@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./src/*"],
+      "#/*": ["./addons/*"],
+      "@/*": ["./examples/*"]
+    },
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleDetection": "force",
+    "moduleResolution": "nodenext",
+    "lib": ["DOM", "DOM.Iterable", "ES2023"],
+    "resolveJsonModule": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "jsx": "preserve",
+    "allowJs": true,
+    "strict": true,
+    "noEmit": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedIndexedAccess": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "exactOptionalPropertyTypes": true,
+
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false
+  },
+  "include": [
+    "build.optim.ts",
+    "build.config.ts",
+    "eslint.config.js",
+    "vitest.config.ts",
+    "src/**/*.ts",
+    "addons/**/*.ts",
+    "examples/**/*.ts",
+    "build.publish.ts",
+    "bump.config.ts",
+    "publish.ts"
+  ],
+  "exclude": ["node_modules", "dist-jsr", "dist-npm"]
+}

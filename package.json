@@ -1,0 +1,78 @@
+{
+  "name": "@reliverse/relico",
+  "version": "1.0.0",
+  "author": "reliverse",
+  "type": "module",
+  "description": "@reliverse/relico is doing its best to improve your terminal colorization experience by leveraging TypeScript and TypeBox for enhanced reliability and type safety.",
+  "scripts": {
+    "check": "bun typecheck && bun knip && bun lint && bun format",
+    "build:npm": "unbuild && bun build.optim.ts",
+    "build:jsr": "bun build.optim.ts --jsr",
+    "build": "bun build:npm && bun build:jsr",
+    "pub:npm": "bun build.publish.ts",
+    "pub:jsr": "bun build.publish.ts --jsr",
+    "pub:dry": "bun build.publish.ts --dry-run",
+    "pub": "bun publish.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint --cache --fix .",
+    "lint:i": "eslint --inspect-config",
+    "format": "biome check --write .",
+    "attw": "bunx @arethetypeswrong/cli",
+    "unpub": "npm unpublish",
+    "test": "vitest",
+    "knip": "knip",
+    "latest": "bun update --latest"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reliverse/relico.git"
+  },
+  "types": "./dist-npm/main.d.ts",
+  "module": "./dist-npm/main.js",
+  "main": "./dist-npm/main.js",
+  "exports": {
+    "import": "./dist-npm/main.js",
+    "types": "./dist-npm/main.d.ts"
+  },
+  "bugs": {
+    "url": "https://github.com/reliverse/relico/issues",
+    "email": "blefnk@gmail.com"
+  },
+  "files": ["package.json", "README.md", "LICENSE.md", "dist-npm"],
+  "homepage": "https://github.com/reliverse/relico",
+  "keywords": ["cli", "reliverse"],
+  "license": "MIT",
+  "dependencies": {
+    "confbox": "^0.1.8",
+    "destr": "^2.0.3",
+    "fs-extra": "^11.3.0",
+    "globby": "^14.0.2",
+    "mri": "^1.2.0",
+    "pathe": "^2.0.2"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.17.3",
+    "@biomejs/biome": "1.9.4",
+    "@eslint/js": "^9.18.0",
+    "@eslint/json": "^0.9.1",
+    "@eslint/markdown": "^6.2.1",
+    "@stylistic/eslint-plugin": "^2.13.0",
+    "@types/bun": "^1.1.18",
+    "@types/eslint__js": "^8.42.3",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.10.7",
+    "citty": "^0.1.6",
+    "eslint": "^9.18.0",
+    "eslint-plugin-perfectionist": "^4.7.0",
+    "execa": "^9.5.2",
+    "jiti": "^2.4.2",
+    "knip": "^5.42.3",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.21.0",
+    "unbuild": "^3.3.1",
+    "vitest": "^3.0.3"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/main.ts",
+    "src/main.test.ts",
+    "examples/example.ts",
+    "{build,eslint}.config.{js,ts}"
+  ],
+  "project": ["src/**/*.ts", "{build,eslint}.config.{js,ts}"]
+}
