@@ -20,6 +20,8 @@ Arguments:
 Options:
   --jsr             Publish to JSR registry
   --dry-run         Perform a dry run of the publish process
+  --pause-publish   Build but skip publishing step
+  --no-dist-rm      Keep dist folders after publishing (for debugging)
   -h, --help        Show help
 `,
   );
@@ -29,11 +31,13 @@ const argv = mri(process.argv.slice(2), {
   alias: {
     h: "help",
   },
-  boolean: ["jsr", "dry-run", "help"],
+  boolean: ["jsr", "dry-run", "help", "pause-publish", "no-dist-rm"],
   default: {
     jsr: false,
     "dry-run": false,
     help: false,
+    "pause-publish": false,
+    "no-dist-rm": false,
   },
 });
 
@@ -44,7 +48,14 @@ if (argv["help"]) {
 }
 
 // Handle flags
-const validFlags = ["jsr", "dry-run", "help", "h"];
+const validFlags = [
+  "jsr",
+  "dry-run",
+  "help",
+  "h",
+  "pause-publish",
+  "no-dist-rm",
+];
 const unknownFlags = Object.keys(argv).filter(
   (key) => !validFlags.includes(key) && key !== "_",
 );
@@ -55,19 +66,63 @@ if (unknownFlags.length > 0) {
   process.exit(1);
 }
 
+async function cleanupDistFolders() {
+  try {
+    // Clean up dist-npm
+    if (await fs.pathExists("dist-npm")) {
+      await fs.remove("dist-npm");
+      console.log("✔ Cleaned up dist-npm folder");
+    }
+
+    // Clean up dist-jsr
+    if (await fs.pathExists("dist-jsr")) {
+      await fs.remove("dist-jsr");
+      console.log("✔ Cleaned up dist-jsr folder");
+    }
+  } catch (error) {
+    console.warn(
+      "⚠ Failed to cleanup dist folders:",
+      error instanceof Error ? error.message : JSON.stringify(error),
+    );
+  }
+}
+
 async function publishNpm(dryRun: boolean) {
   try {
-    if (dryRun) {
-      await execaCommand("npm publish --dry-run", { stdio: "inherit" });
+    // Always run the build
+    await execaCommand(
+      `bun build:npm${argv["pause-publish"] ? " --pause-publish" : ""}`,
+      { stdio: "inherit" },
+    );
+
+    // Only publish if not in pause mode
+    if (!argv["pause-publish"]) {
+      // Change to dist-npm directory for publishing
+      const currentDir = process.cwd();
+      process.chdir("dist-npm");
+
+      try {
+        if (dryRun) {
+          await execaCommand("npm publish --dry-run", { stdio: "inherit" });
+        } else {
+          await execaCommand("npm publish", { stdio: "inherit" });
+        }
+        console.log("success", "Published to npm successfully.");
+      } finally {
+        // Always change back to original directory
+        process.chdir(currentDir);
+        // Only cleanup after successful publish and not in pause mode or no-dist-rm mode
+        if (!argv["no-dist-rm"]) {
+          await cleanupDistFolders();
+        }
+      }
     } else {
-      await execaCommand("bun build:npm", { stdio: "inherit" });
-      await execaCommand("npm publish", { stdio: "inherit" });
+      console.log("✨ Publishing paused. Build completed successfully.");
     }
-    console.log("success", "Published to npm successfully.");
   } catch (error) {
     console.error(
-      "❌ Failed to publish to npm:",
-      error instanceof Error ? error.message : String(error),
+      "❌ Failed to build/publish to npm:",
+      error instanceof Error ? error.message : JSON.stringify(error),
     );
     process.exit(1);
   }
@@ -75,21 +130,44 @@ async function publishNpm(dryRun: boolean) {
 
 async function publishJsr(dryRun: boolean) {
   try {
-    if (dryRun) {
-      await execaCommand("bunx jsr publish --dry-run", {
-        stdio: "inherit",
-      });
+    // Always run the build
+    await execaCommand(
+      `bun build:jsr${argv["pause-publish"] ? " --pause-publish" : ""}`,
+      { stdio: "inherit" },
+    );
+
+    // Only publish if not in pause mode
+    if (!argv["pause-publish"]) {
+      // Change to dist-jsr directory for publishing
+      const currentDir = process.cwd();
+      process.chdir("dist-jsr");
+
+      try {
+        if (dryRun) {
+          await execaCommand("bunx jsr publish --dry-run", {
+            stdio: "inherit",
+          });
+        } else {
+          await execaCommand("bunx jsr publish --allow-dirty", {
+            stdio: "inherit",
+          });
+        }
+      } finally {
+        // Always change back to original directory
+        process.chdir(currentDir);
+      }
+      console.log("success", "Published to JSR successfully.");
+      // Only cleanup after successful publish and not in pause mode or no-dist-rm mode
+      if (!argv["no-dist-rm"]) {
+        await cleanupDistFolders();
+      }
     } else {
-      await execaCommand("bun build:jsr", { stdio: "inherit" });
-      await execaCommand("bunx jsr publish --allow-slow-types", {
-        stdio: "inherit",
-      });
+      console.log("✨ Publishing paused. Build completed successfully.");
     }
-    console.log("success", "Published to JSR successfully.");
   } catch (error) {
     console.error(
-      "❌ Failed to publish to JSR:",
-      error instanceof Error ? error.message : String(error),
+      "❌ Failed to build/publish to JSR:",
+      error instanceof Error ? error.message : JSON.stringify(error),
     );
     process.exit(1);
   }
@@ -112,7 +190,7 @@ async function bumpVersions(oldVersion: string, newVersion: string) {
         "**/package-lock.json",
         "**/pnpm-lock.yaml",
         "**/yarn.lock",
-        "**/bun.lockb",
+        "**/bun.lock",
       ],
     });
 
@@ -125,7 +203,15 @@ async function bumpVersions(oldVersion: string, newVersion: string) {
         const content = await fs.readFile(file, "utf-8");
 
         // Handle different file types
-        if (file.endsWith(".json") || file.endsWith(".reliverse")) {
+        if (file.endsWith(".reliverse")) {
+          const parsed = parseJSONC(content);
+          if (parsed && typeof parsed === "object" && "version" in parsed) {
+            parsed.version = newVersion;
+            await fs.writeFile(file, `${JSON.stringify(parsed, null, 2)}\n`);
+            updatedFiles.push(file);
+            continue;
+          }
+        } else if (file.endsWith(".json")) {
           const parsed = destr(content);
           if (parsed && typeof parsed === "object" && "version" in parsed) {
             parsed.version = newVersion;
@@ -160,7 +246,7 @@ async function bumpVersions(oldVersion: string, newVersion: string) {
       } catch (error) {
         console.warn(
           `Failed to process ${file}:`,
-          error instanceof Error ? error.message : String(error),
+          error instanceof Error ? error.message : JSON.stringify(error),
         );
       }
     }
@@ -177,7 +263,7 @@ async function bumpVersions(oldVersion: string, newVersion: string) {
   } catch (error) {
     console.error(
       "Failed to bump versions:",
-      error instanceof Error ? error.message : String(error),
+      error instanceof Error ? error.message : JSON.stringify(error),
     );
     throw error;
   }
@@ -192,7 +278,7 @@ async function main() {
     const newVersion = argv._[0];
 
     if (!newVersion) {
-      console.log("No version specified, skipping version bump");
+      console.log("ℹ️ No version specified, skipping version bump...");
     } else {
       // Validate version format
       if (!/^\d+\.\d+\.\d+(?:-[\w.-]+)?(?:\+[\w.-]+)?$/.test(newVersion)) {
@@ -231,7 +317,7 @@ async function main() {
   } catch (error) {
     console.error(
       "❌ An unexpected error occurred:",
-      error instanceof Error ? error.message : String(error),
+      error instanceof Error ? error.message : JSON.stringify(error),
     );
     process.exit(1);
   }
@@ -240,7 +326,7 @@ async function main() {
 main().catch((error: unknown) => {
   console.error(
     "❌ An unexpected error occurred:",
-    error instanceof Error ? error.message : String(error),
+    error instanceof Error ? error.message : JSON.stringify(error),
   );
   process.exit(1);
 });

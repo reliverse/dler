@@ -32,21 +32,19 @@
     "strictNullChecks": true,
     "noImplicitAny": true,
     "exactOptionalPropertyTypes": true,
-
     "allowUnreachableCode": false,
     "allowUnusedLabels": false
   },
   "include": [
-    "build.optim.ts",
+    "latest.ts",
+    "pub.setup.ts",
+    "pub.config.ts",
     "build.config.ts",
     "eslint.config.js",
     "vitest.config.ts",
     "src/**/*.ts",
     "addons/**/*.ts",
-    "examples/**/*.ts",
-    "build.publish.ts",
-    "bump.config.ts",
-    "publish.ts"
+    "deprecated/**/*.ts"
   ],
   "exclude": ["node_modules", "dist-jsr", "dist-npm"]
 }

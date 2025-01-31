@@ -5,12 +5,12 @@
   "$schema": "https://reliverse.org/schema.json",
 
   // General project information
-  "projectName": "@reliverse/relico",
+  "projectName": "@reliverse/relidler",
   "projectAuthor": "blefnk",
-  "projectDescription": "@reliverse/relico is doing its best to improve your terminal colorization experience by leveraging TypeScript and TypeBox for enhanced reliability and type safety.",
+  "projectDescription": "@reliverse/relidler",
   "projectVersion": "1.0.0",
   "projectLicense": "MIT",
-  "projectRepository": "https://github.com/reliverse/relico",
+  "projectRepository": "https://github.com/reliverse/relidler",
   "projectState": "creating",
   "projectDomain": "https://example.com",
   "projectDeployService": "vercel",
