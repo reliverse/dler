@@ -58,7 +58,7 @@ export type PublishConfig = {
   /**
    * The bundler to use for building the JSR-optimized package.
    */
-  builderJsR: "bun" | "copy" | "mkdist" | "rollup" | "untyped";
+  builderJsr: "bun" | "copy" | "mkdist" | "rollup" | "untyped";
 
   /**
    * If `true`, minify the build output.
@@ -122,13 +122,13 @@ const pubConfig: PublishConfig = {
 
   // Build configuration
   builderNpm: "mkdist",
-  builderJsR: "copy",
+  builderJsr: "copy",
   shouldMinify: true,
   splitting: false,
   sourcemap: "linked",
+  publicPath: "/",
   target: "node",
   format: "esm",
-  publicPath: "/",
 };
 
 export default pubConfig;
