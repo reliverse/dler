@@ -1,210 +1,458 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
-import type { PackageJson } from "pkg-types";
+import { re } from "@reliverse/relico";
+import fs from "fs-extra";
+import path from "pathe";
 
-import { consola } from "consola";
-import { createJiti } from "jiti";
-import { readdirSync, statSync } from "node:fs";
-import fsp from "node:fs/promises";
-import { dirname, resolve } from "pathe";
-
-import type { BuildPreset, BuildConfig, BuildContext } from "./types.js";
-
-import { autoPreset } from "./auto.js";
-
-export async function ensuredir(path: string): Promise<void> {
-  await fsp.mkdir(dirname(path), { recursive: true });
+/**
+ * Log levels in order of severity
+ */
+export enum LogLevel {
+  VERBOSE = 0,
+  INFO = 1,
+  SUCCESS = 2,
+  WARN = 3,
+  ERROR = 4,
+  NONE = 5,
 }
 
-export function warn(ctx: BuildContext, message: string): void {
-  if (ctx.warnings.has(message)) {
-    return;
-  }
-  consola.debug("[relidler] [warn]", message);
-  ctx.warnings.add(message);
-}
-
-export async function symlink(
-  from: string,
-  to: string,
-  force = true,
-): Promise<void> {
-  await ensuredir(to);
-  if (force) {
-    await fsp.unlink(to).catch(() => {});
-  }
-  await fsp.symlink(from, to, "junction");
-}
-
-export function dumpObject(obj: Record<string, any>): string {
-  return `{ ${Object.keys(obj)
-    .map((key) => `${key}: ${JSON.stringify(obj[key])}`)
-    .join(", ")} }`;
-}
-
-export function getpkg(id = ""): string {
-  const s = id.split("/");
-  // @ts-expect-error TODO: fix ts
-  return s[0].startsWith("@") ? `${s[0]}/${s[1]}` : s[0];
-}
-
-export async function rmdir(dir: string): Promise<void> {
-  await fsp.unlink(dir).catch(() => {});
-  await fsp.rm(dir, { recursive: true, force: true }).catch(() => {});
-}
-
-export function listRecursively(path: string): string[] {
-  const filenames = new Set<string>();
-  const walk = (path: string): void => {
-    const files = readdirSync(path);
-    for (const file of files) {
-      const fullPath = resolve(path, file);
-      if (statSync(fullPath).isDirectory()) {
-        filenames.add(`${fullPath}/`);
-        walk(fullPath);
-      } else {
-        filenames.add(fullPath);
-      }
-    }
+/**
+ * Logger configuration options
+ */
+type RelinkaConfig = {
+  /** Whether to include timestamps in logs */
+  withTimestamp?: boolean;
+  /** Whether to save logs to a file */
+  saveLogsToFile?: boolean;
+  /** Path to the log file (relative to process.cwd()) */
+  logFilePath?: string;
+  /** Minimum log level to display */
+  logLevel?: LogLevel;
+  /** Whether to enable verbose logging regardless of log level */
+  debug?: boolean;
+  /** Directory-specific configuration */
+  dirs?: {
+    /** Log directory path */
+    logDir?: string;
+    /** Whether to create separate log files for each day */
+    dailyLogs?: boolean;
+    /** Maximum number of log files to keep (0 = unlimited) */
+    maxLogFiles?: number;
+    /** Special directory handling */
+    specialDirs?: {
+      /** Whether to look for config in parent directory when in dist folders */
+      useParentConfigInDist?: boolean;
+      /** List of directory names considered as dist folders */
+      distDirNames?: string[];
+    };
   };
-  walk(path);
-  return [...filenames];
-}
+};
 
-export async function resolvePreset(
-  preset: string | BuildPreset,
-  rootDir: string,
-): Promise<BuildConfig> {
-  if (preset === "auto") {
-    preset = autoPreset;
-  } else if (typeof preset === "string") {
-    preset =
-      (await createJiti(rootDir, { interopDefault: true }).import(preset, {
-        default: true,
-      })) || {};
+/**
+ * Default logger configuration
+ */
+const DEFAULT_RELINKA_CONFIG: RelinkaConfig = {
+  withTimestamp: false,
+  saveLogsToFile: true,
+  logFilePath: "relinka.log",
+  logLevel: LogLevel.VERBOSE,
+  debug: false,
+  dirs: {
+    logDir: ".",
+    dailyLogs: false,
+    maxLogFiles: 0,
+    specialDirs: {
+      useParentConfigInDist: true,
+      distDirNames: ["dist-jsr", "dist-npm", "dist-libs", "dist"],
+    },
+  },
+};
+
+/**
+ * Define a configuration for relinka
+ */
+export const defineConfig = (config: Partial<RelinkaConfig> = {}) => {
+  return { ...DEFAULT_RELINKA_CONFIG, ...config };
+};
+
+/**
+ * Current logger configuration
+ */
+let config: RelinkaConfig = { ...DEFAULT_RELINKA_CONFIG };
+
+/**
+ * Load configuration from environment variables
+ */
+const loadEnvConfig = (): Partial<RelinkaConfig> => {
+  const envConfig: Partial<RelinkaConfig> = {
+    dirs: {},
+  };
+
+  // RELINKA_TIMESTAMP - Whether to include timestamps in logs
+  if (process.env.RELINKA_TIMESTAMP !== undefined) {
+    const value = process.env.RELINKA_TIMESTAMP.toLowerCase().trim();
+    envConfig.withTimestamp = !["false", "0", ""].includes(value);
   }
-  if (typeof preset === "function") {
-    preset = preset();
-  }
-  return preset as BuildConfig;
-}
 
-export function inferExportType(
-  condition: string,
-  previousConditions: string[] = [],
-  filename = "",
-): "esm" | "cjs" {
-  if (filename) {
-    if (filename.endsWith(".d.ts")) {
-      return "esm";
-    }
-    if (filename.endsWith(".mjs")) {
-      return "esm";
-    }
-    if (filename.endsWith(".cjs")) {
-      return "cjs";
+  // RELINKA_SAVE_LOGS - Whether to save logs to a file
+  if (process.env.RELINKA_SAVE_LOGS !== undefined) {
+    const value = process.env.RELINKA_SAVE_LOGS.toLowerCase().trim();
+    envConfig.saveLogsToFile = !["false", "0", ""].includes(value);
+  }
+
+  // RELINKA_LOGFILE - Path to the log file
+  if (process.env.RELINKA_LOGFILE) {
+    envConfig.logFilePath = process.env.RELINKA_LOGFILE;
+  }
+
+  // RELINKA_LOG_LEVEL - Minimum log level to display
+  if (process.env.RELINKA_LOG_LEVEL) {
+    const level = process.env.RELINKA_LOG_LEVEL.toUpperCase();
+    if (level in LogLevel) {
+      envConfig.logLevel = LogLevel[level as keyof typeof LogLevel];
     }
   }
-  switch (condition) {
-    case "import": {
-      return "esm";
-    }
-    case "require": {
-      return "cjs";
-    }
-    default: {
-      if (previousConditions.length === 0) {
-        // TODO: Check against type:module for default
-        return "esm";
-      }
-      const [newCondition, ...rest] = previousConditions;
-      // @ts-expect-error TODO: fix ts
-      return inferExportType(newCondition, rest, filename);
+
+  // RELINKA_DEBUG - Whether to enable verbose logging
+  if (process.env.RELINKA_DEBUG !== undefined) {
+    const value = process.env.RELINKA_DEBUG.toLowerCase().trim();
+    envConfig.debug = !["false", "0", ""].includes(value);
+  }
+
+  // RELINKA_LOG_DIR - Directory to store log files
+  if (process.env.RELINKA_LOG_DIR) {
+    envConfig.dirs!.logDir = process.env.RELINKA_LOG_DIR;
+  }
+
+  // RELINKA_DAILY_LOGS - Whether to create separate log files for each day
+  if (process.env.RELINKA_DAILY_LOGS !== undefined) {
+    const value = process.env.RELINKA_DAILY_LOGS.toLowerCase().trim();
+    envConfig.dirs!.dailyLogs = !["false", "0", ""].includes(value);
+  }
+
+  // RELINKA_MAX_LOG_FILES - Maximum number of log files to keep
+  if (process.env.RELINKA_MAX_LOG_FILES) {
+    const value = parseInt(process.env.RELINKA_MAX_LOG_FILES, 10);
+    if (!isNaN(value)) {
+      envConfig.dirs!.maxLogFiles = value;
     }
   }
-}
 
-export type OutputDescriptor = { file: string; type?: "esm" | "cjs" };
-
-export function extractExportFilenames(
-  exports: PackageJson["exports"],
-  conditions: string[] = [],
-): OutputDescriptor[] {
-  if (!exports) {
-    return [];
+  // RELINKA_USE_PARENT_CONFIG - Whether to look for config in parent directory when in dist folders
+  if (process.env.RELINKA_USE_PARENT_CONFIG !== undefined) {
+    const value = process.env.RELINKA_USE_PARENT_CONFIG.toLowerCase().trim();
+    if (!envConfig.dirs!.specialDirs) {
+      envConfig.dirs!.specialDirs = {};
+    }
+    envConfig.dirs!.specialDirs.useParentConfigInDist = ![
+      "false",
+      "0",
+      "",
+    ].includes(value);
   }
-  if (typeof exports === "string") {
-    return [{ file: exports, type: "esm" }];
+
+  return envConfig;
+};
+
+/**
+ * Check if current directory is a dist directory
+ */
+const isInDistDir = (): boolean => {
+  const currentDir = path.basename(process.cwd());
+  return config.dirs?.specialDirs?.distDirNames?.includes(currentDir) || false;
+};
+
+/**
+ * Get possible config file paths to try
+ */
+const getConfigPaths = (): string[] => {
+  const paths: string[] = [];
+  const currentDir = process.cwd();
+
+  // Add current directory config path
+  paths.push(path.join(currentDir, "relinka.cfg.ts"));
+  paths.push(path.join(currentDir, "relinka.cfg.js"));
+
+  // If in dist directory and useParentConfigInDist is enabled, add parent directory config path
+  if (isInDistDir() && config.dirs?.specialDirs?.useParentConfigInDist) {
+    const parentDir = path.dirname(currentDir);
+    paths.push(path.join(parentDir, "relinka.cfg.ts"));
+    paths.push(path.join(parentDir, "relinka.cfg.js"));
   }
-  return (
-    Object.entries(exports)
-      // Filter out .json subpaths such as package.json
-      .filter(([subpath]) => !subpath.endsWith(".json"))
-      .flatMap(([condition, exports]) =>
-        typeof exports === "string"
-          ? {
-              file: exports,
-              type: inferExportType(condition, conditions, exports),
-            }
-          : extractExportFilenames(exports, [...conditions, condition]),
-      )
-  );
-}
 
-export function arrayIncludes(
-  arr: (string | RegExp)[],
-  searchElement: string,
-): boolean {
-  return arr.some((entry) =>
-    entry instanceof RegExp
-      ? entry.test(searchElement)
-      : entry === searchElement,
-  );
-}
+  return paths;
+};
 
-export function removeExtension(filename: string): string {
-  return filename.replace(/\.(js|mjs|cjs|ts|mts|cts|json|jsx|tsx)$/, "");
-}
+/**
+ * Load configuration from relinka.cfg.ts if it exists
+ */
+const loadConfigFile = async (): Promise<void> => {
+  try {
+    // First load environment variables
+    const envConfig = loadEnvConfig();
 
-export function inferPkgExternals(pkg: PackageJson): (string | RegExp)[] {
-  const externals: (string | RegExp)[] = [
-    ...Object.keys(pkg.dependencies || {}),
-    ...Object.keys(pkg.peerDependencies || {}),
-    ...Object.keys(pkg.devDependencies || {}).filter((dep) =>
-      dep.startsWith("@types/"),
-    ),
-    ...Object.keys(pkg.optionalDependencies || {}),
-  ];
+    // Apply environment config
+    config = { ...config, ...envConfig };
 
-  if (pkg.name) {
-    externals.push(pkg.name);
-    if (pkg.exports) {
-      for (const subpath of Object.keys(pkg.exports)) {
-        if (subpath.startsWith("./")) {
-          externals.push(pathToRegex(`${pkg.name}/${subpath.slice(2)}`));
+    // Get possible config file paths
+    const configPaths = getConfigPaths();
+
+    // Try each config path
+    for (const configPath of configPaths) {
+      if (fs.existsSync(configPath)) {
+        try {
+          // For ESM imports in TypeScript
+          const configModule = await import(
+            /* @vite-ignore */ `file://${configPath}`
+          );
+          const userConfig = configModule.default;
+
+          if (userConfig) {
+            // Config file overrides environment variables
+            config = { ...config, ...userConfig };
+            console.log(`Loaded configuration from ${configPath}`);
+            break; // Stop after first successful config load
+          }
+        } catch (importErr) {
+          console.error(
+            `Failed to import ${configPath}: ${importErr instanceof Error ? importErr.message : String(importErr)}`,
+          );
         }
       }
     }
+  } catch (err) {
+    console.error(
+      `Failed to load relinka config: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+};
+
+// Try to load config file immediately
+loadConfigFile().catch((err) => {
+  console.error(
+    `Failed to initialize relinka config: ${err instanceof Error ? err.message : String(err)}`,
+  );
+});
+
+/**
+ * Configure the logger
+ */
+const configureLogger = (newConfig: Partial<RelinkaConfig>): void => {
+  config = { ...config, ...newConfig };
+};
+
+/**
+ * Reset logger to default configuration
+ */
+const resetConfig = (): void => {
+  config = { ...DEFAULT_RELINKA_CONFIG };
+};
+
+/**
+ * Get formatted timestamp based on configuration
+ */
+const getTimestamp = (): string => {
+  if (!config.withTimestamp) return "";
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+  const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
+};
+
+/**
+ * Get the full path to the log file
+ */
+const getLogFilePath = (): string => {
+  // Use config value or default
+  let logFilePath = config.logFilePath || DEFAULT_RELINKA_CONFIG.logFilePath!;
+
+  // If daily logs are enabled, add date to filename
+  if (config.dirs?.dailyLogs) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+
+    // Add date prefix to filename
+    const datePrefix = `${year}-${month}-${day}-`;
+    const fileName = path.basename(logFilePath);
+    const dirName = path.dirname(logFilePath);
+
+    logFilePath = path.join(dirName, datePrefix + fileName);
   }
 
-  if (pkg.imports) {
-    for (const importName of Object.keys(pkg.imports)) {
-      if (importName.startsWith("#")) {
-        externals.push(pathToRegex(importName));
+  // If log directory is specified, use it
+  if (config.dirs?.logDir) {
+    const fileName = path.basename(logFilePath);
+    logFilePath = path.join(config.dirs.logDir, fileName);
+  }
+
+  return path.join(process.cwd(), logFilePath);
+};
+
+/**
+ * Clean up old log files if maxLogFiles is set
+ */
+const cleanupOldLogFiles = (): void => {
+  if (
+    !config.saveLogsToFile ||
+    !config.dirs?.maxLogFiles ||
+    config.dirs.maxLogFiles <= 0
+  ) {
+    return;
+  }
+
+  try {
+    const logDir = config.dirs.logDir
+      ? path.join(process.cwd(), config.dirs.logDir)
+      : path.dirname(getLogFilePath());
+
+    // Ensure directory exists
+    if (!fs.existsSync(logDir)) {
+      return;
+    }
+
+    // Get all log files
+    const files = fs
+      .readdirSync(logDir)
+      .filter((file) => file.endsWith(".log"))
+      .map((file) => ({
+        name: file,
+        path: path.join(logDir, file),
+        stats: fs.statSync(path.join(logDir, file)),
+      }))
+      .sort((a, b) => b.stats.mtime.getTime() - a.stats.mtime.getTime()); // Sort by modification time, newest first
+
+    // Delete old files if we have more than maxLogFiles
+    if (files.length > config.dirs.maxLogFiles) {
+      const filesToDelete = files.slice(config.dirs.maxLogFiles);
+      for (const file of filesToDelete) {
+        fs.unlinkSync(file.path);
       }
     }
+  } catch (err) {
+    console.error(
+      `Failed to clean up old log files: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+};
+
+/**
+ * Write a message to the log file
+ */
+const writeToLogFile = (logMessage: string): void => {
+  if (!config.saveLogsToFile) return;
+
+  try {
+    const logFilePath = getLogFilePath();
+    fs.ensureDirSync(path.dirname(logFilePath));
+    fs.appendFileSync(logFilePath, logMessage + "\n");
+
+    // Clean up old log files if needed
+    cleanupOldLogFiles();
+  } catch (err) {
+    console.error(
+      `Failed to write to log file: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+};
+
+/**
+ * Format a log message with timestamp and emoji
+ */
+const formatLogMessage = (
+  level: string,
+  msg: string,
+  details?: unknown,
+): string => {
+  const timestamp = getTimestamp();
+  const detailsStr = details
+    ? ` ${details instanceof Error ? details.message : String(details)}`
+    : "";
+
+  // Pad the log level to ensure consistent spacing
+  const paddedLevel = level.padEnd(7, " ");
+
+  return timestamp
+    ? `[${timestamp}]  ${paddedLevel} ${msg}${detailsStr}`
+    : `${paddedLevel} ${msg}${detailsStr}`;
+};
+
+/**
+ * Check if verbose logging should be enabled
+ */
+const isVerboseEnabled = (): boolean => {
+  // Check config.debug (already includes environment variable check)
+  return config.debug === true;
+};
+
+/**
+ * Unified logging function
+ *
+ * @param level - Log level ('verbose', 'info', 'success', 'warn', 'error')
+ * @param message - Main message to log
+ * @param args - Additional arguments to include in the log
+ */
+export const relinka = (
+  level: "verbose" | "info" | "success" | "warn" | "error" | (string & {}),
+  message: string,
+  ...args: any[]
+): void => {
+  // If message is empty, just print a blank line
+  if (message === "") {
+    console.log();
+    return;
   }
 
-  return [...new Set(externals)];
-}
+  // Convert level to uppercase for enum matching
+  const upperLevel = level.toUpperCase() as keyof typeof LogLevel;
+  const logLevel =
+    LogLevel[upperLevel] !== undefined ? LogLevel[upperLevel] : LogLevel.INFO;
 
-function pathToRegex(path: string): string | RegExp {
-  return path.includes("*")
-    ? new RegExp(
-        `^${path.replace(/\./g, String.raw`\.`).replace(/\*/g, ".*")}$`,
-      )
-    : path;
-}
+  // Skip if log level is below configured minimum
+  if (logLevel < config.logLevel!) return;
 
-export function withTrailingSlash(path: string): string {
-  return path.endsWith("/") ? path : `${path}/`;
-}
+  // Special handling for verbose logs
+  if (upperLevel === "VERBOSE") {
+    if (!isVerboseEnabled()) return;
+  }
+
+  // Format the log message
+  const details = args.length > 0 ? args.join(" ") : undefined;
+  const displayLevel = upperLevel === "VERBOSE" ? "DEBUG" : upperLevel;
+  const logMessage = formatLogMessage(displayLevel, message, details);
+
+  // Output to console with appropriate color
+  switch (upperLevel) {
+    case "VERBOSE":
+      console.log(re.magentaBright(logMessage));
+      break;
+    case "INFO":
+      console.log(re.cyanBright(logMessage));
+      break;
+    case "SUCCESS":
+      console.log(re.greenBright(logMessage));
+      break;
+    case "WARN":
+      console.warn(re.yellowBright(logMessage));
+      break;
+    case "ERROR":
+      console.error(re.redBright(logMessage));
+      break;
+    default:
+      console.log(logMessage);
+  }
+
+  // Write to log file
+  writeToLogFile(logMessage);
+};
+
+// Attach configuration methods to relinka
+relinka.configure = configureLogger;
+relinka.resetConfig = resetConfig;
+relinka.defineConfig = defineConfig;

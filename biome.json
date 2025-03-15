@@ -6,25 +6,17 @@
     "useIgnoreFile": false
   },
   "files": {
-    "ignoreUnknown": false,
+    "ignoreUnknown": true,
     "ignore": [
       "node_modules/",
       "dist-jsr/",
       "dist-npm/",
-      "tests-runtime/",
+      "dist-libs/",
       "bun.lock"
     ]
   },
   "formatter": {
     "enabled": true,
-    "ignore": [
-      ".git/",
-      "node_modules/",
-      "dist-jsr/",
-      "dist-npm/",
-      "tests-runtime/",
-      "bun.lock"
-    ],
     "indentStyle": "space",
     "attributePosition": "auto",
     "formatWithErrors": false,
@@ -37,14 +29,6 @@
   },
   "linter": {
     "enabled": true,
-    "ignore": [
-      ".git/",
-      "node_modules/",
-      "dist-jsr/",
-      "dist-npm/",
-      "tests-runtime/",
-      "bun.lock"
-    ],
     "rules": {
       "recommended": true,
       "a11y": {
@@ -103,9 +87,15 @@
         "noDangerouslySetInnerHtml": "off"
       },
       "style": {
+        "useConst": {
+          "level": "warn",
+          "fix": "unsafe"
+        },
+        "useTemplate": "off",
+        "noUnusedTemplateLiteral": "off",
+        "useDefaultParameterLast": "off",
         "useSingleVarDeclarator": "off",
         "useExponentiationOperator": "off",
-        "useConst": "off",
         "noInferrableTypes": "off",
         "noNonNullAssertion": "off",
         "noParameterAssign": "off",
@@ -120,6 +110,7 @@
         "useWhile": "off"
       },
       "suspicious": {
+        "noControlCharactersInRegex": "off",
         "noConfusingVoidType": "off",
         "noApproximativeNumericConstant": "off",
         "noArrayIndexKey": "off",

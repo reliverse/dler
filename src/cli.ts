@@ -1,70 +1,101 @@
-#!/usr/bin/env node
-import { defineCommand, runMain } from "citty";
-import consola from "consola";
-import { resolve } from "pathe";
+import { defineCommand } from "@reliverse/prompts";
 
-import { build } from "./build.js";
+import { relidler } from "~/libs/sdk/sdk-mod.js";
 
-const main = defineCommand({
+export default defineCommand({
   meta: {
-    name: "@reliverse/bundler",
-    version: "1.0.1",
-    description: "Bundles your code",
+    name: "cli",
+    description: `Runs the @reliverse/relidler`,
   },
   args: {
+    /**
+     * isDev
+     */
+    dev: {
+      type: "boolean",
+      description: "Runs the CLI in dev mode",
+      required: false,
+    },
+    /**
+     * cliFlags
+     */
+    bump: {
+      type: "string",
+      description: "Specify a version to bump to",
+      required: false,
+    },
+    dryRun: {
+      type: "boolean",
+      alias: "d",
+      description: "Run in dry run mode (no actual publish)",
+      required: false,
+    },
+    jsrAllowDirty: {
+      type: "boolean",
+      description: "Allow publishing from a dirty working directory",
+      required: false,
+    },
+    jsrSlowTypes: {
+      type: "boolean",
+      description: "Enable slow type-checking for JSR",
+      required: false,
+    },
+    registry: {
+      type: "string",
+      description: "Select the registry to publish to (npm|jsr|npm-jsr)",
+      required: false,
+    },
+    verbose: {
+      type: "boolean",
+      alias: "v",
+      description: "Enable verbose logging",
+      required: false,
+    },
+    /**
+     * argsBuilderConfig
+     */
+    config: {
+      type: "string",
+      description: [
+        "The configuration file to use relative to the current working directory.",
+        "                 Relidler tries to read the config from the build `DIR` by default.",
+        "",
+      ].join("\n"),
+      required: false,
+    },
     dir: {
       type: "positional",
       description: "The directory to build",
       required: false,
     },
-    config: {
-      type: "string",
-      description: [
-        "The configuration file to use relative to the current working directory.",
-        "                 Relidler tries to read `build.config` from the build `DIR` by default.",
-        "",
-      ].join("\n"),
-    },
-    watch: {
-      type: "boolean",
-      description: "Watch the src dir and rebuild on change (experimental)",
-    },
-    stub: {
-      type: "boolean",
-      description: "Stub the package for JIT compilation",
-    },
     minify: {
       type: "boolean",
       description: "Minify build",
-    },
-    sourcemap: {
-      type: "boolean",
-      description: "Generate sourcemaps (experimental)",
+      required: false,
     },
     parallel: {
       type: "boolean",
       description:
-        "Run different types of builds (untyped, mkdist, Rollup, copy) simultaneously.",
+        "Run different types of builds (untyped, mkdist, rollup, copy) simultaneously",
+      required: false,
+    },
+    sourcemap: {
+      type: "boolean",
+      description: "Generate sourcemaps (experimental)",
+      required: false,
+    },
+    stub: {
+      type: "boolean",
+      description: "Stub the package for JIT compilation",
+      required: false,
+    },
+    watch: {
+      type: "boolean",
+      description: "Watch the src dir and rebuild on change (experimental)",
+      required: false,
     },
   },
-  async run({ args }) {
-    const rootDir = resolve(process.cwd(), args.dir || ".");
-    // @ts-expect-error TODO: fix ts
-    await build(rootDir, args.stub, {
-      sourcemap: args.sourcemap,
-      config: args.config ? resolve(args.config) : undefined,
-      stub: args.stub,
-      watch: args.watch,
-      rollup: {
-        esbuild: {
-          minify: args.minify,
-        },
-      },
-    }).catch((error) => {
-      consola.error(`Error building ${rootDir}: ${error}`);
-      throw error;
-    });
+  run: async ({ args }) => {
+    await relidler({ args });
   },
 });
-
-await runMain(main);

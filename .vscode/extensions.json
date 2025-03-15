@@ -1,3 +1,8 @@
 {
-  "recommendations": ["fabiospampinato.vscode-open-multiple-files"]
+  "recommendations": [
+    "fabiospampinato.vscode-open-multiple-files",
+    "yoavbls.pretty-ts-errors",
+    "berublan.vscode-log-viewer",
+    "emilast.logfilehighlighter"
+  ]
 }

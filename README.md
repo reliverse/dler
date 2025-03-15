@@ -1,30 +1,58 @@
-# @reliverse/relidler
+# Reliverse Relidler
 
-[**Docs**](.github/DOCS.md) | [**NPM**](https://npmjs.com/package/@reliverse/relidler) | [**GitHub**](https://github.com/reliverse/relidler)
+[📦 NPM](https://npmjs.com/@reliverse/relidler) • [💬 Discord](https://discord.gg/Pb8uKbwpsJ) • [💖 Patreon](https://patreon.com/blefnk) • [📚 Docs](https://docs.reliverse.org)
 
-<p align="left">
-  <a href="https://npmjs.org/package/@reliverse/relidler">
-    <img src="https://img.shields.io/npm/v/@reliverse/relidler.svg" alt="version" />
-  </a>
-  <a href="https://npmjs.org/package/@reliverse/relidler">
-    <img src="https://img.shields.io/npm/dm/@reliverse/relidler.svg" alt="downloads" />
-  </a>
-</p>
+@reliverse/relidler is a flexible unified bundler and NPM/JSR publish tool for TypeScript and JavaScript projects.
 
-**@reliverse/relidler** provides a type-safe and flexible way to bundle JavaScript and TypeScript projects.
+## Features
+
+- Drop-in replacement for `unbuild` 😘
+- `relidler` works via CLI or as a lib
+- Automates publishing to NPM and JSR
+- No more package.json headaches, yep
+- Handles version bumps automatically
+- Ensures reliable builds for JS/TS projects
+- Optimized for speed and modern workflows
+- Path conversion and symbol resolution
+- Flexible configuration options
 
 ## Installation
 
+Ensure [git](https://git-scm.com/downloads), [node.js](https://nodejs.org), and [bun](https://bun.sh)/[pnpm](https://pnpm.io)/[yarn](https://yarnpkg.com)/[npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) are installed. Then:
+
+### CLI Usage
+
+1. Install globally:
+
+    ```sh
+    bun i -g @reliverse/relidler
+    ```
+
+2. Generate optional config (recommended):
+
+    ```sh
+    bun add -D @reliverse/relidler-cfg # (⚠️soon)
+    relidler init
+    ```
+
+3. Run and enjoy:
+
+    ```sh
+    relidler cli
+    ```
+
+### API Usage (for advanced users) (⚠️soon)
+
+Extend your own CLI functionality via:
+
 ```sh
-bun add @reliverse/relidler # Replace "bun" with npm, pnpm, or yarn if desired
+bun add -D @reliverse/relidler-sdk
 ```
 
-## Thank you
+## Related
 
-This project was highly inspired by [unbuild](https://unjs.io/packages/unbuild) ❤️
-
-The mission of the current project is to extend unbuild's functionalities including introducing Bun Bundler support.
+- [unjs/unbuild](https://github.com/unjs/unbuild)
 
 ## License
 
-[MIT](./LICENSE.md) © [Nazarii Korniienko](https://github.com/blefnk)
+🩷 [MIT](./LICENSE.md) © [blefnk Nazar Kornienko](https://github.com/blefnk)

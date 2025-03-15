@@ -18,8 +18,5 @@
     "MD033": false
   },
   "typescript.tsdk": "node_modules\\typescript\\lib",
-  "eslint.ignoreUntitled": true,
-  "files.associations": {
-    ".reliverse": "jsonc"
-  }
+  "eslint.ignoreUntitled": true
 }
