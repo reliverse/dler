@@ -3,31 +3,17 @@ import fs from "fs-extra";
 import path from "pathe";
 
 /**
- * Log levels in order of severity
- */
-export enum LogLevel {
-  VERBOSE = 0,
-  INFO = 1,
-  SUCCESS = 2,
-  WARN = 3,
-  ERROR = 4,
-  NONE = 5,
-}
-
-/**
  * Logger configuration options
  */
 type RelinkaConfig = {
+  /** Whether to enable verbose logging */
+  debug?: boolean;
   /** Whether to include timestamps in logs */
   withTimestamp?: boolean;
   /** Whether to save logs to a file */
   saveLogsToFile?: boolean;
   /** Path to the log file (relative to process.cwd()) */
   logFilePath?: string;
-  /** Minimum log level to display */
-  logLevel?: LogLevel;
-  /** Whether to enable verbose logging regardless of log level */
-  debug?: boolean;
   /** Directory-specific configuration */
   dirs?: {
     /** Log directory path */
@@ -53,7 +39,6 @@ const DEFAULT_RELINKA_CONFIG: RelinkaConfig = {
   withTimestamp: false,
   saveLogsToFile: true,
   logFilePath: "relinka.log",
-  logLevel: LogLevel.VERBOSE,
   debug: false,
   dirs: {
     logDir: ".",
@@ -86,6 +71,12 @@ const loadEnvConfig = (): Partial<RelinkaConfig> => {
     dirs: {},
   };
 
+  // RELINKA_DEBUG - Whether to enable verbose logging
+  if (process.env.RELINKA_DEBUG !== undefined) {
+    const value = process.env.RELINKA_DEBUG.toLowerCase().trim();
+    envConfig.debug = !["false", "0", ""].includes(value);
+  }
+
   // RELINKA_TIMESTAMP - Whether to include timestamps in logs
   if (process.env.RELINKA_TIMESTAMP !== undefined) {
     const value = process.env.RELINKA_TIMESTAMP.toLowerCase().trim();
@@ -98,23 +89,9 @@ const loadEnvConfig = (): Partial<RelinkaConfig> => {
     envConfig.saveLogsToFile = !["false", "0", ""].includes(value);
   }
 
-  // RELINKA_LOGFILE - Path to the log file
-  if (process.env.RELINKA_LOGFILE) {
-    envConfig.logFilePath = process.env.RELINKA_LOGFILE;
-  }
-
-  // RELINKA_LOG_LEVEL - Minimum log level to display
-  if (process.env.RELINKA_LOG_LEVEL) {
-    const level = process.env.RELINKA_LOG_LEVEL.toUpperCase();
-    if (level in LogLevel) {
-      envConfig.logLevel = LogLevel[level as keyof typeof LogLevel];
-    }
-  }
-
-  // RELINKA_DEBUG - Whether to enable verbose logging
-  if (process.env.RELINKA_DEBUG !== undefined) {
-    const value = process.env.RELINKA_DEBUG.toLowerCase().trim();
-    envConfig.debug = !["false", "0", ""].includes(value);
+  // RELINKA_LOG_FILE - Path to the log file
+  if (process.env.RELINKA_LOG_FILE) {
+    envConfig.logFilePath = process.env.RELINKA_LOG_FILE;
   }
 
   // RELINKA_LOG_DIR - Directory to store log files
@@ -394,12 +371,12 @@ const isVerboseEnabled = (): boolean => {
 /**
  * Unified logging function
  *
- * @param level - Log level ('verbose', 'info', 'success', 'warn', 'error')
+ * @param level - Log type ('verbose', 'info', 'success', 'warn', 'error')
  * @param message - Main message to log
  * @param args - Additional arguments to include in the log
  */
 export const relinka = (
-  level: "verbose" | "info" | "success" | "warn" | "error" | (string & {}),
+  type: "verbose" | "info" | "success" | "warn" | "error" | (string & {}),
   message: string,
   ...args: any[]
 ): void => {
@@ -409,26 +386,21 @@ export const relinka = (
     return;
   }
 
-  // Convert level to uppercase for enum matching
-  const upperLevel = level.toUpperCase() as keyof typeof LogLevel;
-  const logLevel =
-    LogLevel[upperLevel] !== undefined ? LogLevel[upperLevel] : LogLevel.INFO;
+  // Convert level to uppercase for consistency
+  const upperType = type.toUpperCase();
 
-  // Skip if log level is below configured minimum
-  if (logLevel < config.logLevel!) return;
-
-  // Special handling for verbose logs
-  if (upperLevel === "VERBOSE") {
-    if (!isVerboseEnabled()) return;
+  // Skip verbose logs unless debug is enabled
+  if (upperType === "VERBOSE" && !isVerboseEnabled()) {
+    return;
   }
 
   // Format the log message
   const details = args.length > 0 ? args.join(" ") : undefined;
-  const displayLevel = upperLevel === "VERBOSE" ? "DEBUG" : upperLevel;
-  const logMessage = formatLogMessage(displayLevel, message, details);
+  const displayType = upperType === "VERBOSE" ? "DEBUG" : (upperType as string);
+  const logMessage = formatLogMessage(displayType, message, details);
 
   // Output to console with appropriate color
-  switch (upperLevel) {
+  switch (upperType) {
     case "VERBOSE":
       console.log(re.magentaBright(logMessage));
       break;

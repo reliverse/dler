@@ -13,7 +13,7 @@ export default defineConfig({
   isCLI: true,
 
   // Publishing options
-  registry: "npm-jsr",
+  registry: "jsr",
   pausePublish: false,
   dryRun: false,
 
@@ -56,7 +56,7 @@ export default defineConfig({
   // Publish specific dirs as separate packages
   // This feature is experimental at the moment
   // Please commit your changes before using it
-  buildPublishMode: "main-project-only",
+  buildPublishMode: "main-and-libs",
   libs: {
     "@reliverse/relidler-cfg": {
       main: "src/libs/cfg/cfg-main.ts",

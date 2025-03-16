@@ -995,7 +995,7 @@ async function processFile(
     } else {
       return {
         success: true,
-        message: "",
+        message: "No matching import paths found",
       };
     }
   } catch (error) {

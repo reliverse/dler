@@ -1,4 +1,4 @@
-import { defineConfig, LogLevel } from "./src/utils.js";
+import { defineConfig } from "./src/utils.js";
 
 /**
  * Relinka Logger Configuration
@@ -6,8 +6,7 @@ import { defineConfig, LogLevel } from "./src/utils.js";
  * This configuration can also be set using environment variables:
  * - RELINKA_TIMESTAMP: Whether to include timestamps in logs (true/false)
  * - RELINKA_SAVE_LOGS: Whether to save logs to a file (true/false)
- * - RELINKA_LOGFILE: Path to the log file
- * - RELINKA_LOG_LEVEL: Minimum log level to display (VERBOSE, INFO, SUCCESS, WARN, ERROR, NONE)
+ * - RELINKA_LOG_FILE: Path to the log file
  * - RELINKA_DEBUG: Whether to enable verbose logging (true/false)
  * - RELINKA_LOG_DIR: Directory to store log files
  * - RELINKA_DAILY_LOGS: Whether to create separate log files for each day (true/false)
@@ -17,20 +16,17 @@ import { defineConfig, LogLevel } from "./src/utils.js";
  * @see https://github.com/reliverse/relinka
  */
 export default defineConfig({
+  // Whether to enable verbose logging
+  debug: true,
+
   // Whether to include timestamps in logs
   withTimestamp: false,
 
   // Whether to save logs to a file
   saveLogsToFile: true,
 
-  // Path to the log file (relative to process.cwd())
+  // Path to the log file (relative to cwd)
   logFilePath: "relinka.log",
-
-  // Minimum log level to display
-  logLevel: LogLevel.INFO,
-
-  // Whether to enable verbose logging regardless of log level
-  debug: false,
 
   // Directory-specific configuration
   dirs: {

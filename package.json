@@ -10,7 +10,7 @@
     "dev": "bun src/main.ts cli --dev",
     "dev:init": "bun src/main.ts init --dev",
     "latest": "bun update --latest && bun check",
-    "check": "tsc --noEmit && knip && eslint --cache --fix . && biome check --write .",
+    "check": "tsc --noEmit && knip && bun vi && eslint --cache --fix . && biome check --write .",
     "vi": "vitest"
   },
   "dependencies": {

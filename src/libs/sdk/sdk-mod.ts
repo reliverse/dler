@@ -40,11 +40,12 @@ const SHOW_VERBOSE = {
 };
 
 const DEBUG_DISABLE = {
-  convertImportPathsToPkgNames: true,
-  copyExternalFilesToAddonsDir: true,
+  unstable_convertImportPathsToPkgNames: true,
+  unstable_copyExternalFilesToAddonsDir: true,
+  unstable_copyFileWithImports: true,
 };
 
-function disable(funcName: keyof typeof DEBUG_DISABLE) {
+function disableFunction(funcName: keyof typeof DEBUG_DISABLE) {
   relinka("verbose", `[DEBUG_DISABLE] Skipping ${funcName}...`);
 }
 
@@ -53,7 +54,6 @@ function disable(funcName: keyof typeof DEBUG_DISABLE) {
 // ============================
 
 const tsconfigJson = "tsconfig.json";
-const cliConfigJsonc = "cli.config.jsonc";
 const cliDomainDocs = "https://docs.reliverse.org";
 
 const PROJECT_ROOT = path.resolve(process.cwd());
@@ -362,7 +362,7 @@ export async function removeDistFolders(): Promise<boolean> {
       },
       { concurrency: 3 },
     );
-    relinka("success", "Distribution folders cleaned up successfully");
+    relinka("success", "Distribution folders removed successfully");
   }
   relinka("verbose", "Exiting removeDistFolders");
   return true;
@@ -384,38 +384,77 @@ async function findFileCaseInsensitive(
 }
 
 /**
- * Copies README and LICENSE files to the output directory.
+ * Copies specified files from the root directory to the output directory.
+ * Handles special cases for certain files and supports parallel processing.
  */
 async function copyFileFromRoot(
-  fileName: "README.md" | "LICENSE",
   outdirRoot: string,
+  fileNames: (
+    | "README.md"
+    | "LICENSE"
+    | ".gitignore"
+    | "drizzle.config.ts"
+    | "schema.json"
+    | "reliverse.jsonc"
+  )[],
 ): Promise<void> {
   try {
-    if (fileName === "README.md") {
-      const file = await findFileCaseInsensitive(fileName);
-      if (file) {
-        await fs.copy(file, path.join(outdirRoot, fileName));
-        relinka("verbose", `Copied ${file} to ${outdirRoot}/${fileName}`);
-      } else {
-        relinka("warn", `${fileName} not found`);
-      }
-      return;
-    }
+    // Ensure output directory exists
+    await fs.ensureDir(outdirRoot);
 
-    // Handle LICENSE file with fallback to LICENSE.md
-    const fileVariants = ["LICENSE", "LICENSE.md"];
-    for (const variant of fileVariants) {
-      const file = await findFileCaseInsensitive(variant);
-      if (file) {
-        await fs.copy(file, path.join(outdirRoot, "LICENSE"));
-        relinka("verbose", `Copied ${file} to ${outdirRoot}/LICENSE`);
-        return;
+    // Define special file handling configurations
+    const specialFileHandlers: Record<
+      string,
+      {
+        variants?: string[];
+        outputName?: string;
       }
-    }
+    > = {
+      "README.md": {},
+      LICENSE: {
+        variants: ["LICENSE", "LICENSE.md"],
+        outputName: "LICENSE",
+      },
+    };
 
-    relinka("warn", "No license file found");
+    // Process files in parallel with concurrency limit
+    await pMap(
+      fileNames,
+      async (fileName) => {
+        try {
+          const specialConfig = specialFileHandlers[fileName];
+
+          if (specialConfig?.variants) {
+            // Handle files with variants (like LICENSE)
+            for (const variant of specialConfig.variants) {
+              const file = await findFileCaseInsensitive(variant);
+              if (file) {
+                const outputName = specialConfig.outputName || fileName;
+                await fs.copy(file, path.join(outdirRoot, outputName));
+                relinka(
+                  "verbose",
+                  `Copied ${file} to ${outdirRoot}/${outputName}`,
+                );
+                break;
+              }
+            }
+          } else {
+            // Handle standard files
+            const file = await findFileCaseInsensitive(fileName);
+            if (file) {
+              await fs.copy(file, path.join(outdirRoot, fileName));
+              relinka("verbose", `Copied ${file} to ${outdirRoot}/${fileName}`);
+            }
+          }
+        } catch (fileError) {
+          relinka("error", `Failed to copy ${fileName}: ${fileError}`);
+        }
+      },
+      { concurrency: 4 }, // Process up to 4 files simultaneously
+    );
   } catch (error) {
-    relinka("error", `Failed to copy ${fileName}: ${error}`);
+    relinka("error", `Failed to copy files: ${error}`);
+    throw new Error(`File copying failed: ${error}`);
   }
 }
 
@@ -1256,47 +1295,6 @@ async function createJsrJSONC(
 }
 
 /**
- * Copies additional JSR-specific files to the output directory.
- */
-async function copyJsrFiles(outdirRoot: string, isLib: boolean): Promise<void> {
-  relinka(
-    "info",
-    `Copying JSR files (isCLI=${(await loadConfig()).isCLI}, isLib=${isLib})`,
-  );
-  if ((await loadConfig()).isCLI) {
-    await writeFileSafe(
-      path.join(outdirRoot, ".gitignore"),
-      "node_modules/\n.env\n",
-      "copyJsrFiles",
-    );
-    relinka("verbose", "Generated .gitignore for JSR");
-  }
-  let jsrFiles: string[];
-  if ((await loadConfig()).isCLI) {
-    jsrFiles = [cliConfigJsonc, "drizzle.config.ts", "schema.json"];
-    relinka("info", `Will copy CLI-specific files: ${jsrFiles.join(", ")}`);
-  } else {
-    jsrFiles = [cliConfigJsonc];
-    relinka("verbose", `Will only copy common files: ${jsrFiles.join(", ")}`);
-  }
-  let copiedCount = 0;
-  await pMap(
-    jsrFiles,
-    async (file) => {
-      if (await fs.pathExists(file)) {
-        await fs.copy(file, path.join(outdirRoot, file));
-        copiedCount++;
-        relinka("verbose", `Copied JSR file: ${file}`);
-      } else {
-        relinka("verbose", `JSR file not found (skipped): ${file}`);
-      }
-    },
-    { concurrency: CONCURRENCY_DEFAULT },
-  );
-  relinka("info", `Copied ${copiedCount} JSR files to ${outdirRoot}`);
-}
-
-/**
  * Calculates the total size (in bytes) of a directory.
  */
 async function getDirectorySize(
@@ -1557,47 +1555,6 @@ async function deleteSpecificFiles(outdirBin: string): Promise<void> {
 }
 
 /**
- * Deletes specific files from the root of the distribution directory.
- */
-async function deleteRootSpecificFiles(outdirRoot: string): Promise<void> {
-  relinka("verbose", `Deleting root-specific files in: ${outdirRoot}`);
-  const config = await loadConfig();
-
-  const isLibraryJsrDist =
-    outdirRoot.includes("dist-libs") && outdirRoot.endsWith("jsr");
-  if (!config.isCLI || isLibraryJsrDist) {
-    const cliSpecificFiles = ["drizzle.config.ts", ".gitignore", "schema.json"];
-    let deletedCount = 0;
-    for (const file of cliSpecificFiles) {
-      const filePath = path.join(outdirRoot, file);
-      if (await fs.pathExists(filePath)) {
-        await fs.remove(filePath);
-        deletedCount++;
-        relinka("verbose", `Deleted CLI-specific file: ${filePath}`);
-      }
-    }
-    if (deletedCount > 0) {
-      if (isLibraryJsrDist) {
-        relinka(
-          "info",
-          `Deleted ${deletedCount} CLI-specific files from lib JSR directory (even with isCLI=${config.isCLI})`,
-        );
-      } else {
-        relinka(
-          "info",
-          `Deleted ${deletedCount} CLI-specific files from root directory (isCLI=${config.isCLI})`,
-        );
-      }
-    }
-  } else {
-    relinka(
-      "info",
-      `Preserving CLI-specific files in main distribution (isCLI=${config.isCLI})`,
-    );
-  }
-}
-
-/**
  * Recursively counts the number of files in a directory.
  */
 export async function outdirBinFilesCount(outdirBin: string): Promise<number> {
@@ -1714,7 +1671,7 @@ async function bundleUsingBun(
 /**
  * Publishes the JSR distribution.
  */
-export async function publishToJsr(
+export async function regular_pubToJsr(
   dryRun: boolean,
   isDev: boolean,
 ): Promise<void> {
@@ -1753,7 +1710,7 @@ export async function publishToJsr(
 /**
  * Publishes the NPM distribution.
  */
-export async function publishToNpm(
+export async function regular_pubToNpm(
   dryRun: boolean,
   isDev: boolean,
 ): Promise<void> {
@@ -2057,14 +2014,14 @@ async function createLibPackageJSON(
  * Identifies and copies external imports (imports outside the lib's source directory)
  * to an "addons" directory in the output directory.
  */
-async function copyExternalFilesToAddonsDir(
+async function unstable_copyExternalFilesToAddonsDir(
   entryDir: string,
   outdirBin: string,
   isDev: boolean,
   isJsr: boolean,
 ): Promise<void> {
-  if (DEBUG_DISABLE.copyExternalFilesToAddonsDir) {
-    disable("copyExternalFilesToAddonsDir");
+  if (DEBUG_DISABLE.unstable_copyExternalFilesToAddonsDir) {
+    disableFunction("unstable_copyExternalFilesToAddonsDir");
     return;
   }
 
@@ -2127,7 +2084,7 @@ async function copyExternalFilesToAddonsDir(
 
   // After handling external imports, also convert any library imports
   // This ensures that both external imports and library imports are properly handled
-  await convertImportPathsToPkgNames(outdirBin, isJsr);
+  await unstable_convertImportPathsToPkgNames(outdirBin, isJsr);
 }
 
 /**
@@ -2275,12 +2232,12 @@ async function processLibraryImportsInFile(
 /**
  * Converts imports from other libs to package names based on the configuration.
  */
-async function convertImportPathsToPkgNames(
+async function unstable_convertImportPathsToPkgNames(
   outdirBin: string,
   isJsr: boolean,
 ): Promise<void> {
-  if (DEBUG_DISABLE.convertImportPathsToPkgNames) {
-    disable("convertImportPathsToPkgNames");
+  if (DEBUG_DISABLE.unstable_convertImportPathsToPkgNames) {
+    disableFunction("unstable_convertImportPathsToPkgNames");
     return;
   }
 
@@ -3153,13 +3110,18 @@ function isInSubdirectory(filePath: string): boolean {
 /**
  * Copies a file with all its imports to the output directory.
  */
-async function copyFileWithImports(
+async function unstable_copyFileWithImports(
   sourcePath: string,
   outputDir: string,
   baseDir: string,
   isDev: boolean,
   isJsr: boolean,
 ): Promise<void> {
+  if (DEBUG_DISABLE.unstable_copyFileWithImports) {
+    disableFunction("unstable_copyFileWithImports");
+    return;
+  }
+
   relinka(
     "info",
     `Starting to copy file with imports: ${sourcePath} -> ${outputDir}`,
@@ -3218,15 +3180,16 @@ function getRollupSourcemap(
 
 /**
  * Bundles source files by copying them with all imports.
+ * JSR registry requires *.ts files instead of *.js ones.
  */
-async function bundleUsingCopy(
+async function bundleUsingJsr(
   src: string,
   dest: string,
   baseDir: string,
   isDev: boolean,
   isJsr: boolean,
 ): Promise<void> {
-  relinka("info", `Starting bundleUsingCopy: ${src} -> ${dest}`);
+  relinka("info", `Starting bundleUsingJsr: ${src} -> ${dest}`);
   relinka("info", `Base directory: ${baseDir}`);
   await ensuredir(path.dirname(dest));
   const stats = await fs.stat(src);
@@ -3236,8 +3199,14 @@ async function bundleUsingCopy(
   const isLibBuild = distName.includes("dist-libs");
 
   if (stats.isFile()) {
-    relinka("info", "Source is a file, using copyFileWithImports");
-    await copyFileWithImports(src, path.dirname(dest), baseDir, isDev, isJsr);
+    relinka("info", "Source is a file, using unstable_copyFileWithImports");
+    await unstable_copyFileWithImports(
+      src,
+      path.dirname(dest),
+      baseDir,
+      isDev,
+      isJsr,
+    );
     relinka("verbose", `Copied file with imports from ${src} to ${dest}`);
   } else {
     relinka("info", "Source is a directory, using fs.copy");
@@ -3248,19 +3217,45 @@ async function bundleUsingCopy(
       const libNameMatch = /dist-libs\/([^/]+)\//.exec(distName);
       if (libNameMatch?.[1]) {
         const libName = libNameMatch[1];
-        // Construct the full path to the library directory
-        const libPath = path.join(baseDir, "libs", libName);
 
-        if (await fs.pathExists(libPath)) {
-          relinka(
-            "info",
-            `Library build detected. Copying only ${libPath} to ${dest}`,
-          );
-          await fs.copy(libPath, dest);
+        // Get the config to find the actual directory path
+        const config = await getConfigWithCliFlags(isDev);
+        const libConfig = config.libs?.[`@reliverse/${libName}`];
+
+        if (libConfig?.main) {
+          // Extract the directory from the main file path
+          const mainFilePath = libConfig.main;
+          const libDirMatch = /src\/libs\/([^/]+)\//.exec(mainFilePath);
+
+          if (libDirMatch?.[1]) {
+            const actualLibDir = libDirMatch[1];
+            // Construct the full path to the library directory
+            const libPath = path.join(baseDir, "libs", actualLibDir);
+
+            if (await fs.pathExists(libPath)) {
+              relinka(
+                "info",
+                `Library build detected. Copying ${libPath} to ${dest}`,
+              );
+              await fs.copy(libPath, dest);
+            } else {
+              relinka(
+                "warn",
+                `Library directory ${libPath} not found, falling back to copying ${src}`,
+              );
+              await fs.copy(src, dest);
+            }
+          } else {
+            relinka(
+              "warn",
+              `Could not determine library directory from ${mainFilePath}, falling back to copying ${src}`,
+            );
+            await fs.copy(src, dest);
+          }
         } else {
           relinka(
             "warn",
-            `Library directory ${libPath} not found, falling back to copying ${src}`,
+            `No main file defined for library ${libName}, falling back to copying ${src}`,
           );
           await fs.copy(src, dest);
         }
@@ -3398,9 +3393,258 @@ async function bundleUsingUnified(
 // ============================
 
 /**
+ * Common build steps shared between JSR and NPM distributions
+ */
+async function performCommonBuildSteps({
+  outdirBinResolved,
+  outdirRoot,
+  entryFile,
+  entrySrcDir,
+  isJsr,
+  config,
+  deleteFiles = true,
+}: {
+  outdirBinResolved: string;
+  outdirRoot: string;
+  entryFile: string;
+  entrySrcDir: string;
+  isJsr: boolean;
+  config: BuildPublishConfig;
+  deleteFiles?: boolean;
+}): Promise<void> {
+  // Convert paths and imports
+  await convertSrcToBinPaths(outdirRoot, isJsr);
+  await convertImportPaths({
+    baseDir: outdirBinResolved,
+    fromType: "alias",
+    toType: "relative",
+    aliasPrefix: "~/",
+  });
+
+  // Handle entry file
+  await renameEntryFile(
+    isJsr,
+    outdirBinResolved,
+    entrySrcDir,
+    entryFile,
+    config,
+  );
+
+  // Clean up files if needed
+  if (deleteFiles) {
+    await deleteSpecificFiles(outdirBinResolved);
+  }
+
+  // Generate package.json
+  await createPackageJSON(outdirRoot, isJsr);
+
+  // Copy files from the root directory
+  await copyFileFromRoot(outdirRoot, ["README.md", "LICENSE"]);
+  if (isJsr && config.isCLI) {
+    await copyFileFromRoot(outdirRoot, [
+      ".gitignore",
+      "reliverse.jsonc",
+      "drizzle.config.ts",
+      "schema.json",
+    ]);
+  }
+}
+
+/**
+ * Builds a regular JSR distribution.
+ */
+export async function regular_buildJsrDist(
+  isDev: boolean,
+  argsBuilderConfig: {
+    config?: string;
+    dir?: string;
+    minify?: boolean;
+    parallel?: boolean;
+    sourcemap?: boolean;
+    stub?: boolean;
+    watch?: boolean;
+    ext?: string;
+  },
+  isJsr: boolean,
+): Promise<void> {
+  relinka("info", "Building JSR distribution...");
+  const config = await loadConfig();
+  const { entrySrcDir, jsrDistDir, jsrBuilder, entryFile } = config;
+
+  // Construct the full path to the entry file
+  const entrySrcDirResolved = resolve(process.cwd(), entrySrcDir);
+  const entryFilePath = path.join(entrySrcDirResolved, entryFile);
+
+  const jsrDistDirResolved = resolve(process.cwd(), jsrDistDir);
+  const outdirBinResolved = path.resolve(jsrDistDirResolved, "bin");
+  await ensuredir(jsrDistDirResolved);
+  await ensuredir(outdirBinResolved);
+  relinka("info", `Using JSR builder: ${jsrBuilder}`);
+
+  // Build using the appropriate builder
+  if (jsrBuilder === "jsr") {
+    await bundleUsingJsr(
+      entrySrcDirResolved,
+      outdirBinResolved,
+      entrySrcDirResolved,
+      isDev,
+      isJsr,
+    );
+  } else if (jsrBuilder === "bun") {
+    await bundleUsingBun(config, entryFilePath, outdirBinResolved, "");
+  } else {
+    await bundleUsingUnified(
+      config,
+      entryFilePath,
+      outdirBinResolved,
+      argsBuilderConfig,
+      "mkdist",
+      isJsr,
+    );
+  }
+
+  // Perform common build steps
+  await performCommonBuildSteps({
+    outdirBinResolved,
+    outdirRoot: jsrDistDirResolved,
+    entryFile,
+    entrySrcDir,
+    isJsr,
+    config,
+  });
+
+  await renameTsxFiles(outdirBinResolved);
+  await createJsrJSONC(jsrDistDirResolved, false);
+
+  if (config.isCLI) {
+    await createTSConfig(jsrDistDirResolved, true);
+  }
+
+  const dirSize = await getDirectorySize(jsrDistDirResolved, isDev);
+  const filesCount = await outdirBinFilesCount(outdirBinResolved);
+  relinka(
+    "success",
+    `JSR distribution built successfully (${filesCount} files, ${prettyBytes(dirSize)})`,
+  );
+}
+
+/**
+ * Builds a regular NPM distribution.
+ */
+export async function regular_buildNpmDist(
+  isDev: boolean,
+  argsBuilderConfig: {
+    config?: string;
+    dir?: string;
+    minify?: boolean;
+    parallel?: boolean;
+    sourcemap?: boolean;
+    stub?: boolean;
+    watch?: boolean;
+    ext?: string;
+  },
+): Promise<void> {
+  relinka("info", "Building NPM distribution...");
+  const config = await loadConfig();
+  const { entrySrcDir, npmDistDir, npmBuilder, entryFile } = config;
+
+  // Construct the full path to the entry file
+  const entrySrcDirResolved = resolve(process.cwd(), entrySrcDir);
+  const entryFilePath = path.join(entrySrcDirResolved, entryFile);
+
+  const npmDistDirResolved = resolve(process.cwd(), npmDistDir);
+  const outdirBinResolved = path.resolve(npmDistDirResolved, "bin");
+  await ensuredir(npmDistDirResolved);
+  await ensuredir(outdirBinResolved);
+  relinka("info", `Using NPM builder: ${npmBuilder}`);
+
+  // Validate and build using the appropriate builder
+  if (npmBuilder === "jsr") {
+    await bundleUsingJsr(
+      entrySrcDirResolved,
+      outdirBinResolved,
+      entrySrcDirResolved,
+      isDev,
+      false,
+    );
+  } else if (npmBuilder === "bun") {
+    await bundleUsingBun(config, entryFilePath, outdirBinResolved, "");
+  } else {
+    await bundleUsingUnified(
+      config,
+      entryFilePath,
+      outdirBinResolved,
+      argsBuilderConfig,
+      npmBuilder,
+      false,
+    );
+  }
+
+  // Perform common build steps
+  await performCommonBuildSteps({
+    outdirBinResolved,
+    outdirRoot: npmDistDirResolved,
+    entryFile,
+    entrySrcDir,
+    isJsr: false,
+    config,
+  });
+
+  const dirSize = await getDirectorySize(npmDistDirResolved, isDev);
+  const filesCount = await outdirBinFilesCount(outdirBinResolved);
+  relinka(
+    "success",
+    `NPM distribution built successfully (${filesCount} files, ${prettyBytes(dirSize)})`,
+  );
+}
+
+/**
+ * Common library build steps shared between JSR and NPM distributions
+ */
+async function performCommonLibBuildSteps({
+  libName,
+  entryDir,
+  outdirRoot,
+  outdirBinResolved,
+  isDev,
+  isJsr,
+  deleteFiles = true,
+}: {
+  libName: string;
+  entryDir: string;
+  outdirRoot: string;
+  outdirBinResolved: string;
+  isDev: boolean;
+  isJsr: boolean;
+  deleteFiles?: boolean;
+}): Promise<void> {
+  // First convert library imports to package names
+  await unstable_convertImportPathsToPkgNames(outdirBinResolved, isJsr);
+
+  // Then handle external imports
+  await unstable_copyExternalFilesToAddonsDir(
+    entryDir,
+    outdirBinResolved,
+    isDev,
+    isJsr,
+  );
+
+  // Create library package.json
+  await createLibPackageJSON(libName, outdirRoot, isJsr);
+
+  // Clean up files
+  if (deleteFiles) {
+    await deleteSpecificFiles(outdirBinResolved);
+  }
+
+  // Copy documentation files
+  await copyFileFromRoot(outdirRoot, ["README.md", "LICENSE"]);
+}
+
+/**
  * Builds a lib distribution for JSR.
  */
-async function buildLibJsrDist(
+async function library_buildJsrDist(
   libName: string,
   entryDir: string,
   outdirRoot: string,
@@ -3421,7 +3665,7 @@ async function buildLibJsrDist(
   const distName = determineDistName(outdirRoot, isJsr);
   relinka(
     "verbose",
-    `[${distName}] Starting buildLibJsrDist for lib: ${libName}`,
+    `[${distName}] Starting library_buildJsrDist for lib: ${libName}`,
   );
   const userConfig = await loadConfig();
   const config = { ...userConfig };
@@ -3431,10 +3675,26 @@ async function buildLibJsrDist(
 
   // Get the library-specific source directory
   const libNameSimple = libName.split("/").pop() || libName;
-  const libSrcDir = path.join(entrySrcDirResolved, "libs", libNameSimple);
 
+  // Extract the actual directory from the main file path in the config
+  let libSrcDir = path.join(entrySrcDirResolved, "libs", libNameSimple);
+
+  // Check if we have a main file path in the config
+  const libConfig = config.libs?.[libName];
+  if (libConfig?.main) {
+    const mainFilePath = libConfig.main;
+    const libDirMatch = /src\/libs\/([^/]+)\//.exec(mainFilePath);
+
+    if (libDirMatch?.[1]) {
+      // Use the directory from the main file path
+      const actualLibDir = libDirMatch[1];
+      libSrcDir = path.join(entrySrcDirResolved, "libs", actualLibDir);
+    }
+  }
+
+  // Build using the appropriate builder
   if (config.jsrBuilder === "jsr") {
-    await bundleUsingCopy(
+    await bundleUsingJsr(
       libSrcDir,
       outdirBinResolved,
       entrySrcDirResolved,
@@ -3457,17 +3717,23 @@ async function buildLibJsrDist(
     );
   }
 
-  // First convert library imports to package names
-  await convertImportPathsToPkgNames(outdirBinResolved, isJsr);
+  // Perform common library build steps
+  await performCommonLibBuildSteps({
+    libName,
+    entryDir,
+    outdirRoot,
+    outdirBinResolved,
+    isDev,
+    isJsr,
+  });
 
-  // Then handle external imports
-  await copyExternalFilesToAddonsDir(entryDir, outdirBinResolved, isDev, true);
-
-  await createLibPackageJSON(libName, outdirRoot, true);
-  await createTSConfig(outdirRoot, true);
-  await copyJsrFiles(outdirRoot, true);
+  // JSR-specific steps
+  if (config.isCLI) {
+    await createTSConfig(outdirRoot, true);
+  }
   await createJsrJSONC(outdirRoot, true, libName);
   await renameTsxFiles(outdirBinResolved);
+
   const { updatedEntryFile } = await renameEntryFile(
     true,
     outdirBinResolved,
@@ -3475,19 +3741,21 @@ async function buildLibJsrDist(
     entryFile,
     config,
   );
+
   await replaceImportsExt(outdirBinResolved, ".js", ".ts", {
     isJsr: true,
     replaceSrcWithBin: true,
   });
+
   await convertImportPaths({
     baseDir: outdirBinResolved,
     fromType: "alias",
     toType: "relative",
     aliasPrefix: "~/",
   });
+
   await convertSrcToBinPaths(outdirRoot, true);
-  await deleteSpecificFiles(outdirBinResolved);
-  await deleteRootSpecificFiles(outdirRoot);
+
   const size = await getDirectorySize(outdirRoot, isDev);
 
   relinka(
@@ -3496,14 +3764,14 @@ async function buildLibJsrDist(
   );
   relinka(
     "verbose",
-    `[${distName}] Exiting buildLibJsrDist for lib: ${libName}`,
+    `[${distName}] Exiting library_buildJsrDist for lib: ${libName}`,
   );
 }
 
 /**
  * Builds a lib distribution for NPM.
  */
-async function buildLibNpmDist(
+async function library_buildNpmDist(
   libName: string,
   entryDir: string,
   outdirRoot: string,
@@ -3522,24 +3790,43 @@ async function buildLibNpmDist(
   isJsr: boolean,
 ): Promise<void> {
   const distName = determineDistName(outdirRoot, isJsr);
-  relinka("info", `[${distName}] Building NPM dist for lib: ${libName}...`);
-
+  relinka(
+    "verbose",
+    `[${distName}] Starting library_buildNpmDist for lib: ${libName}`,
+  );
   const userConfig = await loadConfig();
   const config = { ...userConfig };
   const outdirBinResolved = path.resolve(outdirRoot, "bin");
+  relinka("info", `[${distName}] Building NPM dist for lib: ${libName}...`);
   const entrySrcDirResolved = resolve(process.cwd(), config.entrySrcDir);
 
   // Get the library-specific source directory
   const libNameSimple = libName.split("/").pop() || libName;
-  const libSrcDir = path.join(entrySrcDirResolved, "libs", libNameSimple);
 
-  if (config.npmBuilder === "copy") {
-    await bundleUsingCopy(
+  // Extract the actual directory from the main file path in the config
+  let libSrcDir = path.join(entrySrcDirResolved, "libs", libNameSimple);
+
+  // Check if we have a main file path in the config
+  const libConfig = config.libs?.[libName];
+  if (libConfig?.main) {
+    const mainFilePath = libConfig.main;
+    const libDirMatch = /src\/libs\/([^/]+)\//.exec(mainFilePath);
+
+    if (libDirMatch?.[1]) {
+      // Use the directory from the main file path
+      const actualLibDir = libDirMatch[1];
+      libSrcDir = path.join(entrySrcDirResolved, "libs", actualLibDir);
+    }
+  }
+
+  // Build using the appropriate builder
+  if (config.npmBuilder === "jsr") {
+    await bundleUsingJsr(
       libSrcDir,
       outdirBinResolved,
       entrySrcDirResolved,
       isDev,
-      isJsr,
+      false,
     );
   } else if (config.npmBuilder === "bun") {
     await bundleUsingBun(config, entryFile, outdirBinResolved, libName);
@@ -3557,17 +3844,17 @@ async function buildLibNpmDist(
     );
   }
 
-  // First convert library imports to package names
-  await convertImportPathsToPkgNames(outdirBinResolved, isJsr);
+  // Perform common library build steps
+  await performCommonLibBuildSteps({
+    libName,
+    entryDir,
+    outdirRoot,
+    outdirBinResolved,
+    isDev,
+    isJsr: false,
+  });
 
-  // Then handle external imports
-  await copyExternalFilesToAddonsDir(entryDir, outdirBinResolved, isDev, false);
-
-  await createLibPackageJSON(libName, outdirRoot, false);
-
-  await copyFileFromRoot("README.md", outdirRoot);
-  await copyFileFromRoot("LICENSE", outdirRoot);
-
+  // NPM-specific steps
   const { updatedEntryFile } = await renameEntryFile(
     false,
     outdirBinResolved,
@@ -3575,19 +3862,21 @@ async function buildLibNpmDist(
     entryFile,
     config,
   );
+
   await replaceImportsExt(outdirBinResolved, ".js", ".js", {
     isJsr: false,
     replaceSrcWithBin: false,
   });
+
   await convertImportPaths({
     baseDir: outdirBinResolved,
     fromType: "alias",
     toType: "relative",
     aliasPrefix: "~/",
   });
+
   await convertSrcToBinPaths(outdirRoot, false);
-  await deleteSpecificFiles(outdirBinResolved);
-  await deleteRootSpecificFiles(outdirRoot);
+
   const size = await getDirectorySize(outdirRoot, isDev);
 
   relinka(
@@ -3596,14 +3885,14 @@ async function buildLibNpmDist(
   );
   relinka(
     "verbose",
-    `[${distName}] Exiting buildLibNpmDist for lib: ${libName}`,
+    `[${distName}] Exiting library_buildNpmDist for lib: ${libName}`,
   );
 }
 
 /**
  * Publishes a lib to JSR.
  */
-async function publishLibToJsr(
+async function library_pubToJsr(
   libOutDir: string,
   dryRun: boolean,
   libName: string,
@@ -3638,13 +3927,13 @@ async function publishLibToJsr(
 /**
  * Publishes a lib to NPM.
  */
-async function publishLibToNpm(
+async function library_pubToNpm(
   libOutDir: string,
   dryRun: boolean,
   libName: string,
   isDev: boolean,
 ): Promise<void> {
-  relinka("verbose", `Starting publishLibToNpm for lib: ${libName}`);
+  relinka("verbose", `Starting library_pubToNpm for lib: ${libName}`);
   if (isDev) {
     relinka("info", `Skipping lib ${libName} NPM publish in development mode`);
     return;
@@ -3660,13 +3949,13 @@ async function publishLibToNpm(
       `Successfully ${dryRun ? "validated" : "published"} lib ${libName} to NPM`,
     );
   });
-  relinka("verbose", `Exiting publishLibToNpm for lib: ${libName}`);
+  relinka("verbose", `Exiting library_pubToNpm for lib: ${libName}`);
 }
 
 /**
  * Processes all libs defined in config.libs.
  */
-export async function buildPublishLibs(
+export async function libraries_buildPublish(
   isDev: boolean,
   argsBuilderConfig: {
     config?: string;
@@ -3679,7 +3968,7 @@ export async function buildPublishLibs(
     ext?: string;
   },
 ): Promise<void> {
-  relinka("verbose", "Starting buildPublishLibs");
+  relinka("verbose", "Starting libraries_buildPublish");
   const config = await loadConfig();
 
   if (!config.libs || Object.keys(config.libs).length === 0) {
@@ -3711,35 +4000,60 @@ export async function buildPublishLibs(
     const mainPath = path.parse(libConfig.main);
     const mainFile = mainPath.base;
     const mainDir = mainPath.dir || ".";
-    await buildLibNpmDist(
-      libName,
-      mainDir,
-      npmOutDir,
-      mainFile,
-      isDev,
-      argsBuilderConfig,
-      false,
-    );
-    await buildLibJsrDist(
-      libName,
-      mainDir,
-      jsrOutDir,
-      mainFile,
-      isDev,
-      argsBuilderConfig,
-      true,
-    );
+    if (config.registry === "npm-jsr") {
+      relinka("info", `Building lib ${libName} for NPM and JSR...`);
+      await library_buildNpmDist(
+        libName,
+        mainDir,
+        npmOutDir,
+        mainFile,
+        isDev,
+        argsBuilderConfig,
+        false,
+      );
+      await library_buildJsrDist(
+        libName,
+        mainDir,
+        jsrOutDir,
+        mainFile,
+        isDev,
+        argsBuilderConfig,
+        false,
+      );
+    } else if (config.registry === "npm") {
+      relinka("info", `Building lib ${libName} for NPM...`);
+      await library_buildNpmDist(
+        libName,
+        mainDir,
+        npmOutDir,
+        mainFile,
+        isDev,
+        argsBuilderConfig,
+        false,
+      );
+    } else if (config.registry === "jsr") {
+      relinka("info", `Building lib ${libName} for JSR...`);
+      await library_buildJsrDist(
+        libName,
+        mainDir,
+        jsrOutDir,
+        mainFile,
+        isDev,
+        argsBuilderConfig,
+        true,
+      );
+    }
     if (!config.pausePublish) {
       if (config.registry === "npm-jsr") {
         relinka("info", `Publishing lib ${libName} to both NPM and JSR...`);
-        await publishLibToNpm(npmOutDir, dry, libName, isDev);
-        await publishLibToJsr(jsrOutDir, dry, libName, isDev);
+        await library_pubToNpm(npmOutDir, dry, libName, isDev);
+        await library_pubToJsr(jsrOutDir, dry, libName, isDev);
       } else if (config.registry === "npm") {
         relinka("info", `Publishing lib ${libName} to NPM only...`);
-        await publishLibToNpm(npmOutDir, dry, libName, isDev);
+        await library_pubToNpm(npmOutDir, dry, libName, isDev);
       } else if (config.registry === "jsr") {
         relinka("info", `Publishing lib ${libName} to JSR only...`);
-        await publishLibToJsr(jsrOutDir, dry, libName, isDev);
+        await library_pubToJsr(jsrOutDir, dry, libName, isDev);
       } else {
         relinka(
           "info",
@@ -3749,254 +4063,7 @@ export async function buildPublishLibs(
     }
   });
   await pAll(tasks, { concurrency: 2 });
-  relinka("verbose", "Completed buildPublishLibs");
-}
-
-// ============================
-// Main Project Build Functions
-// ============================
-
-/**
- * Builds the JSR distribution.
- */
-export async function buildRegularJsrDist(
-  isDev: boolean,
-  argsBuilderConfig: {
-    config?: string;
-    dir?: string;
-    minify?: boolean;
-    parallel?: boolean;
-    sourcemap?: boolean;
-    stub?: boolean;
-    watch?: boolean;
-    ext?: string;
-  },
-  isJsr: boolean,
-): Promise<void> {
-  relinka("info", "Building JSR distribution...");
-  const config = await loadConfig();
-  const { entrySrcDir, jsrDistDir, jsrBuilder, entryFile } = config;
-
-  // Construct the full path to the entry file
-  const entrySrcDirResolved = resolve(process.cwd(), entrySrcDir);
-  const entryFilePath = path.join(entrySrcDirResolved, entryFile);
-
-  const jsrDistDirResolved = resolve(process.cwd(), jsrDistDir);
-  const outdirBinResolved = path.resolve(jsrDistDirResolved, "bin");
-  await ensuredir(jsrDistDirResolved);
-  await ensuredir(outdirBinResolved);
-  relinka("info", `Using JSR builder: ${jsrBuilder}`);
-  if (jsrBuilder === "jsr") {
-    await bundleUsingCopy(
-      entrySrcDirResolved,
-      outdirBinResolved,
-      entrySrcDirResolved,
-      isDev,
-      isJsr,
-    );
-    await convertSrcToBinPaths(jsrDistDirResolved, true);
-    await convertImportPaths({
-      baseDir: outdirBinResolved,
-      fromType: "alias",
-      toType: "relative",
-      aliasPrefix: "~/",
-    });
-    await copyExternalFilesToAddonsDir(
-      entrySrcDirResolved,
-      outdirBinResolved,
-      isDev,
-      true,
-    );
-    await renameEntryFile(
-      true,
-      outdirBinResolved,
-      entrySrcDir,
-      entryFile,
-      config,
-    );
-    await deleteSpecificFiles(outdirBinResolved);
-    await deleteRootSpecificFiles(jsrDistDirResolved);
-    await createPackageJSON(jsrDistDirResolved, true);
-    await createTSConfig(jsrDistDirResolved, true);
-    await renameTsxFiles(outdirBinResolved);
-    await copyJsrFiles(jsrDistDirResolved, true);
-    await createJsrJSONC(jsrDistDirResolved, false);
-  } else if (jsrBuilder === "bun") {
-    await bundleUsingBun(config, entryFilePath, outdirBinResolved, "");
-    await convertSrcToBinPaths(jsrDistDirResolved, true);
-    await convertImportPaths({
-      baseDir: outdirBinResolved,
-      fromType: "alias",
-      toType: "relative",
-      aliasPrefix: "~/",
-    });
-    await copyExternalFilesToAddonsDir(
-      entrySrcDirResolved,
-      outdirBinResolved,
-      isDev,
-      true,
-    );
-    await renameEntryFile(
-      true,
-      outdirBinResolved,
-      entrySrcDir,
-      entryFile,
-      config,
-    );
-    await deleteSpecificFiles(outdirBinResolved);
-    await deleteRootSpecificFiles(jsrDistDirResolved);
-    await createPackageJSON(jsrDistDirResolved, true);
-    await createTSConfig(jsrDistDirResolved, true);
-    await renameTsxFiles(outdirBinResolved);
-  } else {
-    await bundleUsingUnified(
-      config,
-      entryFilePath,
-      outdirBinResolved,
-      argsBuilderConfig,
-      "mkdist",
-      isJsr,
-    );
-    await convertSrcToBinPaths(jsrDistDirResolved, true);
-    await convertImportPaths({
-      baseDir: outdirBinResolved,
-      fromType: "alias",
-      toType: "relative",
-      aliasPrefix: "~/",
-    });
-    await copyExternalFilesToAddonsDir(
-      entrySrcDirResolved,
-      outdirBinResolved,
-      isDev,
-      true,
-    );
-    await renameEntryFile(
-      true,
-      outdirBinResolved,
-      entrySrcDir,
-      entryFile,
-      config,
-    );
-    await deleteSpecificFiles(outdirBinResolved);
-    await deleteRootSpecificFiles(jsrDistDirResolved);
-    await createPackageJSON(jsrDistDirResolved, true);
-    await createTSConfig(jsrDistDirResolved, true);
-    await renameTsxFiles(outdirBinResolved);
-  }
-
-  await copyFileFromRoot("README.md", jsrDistDirResolved);
-  await copyFileFromRoot("LICENSE", jsrDistDirResolved);
-
-  const dirSize = await getDirectorySize(jsrDistDirResolved, isDev);
-  const filesCount = await outdirBinFilesCount(outdirBinResolved);
-  relinka(
-    "success",
-    `JSR distribution built successfully (${filesCount} files, ${prettyBytes(dirSize)})`,
-  );
-}
-
-/**
- * Builds the NPM distribution.
- */
-export async function buildRegularNpmDist(
-  isDev: boolean,
-  argsBuilderConfig: {
-    config?: string;
-    dir?: string;
-    minify?: boolean;
-    parallel?: boolean;
-    sourcemap?: boolean;
-    stub?: boolean;
-    watch?: boolean;
-    ext?: string;
-  },
-): Promise<void> {
-  relinka("info", "Building NPM distribution...");
-  const config = await loadConfig();
-  const { entrySrcDir, npmDistDir, npmBuilder, entryFile } = config;
-
-  // Construct the full path to the entry file
-  const entrySrcDirResolved = resolve(process.cwd(), entrySrcDir);
-  const entryFilePath = path.join(entrySrcDirResolved, entryFile);
-
-  const npmDistDirResolved = resolve(process.cwd(), npmDistDir);
-  const outdirBinResolved = path.resolve(npmDistDirResolved, "bin");
-  await ensuredir(npmDistDirResolved);
-  await ensuredir(outdirBinResolved);
-  relinka("info", `Using NPM builder: ${npmBuilder}`);
-  if (npmBuilder === "bun") {
-    await bundleUsingBun(config, entryFilePath, outdirBinResolved, "");
-    await convertSrcToBinPaths(npmDistDirResolved, false);
-    await convertImportPaths({
-      baseDir: outdirBinResolved,
-      fromType: "alias",
-      toType: "relative",
-      aliasPrefix: "~/",
-    });
-    await copyExternalFilesToAddonsDir(
-      entrySrcDirResolved,
-      outdirBinResolved,
-      isDev,
-      false,
-    );
-    await renameEntryFile(
-      false,
-      outdirBinResolved,
-      entrySrcDir,
-      entryFile,
-      config,
-    );
-    await deleteSpecificFiles(outdirBinResolved);
-    await deleteRootSpecificFiles(npmDistDirResolved);
-    await createPackageJSON(npmDistDirResolved, false);
-  } else {
-    if (npmBuilder === "jsr") {
-      throw new Error("jsr builder not supported for npm distribution");
-    }
-    await bundleUsingUnified(
-      config,
-      entryFilePath,
-      outdirBinResolved,
-      argsBuilderConfig,
-      npmBuilder,
-      false,
-    );
-    await convertSrcToBinPaths(npmDistDirResolved, false);
-    await convertImportPaths({
-      baseDir: outdirBinResolved,
-      fromType: "alias",
-      toType: "relative",
-      aliasPrefix: "~/",
-    });
-    await copyExternalFilesToAddonsDir(
-      entrySrcDirResolved,
-      outdirBinResolved,
-      isDev,
-      false,
-    );
-    await renameEntryFile(
-      false,
-      outdirBinResolved,
-      entrySrcDir,
-      entryFile,
-      config,
-    );
-    await deleteSpecificFiles(outdirBinResolved);
-    await deleteRootSpecificFiles(npmDistDirResolved);
-    await createPackageJSON(npmDistDirResolved, false);
-    await copyFileFromRoot("README.md", npmDistDirResolved);
-    await copyFileFromRoot("LICENSE", npmDistDirResolved);
-  }
-
-  await copyFileFromRoot("README.md", npmDistDirResolved);
-  await copyFileFromRoot("LICENSE", npmDistDirResolved);
-
-  const dirSize = await getDirectorySize(npmDistDirResolved, isDev);
-  const filesCount = await outdirBinFilesCount(outdirBinResolved);
-  relinka(
-    "success",
-    `NPM distribution built successfully (${filesCount} files, ${prettyBytes(dirSize)})`,
-  );
+  relinka("verbose", "Completed libraries_buildPublish");
 }
 
 export async function relidler({
@@ -4078,31 +4145,31 @@ export async function relidler({
           "info",
           "Initializing build process for main project to both NPM and JSR...",
         );
-        await buildRegularJsrDist(isDev, argsBuilderConfig, true);
-        await buildRegularNpmDist(isDev, argsBuilderConfig);
-        await publishToJsr(dry, isDev);
-        await publishToNpm(dry, isDev);
+        await regular_buildJsrDist(isDev, argsBuilderConfig, true);
+        await regular_buildNpmDist(isDev, argsBuilderConfig);
+        await regular_pubToJsr(dry, isDev);
+        await regular_pubToNpm(dry, isDev);
       } else if (registry === "npm") {
         relinka(
           "info",
           "Initializing build process for main project to NPM only...",
         );
-        await buildRegularNpmDist(isDev, argsBuilderConfig);
-        await publishToNpm(dry, isDev);
+        await regular_buildNpmDist(isDev, argsBuilderConfig);
+        await regular_pubToNpm(dry, isDev);
       } else if (registry === "jsr") {
         relinka(
           "info",
           "Initializing build process for main project to JSR only...",
         );
-        await buildRegularJsrDist(isDev, argsBuilderConfig, true);
-        await publishToJsr(dry, isDev);
+        await regular_buildJsrDist(isDev, argsBuilderConfig, true);
+        await regular_pubToJsr(dry, isDev);
       } else {
         relinka(
           "warn",
           `Registry "${registry}" not recognized. Building main project only...`,
         );
-        await buildRegularNpmDist(isDev, argsBuilderConfig);
-        await buildRegularJsrDist(isDev, argsBuilderConfig, true);
+        await regular_buildNpmDist(isDev, argsBuilderConfig);
+        await regular_buildJsrDist(isDev, argsBuilderConfig, true);
       }
     } else {
       relinka(
@@ -4116,7 +4183,7 @@ export async function relidler({
       buildPublishMode === "libs-only" ||
       buildPublishMode === "main-and-libs"
     ) {
-      await buildPublishLibs(isDev, argsBuilderConfig);
+      await libraries_buildPublish(isDev, argsBuilderConfig);
     } else {
       relinka(
         "info",
