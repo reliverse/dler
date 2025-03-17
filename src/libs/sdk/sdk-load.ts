@@ -16,7 +16,6 @@ export async function loadConfig(): Promise<BuildPublishConfig> {
     "relidler.cfg.ts",
     "build.pub.ts",
     "build.cfg.ts",
-    "build.config.ts",
     "relidler.config.ts",
   ];
 

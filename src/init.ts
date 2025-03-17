@@ -35,12 +35,12 @@ import { defineConfig } from "@reliverse/relidler";`;
   const libsObject = isDev
     ? `{
   "@reliverse/relidler-cfg": {
-    main: "src/libs/cfg/cfg-main.ts",
+    main: "cfg/cfg-main.ts",
     description: "@reliverse/relidler defineConfig",
     dependencies: ["pathe"]
   },
   "@reliverse/relidler-sdk": {
-    main: "src/libs/sdk/sdk-main.ts",
+    main: "sdk/sdk-main.ts",
     description: "@reliverse/relidler without cli",
     dependencies: true
   }
@@ -100,12 +100,16 @@ export default defineConfig({
   format: "${DEFAULT_CONFIG.format}",
 
   // Dependency filtering
+  excludeMode: "${DEFAULT_CONFIG.excludeMode}",
   excludedDependencyPatterns: ${excludedDependencyPatternsValue},
 
+  // Libraries Relidler Plugin
   // Publish specific dirs as separate packages
   // This feature is experimental at the moment
   // Please commit your changes before using it
   buildPublishMode: "${buildPublishModeValue}",
+  libsDistDir: "${DEFAULT_CONFIG.libsDistDir}",
+  libsSrcDir: "${DEFAULT_CONFIG.libsSrcDir}",
   libs: ${libsObject},
 });
 `;

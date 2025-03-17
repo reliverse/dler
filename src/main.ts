@@ -3,7 +3,7 @@ import { defineCommand, errorHandler, runMain } from "@reliverse/prompts";
 const main = defineCommand({
   meta: {
     name: "relidler",
-    version: "1.0.4",
+    version: "1.0.6",
     description: "https://docs.reliverse.org",
   },
   subCommands: {

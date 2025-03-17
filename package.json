@@ -1,7 +1,7 @@
 {
   "name": "@reliverse/relidler",
   "author": "reliverse",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "type": "module",
   "license": "MIT",
   "description": "@reliverse/relidler is a flexible unified bundler and NPM/JSR publish tool for TypeScript and JavaScript projects.",

@@ -13,7 +13,7 @@ export default defineConfig({
   isCLI: true,
 
   // Publishing options
-  registry: "jsr",
+  registry: "npm-jsr",
   pausePublish: false,
   dryRun: false,
 
@@ -43,6 +43,7 @@ export default defineConfig({
   format: "esm",
 
   // Dependency filtering
+  excludeMode: "patterns-and-devdeps",
   excludedDependencyPatterns: [
     "@types",
     "biome",
@@ -53,18 +54,21 @@ export default defineConfig({
     "@reliverse/config",
   ],
 
+  // Libraries Relidler Plugin
   // Publish specific dirs as separate packages
   // This feature is experimental at the moment
   // Please commit your changes before using it
-  buildPublishMode: "main-and-libs",
+  buildPublishMode: "main-project-only",
+  libsDistDir: "dist-libs",
+  libsSrcDir: "src/libs",
   libs: {
     "@reliverse/relidler-cfg": {
-      main: "src/libs/cfg/cfg-main.ts",
+      main: "cfg/cfg-main.ts",
       description: "@reliverse/relidler defineConfig",
       dependencies: ["pathe"],
     },
     "@reliverse/relidler-sdk": {
-      main: "src/libs/sdk/sdk-main.ts",
+      main: "sdk/sdk-main.ts",
       description: "@reliverse/relidler without cli",
       dependencies: true,
     },

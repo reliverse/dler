@@ -1,26 +1,37 @@
-# Reliverse Relidler
+# Relidler: Reliverse Bundler
 
 [📦 NPM](https://npmjs.com/@reliverse/relidler) • [💬 Discord](https://discord.gg/Pb8uKbwpsJ) • [💖 Patreon](https://patreon.com/blefnk) • [📚 Docs](https://docs.reliverse.org)
 
-@reliverse/relidler is a flexible unified bundler and NPM/JSR publish tool for TypeScript and JavaScript projects.
+**@reliverse/relidler** is a flexible, unified bundler and NPM/JSR publishing tool for TypeScript and JavaScript projects.
 
 ## Features
 
 - Drop-in replacement for `unbuild` 😘
 - `relidler` works via CLI or as a lib
 - Automates publishing to NPM and JSR
-- No more package.json headaches, yep
+- No more package.json headaches
 - Handles version bumps automatically
 - Ensures reliable builds for JS/TS projects
 - Optimized for speed and modern workflows
-- Path conversion and symbol resolution
-- Flexible configuration options
+- Supports path conversion and symbol resolution
+- Highly configurable via an optional config file
 
-## Installation
+## Getting Started
 
-Ensure [git](https://git-scm.com/downloads), [node.js](https://nodejs.org), and [bun](https://bun.sh)/[pnpm](https://pnpm.io)/[yarn](https://yarnpkg.com)/[npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) are installed. Then:
+Ensure [Git](https://git-scm.com/downloads), [Node.js](https://nodejs.org), and [Bun](https://bun.sh)/[pnpm](https://pnpm.io)/[Yarn](https://yarnpkg.com)/[npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) are installed. Then:
 
-### CLI Usage
+### Example Playground
+
+Want to try Relidler before using it in your own project? Just clone the repo and let Relidler build itself!
+
+```sh
+git clone https://github.com/reliverse/relidler.git
+cd relidler
+bun i
+bun dev # bun src/main.ts cli --dev
+```
+
+### Relidler CLI Usage
 
 1. Install globally:
 
@@ -28,25 +39,33 @@ Ensure [git](https://git-scm.com/downloads), [node.js](https://nodejs.org), and 
     bun i -g @reliverse/relidler
     ```
 
-2. Generate optional config (recommended):
+2. Generate a config (recommended):
 
     ```sh
     bun add -D @reliverse/relidler-cfg # (⚠️soon)
     relidler init
     ```
 
-3. Run and enjoy:
+    Supported config files: relidler.cfg.ts, relidler.config.ts, build.cfg.ts, build.config.ts (⚠️soon), build.pub.ts
+
+3. Run and enjoy the magic:
 
     ```sh
     relidler cli
     ```
 
-### API Usage (for advanced users) (⚠️soon)
+## Plugins
 
-Extend your own CLI functionality via:
+Relidler includes a plugin system. The following built-in plugin is already available:
+
+- `libraries-relidler-plugin`: Builds and publishes specified directories of the main project's source directory as separate packages.
+
+### API (for advanced users)
+
+Build a new Relidler plugin or extend your own CLI functionality with:
 
 ```sh
-bun add -D @reliverse/relidler-sdk
+bun add -D @reliverse/relidler-sdk # (⚠️soon)
 ```
 
 ## Related

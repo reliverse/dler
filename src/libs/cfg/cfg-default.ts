@@ -41,6 +41,7 @@ export const DEFAULT_CONFIG: BuildPublishConfig = {
   format: "esm",
 
   // Dependency filtering
+  excludeMode: "patterns-and-devdeps",
   excludedDependencyPatterns: [
     "@types",
     "biome",
@@ -51,9 +52,12 @@ export const DEFAULT_CONFIG: BuildPublishConfig = {
     "@reliverse/config",
   ],
 
+  // Libraries Relidler Plugin
   // Publish specific dirs as separate packages
   // This feature is experimental at the moment
   // Please commit your changes before using it
   buildPublishMode: "main-project-only",
+  libsDistDir: "dist-libs",
+  libsSrcDir: "src/libs",
   libs: {},
 };
