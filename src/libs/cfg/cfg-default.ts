@@ -35,7 +35,6 @@ export const DEFAULT_CONFIG: BuildPublishConfig = {
   // Build setup
   minify: true,
   splitting: false,
-  parallel: false,
   stub: false,
   watch: false,
   sourcemap: "none",

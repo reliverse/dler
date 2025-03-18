@@ -79,6 +79,7 @@ const tsconfigJson = "tsconfig.json";
 const cliDomainDocs = "https://docs.reliverse.org";
 
 const PROJECT_ROOT = path.resolve(process.cwd());
+const validExtensions: NpmOutExt[] = ["cjs", "js", "mjs", "ts", "mts", "cts"];
 const TEST_FILE_PATTERNS = [
   "**/*.test.js",
   "**/*.test.ts",
@@ -280,8 +281,6 @@ export async function removeDistFolders(
   libsDistDir: string,
   libs: Record<string, LibConfig>,
 ): Promise<boolean> {
-  relinka("verbose", "Starting removeDistFolders");
-
   // Determine folders to remove based on config or use defaults
   const foldersToRemove: string[] = [];
   foldersToRemove.push(npmDistDir);
@@ -319,7 +318,6 @@ export async function removeDistFolders(
     relinka("success", "Distribution folders removed successfully");
   }
 
-  relinka("verbose", "Exiting removeDistFolders");
   return true;
 }
 
@@ -338,7 +336,6 @@ async function findFileCaseInsensitive(
 
 /**
  * Copies specified files from the root directory to the output directory.
- * Handles special cases for certain files and supports parallel processing.
  */
 async function copyFileFromRoot(
   outdirRoot: string,
@@ -370,7 +367,7 @@ async function copyFileFromRoot(
       },
     };
 
-    // Process files in parallel with concurrency limit
+    // Process files in parallel
     await pMap(
       fileNames,
       async (fileName) => {
@@ -1474,8 +1471,11 @@ async function regular_bundleUsingBun(
   sourcemap: Sourcemap,
   publicPath: string,
   packageName = "",
+  timer?: Timer,
 ): Promise<void> {
-  const startTime = performance.now();
+  // Create a timer if none is provided
+  const localTimer = timer || createTimer();
+
   relinka(
     "verbose",
     `Bundling regular project using Bun for ${packageName || "main project"} (entry: ${entryFile}, outdir: ${outdirBin})`,
@@ -1512,7 +1512,8 @@ async function regular_bundleUsingBun(
       drop: ["debugger"],
     });
 
-    const duration = performance.now() - startTime;
+    // Calculate and log build duration
+    const duration = getElapsedTime(localTimer);
     const formattedDuration = prettyMilliseconds(duration, { verbose: true });
     relinka(
       "success",
@@ -1556,8 +1557,11 @@ async function library_bundleUsingBun(
   minify: boolean,
   sourcemap: Sourcemap,
   publicPath: string,
+  timer?: Timer,
 ): Promise<void> {
-  const startTime = performance.now();
+  // Create a timer if none is provided
+  const localTimer = timer || createTimer();
+
   relinka(
     "verbose",
     `Bundling library using Bun for ${libName} (entry: ${entryFile}, outdir: ${outdirBin})`,
@@ -1594,7 +1598,8 @@ async function library_bundleUsingBun(
       drop: ["debugger"],
     });
 
-    const duration = performance.now() - startTime;
+    // Calculate and log build duration
+    const duration = getElapsedTime(localTimer);
     const formattedDuration = prettyMilliseconds(duration, { verbose: true });
     relinka(
       "success",
@@ -2833,32 +2838,56 @@ async function renameEntryFile(
     "verbose",
     `Renaming entry file. Original: ${entryFile} (isJsr=${isJsr})`,
   );
+
+  // Get the base filename without directory path
+  const entryBasename = path.basename(entryFile);
+  // Convert to output extension
+  const outExt = npmOutFilesExt || "js";
+  const jsEntryFile = entryBasename.replace(/\.tsx?$/, `.${outExt}`);
+  const entryFileNoExt = jsEntryFile.split(".").slice(0, -1).join(".");
+
+  // First check if the entry file exists in the output directory
+  if (!(await fs.pathExists(path.join(outdirBin, jsEntryFile)))) {
+    relinka(
+      "warn",
+      `Entry file not found for renaming: ${path.join(outdirBin, jsEntryFile)}. Skipping rename operation.`,
+    );
+    return { updatedEntryFile: jsEntryFile };
+  }
+
+  // Handle declaration files if they exist
   if (!isJsr) {
-    const outExt = npmOutFilesExt || "js";
-    entryFile = entryFile.replace(".ts", `.${outExt}`);
-    const entryFileNoExt = entryFile.split(".").slice(0, -1).join(".");
-    if (await fs.pathExists(path.join(outdirBin, `${entryFileNoExt}.d.ts`))) {
-      await fs.rename(
-        path.join(outdirBin, `${entryFileNoExt}.d.ts`),
-        path.join(outdirBin, "main.d.ts"),
-      );
+    const declarationPath = path.join(outdirBin, `${entryFileNoExt}.d.ts`);
+    if (await fs.pathExists(declarationPath)) {
+      await fs.rename(declarationPath, path.join(outdirBin, "main.d.ts"));
     }
   }
+
+  // Rename the main file
   if (!isJsr) {
-    const outExt = npmOutFilesExt || "js";
     await fs.rename(
-      path.join(outdirBin, entryFile),
+      path.join(outdirBin, jsEntryFile),
       path.join(outdirBin, `main.${outExt}`),
     );
     entryFile = `main.${outExt}`;
-  } else if (entryFile.endsWith(".ts")) {
-    await fs.rename(
-      path.join(outdirBin, entryFile),
-      path.join(outdirBin, "main.ts"),
-    );
-    entryFile = "main.ts";
+  } else if (entryBasename.endsWith(".ts")) {
+    // For JSR, keep TypeScript extension
+    if (await fs.pathExists(path.join(outdirBin, entryBasename))) {
+      await fs.rename(
+        path.join(outdirBin, entryBasename),
+        path.join(outdirBin, "main.ts"),
+      );
+      entryFile = "main.ts";
+    } else {
+      relinka(
+        "warn",
+        `JSR entry file not found for renaming: ${path.join(outdirBin, entryBasename)}. Skipping rename operation.`,
+      );
+      entryFile = entryBasename;
+    }
   }
-  relinka("info", `Renamed entry file to ${entryDir + entryFile}`);
+
+  relinka("info", `Renamed entry file to ${path.join(entryDir, entryFile)}`);
   return { updatedEntryFile: entryFile };
 }
 
@@ -2872,15 +2901,49 @@ function detectCurrentLibrary(
 ): string | undefined {
   if (!libs) return undefined;
 
+  // Normalize path for matching (replace Windows backslashes with forward slashes)
+  const normalizedBaseDir = baseDir.replace(/\\/g, "/");
+
+  // Extract the dist-libs part from the path
+  const distMatch = /dist-libs\/([^/]+)\//.exec(normalizedBaseDir);
+  if (!distMatch?.[1]) return undefined;
+
+  const distLibName = distMatch[1];
+
   for (const [libName, libConfig] of Object.entries(libs)) {
-    const libDirName = path.basename(path.dirname(libConfig.main));
+    // Get the simple name without any scope
+    const libNameSimple = libName.split("/").pop() || libName;
+    // Get the directory from the lib's main path
+    const mainDir = path.dirname(libConfig.main);
+    // Extract just the lib dir name from the main path
+    const libDirName = path.basename(mainDir);
+
+    // Check for exact matches (simple cases)
+    if (distLibName === libNameSimple || distLibName === libDirName) {
+      relinka(
+        "verbose",
+        `[${distName}] Detected current library (exact match) for import analysis: ${libName} for path: ${baseDir}`,
+      );
+      return libName;
+    }
+
+    // Check for prefixed pattern matches
+    // For libraries like "relidler-cfg" where "cfg" is the actual directory name
+    const libPartAfterDash = libNameSimple.split("-").pop();
+    const distPartAfterDash = distLibName.split("-").pop();
+
     if (
-      baseDir.includes(`/dist-libs/${libDirName}/`) ||
-      baseDir.includes(`\\dist-libs\\${libDirName}\\`)
+      // Package name like "relidler-cfg" matches dist folder "relidler-cfg"
+      (libNameSimple.includes("-") && distLibName === libNameSimple) ||
+      // Main directory like "cfg" matches dist folder "relidler-cfg" after dash
+      (libPartAfterDash &&
+        distPartAfterDash &&
+        (libDirName === distPartAfterDash ||
+          libPartAfterDash === distPartAfterDash))
     ) {
       relinka(
         "verbose",
-        `[${distName}] Detected current library for import analysis: ${libName} for path: ${baseDir}`,
+        `[${distName}] Detected current library (with prefix) for import analysis: ${libName} for path: ${baseDir}`,
       );
       return libName;
     }
@@ -3121,17 +3184,19 @@ async function regular_bundleUsingUnified(
   esbuild: string,
   minify: boolean,
   sourcemap: Sourcemap,
+  timer?: Timer,
 ): Promise<void> {
+  // Create a timer if none is provided
+  const localTimer = timer || createTimer();
+
   try {
     relinka(
       "verbose",
       `Starting regular_bundleUsingUnified with builder: ${builder}`,
     );
     const rootDir = resolve(process.cwd(), entrySrcDir || ".");
-    const startTime = performance.now();
 
     // Validate and normalize the output file extension
-    const validExtensions = ["cjs", "js", "mjs", "ts", "mts", "cts"];
     if (!validExtensions.includes(npmOutFilesExt)) {
       relinka(
         "warn",
@@ -3181,7 +3246,8 @@ async function regular_bundleUsingUnified(
 
     await unifiedBuild(rootDir, stub, unifiedBuildConfig, outdirBin);
 
-    const duration = performance.now() - startTime;
+    // Calculate and log build duration
+    const duration = getElapsedTime(localTimer);
     const formattedDuration = prettyMilliseconds(duration, { verbose: true });
     relinka(
       "success",
@@ -3213,7 +3279,6 @@ async function library_bundleUsingUnified(
   entryFile: string,
   outdirBin: string,
   builder: "rollup" | "untyped" | "mkdist" | "copy",
-  isJsr: boolean,
   entrySrcDir: string,
   npmOutFilesExt: NpmOutExt,
   stub: boolean,
@@ -3221,18 +3286,23 @@ async function library_bundleUsingUnified(
   esbuild: string,
   minify: boolean,
   sourcemap: Sourcemap,
+  timer?: Timer,
+  libs?: Record<string, LibConfig>,
 ): Promise<void> {
+  // Create a timer if none is provided
+  const localTimer = timer || createTimer();
+
   try {
     relinka(
       "verbose",
       `Starting library_bundleUsingUnified with builder: ${builder}`,
     );
     const rootDir = resolve(process.cwd(), entrySrcDir || ".");
-    const startTime = performance.now();
 
-    // Extract the library name from the distName
-    const distName = determineDistName(outdirBin, isJsr);
-    const libNameMatch = /dist-libs\/([^/]+)\//.exec(distName);
+    // Extract the library name from the path
+    // Normalize path for regex processing (replace Windows backslashes with forward slashes)
+    const normalizedPath = outdirBin.replace(/\\/g, "/");
+    const libNameMatch = /dist-libs\/([^/]+)\//.exec(normalizedPath);
 
     if (!libNameMatch?.[1]) {
       throw new Error(
@@ -3240,11 +3310,78 @@ async function library_bundleUsingUnified(
       );
     }
 
-    const libName = libNameMatch[1];
+    // The distribution directory name which may contain a prefix
+    const distLibName = libNameMatch[1];
 
-    // Construct the full path to the library directory
-    const entrySrcDirResolved = resolve(process.cwd(), entrySrcDir);
-    const libSrcDir = path.join(entrySrcDirResolved, "libs", libName);
+    // Look for a matching library in the config if available
+    let libName = "";
+    let libSrcDir = "";
+
+    if (libs) {
+      for (const [pkgName, config] of Object.entries(libs)) {
+        const mainPath = config.main;
+        const simpleLibName = pkgName.split("/").pop() || pkgName;
+
+        // Check if this is the correct library by comparing distribution dir name
+        if (
+          distLibName === simpleLibName ||
+          distLibName.endsWith(`-${simpleLibName.replace(/^.*?-/, "")}`) ||
+          // For prefixed names like relidler-cfg where cfg is the actual dir
+          mainPath.includes(`/${distLibName.split("-").pop()}/`)
+        ) {
+          // Found a match - extract the library name and source directory
+          libName = simpleLibName.split("-").pop() || simpleLibName;
+
+          // Try different approaches to find the correct source directory
+          const possibilities = [
+            // From the main path directly (cfg/cfg-main.ts -> src/libs/cfg)
+            path.join(rootDir, "libs", path.dirname(mainPath)),
+            // Just the library directory (src/libs/cfg)
+            path.join(rootDir, "libs", libName),
+            // Full path from main (src/libs/cfg)
+            path.join(rootDir, path.dirname(mainPath)),
+          ];
+
+          // Use the first path that exists
+          for (const possiblePath of possibilities) {
+            try {
+              if (fs.existsSync(possiblePath)) {
+                libSrcDir = possiblePath;
+                break;
+              }
+            } catch (_e) {
+              // Ignore errors and try next option
+            }
+          }
+
+          if (libSrcDir) {
+            break;
+          }
+        }
+      }
+    }
+
+    // Fallback to the old parsing logic if we didn't find a match in the config
+    if (!libSrcDir) {
+      // Extract the actual library name without any prefix if it contains a dash
+      libName = distLibName;
+      // Handle "{any-prefix}-xyz" format by extracting just the "xyz" part
+      const dashIndex = libName.indexOf("-");
+      if (dashIndex !== -1) {
+        libName = libName.substring(dashIndex + 1);
+      }
+
+      // Construct the full path to the library directory
+      const entrySrcDirResolved = resolve(process.cwd(), entrySrcDir);
+      libSrcDir = path.join(entrySrcDirResolved, "libs", libName);
+
+      // Make sure the directory exists
+      if (!fs.existsSync(libSrcDir)) {
+        throw new Error(
+          `Library source directory not found: ${libSrcDir} for library: ${libName}`,
+        );
+      }
+    }
 
     relinka(
       "info",
@@ -3252,7 +3389,6 @@ async function library_bundleUsingUnified(
     );
 
     // Validate and normalize the output file extension
-    const validExtensions = ["cjs", "js", "mjs", "ts", "mts", "cts"];
     if (!validExtensions.includes(npmOutFilesExt)) {
       relinka(
         "warn",
@@ -3298,7 +3434,8 @@ async function library_bundleUsingUnified(
 
     await unifiedBuild(rootDir, stub, unifiedBuildConfig, outdirBin);
 
-    const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+    // Calculate and log build duration
+    const duration = (getElapsedTime(localTimer) / 1000).toFixed(2);
     relinka(
       "success",
       `Library bundle completed in ${duration}s using ${builder} builder for library ${libName}`,
@@ -3453,7 +3590,11 @@ async function regular_buildJsrDist(
   sourcemap: Sourcemap,
   publicPath: string,
   npmOutFilesExt: NpmOutExt,
+  timer?: Timer,
 ): Promise<void> {
+  // Create a timer if none is provided
+  const localTimer = timer || createTimer();
+
   relinka("info", "Building JSR distribution...");
   const entrySrcDirResolved = resolve(process.cwd(), entrySrcDir);
   const entryFilePath = path.join(entrySrcDirResolved, entryFile);
@@ -3474,6 +3615,8 @@ async function regular_buildJsrDist(
       minify,
       sourcemap,
       publicPath,
+      "",
+      localTimer,
     );
   } else {
     await regular_bundleUsingUnified(
@@ -3520,7 +3663,11 @@ export async function regular_buildNpmDist(
   npmDistDir: string,
   npmBuilder: BundlerName,
   entryFile: string,
+  timer?: Timer,
 ): Promise<void> {
+  // Create a timer if none is provided
+  const localTimer = timer || createTimer();
+
   relinka("info", "Building NPM distribution...");
   const entrySrcDirResolved = resolve(process.cwd(), entrySrcDir);
   const entryFilePath = path.join(entrySrcDirResolved, entryFile);
@@ -3542,6 +3689,7 @@ export async function regular_buildNpmDist(
       "none",
       "/",
       "",
+      localTimer,
     );
   } else {
     await regular_bundleUsingUnified(
@@ -3594,7 +3742,11 @@ async function library_buildJsrDist(
   sourcemap: Sourcemap,
   publicPath: string,
   outdirBin: string,
+  timer?: Timer,
 ): Promise<void> {
+  // Create a timer if none is provided
+  const localTimer = timer || createTimer();
+
   relinka("info", "Building JSR distribution...");
   const entrySrcDirResolved = resolve(process.cwd(), entrySrcDir);
   const entryFilePath = path.join(entrySrcDirResolved, entryFile);
@@ -3616,13 +3768,13 @@ async function library_buildJsrDist(
       minify,
       sourcemap,
       publicPath,
+      localTimer,
     );
   } else {
     await library_bundleUsingUnified(
       entryFilePath,
       outdirBinResolved,
       "mkdist",
-      true,
       entrySrcDir,
       npmOutFilesExt,
       false,
@@ -3630,6 +3782,8 @@ async function library_buildJsrDist(
       "es2023",
       minify,
       sourcemap,
+      localTimer,
+      libs,
     );
   }
   await library_performCommonBuildSteps({
@@ -3673,7 +3827,11 @@ async function _library_buildJsrDist2(
   libs: Record<string, LibConfig>,
   isCLI: boolean,
   npmOutFilesExt: NpmOutExt,
+  timer?: Timer,
 ): Promise<void> {
+  // Create a timer if none is provided
+  const localTimer = timer || createTimer();
+
   // =====================================================
   // [dist-libs/jsr] 1. Initialize
   // =====================================================
@@ -3705,13 +3863,7 @@ async function _library_buildJsrDist2(
   // [dist-libs/jsr] 2. Build using the appropriate builder
   // =====================================================
   if (jsrBuilder === "jsr") {
-    await library_bundleUsingJsr(
-      libSrcDir,
-      libOutdirBinResolved,
-      // entrySrcDirResolved,
-      // isDev,
-      // true,
-    );
+    await library_bundleUsingJsr(libSrcDir, libOutdirBinResolved);
   } else if (jsrBuilder === "bun") {
     await library_bundleUsingBun(
       libEntryFile,
@@ -3723,6 +3875,7 @@ async function _library_buildJsrDist2(
       false,
       "none",
       "/",
+      localTimer,
     );
   } else {
     // Construct the full path to the entry file
@@ -3737,7 +3890,6 @@ async function _library_buildJsrDist2(
       libEntryFilePath,
       libOutdirBinResolved,
       "mkdist",
-      true,
       entrySrcDir,
       "js",
       false,
@@ -3745,6 +3897,8 @@ async function _library_buildJsrDist2(
       "es2023",
       false,
       "none",
+      localTimer,
+      libs,
     );
   }
 
@@ -3809,7 +3963,11 @@ async function library_buildNpmDist(
   libs: Record<string, LibConfig>,
   isCLI: boolean,
   npmOutFilesExt: NpmOutExt,
+  timer?: Timer,
 ): Promise<void> {
+  // Create a timer if none is provided
+  const localTimer = timer || createTimer();
+
   // =====================================================
   // [dist-libs/npm] 1. Initialize
   // =====================================================
@@ -3823,8 +3981,12 @@ async function library_buildNpmDist(
   const entrySrcDirResolved = resolve(process.cwd(), entrySrcDir);
   // Get the library-specific source directory
   const libNameSimple = libName.split("/").pop() || libName;
+  // Handle any "{prefix}-xyz" format by extracting just "xyz" part
+  const dashIndex = libNameSimple.indexOf("-");
+  const normalizedLibName =
+    dashIndex !== -1 ? libNameSimple.substring(dashIndex + 1) : libNameSimple;
   // Extract the actual directory from the main file path in the config
-  let libSrcDir = path.join(entrySrcDirResolved, "libs", libNameSimple);
+  let libSrcDir = path.join(entrySrcDirResolved, "libs", normalizedLibName);
   // Check if we have a main file path in the config
   const libConfig = libs?.[libName];
   if (libConfig?.main) {
@@ -3841,13 +4003,7 @@ async function library_buildNpmDist(
   // [dist-libs/npm] 2. Build using the appropriate builder
   // =====================================================
   if (npmBuilder === "jsr") {
-    await library_bundleUsingJsr(
-      libSrcDir,
-      libOutdirBinResolved,
-      // entrySrcDirResolved,
-      // isDev,
-      // false,
-    );
+    await library_bundleUsingJsr(libSrcDir, libOutdirBinResolved);
   } else if (npmBuilder === "bun") {
     await library_bundleUsingBun(
       libEntryFile,
@@ -3859,6 +4015,7 @@ async function library_buildNpmDist(
       false,
       "none",
       "/",
+      localTimer,
     );
   } else {
     // Construct the full path to the entry file
@@ -3873,7 +4030,6 @@ async function library_buildNpmDist(
       libEntryFilePath,
       libOutdirBinResolved,
       npmBuilder,
-      false,
       entrySrcDir,
       "js",
       false,
@@ -3881,6 +4037,8 @@ async function library_buildNpmDist(
       "es2023",
       false,
       "none",
+      localTimer,
+      libs,
     );
   }
 
@@ -4515,14 +4673,17 @@ async function finalizeBuild(
   if (!pausePublish) {
     relinka(
       "success",
-      `🎉 ${re.bold("Build and publishing completed")} successfully in ${re.bold(formattedTime)}!`,
+      `🎉 ${re.bold("Build and publishing completed")} successfully (in ${re.bold(formattedTime)})`,
     );
   } else {
     relinka(
       "success",
-      `🎉 ${re.bold("Test build completed")} successfully in ${re.bold(formattedTime)}!`,
+      `🎉 ${re.bold("Test build completed")} successfully (in ${re.bold(formattedTime)})`,
     );
-    relinka("info", "📝 Publish process is paused in the config file.");
+    relinka(
+      "info",
+      "📝 Publish process is currently paused in your config file",
+    );
   }
 }
 

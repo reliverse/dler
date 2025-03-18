@@ -17,6 +17,8 @@ import { relinka } from "~/utils.js";
 // Constants
 // -------------------------------------------------------------------
 
+const debug = false;
+
 // Cache current working directory to
 // avoid repeated calls to process.cwd()
 const CWD = process.cwd();
@@ -797,7 +799,9 @@ async function convertImportPathsInFile(
         }
       }
       const message = `Updated import paths in: ${filePath}${dryRun ? " (dry run)" : ""}`;
-      relinka("verbose", message);
+      if (debug) {
+        relinka("verbose", message);
+      }
       return { success: true, message };
     }
     return { success: true, message: "No matching import paths found" };

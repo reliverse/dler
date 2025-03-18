@@ -11,7 +11,7 @@ import prettyBytes from "pretty-bytes";
 import prettyMilliseconds from "pretty-ms";
 import { glob } from "tinyglobby";
 
-import { relinka } from "~/utils.js";
+import { relinka, createTimer, getElapsedTime } from "~/utils.js";
 
 import type {
   BuildContext,
@@ -104,7 +104,7 @@ async function _build(
   showOutLog: boolean,
 ): Promise<void> {
   // Start timing the build process
-  const startTime = performance.now();
+  const timer = createTimer();
 
   // Resolve preset
   const preset = await resolvePreset(
@@ -415,17 +415,16 @@ async function _build(
     }
 
     // Calculate elapsed time
-    const endTime = performance.now();
-    const elapsedTime = endTime - startTime;
+    const elapsedTime = getElapsedTime(timer);
     const formattedTime = prettyMilliseconds(elapsedTime, { verbose: true });
 
     relinka(
       "info",
-      "Σ Total dist size (byte size):",
-      re.cyan(
+      "Σ Total dist size:",
+      re.bold(
         prettyBytes(ctx.buildEntries.reduce((a, e) => a + (e.bytes || 0), 0)),
       ),
-      `(build time: ${re.yellow(formattedTime)})`,
+      `(build time: ${re.bold(formattedTime)})`,
     );
   }
 

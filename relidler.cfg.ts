@@ -14,7 +14,7 @@ export default defineConfig({
 
   // Publishing options
   registry: "npm-jsr",
-  pausePublish: false,
+  pausePublish: true,
   dryRun: false,
 
   // Versioning options
@@ -38,7 +38,6 @@ export default defineConfig({
   minify: true,
   splitting: false,
   sourcemap: "none",
-  parallel: false,
   stub: false,
   watch: false,
   esbuild: "es2023",

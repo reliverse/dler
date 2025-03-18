@@ -28,6 +28,9 @@ export default defineConfig({
   // Path to the log file (relative to cwd)
   logFilePath: "relinka.log",
 
+  // Whether to disable colors in console output
+  disableColors: false,
+
   // Directory-specific configuration
   dirs: {
     // Log directory path

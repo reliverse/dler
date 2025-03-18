@@ -41,11 +41,7 @@ bun dev # Runs bun src/main.ts --dev
     bun i -g @reliverse/relidler
     ```
 
-    Or update if needed:
-
-    ```sh
-    bun -g update --latest
-    ```
+    **Or update if needed**: `bun -g update --latest`
 
 2. **Prepare your project**:
 
@@ -66,7 +62,7 @@ bun dev # Runs bun src/main.ts --dev
 
     The `relidler.cfg.ts` file will be created automatically on the first run if it doesn't already exist. It's recommended to edit it according to your needs.
 
-    The following names are available for the config file: relidler.cfg.ts • relidler.config.ts • build.cfg.ts • build.config.ts (⚠️soon) • build.pub.ts
+    The following names are available for the config file: `relidler.cfg.ts` • `relidler.config.ts` • `build.cfg.ts` • `build.config.ts (⚠️soon)` • `build.pub.ts`
 
 ## Plugins & SDK
 
@@ -87,6 +83,7 @@ bun add -D @reliverse/relidler-sdk # (⚠️soon)
 - [x] Implement stable `regular` build and publish
 - [ ] Implement stable `library` build and publish
 - [ ] Implement automatic migration from `unbuild`
+- [ ] Achieve full drop-in replacement for `unbuild`
 - [ ] Make configuration fully optional using defaults
 - [ ] Support configuration via `reliverse.{ts,jsonc}`
 - [ ] Allow plugins to extend Relidler's `defineConfig`

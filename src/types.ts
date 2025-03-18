@@ -282,13 +282,6 @@ export type BuildPublishConfig = {
   splitting: boolean;
 
   /**
-   * Run different types of builds (untyped, mkdist, rollup, copy) simultaneously.
-   *
-   * @default false
-   */
-  parallel: boolean;
-
-  /**
    * Stub the package for JIT compilation.
    *
    * @default false

@@ -60,6 +60,8 @@ type RelinkaConfig = {
   saveLogsToFile?: boolean;
   /** Path to the log file (relative to process.cwd()) */
   logFilePath?: string;
+  /** Whether to disable colors in console output */
+  disableColors?: boolean;
   /** Directory-specific configuration */
   dirs?: {
     /** Log directory path */
@@ -86,6 +88,7 @@ const DEFAULT_RELINKA_CONFIG: RelinkaConfig = {
   saveLogsToFile: true,
   logFilePath: "relinka.log",
   debug: false,
+  disableColors: false,
   dirs: {
     logDir: ".",
     dailyLogs: false,
@@ -127,6 +130,12 @@ const loadEnvConfig = (): Partial<RelinkaConfig> => {
   if (process.env.RELINKA_TIMESTAMP !== undefined) {
     const value = process.env.RELINKA_TIMESTAMP.toLowerCase().trim();
     envConfig.withTimestamp = !["false", "0", ""].includes(value);
+  }
+
+  // RELINKA_DISABLE_COLORS - Whether to disable colors in console output
+  if (process.env.RELINKA_DISABLE_COLORS !== undefined) {
+    const value = process.env.RELINKA_DISABLE_COLORS.toLowerCase().trim();
+    envConfig.disableColors = !["false", "0", ""].includes(value);
   }
 
   // RELINKA_SAVE_LOGS - Whether to save logs to a file
@@ -444,22 +453,25 @@ export const relinka = (
   const displayType = upperType === "VERBOSE" ? "DEBUG" : (upperType as string);
   const logMessage = formatLogMessage(displayType, message, details);
 
+  // Check if colors should be disabled
+  const useColors = !config.disableColors;
+
   // Output to console with appropriate color
   switch (upperType) {
     case "VERBOSE":
-      console.log(re.magentaBright(logMessage));
+      console.log(useColors ? re.dim(logMessage) : logMessage);
       break;
     case "INFO":
-      console.log(re.cyanBright(logMessage));
+      console.log(useColors ? re.cyanBright(logMessage) : logMessage);
       break;
     case "SUCCESS":
-      console.log(re.greenBright(logMessage));
+      console.log(useColors ? re.greenBright(logMessage) : logMessage);
       break;
     case "WARN":
-      console.warn(re.yellowBright(logMessage));
+      console.warn(useColors ? re.yellowBright(logMessage) : logMessage);
       break;
     case "ERROR":
-      console.error(re.redBright(logMessage));
+      console.error(useColors ? re.redBright(logMessage) : logMessage);
       break;
     default:
       console.log(logMessage);

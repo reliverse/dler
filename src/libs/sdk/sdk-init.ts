@@ -90,7 +90,6 @@ export default defineConfig({
   minify: ${DEFAULT_CONFIG.minify},
   splitting: ${DEFAULT_CONFIG.splitting},
   sourcemap: "${DEFAULT_CONFIG.sourcemap}",
-  parallel: ${DEFAULT_CONFIG.parallel},
   stub: ${DEFAULT_CONFIG.stub},
   watch: ${DEFAULT_CONFIG.watch},
   esbuild: "${DEFAULT_CONFIG.esbuild}",
