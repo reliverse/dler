@@ -2,6 +2,52 @@ import { re } from "@reliverse/relico";
 import fs from "fs-extra";
 import path from "pathe";
 
+// ========================================
+// Timer (TODO: Move to a separate repo)
+// ========================================
+
+export type Timer = {
+  startTime: number;
+  pausedAt: number | null;
+  pausedDuration: number;
+};
+
+export function createTimer(): Timer {
+  return {
+    startTime: performance.now(),
+    pausedAt: null,
+    pausedDuration: 0,
+  };
+}
+
+export function pauseTimer(timer: Timer): void {
+  if (timer.pausedAt === null) {
+    timer.pausedAt = performance.now();
+  }
+}
+
+export function resumeTimer(timer: Timer): void {
+  if (timer.pausedAt !== null) {
+    timer.pausedDuration += performance.now() - timer.pausedAt;
+    timer.pausedAt = null;
+  }
+}
+
+export function getElapsedTime(timer: Timer): number {
+  const currentPausedTime =
+    timer.pausedAt !== null ? performance.now() - timer.pausedAt : 0;
+  return (
+    performance.now() -
+    timer.startTime -
+    timer.pausedDuration -
+    currentPausedTime
+  );
+}
+
+// ========================================
+// Logger (TODO: Move to a separate repo)
+// ========================================
+
 /**
  * Logger configuration options
  */
@@ -161,7 +207,7 @@ const getConfigPaths = (): string[] => {
 /**
  * Load configuration from relinka.cfg.ts if it exists
  */
-const loadConfigFile = async (): Promise<void> => {
+const loadRelinkaConfigFile = async (): Promise<void> => {
   try {
     // First load environment variables
     const envConfig = loadEnvConfig();
@@ -202,7 +248,7 @@ const loadConfigFile = async (): Promise<void> => {
 };
 
 // Try to load config file immediately
-loadConfigFile().catch((err) => {
+loadRelinkaConfigFile().catch((err) => {
   console.error(
     `Failed to initialize relinka config: ${err instanceof Error ? err.message : String(err)}`,
   );

@@ -23,6 +23,39 @@ export type BumpMode = "autoPatch" | "autoMinor" | "autoMajor";
 export type BumpFilter = "package.json" | "reliverse.jsonc" | "reliverse.ts";
 
 /**
+ * Supported modes for filtering dependencies.
+ * - patterns-and-devdeps: Excludes all `devDependencies` and dependencies matching specified patterns.
+ * - patterns-only: Excludes only dependencies matching `excludedDependencyPatterns`.
+ */
+export type ExcludeMode = "patterns-and-devdeps" | "patterns-only";
+
+/**
+ * Supported target runtime environments for built packages.
+ * - node: Optimized for Node.js.
+ * - bun: Optimized for Bun.
+ * - browser: Optimized for web browsers.
+ */
+export type Target = "node" | "bun" | "browser";
+
+/**
+ * Supported output module formats for built packages.
+ * - esm: ECMAScript modules (import/export)
+ * - cjs: CommonJS modules (require/exports)
+ * - iife: Immediately Invoked Function Expression (for browsers)
+ */
+export type Format = "esm" | "cjs" | "iife";
+
+/**
+ * Supported source map options for built packages.
+ * - boolean: Enable/disable source maps.
+ * - "inline": Include source maps within output files.
+ * - "none": Do not generate source maps.
+ * - "linked": Generate separate source map files with links.
+ * - "external": Generate separate source map files.
+ */
+export type Sourcemap = boolean | "inline" | "none" | "linked" | "external";
+
+/**
  * Defines the full configuration for building and publishing packages.
  * This includes versioning, build settings, publishing options, multi-package support, and more.
  * It customizes the build and publish pipeline for both NPM and JSR registries.
@@ -271,7 +304,7 @@ export type BuildPublishConfig = {
    *
    * @default false
    */
-  sourcemap: boolean | "inline" | "none" | "linked" | "external";
+  sourcemap: Sourcemap;
 
   /**
    * The target runtime environment for the built package.
@@ -296,7 +329,7 @@ export type BuildPublishConfig = {
    *
    * @default "node"
    */
-  target: "node" | "bun" | "browser";
+  target: Target;
 
   /**
    * Output module format for built files:
@@ -306,7 +339,7 @@ export type BuildPublishConfig = {
    *
    * @default "esm"
    */
-  format: "esm" | "cjs" | "iife";
+  format: Format;
 
   // ==========================================================================
   // Logger options
@@ -337,7 +370,7 @@ export type BuildPublishConfig = {
    *
    * @default "patterns-and-devdeps"
    */
-  excludeMode: "patterns-and-devdeps" | "patterns-only";
+  excludeMode: ExcludeMode;
 
   /**
    * A list of dependency name patterns to exclude when filtering `dependencies` and `devDependencies`.

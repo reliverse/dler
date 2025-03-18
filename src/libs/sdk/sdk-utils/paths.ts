@@ -3,11 +3,22 @@ import MagicString from "magic-string";
 import pMap from "p-map";
 import path from "pathe";
 
-import type { BuildPublishConfig } from "~/types.js";
+import type { LibConfig } from "~/types.js";
 
 import { relinka } from "~/utils.js";
 
-// Cache current working directory to avoid repeated calls to process.cwd()
+// ========================================
+// Paths (TODO: Move to a separate repo)
+// ========================================
+
+// TODO: Eliminate the functions related to the `relidler` specifically
+
+// -------------------------------------------------------------------
+// Constants
+// -------------------------------------------------------------------
+
+// Cache current working directory to
+// avoid repeated calls to process.cwd()
 const CWD = process.cwd();
 
 // -------------------------------------------------------------------
@@ -26,7 +37,7 @@ type ConversionOptions = {
   sourceFile: string;
   baseDir: string;
   aliasPrefix: string;
-  config?: BuildPublishConfig;
+  libs: Record<string, LibConfig>;
   currentLibName?: string;
   urlMap?: Record<string, string>;
 };
@@ -89,10 +100,10 @@ function isLibraryImport(
  */
 function matchLibraryImport(
   relativeToRoot: string,
-  config: BuildPublishConfig,
+  libs: Record<string, LibConfig>,
   currentLibName?: string,
 ): string | null {
-  for (const [libName, libConfig] of Object.entries(config.libs)) {
+  for (const [libName, libConfig] of Object.entries(libs)) {
     if (isLibraryImport(relativeToRoot, libName, libConfig, currentLibName)) {
       return libName;
     }
@@ -146,13 +157,13 @@ function convertImportPathRelativeToAlias(
 function convertImportPathRelativeToModule(
   importPath: string,
   sourceFile: string,
-  config?: BuildPublishConfig,
+  libs: Record<string, LibConfig>,
   currentLibName?: string,
 ): string {
-  if (!config?.libs) return importPath;
+  if (!libs) return importPath;
   const absoluteImportPath = path.resolve(path.dirname(sourceFile), importPath);
   const relativeToRoot = path.relative(CWD, absoluteImportPath);
-  const libName = matchLibraryImport(relativeToRoot, config, currentLibName);
+  const libName = matchLibraryImport(relativeToRoot, libs, currentLibName);
   if (libName) {
     relinka(
       "verbose",
@@ -191,12 +202,12 @@ function convertImportPathAbsoluteToAlias(
 
 function convertImportPathAbsoluteToModule(
   importPath: string,
-  config?: BuildPublishConfig,
+  libs: Record<string, LibConfig>,
   currentLibName?: string,
 ): string {
-  if (!config?.libs) return importPath;
+  if (!libs) return importPath;
   const relativeToRoot = path.relative(CWD, importPath);
-  const libName = matchLibraryImport(relativeToRoot, config, currentLibName);
+  const libName = matchLibraryImport(relativeToRoot, libs, currentLibName);
   if (libName) {
     relinka(
       "verbose",
@@ -237,17 +248,17 @@ function convertImportPathAliasToModule(
   importPath: string,
   baseDir: string,
   aliasPrefix: string,
-  config?: BuildPublishConfig,
+  libs: Record<string, LibConfig>,
   currentLibName?: string,
 ): string {
-  if (!importPath.startsWith(aliasPrefix) || !config?.libs) return importPath;
+  if (!importPath.startsWith(aliasPrefix) || !libs) return importPath;
   const absolutePath = convertImportPathAliasToAbsolute(
     importPath,
     baseDir,
     aliasPrefix,
   );
   const relativeToRoot = path.relative(CWD, absolutePath);
-  const libName = matchLibraryImport(relativeToRoot, config, currentLibName);
+  const libName = matchLibraryImport(relativeToRoot, libs, currentLibName);
   return libName || importPath;
 }
 
@@ -278,12 +289,12 @@ function convertImportPathAliasToAlias(
 function convertImportPathModuleToRelative(
   importPath: string,
   sourceFile: string,
-  config?: BuildPublishConfig,
+  libs: Record<string, LibConfig>,
 ): string {
-  if (!config?.libs || !extractPackageName(importPath)) return importPath;
+  if (!libs || !extractPackageName(importPath)) return importPath;
   const packageName = extractPackageName(importPath);
-  if (!packageName || !config.libs[packageName]) return importPath;
-  const libConfig = config.libs[packageName];
+  if (!packageName || !libs[packageName]) return importPath;
+  const libConfig = libs[packageName];
   const libMainDir = path.dirname(libConfig.main);
   const libMainPath = path.join(CWD, libMainDir);
   return convertImportPathAbsoluteToRelative(libMainPath, sourceFile);
@@ -291,12 +302,12 @@ function convertImportPathModuleToRelative(
 
 function convertImportPathModuleToAbsolute(
   importPath: string,
-  config?: BuildPublishConfig,
+  libs: Record<string, LibConfig>,
 ): string {
-  if (!config?.libs || !extractPackageName(importPath)) return importPath;
+  if (!libs || !extractPackageName(importPath)) return importPath;
   const packageName = extractPackageName(importPath);
-  if (!packageName || !config.libs[packageName]) return importPath;
-  const libConfig = config.libs[packageName];
+  if (!packageName || !libs[packageName]) return importPath;
+  const libConfig = libs[packageName];
   const libMainDir = path.dirname(libConfig.main);
   return path.join(CWD, libMainDir);
 }
@@ -305,10 +316,10 @@ function convertImportPathModuleToAlias(
   importPath: string,
   baseDir: string,
   aliasPrefix: string,
-  config?: BuildPublishConfig,
+  libs: Record<string, LibConfig>,
 ): string {
-  if (!config?.libs || !extractPackageName(importPath)) return importPath;
-  const absolutePath = convertImportPathModuleToAbsolute(importPath, config);
+  if (!libs || !extractPackageName(importPath)) return importPath;
+  const absolutePath = convertImportPathModuleToAbsolute(importPath, libs);
   return convertImportPathAbsoluteToAlias(absolutePath, baseDir, aliasPrefix);
 }
 
@@ -360,14 +371,14 @@ function convertImportPathDynamicToAlias(
 function convertImportPathDynamicToModule(
   importPath: string,
   sourceFile: string,
-  config?: BuildPublishConfig,
+  libs: Record<string, LibConfig>,
   currentLibName?: string,
 ): string {
   const dynamicPath = getDynamicImportPath(importPath);
-  if (!dynamicPath || !config?.libs) return importPath;
+  if (!dynamicPath || !libs) return importPath;
   const absolutePath = path.resolve(path.dirname(sourceFile), dynamicPath);
   const relativeToRoot = path.relative(CWD, absolutePath);
-  const libName = matchLibraryImport(relativeToRoot, config, currentLibName);
+  const libName = matchLibraryImport(relativeToRoot, libs, currentLibName);
   if (libName) {
     relinka(
       "verbose",
@@ -442,11 +453,11 @@ function convertImportPathBareToAlias(
 function convertImportPathBareToModule(
   importPath: string,
   urlMap: Record<string, string>,
-  config?: BuildPublishConfig,
+  libs: Record<string, LibConfig>,
   currentLibName?: string,
 ): string {
   const url = getBareImportUrl(importPath);
-  if (!url || !config?.libs) return importPath;
+  if (!url || !libs) return importPath;
   const localPath = urlMap[url];
   if (!localPath) {
     relinka("verbose", `No local mapping found for URL: ${url}`);
@@ -454,7 +465,7 @@ function convertImportPathBareToModule(
   }
   const absolutePath = path.resolve(CWD, localPath);
   const relativeToRoot = path.relative(CWD, absolutePath);
-  const libName = matchLibraryImport(relativeToRoot, config, currentLibName);
+  const libName = matchLibraryImport(relativeToRoot, libs, currentLibName);
   if (libName) {
     relinka(
       "verbose",
@@ -505,7 +516,7 @@ const conversionMapping: Record<string, ConverterFunction> = {
     convertImportPathRelativeToModule(
       ip,
       opts.sourceFile,
-      opts.config,
+      opts.libs,
       opts.currentLibName,
     ),
   "absolute:relative": (ip, opts) =>
@@ -513,7 +524,7 @@ const conversionMapping: Record<string, ConverterFunction> = {
   "absolute:alias": (ip, opts) =>
     convertImportPathAbsoluteToAlias(ip, opts.baseDir, opts.aliasPrefix),
   "absolute:module": (ip, opts) =>
-    convertImportPathAbsoluteToModule(ip, opts.config, opts.currentLibName),
+    convertImportPathAbsoluteToModule(ip, opts.libs, opts.currentLibName),
   "alias:relative": (ip, opts) =>
     convertImportPathAliasToRelative(
       ip,
@@ -536,19 +547,19 @@ const conversionMapping: Record<string, ConverterFunction> = {
       ip,
       opts.baseDir,
       opts.aliasPrefix,
-      opts.config,
+      opts.libs,
       opts.currentLibName,
     ),
   "module:relative": (ip, opts) =>
-    convertImportPathModuleToRelative(ip, opts.sourceFile, opts.config),
+    convertImportPathModuleToRelative(ip, opts.sourceFile, opts.libs),
   "module:absolute": (ip, opts) =>
-    convertImportPathModuleToAbsolute(ip, opts.config),
+    convertImportPathModuleToAbsolute(ip, opts.libs),
   "module:alias": (ip, opts) =>
     convertImportPathModuleToAlias(
       ip,
       opts.baseDir,
       opts.aliasPrefix,
-      opts.config,
+      opts.libs,
     ),
   "dynamic:relative": (ip, opts) =>
     convertImportPathDynamicToRelative(ip, opts.sourceFile),
@@ -565,7 +576,7 @@ const conversionMapping: Record<string, ConverterFunction> = {
     convertImportPathDynamicToModule(
       ip,
       opts.sourceFile,
-      opts.config,
+      opts.libs,
       opts.currentLibName,
     ),
   "bare:relative": (ip, opts) =>
@@ -583,7 +594,7 @@ const conversionMapping: Record<string, ConverterFunction> = {
     convertImportPathBareToModule(
       ip,
       opts.urlMap || {},
-      opts.config,
+      opts.libs,
       opts.currentLibName,
     ),
   "bare:dynamic": (ip, opts) =>
@@ -601,7 +612,7 @@ function convertSingleImportPath(
     sourceFile?: string;
     baseDir?: string;
     aliasPrefix?: string;
-    config?: BuildPublishConfig;
+    libs?: Record<string, LibConfig>;
     currentLibName?: string;
     urlMap?: Record<string, string>;
   } = {},
@@ -609,7 +620,7 @@ function convertSingleImportPath(
   const {
     sourceFile = "",
     baseDir = CWD,
-    config,
+    libs,
     currentLibName,
     urlMap = {},
   } = options;
@@ -626,7 +637,7 @@ function convertSingleImportPath(
       sourceFile,
       baseDir,
       aliasPrefix: normalizedAliasPrefix || "",
-      config,
+      libs,
       currentLibName,
       urlMap,
     });
@@ -652,7 +663,7 @@ async function convertImportPathsInFile(
     toType: ImportType;
     baseDir?: string;
     aliasPrefix?: string;
-    config?: BuildPublishConfig;
+    libs: Record<string, LibConfig>;
     currentLibName?: string;
     urlMap?: Record<string, string>;
     dryRun?: boolean;
@@ -665,7 +676,7 @@ async function convertImportPathsInFile(
       toType,
       baseDir = CWD,
       aliasPrefix,
-      config,
+      libs,
       currentLibName,
       urlMap = {},
       dryRun = false,
@@ -690,7 +701,7 @@ async function convertImportPathsInFile(
           sourceFile: filePath,
           baseDir,
           aliasPrefix,
-          config,
+          libs,
           currentLibName,
           urlMap,
         },
@@ -729,7 +740,7 @@ async function convertImportPathsInFile(
             convertImportPathDynamicToModule(
               matchStr,
               filePath,
-              config,
+              libs,
               currentLibName,
             ),
           relative: (matchStr) =>
@@ -756,7 +767,7 @@ async function convertImportPathsInFile(
             sourceFile: filePath,
             baseDir,
             aliasPrefix,
-            config,
+            libs,
             currentLibName,
             urlMap,
           },
@@ -804,7 +815,7 @@ async function processDirConvertImportPathsInFiles(
     toType: ImportType;
     baseDir?: string;
     aliasPrefix?: string;
-    config?: BuildPublishConfig;
+    libs: Record<string, LibConfig>;
     currentLibName?: string;
     urlMap?: Record<string, string>;
     dryRun?: boolean;
@@ -991,7 +1002,7 @@ export async function convertImportPaths(options: {
   fromType: ImportType;
   toType: ImportType;
   aliasPrefix?: string;
-  config?: BuildPublishConfig;
+  libs: Record<string, LibConfig>;
   currentLibName?: string;
   urlMap?: Record<string, string>;
   dryRun?: boolean;
@@ -1025,7 +1036,12 @@ export async function convertImportPaths(options: {
   }
 
   relinka("info", `Starting path replacement in ${baseDir} folder...`);
-  const modifiedOptions = { ...options, baseDir, aliasPrefix };
+  const modifiedOptions = {
+    ...options,
+    baseDir,
+    aliasPrefix,
+    libs: options.libs,
+  };
   const results = await processDirConvertImportPathsInFiles(
     baseDir,
     modifiedOptions,
