@@ -14,7 +14,7 @@ export default defineConfig({
 
   // Publishing options
   registry: "npm-jsr",
-  pausePublish: true,
+  pausePublish: false,
   dryRun: false,
 
   // Versioning options

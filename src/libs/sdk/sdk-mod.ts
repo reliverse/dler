@@ -187,7 +187,6 @@ async function writeFileSafe(
   content: string,
   reason: string,
 ): Promise<void> {
-  relinka("verbose", `Attempting to write file: ${filePath}`);
   try {
     await fs.writeFile(filePath, content, "utf8");
     relinka(
@@ -213,10 +212,6 @@ async function updateVersionInContent(
   oldVersion: string,
   newVersion: string,
 ): Promise<boolean> {
-  relinka(
-    "verbose",
-    `Entering updateVersionInContent for file: ${filePath} (old: ${oldVersion}, new: ${newVersion})`,
-  );
   let updatedContent = content;
   let changed = false;
 
@@ -239,7 +234,6 @@ async function updateVersionInContent(
   }
   if (changed) {
     await writeFileSafe(filePath, updatedContent, "version update");
-    relinka("info", `Updated version in ${filePath}`);
   }
   return changed;
 }
@@ -300,10 +294,6 @@ export async function removeDistFolders(
   }
 
   if (existingFolders.length > 0) {
-    relinka(
-      "verbose",
-      `Found existing distribution folders: ${existingFolders.join(", ")}`,
-    );
     await pMap(
       existingFolders,
       async (folder) => {
@@ -463,7 +453,7 @@ async function bumpVersions(
 ): Promise<void> {
   relinka(
     "verbose",
-    `Starting bumpVersions from ${oldVersion} to ${newVersion} with filters: ${bumpFilter.join(", ")}`,
+    `Starting bumpVersions from ${oldVersion} to ${newVersion}`,
   );
   try {
     // Create glob patterns based on the bumpFilter
@@ -536,7 +526,7 @@ async function bumpVersions(
         if (gitignorePatterns.length > 0) {
           relinka(
             "verbose",
-            `Adding ${gitignorePatterns.length} patterns from .gitignore`,
+            `Bump will not process ${gitignorePatterns.length} patterns listed in .gitignore`,
           );
           ignorePatterns.push(...gitignorePatterns);
         }
@@ -611,10 +601,6 @@ function autoIncrementVersion(
   oldVersion: string,
   bumpMode: "autoPatch" | "autoMinor" | "autoMajor",
 ): string {
-  relinka(
-    "verbose",
-    `Auto incrementing version ${oldVersion} using mode: ${bumpMode}`,
-  );
   if (!semver.valid(oldVersion)) {
     throw new Error(`Can't auto-increment invalid version: ${oldVersion}`);
   }
@@ -627,7 +613,6 @@ function autoIncrementVersion(
   if (!newVer) {
     throw new Error(`semver.inc failed for ${oldVersion} and mode ${bumpMode}`);
   }
-  relinka("verbose", `Auto incremented version: ${newVer}`);
   return newVer;
 }
 
@@ -638,13 +623,8 @@ export async function setBumpDisabled(
   value: boolean,
   pausePublish: boolean,
 ): Promise<void> {
-  relinka("verbose", `Entering setBumpDisabled with value: ${value}`);
-
   if (pausePublish && value) {
-    relinka(
-      "verbose",
-      "Skipping disableBump toggle due to `pausePublish: true`",
-    );
+    // Skipping disableBump toggle due to `pausePublish: true`
     return;
   }
 
@@ -2849,7 +2829,7 @@ async function renameEntryFile(
   // First check if the entry file exists in the output directory
   if (!(await fs.pathExists(path.join(outdirBin, jsEntryFile)))) {
     relinka(
-      "warn",
+      "verbose",
       `Entry file not found for renaming: ${path.join(outdirBin, jsEntryFile)}. Skipping rename operation.`,
     );
     return { updatedEntryFile: jsEntryFile };
@@ -4663,6 +4643,7 @@ async function finalizeBuild(
   npmDistDir: string,
   jsrDistDir: string,
   libsDistDir: string,
+  isDev: boolean,
 ): Promise<void> {
   if (!pausePublish) {
     await removeDistFolders(npmDistDir, jsrDistDir, libsDistDir, libs);
@@ -4680,10 +4661,17 @@ async function finalizeBuild(
       "success",
       `🎉 ${re.bold("Test build completed")} successfully (in ${re.bold(formattedTime)})`,
     );
-    relinka(
-      "info",
-      "📝 Publish process is currently paused in your config file",
-    );
+    if (!isDev) {
+      relinka(
+        "info",
+        "📝 Publish process is currently paused in your config file",
+      );
+    } else {
+      relinka(
+        "info",
+        "📝 Publish is paused, you're in dev mode (use `bun pub` to publish)",
+      );
+    }
   }
 }
 
@@ -4782,6 +4770,7 @@ export async function relidler(isDev: boolean) {
       config.npmDistDir,
       config.jsrDistDir,
       config.libsDistDir,
+      isDev,
     );
   } catch (error) {
     handleBuildError(error, timer);

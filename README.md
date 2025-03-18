@@ -1,6 +1,6 @@
 # Relidler: Reliverse Bundler
 
-[💖 GitHub Sponsors](https://github.com/sponsors/blefnk) • [💬 Discord](https://discord.gg/Pb8uKbwpsJ) • [📦 NPM](https://npmjs.com/@reliverse/relidler) • [✨ Repo](https://github.com/reliverse/relidler-reliverse-bundler) • [📚 Docs](https://docs.reliverse.org)
+[💖 GitHub Sponsors](https://github.com/sponsors/blefnk) • [💬 Discord](https://discord.gg/Pb8uKbwpsJ) • [✨ Repo](https://github.com/reliverse/relidler-reliverse-bundler) • [📦 NPM](https://npmjs.com/@reliverse/relidler) • [📚 Docs](https://docs.reliverse.org)
 
 **@reliverse/relidler** is a flexible, unified, and fully automated bundler for TypeScript/JavaScript projects, as well as an NPM/JSR publishing tool.
 
@@ -41,7 +41,11 @@ bun dev # Runs bun src/main.ts --dev
     bun i -g @reliverse/relidler
     ```
 
-    **Or update if needed**: `bun -g update --latest`
+    **Or update if needed**:
+
+    ```sh
+    bun -g update --latest
+    ```
 
 2. **Prepare your project**:
 
@@ -60,7 +64,7 @@ bun dev # Runs bun src/main.ts --dev
     relidler
     ```
 
-    The `relidler.cfg.ts` file will be created automatically on the first run if it doesn't already exist. It's recommended to edit it according to your needs.
+    The `relidler.cfg.ts` file will be created automatically on the first run. It's recommended to edit it according to your needs.
 
     The following names are available for the config file: `relidler.cfg.ts` • `relidler.config.ts` • `build.cfg.ts` • `build.config.ts (⚠️soon)` • `build.pub.ts`
 
@@ -85,13 +89,15 @@ bun add -D @reliverse/relidler-sdk # (⚠️soon)
 - [ ] Implement automatic migration from `unbuild`
 - [ ] Achieve full drop-in replacement for `unbuild`
 - [ ] Make configuration fully optional using defaults
-- [ ] Support configuration via `reliverse.{ts,jsonc}`
 - [ ] Allow plugins to extend Relidler's `defineConfig`
+- [ ] Support configuration via `reliverse.{ts,jsonc}`
 
 ## Related
+
+Kudos to the following projects that made Relidler possible:
 
 - [unjs/unbuild](https://github.com/unjs/unbuild)
 
 ## License
 
-🩷 [MIT](./LICENSE.md) © [blefnk Nazar Kornienko](https://github.com/blefnk)
+🩷 [MIT](./LICENSE) © [blefnk Nazar Kornienko](https://github.com/blefnk)

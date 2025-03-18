@@ -23,9 +23,14 @@ function generateConfig(isDev: boolean): string {
     ? `import { defineConfig } from "./src/libs/cfg/cfg-main.js";`
     : `// @ts-expect-error coming soon
 import { defineConfig } from "@reliverse/relidler-cfg";`;
-  const verboseValue = getValue(isDev, true, false);
-  const isCLIValue = getValue(isDev, true, false);
-  const npmDeclarationsValue = getValue(isDev, false, true);
+  const verboseValue = getValue(isDev, true, DEFAULT_CONFIG.verbose);
+  const isCLIValue = getValue(isDev, true, DEFAULT_CONFIG.isCLI);
+  const pausePublishValue = getValue(isDev, false, DEFAULT_CONFIG.pausePublish);
+  const npmDeclarationsValue = getValue(
+    isDev,
+    false,
+    DEFAULT_CONFIG.npmDeclarations,
+  );
   const buildPublishModeValue = getValue(
     isDev,
     "main-project-only",
@@ -66,7 +71,7 @@ export default defineConfig({
 
   // Publishing options
   registry: "${DEFAULT_CONFIG.registry}",
-  pausePublish: ${DEFAULT_CONFIG.pausePublish},
+  pausePublish: ${pausePublishValue},
   dryRun: ${DEFAULT_CONFIG.dryRun},
 
   // Versioning options
@@ -146,9 +151,13 @@ export async function initRelidlerConfig(isDev: boolean) {
     const configContent = generateConfig(isDev);
     await fs.outputFile(configPath, configContent, "utf-8");
     relinka("success", `Config was created at ${configPath}`);
-    relinka("info", "Edit this file to customize build/publish settings");
-    relinka("info", "Please note: pausePublish is set to false by default");
-    relinka("info", "When you're ready, run `relidler` to build and publish");
+    relinka("info", "Edit this file to customize build and publish settings");
+    if (!isDev) {
+      relinka("info", "Please note: pausePublish is set to false by default");
+      relinka("info", "When you're ready, run `relidler` to build and publish");
+    } else {
+      relinka("info", "When you're ready, run `bun pub` to build and publish");
+    }
     process.exit(0); // ✅
   } catch (error: any) {
     relinka(
