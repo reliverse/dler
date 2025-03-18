@@ -45,11 +45,10 @@ export async function rollupStub(ctx: BuildContext): Promise<void> {
                 `plugin${i}`,
                 ...args.map((val) => JSON.stringify(val)),
               ].join(", ")}]`;
-            } else {
-              // @ts-expect-error TODO: fix (reset.d.ts)
-              importedBabelPlugins.push(plugin);
-              return `plugin${i}`;
             }
+            // @ts-expect-error TODO: fix (reset.d.ts)
+            importedBabelPlugins.push(plugin);
+            return `plugin${i}`;
           })
           .join(",")}]`
       : "[]",

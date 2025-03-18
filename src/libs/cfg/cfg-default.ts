@@ -12,12 +12,13 @@ export const DEFAULT_CONFIG: BuildPublishConfig = {
 
   // Publishing options
   registry: "npm-jsr",
-  pausePublish: false,
+  pausePublish: true,
   dryRun: false,
 
   // Versioning options
-  bump: "autoPatch",
+  bumpMode: "autoPatch",
   disableBump: false,
+  bumpFilter: ["package.json", "reliverse.jsonc", "reliverse.ts"],
 
   // NPM-only config
   npmDistDir: "dist-npm",
@@ -28,17 +29,24 @@ export const DEFAULT_CONFIG: BuildPublishConfig = {
   // JSR-only config
   jsrDistDir: "dist-jsr",
   jsrBuilder: "jsr",
-  jsrSlowTypes: false,
-  jsrAllowDirty: false,
+  jsrSlowTypes: true,
+  jsrAllowDirty: true,
 
-  // Build optimization
-  shouldMinify: true,
+  // Build setup
+  minify: true,
   splitting: false,
+  parallel: false,
+  stub: false,
+  watch: false,
   sourcemap: "none",
   esbuild: "es2023",
   publicPath: "/",
   target: "node",
   format: "esm",
+
+  // Logger options
+  freshLogFile: true,
+  logFile: "relinka.log",
 
   // Dependency filtering
   excludeMode: "patterns-and-devdeps",

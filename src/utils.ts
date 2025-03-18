@@ -107,8 +107,8 @@ const loadEnvConfig = (): Partial<RelinkaConfig> => {
 
   // RELINKA_MAX_LOG_FILES - Maximum number of log files to keep
   if (process.env.RELINKA_MAX_LOG_FILES) {
-    const value = parseInt(process.env.RELINKA_MAX_LOG_FILES, 10);
-    if (!isNaN(value)) {
+    const value = Number.parseInt(process.env.RELINKA_MAX_LOG_FILES, 10);
+    if (!Number.isNaN(value)) {
       envConfig.dirs!.maxLogFiles = value;
     }
   }
@@ -185,7 +185,6 @@ const loadConfigFile = async (): Promise<void> => {
           if (userConfig) {
             // Config file overrides environment variables
             config = { ...config, ...userConfig };
-            console.log(`Loaded configuration from ${configPath}`);
             break; // Stop after first successful config load
           }
         } catch (importErr) {
@@ -328,7 +327,7 @@ const writeToLogFile = (logMessage: string): void => {
   try {
     const logFilePath = getLogFilePath();
     fs.ensureDirSync(path.dirname(logFilePath));
-    fs.appendFileSync(logFilePath, logMessage + "\n");
+    fs.appendFileSync(logFilePath, `${logMessage}\n`);
 
     // Clean up old log files if needed
     cleanupOldLogFiles();

@@ -39,7 +39,7 @@ type ConversionOptions = {
  * Normalizes the alias prefix so that it always ends with a "/".
  */
 function normalizeAliasPrefix(prefix: string): string {
-  return prefix.endsWith("/") ? prefix : prefix + "/";
+  return prefix.endsWith("/") ? prefix : `${prefix}/`;
 }
 
 /**
@@ -630,13 +630,12 @@ function convertSingleImportPath(
       currentLibName,
       urlMap,
     });
-  } else {
-    relinka(
-      "verbose",
-      `Conversion from ${fromType} to ${toType} not implemented or not needed`,
-    );
-    return importPath;
   }
+  relinka(
+    "verbose",
+    `Conversion from ${fromType} to ${toType} not implemented or not needed`,
+  );
+  return importPath;
 }
 
 // -------------------------------------------------------------------
@@ -773,7 +772,7 @@ async function convertImportPathsInFile(
     if (generateSourceMap) {
       const sourcemap = s.generateMap({
         source: filePath,
-        file: filePath + ".map",
+        file: `${filePath}.map`,
         includeContent: true,
       });
       map = sourcemap.toString();
@@ -783,15 +782,14 @@ async function convertImportPathsInFile(
       if (!dryRun) {
         await fs.writeFile(filePath, newContent, "utf-8");
         if (generateSourceMap && map) {
-          await fs.writeFile(filePath + ".map", map, "utf-8");
+          await fs.writeFile(`${filePath}.map`, map, "utf-8");
         }
       }
       const message = `Updated import paths in: ${filePath}${dryRun ? " (dry run)" : ""}`;
       relinka("verbose", message);
       return { success: true, message };
-    } else {
-      return { success: true, message: "No matching import paths found" };
     }
+    return { success: true, message: "No matching import paths found" };
   } catch (error) {
     const errorMessage = `Error processing file ${filePath}: ${error instanceof Error ? error.message : String(error)}`;
     relinka("error", errorMessage);
@@ -864,7 +862,7 @@ async function processDirConvertImportPathsInFiles(
 
 function replaceJsExtension(importPath: string): string {
   return importPath.endsWith(".js")
-    ? importPath.slice(0, -3) + ".ts"
+    ? `${importPath.slice(0, -3)}.ts`
     : importPath;
 }
 
@@ -908,7 +906,7 @@ async function convertImportExtensionsJsToTsInFile(
     if (generateSourceMap) {
       const sourcemap = s.generateMap({
         source: filePath,
-        file: filePath + ".map",
+        file: `${filePath}.map`,
         includeContent: true,
       });
       map = sourcemap.toString();
@@ -918,17 +916,16 @@ async function convertImportExtensionsJsToTsInFile(
       if (!dryRun) {
         await fs.writeFile(filePath, newContent, "utf-8");
         if (generateSourceMap && map) {
-          await fs.writeFile(filePath + ".map", map, "utf-8");
+          await fs.writeFile(`${filePath}.map`, map, "utf-8");
         }
       }
       const message = `Replaced .js with .ts in import paths for: ${filePath}${dryRun ? " (dry run)" : ""}`;
       return { success: true, message };
-    } else {
-      return {
-        success: true,
-        message: "No .js extension found in import paths",
-      };
     }
+    return {
+      success: true,
+      message: "No .js extension found in import paths",
+    };
   } catch (error) {
     const errorMessage = `Error processing file ${filePath}: ${error instanceof Error ? error.message : String(error)}`;
     return { success: false, message: errorMessage };

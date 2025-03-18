@@ -39,7 +39,7 @@ export async function build(
   inputConfig: UnifiedBuildConfig & {
     config?: string;
     showOutLog?: boolean;
-  } = {},
+  },
   outDir: string,
 ): Promise<void> {
   // Determine rootDir
@@ -94,7 +94,7 @@ export async function build(
 
 async function _build(
   rootDir: string,
-  inputConfig: UnifiedBuildConfig = {},
+  inputConfig: UnifiedBuildConfig,
   buildConfig: UnifiedBuildConfig,
   pkg: PackageJson & Partial<Record<"relidler" | "build", UnifiedBuildConfig>>,
   cleanedDirs: string[],

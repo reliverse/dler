@@ -7,5 +7,6 @@
     "reliverse.ts",
     "src/**/*-main.ts",
     "*.{config,cfg}.{ts,js}"
-  ]
+  ],
+  "ignoreDependencies": ["bun"]
 }

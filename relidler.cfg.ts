@@ -18,8 +18,9 @@ export default defineConfig({
   dryRun: false,
 
   // Versioning options
-  bump: "autoPatch",
+  bumpMode: "autoPatch",
   disableBump: false,
+  bumpFilter: ["package.json", "reliverse.jsonc", "reliverse.ts"],
 
   // NPM-only config
   npmDistDir: "dist-npm",
@@ -33,14 +34,21 @@ export default defineConfig({
   jsrSlowTypes: true,
   jsrAllowDirty: true,
 
-  // Build optimization
-  shouldMinify: true,
+  // Build setup
+  minify: true,
   splitting: false,
   sourcemap: "none",
+  parallel: false,
+  stub: false,
+  watch: false,
   esbuild: "es2023",
   publicPath: "/",
   target: "node",
   format: "esm",
+
+  // Logger options
+  freshLogFile: true,
+  logFile: "relinka.log",
 
   // Dependency filtering
   excludeMode: "patterns-and-devdeps",
@@ -66,11 +74,13 @@ export default defineConfig({
       main: "cfg/cfg-main.ts",
       description: "@reliverse/relidler defineConfig",
       dependencies: ["pathe"],
+      minify: false,
     },
     "@reliverse/relidler-sdk": {
       main: "sdk/sdk-main.ts",
       description: "@reliverse/relidler without cli",
       dependencies: true,
+      minify: true,
     },
   },
 });

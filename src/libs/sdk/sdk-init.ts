@@ -1,32 +1,31 @@
-import { defineCommand } from "@reliverse/prompts";
 import fs from "fs-extra";
 import path from "pathe";
 
 import { DEFAULT_CONFIG } from "~/libs/cfg/cfg-default.js";
 import { relinka } from "~/utils.js";
 
+// Supported configuration filenames
+const CONFIG_FILENAMES = [
+  "relidler.cfg.ts",
+  "relidler.config.ts",
+  "build.cfg.ts",
+  "build.pub.ts",
+];
+
 // Helper to choose a value based on the environment
 function getValue<T>(isDev: boolean, devValue: T, prodValue: T): T {
   return isDev ? devValue : prodValue;
 }
 
-// Constant for configuration file name
-const CONFIG_FILE_NAME = "relidler.cfg.ts";
-
+// Generate the config file content
 function generateConfig(isDev: boolean): string {
   const importDefineConfigStatement = isDev
     ? `import { defineConfig } from "./src/libs/cfg/cfg-main.js";`
     : `// @ts-expect-error coming soon
-import { defineConfig } from "@reliverse/relidler";`;
+import { defineConfig } from "@reliverse/relidler-cfg";`;
   const verboseValue = getValue(isDev, true, false);
   const isCLIValue = getValue(isDev, true, false);
   const npmDeclarationsValue = getValue(isDev, false, true);
-  const jsrSlowTypesValue = getValue(isDev, true, false);
-  const jsrAllowDirtyValue = getValue(isDev, true, false);
-
-  const pausePublishValue = getValue(isDev, false, DEFAULT_CONFIG.pausePublish); // (?)
-  const disableBumpValue = getValue(isDev, false, DEFAULT_CONFIG.disableBump); // (?)
-
   const buildPublishModeValue = getValue(
     isDev,
     "main-project-only",
@@ -37,21 +36,17 @@ import { defineConfig } from "@reliverse/relidler";`;
   "@reliverse/relidler-cfg": {
     main: "cfg/cfg-main.ts",
     description: "@reliverse/relidler defineConfig",
-    dependencies: ["pathe"]
+    dependencies: ["pathe"],
+    minify: false,
   },
   "@reliverse/relidler-sdk": {
     main: "sdk/sdk-main.ts",
     description: "@reliverse/relidler without cli",
-    dependencies: true
-  }
+    dependencies: true,
+    minify: true,
+  },
 }`
-    : `{}`;
-
-  // Format the excluded dependency patterns array
-  const excludedDependencyPatternsValue = JSON.stringify(
-    DEFAULT_CONFIG.excludedDependencyPatterns,
-  );
-
+    : "{}";
   /**
    * relidler.cfg.ts config template
    */
@@ -71,12 +66,13 @@ export default defineConfig({
 
   // Publishing options
   registry: "${DEFAULT_CONFIG.registry}",
-  pausePublish: ${pausePublishValue},
+  pausePublish: ${DEFAULT_CONFIG.pausePublish},
   dryRun: ${DEFAULT_CONFIG.dryRun},
 
   // Versioning options
-  bump: "${DEFAULT_CONFIG.bump}",
-  disableBump: ${disableBumpValue},
+  bumpMode: "${DEFAULT_CONFIG.bumpMode}",
+  disableBump: ${DEFAULT_CONFIG.disableBump},
+  bumpFilter: ${JSON.stringify(DEFAULT_CONFIG.bumpFilter)},
 
   // NPM-only config
   npmDistDir: "${DEFAULT_CONFIG.npmDistDir}",
@@ -87,21 +83,30 @@ export default defineConfig({
   // JSR-only config
   jsrDistDir: "${DEFAULT_CONFIG.jsrDistDir}",
   jsrBuilder: "${DEFAULT_CONFIG.jsrBuilder}",
-  jsrSlowTypes: ${jsrSlowTypesValue},
-  jsrAllowDirty: ${jsrAllowDirtyValue},
+  jsrSlowTypes: ${DEFAULT_CONFIG.jsrSlowTypes},
+  jsrAllowDirty: ${DEFAULT_CONFIG.jsrAllowDirty},
 
-  // Build optimization
-  shouldMinify: ${DEFAULT_CONFIG.shouldMinify},
+  // Build setup
+  minify: ${DEFAULT_CONFIG.minify},
   splitting: ${DEFAULT_CONFIG.splitting},
   sourcemap: "${DEFAULT_CONFIG.sourcemap}",
+  parallel: ${DEFAULT_CONFIG.parallel},
+  stub: ${DEFAULT_CONFIG.stub},
+  watch: ${DEFAULT_CONFIG.watch},
   esbuild: "${DEFAULT_CONFIG.esbuild}",
   publicPath: "${DEFAULT_CONFIG.publicPath}",
   target: "${DEFAULT_CONFIG.target}",
   format: "${DEFAULT_CONFIG.format}",
 
+  // Logger options
+  freshLogFile: ${DEFAULT_CONFIG.freshLogFile},
+  logFile: "${DEFAULT_CONFIG.logFile}",
+
   // Dependency filtering
   excludeMode: "${DEFAULT_CONFIG.excludeMode}",
-  excludedDependencyPatterns: ${excludedDependencyPatternsValue},
+  excludedDependencyPatterns: ${JSON.stringify(
+    DEFAULT_CONFIG.excludedDependencyPatterns,
+  )},
 
   // Libraries Relidler Plugin
   // Publish specific dirs as separate packages
@@ -113,55 +118,44 @@ export default defineConfig({
   libs: ${libsObject},
 });
 `;
-
   return configTemplate;
 }
 
-export default defineCommand({
-  meta: {
-    name: "init",
-    description: "Initializes a new relidler.cfg.ts",
-  },
-  args: {
-    dev: {
-      type: "boolean",
-      description: "Runs the CLI in dev mode",
-      required: false,
-    },
-  },
-  run: async ({ args }) => {
-    // Get the dev flag
-    const isDev = args.dev;
-
-    // Get the config path
-    const configPath = path.resolve(process.cwd(), CONFIG_FILE_NAME);
-
-    // Check if the config file already exists
+async function findExistingConfig() {
+  for (const filename of CONFIG_FILENAMES) {
+    const configPath = path.resolve(process.cwd(), filename);
     if (await fs.pathExists(configPath)) {
-      relinka("warn", `Configuration file already exists at ${configPath}`);
-      relinka(
-        "info",
-        "To overwrite, delete the existing file and run init again.",
-      );
-      return;
+      return configPath;
     }
+  }
+  return null;
+}
 
-    try {
-      // Generate and write the config file
-      const configContent = generateConfig(isDev);
-      await fs.outputFile(configPath, configContent, "utf-8");
+export async function initRelidlerConfig(isDev: boolean) {
+  // Check if any of the supported config files already exist
+  const existingConfigPath = await findExistingConfig();
+  if (existingConfigPath) {
+    return;
+  }
 
-      relinka("success", `Configuration file created at ${configPath}`);
-      relinka(
-        "info",
-        "Edit this file to customize your build and publish settings",
-      );
-    } catch (error: any) {
-      relinka(
-        "error",
-        `Failed to create configuration file: ${error.message || error}`,
-      );
-      process.exit(1);
-    }
-  },
-});
+  // Default to the first config filename if none exists
+  const configFilename = CONFIG_FILENAMES[0];
+  const configPath = path.resolve(process.cwd(), configFilename);
+
+  try {
+    // Generate and write the config file
+    const configContent = generateConfig(isDev);
+    await fs.outputFile(configPath, configContent, "utf-8");
+    relinka("success", `Config was created at ${configPath}`);
+    relinka("info", "Edit this file to customize build/publish settings");
+    relinka("info", "Please note: pausePublish is set to false by default");
+    relinka("info", "When you're ready, run `relidler` to build and publish");
+    process.exit(0); // ✅
+  } catch (error: any) {
+    relinka(
+      "error",
+      `Error creating configuration file: ${error.message || error}`,
+    );
+    process.exit(1); // ❌
+  }
+}

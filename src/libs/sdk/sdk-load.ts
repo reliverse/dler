@@ -1,5 +1,5 @@
 import fs from "fs-extra";
-import { resolve } from "path";
+import { resolve } from "node:path";
 
 import type { BuildPublishConfig } from "~/types.js";
 
@@ -32,10 +32,9 @@ export async function loadConfig(): Promise<BuildPublishConfig> {
         if (typeof config === "function") {
           // Handle case where user exports a function
           return defineConfig(config());
-        } else {
-          // Handle case where user exports an object
-          return defineConfig(config);
         }
+        // Handle case where user exports an object
+        return defineConfig(config);
       } catch (error) {
         relinka("error", `Error loading config from ${configPath}:`, error);
         // Continue to next file on error

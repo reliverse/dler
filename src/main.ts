@@ -1,14 +1,25 @@
 import { defineCommand, errorHandler, runMain } from "@reliverse/prompts";
 
+import { initRelidlerConfig } from "./libs/sdk/sdk-init.js";
+import { relidler } from "./libs/sdk/sdk-main.js";
+
 const main = defineCommand({
   meta: {
     name: "relidler",
-    version: "1.0.6",
+    version: "1.0.12",
     description: "https://docs.reliverse.org",
   },
-  subCommands: {
-    cli: () => import("./cli.js").then((r) => r.default),
-    init: () => import("./init.js").then((r) => r.default),
+  args: {
+    dev: {
+      type: "boolean",
+      description: "Runs the CLI in dev mode",
+      required: false,
+    },
+  },
+  run: async ({ args }) => {
+    const isDev = args.dev;
+    await initRelidlerConfig(isDev);
+    await relidler(isDev);
   },
 });
 

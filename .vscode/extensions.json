@@ -3,6 +3,7 @@
     "fabiospampinato.vscode-open-multiple-files",
     "yoavbls.pretty-ts-errors",
     "berublan.vscode-log-viewer",
-    "emilast.logfilehighlighter"
+    "emilast.logfilehighlighter",
+    "oven.bun-vscode"
   ]
 }

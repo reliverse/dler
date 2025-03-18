@@ -2,11 +2,8 @@ import { re } from "@reliverse/relico";
 import { build as bunBuild } from "bun";
 import { execaCommand } from "execa";
 import fs from "fs-extra";
-import os from "os";
 import pAll from "p-all";
 import pMap from "p-map";
-import pRetry from "p-retry";
-import pTimeout from "p-timeout";
 import { resolve } from "pathe";
 import path from "pathe";
 import {
@@ -20,7 +17,12 @@ import prettyMilliseconds from "pretty-ms";
 import semver from "semver";
 import { glob } from "tinyglobby";
 
-import type { BuildPublishConfig, LibConfig } from "~/types.js";
+import type {
+  BuildPublishConfig,
+  BumpFilter,
+  BumpMode,
+  LibConfig,
+} from "~/types.js";
 
 import { relinka } from "~/utils.js";
 
@@ -57,11 +59,14 @@ function disableFunction(funcName: keyof typeof DEBUG_DISABLE) {
 // Constants & Global Setup
 // ============================
 
+// Default concurrency for parallel tasks
+// TODO: Implement dynamic concurrency based on CPU count
+const CONCURRENCY_DEFAULT = 2;
+
 const tsconfigJson = "tsconfig.json";
 const cliDomainDocs = "https://docs.reliverse.org";
 
 const PROJECT_ROOT = path.resolve(process.cwd());
-const JSON_FILE_PATTERN = "**/*.{ts,json,jsonc,json5}";
 const TEST_FILE_PATTERNS = [
   "**/*.test.js",
   "**/*.test.ts",
@@ -87,9 +92,6 @@ const IGNORE_PATTERNS = [
   "**/bun.lock",
 ];
 
-// Default concurrency for parallel tasks
-const CONCURRENCY_DEFAULT = 5;
-
 // Regex factories for version updates
 const createJsonVersionRegex = (oldVer: string): RegExp =>
   new RegExp(`"version"\\s*:\\s*"${oldVer}"`, "g");
@@ -108,78 +110,6 @@ const TS_VERSION_REGEXES = [
   (oldVer: string) =>
     new RegExp(`(const\\s+cliVersion\\s*=\\s*["'])${oldVer}(["'])`, "g"),
 ];
-
-// ============================
-// CLI Flags & Config Parsing
-// ============================
-
-/**
- * Get a configuration merged with CLI flags.
- * This applies CLI flags on top of the user's loaded configuration.
- */
-export async function getConfigWithCliFlags(
-  isDev: boolean,
-  flags?: {
-    bump?: string;
-    registry?: string;
-    verbose?: boolean;
-    dryRun?: boolean;
-    jsrAllowDirty?: boolean;
-    jsrSlowTypes?: boolean;
-  },
-): Promise<BuildPublishConfig> {
-  relinka(
-    "verbose",
-    `Entering getConfigWithCliFlags with flags: ${JSON.stringify(flags)}`,
-  );
-  // First load the user's configuration
-  const userConfig = await loadConfig();
-  relinka("verbose", "User config loaded");
-
-  // Clone the config to avoid modifying the original
-  const config = { ...userConfig };
-
-  // Override with CLI flags if provided
-  if (flags) {
-    if (flags.verbose !== undefined) {
-      config.verbose = flags.verbose;
-    }
-    if (flags.dryRun !== undefined) {
-      config.dryRun = flags.dryRun;
-    }
-    if (flags.registry) {
-      if (["npm", "jsr", "npm-jsr"].includes(flags.registry)) {
-        config.registry = flags.registry as "npm" | "jsr" | "npm-jsr";
-      } else {
-        relinka(
-          "warn",
-          `Warning: Unrecognized registry "${flags.registry}". Using config value: ${config.registry}`,
-        );
-      }
-    }
-    if (flags.jsrAllowDirty !== undefined) {
-      config.jsrAllowDirty = flags.jsrAllowDirty;
-    }
-    if (flags.jsrSlowTypes !== undefined) {
-      config.jsrSlowTypes = flags.jsrSlowTypes;
-    }
-  }
-
-  // Always set pausePublish and disableBump to true in development mode
-  if (isDev) {
-    config.pausePublish = true;
-    config.disableBump = true;
-    relinka(
-      "info",
-      "Development mode: Publishing paused and version bumping disabled.",
-    );
-  }
-  relinka(
-    "verbose",
-    `Exiting getConfigWithCliFlags with config: ${JSON.stringify(config)}`,
-  );
-  return config;
-}
 
 // ============================
 // Helper Functions & Utilities
@@ -207,37 +137,6 @@ function handleBuildError(error: unknown, startTime: number): never {
 
   // Exit with error code
   process.exit(1);
-}
-
-/**
- * Executes a shell command with retries and a timeout.
- */
-async function runCommand(command: string): Promise<void> {
-  relinka("verbose", `Entering runCommand with command: ${command}`);
-  try {
-    relinka("verbose", `Executing command: ${command}`);
-    await pRetry(
-      () =>
-        pTimeout(execaCommand(command, { stdio: "inherit" }), {
-          milliseconds: 60000,
-          message: `Command timed out after 60 seconds: ${command}`,
-        }),
-      {
-        retries: 3,
-        onFailedAttempt: (error) =>
-          relinka(
-            "warn",
-            `Command attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left. ${String(error)}`,
-          ),
-      },
-    );
-    relinka("verbose", `Command executed successfully: ${command}`);
-  } catch (error) {
-    relinka("error", `Command failed: ${command}`, error);
-    throw error;
-  } finally {
-    relinka("verbose", `Exiting runCommand for command: ${command}`);
-  }
 }
 
 /**
@@ -392,7 +291,7 @@ export async function removeDistFolders(
 
   if (existingFolders.length > 0) {
     relinka(
-      "info",
+      "verbose",
       `Found existing distribution folders: ${existingFolders.join(", ")}`,
     );
     await pMap(
@@ -543,32 +442,143 @@ async function deleteSpecificFiles(outdirBin: string): Promise<void> {
 // ============================
 
 /**
- * Updates version strings in files based on file type.
+ * Updates version strings in files based on file type and relative paths.
  */
 async function bumpVersions(
   oldVersion: string,
   newVersion: string,
+  bumpFilter: BumpFilter[] = [
+    "package.json",
+    "reliverse.jsonc",
+    "reliverse.ts",
+  ],
 ): Promise<void> {
   relinka(
     "verbose",
-    `Starting bumpVersions from ${oldVersion} to ${newVersion}`,
+    `Starting bumpVersions from ${oldVersion} to ${newVersion} with filters: ${bumpFilter.join(", ")}`,
   );
   try {
-    const modifiedCount = await processFilesInDirectory(
-      "",
-      process.cwd(),
-      [JSON_FILE_PATTERN],
-      async (file, content) => {
-        const modified = await updateVersionInContent(
-          file,
-          content,
-          oldVersion,
-          newVersion,
-        );
-        // updateVersionInContent returns a boolean and handles file writing internally
-        return { modified, newContent: undefined };
+    // Create glob patterns based on the bumpFilter
+    const filePatterns: string[] = [];
+
+    // Add patterns for each filter type in a dynamic way
+    if (bumpFilter.length > 0) {
+      // Process each filter
+      for (const filter of bumpFilter) {
+        // Case 1: Relative path with separators
+        if (filter.includes("/") || filter.includes("\\")) {
+          filePatterns.push(`**/${filter}`);
+          continue;
+        }
+
+        // Case 2: File with extension
+        if (filter.includes(".")) {
+          filePatterns.push(`**/${filter}`);
+          continue;
+        }
+
+        // Case 3: File without extension
+        filePatterns.push(`**/${filter}.*`);
+      }
+
+      relinka(
+        "verbose",
+        `Generated patterns from filters: ${filePatterns.join(", ")}`,
+      );
+    } else {
+      // If no specific filters were provided, only process package.json as fallback
+      filePatterns.push("**/package.json");
+      relinka(
+        "verbose",
+        "No filters provided, falling back to only process package.json",
+      );
+    }
+
+    // Always ignore these directories
+    const ignorePatterns = [
+      "**/node_modules/**",
+      "**/.git/**",
+      ...IGNORE_PATTERNS,
+    ];
+
+    // Try to read .gitignore file and add its patterns to our ignore list
+    try {
+      const gitignorePath = path.join(process.cwd(), ".gitignore");
+      if (await fs.pathExists(gitignorePath)) {
+        const gitignoreContent = await fs.readFile(gitignorePath, "utf8");
+        const gitignorePatterns = gitignoreContent
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line && !line.startsWith("#"))
+          .map((pattern) => {
+            // Convert .gitignore patterns to glob patterns
+            if (pattern.startsWith("/")) {
+              // Pattern starting with / in gitignore means root-relative
+              // Convert to a relative pattern but ensure it doesn't start with /
+              return pattern.substring(1);
+            } else if (pattern.endsWith("/")) {
+              // Pattern ending with / matches directories
+              return `**/${pattern}**`;
+            } else {
+              // Regular pattern
+              return `**/${pattern}`;
+            }
+          });
+
+        if (gitignorePatterns.length > 0) {
+          relinka(
+            "verbose",
+            `Adding ${gitignorePatterns.length} patterns from .gitignore`,
+          );
+          ignorePatterns.push(...gitignorePatterns);
+        }
+      }
+    } catch (err) {
+      relinka("verbose", `Could not process .gitignore: ${err}`);
+    }
+
+    // Get all matching files using tinyglobby
+    const matchedFiles = await glob(filePatterns, {
+      cwd: process.cwd(),
+      absolute: true,
+      ignore: ignorePatterns,
+      dot: false, // Skip hidden files
+    });
+
+    relinka(
+      "verbose",
+      `Found ${matchedFiles.length} files to check for version bumping`,
+    );
+
+    // Process each file to update version
+    let modifiedCount = 0;
+
+    await pMap(
+      matchedFiles,
+      async (file) => {
+        try {
+          if (!(await fs.pathExists(file))) {
+            relinka("verbose", `File does not exist (skipped): ${file}`);
+            return;
+          }
+
+          const content = await readFileSafe(file, "", "bumpVersions");
+          const modified = await updateVersionInContent(
+            file,
+            content,
+            oldVersion,
+            newVersion,
+          );
+
+          if (modified) {
+            modifiedCount++;
+            relinka("verbose", `Updated version in: ${file}`);
+          }
+        } catch (err) {
+          relinka("error", `Error processing file ${file}: ${err}`);
+        }
       },
-      { concurrency: CONCURRENCY_DEFAULT, ignore: IGNORE_PATTERNS },
+      { concurrency: CONCURRENCY_DEFAULT },
     );
 
     if (modifiedCount > 0) {
@@ -587,15 +597,15 @@ async function bumpVersions(
 }
 
 /**
- * Auto-increments a semantic version based on the specified bump mode.
+ * Auto-increments a semantic version based on the specified bumpMode.
  */
 function autoIncrementVersion(
   oldVersion: string,
-  mode: "autoPatch" | "autoMinor" | "autoMajor",
+  bumpMode: "autoPatch" | "autoMinor" | "autoMajor",
 ): string {
   relinka(
     "verbose",
-    `Auto incrementing version ${oldVersion} using mode: ${mode}`,
+    `Auto incrementing version ${oldVersion} using mode: ${bumpMode}`,
   );
   if (!semver.valid(oldVersion)) {
     throw new Error(`Can't auto-increment invalid version: ${oldVersion}`);
@@ -605,9 +615,9 @@ function autoIncrementVersion(
     autoMinor: "minor",
     autoMajor: "major",
   } as const;
-  const newVer = semver.inc(oldVersion, releaseTypeMap[mode]);
+  const newVer = semver.inc(oldVersion, releaseTypeMap[bumpMode]);
   if (!newVer) {
-    throw new Error(`semver.inc failed for ${oldVersion} and mode ${mode}`);
+    throw new Error(`semver.inc failed for ${oldVersion} and mode ${bumpMode}`);
   }
   relinka("verbose", `Auto incremented version: ${newVer}`);
   return newVer;
@@ -618,12 +628,11 @@ function autoIncrementVersion(
  */
 export async function setBumpDisabled(
   value: boolean,
-  isDev: boolean,
+  pausePublish: boolean,
 ): Promise<void> {
   relinka("verbose", `Entering setBumpDisabled with value: ${value}`);
-  const config = await getConfigWithCliFlags(isDev);
 
-  if (config.pausePublish && value) {
+  if (pausePublish && value) {
     relinka(
       "verbose",
       "Skipping disableBump toggle due to `pausePublish: true`",
@@ -651,33 +660,24 @@ export async function setBumpDisabled(
     `disableBump: ${value}`,
   );
   await writeFileSafe(configPath, content, "disableBump update");
-  relinka("info", `Updated disableBump to ${value}`);
 }
 
 /**
  * Handles version bumping.
  */
 export async function bumpHandler(
-  isDev: boolean,
-  flags?: {
-    bump?: string;
-  },
+  bumpMode: BumpMode,
+  disableBump: boolean,
+  pausePublish: boolean,
+  bumpFilter: BumpFilter[],
 ): Promise<void> {
-  relinka(
-    "verbose",
-    `Entering bumpHandler with flags: ${JSON.stringify(flags)}`,
-  );
-  const config = await getConfigWithCliFlags(isDev, flags);
-
-  if (config.disableBump || config.pausePublish) {
+  if (disableBump || pausePublish) {
     relinka(
       "info",
       "Skipping version bump because it is either `disableBump: true` or `pausePublish: true` in your relidler config.",
     );
     return;
   }
-
-  const bumpVersion = flags?.bump;
 
   const pkgPath = path.resolve("package.json");
   if (!(await fs.pathExists(pkgPath))) {
@@ -689,35 +689,20 @@ export async function bumpHandler(
   }
   const oldVersion = pkgJson.version;
 
-  if (bumpVersion) {
-    if (!semver.valid(bumpVersion)) {
-      throw new Error(`Invalid version format for --bump: "${bumpVersion}"`);
-    }
-    if (oldVersion !== bumpVersion) {
-      await bumpVersions(oldVersion, bumpVersion);
-      await setBumpDisabled(true, isDev);
-    } else {
-      relinka("info", `Version is already at ${oldVersion}, no bump needed.`);
-    }
-  } else {
-    if (!semver.valid(oldVersion)) {
-      throw new Error(
-        `Invalid existing version in package.json: ${oldVersion}`,
-      );
-    }
-    relinka(
-      "info",
-      `Auto-incrementing version from ${oldVersion} using "${config.bump}"`,
-    );
-    const incremented = autoIncrementVersion(oldVersion, config.bump);
-    if (oldVersion !== incremented) {
-      await bumpVersions(oldVersion, incremented);
-      await setBumpDisabled(true, isDev);
-    } else {
-      relinka("info", `Version is already at ${oldVersion}, no bump needed.`);
-    }
+  if (!semver.valid(oldVersion)) {
+    throw new Error(`Invalid existing version in package.json: ${oldVersion}`);
   }
-  relinka("verbose", "Exiting bumpHandler");
+  relinka(
+    "info",
+    `Auto-incrementing version from ${oldVersion} using "${bumpMode}"`,
+  );
+  const incremented = autoIncrementVersion(oldVersion, bumpMode);
+  if (oldVersion !== incremented) {
+    await bumpVersions(oldVersion, incremented, bumpFilter);
+    await setBumpDisabled(true, pausePublish);
+  } else {
+    relinka("info", `Version is already at ${oldVersion}, no bump needed.`);
+  }
 }
 
 // ============================
@@ -750,7 +735,7 @@ async function createCommonPackageFields(): Promise<Partial<PackageJson>> {
   if (isCLI) {
     relinka(
       "verbose",
-      `isCLI is true, adding CLI-specific fields to common package fields`,
+      "isCLI is true, adding CLI-specific fields to common package fields",
     );
     if (commonPkg.keywords) {
       const cliCommandName = name?.startsWith("@")
@@ -784,7 +769,7 @@ async function createCommonPackageFields(): Promise<Partial<PackageJson>> {
       relinka("verbose", `Set keywords: ${JSON.stringify(commonPkg.keywords)}`);
     }
   } else {
-    relinka("verbose", `isCLI is false, skipping CLI-specific fields`);
+    relinka("verbose", "isCLI is false, skipping CLI-specific fields");
   }
 
   if (author) {
@@ -822,7 +807,7 @@ async function filterDeps(
   clearUnused: boolean,
   outdirBin: string,
   isJsr: boolean,
-  config?: BuildPublishConfig,
+  config: BuildPublishConfig,
 ): Promise<Record<string, string>> {
   relinka("verbose", `Filtering dependencies (clearUnused=${clearUnused})`);
   if (!deps) return {};
@@ -851,7 +836,8 @@ async function filterDeps(
     if (excludeMode === "patterns-only") {
       // Only exclude dependencies matching patterns, regardless if they're dev dependencies
       return shouldExcludeByPattern(depName);
-    } else if (excludeMode === "patterns-and-devdeps") {
+    }
+    if (excludeMode === "patterns-and-devdeps") {
       // Exclude both dev dependencies and dependencies matching patterns
       return isDev || shouldExcludeByPattern(depName);
     }
@@ -1506,7 +1492,7 @@ async function regular_bundleUsingBun(
       target: cfg.target,
       format: cfg.format,
       splitting: cfg.splitting,
-      minify: cfg.shouldMinify,
+      minify: cfg.minify,
       sourcemap: getBunSourcemapOption(cfg.sourcemap),
       throw: true,
       naming: {
@@ -1525,10 +1511,11 @@ async function regular_bundleUsingBun(
       drop: ["debugger"],
     });
 
-    const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+    const duration = performance.now() - startTime;
+    const formattedDuration = prettyMilliseconds(duration, { verbose: true });
     relinka(
       "success",
-      `Regular bun build completed in ${duration}s with ${buildResult.outputs.length} output file(s).`,
+      `Regular bun build completed in ${formattedDuration} with ${buildResult.outputs.length} output file(s).`,
     );
 
     if (buildResult.logs && buildResult.logs.length > 0) {
@@ -1586,7 +1573,7 @@ async function library_bundleUsingBun(
       target: cfg.target,
       format: cfg.format,
       splitting: cfg.splitting,
-      minify: cfg.shouldMinify,
+      minify: cfg.minify,
       sourcemap: getBunSourcemapOption(cfg.sourcemap),
       throw: true,
       naming: {
@@ -1605,10 +1592,11 @@ async function library_bundleUsingBun(
       drop: ["debugger"],
     });
 
-    const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+    const duration = performance.now() - startTime;
+    const formattedDuration = prettyMilliseconds(duration, { verbose: true });
     relinka(
       "success",
-      `Library bun build completed in ${duration}s for ${libName} with ${buildResult.outputs.length} output file(s).`,
+      `Library bun build completed in ${formattedDuration} for ${libName} with ${buildResult.outputs.length} output file(s).`,
     );
 
     if (buildResult.logs && buildResult.logs.length > 0) {
@@ -1657,7 +1645,7 @@ export async function regular_pubToJsr(
       const jsrDistDirResolved = resolve(PROJECT_ROOT, config.jsrDistDir);
       await withWorkingDirectory(jsrDistDirResolved, async () => {
         const command = [
-          "bunx jsr publish",
+          "bun x jsr publish",
           dryRun ? "--dry-run" : "",
           config.jsrAllowDirty ? "--allow-dirty" : "",
           config.jsrSlowTypes ? "--allow-slow-types" : "",
@@ -1665,7 +1653,7 @@ export async function regular_pubToJsr(
           .filter(Boolean)
           .join(" ");
         relinka("verbose", `Running publish command: ${command}`);
-        await runCommand(command);
+        await execaCommand(command, { stdio: "inherit" });
         relinka(
           "success",
           `Successfully ${dryRun ? "validated" : "published"} to JSR registry`,
@@ -1699,7 +1687,7 @@ export async function regular_pubToNpm(
           .filter(Boolean)
           .join(" ");
         relinka("verbose", `Running publish command: ${command}`);
-        await runCommand(command);
+        await execaCommand(command, { stdio: "inherit" });
         relinka(
           "success",
           `Successfully ${dryRun ? "validated" : "published"} to NPM registry`,
@@ -1911,7 +1899,7 @@ async function createLibPackageJSON(
 
   if (isCLI) {
     relinka("verbose", `Adding CLI-specific fields for lib ${libName}...`);
-    const binPath = `bin/main.js`;
+    const binPath = "bin/main.js";
     Object.assign(commonPkg, {
       bin: { [cliCommandName]: binPath },
     });
@@ -2793,7 +2781,7 @@ async function renameEntryFile(
   outdirBin: string,
   entryDir: string,
   entryFile: string,
-  config?: BuildPublishConfig,
+  config: BuildPublishConfig,
 ): Promise<{ updatedEntryFile: string }> {
   relinka(
     "verbose",
@@ -2982,9 +2970,37 @@ async function regular_bundleUsingJsr(
 async function library_bundleUsingJsr(
   src: string,
   dest: string,
+): Promise<void> {
+  relinka("info", `Starting regular JSR bundle: ${src} -> ${dest}`);
+  await ensuredir(path.dirname(dest));
+
+  // Validate source is a directory
+  const stats = await fs.stat(src);
+  if (!stats.isDirectory()) {
+    throw new Error(
+      "You are using the 'jsr' builder, but path to file was provided. Please provide path to directory instead.",
+    );
+  }
+
+  try {
+    await fs.copy(src, dest);
+    relinka("verbose", `Copied directory from ${src} to ${dest}`);
+    relinka("success", "Completed regular JSR bundling");
+  } catch (error) {
+    // Handle errors gracefully with fallback to original source
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    relinka("warn", `${errorMessage}, falling back to copying ${src}`);
+    await fs.copy(src, dest);
+  }
+}
+
+// TODO: remove
+async function _library_bundleUsingJsr2(
+  src: string,
+  dest: string,
   baseDir: string,
-  isDev: boolean,
   isJsr: boolean,
+  config: BuildPublishConfig,
 ): Promise<void> {
   relinka("info", `Starting library JSR bundle: ${src} -> ${dest}`);
   relinka("verbose", `Base directory: ${baseDir}`);
@@ -3008,7 +3024,6 @@ async function library_bundleUsingJsr(
     }
 
     const libName = libNameMatch[1];
-    const config = await getConfigWithCliFlags(isDev);
     const libConfig = config.libs?.[`@reliverse/${libName}`];
 
     if (!libConfig?.main) {
@@ -3052,23 +3067,12 @@ async function library_bundleUsingJsr(
  * @param config - Build and publish configuration
  * @param entryFile - Entry file path
  * @param outdirBin - Output directory path
- * @param argsBuilderConfig - Builder configuration options
  * @param builder - Builder type to use (rollup, untyped, mkdist, copy)
  */
 async function regular_bundleUsingUnified(
   config: BuildPublishConfig,
   entryFile: string,
   outdirBin: string,
-  argsBuilderConfig: {
-    config?: string;
-    dir?: string;
-    minify?: boolean;
-    parallel?: boolean;
-    sourcemap?: boolean;
-    stub?: boolean;
-    watch?: boolean;
-    ext?: string;
-  },
   builder: "rollup" | "untyped" | "mkdist" | "copy",
 ): Promise<void> {
   try {
@@ -3076,7 +3080,7 @@ async function regular_bundleUsingUnified(
       "verbose",
       `Starting regular_bundleUsingUnified with builder: ${builder}`,
     );
-    const rootDir = resolve(process.cwd(), argsBuilderConfig.dir || ".");
+    const rootDir = resolve(process.cwd(), config.entrySrcDir || ".");
     const startTime = performance.now();
 
     // Validate and normalize the output file extension
@@ -3097,13 +3101,10 @@ async function regular_bundleUsingUnified(
     const input = builder === "mkdist" ? path.dirname(entryFile) : entryFile;
 
     // Determine optimal concurrency based on configuration and system resources
-    const concurrency = determineOptimalConcurrency(argsBuilderConfig);
+    const concurrency = CONCURRENCY_DEFAULT;
     relinka("verbose", `Using concurrency level: ${concurrency}`);
 
     const unifiedBuildConfig = {
-      config: argsBuilderConfig.config
-        ? resolve(argsBuilderConfig.config)
-        : undefined,
       declaration: false,
       clean: false,
       entries: [
@@ -3114,8 +3115,8 @@ async function regular_bundleUsingUnified(
           ext: config.npmOutFilesExt,
         },
       ],
-      stub: argsBuilderConfig.stub,
-      watch: argsBuilderConfig.watch ?? false,
+      stub: config.stub,
+      watch: config.watch ?? false,
       showOutLog: true,
       concurrency,
       rollup: {
@@ -3123,27 +3124,21 @@ async function regular_bundleUsingUnified(
         inlineDependencies: true,
         esbuild: {
           target: config.esbuild,
-          minify: argsBuilderConfig.minify ?? config.shouldMinify,
+          minify: config.minify,
         },
         output: {
-          sourcemap:
-            argsBuilderConfig.sourcemap ?? getRollupSourcemap(config.sourcemap),
+          sourcemap: getRollupSourcemap(config.sourcemap),
         },
       },
-      sourcemap: argsBuilderConfig.sourcemap ?? false,
-    } satisfies UnifiedBuildConfig & { config?: string; concurrency?: number };
+    } satisfies UnifiedBuildConfig & { concurrency?: number };
 
-    await unifiedBuild(
-      rootDir,
-      argsBuilderConfig.stub,
-      unifiedBuildConfig,
-      outdirBin,
-    );
+    await unifiedBuild(rootDir, config.stub, unifiedBuildConfig, outdirBin);
 
-    const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+    const duration = performance.now() - startTime;
+    const formattedDuration = prettyMilliseconds(duration, { verbose: true });
     relinka(
       "success",
-      `Regular bundle completed in ${duration}s using ${builder} builder`,
+      `Regular bundle completed in ${formattedDuration} using ${builder} builder`,
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -3169,23 +3164,12 @@ async function regular_bundleUsingUnified(
  * @param config - Build and publish configuration
  * @param entryFile - Entry file path
  * @param outdirBin - Output directory path
- * @param argsBuilderConfig - Builder configuration options
  * @param builder - Builder type to use (rollup, untyped, mkdist, copy)
  */
 async function library_bundleUsingUnified(
   config: BuildPublishConfig,
   entryFile: string,
   outdirBin: string,
-  argsBuilderConfig: {
-    config?: string;
-    dir?: string;
-    minify?: boolean;
-    parallel?: boolean;
-    sourcemap?: boolean;
-    stub?: boolean;
-    watch?: boolean;
-    ext?: string;
-  },
   builder: "rollup" | "untyped" | "mkdist" | "copy",
   isJsr: boolean,
 ): Promise<void> {
@@ -3194,7 +3178,7 @@ async function library_bundleUsingUnified(
       "verbose",
       `Starting library_bundleUsingUnified with builder: ${builder}`,
     );
-    const rootDir = resolve(process.cwd(), argsBuilderConfig.dir || ".");
+    const rootDir = resolve(process.cwd(), config.entrySrcDir || ".");
     const startTime = performance.now();
 
     // Extract the library name from the distName
@@ -3232,13 +3216,10 @@ async function library_bundleUsingUnified(
     const input = builder === "mkdist" ? libSrcDir : entryFile;
 
     // Determine optimal concurrency based on configuration and system resources
-    const concurrency = determineOptimalConcurrency(argsBuilderConfig);
+    const concurrency = CONCURRENCY_DEFAULT;
     relinka("verbose", `Using concurrency level: ${concurrency}`);
 
     const unifiedBuildConfig = {
-      config: argsBuilderConfig.config
-        ? resolve(argsBuilderConfig.config)
-        : undefined,
       declaration: false,
       clean: false,
       entries: [
@@ -3249,8 +3230,8 @@ async function library_bundleUsingUnified(
           ext: config.npmOutFilesExt,
         },
       ],
-      stub: argsBuilderConfig.stub,
-      watch: argsBuilderConfig.watch ?? false,
+      stub: config.stub,
+      watch: config.watch ?? false,
       showOutLog: true,
       concurrency,
       rollup: {
@@ -3258,22 +3239,15 @@ async function library_bundleUsingUnified(
         inlineDependencies: true,
         esbuild: {
           target: config.esbuild,
-          minify: argsBuilderConfig.minify ?? config.shouldMinify,
+          minify: config.minify,
         },
         output: {
-          sourcemap:
-            argsBuilderConfig.sourcemap ?? getRollupSourcemap(config.sourcemap),
+          sourcemap: getRollupSourcemap(config.sourcemap),
         },
       },
-      sourcemap: argsBuilderConfig.sourcemap ?? false,
-    } satisfies UnifiedBuildConfig & { config?: string; concurrency?: number };
+    } satisfies UnifiedBuildConfig & { concurrency?: number };
 
-    await unifiedBuild(
-      rootDir,
-      argsBuilderConfig.stub,
-      unifiedBuildConfig,
-      outdirBin,
-    );
+    await unifiedBuild(rootDir, config.stub, unifiedBuildConfig, outdirBin);
 
     const duration = ((performance.now() - startTime) / 1000).toFixed(2);
     relinka(
@@ -3366,7 +3340,6 @@ async function library_performCommonBuildSteps({
   libName,
   entryDir,
   outdirRoot,
-  outdirBinResolved,
   isDev,
   isJsr,
   deleteFiles = true,
@@ -3374,11 +3347,12 @@ async function library_performCommonBuildSteps({
   libName: string;
   entryDir: string;
   outdirRoot: string;
-  outdirBinResolved: string;
   isDev: boolean;
   isJsr: boolean;
   deleteFiles?: boolean;
 }): Promise<void> {
+  const outdirBinResolved = path.resolve(outdirRoot, "bin");
+
   // First convert library imports to package names
   await unstable_convertImportPathsToPkgNames(outdirBinResolved, isJsr);
 
@@ -3415,23 +3389,13 @@ async function library_performCommonBuildSteps({
  */
 async function regular_buildJsrDist(
   isDev: boolean,
-  argsBuilderConfig: {
-    config?: string;
-    dir?: string;
-    minify?: boolean;
-    parallel?: boolean;
-    sourcemap?: boolean;
-    stub?: boolean;
-    watch?: boolean;
-    ext?: string;
-  },
+  config: BuildPublishConfig,
   isJsr: boolean,
 ): Promise<void> {
   // =====================================================
   // [dist-jsr] 1. Initialize
   // =====================================================
   relinka("info", "Building JSR distribution...");
-  const config = await loadConfig();
   const { entrySrcDir, jsrDistDir, jsrBuilder, entryFile } = config;
   const entrySrcDirResolved = resolve(process.cwd(), entrySrcDir);
   const entryFilePath = path.join(entrySrcDirResolved, entryFile);
@@ -3453,7 +3417,6 @@ async function regular_buildJsrDist(
       config,
       entryFilePath,
       outdirBinResolved,
-      argsBuilderConfig,
       "mkdist",
     );
   }
@@ -3496,22 +3459,12 @@ async function regular_buildJsrDist(
  */
 export async function regular_buildNpmDist(
   isDev: boolean,
-  argsBuilderConfig: {
-    config?: string;
-    dir?: string;
-    minify?: boolean;
-    parallel?: boolean;
-    sourcemap?: boolean;
-    stub?: boolean;
-    watch?: boolean;
-    ext?: string;
-  },
+  config: BuildPublishConfig,
 ): Promise<void> {
   // =====================================================
   // [dist-npm] 1. Initialize
   // =====================================================
   relinka("info", "Building NPM distribution...");
-  const config = await loadConfig();
   const { entrySrcDir, npmDistDir, npmBuilder, entryFile } = config;
   const entrySrcDirResolved = resolve(process.cwd(), entrySrcDir);
   const entryFilePath = path.join(entrySrcDirResolved, entryFile);
@@ -3533,7 +3486,6 @@ export async function regular_buildNpmDist(
       config,
       entryFilePath,
       outdirBinResolved,
-      argsBuilderConfig,
       npmBuilder,
     );
   }
@@ -3565,21 +3517,83 @@ export async function regular_buildNpmDist(
  * Builds a lib distribution for JSR.
  */
 async function library_buildJsrDist(
+  isDev: boolean,
+  config: BuildPublishConfig,
+  libName: string,
+): Promise<void> {
+  // =====================================================
+  // [dist-jsr] 1. Initialize
+  // =====================================================
+  relinka("info", "Building JSR distribution...");
+  const { entrySrcDir, jsrDistDir, jsrBuilder, entryFile } = config;
+  const entrySrcDirResolved = resolve(process.cwd(), entrySrcDir);
+  const entryFilePath = path.join(entrySrcDirResolved, entryFile);
+  const jsrDistDirResolved = resolve(process.cwd(), jsrDistDir);
+  const outdirBinResolved = path.resolve(jsrDistDirResolved, "bin");
+  await ensuredir(jsrDistDirResolved);
+  await ensuredir(outdirBinResolved);
+  relinka("info", `Using JSR builder: ${jsrBuilder}`);
+
+  // =====================================================
+  // [dist-jsr] 2. Build using the appropriate builder
+  // =====================================================
+  if (jsrBuilder === "jsr") {
+    await library_bundleUsingJsr(entrySrcDirResolved, outdirBinResolved);
+  } else if (jsrBuilder === "bun") {
+    await library_bundleUsingBun(config, entryFilePath, outdirBinResolved, "");
+  } else {
+    await library_bundleUsingUnified(
+      config,
+      entryFilePath,
+      outdirBinResolved,
+      "mkdist",
+      true,
+    );
+  }
+
+  // =====================================================
+  // [dist-jsr] 3. Perform common build steps
+  // =====================================================
+  await library_performCommonBuildSteps({
+    libName,
+    entryDir: entrySrcDirResolved,
+    outdirRoot: jsrDistDirResolved,
+    isDev,
+    isJsr: true,
+  });
+
+  // =====================================================
+  // [dist-jsr] 4. Perform additional steps
+  // =====================================================
+  await convertImportExtensionsJsToTs(outdirBinResolved);
+  await renameTsxFiles(outdirBinResolved);
+  await createJsrJSONC(jsrDistDirResolved, false);
+  if (config.isCLI) {
+    await createTSConfig(jsrDistDirResolved, true);
+  }
+
+  // =====================================================
+  // [dist-jsr] 5. Finalize
+  // =====================================================
+  const dirSize = await getDirectorySize(jsrDistDirResolved, isDev);
+  const filesCount = await outdirBinFilesCount(outdirBinResolved);
+  relinka(
+    "success",
+    `JSR distribution built successfully (${filesCount} files, ${prettyBytes(dirSize)})`,
+  );
+}
+
+/**
+ * Builds a lib distribution for JSR.
+ * @deprecated TODO: remove
+ */
+async function _library_buildJsrDist2(
   libName: string,
   libEntryDir: string,
   libOutdirRoot: string,
   libEntryFile: string,
   isDev: boolean,
-  argsBuilderConfig: {
-    config?: string;
-    dir?: string;
-    minify?: boolean;
-    parallel?: boolean;
-    sourcemap?: boolean;
-    stub?: boolean;
-    watch?: boolean;
-    ext?: string;
-  },
+  config: BuildPublishConfig,
 ): Promise<void> {
   // =====================================================
   // [dist-libs/jsr] 1. Initialize
@@ -3589,7 +3603,6 @@ async function library_buildJsrDist(
     "verbose",
     `[${distName}] Starting library_buildJsrDist for lib: ${libName}`,
   );
-  const config = await loadConfig();
   const { entrySrcDir, jsrBuilder, libs, isCLI } = config;
   const libOutdirBinResolved = path.resolve(libOutdirRoot, "bin");
   relinka("info", `[${distName}] Building JSR dist for lib: ${libName}...`);
@@ -3617,9 +3630,9 @@ async function library_buildJsrDist(
     await library_bundleUsingJsr(
       libSrcDir,
       libOutdirBinResolved,
-      entrySrcDirResolved,
-      isDev,
-      true,
+      // entrySrcDirResolved,
+      // isDev,
+      // true,
     );
   } else if (jsrBuilder === "bun") {
     await library_bundleUsingBun(
@@ -3641,7 +3654,6 @@ async function library_buildJsrDist(
       config,
       libEntryFilePath,
       libOutdirBinResolved,
-      argsBuilderConfig,
       "mkdist",
       true,
     );
@@ -3654,7 +3666,6 @@ async function library_buildJsrDist(
     libName,
     entryDir: libEntryDir,
     outdirRoot: libOutdirRoot,
-    outdirBinResolved: libOutdirBinResolved,
     isDev,
     isJsr: true,
   });
@@ -3699,16 +3710,7 @@ async function library_buildNpmDist(
   libOutdirRoot: string,
   libEntryFile: string,
   isDev: boolean,
-  argsBuilderConfig: {
-    config?: string;
-    dir?: string;
-    minify?: boolean;
-    parallel?: boolean;
-    sourcemap?: boolean;
-    stub?: boolean;
-    watch?: boolean;
-    ext?: string;
-  },
+  config: BuildPublishConfig,
 ): Promise<void> {
   // =====================================================
   // [dist-libs/npm] 1. Initialize
@@ -3718,7 +3720,6 @@ async function library_buildNpmDist(
     "verbose",
     `[${distName}] Starting library_buildNpmDist for lib: ${libName}`,
   );
-  const config = await loadConfig();
   const { entrySrcDir, npmBuilder, libs } = config;
   const libOutdirBinResolved = path.resolve(libOutdirRoot, "bin");
   relinka("info", `[${distName}] Building NPM dist for lib: ${libName}...`);
@@ -3746,9 +3747,9 @@ async function library_buildNpmDist(
     await library_bundleUsingJsr(
       libSrcDir,
       libOutdirBinResolved,
-      entrySrcDirResolved,
-      isDev,
-      false,
+      // entrySrcDirResolved,
+      // isDev,
+      // false,
     );
   } else if (npmBuilder === "bun") {
     await library_bundleUsingBun(
@@ -3770,7 +3771,6 @@ async function library_buildNpmDist(
       config,
       libEntryFilePath,
       libOutdirBinResolved,
-      argsBuilderConfig,
       npmBuilder,
       false,
     );
@@ -3783,7 +3783,6 @@ async function library_buildNpmDist(
     libName,
     entryDir: libEntryDir,
     outdirRoot: libOutdirRoot,
-    outdirBinResolved: libOutdirBinResolved,
     isDev,
     isJsr: false,
   });
@@ -3828,23 +3827,29 @@ async function library_pubToJsr(
     return;
   }
   const config = await loadConfig();
-  await withWorkingDirectory(libOutDir, async () => {
-    relinka("info", `Publishing lib ${libName} to JSR from ${libOutDir}`);
-    const command = [
-      "bunx jsr publish",
-      dryRun ? "--dry-run" : "",
-      config.jsrAllowDirty ? "--allow-dirty" : "",
-      config.jsrSlowTypes ? "--allow-slow-types" : "",
-    ]
-      .filter(Boolean)
-      .join(" ");
-    await runCommand(command);
-    relinka(
-      "success",
-      `Successfully ${dryRun ? "validated" : "published"} lib ${libName} to JSR`,
-    );
-  });
-  relinka("verbose", `Exiting library_pubToJsr for lib: ${libName}`);
+  try {
+    await withWorkingDirectory(libOutDir, async () => {
+      relinka("info", `Publishing lib ${libName} to JSR from ${libOutDir}`);
+      const command = [
+        "bun x jsr publish",
+        dryRun ? "--dry-run" : "",
+        config.jsrAllowDirty ? "--allow-dirty" : "",
+        config.jsrSlowTypes ? "--allow-slow-types" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+      await execaCommand(command, { stdio: "inherit" });
+      relinka(
+        "success",
+        `Successfully ${dryRun ? "validated" : "published"} lib ${libName} to JSR`,
+      );
+    });
+  } catch (error) {
+    relinka("error", `Failed to publish lib ${libName} to JSR`, error);
+    throw error;
+  } finally {
+    relinka("verbose", `Exiting library_pubToJsr for lib: ${libName}`);
+  }
 }
 
 /**
@@ -3861,18 +3866,24 @@ async function library_pubToNpm(
     relinka("info", `Skipping lib ${libName} NPM publish in development mode`);
     return;
   }
-  await withWorkingDirectory(libOutDir, async () => {
-    relinka("info", `Publishing lib ${libName} to NPM from ${libOutDir}`);
-    const command = ["bun publish", dryRun ? "--dry-run" : ""]
-      .filter(Boolean)
-      .join(" ");
-    await runCommand(command);
-    relinka(
-      "success",
-      `Successfully ${dryRun ? "validated" : "published"} lib ${libName} to NPM`,
-    );
-  });
-  relinka("verbose", `Exiting library_pubToNpm for lib: ${libName}`);
+  try {
+    await withWorkingDirectory(libOutDir, async () => {
+      relinka("info", `Publishing lib ${libName} to NPM from ${libOutDir}`);
+      const command = ["bun publish", dryRun ? "--dry-run" : ""]
+        .filter(Boolean)
+        .join(" ");
+      await execaCommand(command, { stdio: "inherit" });
+      relinka(
+        "success",
+        `Successfully ${dryRun ? "validated" : "published"} lib ${libName} to NPM`,
+      );
+    });
+  } catch (error) {
+    relinka("error", `Failed to publish lib ${libName} to NPM`, error);
+    throw error;
+  } finally {
+    relinka("verbose", `Exiting library_pubToNpm for lib: ${libName}`);
+  }
 }
 
 /**
@@ -3884,123 +3895,6 @@ function extractFolderName(libName: string): string {
     if (parts.length > 1) return parts[1]!;
   }
   return libName;
-}
-
-/**
- * Determines the optimal concurrency based on configuration and system resources.
- */
-function determineOptimalConcurrency(argsBuilderConfig: {
-  parallel?: boolean;
-  [key: string]: any;
-}): number {
-  if (argsBuilderConfig.parallel === false) {
-    return 1; // Sequential processing explicitly requested
-  }
-
-  // Default concurrency based on parallel flag
-  const defaultConcurrency = argsBuilderConfig.parallel ? 4 : 2;
-
-  try {
-    // Try to get available CPU cores for better resource utilization
-    const cpuCount = os.cpus().length;
-
-    // Use CPU count as a factor, but don't go too high to avoid overwhelming the system
-    // For parallel mode, use 75% of available cores, for non-parallel use 50%
-    const factor = argsBuilderConfig.parallel ? 0.75 : 0.5;
-    const calculatedConcurrency = Math.max(1, Math.floor(cpuCount * factor));
-
-    return calculatedConcurrency;
-  } catch (_) {
-    // Fallback to default if we can't determine CPU count
-    return defaultConcurrency;
-  }
-}
-
-/**
- * Builds a library for the specified registry.
- */
-async function buildLibrary(
-  registry: string | undefined,
-  libName: string,
-  mainDir: string,
-  npmOutDir: string,
-  jsrOutDir: string,
-  mainFile: string,
-  isDev: boolean,
-  argsBuilderConfig: {
-    config?: string;
-    dir?: string;
-    minify?: boolean;
-    parallel?: boolean;
-    sourcemap?: boolean;
-    stub?: boolean;
-    watch?: boolean;
-    ext?: string;
-  },
-): Promise<void> {
-  switch (registry) {
-    case "npm-jsr": {
-      relinka("info", `Building lib ${libName} for NPM and JSR...`);
-
-      // Create build tasks
-      const buildTasks = [
-        () =>
-          library_buildNpmDist(
-            libName,
-            mainDir,
-            npmOutDir,
-            mainFile,
-            isDev,
-            argsBuilderConfig,
-          ),
-        () =>
-          library_buildJsrDist(
-            libName,
-            mainDir,
-            jsrOutDir,
-            mainFile,
-            isDev,
-            argsBuilderConfig,
-          ),
-      ];
-
-      // Run build tasks with appropriate concurrency
-      await pAll(buildTasks, {
-        concurrency: argsBuilderConfig.parallel ? 2 : 1,
-      });
-      break;
-    }
-
-    case "npm":
-      relinka("info", `Building lib ${libName} for NPM...`);
-      await library_buildNpmDist(
-        libName,
-        mainDir,
-        npmOutDir,
-        mainFile,
-        isDev,
-        argsBuilderConfig,
-      );
-      break;
-
-    case "jsr":
-      relinka("info", `Building lib ${libName} for JSR...`);
-      await library_buildJsrDist(
-        libName,
-        mainDir,
-        jsrOutDir,
-        mainFile,
-        isDev,
-        argsBuilderConfig,
-      );
-      break;
-
-    default:
-      relinka(
-        "warn",
-        `Unknown registry "${registry}" for lib ${libName}. Skipping build.`,
-      );
-  }
 }
 
 /**
@@ -4033,7 +3927,7 @@ async function publishLibrary(
         () => library_pubToJsr(jsrOutDir, dryRun, libName, isDev),
       ];
 
-      // Run publish tasks with appropriate concurrency
+      // Run publish tasks
       await pAll(publishTasks, { concurrency: 2 });
       break;
     }
@@ -4057,36 +3951,108 @@ async function publishLibrary(
 }
 
 /**
+ * Builds a library for the specified registry.
+ */
+async function buildLibrary(
+  registry: string | undefined,
+  libName: string,
+  mainDir: string,
+  npmOutDir: string,
+  mainFile: string,
+  isDev: boolean,
+  config: BuildPublishConfig,
+): Promise<void> {
+  switch (registry) {
+    case "npm-jsr": {
+      relinka("info", `Building lib ${libName} for NPM and JSR...`);
+
+      // Create build tasks
+      const buildTasks = [
+        // () =>
+        //   library_buildNpmDist(
+        //     libName,
+        //     mainDir,
+        //     npmOutDir,
+        //     mainFile,
+        //     isDev,
+        //     config,
+        //   ),
+        () =>
+          library_buildJsrDist(
+            isDev,
+            config,
+            libName,
+            // mainDir,
+            // jsrOutDir,
+            // mainFile,
+          ),
+      ];
+
+      // Run build tasks
+      await pAll(buildTasks, {
+        concurrency: 2,
+      });
+      break;
+    }
+
+    case "npm":
+      relinka("info", `Building lib ${libName} for NPM-only...`);
+      await library_buildNpmDist(
+        libName,
+        mainDir,
+        npmOutDir,
+        mainFile,
+        isDev,
+        config,
+      );
+      break;
+
+    case "jsr":
+      relinka("info", `Building lib ${libName} for JSR-only...`);
+      await library_buildJsrDist(
+        isDev,
+        config,
+        libName,
+        // mainDir,
+        // jsrOutDir,
+        // mainFile,
+      );
+      break;
+
+    default:
+      relinka(
+        "warn",
+        `Unknown registry "${registry}" for lib ${libName}. Skipping build.`,
+      );
+  }
+}
+
+/**
  * Processes all libs defined in config.libs.
  * Builds and optionally publishes each library based on configuration.
  */
 export async function libraries_buildPublish(
   isDev: boolean,
-  argsBuilderConfig: {
-    config?: string;
-    dir?: string;
-    minify?: boolean;
-    parallel?: boolean;
-    sourcemap?: boolean;
-    stub?: boolean;
-    watch?: boolean;
-    ext?: string;
-  },
+  config: BuildPublishConfig,
 ): Promise<void> {
   relinka("verbose", "Starting libraries_buildPublish");
-  const config = await loadConfig();
 
   if (!config.libs || Object.keys(config.libs).length === 0) {
     relinka("info", "No lib configs found in config, skipping libs build.");
     return;
   }
 
+  relinka("verbose", `config.libs: ${JSON.stringify(config.libs, null, 2)}`);
   relinka(
-    "info",
+    "verbose",
     "Library configurations detected in config, processing libs...",
   );
   const libs = Object.entries(config.libs);
   const dry = !!config.dryRun;
+
+  // Get the configured directories or use defaults
+  const libsDistDir = config.libsDistDir || "dist-libs";
+  const libsSrcDir = config.libsSrcDir || "src/libs";
 
   // Create tasks for each library
   const tasks = libs.map(([libName, libConfig]) => async () => {
@@ -4102,26 +4068,41 @@ export async function libraries_buildPublish(
       // Extract folder name from library name
       const folderName = extractFolderName(libName);
 
-      // Setup paths
-      const libBaseDir = path.resolve(PROJECT_ROOT, "dist-libs", folderName);
+      // Setup base output directory
+      const libBaseDir = path.resolve(PROJECT_ROOT, libsDistDir, folderName);
       const npmOutDir = path.join(libBaseDir, "npm");
       const jsrOutDir = path.join(libBaseDir, "jsr");
 
-      // Parse main file path
-      const mainPath = path.parse(libConfig.main);
-      const mainFile = mainPath.base;
-      const mainDir = mainPath.dir || ".";
+      // Parse main file path and determine if it's already a full path
+      const libMainPath = path.parse(libConfig.main);
+      const libMainFile = libMainPath.base;
+
+      // Determine the main directory
+      let libMainDir: string;
+
+      // If main path already starts with libsSrcDir, use it directly
+      if (libConfig.main.startsWith(libsSrcDir)) {
+        libMainDir = libMainPath.dir || ".";
+      } else {
+        // Otherwise, compose the path by joining libsSrcDir with the main path's directory
+        // This handles cases where main is just the relative path within libsSrcDir
+        libMainDir = path.join(libsSrcDir, libMainPath.dir || ".");
+      }
+
+      relinka(
+        "verbose",
+        `Processing library ${libName}: libMainDir=${libMainDir}, libMainFile=${libMainFile}`,
+      );
 
       // Build phase
       await buildLibrary(
         config.registry,
         libName,
-        mainDir,
+        libMainDir,
         npmOutDir,
-        jsrOutDir,
-        mainFile,
+        libMainFile,
         isDev,
-        argsBuilderConfig,
+        config,
       );
 
       // Publish phase (if not paused)
@@ -4152,29 +4133,24 @@ export async function libraries_buildPublish(
   });
 
   // Determine optimal concurrency based on configuration and system
-  const concurrency = determineOptimalConcurrency(argsBuilderConfig);
+  const concurrency = CONCURRENCY_DEFAULT;
 
   try {
     // Run tasks with concurrency control and error handling
     await pAll(tasks, {
       concurrency,
-      // In development mode, continue processing other libraries even if one fails
-      stopOnError: !isDev,
     });
     relinka("verbose", "Completed libraries_buildPublish");
   } catch (error) {
     if (error instanceof AggregateError) {
       relinka(
         "error",
-        `Multiple libraries failed to process. See above for details.`,
+        "Multiple libraries failed to process. See above for details.",
       );
     } else {
-      relinka("error", `Library processing stopped due to an error.`);
+      relinka("error", "Library processing stopped due to an error.");
     }
-    // In production, we want to stop the entire process if any library fails
-    if (!isDev) {
-      throw error;
-    }
+    throw error;
   }
 }
 
@@ -4184,16 +4160,7 @@ export async function libraries_buildPublish(
 async function processLibraries(
   buildPublishMode: string,
   isDev: boolean,
-  argsBuilderConfig: {
-    config?: string;
-    dir?: string;
-    ext?: string;
-    minify?: boolean;
-    parallel?: boolean;
-    sourcemap?: boolean;
-    stub?: boolean;
-    watch?: boolean;
-  },
+  config: BuildPublishConfig,
 ): Promise<void> {
   // Skip if not building libraries
   if (
@@ -4201,14 +4168,14 @@ async function processLibraries(
     buildPublishMode !== "main-and-libs"
   ) {
     relinka(
-      "info",
+      "verbose",
       "Skipping libs build/publish as buildPublishMode is set to 'main-project-only'",
     );
     return;
   }
 
   // Process libraries
-  await libraries_buildPublish(isDev, argsBuilderConfig);
+  await libraries_buildPublish(isDev, config);
 }
 
 /**
@@ -4218,16 +4185,7 @@ async function processMainProject(
   buildPublishMode: string,
   registry: string,
   isDev: boolean,
-  argsBuilderConfig: {
-    config?: string;
-    dir?: string;
-    ext?: string;
-    minify?: boolean;
-    parallel?: boolean;
-    sourcemap?: boolean;
-    stub?: boolean;
-    watch?: boolean;
-  },
+  config: BuildPublishConfig,
   dry: boolean,
 ): Promise<void> {
   // Skip if not building main project
@@ -4252,13 +4210,13 @@ async function processMainProject(
 
       // Create build tasks
       const buildTasks = [
-        () => regular_buildJsrDist(isDev, argsBuilderConfig, true),
-        () => regular_buildNpmDist(isDev, argsBuilderConfig),
+        () => regular_buildJsrDist(isDev, config, true),
+        () => regular_buildNpmDist(isDev, config),
       ];
 
-      // Run build tasks with appropriate concurrency
+      // Run build tasks
       await pAll(buildTasks, {
-        concurrency: argsBuilderConfig.parallel ? 2 : 1,
+        concurrency: 2,
       });
 
       if (!isDev) {
@@ -4268,7 +4226,7 @@ async function processMainProject(
           () => regular_pubToNpm(dry, isDev),
         ];
 
-        // Run publish tasks with appropriate concurrency
+        // Run publish tasks
         await pAll(publishTasks, { concurrency: 2 });
       }
       break;
@@ -4279,7 +4237,7 @@ async function processMainProject(
         "info",
         "Initializing build process for main project to NPM only...",
       );
-      await regular_buildNpmDist(isDev, argsBuilderConfig);
+      await regular_buildNpmDist(isDev, config);
 
       if (!isDev) {
         await regular_pubToNpm(dry, isDev);
@@ -4291,7 +4249,7 @@ async function processMainProject(
         "info",
         "Initializing build process for main project to JSR only...",
       );
-      await regular_buildJsrDist(isDev, argsBuilderConfig, true);
+      await regular_buildJsrDist(isDev, config, true);
 
       if (!isDev) {
         await regular_pubToJsr(dry, isDev);
@@ -4306,13 +4264,13 @@ async function processMainProject(
 
       // Create build tasks for unknown registry
       const fallbackBuildTasks = [
-        () => regular_buildNpmDist(isDev, argsBuilderConfig),
-        () => regular_buildJsrDist(isDev, argsBuilderConfig, true),
+        () => regular_buildNpmDist(isDev, config),
+        () => regular_buildJsrDist(isDev, config, true),
       ];
 
-      // Run build tasks with appropriate concurrency
+      // Run build tasks
       await pAll(fallbackBuildTasks, {
-        concurrency: argsBuilderConfig.parallel ? 2 : 1,
+        concurrency: 2,
       });
     }
   }
@@ -4323,19 +4281,18 @@ async function processMainProject(
  */
 async function finalizeBuild(
   pausePublish: boolean | undefined,
-  isDev: boolean,
   startTime: number,
-  config?: BuildPublishConfig,
+  config: BuildPublishConfig,
 ): Promise<void> {
   if (!pausePublish) {
     // Clean up after successful publish
     await removeDistFolders(
-      config?.npmDistDir,
-      config?.jsrDistDir,
-      config?.libsDistDir,
-      config?.libs,
+      config.npmDistDir,
+      config.jsrDistDir,
+      config.libsDistDir,
+      config.libs,
     );
-    await setBumpDisabled(false, isDev);
+    await setBumpDisabled(false, pausePublish);
   }
 
   // Calculate and report elapsed time
@@ -4352,25 +4309,10 @@ async function finalizeBuild(
   } else {
     relinka(
       "success",
-      `🎉 ${re.bold("Test build completed")} successfully in ${re.bold(formattedTime)}! Publish is paused in the config.`,
+      `🎉 ${re.bold("Test build completed")} successfully in ${re.bold(formattedTime)}!`,
     );
+    relinka("info", "📝 Publish process is paused in the config file.");
   }
-}
-
-/**
- * Cleans up artifacts from previous runs.
- */
-async function cleanupPreviousRun(config?: BuildPublishConfig): Promise<void> {
-  // Remove log file if it exists
-  await fs.remove(path.join(process.cwd(), "relidler.log"));
-
-  // Clean dist folders
-  await removeDistFolders(
-    config?.npmDistDir,
-    config?.jsrDistDir,
-    config?.libsDistDir,
-    config?.libs,
-  );
 }
 
 // ============================
@@ -4381,103 +4323,57 @@ async function cleanupPreviousRun(config?: BuildPublishConfig): Promise<void> {
  * Main entry point for the relidler build and publish process.
  * Handles building and publishing for both main project and libraries.
  */
-export async function relidler({
-  args,
-}: {
-  args: {
-    // isDev
-    dev?: boolean;
-    // cliFlags
-    bump?: string;
-    dryRun?: boolean;
-    jsrAllowDirty?: boolean;
-    jsrSlowTypes?: boolean;
-    registry?: string;
-    verbose?: boolean;
-    // argsBuilderConfig
-    config?: string;
-    dir?: string;
-    ext?: string;
-    minify?: boolean;
-    parallel?: boolean;
-    sourcemap?: boolean;
-    stub?: boolean;
-    watch?: boolean;
-  };
-}) {
-  // ================================================
-  // 1. Start timing the process
-  // ================================================
+export async function relidler(isDev: boolean) {
+  // Start timing the process
   const startTime = performance.now();
 
-  // ================================================
-  // 2. Extract and organize arguments
-  // ================================================
-  const isDev = args.dev;
-  const argsBuilderConfig = {
-    config: args.config,
-    dir: args.dir,
-    ext: args.ext,
-    minify: args.minify,
-    parallel: args.parallel,
-    sourcemap: args.sourcemap,
-    stub: args.stub,
-    watch: args.watch,
-  };
-  const cliFlags = {
-    bump: args.bump,
-    dryRun: args.dryRun,
-    jsrAllowDirty: args.jsrAllowDirty,
-    jsrSlowTypes: args.jsrSlowTypes,
-    registry: args.registry,
-    verbose: args.verbose,
-  };
-
   try {
-    // ================================================
-    // 4. Load configuration and prepare environment
-    // ================================================
-    const config = await getConfigWithCliFlags(isDev, cliFlags);
+    // Load configuration
+    const config = await loadConfig();
 
-    // ================================================
-    // 3. Clean up previous run artifacts
-    // ================================================
-    await cleanupPreviousRun(config);
-
-    // ================================================
-    // 5. Handle version bumping if enabled
-    // ================================================
-    if (!config.disableBump) {
-      await bumpHandler(isDev, { bump: args.bump });
+    // Prepare environment
+    if (isDev) {
+      config.pausePublish = true;
+      config.disableBump = true;
+      relinka(
+        "info",
+        "Development mode: Publishing paused and version bumping disabled.",
+      );
     }
 
-    // ================================================
-    // 6. Set default values for configuration
-    // ================================================
+    // Clean up previous run artifacts
+    if (config.freshLogFile) {
+      await fs.remove(path.join(process.cwd(), config.logFile));
+    }
+    await removeDistFolders(
+      config.npmDistDir,
+      config.jsrDistDir,
+      config.libsDistDir,
+      config.libs,
+    );
+
+    // Handle version bumping if enabled
+    if (!config.disableBump) {
+      await bumpHandler(
+        config.bumpMode,
+        config.disableBump,
+        config.pausePublish,
+        config.bumpFilter,
+      );
+    }
+
+    // Set default values for configuration
     const registry = config.registry || "npm-jsr";
     const dry = !!config.dryRun;
     const buildPublishMode = config.buildPublishMode || "main-project-only";
 
-    // ================================================
-    // 7. Process main project and libraries based on build mode
-    // ================================================
-    await processMainProject(
-      buildPublishMode,
-      registry,
-      isDev,
-      argsBuilderConfig,
-      dry,
-    );
-    await processLibraries(buildPublishMode, isDev, argsBuilderConfig);
+    // Process main project and libraries based on build mode
+    await processMainProject(buildPublishMode, registry, isDev, config, dry);
+    await processLibraries(buildPublishMode, isDev, config);
 
-    // ================================================
-    // 8. Finalize the build process
-    // ================================================
-    await finalizeBuild(config.pausePublish, isDev, startTime, config);
+    // Finalize the build process
+    await finalizeBuild(config.pausePublish, startTime, config);
   } catch (error) {
-    // ================================================
-    // 9. Handle build errors
-    // ================================================
     handleBuildError(error, startTime);
   }
 }
