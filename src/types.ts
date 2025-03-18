@@ -7,7 +7,13 @@
  * - rollup: A traditional bundler with an extensive plugin ecosystem
  * - untyped: Types and markdown generation from a config object
  */
-type BundlerName = "jsr" | "bun" | "copy" | "mkdist" | "rollup" | "untyped";
+export type BundlerName =
+  | "jsr"
+  | "bun"
+  | "copy"
+  | "mkdist"
+  | "rollup"
+  | "untyped";
 
 /**
  * Supported bump modes for versioning:
@@ -54,6 +60,8 @@ export type Format = "esm" | "cjs" | "iife";
  * - "external": Generate separate source map files.
  */
 export type Sourcemap = boolean | "inline" | "none" | "linked" | "external";
+
+export type NpmOutExt = "cjs" | "js" | "mjs" | "ts" | "mts" | "cts";
 
 /**
  * Defines the full configuration for building and publishing packages.
@@ -193,7 +201,7 @@ export type BuildPublishConfig = {
    *
    * @default "js"
    */
-  npmOutFilesExt?: "js" | "mjs" | "ts" | "mts" | "cts" | "cjs";
+  npmOutFilesExt?: NpmOutExt;
 
   /**
    * When `true`, generates TypeScript declaration files (.d.ts) for NPM packages.

@@ -34,6 +34,7 @@ export * from "./bar";`;
       fromType: "relative",
       toType: "absolute",
       dryRun: false,
+      libs: {},
     });
 
     // Read the modified file
@@ -69,6 +70,7 @@ export * from "./bar";`;
       toType: "alias",
       aliasPrefix: "~/",
       dryRun: false,
+      libs: {},
     });
 
     // Read the modified file
@@ -95,6 +97,7 @@ export * from "./bar";`;
       toType: "alias",
       aliasPrefix: "~/",
       dryRun: false,
+      libs: {},
     });
 
     // Read the modified file
@@ -123,6 +126,7 @@ export * from "./bar";`;
       fromType: "dynamic",
       toType: "absolute",
       dryRun: false,
+      libs: {},
     });
 
     const modifiedContent = await fs.readFile(filePath, "utf8");
@@ -145,6 +149,7 @@ export * from "./bar";`;
       toType: "relative",
       aliasPrefix: "~/",
       dryRun: false,
+      libs: {},
     });
 
     const modifiedContent = await fs.readFile(filePath, "utf8");
@@ -166,6 +171,7 @@ export * from "./bar";`;
       toType: "alias",
       aliasPrefix: "~/",
       dryRun: false,
+      libs: {},
     });
 
     // Read the modified file
@@ -186,6 +192,7 @@ export * from "./bar";`;
       toType: "absolute",
       aliasPrefix: "~/",
       dryRun: false,
+      libs: {},
     });
 
     // Read the file again
@@ -211,6 +218,7 @@ export * from "./bar";`;
         toType: "relative",
         // aliasPrefix is intentionally omitted
         dryRun: false,
+        libs: {},
       }),
     ).rejects.toThrow("aliasPrefix is required for alias path conversions");
   });

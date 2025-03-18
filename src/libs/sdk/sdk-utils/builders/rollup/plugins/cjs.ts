@@ -23,7 +23,6 @@ export function fixCJSExportTypePlugin(ctx: BuildContext): Plugin {
     ctx.options.declaration === "node16"
       ? /\.d\.cts$/ // d.cts only
       : /\.d\.c?ts$/; // d.ts and d.cts
-  // @ts-expect-error TODO: fix `Types of property 'augmentChunkHash' are incompatible`
   return FixDtsDefaultCjsExportsPlugin({
     warn: (msg) => ctx.warnings.add(msg),
     matcher: (info) => {
