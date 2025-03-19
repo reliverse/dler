@@ -71,12 +71,14 @@ export default defineConfig({
   libs: {
     "@reliverse/relidler-cfg": {
       main: "cfg/cfg-main.ts",
+      subDistDir: "cfg",
       description: "@reliverse/relidler defineConfig",
       dependencies: ["pathe"],
       minify: false,
     },
     "@reliverse/relidler-sdk": {
       main: "sdk/sdk-main.ts",
+      subDistDir: "sdk",
       description: "@reliverse/relidler without cli",
       dependencies: true,
       minify: true,

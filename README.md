@@ -64,9 +64,7 @@ bun dev # Runs bun src/main.ts --dev
     relidler
     ```
 
-    The `relidler.cfg.ts` file will be created automatically on the first run. It's recommended to edit it according to your needs.
-
-    The following names are available for the config file: `relidler.cfg.ts` • `relidler.config.ts` • `build.cfg.ts` • `build.config.ts (⚠️soon)` • `build.pub.ts`
+    The `relidler.cfg.ts` file will be created automatically on the first run. **It's recommended to edit this file according to your needs.** While `relidler.cfg.ts` is the recommended name, the following names are also available: `relidler.config.ts` • `build.cfg.ts` • `build.config.ts (⚠️soon)` • `build.pub.ts`.
 
 ## Plugins & SDK
 

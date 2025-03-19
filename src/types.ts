@@ -445,6 +445,13 @@ export type LibConfig = {
   main: string;
 
   /**
+   * The directory where the library's dist files are stored.
+   *
+   * @default name is derived from the library's name after slash
+   */
+  subDistDir?: string;
+
+  /**
    * An optional description of the library, included in the dist's package.json.
    * Provides users with an overview of the library's purpose.
    *

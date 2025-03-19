@@ -1,0 +1,10 @@
+node_modules
+.eslintcache
+.DS_Store
+.env
+*.log
+dist-npm
+dist-jsr
+dist-libs
+knip.json
+bun.lock
