@@ -63,6 +63,8 @@ export type Sourcemap = boolean | "inline" | "none" | "linked" | "external";
 
 export type NpmOutExt = "cjs" | "js" | "mjs" | "ts" | "mts" | "cts";
 
+export type Esbuild = "es2023" | "es2022" | "es2021" | "es2020" | "es2019";
+
 /**
  * Defines the full configuration for building and publishing packages.
  * This includes versioning, build settings, publishing options, multi-package support, and more.
@@ -312,7 +314,7 @@ export type BuildPublishConfig = {
    *
    * @default "es2023"
    */
-  esbuild: "es2023" | "es2022" | "es2021" | "es2020" | "es2019";
+  esbuild: Esbuild;
 
   /**
    * The base URL for loading assets in the built package.

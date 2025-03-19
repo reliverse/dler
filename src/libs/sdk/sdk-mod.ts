@@ -21,6 +21,7 @@ import type {
   BumpFilter,
   BumpMode,
   BundlerName,
+  Esbuild,
   ExcludeMode,
   Format,
   LibConfig,
@@ -1391,12 +1392,9 @@ async function regular_bundleUsingBun(
   minify: boolean,
   sourcemap: Sourcemap,
   publicPath: string,
-  packageName = "",
-  timer?: Timer,
+  packageName: string,
+  timer: Timer,
 ): Promise<void> {
-  // Create a timer if none is provided
-  const localTimer = timer || createTimer();
-
   relinka(
     "verbose",
     `Bundling regular project using Bun for ${packageName || "main project"} (entry: ${entryFile}, outdir: ${outdirBin})`,
@@ -1414,7 +1412,7 @@ async function regular_bundleUsingBun(
       target: target,
       format: format,
       splitting: splitting,
-      minify: minify,
+      minify,
       sourcemap: getBunSourcemapOption(sourcemap),
       throw: true,
       naming: {
@@ -1434,7 +1432,7 @@ async function regular_bundleUsingBun(
     });
 
     // Calculate and log build duration
-    const duration = getElapsedTime(localTimer);
+    const duration = getElapsedTime(timer);
     const formattedDuration = prettyMilliseconds(duration, { verbose: true });
     relinka(
       "success",
@@ -1478,11 +1476,8 @@ async function library_bundleUsingBun(
   minify: boolean,
   sourcemap: Sourcemap,
   publicPath: string,
-  timer?: Timer,
+  timer: Timer,
 ): Promise<void> {
-  // Create a timer if none is provided
-  const localTimer = timer || createTimer();
-
   relinka(
     "verbose",
     `Bundling library using Bun for ${libName} (entry: ${entryFile}, outdir: ${outdirBin})`,
@@ -1520,7 +1515,7 @@ async function library_bundleUsingBun(
     });
 
     // Calculate and log build duration
-    const duration = getElapsedTime(localTimer);
+    const duration = getElapsedTime(timer);
     const formattedDuration = prettyMilliseconds(duration, { verbose: true });
     relinka(
       "success",
@@ -2184,8 +2179,8 @@ function findCrossLibraryReplacement(
       logFoundImport(importPath, libName, isJsr, filePath);
 
       // Calculate replacement positions
-      const importPathStart = Number(matchStart) + Number(importPathIndex);
-      const importPathEnd = Number(importPathStart) + Number(importPath.length);
+      const importPathStart = matchStart + importPathIndex;
+      const importPathEnd = importPathStart + importPath.length;
 
       return {
         start: importPathStart,
@@ -2374,8 +2369,8 @@ async function handleExternalImport(
       : `./${relativeImportPath}`;
 
     // Calculate replacement positions
-    const importPathStart = Number(matchStart) + Number(importPathIndex);
-    const importPathEnd = Number(importPathStart) + Number(importPath.length);
+    const importPathStart = matchStart + importPathIndex;
+    const importPathEnd = importPathStart + importPath.length;
 
     return {
       start: importPathStart,
@@ -2663,9 +2658,7 @@ function isInSubdirectory(filePath: string): boolean {
  * Computes the Rollup sourcemap option based on the given configuration.
  * @returns "inline" if inline is specified; true for linked/external or boolean true; otherwise false.
  */
-function getRollupSourcemap(
-  sourcemap: boolean | "inline" | "none" | "linked" | "external",
-): boolean | "inline" {
+function getRollupSourcemap(sourcemap: Sourcemap): boolean | "inline" {
   relinka("verbose", `Converting rollup sourcemap option: ${sourcemap}`);
   switch (sourcemap) {
     case "none":
@@ -2818,19 +2811,21 @@ async function _library_bundleUsingJsr2(
 async function regular_bundleUsingUnified(
   entryFile: string,
   outdirBin: string,
-  builder: "rollup" | "untyped" | "mkdist" | "copy",
+  builder: BundlerName,
   unifiedBundlerOutExt: NpmOutExt,
   entrySrcDir: string,
   stub: boolean,
   watch: boolean,
-  esbuild: string,
+  target: Target,
   minify: boolean,
   sourcemap: Sourcemap,
-  timer?: Timer,
+  timer: Timer,
 ): Promise<void> {
-  // Create a timer if none is provided
-  const localTimer = timer || createTimer();
-
+  if (builder === "jsr" || builder === "bun") {
+    throw new Error(
+      "'jsr'/'bun' builder not supported for regular_bundleUsingUnified",
+    );
+  }
   try {
     relinka(
       "verbose",
@@ -2877,8 +2872,8 @@ async function regular_bundleUsingUnified(
         emitCJS: false,
         inlineDependencies: true,
         esbuild: {
-          target: esbuild,
-          minify: minify,
+          target,
+          minify,
         },
         output: {
           sourcemap: getRollupSourcemap(sourcemap),
@@ -2889,7 +2884,7 @@ async function regular_bundleUsingUnified(
     await unifiedBuild(rootDir, stub, unifiedBuildConfig, outdirBin);
 
     // Calculate and log build duration
-    const duration = getElapsedTime(localTimer);
+    const duration = getElapsedTime(timer);
     const formattedDuration = prettyMilliseconds(duration, { verbose: true });
     relinka(
       "success",
@@ -2920,20 +2915,22 @@ async function regular_bundleUsingUnified(
 async function library_bundleUsingUnified(
   entryFile: string,
   outdirBin: string,
-  builder: "rollup" | "untyped" | "mkdist" | "copy",
+  builder: BundlerName,
   entrySrcDir: string,
   unifiedBundlerOutExt: NpmOutExt,
   stub: boolean,
   watch: boolean,
-  esbuild: string,
+  esbuild: Esbuild,
   minify: boolean,
   sourcemap: Sourcemap,
-  timer?: Timer,
+  timer: Timer,
   libs?: Record<string, LibConfig>,
 ): Promise<void> {
-  // Create a timer if none is provided
-  const localTimer = timer || createTimer();
-
+  if (builder === "jsr" || builder === "bun") {
+    throw new Error(
+      "'jsr'/'bun' builder not supported for library_bundleUsingUnified",
+    );
+  }
   try {
     relinka(
       "verbose",
@@ -3066,7 +3063,7 @@ async function library_bundleUsingUnified(
         inlineDependencies: true,
         esbuild: {
           target: esbuild,
-          minify: minify,
+          minify,
         },
         output: {
           sourcemap: getRollupSourcemap(sourcemap),
@@ -3077,7 +3074,7 @@ async function library_bundleUsingUnified(
     await unifiedBuild(rootDir, stub, unifiedBuildConfig, outdirBin);
 
     // Calculate and log build duration
-    const duration = (getElapsedTime(localTimer) / 1000).toFixed(2);
+    const duration = (getElapsedTime(timer) / 1000).toFixed(2);
     relinka(
       "success",
       `Library bundle completed in ${duration}s using ${builder} builder for library ${libName}`,
@@ -3220,7 +3217,7 @@ async function regular_buildJsrDist(
   isCLI: boolean,
   entrySrcDir: string,
   jsrDistDir: string,
-  jsrBuilder: string,
+  jsrBuilder: BundlerName,
   entryFile: string,
   target: Target,
   format: Format,
@@ -3230,11 +3227,10 @@ async function regular_buildJsrDist(
   publicPath: string,
   unifiedBundlerOutExt: NpmOutExt,
   excludeMode: ExcludeMode,
-  timer?: Timer,
+  timer: Timer,
+  stub: boolean,
+  watch: boolean,
 ): Promise<void> {
-  // Create a timer if none is provided
-  const localTimer = timer || createTimer();
-
   relinka("info", "Building JSR distribution...");
   const entrySrcDirResolved = resolve(process.cwd(), entrySrcDir);
   const entryFilePath = path.join(entrySrcDirResolved, entryFile);
@@ -3256,20 +3252,21 @@ async function regular_buildJsrDist(
       sourcemap,
       publicPath,
       "",
-      localTimer,
+      timer,
     );
   } else {
     await regular_bundleUsingUnified(
       entryFilePath,
       outdirBinResolved,
-      "mkdist",
+      jsrBuilder,
       unifiedBundlerOutExt,
       entrySrcDir,
-      false,
-      false,
-      "es2023",
+      stub,
+      watch,
+      target,
       minify,
       sourcemap,
+      timer,
     );
   }
   await regular_performCommonBuildSteps({
@@ -3308,11 +3305,16 @@ export async function regular_buildNpmDist(
   unifiedBundlerOutExt: NpmOutExt,
   excludeMode: ExcludeMode,
   isCLI: boolean,
-  timer?: Timer,
+  target: Target,
+  format: Format,
+  splitting: boolean,
+  minify: boolean,
+  sourcemap: Sourcemap,
+  publicPath: string,
+  stub: boolean,
+  watch: boolean,
+  timer: Timer,
 ): Promise<void> {
-  // Create a timer if none is provided
-  const localTimer = timer || createTimer();
-
   relinka("info", "Building NPM distribution...");
   const entrySrcDirResolved = resolve(process.cwd(), entrySrcDir);
   const entryFilePath = path.join(entrySrcDirResolved, entryFile);
@@ -3327,14 +3329,14 @@ export async function regular_buildNpmDist(
     await regular_bundleUsingBun(
       entryFilePath,
       outdirBinResolved,
-      "node",
-      "esm",
-      false,
-      false,
-      "none",
-      "/",
+      target,
+      format,
+      splitting,
+      minify,
+      sourcemap,
+      publicPath,
       "",
-      localTimer,
+      timer,
     );
   } else {
     await regular_bundleUsingUnified(
@@ -3343,11 +3345,12 @@ export async function regular_buildNpmDist(
       npmBuilder,
       unifiedBundlerOutExt,
       entrySrcDir,
-      false,
-      false,
-      "es2023",
-      false,
-      "none",
+      stub,
+      watch,
+      target,
+      minify,
+      sourcemap,
+      timer,
     );
   }
   await regular_performCommonBuildSteps({
@@ -3375,7 +3378,7 @@ async function library_buildJsrDist(
   libName: string,
   entrySrcDir: string,
   jsrDistDir: string,
-  jsrBuilder: string,
+  jsrBuilder: BundlerName,
   entryFile: string,
   isCLI: boolean,
   libs: Record<string, LibConfig>,
@@ -3389,11 +3392,11 @@ async function library_buildJsrDist(
   sourcemap: Sourcemap,
   publicPath: string,
   outdirBin: string,
-  timer?: Timer,
+  esbuild: Esbuild,
+  timer: Timer,
+  stub: boolean,
+  watch: boolean,
 ): Promise<void> {
-  // Create a timer if none is provided
-  const localTimer = timer || createTimer();
-
   relinka("info", "Building JSR distribution...");
   const entrySrcDirResolved = resolve(process.cwd(), entrySrcDir);
   const entryFilePath = path.join(entrySrcDirResolved, entryFile);
@@ -3415,21 +3418,21 @@ async function library_buildJsrDist(
       minify,
       sourcemap,
       publicPath,
-      localTimer,
+      timer,
     );
   } else {
     await library_bundleUsingUnified(
       entryFilePath,
       outdirBinResolved,
-      "mkdist",
+      jsrBuilder,
       entrySrcDir,
       unifiedBundlerOutExt,
-      false,
-      false,
-      "es2023",
+      stub,
+      watch,
+      esbuild,
       minify,
       sourcemap,
-      localTimer,
+      timer,
       libs,
     );
   }
@@ -3472,11 +3475,17 @@ async function library_buildNpmDist(
   unifiedBundlerOutExt: NpmOutExt,
   excludeMode: ExcludeMode,
   excludedDependencyPatterns: string[],
-  timer?: Timer,
+  esbuild: Esbuild,
+  target: Target,
+  format: Format,
+  splitting: boolean,
+  minify: boolean,
+  sourcemap: Sourcemap,
+  publicPath: string,
+  timer: Timer,
+  stub: boolean,
+  watch: boolean,
 ): Promise<void> {
-  // Create a timer if none is provided
-  const localTimer = timer || createTimer();
-
   // =====================================================
   // [dist-libs/npm] 1. Initialize
   // =====================================================
@@ -3518,13 +3527,13 @@ async function library_buildNpmDist(
       libEntryFile,
       libOutdirBinResolved,
       libName,
-      "node",
-      "esm",
-      false,
-      false,
-      "none",
-      "/",
-      localTimer,
+      target,
+      format,
+      splitting,
+      minify,
+      sourcemap,
+      publicPath,
+      timer,
     );
   } else {
     // Construct the full path to the entry file
@@ -3541,12 +3550,12 @@ async function library_buildNpmDist(
       npmBuilder,
       entrySrcDir,
       unifiedBundlerOutExt,
-      false,
-      false,
-      "es2023",
+      stub,
+      watch,
+      esbuild,
       false,
       "none",
-      localTimer,
+      timer,
       libs,
     );
   }
@@ -3752,6 +3761,17 @@ async function buildLibrary(
   unifiedBundlerOutExt: NpmOutExt,
   excludeMode: ExcludeMode,
   excludedDependencyPatterns: string[],
+  esbuild: Esbuild,
+  target: Target,
+  format: Format,
+  splitting: boolean,
+  minify: boolean,
+  sourcemap: Sourcemap,
+  publicPath: string,
+  jsrBuilder: BundlerName,
+  timer: Timer,
+  stub: boolean,
+  watch: boolean,
 ): Promise<void> {
   switch (registry) {
     case "npm-jsr": {
@@ -3771,6 +3791,16 @@ async function buildLibrary(
             unifiedBundlerOutExt,
             excludeMode,
             excludedDependencyPatterns,
+            esbuild,
+            target,
+            format,
+            splitting,
+            minify,
+            sourcemap,
+            publicPath,
+            timer,
+            stub,
+            watch,
           ),
         () =>
           library_buildJsrDist(
@@ -3778,20 +3808,24 @@ async function buildLibrary(
             libName,
             mainDir,
             jsrOutDir,
-            "jsr",
+            jsrBuilder,
             mainFile,
-            true,
+            isCLI,
             libs,
             excludeMode,
             excludedDependencyPatterns,
             unifiedBundlerOutExt,
-            "node",
-            "esm",
-            false,
-            false,
-            "none",
-            "/",
+            target,
+            format,
+            splitting,
+            minify,
+            sourcemap,
+            publicPath,
             jsrOutDir,
+            esbuild,
+            timer,
+            stub,
+            watch,
           ),
       ];
       await pAll(buildTasks, {
@@ -3813,6 +3847,16 @@ async function buildLibrary(
         unifiedBundlerOutExt,
         excludeMode,
         excludedDependencyPatterns,
+        esbuild,
+        target,
+        format,
+        splitting,
+        minify,
+        sourcemap,
+        publicPath,
+        timer,
+        stub,
+        watch,
       );
       break;
     case "jsr":
@@ -3822,20 +3866,24 @@ async function buildLibrary(
         libName,
         mainDir,
         npmOutDir,
-        "jsr",
+        jsrBuilder,
         mainFile,
-        true,
-        {},
+        isCLI,
+        libs,
         excludeMode,
         excludedDependencyPatterns,
         unifiedBundlerOutExt,
-        "node",
-        "esm",
-        false,
-        false,
-        "none",
-        "/",
+        target,
+        format,
+        splitting,
+        minify,
+        sourcemap,
+        publicPath,
         npmOutDir,
+        esbuild,
+        timer,
+        stub,
+        watch,
       );
       break;
     default:
@@ -3865,6 +3913,16 @@ export async function libraries_buildPublish(
   entrySrcDir: string,
   excludeMode: ExcludeMode,
   excludedDependencyPatterns: string[],
+  esbuild: Esbuild,
+  target: Target,
+  format: Format,
+  splitting: boolean,
+  minify: boolean,
+  sourcemap: Sourcemap,
+  publicPath: string,
+  jsrBuilder: BundlerName,
+  stub: boolean,
+  watch: boolean,
 ): Promise<void> {
   relinka("verbose", "Starting libraries_buildPublish");
   if (!libs || Object.keys(libs).length === 0) {
@@ -3912,6 +3970,17 @@ export async function libraries_buildPublish(
         unifiedBundlerOutExt,
         excludeMode,
         excludedDependencyPatterns,
+        esbuild,
+        target,
+        format,
+        splitting,
+        minify,
+        sourcemap,
+        publicPath,
+        jsrBuilder,
+        timer,
+        stub,
+        watch,
       );
       if (!pausePublish) {
         await publishLibrary(
@@ -3976,6 +4045,16 @@ async function processLibraries(
   entrySrcDir: string,
   excludeMode: ExcludeMode,
   excludedDependencyPatterns: string[],
+  esbuild: Esbuild,
+  target: Target,
+  format: Format,
+  splitting: boolean,
+  minify: boolean,
+  sourcemap: Sourcemap,
+  publicPath: string,
+  jsrBuilder: BundlerName,
+  stub: boolean,
+  watch: boolean,
 ): Promise<void> {
   if (
     buildPublishMode !== "libs-only" &&
@@ -4002,6 +4081,16 @@ async function processLibraries(
     entrySrcDir,
     excludeMode,
     excludedDependencyPatterns,
+    esbuild,
+    target,
+    format,
+    splitting,
+    minify,
+    sourcemap,
+    publicPath,
+    jsrBuilder,
+    stub,
+    watch,
   );
 }
 
@@ -4021,7 +4110,7 @@ async function processMainProject(
   dryRun: boolean,
   pausePublish: boolean,
   jsrDistDir: string,
-  jsrBuilder: string,
+  jsrBuilder: BundlerName,
   target: Target,
   format: Format,
   splitting: boolean,
@@ -4032,6 +4121,8 @@ async function processMainProject(
   jsrSlowTypes: boolean,
   unifiedBundlerOutExt: NpmOutExt,
   excludeMode: ExcludeMode,
+  stub: boolean,
+  watch: boolean,
 ): Promise<void> {
   if (
     buildPublishMode !== "main-project-only" &&
@@ -4067,6 +4158,9 @@ async function processMainProject(
             publicPath,
             unifiedBundlerOutExt,
             excludeMode,
+            timer,
+            stub,
+            watch,
           ),
         () =>
           regular_buildNpmDist(
@@ -4078,6 +4172,15 @@ async function processMainProject(
             unifiedBundlerOutExt,
             excludeMode,
             isCLI,
+            target,
+            format,
+            splitting,
+            minify,
+            sourcemap,
+            publicPath,
+            stub,
+            watch,
+            timer,
           ),
       ];
       await pAll(buildTasks, { concurrency: 2 });
@@ -4114,6 +4217,15 @@ async function processMainProject(
         unifiedBundlerOutExt,
         excludeMode,
         isCLI,
+        target,
+        format,
+        splitting,
+        minify,
+        sourcemap,
+        publicPath,
+        stub,
+        watch,
+        timer,
       );
       if (!isDev) {
         await regular_pubToNpm(dryRun, isDev, pausePublish, npmDistDir, timer);
@@ -4140,6 +4252,9 @@ async function processMainProject(
         publicPath,
         unifiedBundlerOutExt,
         excludeMode,
+        timer,
+        stub,
+        watch,
       );
       if (!isDev) {
         await regular_pubToJsr(
@@ -4169,6 +4284,15 @@ async function processMainProject(
             unifiedBundlerOutExt,
             excludeMode,
             isCLI,
+            target,
+            format,
+            splitting,
+            minify,
+            sourcemap,
+            publicPath,
+            stub,
+            watch,
+            timer,
           ),
         () =>
           regular_buildJsrDist(
@@ -4187,6 +4311,9 @@ async function processMainProject(
             publicPath,
             unifiedBundlerOutExt,
             excludeMode,
+            timer,
+            stub,
+            watch,
           ),
       ];
       await pAll(fallbackBuildTasks, { concurrency: 2 });
@@ -4309,6 +4436,8 @@ export async function relidler(isDev: boolean) {
       config.jsrSlowTypes,
       config.npmOutFilesExt,
       config.excludeMode,
+      config.stub,
+      config.watch,
     );
     await processLibraries(
       timer,
@@ -4326,6 +4455,16 @@ export async function relidler(isDev: boolean) {
       config.entrySrcDir,
       config.excludeMode,
       config.excludedDependencyPatterns,
+      config.esbuild,
+      config.target,
+      config.format,
+      config.splitting,
+      config.minify,
+      config.sourcemap,
+      config.publicPath,
+      config.jsrBuilder,
+      config.stub,
+      config.watch,
     );
     await finalizeBuild(
       timer,
