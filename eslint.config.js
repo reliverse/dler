@@ -14,6 +14,10 @@ const config = tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
+
+  // TODO: enable+configure after splitting sdk-mod.ts
+  // perfectionist.configs['recommended-line-length'],
+
   {
     files: ["**/*.js"],
     ...tseslint.configs.disableTypeChecked,
@@ -84,7 +88,6 @@ const config = tseslint.config(
       "no-constant-binary-expression": "off",
       "no-constant-condition": "off",
       "no-case-declarations": "off",
-      "perfectionist/sort-imports": "warn",
       "@stylistic/operator-linebreak": "off",
       "@stylistic/indent": "off",
       "@stylistic/quotes": "off",
@@ -94,6 +97,7 @@ const config = tseslint.config(
         "warn",
         { allowSameFolder: true, rootDir: "src", prefix: "~" },
       ],
+      "perfectionist/sort-imports": "warn",
     },
   },
 );

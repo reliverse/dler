@@ -44,6 +44,7 @@ import { defineConfig } from "@reliverse/relidler-cfg";`;
     description: "@reliverse/relidler defineConfig",
     dependencies: ["pathe"],
     minify: false,
+    npmDeclarations: true,
   },
   "@reliverse/relidler-sdk": {
     main: "sdk/sdk-main.ts",
@@ -51,6 +52,7 @@ import { defineConfig } from "@reliverse/relidler-cfg";`;
     description: "@reliverse/relidler without cli",
     dependencies: true,
     minify: true,
+    npmDeclarations: true,
   },
 }`
     : `{
@@ -60,6 +62,7 @@ import { defineConfig } from "@reliverse/relidler-cfg";`;
   //   description: "@org/cli defineConfig",
   //   dependencies: true,
   //   minify: false,
+  //   npmDeclarations: true,
   // },
 }`;
 
@@ -95,12 +98,15 @@ export default defineConfig({
   npmBuilder: "${DEFAULT_CONFIG.npmBuilder}",
   npmOutFilesExt: "${DEFAULT_CONFIG.npmOutFilesExt}",
   npmDeclarations: ${npmDeclarationsValue},
+  npmCopyRootFiles: ${JSON.stringify(DEFAULT_CONFIG.npmCopyRootFiles)},
 
   // JSR-only config
   jsrDistDir: "${DEFAULT_CONFIG.jsrDistDir}",
   jsrBuilder: "${DEFAULT_CONFIG.jsrBuilder}",
   jsrSlowTypes: ${DEFAULT_CONFIG.jsrSlowTypes},
   jsrAllowDirty: ${DEFAULT_CONFIG.jsrAllowDirty},
+  jsrGenTsconfig: ${DEFAULT_CONFIG.jsrGenTsconfig},
+  jsrCopyRootFiles: ${JSON.stringify(DEFAULT_CONFIG.jsrCopyRootFiles)},
 
   // Build setup
   minify: ${DEFAULT_CONFIG.minify},

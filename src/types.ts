@@ -166,14 +166,14 @@ export type BuildPublishConfig = {
    * Controls which files will have their version numbers updated during version bumping.
    *
    * Accepts:
-   * - Standard file types like "reliverse.jsonc"
+   * - Standard file types like "package.json"
    * - Relative paths like "src/constants.ts"
-   * - [Globbing patterns](https://github.com/mrmlnc/fast-glob#pattern-syntax) (experimental)
+   * - [Globbing patterns](https://github.com/mrmlnc/fast-glob#pattern-syntax)
    *
    * When empty, falls back to only updating "package.json".
    * Respects: .gitignore patterns, hidden files, .git & node_modules.
    *
-   * @default ["package.json", "reliverse.jsonc", "reliverse.ts"]
+   * @default ["package.json", "reliverse.ts"]
    */
   bumpFilter: BumpFilter[];
 
@@ -213,6 +213,14 @@ export type BuildPublishConfig = {
    * @default true
    */
   npmDeclarations: boolean;
+
+  /**
+   * Files to copy to the NPM distribution directory.
+   * Useful for including additional files like configuration or documentation.
+   *
+   * @default ["LICENSE", "README.md"]
+   */
+  npmCopyRootFiles: string[];
 
   // ==========================================================================
   // JSR-only config
@@ -262,6 +270,21 @@ export type BuildPublishConfig = {
    * @default true
    */
   jsrAllowDirty: boolean;
+
+  /**
+   * When `true`, generates a `jsconfig.json` file for JSR's dist.
+   *
+   * @default false
+   */
+  jsrGenTsconfig: boolean;
+
+  /**
+   * Files to copy to the JSR distribution directory.
+   * Useful for including additional files like configuration or documentation.
+   *
+   * @default ["README.md", "LICENSE"]
+   */
+  jsrCopyRootFiles: string[];
 
   // ==========================================================================
   // Build setup
@@ -486,4 +509,9 @@ export type LibConfig = {
    * @default true
    */
   minify?: boolean;
+
+  /**
+   * When `true`, generates TypeScript declaration files (.d.ts) for NPM packages.
+   */
+  npmDeclarations?: boolean;
 };

@@ -11,7 +11,7 @@ export default defineConfig({
   projectAuthor: "reliverse",
   projectDescription:
     "@reliverse/relidler is a flexible unified bundler and publish tool for JavaScript and TypeScript projects.",
-  version: "1.0.15",
+  version: "1.0.16",
   projectLicense: "MIT",
   projectState: "created",
   projectRepository: "https://github.com/reliverse/relidler",

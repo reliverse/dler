@@ -20,19 +20,22 @@ export default defineConfig({
   // Versioning options
   bumpMode: "autoPatch",
   disableBump: false,
-  bumpFilter: ["package.json", "reliverse.jsonc", "reliverse.ts"],
+  bumpFilter: ["package.json", "reliverse.ts"],
 
   // NPM-only config
   npmDistDir: "dist-npm",
   npmBuilder: "mkdist",
   npmOutFilesExt: "js",
   npmDeclarations: false,
+  npmCopyRootFiles: ["README.md", "LICENSE"],
 
   // JSR-only config
   jsrDistDir: "dist-jsr",
   jsrBuilder: "jsr",
   jsrSlowTypes: true,
   jsrAllowDirty: true,
+  jsrGenTsconfig: false,
+  jsrCopyRootFiles: ["README.md", "LICENSE"],
 
   // Build setup
   minify: true,
@@ -75,6 +78,7 @@ export default defineConfig({
       description: "@reliverse/relidler defineConfig",
       dependencies: ["pathe"],
       minify: false,
+      npmDeclarations: true,
     },
     "@reliverse/relidler-sdk": {
       main: "sdk/sdk-main.ts",
@@ -82,6 +86,7 @@ export default defineConfig({
       description: "@reliverse/relidler without cli",
       dependencies: true,
       minify: true,
+      npmDeclarations: true,
     },
   },
 });

@@ -18,19 +18,22 @@ export const DEFAULT_CONFIG: BuildPublishConfig = {
   // Versioning options
   bumpMode: "autoPatch",
   disableBump: false,
-  bumpFilter: ["package.json", "reliverse.jsonc", "reliverse.ts"],
+  bumpFilter: ["package.json", "reliverse.ts"],
 
   // NPM-only config
   npmDistDir: "dist-npm",
   npmBuilder: "mkdist",
   npmOutFilesExt: "js",
   npmDeclarations: true,
+  npmCopyRootFiles: ["README.md", "LICENSE"],
 
   // JSR-only config
   jsrDistDir: "dist-jsr",
   jsrBuilder: "jsr",
   jsrSlowTypes: true,
   jsrAllowDirty: true,
+  jsrGenTsconfig: false,
+  jsrCopyRootFiles: ["README.md", "LICENSE"],
 
   // Build setup
   minify: true,
