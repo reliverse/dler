@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
-    "paths": { "~/*": ["./src/*"] },
+    "paths": {
+      "~/*": ["./src/*"]
+    },
     "baseUrl": ".",
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -17,7 +19,6 @@
     "module": "NodeNext",
     "moduleResolution": "nodenext",
     "noEmit": true,
-
     "allowSyntheticDefaultImports": true,
     "exactOptionalPropertyTypes": false,
     "noFallthroughCasesInSwitch": false,
@@ -27,7 +28,6 @@
     "noUnusedParameters": false,
     "strictNullChecks": false
   },
-
   "include": ["**/*.ts", "reset.d.ts", "eslint.config.js"],
   "exclude": ["node_modules", "dist-jsr", "temp-testing", "dist-libs"]
 }

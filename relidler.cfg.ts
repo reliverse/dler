@@ -6,55 +6,70 @@ import { defineConfig } from "./src/libs/cfg/cfg-main.js";
  * @see https://github.com/reliverse/relidler
  */
 export default defineConfig({
-  // Common configuration
-  entryFile: "main.ts",
-  entrySrcDir: "src",
-  verbose: true,
-  isCLI: true,
-
-  // Publishing options
-  registry: "npm-jsr",
-  pausePublish: false,
-  dryRun: false,
-
-  // Versioning options
-  bumpMode: "autoPatch",
-  disableBump: false,
+  // Bump configuration
+  bumpDisable: false,
   bumpFilter: ["package.json", "reliverse.ts"],
+  bumpMode: "autoPatch",
 
-  // NPM-only config
-  npmDistDir: "dist-npm",
-  npmBuilder: "mkdist",
-  npmOutFilesExt: "js",
-  npmDeclarations: false,
-  npmCopyRootFiles: ["README.md", "LICENSE"],
+  // Common configuration
+  commonPubPause: false,
+  commonPubRegistry: "npm-jsr",
+  commonVerbose: true,
+
+  // Core configuration
+  coreEntryFile: "main.ts",
+  coreEntrySrcDir: "src",
+  coreIsCLI: true,
 
   // JSR-only config
-  jsrDistDir: "dist-jsr",
-  jsrBuilder: "jsr",
-  jsrSlowTypes: true,
-  jsrAllowDirty: true,
-  jsrGenTsconfig: false,
-  jsrCopyRootFiles: ["README.md", "LICENSE"],
+  distJsrAllowDirty: true,
+  distJsrBuilder: "jsr",
+  distJsrCopyRootFiles: ["README.md", "LICENSE"],
+  distJsrDirName: "dist-jsr",
+  distJsrDryRun: false,
+  distJsrGenTsconfig: false,
+  distJsrSlowTypes: true,
 
-  // Build setup
-  minify: true,
-  splitting: false,
-  sourcemap: "none",
-  stub: false,
-  watch: false,
-  esbuild: "es2023",
-  publicPath: "/",
-  target: "node",
-  format: "esm",
+  // NPM-only config
+  distNpmBuilder: "mkdist",
+  distNpmCopyRootFiles: ["README.md", "LICENSE"],
+  distNpmDeclarations: false,
+  distNpmDirName: "dist-npm",
+  distNpmOutFilesExt: "js",
+
+  // Libraries Relidler Plugin
+  // Publish specific dirs as separate packages
+  // This feature is experimental at the moment
+  // Please commit your changes before using it
+  libsActMode: "main-project-only",
+  libsDirDist: "dist-libs",
+  libsDirSrc: "src/libs",
+  libsList: {
+    "@reliverse/relidler-cfg": {
+      libDesc: "@reliverse/relidler defineConfig",
+      libDirName: "cfg",
+      libMainFile: "cfg/cfg-main.ts",
+      libPkgKeepDeps: false,
+      libTranspileDtsNpm: true,
+      libTranspileMinify: false,
+    },
+    "@reliverse/relidler-sdk": {
+      libDesc: "@reliverse/relidler without cli",
+      libDirName: "sdk",
+      libMainFile: "sdk/sdk-main.ts",
+      libPkgKeepDeps: true,
+      libTranspileDtsNpm: true,
+      libTranspileMinify: true,
+    },
+  },
 
   // Logger options
-  freshLogFile: true,
-  logFile: "relinka.log",
+  logsFileName: "relinka.log",
+  logsFreshFile: true,
 
   // Dependency filtering
-  excludeMode: "patterns-and-devdeps",
-  excludedDependencyPatterns: [
+  rmDepsMode: "patterns-and-devdeps",
+  rmDepsPatterns: [
     "@types",
     "biome",
     "eslint",
@@ -64,29 +79,14 @@ export default defineConfig({
     "@reliverse/config",
   ],
 
-  // Libraries Relidler Plugin
-  // Publish specific dirs as separate packages
-  // This feature is experimental at the moment
-  // Please commit your changes before using it
-  buildPublishMode: "main-project-only",
-  libsDistDir: "dist-libs",
-  libsSrcDir: "src/libs",
-  libs: {
-    "@reliverse/relidler-cfg": {
-      main: "cfg/cfg-main.ts",
-      subDistDir: "cfg",
-      description: "@reliverse/relidler defineConfig",
-      dependencies: ["pathe"],
-      minify: false,
-      npmDeclarations: true,
-    },
-    "@reliverse/relidler-sdk": {
-      main: "sdk/sdk-main.ts",
-      subDistDir: "sdk",
-      description: "@reliverse/relidler without cli",
-      dependencies: true,
-      minify: true,
-      npmDeclarations: true,
-    },
-  },
+  // Build setup
+  transpileEsbuild: "es2023",
+  transpileFormat: "esm",
+  transpileMinify: true,
+  transpilePublicPath: "/",
+  transpileSourcemap: "none",
+  transpileSplitting: false,
+  transpileStub: false,
+  transpileTarget: "node",
+  transpileWatch: false,
 });

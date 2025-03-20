@@ -1,0 +1,655 @@
+import fs from "fs-extra";
+import path from "pathe";
+import {
+  definePackageJSON,
+  type PackageJson,
+  readPackageJSON,
+} from "pkg-types";
+
+import type { ExcludeMode, LibConfig, NpmOutExt } from "~/types.js";
+
+import { cliDomainDocs } from "./utils-consts.js";
+import { filterDeps } from "./utils-deps.js";
+import { relinka } from "./utils-logs.js";
+
+// =============================
+// package.json generation utils
+// =============================
+
+/**
+ * Creates a package.json for a lib distribution.
+ */
+export async function createLibPackageJSON(
+  libName: string,
+  outDirRoot: string,
+  isJsr: boolean,
+  coreIsCLI: boolean,
+  libsList: Record<string, LibConfig>,
+  rmDepsMode: ExcludeMode,
+  rmDepsPatterns: string[],
+  unifiedBundlerOutExt: NpmOutExt,
+): Promise<void> {
+  relinka(
+    "commonVerbose",
+    `Generating package.json for lib ${libName} (isJsr=${isJsr}, coreIsCLI=${coreIsCLI})...`,
+  );
+  const originalPkg = await readPackageJSON();
+  let { description } = originalPkg;
+  const { author, keywords, license, version } = originalPkg;
+
+  // Set description based on config
+  if (libsList?.[libName]?.libDesc) {
+    description = libsList[libName].libDesc;
+    relinka(
+      "commonVerbose",
+      `Using lib-specific description from config: "${description}"`,
+    );
+  } else if (!coreIsCLI) {
+    description = "A helper lib for the Reliverse CLI";
+    relinka(
+      "commonVerbose",
+      `Using default helper lib description: "${description}"`,
+    );
+  } else {
+    description = description || `CLI tool for ${libName}`;
+    relinka("commonVerbose", `Using CLI description: "${description}"`);
+  }
+
+  // Get the root package name for CLI command
+  const rootPackageName = originalPkg.name || "relidler";
+  const cliCommandName = rootPackageName.startsWith("@")
+    ? rootPackageName.split("/").pop() || "cli"
+    : rootPackageName;
+
+  relinka(
+    "commonVerbose",
+    `Root package name: "${rootPackageName}", CLI command name: "${cliCommandName}"`,
+  );
+
+  const commonPkg: Partial<PackageJson> = {
+    description,
+    license: license || "MIT",
+    name: libName,
+    type: "module",
+    version,
+  };
+
+  if (coreIsCLI) {
+    relinka(
+      "commonVerbose",
+      `Adding CLI-specific fields for lib ${libName}...`,
+    );
+    const binPath = "bin/main.js";
+    Object.assign(commonPkg, {
+      bin: { [cliCommandName]: binPath },
+    });
+    relinka(
+      "commonVerbose",
+      `Added bin entry: { "${cliCommandName}": "${binPath}" }`,
+    );
+  }
+
+  if (author) {
+    const repoOwner = typeof author === "string" ? author : author.name;
+    const repoName = originalPkg.name
+      ? originalPkg.name.startsWith("@")
+        ? originalPkg.name.split("/").pop() || originalPkg.name
+        : originalPkg.name
+      : "";
+    Object.assign(commonPkg, {
+      author,
+      bugs: {
+        email: "blefnk@gmail.com",
+        url: `https://github.com/${repoOwner}/${repoName}/issues`,
+      },
+      keywords: [...new Set([author, ...(keywords || [])])],
+      repository: {
+        type: "git",
+        url: `git+https://github.com/${repoOwner}/${repoName}.git`,
+      },
+    });
+  } else if (keywords && keywords.length > 0 && !commonPkg.keywords) {
+    commonPkg.keywords = keywords;
+  }
+
+  if (coreIsCLI && commonPkg.keywords) {
+    const cliKeywords = ["cli", "command-line", cliCommandName];
+    relinka(
+      "commonVerbose",
+      `Adding CLI keywords: ${JSON.stringify(cliKeywords)}`,
+    );
+    commonPkg.keywords = [...new Set([...cliKeywords, ...commonPkg.keywords])];
+    relinka(
+      "commonVerbose",
+      `Updated keywords: ${JSON.stringify(commonPkg.keywords)}`,
+    );
+  }
+
+  const outDirBin = path.join(outDirRoot, "bin");
+  if (isJsr) {
+    relinka("commonVerbose", `Creating JSR package.json for lib ${libName}...`);
+    await writeJsrLibPackageJSON(
+      libName,
+      outDirBin,
+      outDirRoot,
+      originalPkg,
+      commonPkg,
+      coreIsCLI,
+      libsList,
+      rmDepsMode,
+      rmDepsPatterns,
+    );
+  } else {
+    relinka("commonVerbose", `Creating NPM package.json for lib ${libName}...`);
+    await writeNpmLibPackageJSON(
+      libName,
+      outDirBin,
+      outDirRoot,
+      originalPkg,
+      commonPkg,
+      coreIsCLI,
+      libsList,
+      rmDepsMode,
+      rmDepsPatterns,
+      unifiedBundlerOutExt,
+    );
+  }
+  relinka(
+    "commonVerbose",
+    `Completed creation of package.json for lib: ${libName}`,
+  );
+}
+
+/**
+ * Creates a package.json for the main distribution.
+ */
+export async function createPackageJSON(
+  outDirRoot: string,
+  isJsr: boolean,
+  coreIsCLI: boolean,
+  unifiedBundlerOutExt: NpmOutExt,
+  rmDepsMode: ExcludeMode,
+  rmDepsPatterns: string[],
+): Promise<void> {
+  relinka(
+    "info",
+    `Generating distribution package.json and tsconfig.json (isJsr=${isJsr})...`,
+  );
+  const commonPkg = await createCommonPackageFields(coreIsCLI);
+  const originalPkg = await readPackageJSON();
+  const packageName = originalPkg.name || "";
+  const cliCommandName = packageName.startsWith("@")
+    ? packageName.split("/").pop() || "cli"
+    : packageName;
+
+  relinka(
+    "commonVerbose",
+    `Package name: "${packageName}", CLI command name: "${cliCommandName}", coreIsCLI: ${coreIsCLI}`,
+  );
+
+  const outDirBin = path.join(outDirRoot, "bin");
+  const outExt = unifiedBundlerOutExt || "js";
+
+  if (isJsr) {
+    // For JSR, we need to handle bin entries with .ts extension
+    const binEntry = coreIsCLI
+      ? { [cliCommandName]: "bin/main.ts" }
+      : undefined;
+
+    if (coreIsCLI) {
+      relinka(
+        "commonVerbose",
+        `Adding CLI bin entry for JSR: { "${cliCommandName}": "bin/main.ts" }`,
+      );
+    }
+
+    const jsrPkg = definePackageJSON({
+      ...commonPkg,
+      bin: binEntry,
+      dependencies: await filterDeps(
+        originalPkg.dependencies,
+        false,
+        outDirBin,
+        isJsr,
+        rmDepsMode,
+        rmDepsPatterns,
+      ),
+      devDependencies: await filterDeps(
+        originalPkg.devDependencies,
+        false,
+        outDirBin,
+        isJsr,
+        rmDepsMode,
+        rmDepsPatterns,
+      ),
+      exports: {
+        ".": "./bin/main.ts",
+      },
+    });
+    await fs.writeJSON(path.join(outDirRoot, "package.json"), jsrPkg, {
+      spaces: 2,
+    });
+
+    if (coreIsCLI) {
+      relinka(
+        "commonVerbose",
+        `JSR package.json created with CLI bin entry: ${JSON.stringify(jsrPkg.bin)}`,
+      );
+    }
+  } else {
+    const binEntry = coreIsCLI
+      ? { [cliCommandName]: `bin/main.${outExt}` }
+      : undefined;
+
+    if (coreIsCLI) {
+      relinka(
+        "commonVerbose",
+        `Adding CLI bin entry for NPM: { "${cliCommandName}": "bin/main.${outExt}" }`,
+      );
+    }
+
+    const npmPkg = definePackageJSON({
+      ...commonPkg,
+      bin: binEntry,
+      dependencies: await filterDeps(
+        originalPkg.dependencies,
+        false,
+        outDirBin,
+        isJsr,
+        rmDepsMode,
+        rmDepsPatterns,
+      ),
+      devDependencies: await filterDeps(
+        originalPkg.devDependencies,
+        false,
+        outDirBin,
+        isJsr,
+        rmDepsMode,
+        rmDepsPatterns,
+      ),
+      exports: {
+        ".": `./bin/main.${outExt}`,
+      },
+      files: ["bin", "package.json", "README.md", "LICENSE"],
+      main: `./bin/main.${outExt}`,
+      module: `./bin/main.${outExt}`,
+      publishConfig: { access: "public" },
+    });
+    await fs.writeJSON(path.join(outDirRoot, "package.json"), npmPkg, {
+      spaces: 2,
+    });
+
+    if (coreIsCLI) {
+      relinka(
+        "commonVerbose",
+        `NPM package.json created with CLI bin entry: ${JSON.stringify(npmPkg.bin)}`,
+      );
+    }
+  }
+  relinka("commonVerbose", `Created package.json in ${outDirRoot}`);
+}
+
+/**
+ * Creates common package.json fields based on the original package.json.
+ */
+async function createCommonPackageFields(
+  coreIsCLI: boolean,
+): Promise<Partial<PackageJson>> {
+  relinka("commonVerbose", "Generating common package fields");
+  const originalPkg = await readPackageJSON();
+  const { author, description, keywords, license, name, version } = originalPkg;
+
+  relinka(
+    "commonVerbose",
+    `Original package name: "${name}", version: "${version}"`,
+  );
+
+  const pkgHomepage = cliDomainDocs;
+  const commonPkg: Partial<PackageJson> = {
+    dependencies: originalPkg.dependencies || {},
+    description,
+    homepage: pkgHomepage,
+    license: license || "MIT",
+    name,
+    type: "module",
+    version,
+  };
+
+  if (coreIsCLI) {
+    relinka(
+      "commonVerbose",
+      "coreIsCLI is true, adding CLI-specific fields to common package fields",
+    );
+    if (commonPkg.keywords) {
+      const cliCommandName = name?.startsWith("@")
+        ? name.split("/").pop() || "cli"
+        : name || "relidler";
+      relinka(
+        "commonVerbose",
+        `Adding CLI keywords to existing keywords, CLI command name: "${cliCommandName}"`,
+      );
+      commonPkg.keywords = [
+        ...new Set([
+          "cli",
+          cliCommandName,
+          "command-line",
+          ...commonPkg.keywords,
+        ]),
+      ];
+      relinka(
+        "commonVerbose",
+        `Updated keywords: ${JSON.stringify(commonPkg.keywords)}`,
+      );
+    } else if (name) {
+      const cliCommandName = name.startsWith("@")
+        ? name.split("/").pop() || "cli"
+        : name;
+      relinka(
+        "commonVerbose",
+        `Setting new CLI keywords, CLI command name: "${cliCommandName}"`,
+      );
+      commonPkg.keywords = ["cli", "command-line", cliCommandName];
+      relinka(
+        "commonVerbose",
+        `Set keywords: ${JSON.stringify(commonPkg.keywords)}`,
+      );
+    }
+  } else {
+    relinka(
+      "commonVerbose",
+      "coreIsCLI is false, skipping CLI-specific fields",
+    );
+  }
+
+  if (author) {
+    const repoOwner = typeof author === "string" ? author : author.name;
+    const repoName = name
+      ? name.startsWith("@")
+        ? name.split("/").pop() || name
+        : name
+      : "";
+    Object.assign(commonPkg, {
+      author,
+      bugs: {
+        email: "blefnk@gmail.com",
+        url: `https://github.com/${repoOwner}/${repoName}/issues`,
+      },
+      keywords: [...new Set([repoOwner, ...(commonPkg.keywords || [])])],
+      repository: {
+        type: "git",
+        url: `git+https://github.com/${repoOwner}/${repoName}.git`,
+      },
+    });
+  } else if (keywords && keywords.length > 0 && !commonPkg.keywords) {
+    commonPkg.keywords = keywords;
+  }
+
+  relinka("commonVerbose", "Common package fields generated");
+  return commonPkg;
+}
+
+/**
+ * Gets dependencies for a lib based on the LibConfig dependencies field.
+ *
+ * @returns A filtered record of dependencies
+ */
+async function library_getlibPkgKeepDeps(
+  libName: string,
+  originalDeps: Record<string, string> | undefined,
+  outDirBin: string,
+  isJsr: boolean,
+  libConfig: LibConfig,
+  rmDepsMode: ExcludeMode,
+  rmDepsPatterns: string[],
+): Promise<Record<string, string>> {
+  relinka("commonVerbose", `Getting lib dependencies for: ${libName}`);
+  if (!originalDeps) return {};
+
+  // Check if the lib has a dependencies configuration
+  if (!libConfig) {
+    // Default behavior - filter based on usage
+    const result = await filterDeps(
+      originalDeps,
+      true,
+      outDirBin,
+      isJsr,
+      rmDepsMode,
+      rmDepsPatterns,
+    );
+    relinka(
+      "commonVerbose",
+      `Lib ${libName} dependencies filtered by usage, count: ${Object.keys(result).length}`,
+    );
+    return result;
+  }
+
+  // If dependencies is true, include all dependencies from the original package.json
+  if (libConfig.libPkgKeepDeps === true) {
+    relinka("info", `Including all dependencies for lib ${libName}`);
+
+    // Read the original package.json to determine if we're dealing with devDependencies
+    const originalPkg = await readPackageJSON();
+    const isDev = originalDeps === originalPkg.devDependencies;
+
+    const result = Object.entries(originalDeps).reduce<Record<string, string>>(
+      (acc, [k, v]) => {
+        // Determine if the dependency should be excluded based on the rmDepsMode
+        let shouldExclude = false;
+
+        if (rmDepsMode === "patterns-only") {
+          // Only exclude dependencies matching patterns
+          shouldExclude = rmDepsPatterns.some((pattern) =>
+            k.toLowerCase().includes(pattern.toLowerCase()),
+          );
+        } else if (rmDepsMode === "patterns-and-devdeps") {
+          // Exclude both dev dependencies and dependencies matching patterns
+          shouldExclude =
+            isDev ||
+            rmDepsPatterns.some((pattern) =>
+              k.toLowerCase().includes(pattern.toLowerCase()),
+            );
+        }
+
+        if (!shouldExclude) {
+          acc[k] = v;
+        }
+        return acc;
+      },
+      {},
+    );
+    return result;
+  }
+
+  // If dependencies is an array, only include those specific dependencies
+  if (Array.isArray(libConfig.libPkgKeepDeps)) {
+    relinka(
+      "info",
+      `Including specific dependencies for lib ${libName}: ${libConfig.libPkgKeepDeps.join(", ")}`,
+    );
+    const result = Object.entries(originalDeps).reduce<Record<string, string>>(
+      (acc, [k, v]) => {
+        if (
+          Array.isArray(libConfig.libPkgKeepDeps) &&
+          libConfig.libPkgKeepDeps.includes(k)
+        ) {
+          acc[k] = v;
+        }
+        return acc;
+      },
+      {},
+    );
+    return result;
+  }
+
+  // Default behavior - filter based on usage
+  const result = await filterDeps(
+    originalDeps,
+    true,
+    outDirBin,
+    isJsr,
+    rmDepsMode,
+    rmDepsPatterns,
+  );
+  relinka(
+    "commonVerbose",
+    `Default filtering for lib ${libName} done, count: ${Object.keys(result).length}`,
+  );
+  return result;
+}
+
+/**
+ * Writes a package.json for a JSR lib distribution.
+ */
+async function writeJsrLibPackageJSON(
+  libName: string,
+  outDirBin: string,
+  outDirRoot: string,
+  originalPkg: PackageJson,
+  commonPkg: Partial<PackageJson>,
+  coreIsCLI: boolean,
+  libsList: Record<string, LibConfig>,
+  rmDepsMode: ExcludeMode,
+  rmDepsPatterns: string[],
+): Promise<void> {
+  relinka("commonVerbose", `Writing package.json for JSR lib: ${libName}`);
+
+  // For JSR packages, we need to handle bin entries differently
+  // JSR uses TypeScript files directly
+  const binEntry = commonPkg.bin;
+  if (binEntry) {
+    relinka(
+      "commonVerbose",
+      `Found bin entry in commonPkg: ${JSON.stringify(binEntry)}`,
+    );
+    // Convert bin paths to .ts extension for JSR
+    const updatedBin: Record<string, string> = {};
+    Object.entries(binEntry).forEach(([key, value]) => {
+      updatedBin[key] = value.replace(/\.js$/, ".ts");
+    });
+    commonPkg.bin = updatedBin;
+    relinka(
+      "commonVerbose",
+      `Updated bin entry for JSR: ${JSON.stringify(updatedBin)}`,
+    );
+  }
+
+  const jsrPkg = definePackageJSON({
+    ...commonPkg,
+    dependencies: await library_getlibPkgKeepDeps(
+      libName,
+      originalPkg.dependencies,
+      outDirBin,
+      true,
+      libsList?.[libName],
+      rmDepsMode,
+      rmDepsPatterns,
+    ),
+    devDependencies: await filterDeps(
+      originalPkg.devDependencies,
+      true,
+      outDirBin,
+      true,
+      rmDepsMode,
+      rmDepsPatterns,
+    ),
+    exports: {
+      ".": "./bin/main.ts",
+    },
+  });
+
+  if (coreIsCLI) {
+    relinka(
+      "commonVerbose",
+      `JSR lib package.json for ${libName} has CLI-specific fields:`,
+    );
+    if (jsrPkg.bin)
+      relinka("commonVerbose", `  bin: ${JSON.stringify(jsrPkg.bin)}`);
+  }
+
+  await fs.writeJSON(path.join(outDirRoot, "package.json"), jsrPkg, {
+    spaces: 2,
+  });
+  relinka(
+    "commonVerbose",
+    `Completed writing package.json for JSR lib: ${libName}`,
+  );
+}
+
+/**
+ * Writes a package.json for a NPM lib distribution.
+ */
+async function writeNpmLibPackageJSON(
+  libName: string,
+  outDirBin: string,
+  outDirRoot: string,
+  originalPkg: PackageJson,
+  commonPkg: Partial<PackageJson>,
+  coreIsCLI: boolean,
+  libsList: Record<string, LibConfig>,
+  rmDepsMode: ExcludeMode,
+  rmDepsPatterns: string[],
+  unifiedBundlerOutExt: NpmOutExt,
+): Promise<void> {
+  relinka("commonVerbose", `Writing package.json for NPM lib: ${libName}`);
+
+  // If bin is already set in commonPkg (from createLibPackageJSON), use that
+  // Otherwise, set it based on coreIsCLI
+  const binEntry =
+    commonPkg.bin ||
+    (coreIsCLI
+      ? { [libName.split("/").pop() || ""]: `bin/main.${unifiedBundlerOutExt}` }
+      : undefined);
+
+  if (binEntry) {
+    relinka(
+      "commonVerbose",
+      `Using bin entry for NPM lib: ${JSON.stringify(binEntry)}`,
+    );
+  }
+
+  const npmPkg = definePackageJSON({
+    ...commonPkg,
+    bin: binEntry,
+    dependencies: await library_getlibPkgKeepDeps(
+      libName,
+      originalPkg.dependencies,
+      outDirBin,
+      false,
+      libsList?.[libName],
+      rmDepsMode,
+      rmDepsPatterns,
+    ),
+    devDependencies: await filterDeps(
+      originalPkg.devDependencies,
+      true,
+      outDirBin,
+      false,
+      rmDepsMode,
+      rmDepsPatterns,
+    ),
+    exports: {
+      ".": `./bin/main.${unifiedBundlerOutExt}`,
+    },
+    files: ["bin", "package.json", "README.md", "LICENSE"],
+    main: `./bin/main.${unifiedBundlerOutExt}`,
+    module: `./bin/main.${unifiedBundlerOutExt}`,
+    publishConfig: { access: "public" },
+  });
+
+  if (coreIsCLI) {
+    relinka(
+      "commonVerbose",
+      `NPM lib package.json for ${libName} has CLI-specific fields:`,
+    );
+    if (npmPkg.bin)
+      relinka("commonVerbose", `  bin: ${JSON.stringify(npmPkg.bin)}`);
+  }
+
+  await fs.writeJSON(path.join(outDirRoot, "package.json"), npmPkg, {
+    spaces: 2,
+  });
+  relinka(
+    "commonVerbose",
+    `Completed writing package.json for NPM lib: ${libName}`,
+  );
+}

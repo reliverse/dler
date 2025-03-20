@@ -8,5 +8,6 @@
     "src/**/*-main.ts",
     "*.{config,cfg}.{ts,js}"
   ],
-  "ignoreDependencies": ["bun"]
+  "ignoreDependencies": ["bun"],
+  "ignore": ["src/libs/sdk/sdk-impl/utils/utils-deprecated.ts"]
 }

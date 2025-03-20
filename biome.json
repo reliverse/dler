@@ -34,8 +34,7 @@
       "suspicious": {
         "noControlCharactersInRegex": "off",
         "noExplicitAny": "off",
-        "noAssignInExpressions": "off",
-        "noImplicitAnyLet": "off"
+        "noAssignInExpressions": "off"
       },
       "style": {
         "noNonNullAssertion": "off",

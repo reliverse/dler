@@ -1,4 +1,4 @@
-import type { BuildPublishConfig } from "~/types.js";
+import type { BuildPublishConfig } from "./cfg-types.js";
 
 import { DEFAULT_CONFIG } from "./cfg-default.js";
 

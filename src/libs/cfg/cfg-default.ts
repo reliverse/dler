@@ -1,58 +1,54 @@
-import type { BuildPublishConfig } from "~/types.js";
+import type { BuildPublishConfig } from "./cfg-types.js";
 
 /**
  * Default configuration for the build and publish logic.
  */
 export const DEFAULT_CONFIG: BuildPublishConfig = {
-  // Common configuration
-  entryFile: "main.ts",
-  entrySrcDir: "src",
-  verbose: false,
-  isCLI: false,
-
-  // Publishing options
-  registry: "npm-jsr",
-  pausePublish: true,
-  dryRun: false,
-
+  bumpDisable: false,
+  bumpFilter: ["package.json", "reliverse.ts"],
   // Versioning options
   bumpMode: "autoPatch",
-  disableBump: false,
-  bumpFilter: ["package.json", "reliverse.ts"],
+  commonPubPause: true,
 
-  // NPM-only config
-  npmDistDir: "dist-npm",
-  npmBuilder: "mkdist",
-  npmOutFilesExt: "js",
-  npmDeclarations: true,
-  npmCopyRootFiles: ["README.md", "LICENSE"],
+  // Publishing options
+  commonPubRegistry: "npm-jsr",
+  commonVerbose: false,
+  // Common configuration
+  coreEntryFile: "main.ts",
 
+  coreEntrySrcDir: "src",
+  coreIsCLI: false,
+  distJsrAllowDirty: true,
+
+  distJsrBuilder: "jsr",
+  distJsrCopyRootFiles: ["README.md", "LICENSE"],
   // JSR-only config
-  jsrDistDir: "dist-jsr",
-  jsrBuilder: "jsr",
-  jsrSlowTypes: true,
-  jsrAllowDirty: true,
-  jsrGenTsconfig: false,
-  jsrCopyRootFiles: ["README.md", "LICENSE"],
+  distJsrDirName: "dist-jsr",
+  distJsrDryRun: false,
+  distJsrGenTsconfig: false,
 
-  // Build setup
-  minify: true,
-  splitting: false,
-  stub: false,
-  watch: false,
-  sourcemap: "none",
-  esbuild: "es2023",
-  publicPath: "/",
-  target: "node",
-  format: "esm",
+  distJsrSlowTypes: true,
+  distNpmBuilder: "mkdist",
+  distNpmCopyRootFiles: ["README.md", "LICENSE"],
+  distNpmDeclarations: true,
+  // NPM-only config
+  distNpmDirName: "dist-npm",
+  distNpmOutFilesExt: "js",
 
+  // Libraries Relidler Plugin
+  // Publish specific dirs as separate packages
+  // This feature is experimental at the moment
+  // Please commit your changes before using it
+  libsActMode: "main-project-only",
+  libsDirDist: "dist-libs",
+  libsDirSrc: "src/libs",
+  libsList: {},
+  logsFileName: "relinka.log",
   // Logger options
-  freshLogFile: true,
-  logFile: "relinka.log",
-
+  logsFreshFile: true,
   // Dependency filtering
-  excludeMode: "patterns-and-devdeps",
-  excludedDependencyPatterns: [
+  rmDepsMode: "patterns-and-devdeps",
+  rmDepsPatterns: [
     "@types",
     "biome",
     "eslint",
@@ -61,13 +57,17 @@ export const DEFAULT_CONFIG: BuildPublishConfig = {
     "typescript",
     "@reliverse/config",
   ],
+  transpileEsbuild: "es2023",
 
-  // Libraries Relidler Plugin
-  // Publish specific dirs as separate packages
-  // This feature is experimental at the moment
-  // Please commit your changes before using it
-  buildPublishMode: "main-project-only",
-  libsDistDir: "dist-libs",
-  libsSrcDir: "src/libs",
-  libs: {},
+  transpileFormat: "esm",
+  // Build setup
+  transpileMinify: true,
+
+  transpilePublicPath: "/",
+  transpileSourcemap: "none",
+
+  transpileSplitting: false,
+  transpileStub: false,
+  transpileTarget: "node",
+  transpileWatch: false,
 };

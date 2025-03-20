@@ -2,8 +2,8 @@
   "recommendations": [
     "fabiospampinato.vscode-open-multiple-files",
     "yoavbls.pretty-ts-errors",
-    "berublan.vscode-log-viewer",
-    "emilast.logfilehighlighter",
-    "oven.bun-vscode"
+    "oven.bun-vscode",
+    "miguelsolorio.symbols",
+    "biomejs.biome"
   ]
 }

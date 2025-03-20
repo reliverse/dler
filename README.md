@@ -8,29 +8,29 @@
 
 - 😘 Drop-in replacement for `unbuild`
 - ⚡ `relidler` works via CLI and SDK
-- 📦 Automates NPM/JSR publishing
+- 📦 Automated NPM and JSR publishing
 - ✅ Ensures reliable JS/TS builds
 - 🔄 Handles automatic version bumps
-- 🔧 Eliminates package.json headaches
-- 🎯 Optimized for speed & modern workflows
+- 🔧 Eliminates `package.json` headaches
+- 🎯 Optimized for speed and modern workflows
 - 🛠️ Converts TypeScript aliases to relative paths
 - ✨ Packed with powerful features under the hood
-- 📝 Highly configurable via a config file
+- 📝 Highly configurable via a configuration file
 - 🔌 Plugin system for extensibility
 
 ## Getting Started
 
-Ensure [Git](https://git-scm.com/downloads), [Node.js](https://nodejs.org), and [bun](https://bun.sh)/[pnpm](https://pnpm.io)/[yarn](https://yarnpkg.com)/[npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) are installed. Then, follow these steps:
+Ensure [Git](https://git-scm.com/downloads), [Node.js](https://nodejs.org), and a package manager ([bun](https://bun.sh)/[pnpm](https://pnpm.io)/[yarn](https://yarnpkg.com)/[npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)) are installed. Then follow these steps:
 
 ### Example Playground
 
-Want to test Relidler before integrating it into your project? Clone the repo and build it with Relidler itself:
+Want to test Relidler before integrating it into your project? Clone the repo and build it using Relidler itself:
 
 ```sh
 git clone https://github.com/reliverse/relidler.git
 cd relidler
 bun i
-bun dev # Runs bun src/main.ts --dev
+bun dev # bun src/main.ts --dev
 ```
 
 ### Relidler Usage
@@ -41,7 +41,7 @@ bun dev # Runs bun src/main.ts --dev
     bun i -g @reliverse/relidler
     ```
 
-    **Or update if needed**:
+    **Or update as needed**:
 
     ```sh
     bun -g update --latest
@@ -49,7 +49,7 @@ bun dev # Runs bun src/main.ts --dev
 
 2. **Prepare your project**:
 
-    Ensure that your gitignore includes log files and dist dirs:
+    Ensure your `.gitignore` file excludes log files and distribution directories:
 
     ```sh
     echo "*.log" >> .gitignore
@@ -64,13 +64,13 @@ bun dev # Runs bun src/main.ts --dev
     relidler
     ```
 
-    The `relidler.cfg.ts` file will be created automatically on the first run. **It's recommended to edit this file according to your needs.** While `relidler.cfg.ts` is the recommended name, the following names are also available: `relidler.config.ts` • `build.cfg.ts` • `build.config.ts (⚠️soon)` • `build.pub.ts`.
+    The `relidler.cfg.ts` file is created automatically on the first run. **It's recommended to customize this file according to your needs.** While `relidler.cfg.ts` is the recommended name, you may also use: `relidler.config.ts`, `build.cfg.ts`, `build.config.ts (⚠️soon)`, or `build.pub.ts`.
 
 ## Plugins & SDK
 
-Relidler includes a plugin system. The following built-in plugin is already available:
+Relidler includes a plugin system with the following built-in plugins available:
 
-- **`libraries-relidler-plugin`**: Builds and publishes specified subdirectories of the main project's source directory as separate packages.
+- **`libraries-relidler-plugin`**: Builds and publishes specified subdirectories of your main project as separate packages.
 
 ### API (for advanced users)
 
@@ -86,13 +86,13 @@ bun add -D @reliverse/relidler-sdk # (⚠️soon)
 - [ ] Implement stable `library` build and publish
 - [ ] Implement automatic migration from `unbuild`
 - [ ] Achieve full drop-in replacement for `unbuild`
-- [ ] Make configuration fully optional using defaults
 - [ ] Allow plugins to extend Relidler's `defineConfig`
 - [ ] Support configuration via `reliverse.{ts,jsonc}`
+- [ ] Make configuration optional with sensible defaults
 
 ## Related
 
-Kudos to the following projects that made Relidler possible:
+Kudos to the following project that made Relidler possible:
 
 - [unjs/unbuild](https://github.com/unjs/unbuild)
 

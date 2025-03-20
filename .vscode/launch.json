@@ -23,10 +23,10 @@
       // If the environment variables should not be inherited from the parent process.
       "strictEnv": false,
 
-      // If the program should be run in watch mode.
-      // This is equivalent to passing `--watch` to the `bun` executable.
+      // If the program should be run in transpileWatch mode.
+      // This is equivalent to passing `--transpileWatch` to the `bun` executable.
       // You can also set this to "hot" to enable hot reloading using `--hot`.
-      "watchMode": false,
+      "transpileWatchMode": false,
 
       // If the debugger should stop on the first line of the program.
       "stopOnEntry": false,
