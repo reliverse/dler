@@ -46,13 +46,13 @@ export async function filterDeps(
   };
 
   // Check if we're filtering dependencies or devDependencies
-  // We assume if the deps object is from package.devDependencies, isDev should be true
-  const isDev = deps === originalPkg.devDependencies;
+  // We assume if the deps object is from package.devDependencies, devDeps should be true
+  const devDeps = deps === originalPkg.devDependencies;
 
   if (!clearUnused) {
     const filtered = Object.entries(deps).reduce<Record<string, string>>(
       (acc, [k, v]) => {
-        if (!shouldExcludeDep(k, isDev)) {
+        if (!shouldExcludeDep(k, devDeps)) {
           acc[k] = v;
         }
         return acc;
@@ -86,7 +86,7 @@ export async function filterDeps(
   }
   const filtered = Object.entries(deps).reduce<Record<string, string>>(
     (acc, [k, v]) => {
-      if (usedPackages.has(k) && !shouldExcludeDep(k, isDev)) {
+      if (usedPackages.has(k) && !shouldExcludeDep(k, devDeps)) {
         acc[k] = v;
       }
       return acc;

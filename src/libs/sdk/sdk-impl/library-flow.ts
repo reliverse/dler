@@ -154,11 +154,23 @@ async function libraries_buildPublish(
       const libMainPath = path.parse(libConfig.libMainFile);
       const libMainFile = libMainPath.base;
       let libMainDir: string;
+
+      // Handle three possible formats:
+      // 1. Full path starting with libsDirSrc (e.g., "src/libs/cfg/cfg-main.ts")
+      // 2. Relative path within libs (e.g., "cfg/cfg-main.ts")
+      // 3. Just filename (e.g., "cfg-main.ts")
       if (libConfig.libMainFile.startsWith(libsDirSrc)) {
+        // Case 1: Already includes the full path
         libMainDir = libMainPath.dir || ".";
+      } else if (libMainPath.dir) {
+        // Case 2: Has directory component but doesn't start with libsDirSrc
+        libMainDir = path.join(libsDirSrc, libMainPath.dir);
       } else {
-        libMainDir = path.join(libsDirSrc, libMainPath.dir || ".");
+        // Case 3: Just a filename, use the libDirName or extract from the library name
+        const dirName = libConfig.libDirName || extractLibDirFromName(libName);
+        libMainDir = path.join(libsDirSrc, dirName);
       }
+
       relinka(
         "verbose",
         `Processing library ${libName}: libMainDir=${libMainDir}, libMainFile=${libMainFile}`,
@@ -232,4 +244,23 @@ async function libraries_buildPublish(
     }
     throw error;
   }
+}
+
+// Helper function to extract directory name from library name
+function extractLibDirFromName(name: string): string {
+  // For scoped packages like @reliverse/relidler-cfg
+  if (name.includes("/")) {
+    const parts = name.split("/");
+    const lastPart = parts[parts.length - 1];
+    // Handle cases like relidler-cfg where we want just "cfg"
+    if (lastPart.includes("-")) {
+      return lastPart.split("-").pop() || lastPart;
+    }
+    return lastPart;
+  }
+  // For simple names with prefix like "relidler-cfg"
+  if (name.includes("-")) {
+    return name.split("-").pop() || name;
+  }
+  return name;
 }

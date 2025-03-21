@@ -36,7 +36,7 @@ import {
   renameTsxFiles,
 } from "~/libs/sdk/sdk-impl/utils/utils-jsr.js";
 import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
-import { createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-package.js";
+import { regular_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-json-reg.js";
 import {
   convertImportExtensionsJsToTs,
   convertImportPaths,
@@ -51,6 +51,8 @@ import { ensuredir } from "./bundlers/unified/utils.js";
 
 /**
  * Builds a regular JSR distribution.
+ * - Copies the entire source directory if `distJsrBuilder` = "jsr"
+ * - Otherwise uses bun or a "unified" bundler.
  */
 export async function regular_buildJsrDist(
   isDev: boolean,
@@ -74,43 +76,35 @@ export async function regular_buildJsrDist(
   distJsrGenTsconfig: boolean,
 ): Promise<void> {
   relinka("info", "Building JSR distribution...");
+
   const coreEntrySrcDirResolved = path.resolve(PROJECT_ROOT, coreEntrySrcDir);
   const coreEntryFilePath = path.join(coreEntrySrcDirResolved, coreEntryFile);
   const distJsrDirNameResolved = path.resolve(PROJECT_ROOT, distJsrDirName);
   const outDirBin = path.resolve(distJsrDirNameResolved, "bin");
+
   await ensuredir(distJsrDirNameResolved);
   await ensuredir(outDirBin);
   relinka("info", `Using JSR builder: ${distJsrBuilder}`);
-  if (distJsrBuilder === "jsr") {
-    await regular_bundleUsingJsr(coreEntrySrcDirResolved, outDirBin);
-  } else if (distJsrBuilder === "bun") {
-    await regular_bundleUsingBun(
-      coreEntryFilePath,
-      outDirBin,
-      transpileTarget,
-      transpileFormat,
-      transpileSplitting,
-      transpileMinify,
-      transpileSourcemap,
-      transpilePublicPath,
-      "",
-      timer,
-    );
-  } else {
-    await regular_bundleUsingUnified(
-      coreEntryFilePath,
-      outDirBin,
-      distJsrBuilder,
-      unifiedBundlerOutExt,
-      coreEntrySrcDir,
-      transpileStub,
-      transpileWatch,
-      transpileTarget,
-      transpileMinify,
-      transpileSourcemap,
-      timer,
-    );
-  }
+
+  // Decide how to do the bundling
+  await regular_bundleWithBuilder(distJsrBuilder, {
+    srcDir: coreEntrySrcDirResolved, // entire dir (used if "jsr")
+    singleFile: coreEntryFilePath, // single entry (used if "bun"/"unified")
+    outDir: outDirBin,
+    transpileTarget,
+    transpileFormat,
+    transpileSplitting,
+    transpileMinify,
+    transpileSourcemap,
+    transpilePublicPath,
+    packageName: "", // not strictly needed, keeping it for logs
+    transpileStub,
+    transpileWatch,
+    timer,
+    unifiedBundlerOutExt,
+  });
+
+  // Perform standard steps after bundling
   await regular_performCommonBuildSteps({
     coreEntryFile,
     coreIsCLI,
@@ -120,22 +114,31 @@ export async function regular_buildJsrDist(
     rmDepsMode,
     unifiedBundlerOutExt,
   });
+
+  // Additional JSR-specific transformations
   await convertImportExtensionsJsToTs(outDirBin);
   await renameTsxFiles(outDirBin);
   await createJsrJSONC(distJsrDirNameResolved, false);
+
+  // Optionally generate a tsconfig if it's a CLI in JSR mode
   if (coreIsCLI && isJsr && distJsrGenTsconfig) {
     await createTSConfig(distJsrDirNameResolved, true);
   }
+
   const dirSize = await getDirectorySize(distJsrDirNameResolved, isDev);
   const filesCount = await outDirBinFilesCount(outDirBin);
   relinka(
     "success",
-    `[${distJsrDirNameResolved}] Successfully created regular distribution: "dist-jsr" (${outDirBin}/main.ts) with (${filesCount} files (${prettyBytes(dirSize)})`,
+    `[${distJsrDirNameResolved}] Successfully created regular distribution: "dist-jsr" (${outDirBin}/main.ts) with (${filesCount} files (${prettyBytes(
+      dirSize,
+    )}))`,
   );
 }
 
 /**
  * Builds a regular NPM distribution.
+ * - Copies entire src dir if "jsr"
+ * - Otherwise uses Bun or a unified builder
  */
 export async function regular_buildNpmDist(
   isDev: boolean,
@@ -157,43 +160,35 @@ export async function regular_buildNpmDist(
   timer: PerfTimer,
 ): Promise<void> {
   relinka("info", "Building NPM distribution...");
+
   const coreEntrySrcDirResolved = path.resolve(PROJECT_ROOT, coreEntrySrcDir);
   const coreEntryFilePath = path.join(coreEntrySrcDirResolved, coreEntryFile);
   const distNpmDirNameResolved = path.resolve(PROJECT_ROOT, distNpmDirName);
   const outDirBin = path.resolve(distNpmDirNameResolved, "bin");
+
   await ensuredir(distNpmDirNameResolved);
   await ensuredir(outDirBin);
   relinka("info", `Using NPM builder: ${distNpmBuilder}`);
-  if (distNpmBuilder === "jsr") {
-    await regular_bundleUsingJsr(coreEntrySrcDirResolved, outDirBin);
-  } else if (distNpmBuilder === "bun") {
-    await regular_bundleUsingBun(
-      coreEntryFilePath,
-      outDirBin,
-      transpileTarget,
-      transpileFormat,
-      transpileSplitting,
-      transpileMinify,
-      transpileSourcemap,
-      transpilePublicPath,
-      "",
-      timer,
-    );
-  } else {
-    await regular_bundleUsingUnified(
-      coreEntryFilePath,
-      outDirBin,
-      distNpmBuilder,
-      unifiedBundlerOutExt,
-      coreEntrySrcDir,
-      transpileStub,
-      transpileWatch,
-      transpileTarget,
-      transpileMinify,
-      transpileSourcemap,
-      timer,
-    );
-  }
+
+  // Decide how to do the bundling
+  await regular_bundleWithBuilder(distNpmBuilder, {
+    srcDir: coreEntrySrcDirResolved,
+    singleFile: coreEntryFilePath,
+    outDir: outDirBin,
+    transpileTarget,
+    transpileFormat,
+    transpileSplitting,
+    transpileMinify,
+    transpileSourcemap,
+    transpilePublicPath,
+    packageName: "", // For logging
+    transpileStub,
+    transpileWatch,
+    timer,
+    unifiedBundlerOutExt,
+  });
+
+  // Perform standard steps after bundling
   await regular_performCommonBuildSteps({
     coreEntryFile,
     coreIsCLI,
@@ -203,6 +198,7 @@ export async function regular_buildNpmDist(
     rmDepsMode,
     unifiedBundlerOutExt,
   });
+
   const dirSize = await getDirectorySize(distNpmDirNameResolved, isDev);
   const filesCount = await outDirBinFilesCount(outDirBin);
   relinka(
@@ -211,12 +207,91 @@ export async function regular_buildNpmDist(
   );
   relinka(
     "success",
-    `[${distNpmDirNameResolved}] Successfully created regular distribution: "dist-npm" (${outDirBin}/main.js) with (${filesCount} files (${prettyBytes(dirSize)})`,
+    `[${distNpmDirNameResolved}] Successfully created regular distribution: "dist-npm" (${outDirBin}/main.js) with (${filesCount} files (${prettyBytes(
+      dirSize,
+    )}))`,
   );
 }
 
 /**
- * Bundles using Bun for regular projects.
+ * Helper function to decide bundler approach: "jsr" vs "bun" vs "unified".
+ */
+async function regular_bundleWithBuilder(
+  builder: BundlerName,
+  params: {
+    srcDir: string; // entire directory (used if builder=jsr)
+    singleFile: string; // single entry file (used if bun/unified)
+    outDir: string;
+    transpileTarget: transpileTarget;
+    transpileFormat: transpileFormat;
+    transpileSplitting: boolean;
+    transpileMinify: boolean;
+    transpileSourcemap: Sourcemap;
+    transpilePublicPath: string;
+    packageName?: string;
+    transpileStub: boolean;
+    transpileWatch: boolean;
+    timer: PerfTimer;
+    unifiedBundlerOutExt: NpmOutExt;
+  },
+): Promise<void> {
+  const {
+    srcDir,
+    singleFile,
+    outDir,
+    transpileTarget,
+    transpileFormat,
+    transpileSplitting,
+    transpileMinify,
+    transpileSourcemap,
+    transpilePublicPath,
+    transpileStub,
+    transpileWatch,
+    timer,
+    unifiedBundlerOutExt,
+  } = params;
+
+  // The "jsr" builder is basically a directory copy
+  if (builder === "jsr") {
+    await regular_bundleUsingJsr(srcDir, outDir);
+    return;
+  }
+
+  // The "bun" builder uses a single entry file
+  if (builder === "bun") {
+    await regular_bundleUsingBun(
+      singleFile,
+      outDir,
+      transpileTarget,
+      transpileFormat,
+      transpileSplitting,
+      transpileMinify,
+      transpileSourcemap,
+      transpilePublicPath,
+      timer,
+    );
+    return;
+  }
+
+  // Everything else is a "unified" type builder (rollup, mkdist, etc.)
+  await regular_bundleUsingUnified(
+    singleFile,
+    outDir,
+    builder,
+    unifiedBundlerOutExt,
+    // For mkdist, we pass the directory. For others, we pass the single file
+    path.dirname(singleFile),
+    transpileStub,
+    transpileWatch,
+    transpileTarget,
+    transpileMinify,
+    transpileSourcemap,
+    timer,
+  );
+}
+
+/**
+ * Bundles a regular project using Bun.
  */
 async function regular_bundleUsingBun(
   coreEntryFile: string,
@@ -227,12 +302,11 @@ async function regular_bundleUsingBun(
   transpileMinify: boolean,
   transpileSourcemap: Sourcemap,
   transpilePublicPath: string,
-  packageName: string,
   timer: PerfTimer,
 ): Promise<void> {
   relinka(
     "verbose",
-    `Bundling regular project using Bun for ${packageName || "main project"} (entry: ${coreEntryFile}, outDir: ${outDirBin})`,
+    `Bundling regular project using Bun (entry: ${coreEntryFile}, outDir: ${outDirBin})`,
   );
 
   if (!(await fs.pathExists(coreEntryFile))) {
@@ -266,7 +340,7 @@ async function regular_bundleUsingBun(
       throw: true,
     });
 
-    // Calculate and log build duration
+    // Build duration
     const duration = getElapsedPerfTime(timer);
     const transpileFormattedDuration = prettyMilliseconds(duration, {
       verbose: true,
@@ -288,14 +362,12 @@ async function regular_bundleUsingBun(
       `Regular build failed while using bun bundler: ${errorMessage}`,
     );
 
-    // Provide more context in the error message
     const enhancedError = new Error(
       `Regular bundle failed for ${outDirBin}: ${errorMessage}`,
     );
     if (error instanceof Error && error.stack) {
       enhancedError.stack = error.stack;
     }
-
     throw enhancedError;
   }
 }
@@ -307,10 +379,7 @@ async function regular_bundleUsingJsr(
   src: string,
   dest: string,
 ): Promise<void> {
-  relinka(
-    "info",
-    `Starting regular_bundleUsingJsr (builder: jsr): ${src} -> ${dest}`,
-  );
+  relinka("info", `Starting regular_bundleUsingJsr: ${src} -> ${dest}`);
   await ensuredir(path.dirname(dest));
 
   // Validate source is a directory
@@ -326,7 +395,7 @@ async function regular_bundleUsingJsr(
     relinka("verbose", `Copied directory from ${src} to ${dest}`);
     relinka("success", "Completed regular JSR bundling");
   } catch (error) {
-    // Handle errors gracefully with fallback to original source
+    // Fallback if there's an error
     const errorMessage = error instanceof Error ? error.message : String(error);
     relinka("warn", `${errorMessage}, falling back to copying ${src}`);
     await fs.copy(src, dest);
@@ -334,7 +403,7 @@ async function regular_bundleUsingJsr(
 }
 
 /**
- * Builds using a unified builder for main project.
+ * Bundles a regular project using a unified builder (rollup, mkdist, etc.).
  */
 async function regular_bundleUsingUnified(
   coreEntryFile: string,
@@ -354,6 +423,7 @@ async function regular_bundleUsingUnified(
       "'jsr'/'bun' builder not supported for regular_bundleUsingUnified",
     );
   }
+
   try {
     relinka(
       "verbose",
@@ -361,7 +431,7 @@ async function regular_bundleUsingUnified(
     );
     const rootDir = path.resolve(PROJECT_ROOT, coreEntrySrcDir || ".");
 
-    // Validate and normalize the output file extension
+    // Validate extension
     if (!validExtensions.includes(unifiedBundlerOutExt)) {
       relinka(
         "warn",
@@ -370,17 +440,11 @@ async function regular_bundleUsingUnified(
       unifiedBundlerOutExt = "js";
     }
 
-    // Determine source directory and input path
-    const srcDir = coreEntrySrcDir || "src";
-    const resolvedSrcDir = path.resolve(PROJECT_ROOT, srcDir);
-
-    // For mkdist, we need to use the directory containing the entry file, not the file itself
+    // For mkdist, pass the entire directory
+    // For other unified builders, pass the single file
     const input =
       builder === "mkdist" ? path.dirname(coreEntryFile) : coreEntryFile;
-
-    // Determine optimal concurrency based on configuration and system resources
     const concurrency = CONCURRENCY_DEFAULT;
-    relinka("verbose", `Using concurrency level: ${concurrency}`);
 
     const unifiedBuildConfig = {
       clean: false,
@@ -390,7 +454,7 @@ async function regular_bundleUsingUnified(
         {
           builder,
           ext: unifiedBundlerOutExt,
-          input: builder === "mkdist" ? resolvedSrcDir : input,
+          input: builder === "mkdist" ? rootDir : input,
           outDir: outDirBin,
         },
       ],
@@ -406,7 +470,7 @@ async function regular_bundleUsingUnified(
         },
       },
       showOutLog: true,
-      transpileStub: transpileStub,
+      transpileStub,
       transpileWatch: transpileWatch ?? false,
     } satisfies UnifiedBuildConfig & { concurrency?: number };
 
@@ -428,20 +492,19 @@ async function regular_bundleUsingUnified(
       `Failed to bundle regular project using ${builder}: ${errorMessage}`,
     );
 
-    // Provide more context in the error message
     const enhancedError = new Error(
       `Regular bundle failed for ${outDirBin}: ${errorMessage}`,
     );
     if (error instanceof Error && error.stack) {
       enhancedError.stack = error.stack;
     }
-
     throw enhancedError;
   }
 }
 
 /**
- * Common build steps shared between JSR and NPM distributions
+ * Common build steps shared between JSR and NPM distributions.
+ * - Convert imports, rename main entry file, optionally delete files, etc.
  */
 async function regular_performCommonBuildSteps({
   coreEntryFile,
@@ -462,6 +525,7 @@ async function regular_performCommonBuildSteps({
   rmDepsMode: ExcludeMode;
   unifiedBundlerOutExt: NpmOutExt;
 }): Promise<void> {
+  // Convert any "~/..." alias imports to relative
   await convertImportPaths({
     aliasPrefix: "~/",
     baseDir: outDirBin,
@@ -469,11 +533,17 @@ async function regular_performCommonBuildSteps({
     libsList: {},
     toType: "relative",
   });
+
+  // Rename the main entry file (e.g. index.js to main.js)
   await renameEntryFile(isJsr, outDirBin, coreEntryFile, unifiedBundlerOutExt);
+
+  // Delete undesired files
   if (deleteFiles) {
     await deleteSpecificFiles(outDirBin);
   }
-  await createPackageJSON(
+
+  // Create a package.json for this distribution
+  await regular_createPackageJSON(
     outDirRoot,
     isJsr,
     coreIsCLI,
@@ -481,9 +551,12 @@ async function regular_performCommonBuildSteps({
     rmDepsMode,
     [],
   );
+
+  // Copy some root files (README, LICENSE, etc.)
   await copyRootFile(outDirRoot, ["README.md", "LICENSE"]);
-  if (isJsr && true) {
-    // coreIsCLI assumed true; adjust if needed
+
+  // Optionally copy a few more if it's JSR
+  if (isJsr) {
     await copyRootFile(outDirRoot, [
       ".gitignore",
       "reliverse.jsonc",

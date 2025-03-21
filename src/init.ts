@@ -82,7 +82,7 @@ function generateConfig(isDev: boolean): string {
   "@reliverse/relidler-cfg": {
     libDesc: "@reliverse/relidler defineConfig",
     libDirName: "cfg",
-    libMainFile: "cfg/cfg-main.ts",
+    libMainFile: "cfg-main.ts",
     libPkgKeepDeps: false,
     libTranspileDtsNpm: true,
     libTranspileMinify: false,
@@ -90,7 +90,7 @@ function generateConfig(isDev: boolean): string {
   "@reliverse/relidler-sdk": {
     libDesc: "@reliverse/relidler without cli",
     libDirName: "sdk",
-    libMainFile: "sdk/sdk-main.ts",
+    libMainFile: "sdk-main.ts",
     libPkgKeepDeps: true,
     libTranspileDtsNpm: true,
     libTranspileMinify: true,

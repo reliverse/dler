@@ -40,7 +40,7 @@ import {
   renameTsxFiles,
 } from "~/libs/sdk/sdk-impl/utils/utils-jsr.js";
 import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
-import { createLibPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-package.js";
+import { library_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-json-libs.js";
 import {
   convertImportExtensionsJsToTs,
   convertImportPaths,
@@ -51,9 +51,146 @@ import {
 } from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
 
 import { ensuredir } from "./bundlers/unified/utils.js";
+import MagicString from "magic-string";
+
+// TODO: store the original file in a temp folder in homerdir/.reliverse/relidler/*
+
+/* ------------------------------------------------------------------
+   preBuildReplacements 
+   ------------------------------------------------------------------ */
+
+type ReplacementRecord = {
+  filePath: string;
+  originalContent: string;
+  newContent: string;
+};
 
 /**
- * Builds a library for the specified commonPubRegistry.
+ * Scans all .ts files in the given directory (recursively).
+ * For each line that ends with `// relidler-replace-me`,
+ * remove that line and replace with the entire content of `src/types.ts`.
+ * Returns an array describing changed files, so we can revert them later.
+ */
+export async function preBuildReplacements(
+  librarySrcDir: string,
+): Promise<ReplacementRecord[]> {
+  // We'll store each changed file's original and new content
+  const replacedFiles: ReplacementRecord[] = [];
+
+  // The file we want to inject. TODO: implement auto paths.
+  const typesPath = path.join(PROJECT_ROOT, "src", "types.ts");
+  if (!(await fs.pathExists(typesPath))) {
+    throw new Error(`Cannot find source types file: ${typesPath}`);
+  }
+  const typesContent = await fs.readFile(typesPath, "utf-8");
+
+  // We'll gather all .ts files from 'librarySrcDir' recursively
+  const allFiles: string[] = [];
+  await collectTsFilesRecursively(librarySrcDir, allFiles);
+
+  // Process each .ts file
+  for (const filePath of allFiles) {
+    const originalCode = await fs.readFile(filePath, "utf-8");
+
+    // Use MagicString to do line-based replacements
+    const magic = new MagicString(originalCode);
+    let hasAtLeastOneReplacement = false;
+
+    // We'll search for lines that end with `// relidler-replace-me`
+    // i.e. something like: `export * from "../../types.js"; // relidler-replace-me`
+    const regex = /^.*\/\/\s*relidler-replace-me\s*$/gm;
+
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(originalCode)) !== null) {
+      hasAtLeastOneReplacement = true;
+
+      const startIdx = match.index; // start of the entire line
+      const endIdx = startIdx + match[0].length; // end of that line
+
+      // Overwrite that entire line with the content from 'types.ts'
+      // plus a newline to separate it
+      magic.overwrite(startIdx, endIdx, `${typesContent}\n`);
+    }
+
+    if (hasAtLeastOneReplacement) {
+      // Get final replaced content
+      const updatedCode = magic.toString();
+
+      // For safety, do a quick check if the result changed
+      if (updatedCode === originalCode) {
+        throw new Error(
+          `Logic error: found 'relidler-replace-me' but content did not change in ${filePath}`,
+        );
+      }
+
+      // Save the replaced file so we can revert later
+      replacedFiles.push({
+        filePath,
+        originalContent: originalCode,
+        newContent: updatedCode,
+      });
+
+      // Write the updated code back to disk
+      await fs.writeFile(filePath, updatedCode, "utf-8");
+      relinka("info", `Applied pre-build replacement in ${filePath}`);
+    }
+  }
+
+  return replacedFiles;
+}
+
+/**
+ * Recursively finds all .ts files in a directory.
+ */
+async function collectTsFilesRecursively(
+  dir: string,
+  output: string[],
+): Promise<void> {
+  if (!(await fs.pathExists(dir))) {
+    throw new Error(`Directory not found for pre-build scanning: ${dir}`);
+  }
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      await collectTsFilesRecursively(fullPath, output);
+    } else if (entry.isFile() && entry.name.endsWith(".ts")) {
+      output.push(fullPath);
+    }
+  }
+}
+
+/* ------------------------------------------------------------------
+     postBuildReplacements 
+     ------------------------------------------------------------------ */
+
+/**
+ * Reverts any changes made by `preBuildReplacements`.
+ * Accepts the array of replaced files from pre-build.
+ * Writes back the original content for each file.
+ */
+export async function postBuildReplacements(
+  replacedFiles: ReplacementRecord[],
+): Promise<void> {
+  for (const rec of replacedFiles) {
+    try {
+      await fs.writeFile(rec.filePath, rec.originalContent, "utf-8");
+      relinka("info", `Reverted changes in ${rec.filePath}`);
+    } catch (err) {
+      throw new Error(
+        `Failed to revert file ${rec.filePath}: ${(err as Error).message}`,
+      );
+    }
+  }
+}
+
+/* ------------------------------------------------------------------
+     library_buildLibrary 
+     ------------------------------------------------------------------ */
+
+/**
+ * Main entry point to build a library for the specified commonPubRegistry.
  */
 export async function library_buildLibrary(
   commonPubRegistry: string | undefined,
@@ -82,134 +219,156 @@ export async function library_buildLibrary(
   transpileStub: boolean,
   transpileWatch: boolean,
 ): Promise<void> {
-  switch (commonPubRegistry) {
-    case "jsr":
-      relinka("info", `Building lib ${libName} for JSR-only...`);
-      await library_buildJsrDist(
-        isDev,
-        libName,
-        mainDir,
-        npmOutDir,
-        distJsrBuilder,
-        mainFile,
-        coreIsCLI,
-        libsList,
-        rmDepsMode,
-        rmDepsPatterns,
-        unifiedBundlerOutExt,
-        transpileTarget,
-        transpileFormat,
-        transpileSplitting,
-        transpileMinify,
-        transpileSourcemap,
-        transpilePublicPath,
-        npmOutDir,
-        transpileEsbuild,
-        timer,
-        transpileStub,
-        transpileWatch,
-      );
-      break;
-    case "npm":
-      relinka("info", `Building lib ${libName} for NPM-only...`);
-      await library_buildNpmDist(
-        libName,
-        npmOutDir,
-        mainFile,
-        isDev,
-        coreEntrySrcDir,
-        distNpmBuilder,
-        libsList,
-        coreIsCLI,
-        unifiedBundlerOutExt,
-        rmDepsMode,
-        rmDepsPatterns,
-        transpileEsbuild,
-        transpileTarget,
-        transpileFormat,
-        transpileSplitting,
-        transpileMinify,
-        transpileSourcemap,
-        transpilePublicPath,
-        timer,
-        transpileStub,
-        transpileWatch,
-      );
-      break;
-    case "npm-jsr": {
-      relinka("info", `Building lib ${libName} for NPM and JSR...`);
+  // We'll do a pre-build pass on 'mainDir' before we do anything
+  let replacedFiles: ReplacementRecord[] = [];
+  try {
+    relinka("info", `Running pre-build replacements for ${libName}...`);
+    replacedFiles = await preBuildReplacements(mainDir);
 
-      const buildTasks = [
-        () =>
-          library_buildNpmDist(
-            libName,
-            npmOutDir,
-            mainFile,
-            isDev,
-            coreEntrySrcDir,
-            distNpmBuilder,
-            libsList,
-            coreIsCLI,
-            unifiedBundlerOutExt,
-            rmDepsMode,
-            rmDepsPatterns,
-            transpileEsbuild,
-            transpileTarget,
-            transpileFormat,
-            transpileSplitting,
-            transpileMinify,
-            transpileSourcemap,
-            transpilePublicPath,
-            timer,
-            transpileStub,
-            transpileWatch,
-          ),
-        () =>
-          library_buildJsrDist(
-            isDev,
-            libName,
-            mainDir,
-            jsrOutDir,
-            distJsrBuilder,
-            mainFile,
-            coreIsCLI,
-            libsList,
-            rmDepsMode,
-            rmDepsPatterns,
-            unifiedBundlerOutExt,
-            transpileTarget,
-            transpileFormat,
-            transpileSplitting,
-            transpileMinify,
-            transpileSourcemap,
-            transpilePublicPath,
-            jsrOutDir,
-            transpileEsbuild,
-            timer,
-            transpileStub,
-            transpileWatch,
-          ),
-      ];
-      await pAll(buildTasks, {
-        concurrency: CONCURRENCY_DEFAULT,
-      });
-      break;
+    // Do normal build tasks
+    switch (commonPubRegistry) {
+      case "jsr":
+        relinka("info", `Building lib ${libName} for JSR-only...`);
+        await library_buildJsrDist(
+          isDev,
+          libName,
+          mainDir,
+          jsrOutDir,
+          distJsrBuilder,
+          mainFile,
+          coreIsCLI,
+          libsList,
+          rmDepsMode,
+          rmDepsPatterns,
+          unifiedBundlerOutExt,
+          transpileTarget,
+          transpileFormat,
+          transpileSplitting,
+          transpileMinify,
+          transpileSourcemap,
+          transpilePublicPath,
+          transpileEsbuild,
+          timer,
+          transpileStub,
+          transpileWatch,
+        );
+        break;
+
+      case "npm":
+        relinka("info", `Building lib ${libName} for NPM-only...`);
+        await library_buildNpmDist(
+          libName,
+          npmOutDir,
+          mainFile,
+          isDev,
+          coreEntrySrcDir,
+          distNpmBuilder,
+          libsList,
+          coreIsCLI,
+          unifiedBundlerOutExt,
+          rmDepsMode,
+          rmDepsPatterns,
+          transpileEsbuild,
+          transpileTarget,
+          transpileFormat,
+          transpileSplitting,
+          transpileMinify,
+          transpileSourcemap,
+          transpilePublicPath,
+          timer,
+          transpileStub,
+          transpileWatch,
+        );
+        break;
+
+      case "npm-jsr": {
+        relinka("info", `Building lib ${libName} for NPM and JSR...`);
+
+        const buildTasks = [
+          () =>
+            library_buildNpmDist(
+              libName,
+              npmOutDir,
+              mainFile,
+              isDev,
+              coreEntrySrcDir,
+              distNpmBuilder,
+              libsList,
+              coreIsCLI,
+              unifiedBundlerOutExt,
+              rmDepsMode,
+              rmDepsPatterns,
+              transpileEsbuild,
+              transpileTarget,
+              transpileFormat,
+              transpileSplitting,
+              transpileMinify,
+              transpileSourcemap,
+              transpilePublicPath,
+              timer,
+              transpileStub,
+              transpileWatch,
+            ),
+          () =>
+            library_buildJsrDist(
+              isDev,
+              libName,
+              mainDir,
+              jsrOutDir,
+              distJsrBuilder,
+              mainFile,
+              coreIsCLI,
+              libsList,
+              rmDepsMode,
+              rmDepsPatterns,
+              unifiedBundlerOutExt,
+              transpileTarget,
+              transpileFormat,
+              transpileSplitting,
+              transpileMinify,
+              transpileSourcemap,
+              transpilePublicPath,
+              transpileEsbuild,
+              timer,
+              transpileStub,
+              transpileWatch,
+            ),
+        ];
+        await pAll(buildTasks, {
+          concurrency: CONCURRENCY_DEFAULT,
+        });
+        break;
+      }
+
+      default:
+        relinka(
+          "warn",
+          `Unknown commonPubRegistry "${commonPubRegistry}" for lib ${libName}. Skipping build.`,
+        );
     }
-    default:
-      relinka(
-        "warn",
-        `Unknown commonPubRegistry "${commonPubRegistry}" for lib ${libName}. Skipping build.`,
-      );
+  } catch (err) {
+    // If anything failed, we rethrow. (We'll still revert in the finally block)
+    relinka(
+      "error",
+      `Build process for ${libName} encountered an error: ${(err as Error).message}`,
+    );
+    throw err;
+  } finally {
+    // post-build revert so that the original source files are restored
+    // even if an error occurred.
+    relinka("info", `Reverting pre-build changes for ${libName}...`);
+    await postBuildReplacements(replacedFiles);
+    relinka("info", `Done reverting changes for ${libName}.`);
   }
 }
 
 /**
  * Builds a lib distribution for JSR.
  */
-async function library_buildJsrDist(
+export async function library_buildJsrDist(
   isDev: boolean,
   libName: string,
-  coreEntrySrcDir: string,
+  mainDir: string,
   distJsrDirName: string,
   distJsrBuilder: BundlerName,
   coreEntryFile: string,
@@ -224,51 +383,49 @@ async function library_buildJsrDist(
   transpileMinify: boolean,
   transpileSourcemap: Sourcemap,
   transpilePublicPath: string,
-  outDirBin: string,
   transpileEsbuild: Esbuild,
   timer: PerfTimer,
   transpileStub: boolean,
   transpileWatch: boolean,
 ): Promise<void> {
   relinka("info", "Building JSR distribution...");
-  const coreEntrySrcDirResolved = path.resolve(PROJECT_ROOT, coreEntrySrcDir);
+
+  const coreEntrySrcDirResolved = path.resolve(PROJECT_ROOT, mainDir);
   const coreEntryFilePath = path.join(coreEntrySrcDirResolved, coreEntryFile);
   const distJsrDirNameResolved = path.resolve(PROJECT_ROOT, distJsrDirName);
   const outDirBinResolved = path.resolve(distJsrDirNameResolved, "bin");
+
   await ensuredir(distJsrDirNameResolved);
   await ensuredir(outDirBinResolved);
   relinka("info", `Using JSR builder: ${distJsrBuilder}`);
-  if (distJsrBuilder === "jsr") {
-    await library_bundleUsingJsr(coreEntrySrcDirResolved, outDirBinResolved);
-  } else if (distJsrBuilder === "bun") {
-    await library_bundleUsingBun(
-      coreEntryFile,
-      outDirBin,
-      libName,
-      transpileTarget,
-      transpileFormat,
-      transpileSplitting,
-      transpileMinify,
-      transpileSourcemap,
-      transpilePublicPath,
-      timer,
-    );
-  } else {
-    await library_bundleUsingUnified(
-      coreEntryFilePath,
-      outDirBinResolved,
-      distJsrBuilder,
-      coreEntrySrcDir,
-      unifiedBundlerOutExt,
-      transpileStub,
-      transpileWatch,
-      transpileEsbuild,
-      transpileMinify,
-      transpileSourcemap,
-      timer,
-      libsList,
-    );
-  }
+
+  // Pick between the entire folder or single file
+  // so that "jsr" builder copies everything
+  const srcDirectory = coreEntrySrcDirResolved; // entire library folder
+  const srcFile = coreEntryFilePath; // single file
+
+  // If the user chose "jsr" bundler, we pass the entire directory for copying
+  // Otherwise (bun/unified), pass only the single entry file
+  const toBundle = distJsrBuilder === "jsr" ? srcDirectory : srcFile;
+
+  await library_bundleWithBuilder(distJsrBuilder, {
+    entryFile: toBundle,
+    outDir: outDirBinResolved,
+    libName,
+    transpileTarget,
+    transpileFormat,
+    transpileSplitting,
+    transpileMinify,
+    transpileSourcemap,
+    transpilePublicPath,
+    transpileStub,
+    transpileWatch,
+    transpileEsbuild,
+    timer,
+    unifiedBundlerOutExt,
+  });
+
+  // Perform common steps for JSR
   await library_performCommonBuildSteps({
     coreEntryFile,
     coreIsCLI,
@@ -280,9 +437,13 @@ async function library_buildJsrDist(
     rmDepsPatterns,
     unifiedBundlerOutExt,
   });
+
+  // Additional JSR-specific transformations
   await convertImportExtensionsJsToTs(outDirBinResolved);
   await renameTsxFiles(outDirBinResolved);
   await createJsrJSONC(distJsrDirNameResolved, false);
+
+  // Logging
   const dirSize = await getDirectorySize(distJsrDirNameResolved, isDev);
   const filesCount = await outDirBinFilesCount(outDirBinResolved);
   relinka(
@@ -291,14 +452,14 @@ async function library_buildJsrDist(
   );
   relinka(
     "success",
-    `[${distJsrDirNameResolved}] Successfully created library distribution: ${libName} (${outDirBinResolved}/main.ts) with (${filesCount} files (${prettyBytes(dirSize)})`,
+    `[${distJsrDirNameResolved}] Successfully created library distribution: ${libName} (${outDirBinResolved}/main.ts) with (${filesCount} files, ${prettyBytes(dirSize)})`,
   );
 }
 
 /**
  * Builds a lib distribution for NPM.
  */
-async function library_buildNpmDist(
+export async function library_buildNpmDist(
   libName: string,
   libOutDirRoot: string,
   libEntryFile: string,
@@ -327,73 +488,67 @@ async function library_buildNpmDist(
   const distName = determineDistName(libOutDirRoot, false, libsList);
   relinka(
     "verbose",
-    `[${distName}] Starting library_buildNpmDist for lib: ${libName}`,
+    `[${distName}] Starting library_buildNpmDist for: ${libName}`,
   );
-  const libOutDirBinResolved = path.resolve(libOutDirRoot, "bin");
   relinka("info", `[${distName}] Building NPM dist for lib: ${libName}...`);
+
+  const libOutDirBinResolved = path.resolve(libOutDirRoot, "bin");
   const coreEntrySrcDirResolved = path.resolve(PROJECT_ROOT, coreEntrySrcDir);
-  // Get the library-specific source directory
+
+  // Attempt to find the library-specific source directory
   const libNameSimple = libName.split("/").pop() || libName;
-  // Handle any "{prefix}-xyz" transpileFormat by extracting just "xyz" part
-  const dashIndex = libNameSimple.indexOf("-");
-  const normalizedLibName =
-    dashIndex !== -1 ? libNameSimple.substring(dashIndex + 1) : libNameSimple;
-  // Extract the actual directory from the main file path in the config
-  let libSrcDir = path.join(coreEntrySrcDirResolved, "libs", normalizedLibName);
-  // Check if we have a main file path in the config
+  let libSrcDir = path.join(coreEntrySrcDirResolved, "libs", libNameSimple);
+
   const libConfig = libsList?.[libName];
   if (libConfig?.libMainFile) {
-    const mainFilePath = libConfig.libMainFile;
-    const libDirMatch = /src\/libs\/([^/]+)\//.exec(mainFilePath);
-    if (libDirMatch?.[1]) {
-      // Use the directory from the main file path
-      const actualLibDir = libDirMatch[1];
-      libSrcDir = path.join(coreEntrySrcDirResolved, "libs", actualLibDir);
+    // 1) If libDirName is explicitly specified, use it
+    if (libConfig.libDirName) {
+      libSrcDir = path.join(
+        coreEntrySrcDirResolved,
+        "libs",
+        libConfig.libDirName,
+      );
+    }
+    // 2) Otherwise, try to parse from libMainFile
+    else if (libConfig.libMainFile.includes("/")) {
+      const libDirMatch = /src\/libs\/([^/]+)\//.exec(libConfig.libMainFile);
+      if (libDirMatch?.[1]) {
+        libSrcDir = path.join(coreEntrySrcDirResolved, "libs", libDirMatch[1]);
+      } else {
+        // fallback
+        const parsedPath = path.parse(libConfig.libMainFile);
+        if (parsedPath.dir) {
+          const firstDir = parsedPath.dir.split("/")[0];
+          if (firstDir) {
+            libSrcDir = path.join(coreEntrySrcDirResolved, "libs", firstDir);
+          }
+        }
+      }
     }
   }
 
+  // Construct the full entry file
+  const fullEntryFilePath = path.join(libSrcDir, path.basename(libEntryFile));
+
   // =====================================================
-  // [dist-libs/npm] 2. Build using the appropriate builder
+  // [dist-libs/npm] 2. Build using the chosen bundler
   // =====================================================
-  if (distNpmBuilder === "jsr") {
-    await library_bundleUsingJsr(libSrcDir, libOutDirBinResolved);
-  } else if (distNpmBuilder === "bun") {
-    await library_bundleUsingBun(
-      libEntryFile,
-      libOutDirBinResolved,
-      libName,
-      transpileTarget,
-      transpileFormat,
-      transpileSplitting,
-      transpileMinify,
-      transpileSourcemap,
-      transpilePublicPath,
-      timer,
-    );
-  } else {
-    // Construct the full path to the entry file
-    // For library builds, we need to use the library-specific entry file path
-    const libEntryFilePath = path.join(libSrcDir, path.basename(libEntryFile));
-    relinka("verbose", `[${distName}] libEntryFilePath: ${libEntryFilePath}`);
-    relinka(
-      "verbose",
-      `[${distName}] libOutDirBinResolved: ${libOutDirBinResolved}`,
-    );
-    await library_bundleUsingUnified(
-      libEntryFilePath,
-      libOutDirBinResolved,
-      distNpmBuilder,
-      coreEntrySrcDir,
-      unifiedBundlerOutExt,
-      transpileStub,
-      transpileWatch,
-      transpileEsbuild,
-      false,
-      "none",
-      timer,
-      libsList,
-    );
-  }
+  await library_bundleWithBuilder(distNpmBuilder, {
+    entryFile: fullEntryFilePath,
+    outDir: libOutDirBinResolved,
+    libName,
+    transpileTarget,
+    transpileFormat,
+    transpileSplitting,
+    transpileMinify,
+    transpileSourcemap,
+    transpilePublicPath,
+    transpileStub,
+    transpileWatch,
+    transpileEsbuild,
+    timer,
+    unifiedBundlerOutExt,
+  });
 
   // =====================================================
   // [dist-libs/npm] 3. Perform common library build steps
@@ -418,7 +573,85 @@ async function library_buildNpmDist(
   const filesCount = await outDirBinFilesCount(libOutDirBinResolved);
   relinka(
     "success",
-    `[${libOutDirRoot}] Successfully created library distribution: ${libName} (${libOutDirRoot}/main.js) with (${filesCount} files (${prettyBytes(dirSize)})`,
+    `[${libOutDirRoot}] Successfully created library distribution: ${libName} (${libOutDirRoot}/main.js) with (${filesCount} files, ${prettyBytes(dirSize)})`,
+  );
+}
+
+/**
+ * Centralized helper to handle bundling with "jsr", "bun", or "unified" logic.
+ */
+async function library_bundleWithBuilder(
+  builder: BundlerName,
+  params: {
+    entryFile: string;
+    outDir: string;
+    libName: string;
+    transpileTarget: transpileTarget;
+    transpileFormat: transpileFormat;
+    transpileSplitting: boolean;
+    transpileMinify: boolean;
+    transpileSourcemap: Sourcemap;
+    transpilePublicPath: string;
+    transpileStub: boolean;
+    transpileWatch: boolean;
+    transpileEsbuild: Esbuild;
+    timer: PerfTimer;
+    unifiedBundlerOutExt: NpmOutExt;
+  },
+): Promise<void> {
+  const {
+    entryFile,
+    outDir,
+    libName,
+    transpileTarget,
+    transpileFormat,
+    transpileSplitting,
+    transpileMinify,
+    transpileSourcemap,
+    transpilePublicPath,
+    transpileStub,
+    transpileWatch,
+    transpileEsbuild,
+    timer,
+    unifiedBundlerOutExt,
+  } = params;
+
+  // Decide which bundling approach to use
+  if (builder === "jsr") {
+    await library_bundleUsingJsr(entryFile, outDir);
+    return;
+  }
+
+  if (builder === "bun") {
+    // Bundling with Bun
+    await library_bundleUsingBun(
+      entryFile,
+      outDir,
+      libName,
+      transpileTarget,
+      transpileFormat,
+      transpileSplitting,
+      transpileMinify,
+      transpileSourcemap,
+      transpilePublicPath,
+      timer,
+    );
+    return;
+  }
+
+  // Otherwise, use one of the "unified" bundlers (rollup, mkdist, etc.)
+  await library_bundleUsingUnified(
+    entryFile,
+    outDir,
+    builder,
+    path.dirname(entryFile),
+    unifiedBundlerOutExt,
+    transpileStub,
+    transpileWatch,
+    transpileEsbuild,
+    transpileMinify,
+    transpileSourcemap,
+    timer,
   );
 }
 
@@ -495,7 +728,6 @@ async function library_bundleUsingBun(
       `Library build failed for ${libName} while using bun bundler: ${errorMessage}`,
     );
 
-    // Provide more context in the error message
     const enhancedError = new Error(
       `Library bundle failed for ${libName} (${outDirBin}): ${errorMessage}`,
     );
@@ -508,7 +740,7 @@ async function library_bundleUsingBun(
 }
 
 /**
- * Bundles a library project using JSR by copying the appropriate library directory.
+ * Bundles a library project using JSR by copying the entire directory or file.
  */
 async function library_bundleUsingJsr(
   src: string,
@@ -517,20 +749,29 @@ async function library_bundleUsingJsr(
   relinka("info", `Starting library JSR bundle: ${src} -> ${dest}`);
   await ensuredir(path.dirname(dest));
 
-  // Validate source is a directory
+  // If 'src' is a directory, copy everything inside.
+  // If 'src' is a file, copy just that file.
   const stats = await fs.stat(src);
-  if (!stats.isDirectory()) {
-    throw new Error(
-      "You are using the 'jsr' builder, but path to file was provided. Please provide path to directory instead.",
-    );
-  }
+  const isDirectory = stats.isDirectory();
 
   try {
-    await fs.copy(src, dest);
-    relinka("verbose", `Copied directory from ${src} to ${dest}`);
+    if (isDirectory) {
+      relinka("verbose", `Copying library directory from ${src} to ${dest}`);
+      const files = await fs.readdir(src);
+      await ensuredir(dest);
+
+      for (const file of files) {
+        const srcPath = path.join(src, file);
+        const destPath = path.join(dest, file);
+        await fs.copy(srcPath, destPath);
+      }
+    } else {
+      // It's a file — copy it directly
+      await fs.copy(src, path.join(dest, path.basename(src)));
+    }
+    relinka("verbose", `Copied from ${src} to ${dest}`);
     relinka("success", "Completed library JSR bundling");
   } catch (error) {
-    // Handle errors gracefully with fallback to original source
     const errorMessage = error instanceof Error ? error.message : String(error);
     relinka("warn", `${errorMessage}, falling back to copying ${src}`);
     await fs.copy(src, dest);
@@ -538,7 +779,7 @@ async function library_bundleUsingJsr(
 }
 
 /**
- * Builds using a unified builder for library projects.
+ * Builds using a unified builder for library projects (rollup, mkdist, etc.).
  */
 async function library_bundleUsingUnified(
   coreEntryFile: string,
@@ -552,13 +793,13 @@ async function library_bundleUsingUnified(
   transpileMinify: boolean,
   transpileSourcemap: Sourcemap,
   timer: PerfTimer,
-  libsList?: Record<string, LibConfig>,
 ): Promise<void> {
   if (builder === "jsr" || builder === "bun") {
     throw new Error(
       "'jsr'/'bun' builder not supported for library_bundleUsingUnified",
     );
   }
+
   try {
     relinka(
       "verbose",
@@ -566,99 +807,7 @@ async function library_bundleUsingUnified(
     );
     const rootDir = path.resolve(PROJECT_ROOT, coreEntrySrcDir || ".");
 
-    // Extract the library name from the path
-    // Normalize path for regex processing (replace Windows backslashes with forward slashes)
-    const normalizedPath = outDirBin.replace(/\\/g, "/");
-    const libNameMatch = /dist-libs\/([^/]+)\//.exec(normalizedPath);
-
-    if (!libNameMatch?.[1]) {
-      throw new Error(
-        `Could not determine library name from path: ${outDirBin}`,
-      );
-    }
-
-    // The distribution directory name which may contain a prefix
-    const distLibName = libNameMatch[1];
-
-    // Look for a matching library in the config if available
-    let libName = "";
-    let libSrcDir = "";
-
-    if (libsList) {
-      for (const [pkgName, config] of Object.entries(libsList)) {
-        const mainPath = config.libMainFile;
-        const simpleLibName = pkgName.split("/").pop() || pkgName;
-
-        // Check if this is the correct library by comparing distribution dir name
-        if (
-          distLibName === simpleLibName ||
-          distLibName.endsWith(`-${simpleLibName.replace(/^.*?-/, "")}`) ||
-          // For prefixed names like relidler-cfg where cfg is the actual dir
-          mainPath.includes(`/${distLibName.split("-").pop()}/`)
-        ) {
-          // Found a match - extract the library name and source directory
-          libName = simpleLibName.split("-").pop() || simpleLibName;
-
-          // Try different approaches to find the correct source directory
-          const possibilities = [
-            // From the main path directly (cfg/cfg-main.ts -> src/libs/cfg)
-            path.join(rootDir, "libs", path.dirname(mainPath)),
-            // Just the library directory (src/libs/cfg)
-            path.join(rootDir, "libs", libName),
-            // Full path from main (src/libs/cfg)
-            path.join(rootDir, path.dirname(mainPath)),
-          ];
-
-          // Use the first path that exists
-          for (const possiblePath of possibilities) {
-            try {
-              if (fs.existsSync(possiblePath)) {
-                libSrcDir = possiblePath;
-                break;
-              }
-            } catch (_e) {
-              // Ignore errors and try next option
-            }
-          }
-
-          if (libSrcDir) {
-            break;
-          }
-        }
-      }
-    }
-
-    // Fallback to the old parsing logic if we didn't find a match in the config
-    if (!libSrcDir) {
-      // Extract the actual library name without any prefix if it contains a dash
-      libName = distLibName;
-      // Handle "{any-prefix}-xyz" transpileFormat by extracting just the "xyz" part
-      const dashIndex = libName.indexOf("-");
-      if (dashIndex !== -1) {
-        libName = libName.substring(dashIndex + 1);
-      }
-
-      // Construct the full path to the library directory
-      const coreEntrySrcDirResolved = path.resolve(
-        PROJECT_ROOT,
-        coreEntrySrcDir,
-      );
-      libSrcDir = path.join(coreEntrySrcDirResolved, "libs", libName);
-
-      // Make sure the directory exists
-      if (!fs.existsSync(libSrcDir)) {
-        throw new Error(
-          `Library source directory not found: ${libSrcDir} for library: ${libName}`,
-        );
-      }
-    }
-
-    relinka(
-      "info",
-      `Library build detected for ${libName}. Using source directory: ${libSrcDir}`,
-    );
-
-    // Validate and normalize the output file extension
+    // Validate extension
     if (!validExtensions.includes(unifiedBundlerOutExt)) {
       relinka(
         "warn",
@@ -667,13 +816,8 @@ async function library_bundleUsingUnified(
       unifiedBundlerOutExt = "js";
     }
 
-    // For mkdist, we need to use the directory containing the entry file, not the file itself
-    const input = builder === "mkdist" ? libSrcDir : coreEntryFile;
-
-    // Determine optimal concurrency based on configuration and system resources
+    // Prepare the configuration
     const concurrency = CONCURRENCY_DEFAULT;
-    relinka("verbose", `Using concurrency level: ${concurrency}`);
-
     const unifiedBuildConfig = {
       clean: false,
       concurrency,
@@ -682,7 +826,8 @@ async function library_bundleUsingUnified(
         {
           builder,
           ext: unifiedBundlerOutExt,
-          input: builder === "mkdist" ? libSrcDir : input,
+          // If using mkdist, pass directory. Otherwise, pass the file.
+          input: builder === "mkdist" ? coreEntrySrcDir : coreEntryFile,
           outDir: outDirBin,
         },
       ],
@@ -705,10 +850,10 @@ async function library_bundleUsingUnified(
     await unifiedBuild(rootDir, transpileStub, unifiedBuildConfig, outDirBin);
 
     // Calculate and log build duration
-    const duration = (getElapsedPerfTime(timer) / 1000).toFixed(2);
+    const durationSeconds = (getElapsedPerfTime(timer) / 1000).toFixed(2);
     relinka(
       "success",
-      `Library bundle completed in ${duration}s using ${builder} builder for library ${libName}`,
+      `Library bundle completed in ${durationSeconds}s using ${builder} builder.`,
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -717,20 +862,18 @@ async function library_bundleUsingUnified(
       `Failed to bundle library using ${builder}: ${errorMessage}`,
     );
 
-    // Provide more context in the error message
     const enhancedError = new Error(
       `Library bundle failed for ${outDirBin}: ${errorMessage}`,
     );
     if (error instanceof Error && error.stack) {
       enhancedError.stack = error.stack;
     }
-
     throw enhancedError;
   }
 }
 
 /**
- * Common library build steps shared between JSR and NPM distributions
+ * Common library build steps shared between JSR and NPM distributions.
  */
 async function library_performCommonBuildSteps({
   coreEntryFile,
@@ -756,7 +899,9 @@ async function library_performCommonBuildSteps({
   unifiedBundlerOutExt: NpmOutExt;
 }): Promise<void> {
   const outDirBinResolved = path.resolve(outDirRoot, "bin");
-  await createLibPackageJSON(
+
+  // Create package.json for this library distribution
+  await library_createPackageJSON(
     libName,
     outDirRoot,
     isJsr,
@@ -766,21 +911,26 @@ async function library_performCommonBuildSteps({
     rmDepsPatterns,
     unifiedBundlerOutExt,
   );
+
   if (deleteFiles) {
     await deleteSpecificFiles(outDirBinResolved);
   }
 
+  // Copy root-level files (README.md, LICENSE, etc.)
   const FILES_TO_COPY = ["README.md", "LICENSE"];
   await copyRootFile(outDirRoot, FILES_TO_COPY);
   relinka("verbose", `Copied root files to ${outDirRoot}`);
 
+  // Convert internal alias imports (~/...) to relative
   await convertImportPaths({
     aliasPrefix: "~/",
     baseDir: outDirBinResolved,
     fromType: "alias",
     libsList,
     toType: "relative",
-    strip: ["libs/sdk"],
+    strip: [`libs/${libsList[libName].libDirName}`],
   });
+
+  // Rename the main entry file (e.g. sdk-main.js -> main.js).
   await renameEntryFile(isJsr, outDirRoot, coreEntryFile, unifiedBundlerOutExt);
 }
