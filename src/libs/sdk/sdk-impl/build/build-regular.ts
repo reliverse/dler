@@ -231,7 +231,7 @@ async function regular_bundleUsingBun(
   timer: PerfTimer,
 ): Promise<void> {
   relinka(
-    "commonVerbose",
+    "verbose",
     `Bundling regular project using Bun for ${packageName || "main project"} (entry: ${coreEntryFile}, outDir: ${outDirBin})`,
   );
 
@@ -278,7 +278,7 @@ async function regular_bundleUsingBun(
 
     if (buildResult.logs && buildResult.logs.length > 0) {
       buildResult.logs.forEach((log, index) => {
-        relinka("commonVerbose", `Log ${index + 1}: ${JSON.stringify(log)}`);
+        relinka("verbose", `Log ${index + 1}: ${JSON.stringify(log)}`);
       });
     }
   } catch (error) {
@@ -323,7 +323,7 @@ async function regular_bundleUsingJsr(
 
   try {
     await fs.copy(src, dest);
-    relinka("commonVerbose", `Copied directory from ${src} to ${dest}`);
+    relinka("verbose", `Copied directory from ${src} to ${dest}`);
     relinka("success", "Completed regular JSR bundling");
   } catch (error) {
     // Handle errors gracefully with fallback to original source
@@ -356,7 +356,7 @@ async function regular_bundleUsingUnified(
   }
   try {
     relinka(
-      "commonVerbose",
+      "verbose",
       `Starting regular_bundleUsingUnified (builder: ${builder}): ${coreEntryFile} -> ${outDirBin}`,
     );
     const rootDir = path.resolve(PROJECT_ROOT, coreEntrySrcDir || ".");
@@ -380,7 +380,7 @@ async function regular_bundleUsingUnified(
 
     // Determine optimal concurrency based on configuration and system resources
     const concurrency = CONCURRENCY_DEFAULT;
-    relinka("commonVerbose", `Using concurrency level: ${concurrency}`);
+    relinka("verbose", `Using concurrency level: ${concurrency}`);
 
     const unifiedBuildConfig = {
       clean: false,

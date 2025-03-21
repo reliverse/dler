@@ -31,7 +31,7 @@ export function getUnifiedSourcemapOption(
   transpileSourcemap: Sourcemap,
 ): "inline" | boolean {
   relinka(
-    "commonVerbose",
+    "verbose",
     `Converting rollup transpileSourcemap option: ${transpileSourcemap}`,
   );
   switch (transpileSourcemap) {
@@ -57,7 +57,7 @@ export async function renameEntryFile(
   unifiedBundlerOutExt: NpmOutExt,
 ): Promise<{ updatedEntryFile: string }> {
   relinka(
-    "commonVerbose",
+    "verbose",
     `Renaming entry file. Original: ${coreEntryFile} (isJsr=${isJsr})`,
   );
 

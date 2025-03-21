@@ -30,7 +30,7 @@ export async function createLibPackageJSON(
   unifiedBundlerOutExt: NpmOutExt,
 ): Promise<void> {
   relinka(
-    "commonVerbose",
+    "verbose",
     `Generating package.json for lib ${libName} (isJsr=${isJsr}, coreIsCLI=${coreIsCLI})...`,
   );
   const originalPkg = await readPackageJSON();
@@ -41,18 +41,18 @@ export async function createLibPackageJSON(
   if (libsList?.[libName]?.libDesc) {
     description = libsList[libName].libDesc;
     relinka(
-      "commonVerbose",
+      "verbose",
       `Using lib-specific description from config: "${description}"`,
     );
   } else if (!coreIsCLI) {
     description = "A helper lib for the Reliverse CLI";
     relinka(
-      "commonVerbose",
+      "verbose",
       `Using default helper lib description: "${description}"`,
     );
   } else {
     description = description || `CLI tool for ${libName}`;
-    relinka("commonVerbose", `Using CLI description: "${description}"`);
+    relinka("verbose", `Using CLI description: "${description}"`);
   }
 
   // Get the root package name for CLI command
@@ -62,7 +62,7 @@ export async function createLibPackageJSON(
     : rootPackageName;
 
   relinka(
-    "commonVerbose",
+    "verbose",
     `Root package name: "${rootPackageName}", CLI command name: "${cliCommandName}"`,
   );
 
@@ -75,16 +75,13 @@ export async function createLibPackageJSON(
   };
 
   if (coreIsCLI) {
-    relinka(
-      "commonVerbose",
-      `Adding CLI-specific fields for lib ${libName}...`,
-    );
+    relinka("verbose", `Adding CLI-specific fields for lib ${libName}...`);
     const binPath = "bin/main.js";
     Object.assign(commonPkg, {
       bin: { [cliCommandName]: binPath },
     });
     relinka(
-      "commonVerbose",
+      "verbose",
       `Added bin entry: { "${cliCommandName}": "${binPath}" }`,
     );
   }
@@ -114,20 +111,17 @@ export async function createLibPackageJSON(
 
   if (coreIsCLI && commonPkg.keywords) {
     const cliKeywords = ["cli", "command-line", cliCommandName];
-    relinka(
-      "commonVerbose",
-      `Adding CLI keywords: ${JSON.stringify(cliKeywords)}`,
-    );
+    relinka("verbose", `Adding CLI keywords: ${JSON.stringify(cliKeywords)}`);
     commonPkg.keywords = [...new Set([...cliKeywords, ...commonPkg.keywords])];
     relinka(
-      "commonVerbose",
+      "verbose",
       `Updated keywords: ${JSON.stringify(commonPkg.keywords)}`,
     );
   }
 
   const outDirBin = path.join(outDirRoot, "bin");
   if (isJsr) {
-    relinka("commonVerbose", `Creating JSR package.json for lib ${libName}...`);
+    relinka("verbose", `Creating JSR package.json for lib ${libName}...`);
     await writeJsrLibPackageJSON(
       libName,
       outDirBin,
@@ -140,7 +134,7 @@ export async function createLibPackageJSON(
       rmDepsPatterns,
     );
   } else {
-    relinka("commonVerbose", `Creating NPM package.json for lib ${libName}...`);
+    relinka("verbose", `Creating NPM package.json for lib ${libName}...`);
     await writeNpmLibPackageJSON(
       libName,
       outDirBin,
@@ -154,10 +148,7 @@ export async function createLibPackageJSON(
       unifiedBundlerOutExt,
     );
   }
-  relinka(
-    "commonVerbose",
-    `Completed creation of package.json for lib: ${libName}`,
-  );
+  relinka("verbose", `Completed creation of package.json for lib: ${libName}`);
 }
 
 /**
@@ -183,7 +174,7 @@ export async function createPackageJSON(
     : packageName;
 
   relinka(
-    "commonVerbose",
+    "verbose",
     `Package name: "${packageName}", CLI command name: "${cliCommandName}", coreIsCLI: ${coreIsCLI}`,
   );
 
@@ -198,7 +189,7 @@ export async function createPackageJSON(
 
     if (coreIsCLI) {
       relinka(
-        "commonVerbose",
+        "verbose",
         `Adding CLI bin entry for JSR: { "${cliCommandName}": "bin/main.ts" }`,
       );
     }
@@ -232,7 +223,7 @@ export async function createPackageJSON(
 
     if (coreIsCLI) {
       relinka(
-        "commonVerbose",
+        "verbose",
         `JSR package.json created with CLI bin entry: ${JSON.stringify(jsrPkg.bin)}`,
       );
     }
@@ -243,7 +234,7 @@ export async function createPackageJSON(
 
     if (coreIsCLI) {
       relinka(
-        "commonVerbose",
+        "verbose",
         `Adding CLI bin entry for NPM: { "${cliCommandName}": "bin/main.${outExt}" }`,
       );
     }
@@ -281,12 +272,12 @@ export async function createPackageJSON(
 
     if (coreIsCLI) {
       relinka(
-        "commonVerbose",
+        "verbose",
         `NPM package.json created with CLI bin entry: ${JSON.stringify(npmPkg.bin)}`,
       );
     }
   }
-  relinka("commonVerbose", `Created package.json in ${outDirRoot}`);
+  relinka("verbose", `Created package.json in ${outDirRoot}`);
 }
 
 /**
@@ -295,14 +286,11 @@ export async function createPackageJSON(
 async function createCommonPackageFields(
   coreIsCLI: boolean,
 ): Promise<Partial<PackageJson>> {
-  relinka("commonVerbose", "Generating common package fields");
+  relinka("verbose", "Generating common package fields");
   const originalPkg = await readPackageJSON();
   const { author, description, keywords, license, name, version } = originalPkg;
 
-  relinka(
-    "commonVerbose",
-    `Original package name: "${name}", version: "${version}"`,
-  );
+  relinka("verbose", `Original package name: "${name}", version: "${version}"`);
 
   const pkgHomepage = cliDomainDocs;
   const commonPkg: Partial<PackageJson> = {
@@ -317,7 +305,7 @@ async function createCommonPackageFields(
 
   if (coreIsCLI) {
     relinka(
-      "commonVerbose",
+      "verbose",
       "coreIsCLI is true, adding CLI-specific fields to common package fields",
     );
     if (commonPkg.keywords) {
@@ -325,7 +313,7 @@ async function createCommonPackageFields(
         ? name.split("/").pop() || "cli"
         : name || "relidler";
       relinka(
-        "commonVerbose",
+        "verbose",
         `Adding CLI keywords to existing keywords, CLI command name: "${cliCommandName}"`,
       );
       commonPkg.keywords = [
@@ -337,7 +325,7 @@ async function createCommonPackageFields(
         ]),
       ];
       relinka(
-        "commonVerbose",
+        "verbose",
         `Updated keywords: ${JSON.stringify(commonPkg.keywords)}`,
       );
     } else if (name) {
@@ -345,20 +333,14 @@ async function createCommonPackageFields(
         ? name.split("/").pop() || "cli"
         : name;
       relinka(
-        "commonVerbose",
+        "verbose",
         `Setting new CLI keywords, CLI command name: "${cliCommandName}"`,
       );
       commonPkg.keywords = ["cli", "command-line", cliCommandName];
-      relinka(
-        "commonVerbose",
-        `Set keywords: ${JSON.stringify(commonPkg.keywords)}`,
-      );
+      relinka("verbose", `Set keywords: ${JSON.stringify(commonPkg.keywords)}`);
     }
   } else {
-    relinka(
-      "commonVerbose",
-      "coreIsCLI is false, skipping CLI-specific fields",
-    );
+    relinka("verbose", "coreIsCLI is false, skipping CLI-specific fields");
   }
 
   if (author) {
@@ -384,7 +366,7 @@ async function createCommonPackageFields(
     commonPkg.keywords = keywords;
   }
 
-  relinka("commonVerbose", "Common package fields generated");
+  relinka("verbose", "Common package fields generated");
   return commonPkg;
 }
 
@@ -402,7 +384,7 @@ async function library_getlibPkgKeepDeps(
   rmDepsMode: ExcludeMode,
   rmDepsPatterns: string[],
 ): Promise<Record<string, string>> {
-  relinka("commonVerbose", `Getting lib dependencies for: ${libName}`);
+  relinka("verbose", `Getting lib dependencies for: ${libName}`);
   if (!originalDeps) return {};
 
   // Check if the lib has a dependencies configuration
@@ -417,7 +399,7 @@ async function library_getlibPkgKeepDeps(
       rmDepsPatterns,
     );
     relinka(
-      "commonVerbose",
+      "verbose",
       `Lib ${libName} dependencies filtered by usage, count: ${Object.keys(result).length}`,
     );
     return result;
@@ -491,7 +473,7 @@ async function library_getlibPkgKeepDeps(
     rmDepsPatterns,
   );
   relinka(
-    "commonVerbose",
+    "verbose",
     `Default filtering for lib ${libName} done, count: ${Object.keys(result).length}`,
   );
   return result;
@@ -511,14 +493,14 @@ async function writeJsrLibPackageJSON(
   rmDepsMode: ExcludeMode,
   rmDepsPatterns: string[],
 ): Promise<void> {
-  relinka("commonVerbose", `Writing package.json for JSR lib: ${libName}`);
+  relinka("verbose", `Writing package.json for JSR lib: ${libName}`);
 
   // For JSR packages, we need to handle bin entries differently
   // JSR uses TypeScript files directly
   const binEntry = commonPkg.bin;
   if (binEntry) {
     relinka(
-      "commonVerbose",
+      "verbose",
       `Found bin entry in commonPkg: ${JSON.stringify(binEntry)}`,
     );
     // Convert bin paths to .ts extension for JSR
@@ -528,7 +510,7 @@ async function writeJsrLibPackageJSON(
     });
     commonPkg.bin = updatedBin;
     relinka(
-      "commonVerbose",
+      "verbose",
       `Updated bin entry for JSR: ${JSON.stringify(updatedBin)}`,
     );
   }
@@ -559,20 +541,16 @@ async function writeJsrLibPackageJSON(
 
   if (coreIsCLI) {
     relinka(
-      "commonVerbose",
+      "verbose",
       `JSR lib package.json for ${libName} has CLI-specific fields:`,
     );
-    if (jsrPkg.bin)
-      relinka("commonVerbose", `  bin: ${JSON.stringify(jsrPkg.bin)}`);
+    if (jsrPkg.bin) relinka("verbose", `  bin: ${JSON.stringify(jsrPkg.bin)}`);
   }
 
   await fs.writeJSON(path.join(outDirRoot, "package.json"), jsrPkg, {
     spaces: 2,
   });
-  relinka(
-    "commonVerbose",
-    `Completed writing package.json for JSR lib: ${libName}`,
-  );
+  relinka("verbose", `Completed writing package.json for JSR lib: ${libName}`);
 }
 
 /**
@@ -590,7 +568,7 @@ async function writeNpmLibPackageJSON(
   rmDepsPatterns: string[],
   unifiedBundlerOutExt: NpmOutExt,
 ): Promise<void> {
-  relinka("commonVerbose", `Writing package.json for NPM lib: ${libName}`);
+  relinka("verbose", `Writing package.json for NPM lib: ${libName}`);
 
   // If bin is already set in commonPkg (from createLibPackageJSON), use that
   // Otherwise, set it based on coreIsCLI
@@ -602,7 +580,7 @@ async function writeNpmLibPackageJSON(
 
   if (binEntry) {
     relinka(
-      "commonVerbose",
+      "verbose",
       `Using bin entry for NPM lib: ${JSON.stringify(binEntry)}`,
     );
   }
@@ -638,18 +616,14 @@ async function writeNpmLibPackageJSON(
 
   if (coreIsCLI) {
     relinka(
-      "commonVerbose",
+      "verbose",
       `NPM lib package.json for ${libName} has CLI-specific fields:`,
     );
-    if (npmPkg.bin)
-      relinka("commonVerbose", `  bin: ${JSON.stringify(npmPkg.bin)}`);
+    if (npmPkg.bin) relinka("verbose", `  bin: ${JSON.stringify(npmPkg.bin)}`);
   }
 
   await fs.writeJSON(path.join(outDirRoot, "package.json"), npmPkg, {
     spaces: 2,
   });
-  relinka(
-    "commonVerbose",
-    `Completed writing package.json for NPM lib: ${libName}`,
-  );
+  relinka("verbose", `Completed writing package.json for NPM lib: ${libName}`);
 }

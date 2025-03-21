@@ -51,7 +51,7 @@ export async function processLibraryFlow(
 ): Promise<void> {
   if (libsActMode !== "libs-only" && libsActMode !== "main-and-libs") {
     relinka(
-      "commonVerbose",
+      "verbose",
       "Skipping libs build/publish as libsActMode is set to 'main-project-only'",
     );
     return;
@@ -132,7 +132,7 @@ async function libraries_buildPublish(
   transpileStub: boolean,
   transpileWatch: boolean,
 ): Promise<void> {
-  relinka("commonVerbose", "Starting libraries_buildPublish");
+  relinka("verbose", "Starting libraries_buildPublish");
   if (!libsList || Object.keys(libsList).length === 0) {
     relinka("info", "No lib configs found in config, skipping libs build.");
     return;
@@ -160,7 +160,7 @@ async function libraries_buildPublish(
         libMainDir = path.join(libsDirSrc, libMainPath.dir || ".");
       }
       relinka(
-        "commonVerbose",
+        "verbose",
         `Processing library ${libName}: libMainDir=${libMainDir}, libMainFile=${libMainFile}`,
       );
       await library_buildLibrary(
@@ -208,7 +208,7 @@ async function libraries_buildPublish(
       );
       if (isDev) {
         relinka(
-          "commonVerbose",
+          "verbose",
           `Error details: ${error instanceof Error ? error.stack : "No stack trace available"}`,
         );
       }
@@ -220,7 +220,7 @@ async function libraries_buildPublish(
     await pAll(tasks, {
       concurrency,
     });
-    relinka("commonVerbose", "Completed libraries_buildPublish");
+    relinka("verbose", "Completed libraries_buildPublish");
   } catch (error) {
     if (error instanceof AggregateError) {
       relinka(

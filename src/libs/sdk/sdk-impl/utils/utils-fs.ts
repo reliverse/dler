@@ -60,7 +60,7 @@ export async function copyRootFile(
                 const outputName = specialConfig.outputName || fileName;
                 await fs.copy(file, path.join(outDirRoot, outputName));
                 relinka(
-                  "commonVerbose",
+                  "verbose",
                   `Copied ${file} to ${outDirRoot}/${outputName}`,
                 );
                 break;
@@ -71,17 +71,14 @@ export async function copyRootFile(
             const file = await findFileCaseInsensitive(fileName);
             if (file) {
               await fs.copy(file, path.join(outDirRoot, fileName));
-              relinka(
-                "commonVerbose",
-                `Copied ${file} to ${outDirRoot}/${fileName}`,
-              );
+              relinka("verbose", `Copied ${file} to ${outDirRoot}/${fileName}`);
             }
           }
         } catch (fileError) {
           relinka("error", `Failed to copy ${fileName}: ${fileError}`);
         }
       },
-      { concurrency: 4 }, // Process up to 4 files simultaneously
+      { concurrency: CONCURRENCY_DEFAULT }, // Process up to CONCURRENCY_DEFAULT files simultaneously
     );
   } catch (error) {
     relinka("error", `Failed to copy files: ${error}`);
@@ -97,7 +94,7 @@ export async function getDirectorySize(
   isDev: boolean,
 ): Promise<number> {
   if (SHOW_VERBOSE.getDirectorySize) {
-    relinka("commonVerbose", `Calculating directory size for: ${outDirRoot}`);
+    relinka("verbose", `Calculating directory size for: ${outDirRoot}`);
   }
   try {
     const files = await fs.readdir(outDirRoot);
@@ -113,7 +110,7 @@ export async function getDirectorySize(
     const totalSize = sizes.reduce((total, s) => total + s, 0);
     if (SHOW_VERBOSE.getDirectorySize) {
       relinka(
-        "commonVerbose",
+        "verbose",
         `Calculated directory size: ${totalSize} bytes for ${outDirRoot}`,
       );
     }
@@ -132,7 +129,7 @@ export async function getDirectorySize(
  * Recursively counts the number of files in a directory.
  */
 export async function outDirBinFilesCount(outDirBin: string): Promise<number> {
-  relinka("commonVerbose", `Counting files in directory: ${outDirBin}`);
+  relinka("verbose", `Counting files in directory: ${outDirBin}`);
   let fileCount = 0;
   if (!(await fs.pathExists(outDirBin))) {
     relinka(
@@ -154,7 +151,7 @@ export async function outDirBinFilesCount(outDirBin: string): Promise<number> {
     }
   }
   await traverse(outDirBin);
-  relinka("commonVerbose", `Total file count in ${outDirBin}: ${fileCount}`);
+  relinka("verbose", `Total file count in ${outDirBin}: ${fileCount}`);
   return fileCount;
 }
 
@@ -185,10 +182,7 @@ const TEST_FILE_PATTERNS = [
  * Deletes specific test and temporary files from a given directory.
  */
 export async function deleteSpecificFiles(outDirBin: string): Promise<void> {
-  relinka(
-    "commonVerbose",
-    `Deleting test and temporary files in: ${outDirBin}`,
-  );
+  relinka("verbose", `Deleting test and temporary files in: ${outDirBin}`);
   const files = await glob(TEST_FILE_PATTERNS, {
     absolute: true,
     cwd: outDirBin,
@@ -208,7 +202,7 @@ export async function deleteSpecificFiles(outDirBin: string): Promise<void> {
     await pMap(filesToDelete, async (file) => fs.remove(file), {
       concurrency: CONCURRENCY_DEFAULT,
     });
-    relinka("commonVerbose", `Deleted files:\n${filesToDelete.join("\n")}`);
+    relinka("verbose", `Deleted files:\n${filesToDelete.join("\n")}`);
   }
   if (snapshotDirs.length > 0) {
     await pMap(snapshotDirs, async (dir) => fs.remove(dir), {
@@ -234,7 +228,7 @@ export async function readFileSafe(
     const content = await fs.readFile(filePath, "utf8");
     if (SHOW_VERBOSE.readFileSafe) {
       relinka(
-        "commonVerbose",
+        "verbose",
         `[${distName}] Successfully read file: ${filePath} [Reason: ${reason}]`,
       );
     }
@@ -260,7 +254,7 @@ export async function writeFileSafe(
   try {
     await fs.writeFile(filePath, content, "utf8");
     relinka(
-      "commonVerbose",
+      "verbose",
       `Successfully wrote file: ${filePath} [Reason: ${reason}]`,
     );
   } catch (error) {

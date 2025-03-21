@@ -287,7 +287,7 @@ async function _build(
 
   // Start info
   relinka(
-    "commonVerbose",
+    "verbose",
     `${options.transpileStub ? "Stubbing" : "[unified] Building"} ${options.name}`,
   );
   if (process.env.DEBUG) {

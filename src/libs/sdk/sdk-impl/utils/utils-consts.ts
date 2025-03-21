@@ -8,7 +8,7 @@ import type { NpmOutExt } from "~/types.js";
 
 export const PROJECT_ROOT = path.resolve(process.cwd());
 
-export const CONCURRENCY_DEFAULT = 2;
+export const CONCURRENCY_DEFAULT = 1;
 
 export const tsconfigJson = "tsconfig.json";
 

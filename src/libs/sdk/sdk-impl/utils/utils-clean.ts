@@ -4,7 +4,7 @@ import path from "pathe";
 
 import type { LibConfig } from "~/types.js";
 
-import { PROJECT_ROOT } from "./utils-consts.js";
+import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "./utils-consts.js";
 import { relinka } from "./utils-logs.js";
 
 /**
@@ -41,10 +41,10 @@ export async function removeDistFolders(
         const folderPath = path.resolve(PROJECT_ROOT, folder);
         if (await fs.pathExists(folderPath)) {
           await fs.remove(folderPath);
-          relinka("commonVerbose", `Removed: ${folderPath}`);
+          relinka("verbose", `Removed: ${folderPath}`);
         }
       },
-      { concurrency: 3 },
+      { concurrency: CONCURRENCY_DEFAULT },
     );
     relinka("success", "Distribution folders removed successfully");
   }

@@ -4,7 +4,7 @@ import path from "pathe";
 import { readPackageJSON } from "pkg-types";
 import { glob } from "tinyglobby";
 
-import { cliDomainDocs } from "./utils-consts.js";
+import { cliDomainDocs, CONCURRENCY_DEFAULT } from "./utils-consts.js";
 import { relinka } from "./utils-logs.js";
 
 /**
@@ -16,7 +16,7 @@ export async function createJsrJSONC(
   projectName?: string,
 ): Promise<void> {
   relinka(
-    "commonVerbose",
+    "verbose",
     `Creating jsr.jsonc configuration (project: ${projectName}, isLib: ${isLib})`,
   );
   const originalPkg = await readPackageJSON();
@@ -42,14 +42,14 @@ export async function createJsrJSONC(
   await fs.writeJSON(path.join(outDirRoot, "jsr.jsonc"), jsrConfig, {
     spaces: 2,
   });
-  relinka("commonVerbose", "Generated jsr.jsonc file");
+  relinka("verbose", "Generated jsr.jsonc file");
 }
 
 /**
  * Renames .tsx files by replacing the .tsx extension with -tsx.txt.
  */
 export async function renameTsxFiles(dir: string): Promise<void> {
-  relinka("commonVerbose", `Renaming .tsx files in directory: ${dir}`);
+  relinka("verbose", `Renaming .tsx files in directory: ${dir}`);
   const files = await glob(["**/*.tsx"], {
     absolute: true,
     cwd: dir,
@@ -59,9 +59,9 @@ export async function renameTsxFiles(dir: string): Promise<void> {
     async (filePath) => {
       const newPath = filePath.replace(/\.tsx$/, "-tsx.txt");
       await fs.rename(filePath, newPath);
-      relinka("commonVerbose", `Renamed: ${filePath} -> ${newPath}`);
+      relinka("verbose", `Renamed: ${filePath} -> ${newPath}`);
     },
-    { concurrency: 10 },
+    { concurrency: CONCURRENCY_DEFAULT },
   );
-  relinka("commonVerbose", `Completed renaming .tsx files in ${dir}`);
+  relinka("verbose", `Completed renaming .tsx files in ${dir}`);
 }

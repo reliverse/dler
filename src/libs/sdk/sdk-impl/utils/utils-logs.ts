@@ -10,7 +10,7 @@ import path from "pathe";
  * Logger configuration options
  */
 type RelinkaConfig = {
-  /** Whether to enable commonVerbose logging */
+  /** Whether to enable verbose logging */
   debug?: boolean;
   /** Directory-specific configuration */
   dirs?: {
@@ -78,7 +78,7 @@ const loadEnvConfig = (): Partial<RelinkaConfig> => {
     dirs: {},
   };
 
-  // RELINKA_DEBUG - Whether to enable commonVerbose logging
+  // RELINKA_DEBUG - Whether to enable verbose logging
   if (process.env.RELINKA_DEBUG !== undefined) {
     const value = process.env.RELINKA_DEBUG.toLowerCase().trim();
     envConfig.debug = !["", "0", "false"].includes(value);
@@ -373,7 +373,7 @@ const transpileFormatLogMessage = (
 };
 
 /**
- * Check if commonVerbose logging should be enabled
+ * Check if verbose logging should be enabled
  */
 const isVerboseEnabled = (): boolean => {
   // Check config.debug (already includes environment variable check)
@@ -383,12 +383,12 @@ const isVerboseEnabled = (): boolean => {
 /**
  * Unified logging function
  *
- * @param level - Log type ('commonVerbose', 'info', 'success', 'warn', 'error')
+ * @param level - Log type ('verbose', 'info', 'success', 'warn', 'error')
  * @param message - Main message to log
  * @param args - Additional arguments to include in the log
  */
 export const relinka = (
-  type: "commonVerbose" | "error" | "info" | "success" | "warn" | (string & {}),
+  type: "error" | "info" | "success" | "verbose" | "warn",
   message: string,
   ...args: any[]
 ): void => {
@@ -401,7 +401,7 @@ export const relinka = (
   // Convert level to uppercase for consistency
   const upperType = type.toUpperCase();
 
-  // Skip commonVerbose logs unless debug is enabled
+  // Skip verbose logs unless debug is enabled
   if (upperType === "VERBOSE" && !isVerboseEnabled()) {
     return;
   }

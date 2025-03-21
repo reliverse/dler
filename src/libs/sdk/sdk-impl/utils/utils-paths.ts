@@ -7,6 +7,8 @@ import type { LibConfig } from "~/libs/sdk/sdk-types.js";
 
 import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
 
+import { CONCURRENCY_DEFAULT } from "./utils-consts.js";
+
 // ========================================
 // Paths (TODO: Move to a separate repo)
 // ========================================
@@ -88,7 +90,7 @@ type ImportType =
 export function extractPackageName(
   importPath: string | undefined,
 ): null | string {
-  relinka("commonVerbose", `Extracting package name from: ${importPath}`);
+  relinka("verbose", `Extracting package name from: ${importPath}`);
   if (!importPath || importPath.startsWith(".")) return null;
   const parts = importPath.split("/");
   if (importPath.startsWith("@") && parts.length >= 2) {
@@ -132,7 +134,7 @@ function convertAbsoluteToModule(
   const libName = matchLibraryImport(relativeToRoot, libsList, currentLibName);
   if (libName) {
     relinka(
-      "commonVerbose",
+      "verbose",
       `Converting absolute import to module: ${importPath} -> ${libName}`,
     );
     return libName;
@@ -234,7 +236,7 @@ function convertBareToAbsolute(
   if (!url) return importPath;
   const localPath = urlMap[url];
   if (!localPath) {
-    relinka("commonVerbose", `No local mapping found for URL: ${url}`);
+    relinka("verbose", `No local mapping found for URL: ${url}`);
     return importPath;
   }
   const absolutePath = path.resolve(CWD, localPath);
@@ -251,7 +253,7 @@ function convertBareToAlias(
   if (!url) return importPath;
   const localPath = urlMap[url];
   if (!localPath) {
-    relinka("commonVerbose", `No local mapping found for URL: ${url}`);
+    relinka("verbose", `No local mapping found for URL: ${url}`);
     return importPath;
   }
   const absolutePath = path.resolve(CWD, localPath);
@@ -271,7 +273,7 @@ function convertBareToDynamic(
   if (!url) return importPath;
   const localPath = urlMap[url];
   if (!localPath) {
-    relinka("commonVerbose", `No local mapping found for URL: ${url}`);
+    relinka("verbose", `No local mapping found for URL: ${url}`);
     return importPath;
   }
   return importPath.replace(
@@ -290,7 +292,7 @@ function convertBareToModule(
   if (!url || !libsList) return importPath;
   const localPath = urlMap[url];
   if (!localPath) {
-    relinka("commonVerbose", `No local mapping found for URL: ${url}`);
+    relinka("verbose", `No local mapping found for URL: ${url}`);
     return importPath;
   }
   const absolutePath = path.resolve(CWD, localPath);
@@ -298,7 +300,7 @@ function convertBareToModule(
   const libName = matchLibraryImport(relativeToRoot, libsList, currentLibName);
   if (libName) {
     relinka(
-      "commonVerbose",
+      "verbose",
       `Converting bare import to module: ${url} -> ${libName}`,
     );
     return importPath.replace(url, libName);
@@ -315,7 +317,7 @@ function convertBareToRelative(
   if (!url) return importPath;
   const localPath = urlMap[url];
   if (!localPath) {
-    relinka("commonVerbose", `No local mapping found for URL: ${url}`);
+    relinka("verbose", `No local mapping found for URL: ${url}`);
     return importPath;
   }
   const absoluteLocalPath = path.resolve(CWD, localPath);
@@ -376,7 +378,7 @@ function convertDynamicToModule(
   const libName = matchLibraryImport(relativeToRoot, libsList, currentLibName);
   if (libName) {
     relinka(
-      "commonVerbose",
+      "verbose",
       `Converting dynamic import to module: ${dynamicPath} -> ${libName}`,
     );
     return importPath.replace(dynamicPath, libName);
@@ -491,7 +493,7 @@ function convertRelativeToModule(
   const libName = matchLibraryImport(relativeToRoot, libsList, currentLibName);
   if (libName) {
     relinka(
-      "commonVerbose",
+      "verbose",
       `Converting relative import to module: ${importPath} -> ${libName}`,
     );
     return libName;
@@ -685,7 +687,7 @@ function convertSingleImportPath(
     });
   }
   relinka(
-    "commonVerbose",
+    "verbose",
     `Conversion from ${fromType} to ${toType} not implemented or not needed`,
   );
   return importPath;
@@ -724,7 +726,7 @@ export async function convertImportExtensionsJsToTs(
         const fullPath = path.join(dirPath, entry.name);
         return await convertImportExtensionsJsToTs(fullPath, options);
       },
-      { concurrency: 5 },
+      { concurrency: CONCURRENCY_DEFAULT },
     );
     results.push(...subDirResults.flat());
     const fileResults = await pMap(
@@ -741,7 +743,7 @@ export async function convertImportExtensionsJsToTs(
           success: result.success,
         };
       },
-      { concurrency: 5 },
+      { concurrency: CONCURRENCY_DEFAULT },
     );
     results.push(...fileResults);
     return results;
@@ -1012,7 +1014,7 @@ async function convertsInFile(
       }
       const message = `Updated import paths in: ${filePath}${distJsrDryRun ? " (dry run)" : ""}`;
       if (debug) {
-        relinka("commonVerbose", message);
+        relinka("verbose", message);
       }
       return { message, success: true };
     }
@@ -1057,7 +1059,7 @@ async function processDirconvertsInFiles(
         const fullPath = path.join(dirPath, entry.name);
         return await processDirconvertsInFiles(fullPath, options);
       },
-      { concurrency: 5 },
+      { concurrency: CONCURRENCY_DEFAULT },
     );
     results.push(...subDirResults.flat());
     const fileResults = await pMap(
@@ -1071,7 +1073,7 @@ async function processDirconvertsInFiles(
           success: result.success,
         };
       },
-      { concurrency: 5 },
+      { concurrency: CONCURRENCY_DEFAULT },
     );
     results.push(...fileResults);
     return results;

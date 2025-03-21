@@ -163,7 +163,7 @@ export function warn(ctx: BuildContext, message: string): void {
   if (ctx.warnings.has(message)) {
     return;
   }
-  relinka("commonVerbose", "[relidler] [warn]", message);
+  relinka("verbose", "[relidler] [warn]", message);
   ctx.warnings.add(message);
 }
 

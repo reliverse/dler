@@ -18,10 +18,7 @@ export async function filterDeps(
   rmDepsMode: ExcludeMode,
   rmDepsPatterns: string[],
 ): Promise<Record<string, string>> {
-  relinka(
-    "commonVerbose",
-    `Filtering dependencies (clearUnused=${clearUnused})`,
-  );
+  relinka("verbose", `Filtering dependencies (clearUnused=${clearUnused})`);
   if (!deps) return {};
 
   // Function to check if a dependency should be excluded based on patterns
@@ -63,7 +60,7 @@ export async function filterDeps(
       {},
     );
     relinka(
-      "commonVerbose",
+      "verbose",
       `Filtered dependencies count: ${Object.keys(filtered).length}`,
     );
     return filtered;
@@ -97,7 +94,7 @@ export async function filterDeps(
     {},
   );
   relinka(
-    "commonVerbose",
+    "verbose",
     `Filtered dependencies count (after usage check): ${Object.keys(filtered).length}`,
   );
   return filtered;

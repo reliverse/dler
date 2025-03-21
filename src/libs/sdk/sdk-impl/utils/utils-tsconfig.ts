@@ -17,7 +17,7 @@ export async function createTSConfig(
   allowImportingTsExtensions: boolean,
 ): Promise<void> {
   relinka(
-    "commonVerbose",
+    "verbose",
     `Creating tsconfig.json in ${outDirRoot} (allowImportingTsExtensions=${allowImportingTsExtensions})`,
   );
   const tsConfig = defineTSConfig({
@@ -52,5 +52,5 @@ export async function createTSConfig(
   await fs.writeJSON(path.join(outDirRoot, tsconfigJson), tsConfig, {
     spaces: 2,
   });
-  relinka("commonVerbose", `Created tsconfig.json in ${outDirRoot}`);
+  relinka("verbose", `Created tsconfig.json in ${outDirRoot}`);
 }

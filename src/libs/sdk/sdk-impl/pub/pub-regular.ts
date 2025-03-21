@@ -47,11 +47,11 @@ export async function regular_pubToJsr(
         ]
           .filter(Boolean)
           .join(" ");
-        relinka("commonVerbose", `Running publish command: ${command}`);
+        relinka("verbose", `Running publish command: ${command}`);
         await execaCommand(command, { stdio: "inherit" });
         relinka(
           "success",
-          `Successfully ${distJsrDryRun ? "validated" : "published"} to JSR commonPubRegistry`,
+          `Successfully ${distJsrDryRun ? "validated" : "published"} to JSR registry`,
         );
       });
 
@@ -92,11 +92,11 @@ export async function regular_pubToNpm(
         const command = ["bun publish", distJsrDryRun ? "--dry-run" : ""]
           .filter(Boolean)
           .join(" ");
-        relinka("commonVerbose", `Running publish command: ${command}`);
+        relinka("verbose", `Running publish command: ${command}`);
         await execaCommand(command, { stdio: "inherit" });
         relinka(
           "success",
-          `Successfully ${distJsrDryRun ? "validated" : "published"} to NPM commonPubRegistry`,
+          `Successfully ${distJsrDryRun ? "validated" : "published"} to NPM registry`,
         );
       });
 

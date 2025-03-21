@@ -191,7 +191,7 @@ export async function library_buildLibrary(
           ),
       ];
       await pAll(buildTasks, {
-        concurrency: 2,
+        concurrency: CONCURRENCY_DEFAULT,
       });
       break;
     }
@@ -326,7 +326,7 @@ async function library_buildNpmDist(
   // =====================================================
   const distName = determineDistName(libOutDirRoot, false, libsList);
   relinka(
-    "commonVerbose",
+    "verbose",
     `[${distName}] Starting library_buildNpmDist for lib: ${libName}`,
   );
   const libOutDirBinResolved = path.resolve(libOutDirRoot, "bin");
@@ -374,12 +374,9 @@ async function library_buildNpmDist(
     // Construct the full path to the entry file
     // For library builds, we need to use the library-specific entry file path
     const libEntryFilePath = path.join(libSrcDir, path.basename(libEntryFile));
+    relinka("verbose", `[${distName}] libEntryFilePath: ${libEntryFilePath}`);
     relinka(
-      "commonVerbose",
-      `[${distName}] libEntryFilePath: ${libEntryFilePath}`,
-    );
-    relinka(
-      "commonVerbose",
+      "verbose",
       `[${distName}] libOutDirBinResolved: ${libOutDirBinResolved}`,
     );
     await library_bundleUsingUnified(
@@ -441,7 +438,7 @@ async function library_bundleUsingBun(
   timer: PerfTimer,
 ): Promise<void> {
   relinka(
-    "commonVerbose",
+    "verbose",
     `Bundling library using Bun for ${libName} (entry: ${coreEntryFile}, outDir: ${outDirBin})`,
   );
 
@@ -488,7 +485,7 @@ async function library_bundleUsingBun(
 
     if (buildResult.logs && buildResult.logs.length > 0) {
       buildResult.logs.forEach((log, index) => {
-        relinka("commonVerbose", `Log ${index + 1}: ${JSON.stringify(log)}`);
+        relinka("verbose", `Log ${index + 1}: ${JSON.stringify(log)}`);
       });
     }
   } catch (error) {
@@ -530,7 +527,7 @@ async function library_bundleUsingJsr(
 
   try {
     await fs.copy(src, dest);
-    relinka("commonVerbose", `Copied directory from ${src} to ${dest}`);
+    relinka("verbose", `Copied directory from ${src} to ${dest}`);
     relinka("success", "Completed library JSR bundling");
   } catch (error) {
     // Handle errors gracefully with fallback to original source
@@ -564,7 +561,7 @@ async function library_bundleUsingUnified(
   }
   try {
     relinka(
-      "commonVerbose",
+      "verbose",
       `Starting library_bundleUsingUnified with builder: ${builder}`,
     );
     const rootDir = path.resolve(PROJECT_ROOT, coreEntrySrcDir || ".");
@@ -675,7 +672,7 @@ async function library_bundleUsingUnified(
 
     // Determine optimal concurrency based on configuration and system resources
     const concurrency = CONCURRENCY_DEFAULT;
-    relinka("commonVerbose", `Using concurrency level: ${concurrency}`);
+    relinka("verbose", `Using concurrency level: ${concurrency}`);
 
     const unifiedBuildConfig = {
       clean: false,

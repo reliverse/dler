@@ -16,6 +16,7 @@ import {
   regular_buildNpmDist,
 } from "./build/build-regular.js";
 import { regular_pubToJsr, regular_pubToNpm } from "./pub/pub-regular.js";
+import { CONCURRENCY_DEFAULT } from "./utils/utils-consts.js";
 import { relinka } from "./utils/utils-logs.js";
 
 /**
@@ -178,7 +179,7 @@ export async function processRegularFlow(
             timer,
           ),
       ];
-      await pAll(buildTasks, { concurrency: 2 });
+      await pAll(buildTasks, { concurrency: CONCURRENCY_DEFAULT });
       if (!isDev) {
         const publishTasks = [
           () =>
@@ -200,7 +201,7 @@ export async function processRegularFlow(
               timer,
             ),
         ];
-        await pAll(publishTasks, { concurrency: 2 });
+        await pAll(publishTasks, { concurrency: CONCURRENCY_DEFAULT });
       }
       break;
     }
@@ -253,7 +254,7 @@ export async function processRegularFlow(
             distJsrGenTsconfig,
           ),
       ];
-      await pAll(fallbackBuildTasks, { concurrency: 2 });
+      await pAll(fallbackBuildTasks, { concurrency: CONCURRENCY_DEFAULT });
     }
   }
 }

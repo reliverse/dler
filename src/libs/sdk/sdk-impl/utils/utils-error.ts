@@ -22,7 +22,7 @@ export function handleRelidlerError(error: unknown, timer: PerfTimer): never {
     `An unexpected error occurred after ${transpileFormattedTime}:`,
     error,
   );
-  relinka("commonVerbose", `Error details: ${errorStack}`);
+  relinka("verbose", `Error details: ${errorStack}`);
 
   // Exit with error code
   process.exit(1);

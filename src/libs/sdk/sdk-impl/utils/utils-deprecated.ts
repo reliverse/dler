@@ -78,7 +78,7 @@ export function detectCurrentLibrary(
     // Check for exact matches (simple cases)
     if (distLibName === libNameSimple || distLibName === libDirName) {
       relinka(
-        "commonVerbose",
+        "verbose",
         `[${distName}] Detected current library (exact match) for import analysis: ${libName} for path: ${baseDir}`,
       );
       return libName;
@@ -99,7 +99,7 @@ export function detectCurrentLibrary(
           libPartAfterDash === distPartAfterDash))
     ) {
       relinka(
-        "commonVerbose",
+        "verbose",
         `[${distName}] Detected current library (with prefix) for import analysis: ${libName} for path: ${baseDir}`,
       );
       return libName;
@@ -210,7 +210,7 @@ async function copyExternalFile(
   await fs.copyFile(resolvedFullPath, transpileTargetPath);
   copiedExternalFiles.set(resolvedFullPath, transpileTargetPath);
   relinka(
-    "commonVerbose",
+    "verbose",
     `Copied external file: ${resolvedFullPath} -> ${transpileTargetPath}`,
   );
 
@@ -340,7 +340,7 @@ async function findMainFileInDirectory(
   // Extract the directory name to look for potential lib-specific main files
   const dirName = path.basename(dirPath);
 
-  relinka("commonVerbose", `Detecting main file in directory: ${dirPath}`);
+  relinka("verbose", `Detecting main file in directory: ${dirPath}`);
 
   // Define patterns for main files in order of priority
   const mainFilePatterns = [
@@ -369,7 +369,7 @@ async function findMainFileInDirectory(
       const filePath = path.join(dirPath, pattern);
       if (await fs.pathExists(filePath)) {
         relinka(
-          "commonVerbose",
+          "verbose",
           `Found main file in directory (exact match): ${filePath}`,
         );
         return filePath;
@@ -383,7 +383,7 @@ async function findMainFileInDirectory(
       const files = await glob(path.join(dirPath, pattern));
       if (files.length > 0) {
         relinka(
-          "commonVerbose",
+          "verbose",
           `Found main file in directory: ${files[0]} (pattern: ${pattern})`,
         );
         return files[0];
@@ -500,7 +500,7 @@ function logFoundImport(
   const distName = determineDistName(processedFilePath, isJsr, null);
   // Log the import found
   relinka(
-    "commonVerbose",
+    "verbose",
     `[${distName}] Found import from another lib: ${importPath} -> ${libName} (in ${processedFilePath})`,
   );
 }
@@ -534,7 +534,7 @@ function normalizeImportPath(importPath: string, filePath: string): string {
 
     // Log the normalization for debugging
     relinka(
-      "commonVerbose",
+      "verbose",
       `Normalized library import from ${importPath} to ${normalizedPath} (lib: ${libName})`,
     );
   }
@@ -627,7 +627,7 @@ async function processImports(
       // Skip imports that already reference dist-libs to prevent nested paths
       if (importPath.includes("dist-libs")) {
         relinka(
-          "commonVerbose",
+          "verbose",
           `[${distName}] Skipping import that already references dist-libsList: ${importPath}`,
         );
         return null;

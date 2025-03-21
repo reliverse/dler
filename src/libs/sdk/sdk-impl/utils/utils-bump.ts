@@ -162,7 +162,7 @@ async function bumpVersions(
   ],
 ): Promise<void> {
   relinka(
-    "commonVerbose",
+    "verbose",
     `Starting bumpVersions from ${oldVersion} to ${newVersion}`,
   );
   try {
@@ -190,14 +190,14 @@ async function bumpVersions(
       }
 
       relinka(
-        "commonVerbose",
+        "verbose",
         `Generated patterns from filters: ${filePatterns.join(", ")}`,
       );
     } else {
       // If no specific filters were provided, only process package.json as fallback
       filePatterns.push("**/package.json");
       relinka(
-        "commonVerbose",
+        "verbose",
         "No filters provided, falling back to only process package.json",
       );
     }
@@ -235,14 +235,14 @@ async function bumpVersions(
 
         if (gitignorePatterns.length > 0) {
           relinka(
-            "commonVerbose",
+            "verbose",
             `Bump will not process ${gitignorePatterns.length} patterns listed in .gitignore`,
           );
           ignorePatterns.push(...gitignorePatterns);
         }
       }
     } catch (err) {
-      relinka("commonVerbose", `Could not process .gitignore: ${err}`);
+      relinka("verbose", `Could not process .gitignore: ${err}`);
     }
 
     // Get all matching files using tinyglobby
@@ -254,7 +254,7 @@ async function bumpVersions(
     });
 
     relinka(
-      "commonVerbose",
+      "verbose",
       `Found ${matchedFiles.length} files to check for version bumping`,
     );
 
@@ -266,7 +266,7 @@ async function bumpVersions(
       async (file) => {
         try {
           if (!(await fs.pathExists(file))) {
-            relinka("commonVerbose", `File does not exist (skipped): ${file}`);
+            relinka("verbose", `File does not exist (skipped): ${file}`);
             return;
           }
 
@@ -280,7 +280,7 @@ async function bumpVersions(
 
           if (modified) {
             modifiedCount++;
-            relinka("commonVerbose", `Updated version in: ${file}`);
+            relinka("verbose", `Updated version in: ${file}`);
           }
         } catch (err) {
           relinka("error", `Error processing file ${file}: ${err}`);
@@ -301,7 +301,7 @@ async function bumpVersions(
     relinka("error", "Failed to bump versions:", error);
     throw error;
   }
-  relinka("commonVerbose", "Exiting bumpVersions");
+  relinka("verbose", "Exiting bumpVersions");
 }
 
 /**

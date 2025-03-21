@@ -1,6 +1,7 @@
 import { execaCommand } from "execa";
 import pAll from "p-all";
 
+import { CONCURRENCY_DEFAULT } from "~/libs/sdk/sdk-impl/utils/utils-consts.js";
 import { withWorkingDirectory } from "~/libs/sdk/sdk-impl/utils/utils-cwd.js";
 import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
 import {
@@ -43,7 +44,7 @@ export async function library_publishLibrary(
         () => library_pubToNpm(npmOutDir, distJsrDryRun, libName, isDev, timer),
         () => library_pubToJsr(jsrOutDir, distJsrDryRun, libName, isDev, timer),
       ];
-      await pAll(publishTasks, { concurrency: 2 });
+      await pAll(publishTasks, { concurrency: CONCURRENCY_DEFAULT });
       break;
     }
     default:
@@ -64,7 +65,7 @@ async function library_pubToJsr(
   isDev: boolean,
   timer: PerfTimer,
 ): Promise<void> {
-  relinka("commonVerbose", `Starting library_pubToJsr for lib: ${libName}`);
+  relinka("verbose", `Starting library_pubToJsr for lib: ${libName}`);
   if (isDev) {
     relinka("info", `Skipping lib ${libName} JSR publish in development mode`);
     return;
@@ -84,7 +85,7 @@ async function library_pubToJsr(
       await execaCommand(command, { stdio: "inherit" });
       relinka(
         "success",
-        `Successfully ${distJsrDryRun ? "validated" : "published"} lib ${libName} to JSR`,
+        `Successfully ${distJsrDryRun ? "validated" : "published"} lib ${libName} to JSR registry`,
       );
     });
     if (timer) resumePerfTimer(timer);
@@ -93,7 +94,7 @@ async function library_pubToJsr(
     relinka("error", `Failed to publish lib ${libName} to JSR`, error);
     throw error;
   } finally {
-    relinka("commonVerbose", `Exiting library_pubToJsr for lib: ${libName}`);
+    relinka("verbose", `Exiting library_pubToJsr for lib: ${libName}`);
   }
 }
 
@@ -107,7 +108,7 @@ async function library_pubToNpm(
   isDev: boolean,
   timer: PerfTimer,
 ): Promise<void> {
-  relinka("commonVerbose", `Starting library_pubToNpm for lib: ${libName}`);
+  relinka("verbose", `Starting library_pubToNpm for lib: ${libName}`);
   if (isDev) {
     relinka("info", `Skipping lib ${libName} NPM publish in development mode`);
     return;
@@ -122,7 +123,7 @@ async function library_pubToNpm(
       await execaCommand(command, { stdio: "inherit" });
       relinka(
         "success",
-        `Successfully ${distJsrDryRun ? "validated" : "published"} lib ${libName} to NPM`,
+        `Successfully ${distJsrDryRun ? "validated" : "published"} lib ${libName} to NPM registry`,
       );
     });
     if (timer) resumePerfTimer(timer);
@@ -131,6 +132,6 @@ async function library_pubToNpm(
     relinka("error", `Failed to publish lib ${libName} to NPM`, error);
     throw error;
   } finally {
-    relinka("commonVerbose", `Exiting library_pubToNpm for lib: ${libName}`);
+    relinka("verbose", `Exiting library_pubToNpm for lib: ${libName}`);
   }
 }

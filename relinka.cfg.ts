@@ -7,7 +7,7 @@ import { defineConfig } from "./src/libs/sdk/sdk-impl/utils/utils-logs.js";
  * - RELINKA_TIMESTAMP: Whether to include timestamps in logs (true/false)
  * - RELINKA_SAVE_LOGS: Whether to save logs to a file (true/false)
  * - RELINKA_LOG_FILE: Path to the log file
- * - RELINKA_DEBUG: Whether to enable commonVerbose logging (true/false)
+ * - RELINKA_DEBUG: Whether to enable verbose logging (true/false)
  * - RELINKA_LOG_DIR: Directory to store log files
  * - RELINKA_DAILY_LOGS: Whether to create separate log files for each day (true/false)
  * - RELINKA_MAX_LOG_FILES: Maximum number of log files to keep (0 = unlimited)
@@ -16,7 +16,7 @@ import { defineConfig } from "./src/libs/sdk/sdk-impl/utils/utils-logs.js";
  * @see https://github.com/reliverse/relinka
  */
 export default defineConfig({
-  // Whether to enable commonVerbose logging
+  // Whether to enable verbose logging
   debug: true,
 
   // Directory-specific configuration

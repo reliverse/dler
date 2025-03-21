@@ -9,16 +9,13 @@ export async function withWorkingDirectory<T>(
   fn: () => Promise<T>,
 ): Promise<T> {
   relinka(
-    "commonVerbose",
+    "verbose",
     `Entering withWorkingDirectory, transpileTargetDir: ${transpileTargetDir}`,
   );
   const originalDir = process.cwd();
   try {
     process.chdir(transpileTargetDir);
-    relinka(
-      "commonVerbose",
-      `Changed working directory to: ${transpileTargetDir}`,
-    );
+    relinka("verbose", `Changed working directory to: ${transpileTargetDir}`);
     const result = await fn();
     return result;
   } catch (error) {
@@ -26,6 +23,6 @@ export async function withWorkingDirectory<T>(
     throw error;
   } finally {
     process.chdir(originalDir);
-    relinka("commonVerbose", `Restored working directory to: ${originalDir}`);
+    relinka("verbose", `Restored working directory to: ${originalDir}`);
   }
 }
