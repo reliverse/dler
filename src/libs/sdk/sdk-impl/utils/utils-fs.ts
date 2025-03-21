@@ -16,16 +16,12 @@ import { relinka } from "./utils-logs.js";
  */
 export async function copyRootFile(
   outDirRoot: string,
-  fileNames: (
-    | ".gitignore"
-    | "drizzle.config.ts"
-    | "LICENSE"
-    | "README.md"
-    | "reliverse.jsonc"
-    | "reliverse.ts"
-    | "schema.json"
-  )[],
+  fileNames: string[],
 ): Promise<void> {
+  if (fileNames.length === 0) {
+    return;
+  }
+
   try {
     // Ensure output directory exists
     await fs.ensureDir(outDirRoot);

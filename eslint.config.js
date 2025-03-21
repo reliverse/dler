@@ -3,10 +3,11 @@
 import eslint from "@eslint/js";
 import stylistic from "@stylistic/eslint-plugin";
 import noRelativeImportPaths from "eslint-plugin-no-relative-import-paths";
-import perfectionist from "eslint-plugin-perfectionist";
 import { fileURLToPath } from "node:url";
 import path from "pathe";
 import tseslint from "typescript-eslint";
+
+// import perfectionist from "eslint-plugin-perfectionist";
 
 /** @type {import("typescript-eslint").Config} */
 const config = tseslint.config(
@@ -14,7 +15,7 @@ const config = tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
-  perfectionist.configs["recommended-natural"],
+  // perfectionist.configs["recommended-natural"],
   {
     files: ["**/*.js"],
     ...tseslint.configs.disableTypeChecked,

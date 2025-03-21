@@ -1,4 +1,3 @@
-import { re } from "@reliverse/relico";
 import prettyMilliseconds from "pretty-ms";
 
 import type { LibConfig } from "~/types.js";
@@ -36,12 +35,12 @@ export async function finalizeBuild(
   if (!commonPubPause) {
     relinka(
       "success",
-      `🎉 ${re.bold("Build and publishing completed")} successfully (in ${re.bold(transpileFormattedTime)})`,
+      `🎉 Build and publishing completed successfully (in ${transpileFormattedTime})`,
     );
   } else {
     relinka(
       "success",
-      `🎉 ${re.bold("Test build completed")} successfully (in ${re.bold(transpileFormattedTime)})`,
+      `🎉 Test build completed successfully (in ${transpileFormattedTime})`,
     );
     if (!isDev) {
       relinka(

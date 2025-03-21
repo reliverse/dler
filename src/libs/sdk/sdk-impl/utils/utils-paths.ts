@@ -658,6 +658,7 @@ function convertSingleImportPath(
     currentLibName?: string;
     libsList?: Record<string, LibConfig>;
     sourceFile?: string;
+    strip?: string[];
     urlMap?: Record<string, string>;
   } = {},
 ): string {
@@ -666,8 +667,26 @@ function convertSingleImportPath(
     currentLibName,
     libsList,
     sourceFile = "",
+    strip = [],
     urlMap = {},
   } = options;
+
+  // Apply strip option to remove specified path segments
+  let processedImportPath = importPath;
+  if (strip.length > 0) {
+    for (const stripPath of strip) {
+      const normalizedStripPath = stripPath.replace(/\\/g, "/");
+      // Ensure the strip path ends with a slash if not already
+      const stripSegment = normalizedStripPath.endsWith("/")
+        ? normalizedStripPath
+        : `${normalizedStripPath}/`;
+
+      if (processedImportPath.includes(stripSegment)) {
+        processedImportPath = processedImportPath.replace(stripSegment, "");
+      }
+    }
+  }
+
   let normalizedAliasPrefix: string | undefined = options.aliasPrefix;
   if ((fromType === "alias" || toType === "alias") && !normalizedAliasPrefix) {
     throw new Error("aliasPrefix is required for alias path conversions");
@@ -677,7 +696,7 @@ function convertSingleImportPath(
   }
   const key = `${fromType}:${toType}`;
   if (conversionMapping[key]) {
-    return conversionMapping[key](importPath, {
+    return conversionMapping[key](processedImportPath, {
       aliasPrefix: normalizedAliasPrefix || "",
       baseDir,
       currentLibName,
@@ -690,7 +709,7 @@ function convertSingleImportPath(
     "verbose",
     `Conversion from ${fromType} to ${toType} not implemented or not needed`,
   );
-  return importPath;
+  return processedImportPath;
 }
 
 // -------------------------------------------------------------------
@@ -763,6 +782,7 @@ export async function convertImportPaths(options: {
   fromType: ImportType;
   generateSourceMap?: boolean;
   libsList: Record<string, LibConfig>;
+  strip?: string[];
   toType: ImportType;
   urlMap?: Record<string, string>;
 }): Promise<{ filePath: string; message: string; success: boolean }[]> {
@@ -889,6 +909,7 @@ async function convertsInFile(
     fromType: ImportType;
     generateSourceMap?: boolean;
     libsList: Record<string, LibConfig>;
+    strip?: string[];
     toType: ImportType;
     urlMap?: Record<string, string>;
   },
@@ -902,6 +923,7 @@ async function convertsInFile(
       fromType,
       generateSourceMap = false,
       libsList,
+      strip,
       toType,
       urlMap = {},
     } = options;
@@ -926,6 +948,7 @@ async function convertsInFile(
           currentLibName,
           libsList,
           sourceFile: filePath,
+          strip,
           urlMap,
         },
       );
@@ -985,6 +1008,7 @@ async function convertsInFile(
             currentLibName,
             libsList,
             sourceFile: filePath,
+            strip,
             urlMap,
           },
         );
@@ -1037,6 +1061,7 @@ async function processDirconvertsInFiles(
     fromType: ImportType;
     generateSourceMap?: boolean;
     libsList: Record<string, LibConfig>;
+    strip?: string[];
     toType: ImportType;
     urlMap?: Record<string, string>;
   },

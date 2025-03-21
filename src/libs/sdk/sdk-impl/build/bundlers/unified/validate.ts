@@ -1,6 +1,5 @@
 import type { PackageJson } from "pkg-types";
 
-import { re } from "@reliverse/relico";
 import { existsSync } from "node:fs";
 import { resolve } from "pathe";
 
@@ -41,13 +40,13 @@ export function validateDependencies(ctx: BuildContext): void {
   if (unusedDependencies.size > 0) {
     warn(
       ctx,
-      `Potential unused dependencies found: ${[...unusedDependencies].map((id) => re.cyan(id)).join(", ")}`,
+      `Potential unused dependencies found: ${[...unusedDependencies].join(", ")}`,
     );
   }
   if (implicitDependencies.size > 0 && !ctx.options.rollup.inlineDependencies) {
     warn(
       ctx,
-      `Potential implicit dependencies found: ${[...implicitDependencies].map((id) => re.cyan(id)).join(", ")}`,
+      `Potential implicit dependencies found: ${[...implicitDependencies].join(", ")}`,
     );
   }
 }
@@ -84,9 +83,7 @@ export function validatePackage(
   if (missingOutputs.length > 0) {
     warn(
       ctx,
-      `Potential missing package.json files: ${missingOutputs
-        .map((o) => re.cyan(o))
-        .join(", ")}`,
+      `Potential missing package.json files: ${missingOutputs.join(", ")}`,
     );
   }
 }

@@ -84,8 +84,8 @@ bun add -D @reliverse/relidler-sdk # (⚠️soon)
 
 - [x] Implement stable `regular` build and publish
 - [ ] Implement stable `library` build and publish
-- [ ] Support auto migration from `build.config.ts`
 - [ ] Achieve full drop-in replacement for `unbuild`
+- [ ] Support auto migration from `build.config.ts`
 - [ ] Allow plugins to extend Relidler's `defineConfig`
 - [ ] Support configuration via `reliverse.{ts,jsonc}`
 - [ ] Make config file optional with sensible defaults

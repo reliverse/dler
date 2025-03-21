@@ -41,7 +41,7 @@ export default defineConfig({
   // Publish specific dirs as separate packages
   // This feature is experimental at the moment
   // Please commit your changes before using it
-  libsActMode: "main-project-only",
+  libsActMode: "libs-only",
   libsDirDist: "dist-libs",
   libsDirSrc: "src/libs",
   libsList: {

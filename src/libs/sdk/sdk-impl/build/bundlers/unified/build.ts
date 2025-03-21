@@ -1,6 +1,5 @@
 import type { PackageJson } from "pkg-types";
 
-import { re } from "@reliverse/relico";
 import { defu } from "defu";
 import { createHooks } from "hookable";
 import { createJiti } from "jiti";
@@ -385,8 +384,7 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
       let line = `  ${rPath(entry.path)} (${[
         totalBytes && `total size: ${prettyBytes(totalBytes)}`,
         entry.bytes && `chunk size: ${prettyBytes(entry.bytes)}`,
-        entry.exports?.length &&
-          `exports: ${re.gray(entry.exports.join(", "))}`,
+        entry.exports?.length && `exports: ${entry.exports.join(", ")}`,
       ]
         .filter(Boolean)
         .join(", ")})`;
@@ -396,11 +394,7 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
           .map((p) => {
             const chunk =
               ctx.buildEntries.find((e) => e.path === p) || ({} as any);
-            return re.gray(
-              `  └─ ${rPath(p)}${re.bold(
-                chunk.bytes ? ` (${prettyBytes(chunk.bytes)})` : "",
-              )}`,
-            );
+            return `  └─ ${rPath(p)}${chunk.bytes ? ` (${prettyBytes(chunk.bytes)})` : ""}`;
           })
           .join("\n")}`;
       }
@@ -410,14 +404,12 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
           .filter((m) => m.id.includes("node_modules"))
           .sort((a, b) => (b.bytes || 0) - (a.bytes || 0))
           .map((m) => {
-            return re.gray(
-              `  📦 ${rPath(m.id)}${re.bold(m.bytes ? ` (${prettyBytes(m.bytes)})` : "")}`,
-            );
+            return `  📦 ${rPath(m.id)}${m.bytes ? ` (${prettyBytes(m.bytes)})` : ""}`;
           })
           .join("\n")}`;
       }
 
-      relinka("info", entry.chunk ? re.gray(line) : line);
+      relinka("info", entry.chunk ? line : line);
     }
 
     // Calculate elapsed time
@@ -429,10 +421,8 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
     relinka(
       "info",
       "Σ Total dist size:",
-      re.bold(
-        prettyBytes(ctx.buildEntries.reduce((a, e) => a + (e.bytes || 0), 0)),
-      ),
-      `(build time: ${re.bold(transpileFormattedTime)})`,
+      prettyBytes(ctx.buildEntries.reduce((a, e) => a + (e.bytes || 0), 0)),
+      `(build time: ${transpileFormattedTime})`,
     );
   }
 

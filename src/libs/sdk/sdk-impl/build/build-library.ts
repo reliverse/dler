@@ -275,7 +275,7 @@ async function library_buildJsrDist(
     isJsr: true,
     libName,
     libsList,
-    outDirRoot: outDirBinResolved,
+    outDirRoot: distJsrDirNameResolved,
     rmDepsMode,
     rmDepsPatterns,
     unifiedBundlerOutExt,
@@ -769,13 +769,18 @@ async function library_performCommonBuildSteps({
   if (deleteFiles) {
     await deleteSpecificFiles(outDirBinResolved);
   }
-  await copyRootFile(outDirRoot, ["README.md", "LICENSE"]);
+
+  const FILES_TO_COPY = ["README.md", "LICENSE"];
+  await copyRootFile(outDirRoot, FILES_TO_COPY);
+  relinka("verbose", `Copied root files to ${outDirRoot}`);
+
   await convertImportPaths({
     aliasPrefix: "~/",
     baseDir: outDirBinResolved,
     fromType: "alias",
     libsList,
     toType: "relative",
+    strip: ["libs/sdk"],
   });
   await renameEntryFile(isJsr, outDirRoot, coreEntryFile, unifiedBundlerOutExt);
 }
