@@ -8,15 +8,15 @@
 
 - 😘 Drop-in replacement for `unbuild`
 - ⚡ `relidler` works via CLI and SDK
-- 📦 Automated NPM and JSR publishing
+- 📦 Automated NPM/JSR publishing
 - ✅ Ensures reliable JS/TS builds
 - 🔄 Handles automatic version bumps
-- 🔧 Eliminates `package.json` headaches
+- 🔧 Eliminates package.json headaches
 - 🎯 Optimized for speed and modern workflows
 - 🛠️ Converts TypeScript aliases to relative paths
 - ✨ Packed with powerful features under the hood
-- 📝 Highly configurable via a configuration file
-- 🔌 Plugin system for extensibility
+- 📝 Highly configurable flow via a configuration file
+- 🔌 Plugin system with one built-in plugin included
 
 ## Getting Started
 
@@ -84,11 +84,11 @@ bun add -D @reliverse/relidler-sdk # (⚠️soon)
 
 - [x] Implement stable `regular` build and publish
 - [ ] Implement stable `library` build and publish
-- [ ] Implement automatic migration from `unbuild`
+- [ ] Support auto migration from `build.config.ts`
 - [ ] Achieve full drop-in replacement for `unbuild`
 - [ ] Allow plugins to extend Relidler's `defineConfig`
 - [ ] Support configuration via `reliverse.{ts,jsonc}`
-- [ ] Make configuration optional with sensible defaults
+- [ ] Make config file optional with sensible defaults
 
 ## Related
 

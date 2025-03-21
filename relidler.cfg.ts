@@ -7,7 +7,7 @@ import { defineConfig } from "./src/libs/cfg/cfg-main.js";
  */
 export default defineConfig({
   // Bump configuration
-  bumpDisable: true,
+  bumpDisable: false,
   bumpFilter: ["package.json", "reliverse.ts"],
   bumpMode: "autoPatch",
 
