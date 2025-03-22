@@ -11,7 +11,7 @@
 - 📦 Automated NPM/JSR publishing
 - ✅ Ensures reliable JS/TS builds
 - 🔄 Handles automatic version bumps
-- 🔧 Eliminates package.json headaches
+- 🔧 Eliminates `package.json` headaches
 - 🎯 Optimized for speed and modern workflows
 - 🛠️ Converts TypeScript aliases to relative paths
 - ✨ Packed with powerful features under the hood
@@ -49,7 +49,7 @@ bun dev # bun src/main.ts --dev
 
 2. **Prepare your project**:
 
-    Ensure your `.gitignore` file excludes log files and distribution directories:
+    a. **Configure `.gitignore`**:
 
     ```sh
     echo "*.log" >> .gitignore
@@ -58,17 +58,31 @@ bun dev # bun src/main.ts --dev
     echo "dist-libs" >> .gitignore
     ```
 
+    b. **Install config intellisense**:
+
+    ```sh
+    bun add -D @reliverse/relidler-cfg
+    ```
+
+    c. **Initialize `relidler.cfg.ts`**:
+
+    ```sh
+    relidler
+    ```
+
+    - The `relidler.cfg.ts` file is created automatically on the first run.
+    - **It's recommended to customize this file according to your needs.**
+    - Supported names: `relidler.cfg.ts` • `relidler.config.ts` • `build.pub.ts` • `build.cfg.ts`.
+
 3. **Run and enjoy**:
 
     ```sh
     relidler
     ```
 
-    The `relidler.cfg.ts` file is created automatically on the first run. **It's recommended to customize this file according to your needs.** While `relidler.cfg.ts` is the recommended name, you may also use: `relidler.config.ts`, `build.cfg.ts`, `build.config.ts (⚠️soon)`, or `build.pub.ts`.
-
 ## Plugins & SDK
 
-Relidler includes a plugin system with the following built-in plugins available:
+Relidler includes a plugin system, with the following official built-in plugin already available:
 
 - **`libraries-relidler-plugin`**: Builds and publishes specified subdirectories of your main project as separate packages.
 
@@ -77,13 +91,14 @@ Relidler includes a plugin system with the following built-in plugins available:
 The SDK allows you to create new Relidler plugins and even extend your own CLI functionality.
 
 ```sh
-bun add -D @reliverse/relidler-sdk # (⚠️soon)
+bun add -D @reliverse/relidler-sdk
 ```
 
 ## TODO
 
-- [x] Implement stable `regular` build and publish
+- [x] ~~Implement stable `regular` build and publish~~
 - [ ] Implement stable `library` build and publish
+- [ ] Allow to minify dist with comments preserved
 - [ ] Achieve full drop-in replacement for `unbuild`
 - [ ] Support auto migration from `build.config.ts`
 - [ ] Allow plugins to extend Relidler's `defineConfig`

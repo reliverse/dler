@@ -12,13 +12,12 @@ import type {
   Sourcemap,
   transpileFormat,
   transpileTarget,
-} from "~/types.js";
+} from "~/libs/sdk/sdk-types.js";
 
 import { build as unifiedBuild } from "~/libs/sdk/sdk-impl/build/bundlers/unified/build.js";
 import {
   getBunSourcemapOption,
   getUnifiedSourcemapOption,
-  renameEntryFile,
 } from "~/libs/sdk/sdk-impl/utils/utils-build.js";
 import {
   CONCURRENCY_DEFAULT,
@@ -32,11 +31,10 @@ import {
   outDirBinFilesCount,
 } from "~/libs/sdk/sdk-impl/utils/utils-fs.js";
 import {
-  createJsrJSONC,
+  createJsrJSON,
   renameTsxFiles,
-} from "~/libs/sdk/sdk-impl/utils/utils-jsr.js";
+} from "~/libs/sdk/sdk-impl/utils/utils-jsr-json.js";
 import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
-import { regular_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-json-reg.js";
 import {
   convertImportExtensionsJsToTs,
   convertImportPaths,
@@ -45,6 +43,7 @@ import {
   getElapsedPerfTime,
   type PerfTimer,
 } from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
+import { regular_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-json-reg.js";
 import { createTSConfig } from "~/libs/sdk/sdk-impl/utils/utils-tsconfig.js";
 
 import { ensuredir } from "./bundlers/unified/utils.js";
@@ -74,6 +73,7 @@ export async function regular_buildJsrDist(
   transpileStub: boolean,
   transpileWatch: boolean,
   distJsrGenTsconfig: boolean,
+  coreDeclarations: boolean,
 ): Promise<void> {
   relinka("info", "Building JSR distribution...");
 
@@ -88,25 +88,25 @@ export async function regular_buildJsrDist(
 
   // Decide how to do the bundling
   await regular_bundleWithBuilder(distJsrBuilder, {
-    srcDir: coreEntrySrcDirResolved, // entire dir (used if "jsr")
-    singleFile: coreEntryFilePath, // single entry (used if "bun"/"unified")
+    coreDeclarations,
     outDir: outDirBin,
-    transpileTarget,
-    transpileFormat,
-    transpileSplitting,
-    transpileMinify,
-    transpileSourcemap,
-    transpilePublicPath,
     packageName: "", // not strictly needed, keeping it for logs
-    transpileStub,
-    transpileWatch,
+    singleFile: coreEntryFilePath, // single entry (used if "bun"/"unified")
+    srcDir: coreEntrySrcDirResolved, // entire dir (used if "jsr")
     timer,
+    transpileFormat,
+    transpileMinify,
+    transpilePublicPath,
+    transpileSourcemap,
+    transpileSplitting,
+    transpileStub,
+    transpileTarget,
+    transpileWatch,
     unifiedBundlerOutExt,
   });
 
   // Perform standard steps after bundling
   await regular_performCommonBuildSteps({
-    coreEntryFile,
     coreIsCLI,
     isJsr,
     outDirBin,
@@ -118,7 +118,7 @@ export async function regular_buildJsrDist(
   // Additional JSR-specific transformations
   await convertImportExtensionsJsToTs(outDirBin);
   await renameTsxFiles(outDirBin);
-  await createJsrJSONC(distJsrDirNameResolved, false);
+  await createJsrJSON(distJsrDirNameResolved, false);
 
   // Optionally generate a tsconfig if it's a CLI in JSR mode
   if (coreIsCLI && isJsr && distJsrGenTsconfig) {
@@ -158,6 +158,7 @@ export async function regular_buildNpmDist(
   transpileStub: boolean,
   transpileWatch: boolean,
   timer: PerfTimer,
+  coreDeclarations: boolean,
 ): Promise<void> {
   relinka("info", "Building NPM distribution...");
 
@@ -172,25 +173,25 @@ export async function regular_buildNpmDist(
 
   // Decide how to do the bundling
   await regular_bundleWithBuilder(distNpmBuilder, {
-    srcDir: coreEntrySrcDirResolved,
-    singleFile: coreEntryFilePath,
+    coreDeclarations,
     outDir: outDirBin,
-    transpileTarget,
-    transpileFormat,
-    transpileSplitting,
-    transpileMinify,
-    transpileSourcemap,
-    transpilePublicPath,
     packageName: "", // For logging
-    transpileStub,
-    transpileWatch,
+    singleFile: coreEntryFilePath,
+    srcDir: coreEntrySrcDirResolved,
     timer,
+    transpileFormat,
+    transpileMinify,
+    transpilePublicPath,
+    transpileSourcemap,
+    transpileSplitting,
+    transpileStub,
+    transpileTarget,
+    transpileWatch,
     unifiedBundlerOutExt,
   });
 
   // Perform standard steps after bundling
   await regular_performCommonBuildSteps({
-    coreEntryFile,
     coreIsCLI,
     isJsr: false,
     outDirBin,
@@ -210,83 +211,6 @@ export async function regular_buildNpmDist(
     `[${distNpmDirNameResolved}] Successfully created regular distribution: "dist-npm" (${outDirBin}/main.js) with (${filesCount} files (${prettyBytes(
       dirSize,
     )}))`,
-  );
-}
-
-/**
- * Helper function to decide bundler approach: "jsr" vs "bun" vs "unified".
- */
-async function regular_bundleWithBuilder(
-  builder: BundlerName,
-  params: {
-    srcDir: string; // entire directory (used if builder=jsr)
-    singleFile: string; // single entry file (used if bun/unified)
-    outDir: string;
-    transpileTarget: transpileTarget;
-    transpileFormat: transpileFormat;
-    transpileSplitting: boolean;
-    transpileMinify: boolean;
-    transpileSourcemap: Sourcemap;
-    transpilePublicPath: string;
-    packageName?: string;
-    transpileStub: boolean;
-    transpileWatch: boolean;
-    timer: PerfTimer;
-    unifiedBundlerOutExt: NpmOutExt;
-  },
-): Promise<void> {
-  const {
-    srcDir,
-    singleFile,
-    outDir,
-    transpileTarget,
-    transpileFormat,
-    transpileSplitting,
-    transpileMinify,
-    transpileSourcemap,
-    transpilePublicPath,
-    transpileStub,
-    transpileWatch,
-    timer,
-    unifiedBundlerOutExt,
-  } = params;
-
-  // The "jsr" builder is basically a directory copy
-  if (builder === "jsr") {
-    await regular_bundleUsingJsr(srcDir, outDir);
-    return;
-  }
-
-  // The "bun" builder uses a single entry file
-  if (builder === "bun") {
-    await regular_bundleUsingBun(
-      singleFile,
-      outDir,
-      transpileTarget,
-      transpileFormat,
-      transpileSplitting,
-      transpileMinify,
-      transpileSourcemap,
-      transpilePublicPath,
-      timer,
-    );
-    return;
-  }
-
-  // Everything else is a "unified" type builder (rollup, mkdist, etc.)
-  await regular_bundleUsingUnified(
-    singleFile,
-    outDir,
-    builder,
-    unifiedBundlerOutExt,
-    // For mkdist, we pass the directory. For others, we pass the single file
-    path.dirname(singleFile),
-    transpileStub,
-    transpileWatch,
-    transpileTarget,
-    transpileMinify,
-    transpileSourcemap,
-    timer,
   );
 }
 
@@ -417,6 +341,7 @@ async function regular_bundleUsingUnified(
   transpileMinify: boolean,
   transpileSourcemap: Sourcemap,
   timer: PerfTimer,
+  coreDeclarations: boolean,
 ): Promise<void> {
   if (builder === "jsr" || builder === "bun") {
     throw new Error(
@@ -444,12 +369,11 @@ async function regular_bundleUsingUnified(
     // For other unified builders, pass the single file
     const input =
       builder === "mkdist" ? path.dirname(coreEntryFile) : coreEntryFile;
-    const concurrency = CONCURRENCY_DEFAULT;
 
     const unifiedBuildConfig = {
       clean: false,
-      concurrency,
-      declaration: false,
+      concurrency: CONCURRENCY_DEFAULT,
+      declaration: coreDeclarations,
       entries: [
         {
           builder,
@@ -503,11 +427,90 @@ async function regular_bundleUsingUnified(
 }
 
 /**
+ * Helper function to decide bundler approach: "jsr" vs "bun" vs "unified".
+ */
+async function regular_bundleWithBuilder(
+  builder: BundlerName,
+  params: {
+    coreDeclarations: boolean;
+    outDir: string;
+    packageName?: string;
+    singleFile: string; // single entry file (used if bun/unified)
+    srcDir: string; // entire directory (used if builder=jsr)
+    timer: PerfTimer;
+    transpileFormat: transpileFormat;
+    transpileMinify: boolean;
+    transpilePublicPath: string;
+    transpileSourcemap: Sourcemap;
+    transpileSplitting: boolean;
+    transpileStub: boolean;
+    transpileTarget: transpileTarget;
+    transpileWatch: boolean;
+    unifiedBundlerOutExt: NpmOutExt;
+  },
+): Promise<void> {
+  const {
+    coreDeclarations,
+    outDir,
+    singleFile,
+    srcDir,
+    timer,
+    transpileFormat,
+    transpileMinify,
+    transpilePublicPath,
+    transpileSourcemap,
+    transpileSplitting,
+    transpileStub,
+    transpileTarget,
+    transpileWatch,
+    unifiedBundlerOutExt,
+  } = params;
+
+  // The "jsr" builder is basically a directory copy
+  if (builder === "jsr") {
+    await regular_bundleUsingJsr(srcDir, outDir);
+    return;
+  }
+
+  // The "bun" builder uses a single entry file
+  if (builder === "bun") {
+    await regular_bundleUsingBun(
+      singleFile,
+      outDir,
+      transpileTarget,
+      transpileFormat,
+      transpileSplitting,
+      transpileMinify,
+      transpileSourcemap,
+      transpilePublicPath,
+      timer,
+    );
+    return;
+  }
+
+  // Everything else is a "unified" type builder (rollup, mkdist, etc.)
+  await regular_bundleUsingUnified(
+    singleFile,
+    outDir,
+    builder,
+    unifiedBundlerOutExt,
+    // For mkdist, we pass the directory. For others, we pass the single file
+    path.dirname(singleFile),
+    transpileStub,
+    transpileWatch,
+    transpileTarget,
+    transpileMinify,
+    transpileSourcemap,
+    timer,
+    coreDeclarations,
+  );
+}
+
+/**
  * Common build steps shared between JSR and NPM distributions.
  * - Convert imports, rename main entry file, optionally delete files, etc.
  */
 async function regular_performCommonBuildSteps({
-  coreEntryFile,
   coreIsCLI,
   deleteFiles = true,
   isJsr,
@@ -516,7 +519,6 @@ async function regular_performCommonBuildSteps({
   rmDepsMode,
   unifiedBundlerOutExt,
 }: {
-  coreEntryFile: string;
   coreIsCLI: boolean;
   deleteFiles?: boolean;
   isJsr: boolean;
@@ -533,9 +535,6 @@ async function regular_performCommonBuildSteps({
     libsList: {},
     toType: "relative",
   });
-
-  // Rename the main entry file (e.g. index.js to main.js)
-  await renameEntryFile(isJsr, outDirBin, coreEntryFile, unifiedBundlerOutExt);
 
   // Delete undesired files
   if (deleteFiles) {

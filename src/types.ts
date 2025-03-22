@@ -1,13 +1,12 @@
 /**
- * Defines the full configuration for building and publishing packages.
- * This includes versioning, build settings, publishing options, multi-package support, and more.
+ * Defines the configuration for building and publishing packages. This includes: versioning,
+ * build settings, publishing options, libraries-relidler-plugin built-in plugin, and more.
  * It customizes the build and publish pipeline for both NPM and JSR registries.
  */
 export type BuildPublishConfig = {
   // ==========================================================================
-  // Common configuration`
+  // Bump configuration
   // ==========================================================================
-
   /**
    * When `true`, disables version bumping.
    * Useful when retrying a failed publish with an already bumped version.
@@ -43,6 +42,10 @@ export type BuildPublishConfig = {
    */
   bumpMode: BumpMode;
 
+  // ==========================================================================
+  // Common configuration
+  // ==========================================================================
+
   /**
    * When `true`, stops after building and retains distribution folders.
    * Useful for development or inspecting the build output.
@@ -50,10 +53,6 @@ export type BuildPublishConfig = {
    * @default true
    */
   commonPubPause: boolean;
-
-  // ==========================================================================
-  // Publishing options
-  // ==========================================================================
 
   /**
    * Specifies which package registries to publish to:
@@ -73,6 +72,19 @@ export type BuildPublishConfig = {
    */
   commonVerbose: boolean;
 
+  // ==========================================================================
+  // Core configuration
+  // ==========================================================================
+
+  /**
+   * When `true`, generates TypeScript declaration files (.d.ts) for NPM packages.
+   * Essential for providing type intranspileFormation to TypeScript users.
+   * Tip: set to `false` if your main project is a CLI to reduce bundle size.
+   *
+   * @default true
+   */
+  coreDeclarations: boolean;
+
   /**
    * Path to the project's main entry file.
    * Used as the entry point for the NPM package.
@@ -80,10 +92,6 @@ export type BuildPublishConfig = {
    * @default "main.ts"
    */
   coreEntryFile: string;
-
-  // ==========================================================================
-  // Versioning options
-  // ==========================================================================
 
   /**
    * Base directory containing the source entry files.
@@ -102,6 +110,10 @@ export type BuildPublishConfig = {
    */
   coreIsCLI: boolean;
 
+  // ==========================================================================
+  // JSR-only config
+  // ==========================================================================
+
   /**
    * When `true`, allows JSR publishing even with uncommitted changes.
    * Use with caution, as it may lead to inconsistent published versions.
@@ -111,10 +123,6 @@ export type BuildPublishConfig = {
    * @default true
    */
   distJsrAllowDirty: boolean;
-
-  // ==========================================================================
-  // NPM-only config
-  // ==========================================================================
 
   /**
    * The bundler to use for creating JSR-compatible packages.
@@ -155,9 +163,12 @@ export type BuildPublishConfig = {
    */
   distJsrGenTsconfig: boolean;
 
-  // ==========================================================================
-  // JSR-only config
-  // ==========================================================================
+  /**
+   * The file extension for output files in JSR packages.
+   *
+   * @default "ts"
+   */
+  distJsrOutFilesExt: NpmOutExt;
 
   /**
    * When `true`, enables JSR to process complex types, which may impact performance.
@@ -178,6 +189,10 @@ export type BuildPublishConfig = {
    */
   distJsrSlowTypes: boolean;
 
+  // ==========================================================================
+  // NPM-only config
+  // ==========================================================================
+
   /**
    * The bundler to use for creating NPM-compatible packages.
    *
@@ -194,15 +209,6 @@ export type BuildPublishConfig = {
   distNpmCopyRootFiles: string[];
 
   /**
-   * When `true`, generates TypeScript declaration files (.d.ts) for NPM packages.
-   * Essential for providing type intranspileFormation to TypeScript users.
-   * Set to `false` if your main project is a CLI to reduce bundle size.
-   *
-   * @default true
-   */
-  distNpmDeclarations: boolean;
-
-  /**
    * Directory where NPM build artifacts are generated.
    * This directory will contain the package ready for NPM publishing.
    *
@@ -217,10 +223,10 @@ export type BuildPublishConfig = {
    *
    * @default "js"
    */
-  distNpmOutFilesExt?: NpmOutExt;
+  distNpmOutFilesExt: NpmOutExt;
 
   // ==========================================================================
-  // Build setup
+  // Libraries Relidler Plugin
   // ==========================================================================
 
   /**
@@ -260,10 +266,14 @@ export type BuildPublishConfig = {
    *   "@myorg/ml3": { main: "src/libs/my-lib-3/index.js" }
    * }
    */
-  libsList?: Record<string, LibConfig>;
+  libsList: Record<string, LibConfig>;
+
+  // ==========================================================================
+  // Logger setup
+  // ==========================================================================
 
   /**
-   * The name of the log file.
+   * The name of the log file. Relidler uses `@reliverse/relinka` for logging.
    *
    * @default "relinka.log"
    */
@@ -275,6 +285,10 @@ export type BuildPublishConfig = {
    * @default false
    */
   logsFreshFile: boolean;
+
+  // ==========================================================================
+  // Dependency filtering
+  // ==========================================================================
 
   /**
    * Controls how dependencies are excluded from the final package:
@@ -293,7 +307,11 @@ export type BuildPublishConfig = {
    * @example ["eslint", "prettier", "test"]
    * @default ["eslint", "prettier", "biome"]
    */
-  rmDepsPatterns?: string[];
+  rmDepsPatterns: string[];
+
+  // ==========================================================================
+  // Build setup
+  // ==========================================================================
 
   /**
    * The transpileTarget runtime environment for the built package.
@@ -301,10 +319,6 @@ export type BuildPublishConfig = {
    * @default "es2023"
    */
   transpileEsbuild: Esbuild;
-
-  // ==========================================================================
-  // Logger options
-  // ==========================================================================
 
   /**
    * Output module transpileFormat for built files:
@@ -323,10 +337,6 @@ export type BuildPublishConfig = {
    * @default true
    */
   transpileMinify: boolean;
-
-  // ==========================================================================
-  // Dependency filtering
-  // ==========================================================================
 
   /**
    * The base URL for loading assets in the built package.
@@ -347,10 +357,6 @@ export type BuildPublishConfig = {
    * @default false
    */
   transpileSourcemap: Sourcemap;
-
-  // ==========================================================================
-  // Libraries Relidler Plugin
-  // ==========================================================================
 
   /**
    * When `true`, enables code transpileSplitting for improved load-time performance.
@@ -384,6 +390,8 @@ export type BuildPublishConfig = {
    */
   transpileWatch: boolean;
 };
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /**
  * Supported file extensions for version bumping.
@@ -424,11 +432,18 @@ export type Esbuild = "es2019" | "es2020" | "es2021" | "es2022" | "es2023";
  */
 export type ExcludeMode = "patterns-and-devdeps" | "patterns-only";
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 /**
  * Configuration for a library to be built and published as a separate package.
  * Used when publishing multiple packages from a single repository.
  */
 export type LibConfig = {
+  /**
+   * When `true`, generates TypeScript declaration files (.d.ts) for NPM packages.
+   */
+  libDeclarations: boolean;
+
   /**
    * An optional description of the library, included in the dist's package.json.
    * Provides users with an overview of the library's purpose.
@@ -436,14 +451,14 @@ export type LibConfig = {
    * @example "Utility functions for data manipulation"
    * @example "Core configuration module for the framework"
    */
-  libDesc?: string;
+  libDescription: string;
 
   /**
    * The directory where the library's dist files are stored.
    *
    * @default name is derived from the library's name after slash
    */
-  libDirName?: string;
+  libDirName: string;
 
   /**
    * The path to the library's main entry file.
@@ -468,16 +483,7 @@ export type LibConfig = {
    * @example ["pathe", "fs-extra"] - Only include these specific dependencies.
    * @example true - Include all `dependencies` from the main package.json.
    */
-  libPkgKeepDeps?: boolean | string[];
-
-  // ==========================================================================
-  // Overrides
-  // ==========================================================================
-
-  /**
-   * When `true`, generates TypeScript declaration files (.d.ts) for NPM packages.
-   */
-  libTranspileDtsNpm?: boolean;
+  libPkgKeepDeps: boolean | string[];
 
   /**
    * When `true`, minifies the output to reduce bundle size.
@@ -485,8 +491,10 @@ export type LibConfig = {
    *
    * @default true
    */
-  libTranspileMinify?: boolean;
+  libTranspileMinify: boolean;
 };
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 export type NpmOutExt = "cjs" | "cts" | "js" | "mjs" | "mts" | "ts";
 

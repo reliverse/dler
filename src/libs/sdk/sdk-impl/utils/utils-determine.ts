@@ -1,4 +1,4 @@
-import type { LibConfig } from "~/types.js";
+import type { LibConfig } from "~/libs/sdk/sdk-types.js";
 
 /**
  * Determines the distribution name based on the file path and build type.

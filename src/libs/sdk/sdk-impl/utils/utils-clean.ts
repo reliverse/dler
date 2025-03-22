@@ -2,7 +2,7 @@ import fs from "fs-extra";
 import pMap from "p-map";
 import path from "pathe";
 
-import type { LibConfig } from "~/types.js";
+import type { LibConfig } from "~/libs/sdk/sdk-types.js";
 
 import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "./utils-consts.js";
 import { relinka } from "./utils-logs.js";

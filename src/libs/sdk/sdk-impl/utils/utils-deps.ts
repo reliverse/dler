@@ -1,7 +1,7 @@
 import { readPackageJSON } from "pkg-types";
 import { glob } from "tinyglobby";
 
-import type { ExcludeMode } from "~/types.js";
+import type { ExcludeMode } from "~/libs/sdk/sdk-types.js";
 
 import { readFileSafe } from "./utils-fs.js";
 import { relinka } from "./utils-logs.js";

@@ -1,7 +1,7 @@
 import fs from "fs-extra";
 import path from "pathe";
 
-import type { NpmOutExt, Sourcemap } from "~/types.js";
+import type { NpmOutExt, Sourcemap } from "~/libs/sdk/sdk-types.js";
 
 import { relinka } from "./utils-logs.js";
 
@@ -55,6 +55,7 @@ export async function renameEntryFile(
   outDirBin: string,
   coreEntryFile: string,
   unifiedBundlerOutExt: NpmOutExt,
+  distJsrOutFilesExt: NpmOutExt,
 ): Promise<{ updatedEntryFile: string }> {
   relinka(
     "verbose",
@@ -64,7 +65,7 @@ export async function renameEntryFile(
   // Get the base filename without directory path
   const entryBasename = path.basename(coreEntryFile);
   // Convert to output extension
-  const outExt = unifiedBundlerOutExt || "js";
+  const outExt = isJsr ? distJsrOutFilesExt : unifiedBundlerOutExt;
   const jsEntryFile = entryBasename.replace(/\.tsx?$/, `.${outExt}`);
   const coreEntryFileNoExt = jsEntryFile.split(".").slice(0, -1).join(".");
 

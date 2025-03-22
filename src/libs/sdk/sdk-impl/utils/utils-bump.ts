@@ -5,7 +5,7 @@ import { readPackageJSON } from "pkg-types";
 import semver from "semver";
 import { glob } from "tinyglobby";
 
-import type { BumpFilter, BumpMode } from "~/types.js";
+import type { BumpFilter, BumpMode } from "~/libs/sdk/sdk-types.js";
 
 import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "./utils-consts.js";
 import { readFileSafe, writeFileSafe } from "./utils-fs.js";

@@ -10,7 +10,7 @@ import type {
   Sourcemap,
   transpileFormat,
   transpileTarget,
-} from "~/types.js";
+} from "~/libs/sdk/sdk-types.js";
 
 import type { PerfTimer } from "./utils/utils-perf.js";
 
@@ -48,6 +48,7 @@ export async function processLibraryFlow(
   distJsrBuilder: BundlerName,
   transpileStub: boolean,
   transpileWatch: boolean,
+  distJsrOutFilesExt: NpmOutExt,
 ): Promise<void> {
   if (libsActMode !== "libs-only" && libsActMode !== "main-and-libs") {
     relinka(
@@ -81,6 +82,7 @@ export async function processLibraryFlow(
     distJsrBuilder,
     transpileStub,
     transpileWatch,
+    distJsrOutFilesExt,
   );
 }
 
@@ -100,6 +102,25 @@ function extractFolderName(libName: string, libConfig?: LibConfig): string {
     if (parts.length > 1) return parts[1]!;
   }
   return libName;
+}
+
+// Helper function to extract directory name from library name
+function extractLibDirFromName(name: string): string {
+  // For scoped packages like @reliverse/relidler-cfg
+  if (name.includes("/")) {
+    const parts = name.split("/");
+    const lastPart = parts[parts.length - 1];
+    // Handle cases like relidler-cfg where we want just "cfg"
+    if (lastPart.includes("-")) {
+      return lastPart.split("-").pop() || lastPart;
+    }
+    return lastPart;
+  }
+  // For simple names with prefix like "relidler-cfg"
+  if (name.includes("-")) {
+    return name.split("-").pop() || name;
+  }
+  return name;
 }
 
 /**
@@ -131,6 +152,7 @@ async function libraries_buildPublish(
   distJsrBuilder: BundlerName,
   transpileStub: boolean,
   transpileWatch: boolean,
+  distJsrOutFilesExt: NpmOutExt,
 ): Promise<void> {
   relinka("verbose", "Starting libraries_buildPublish");
   if (!libsList || Object.keys(libsList).length === 0) {
@@ -201,6 +223,7 @@ async function libraries_buildPublish(
         timer,
         transpileStub,
         transpileWatch,
+        distJsrOutFilesExt,
       );
       if (!commonPubPause) {
         await library_publishLibrary(
@@ -244,23 +267,4 @@ async function libraries_buildPublish(
     }
     throw error;
   }
-}
-
-// Helper function to extract directory name from library name
-function extractLibDirFromName(name: string): string {
-  // For scoped packages like @reliverse/relidler-cfg
-  if (name.includes("/")) {
-    const parts = name.split("/");
-    const lastPart = parts[parts.length - 1];
-    // Handle cases like relidler-cfg where we want just "cfg"
-    if (lastPart.includes("-")) {
-      return lastPart.split("-").pop() || lastPart;
-    }
-    return lastPart;
-  }
-  // For simple names with prefix like "relidler-cfg"
-  if (name.includes("-")) {
-    return name.split("-").pop() || name;
-  }
-  return name;
 }

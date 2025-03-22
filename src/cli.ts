@@ -88,6 +88,7 @@ export async function relidler(isDev: boolean) {
       config.transpileStub,
       config.transpileWatch,
       config.distJsrGenTsconfig,
+      config.coreDeclarations,
     );
 
     // Process libraries
@@ -117,6 +118,7 @@ export async function relidler(isDev: boolean) {
       config.distJsrBuilder,
       config.transpileStub,
       config.transpileWatch,
+      config.distJsrOutFilesExt,
     );
 
     // Finalize relidler

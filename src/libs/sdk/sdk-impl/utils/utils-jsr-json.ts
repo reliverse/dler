@@ -8,23 +8,21 @@ import { cliDomainDocs, CONCURRENCY_DEFAULT } from "./utils-consts.js";
 import { relinka } from "./utils-logs.js";
 
 /**
- * Generates a jsr.jsonc configuration file for JSR distributions.
+ * Generates a jsr.json configuration file for JSR distributions.
  */
-export async function createJsrJSONC(
+export async function createJsrJSON(
   outDirRoot: string,
   isLib: boolean,
-  projectName?: string,
+  libName = "unknown-lib-name",
+  libDescription = "unknown-lib-description",
 ): Promise<void> {
-  relinka(
-    "verbose",
-    `Creating jsr.jsonc configuration (project: ${projectName}, isLib: ${isLib})`,
-  );
+  relinka("verbose", `Creating jsr.json configuration (isLib: ${isLib})`);
   const originalPkg = await readPackageJSON();
   let { description, name } = originalPkg;
   const { author, license, version } = originalPkg;
   if (isLib) {
-    name = projectName;
-    description = "A helper lib for the Reliverse CLI";
+    name = libName;
+    description = libDescription;
   }
   const pkgHomepage = cliDomainDocs;
   const jsrConfig = {
@@ -39,10 +37,10 @@ export async function createJsrJSONC(
     },
     version,
   };
-  await fs.writeJSON(path.join(outDirRoot, "jsr.jsonc"), jsrConfig, {
+  await fs.writeJSON(path.join(outDirRoot, "jsr.json"), jsrConfig, {
     spaces: 2,
   });
-  relinka("verbose", "Generated jsr.jsonc file");
+  relinka("verbose", `Generated jsr.json file in ${outDirRoot}/jsr.json`);
 }
 
 /**

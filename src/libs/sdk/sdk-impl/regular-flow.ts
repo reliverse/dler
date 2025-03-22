@@ -7,7 +7,7 @@ import type {
   Sourcemap,
   transpileFormat,
   transpileTarget,
-} from "~/types.js";
+} from "~/libs/sdk/sdk-types.js";
 
 import type { PerfTimer } from "./utils/utils-perf.js";
 
@@ -49,6 +49,7 @@ export async function processRegularFlow(
   transpileStub: boolean,
   transpileWatch: boolean,
   distJsrGenTsconfig: boolean,
+  coreDeclarations: boolean,
 ): Promise<void> {
   if (libsActMode !== "main-project-only" && libsActMode !== "main-and-libs") {
     relinka(
@@ -83,6 +84,7 @@ export async function processRegularFlow(
         transpileStub,
         transpileWatch,
         distJsrGenTsconfig,
+        coreDeclarations,
       );
       if (!isDev) {
         await regular_pubToJsr(
@@ -119,6 +121,7 @@ export async function processRegularFlow(
         transpileStub,
         transpileWatch,
         timer,
+        coreDeclarations,
       );
       if (!isDev) {
         await regular_pubToNpm(
@@ -157,6 +160,7 @@ export async function processRegularFlow(
             transpileStub,
             transpileWatch,
             distJsrGenTsconfig,
+            coreDeclarations,
           ),
         () =>
           regular_buildNpmDist(
@@ -177,6 +181,7 @@ export async function processRegularFlow(
             transpileStub,
             transpileWatch,
             timer,
+            coreDeclarations,
           ),
       ];
       await pAll(buildTasks, { concurrency: CONCURRENCY_DEFAULT });
@@ -230,6 +235,7 @@ export async function processRegularFlow(
             transpileStub,
             transpileWatch,
             timer,
+            coreDeclarations,
           ),
         () =>
           regular_buildJsrDist(
@@ -252,6 +258,7 @@ export async function processRegularFlow(
             transpileStub,
             transpileWatch,
             distJsrGenTsconfig,
+            coreDeclarations,
           ),
       ];
       await pAll(fallbackBuildTasks, { concurrency: CONCURRENCY_DEFAULT });

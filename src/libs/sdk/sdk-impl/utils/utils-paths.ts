@@ -812,7 +812,7 @@ export async function convertImportPaths(options: {
     );
   }
 
-  relinka("info", `Starting path replacement in ${baseDir} folder...`);
+  relinka("info", `Paths replacement in ${baseDir} folder...`);
   const modifiedOptions = {
     ...options,
     aliasPrefix,

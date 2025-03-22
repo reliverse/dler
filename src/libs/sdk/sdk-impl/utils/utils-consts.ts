@@ -1,6 +1,6 @@
 import path from "pathe";
 
-import type { NpmOutExt } from "~/types.js";
+import type { NpmOutExt } from "~/libs/sdk/sdk-types.js";
 
 // ============================
 // Constants & Global Setup

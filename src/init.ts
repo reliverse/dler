@@ -67,42 +67,42 @@ function generateConfig(isDev: boolean): string {
     false,
     DEFAULT_CONFIG.commonPubPause,
   );
-  const distNpmDeclarationsValue = getValue(
+  const coreDeclarationsValue = getValue(
     isDev,
     false,
-    DEFAULT_CONFIG.distNpmDeclarations,
+    DEFAULT_CONFIG.coreDeclarations,
   );
   const libsActModeValue = getValue(
     isDev,
-    "main-project-only",
+    "main-and-libs",
     DEFAULT_CONFIG.libsActMode,
   );
   const libsObject = isDev
     ? `{
   "@reliverse/relidler-cfg": {
-    libDesc: "@reliverse/relidler defineConfig",
+    libDeclarations: true,
+    libDescription: "@reliverse/relidler defineConfig",
     libDirName: "cfg",
-    libMainFile: "cfg-main.ts",
+    libMainFile: "cfg/cfg-main.ts",
     libPkgKeepDeps: false,
-    libTranspileDtsNpm: true,
     libTranspileMinify: false,
   },
   "@reliverse/relidler-sdk": {
-    libDesc: "@reliverse/relidler without cli",
+    libDeclarations: true,
+    libDescription: "@reliverse/relidler without cli",
     libDirName: "sdk",
-    libMainFile: "sdk-main.ts",
+    libMainFile: "sdk/sdk-main.ts",
     libPkgKeepDeps: true,
-    libTranspileDtsNpm: true,
     libTranspileMinify: true,
   },
 }`
     : `{
-  // "@org/cli-libName": {
-  //   libDesc: "@org/cli defineConfig",
+  // "@acme/cli-libName": {
+  //   libDeclarations: true,
+  //   libDescription: "@acme/cli defineConfig",
   //   libDirName: "libName",
   //   libMainFile: "libName/libName-main.ts",
   //   libPkgKeepDeps: true,
-  //   libTranspileDtsNpm: true,
   //   libTranspileMinify: false,
   // },
 }`;
@@ -129,6 +129,7 @@ export default defineConfig({
   commonVerbose: ${verboseValue},
 
   // Core configuration
+  coreDeclarations: ${coreDeclarationsValue},
   coreEntryFile: "${DEFAULT_CONFIG.coreEntryFile}",
   coreEntrySrcDir: "${DEFAULT_CONFIG.coreEntrySrcDir}",
   coreIsCLI: ${isCLIValue},
@@ -140,12 +141,12 @@ export default defineConfig({
   distJsrDirName: "${DEFAULT_CONFIG.distJsrDirName}",
   distJsrDryRun: ${DEFAULT_CONFIG.distJsrDryRun},
   distJsrGenTsconfig: ${DEFAULT_CONFIG.distJsrGenTsconfig},
+  distJsrOutFilesExt: "${DEFAULT_CONFIG.distJsrOutFilesExt}",
   distJsrSlowTypes: ${DEFAULT_CONFIG.distJsrSlowTypes},
 
   // NPM-only config
   distNpmBuilder: "${DEFAULT_CONFIG.distNpmBuilder}",
   distNpmCopyRootFiles: ${JSON.stringify(DEFAULT_CONFIG.distNpmCopyRootFiles)},
-  distNpmDeclarations: ${distNpmDeclarationsValue},
   distNpmDirName: "${DEFAULT_CONFIG.distNpmDirName}",
   distNpmOutFilesExt: "${DEFAULT_CONFIG.distNpmOutFilesExt}",
 
@@ -158,7 +159,7 @@ export default defineConfig({
   libsDirSrc: "${DEFAULT_CONFIG.libsDirSrc}",
   libsList: ${libsObject},
 
-  // Logger options
+  // Logger setup
   logsFileName: "${DEFAULT_CONFIG.logsFileName}",
   logsFreshFile: ${DEFAULT_CONFIG.logsFreshFile},
 

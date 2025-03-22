@@ -1,6 +1,6 @@
 import prettyMilliseconds from "pretty-ms";
 
-import type { LibConfig } from "~/types.js";
+import type { LibConfig } from "~/libs/sdk/sdk-types.js";
 
 import { setBumpDisabled } from "./utils-bump.js";
 import { removeDistFolders } from "./utils-clean.js";

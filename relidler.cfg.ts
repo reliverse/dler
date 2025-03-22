@@ -17,6 +17,7 @@ export default defineConfig({
   commonVerbose: true,
 
   // Core configuration
+  coreDeclarations: false,
   coreEntryFile: "main.ts",
   coreEntrySrcDir: "src",
   coreIsCLI: true,
@@ -28,12 +29,12 @@ export default defineConfig({
   distJsrDirName: "dist-jsr",
   distJsrDryRun: false,
   distJsrGenTsconfig: false,
+  distJsrOutFilesExt: "ts",
   distJsrSlowTypes: true,
 
   // NPM-only config
   distNpmBuilder: "mkdist",
   distNpmCopyRootFiles: ["README.md", "LICENSE"],
-  distNpmDeclarations: false,
   distNpmDirName: "dist-npm",
   distNpmOutFilesExt: "js",
 
@@ -46,24 +47,24 @@ export default defineConfig({
   libsDirSrc: "src/libs",
   libsList: {
     "@reliverse/relidler-cfg": {
-      libDesc: "@reliverse/relidler defineConfig",
+      libDeclarations: true,
+      libDescription: "@reliverse/relidler defineConfig",
       libDirName: "cfg",
       libMainFile: "cfg/cfg-main.ts",
       libPkgKeepDeps: false,
-      libTranspileDtsNpm: true,
       libTranspileMinify: false,
     },
     "@reliverse/relidler-sdk": {
-      libDesc: "@reliverse/relidler without cli",
+      libDeclarations: true,
+      libDescription: "@reliverse/relidler without cli",
       libDirName: "sdk",
       libMainFile: "sdk/sdk-main.ts",
       libPkgKeepDeps: true,
-      libTranspileDtsNpm: true,
       libTranspileMinify: true,
     },
   },
 
-  // Logger options
+  // Logger setup
   logsFileName: "relinka.log",
   logsFreshFile: true,
 

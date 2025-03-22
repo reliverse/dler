@@ -6,101 +6,11 @@ import {
   readPackageJSON,
 } from "pkg-types";
 
-import type { ExcludeMode, NpmOutExt } from "~/types.js";
+import type { ExcludeMode, NpmOutExt } from "~/libs/sdk/sdk-types.js";
 
 import { cliDomainDocs } from "~/libs/sdk/sdk-impl/utils/utils-consts.js";
 import { filterDeps } from "~/libs/sdk/sdk-impl/utils/utils-deps.js";
 import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
-
-/**
- * Creates common package.json fields based on the original package.json.
- */
-async function regular_createCommonPackageFields(
-  coreIsCLI: boolean,
-): Promise<Partial<PackageJson>> {
-  relinka("verbose", "Generating common package fields");
-  const originalPkg = await readPackageJSON();
-  const { author, description, keywords, license, name, version } = originalPkg;
-
-  relinka("verbose", `Original package name: "${name}", version: "${version}"`);
-
-  const pkgHomepage = cliDomainDocs;
-  const commonPkg: Partial<PackageJson> = {
-    dependencies: originalPkg.dependencies || {},
-    description,
-    homepage: pkgHomepage,
-    license: license || "MIT",
-    name,
-    type: "module",
-    version,
-  };
-
-  if (coreIsCLI) {
-    relinka(
-      "verbose",
-      "coreIsCLI is true, adding CLI-specific fields to common package fields",
-    );
-    if (commonPkg.keywords) {
-      const cliCommandName = name?.startsWith("@")
-        ? name.split("/").pop() || "cli"
-        : name || "relidler";
-      relinka(
-        "verbose",
-        `Adding CLI keywords to existing keywords, CLI command name: "${cliCommandName}"`,
-      );
-      commonPkg.keywords = [
-        ...new Set([
-          "cli",
-          cliCommandName,
-          "command-line",
-          ...commonPkg.keywords,
-        ]),
-      ];
-      relinka(
-        "verbose",
-        `Updated keywords: ${JSON.stringify(commonPkg.keywords)}`,
-      );
-    } else if (name) {
-      const cliCommandName = name.startsWith("@")
-        ? name.split("/").pop() || "cli"
-        : name;
-      relinka(
-        "verbose",
-        `Setting new CLI keywords, CLI command name: "${cliCommandName}"`,
-      );
-      commonPkg.keywords = ["cli", "command-line", cliCommandName];
-      relinka("verbose", `Set keywords: ${JSON.stringify(commonPkg.keywords)}`);
-    }
-  } else {
-    relinka("verbose", "coreIsCLI is false, skipping CLI-specific fields");
-  }
-
-  if (author) {
-    const repoOwner = typeof author === "string" ? author : author.name;
-    const repoName = name
-      ? name.startsWith("@")
-        ? name.split("/").pop() || name
-        : name
-      : "";
-    Object.assign(commonPkg, {
-      author,
-      bugs: {
-        email: "blefnk@gmail.com",
-        url: `https://github.com/${repoOwner}/${repoName}/issues`,
-      },
-      keywords: [...new Set([repoOwner, ...(commonPkg.keywords || [])])],
-      repository: {
-        type: "git",
-        url: `git+https://github.com/${repoOwner}/${repoName}.git`,
-      },
-    });
-  } else if (keywords && keywords.length > 0 && !commonPkg.keywords) {
-    commonPkg.keywords = keywords;
-  }
-
-  relinka("verbose", "Common package fields generated");
-  return commonPkg;
-}
 
 /**
  * Creates a package.json for the main distribution.
@@ -228,4 +138,94 @@ export async function regular_createPackageJSON(
     }
   }
   relinka("verbose", `Created package.json in ${outDirRoot}`);
+}
+
+/**
+ * Creates common package.json fields based on the original package.json.
+ */
+async function regular_createCommonPackageFields(
+  coreIsCLI: boolean,
+): Promise<Partial<PackageJson>> {
+  relinka("verbose", "Generating common package fields");
+  const originalPkg = await readPackageJSON();
+  const { author, description, keywords, license, name, version } = originalPkg;
+
+  relinka("verbose", `Original package name: "${name}", version: "${version}"`);
+
+  const pkgHomepage = cliDomainDocs;
+  const commonPkg: Partial<PackageJson> = {
+    dependencies: originalPkg.dependencies || {},
+    description,
+    homepage: pkgHomepage,
+    license: license || "MIT",
+    name,
+    type: "module",
+    version,
+  };
+
+  if (coreIsCLI) {
+    relinka(
+      "verbose",
+      "coreIsCLI is true, adding CLI-specific fields to common package fields",
+    );
+    if (commonPkg.keywords) {
+      const cliCommandName = name?.startsWith("@")
+        ? name.split("/").pop() || "cli"
+        : name || "relidler";
+      relinka(
+        "verbose",
+        `Adding CLI keywords to existing keywords, CLI command name: "${cliCommandName}"`,
+      );
+      commonPkg.keywords = [
+        ...new Set([
+          "cli",
+          cliCommandName,
+          "command-line",
+          ...commonPkg.keywords,
+        ]),
+      ];
+      relinka(
+        "verbose",
+        `Updated keywords: ${JSON.stringify(commonPkg.keywords)}`,
+      );
+    } else if (name) {
+      const cliCommandName = name.startsWith("@")
+        ? name.split("/").pop() || "cli"
+        : name;
+      relinka(
+        "verbose",
+        `Setting new CLI keywords, CLI command name: "${cliCommandName}"`,
+      );
+      commonPkg.keywords = ["cli", "command-line", cliCommandName];
+      relinka("verbose", `Set keywords: ${JSON.stringify(commonPkg.keywords)}`);
+    }
+  } else {
+    relinka("verbose", "coreIsCLI is false, skipping CLI-specific fields");
+  }
+
+  if (author) {
+    const repoOwner = typeof author === "string" ? author : author.name;
+    const repoName = name
+      ? name.startsWith("@")
+        ? name.split("/").pop() || name
+        : name
+      : "";
+    Object.assign(commonPkg, {
+      author,
+      bugs: {
+        email: "blefnk@gmail.com",
+        url: `https://github.com/${repoOwner}/${repoName}/issues`,
+      },
+      keywords: [...new Set([repoOwner, ...(commonPkg.keywords || [])])],
+      repository: {
+        type: "git",
+        url: `git+https://github.com/${repoOwner}/${repoName}.git`,
+      },
+    });
+  } else if (keywords && keywords.length > 0 && !commonPkg.keywords) {
+    commonPkg.keywords = keywords;
+  }
+
+  relinka("verbose", "Common package fields generated");
+  return commonPkg;
 }

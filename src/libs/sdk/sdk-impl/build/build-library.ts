@@ -1,5 +1,6 @@
 import { build as bunBuild } from "bun";
 import fs from "fs-extra";
+import MagicString from "magic-string";
 import pAll from "p-all";
 import path from "pathe";
 import prettyBytes from "pretty-bytes";
@@ -15,7 +16,7 @@ import type {
   Sourcemap,
   transpileFormat,
   transpileTarget,
-} from "~/types.js";
+} from "~/libs/sdk/sdk-types.js";
 
 import { build as unifiedBuild } from "~/libs/sdk/sdk-impl/build/bundlers/unified/build.js";
 import {
@@ -36,11 +37,10 @@ import {
   outDirBinFilesCount,
 } from "~/libs/sdk/sdk-impl/utils/utils-fs.js";
 import {
-  createJsrJSONC,
+  createJsrJSON,
   renameTsxFiles,
-} from "~/libs/sdk/sdk-impl/utils/utils-jsr.js";
+} from "~/libs/sdk/sdk-impl/utils/utils-jsr-json.js";
 import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
-import { library_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-json-libs.js";
 import {
   convertImportExtensionsJsToTs,
   convertImportPaths,
@@ -49,11 +49,9 @@ import {
   getElapsedPerfTime,
   type PerfTimer,
 } from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
+import { library_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-json-libs.js";
 
 import { ensuredir } from "./bundlers/unified/utils.js";
-import MagicString from "magic-string";
-
-// TODO: store the original file in a temp folder in homerdir/.reliverse/relidler/*
 
 /* ------------------------------------------------------------------
    preBuildReplacements 
@@ -61,133 +59,9 @@ import MagicString from "magic-string";
 
 type ReplacementRecord = {
   filePath: string;
-  originalContent: string;
   newContent: string;
+  originalContent: string;
 };
-
-/**
- * Scans all .ts files in the given directory (recursively).
- * For each line that ends with `// relidler-replace-me`,
- * remove that line and replace with the entire content of `src/types.ts`.
- * Returns an array describing changed files, so we can revert them later.
- */
-export async function preBuildReplacements(
-  librarySrcDir: string,
-): Promise<ReplacementRecord[]> {
-  // We'll store each changed file's original and new content
-  const replacedFiles: ReplacementRecord[] = [];
-
-  // The file we want to inject. TODO: implement auto paths.
-  const typesPath = path.join(PROJECT_ROOT, "src", "types.ts");
-  if (!(await fs.pathExists(typesPath))) {
-    throw new Error(`Cannot find source types file: ${typesPath}`);
-  }
-  const typesContent = await fs.readFile(typesPath, "utf-8");
-
-  // We'll gather all .ts files from 'librarySrcDir' recursively
-  const allFiles: string[] = [];
-  await collectTsFilesRecursively(librarySrcDir, allFiles);
-
-  // Process each .ts file
-  for (const filePath of allFiles) {
-    const originalCode = await fs.readFile(filePath, "utf-8");
-
-    // Use MagicString to do line-based replacements
-    const magic = new MagicString(originalCode);
-    let hasAtLeastOneReplacement = false;
-
-    // We'll search for lines that end with `// relidler-replace-me`
-    // i.e. something like: `export * from "../../types.js"; // relidler-replace-me`
-    const regex = /^.*\/\/\s*relidler-replace-me\s*$/gm;
-
-    let match: RegExpExecArray | null;
-    while ((match = regex.exec(originalCode)) !== null) {
-      hasAtLeastOneReplacement = true;
-
-      const startIdx = match.index; // start of the entire line
-      const endIdx = startIdx + match[0].length; // end of that line
-
-      // Overwrite that entire line with the content from 'types.ts'
-      // plus a newline to separate it
-      magic.overwrite(startIdx, endIdx, `${typesContent}\n`);
-    }
-
-    if (hasAtLeastOneReplacement) {
-      // Get final replaced content
-      const updatedCode = magic.toString();
-
-      // For safety, do a quick check if the result changed
-      if (updatedCode === originalCode) {
-        throw new Error(
-          `Logic error: found 'relidler-replace-me' but content did not change in ${filePath}`,
-        );
-      }
-
-      // Save the replaced file so we can revert later
-      replacedFiles.push({
-        filePath,
-        originalContent: originalCode,
-        newContent: updatedCode,
-      });
-
-      // Write the updated code back to disk
-      await fs.writeFile(filePath, updatedCode, "utf-8");
-      relinka("info", `Applied pre-build replacement in ${filePath}`);
-    }
-  }
-
-  return replacedFiles;
-}
-
-/**
- * Recursively finds all .ts files in a directory.
- */
-async function collectTsFilesRecursively(
-  dir: string,
-  output: string[],
-): Promise<void> {
-  if (!(await fs.pathExists(dir))) {
-    throw new Error(`Directory not found for pre-build scanning: ${dir}`);
-  }
-  const entries = await fs.readdir(dir, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      await collectTsFilesRecursively(fullPath, output);
-    } else if (entry.isFile() && entry.name.endsWith(".ts")) {
-      output.push(fullPath);
-    }
-  }
-}
-
-/* ------------------------------------------------------------------
-     postBuildReplacements 
-     ------------------------------------------------------------------ */
-
-/**
- * Reverts any changes made by `preBuildReplacements`.
- * Accepts the array of replaced files from pre-build.
- * Writes back the original content for each file.
- */
-export async function postBuildReplacements(
-  replacedFiles: ReplacementRecord[],
-): Promise<void> {
-  for (const rec of replacedFiles) {
-    try {
-      await fs.writeFile(rec.filePath, rec.originalContent, "utf-8");
-      relinka("info", `Reverted changes in ${rec.filePath}`);
-    } catch (err) {
-      throw new Error(
-        `Failed to revert file ${rec.filePath}: ${(err as Error).message}`,
-      );
-    }
-  }
-}
-
-/* ------------------------------------------------------------------
-     library_buildLibrary 
-     ------------------------------------------------------------------ */
 
 /**
  * Main entry point to build a library for the specified commonPubRegistry.
@@ -218,6 +92,7 @@ export async function library_buildLibrary(
   timer: PerfTimer,
   transpileStub: boolean,
   transpileWatch: boolean,
+  distJsrOutFilesExt: NpmOutExt,
 ): Promise<void> {
   // We'll do a pre-build pass on 'mainDir' before we do anything
   let replacedFiles: ReplacementRecord[] = [];
@@ -251,6 +126,7 @@ export async function library_buildLibrary(
           timer,
           transpileStub,
           transpileWatch,
+          distJsrOutFilesExt,
         );
         break;
 
@@ -278,6 +154,7 @@ export async function library_buildLibrary(
           timer,
           transpileStub,
           transpileWatch,
+          distJsrOutFilesExt,
         );
         break;
 
@@ -308,6 +185,7 @@ export async function library_buildLibrary(
               timer,
               transpileStub,
               transpileWatch,
+              distJsrOutFilesExt,
             ),
           () =>
             library_buildJsrDist(
@@ -332,6 +210,7 @@ export async function library_buildLibrary(
               timer,
               transpileStub,
               transpileWatch,
+              distJsrOutFilesExt,
             ),
         ];
         await pAll(buildTasks, {
@@ -356,16 +235,42 @@ export async function library_buildLibrary(
   } finally {
     // post-build revert so that the original source files are restored
     // even if an error occurred.
-    relinka("info", `Reverting pre-build changes for ${libName}...`);
+    relinka("verbose", `Reverting pre-build changes for ${libName}...`);
     await postBuildReplacements(replacedFiles);
-    relinka("info", `Done reverting changes for ${libName}.`);
+    relinka("verbose", `Done reverting changes for ${libName}.`);
   }
 }
 
 /**
+ * Recursively finds all .ts files in a directory.
+ */
+async function collectTsFilesRecursively(
+  dir: string,
+  output: string[],
+): Promise<void> {
+  if (!(await fs.pathExists(dir))) {
+    throw new Error(`Directory not found for pre-build scanning: ${dir}`);
+  }
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      await collectTsFilesRecursively(fullPath, output);
+    } else if (entry.isFile() && entry.name.endsWith(".ts")) {
+      output.push(fullPath);
+    }
+  }
+}
+
+/* ------------------------------------------------------------------
+     postBuildReplacements 
+     ------------------------------------------------------------------ */
+
+/**
  * Builds a lib distribution for JSR.
  */
-export async function library_buildJsrDist(
+async function library_buildJsrDist(
   isDev: boolean,
   libName: string,
   mainDir: string,
@@ -387,6 +292,7 @@ export async function library_buildJsrDist(
   timer: PerfTimer,
   transpileStub: boolean,
   transpileWatch: boolean,
+  distJsrOutFilesExt: NpmOutExt,
 ): Promise<void> {
   relinka("info", "Building JSR distribution...");
 
@@ -408,20 +314,25 @@ export async function library_buildJsrDist(
   // Otherwise (bun/unified), pass only the single entry file
   const toBundle = distJsrBuilder === "jsr" ? srcDirectory : srcFile;
 
+  const libConfig = libsList[libName];
+  const libDeclarations = libConfig?.libDeclarations ?? false;
+  const libDescription = libConfig?.libDescription ?? "";
+
   await library_bundleWithBuilder(distJsrBuilder, {
     entryFile: toBundle,
-    outDir: outDirBinResolved,
+    libDeclarations,
     libName,
-    transpileTarget,
-    transpileFormat,
-    transpileSplitting,
-    transpileMinify,
-    transpileSourcemap,
-    transpilePublicPath,
-    transpileStub,
-    transpileWatch,
-    transpileEsbuild,
+    outDir: outDirBinResolved,
     timer,
+    transpileEsbuild,
+    transpileFormat,
+    transpileMinify,
+    transpilePublicPath,
+    transpileSourcemap,
+    transpileSplitting,
+    transpileStub,
+    transpileTarget,
+    transpileWatch,
     unifiedBundlerOutExt,
   });
 
@@ -436,12 +347,13 @@ export async function library_buildJsrDist(
     rmDepsMode,
     rmDepsPatterns,
     unifiedBundlerOutExt,
+    distJsrOutFilesExt,
   });
 
   // Additional JSR-specific transformations
   await convertImportExtensionsJsToTs(outDirBinResolved);
   await renameTsxFiles(outDirBinResolved);
-  await createJsrJSONC(distJsrDirNameResolved, false);
+  await createJsrJSON(distJsrDirNameResolved, true, libName, libDescription);
 
   // Logging
   const dirSize = await getDirectorySize(distJsrDirNameResolved, isDev);
@@ -456,10 +368,14 @@ export async function library_buildJsrDist(
   );
 }
 
+/* ------------------------------------------------------------------
+     library_buildLibrary 
+     ------------------------------------------------------------------ */
+
 /**
  * Builds a lib distribution for NPM.
  */
-export async function library_buildNpmDist(
+async function library_buildNpmDist(
   libName: string,
   libOutDirRoot: string,
   libEntryFile: string,
@@ -481,6 +397,7 @@ export async function library_buildNpmDist(
   timer: PerfTimer,
   transpileStub: boolean,
   transpileWatch: boolean,
+  distJsrOutFilesExt: NpmOutExt,
 ): Promise<void> {
   // =====================================================
   // [dist-libs/npm] 1. Initialize
@@ -530,23 +447,26 @@ export async function library_buildNpmDist(
   // Construct the full entry file
   const fullEntryFilePath = path.join(libSrcDir, path.basename(libEntryFile));
 
+  const libDeclarations = libConfig?.libDeclarations ?? false;
+
   // =====================================================
   // [dist-libs/npm] 2. Build using the chosen bundler
   // =====================================================
   await library_bundleWithBuilder(distNpmBuilder, {
     entryFile: fullEntryFilePath,
-    outDir: libOutDirBinResolved,
+    libDeclarations,
     libName,
-    transpileTarget,
-    transpileFormat,
-    transpileSplitting,
-    transpileMinify,
-    transpileSourcemap,
-    transpilePublicPath,
-    transpileStub,
-    transpileWatch,
-    transpileEsbuild,
+    outDir: libOutDirBinResolved,
     timer,
+    transpileEsbuild,
+    transpileFormat,
+    transpileMinify,
+    transpilePublicPath,
+    transpileSourcemap,
+    transpileSplitting,
+    transpileStub,
+    transpileTarget,
+    transpileWatch,
     unifiedBundlerOutExt,
   });
 
@@ -564,6 +484,7 @@ export async function library_buildNpmDist(
     rmDepsMode,
     rmDepsPatterns,
     unifiedBundlerOutExt,
+    distJsrOutFilesExt,
   });
 
   // =====================================================
@@ -574,84 +495,6 @@ export async function library_buildNpmDist(
   relinka(
     "success",
     `[${libOutDirRoot}] Successfully created library distribution: ${libName} (${libOutDirRoot}/main.js) with (${filesCount} files, ${prettyBytes(dirSize)})`,
-  );
-}
-
-/**
- * Centralized helper to handle bundling with "jsr", "bun", or "unified" logic.
- */
-async function library_bundleWithBuilder(
-  builder: BundlerName,
-  params: {
-    entryFile: string;
-    outDir: string;
-    libName: string;
-    transpileTarget: transpileTarget;
-    transpileFormat: transpileFormat;
-    transpileSplitting: boolean;
-    transpileMinify: boolean;
-    transpileSourcemap: Sourcemap;
-    transpilePublicPath: string;
-    transpileStub: boolean;
-    transpileWatch: boolean;
-    transpileEsbuild: Esbuild;
-    timer: PerfTimer;
-    unifiedBundlerOutExt: NpmOutExt;
-  },
-): Promise<void> {
-  const {
-    entryFile,
-    outDir,
-    libName,
-    transpileTarget,
-    transpileFormat,
-    transpileSplitting,
-    transpileMinify,
-    transpileSourcemap,
-    transpilePublicPath,
-    transpileStub,
-    transpileWatch,
-    transpileEsbuild,
-    timer,
-    unifiedBundlerOutExt,
-  } = params;
-
-  // Decide which bundling approach to use
-  if (builder === "jsr") {
-    await library_bundleUsingJsr(entryFile, outDir);
-    return;
-  }
-
-  if (builder === "bun") {
-    // Bundling with Bun
-    await library_bundleUsingBun(
-      entryFile,
-      outDir,
-      libName,
-      transpileTarget,
-      transpileFormat,
-      transpileSplitting,
-      transpileMinify,
-      transpileSourcemap,
-      transpilePublicPath,
-      timer,
-    );
-    return;
-  }
-
-  // Otherwise, use one of the "unified" bundlers (rollup, mkdist, etc.)
-  await library_bundleUsingUnified(
-    entryFile,
-    outDir,
-    builder,
-    path.dirname(entryFile),
-    unifiedBundlerOutExt,
-    transpileStub,
-    transpileWatch,
-    transpileEsbuild,
-    transpileMinify,
-    transpileSourcemap,
-    timer,
   );
 }
 
@@ -793,6 +636,7 @@ async function library_bundleUsingUnified(
   transpileMinify: boolean,
   transpileSourcemap: Sourcemap,
   timer: PerfTimer,
+  libDeclarations: boolean,
 ): Promise<void> {
   if (builder === "jsr" || builder === "bun") {
     throw new Error(
@@ -817,11 +661,10 @@ async function library_bundleUsingUnified(
     }
 
     // Prepare the configuration
-    const concurrency = CONCURRENCY_DEFAULT;
     const unifiedBuildConfig = {
       clean: false,
-      concurrency,
-      declaration: false,
+      concurrency: CONCURRENCY_DEFAULT,
+      declaration: libDeclarations,
       entries: [
         {
           builder,
@@ -873,6 +716,87 @@ async function library_bundleUsingUnified(
 }
 
 /**
+ * Centralized helper to handle bundling with "jsr", "bun", or "unified" logic.
+ */
+async function library_bundleWithBuilder(
+  builder: BundlerName,
+  params: {
+    entryFile: string;
+    libDeclarations: boolean;
+    libName: string;
+    outDir: string;
+    timer: PerfTimer;
+    transpileEsbuild: Esbuild;
+    transpileFormat: transpileFormat;
+    transpileMinify: boolean;
+    transpilePublicPath: string;
+    transpileSourcemap: Sourcemap;
+    transpileSplitting: boolean;
+    transpileStub: boolean;
+    transpileTarget: transpileTarget;
+    transpileWatch: boolean;
+    unifiedBundlerOutExt: NpmOutExt;
+  },
+): Promise<void> {
+  const {
+    entryFile,
+    libDeclarations,
+    libName,
+    outDir,
+    timer,
+    transpileEsbuild,
+    transpileFormat,
+    transpileMinify,
+    transpilePublicPath,
+    transpileSourcemap,
+    transpileSplitting,
+    transpileStub,
+    transpileTarget,
+    transpileWatch,
+    unifiedBundlerOutExt,
+  } = params;
+
+  // Decide which bundling approach to use
+  if (builder === "jsr") {
+    await library_bundleUsingJsr(entryFile, outDir);
+    return;
+  }
+
+  if (builder === "bun") {
+    // Bundling with Bun
+    await library_bundleUsingBun(
+      entryFile,
+      outDir,
+      libName,
+      transpileTarget,
+      transpileFormat,
+      transpileSplitting,
+      transpileMinify,
+      transpileSourcemap,
+      transpilePublicPath,
+      timer,
+    );
+    return;
+  }
+
+  // Otherwise, use one of the "unified" bundlers (rollup, mkdist, etc.)
+  await library_bundleUsingUnified(
+    entryFile,
+    outDir,
+    builder,
+    path.dirname(entryFile),
+    unifiedBundlerOutExt,
+    transpileStub,
+    transpileWatch,
+    transpileEsbuild,
+    transpileMinify,
+    transpileSourcemap,
+    timer,
+    libDeclarations,
+  );
+}
+
+/**
  * Common library build steps shared between JSR and NPM distributions.
  */
 async function library_performCommonBuildSteps({
@@ -886,6 +810,7 @@ async function library_performCommonBuildSteps({
   rmDepsMode,
   rmDepsPatterns,
   unifiedBundlerOutExt,
+  distJsrOutFilesExt,
 }: {
   coreEntryFile: string;
   coreIsCLI: boolean;
@@ -897,8 +822,9 @@ async function library_performCommonBuildSteps({
   rmDepsMode: ExcludeMode;
   rmDepsPatterns: string[];
   unifiedBundlerOutExt: NpmOutExt;
+  distJsrOutFilesExt: NpmOutExt;
 }): Promise<void> {
-  const outDirBinResolved = path.resolve(outDirRoot, "bin");
+  const outDirBin = path.resolve(outDirRoot, "bin");
 
   // Create package.json for this library distribution
   await library_createPackageJSON(
@@ -913,7 +839,7 @@ async function library_performCommonBuildSteps({
   );
 
   if (deleteFiles) {
-    await deleteSpecificFiles(outDirBinResolved);
+    await deleteSpecificFiles(outDirBin);
   }
 
   // Copy root-level files (README.md, LICENSE, etc.)
@@ -924,13 +850,113 @@ async function library_performCommonBuildSteps({
   // Convert internal alias imports (~/...) to relative
   await convertImportPaths({
     aliasPrefix: "~/",
-    baseDir: outDirBinResolved,
+    baseDir: outDirBin,
     fromType: "alias",
     libsList,
-    toType: "relative",
     strip: [`libs/${libsList[libName].libDirName}`],
+    toType: "relative",
   });
 
   // Rename the main entry file (e.g. sdk-main.js -> main.js).
-  await renameEntryFile(isJsr, outDirRoot, coreEntryFile, unifiedBundlerOutExt);
+  await renameEntryFile(
+    isJsr,
+    outDirBin,
+    coreEntryFile,
+    unifiedBundlerOutExt,
+    distJsrOutFilesExt,
+  );
+}
+
+/**
+ * Reverts any changes made by `preBuildReplacements`.
+ * Accepts the array of replaced files from pre-build.
+ * Writes back the original content for each file.
+ */
+async function postBuildReplacements(
+  replacedFiles: ReplacementRecord[],
+): Promise<void> {
+  for (const rec of replacedFiles) {
+    try {
+      await fs.writeFile(rec.filePath, rec.originalContent, "utf-8");
+      relinka("verbose", `Reverted changes in ${rec.filePath}`);
+    } catch (err) {
+      throw new Error(
+        `Failed to revert file ${rec.filePath}: ${(err as Error).message}`,
+      );
+    }
+  }
+}
+
+/**
+ * Scans all .ts files in the given directory (recursively).
+ * For each line that ends with `// relidler-replace-me`,
+ * remove that line and replace with the entire content of `src/types.ts`.
+ * Returns an array describing changed files, so we can revert them later.
+ */
+async function preBuildReplacements(
+  librarySrcDir: string,
+): Promise<ReplacementRecord[]> {
+  // We'll store each changed file's original and new content
+  const replacedFiles: ReplacementRecord[] = [];
+
+  // The file we want to inject. TODO: implement auto paths.
+  const typesPath = path.join(PROJECT_ROOT, "src", "types.ts");
+  if (!(await fs.pathExists(typesPath))) {
+    throw new Error(`Cannot find source types file: ${typesPath}`);
+  }
+  const typesContent = await fs.readFile(typesPath, "utf-8");
+
+  // We'll gather all .ts files from 'librarySrcDir' recursively
+  const allFiles: string[] = [];
+  await collectTsFilesRecursively(librarySrcDir, allFiles);
+
+  // Process each .ts file
+  for (const filePath of allFiles) {
+    const originalCode = await fs.readFile(filePath, "utf-8");
+
+    // Use MagicString to do line-based replacements
+    const magic = new MagicString(originalCode);
+    let hasAtLeastOneReplacement = false;
+
+    // We'll search for lines that end with `// relidler-replace-me`
+    // i.e. something like: `export * from "../../types.js"; // relidler-replace-me`
+    const regex = /^.*\/\/\s*relidler-replace-me\s*$/gm;
+
+    let match: null | RegExpExecArray;
+    while ((match = regex.exec(originalCode)) !== null) {
+      hasAtLeastOneReplacement = true;
+
+      const startIdx = match.index; // start of the entire line
+      const endIdx = startIdx + match[0].length; // end of that line
+
+      // Overwrite that entire line with the content from 'types.ts'
+      // plus a newline to separate it
+      magic.overwrite(startIdx, endIdx, `${typesContent}\n`);
+    }
+
+    if (hasAtLeastOneReplacement) {
+      // Get final replaced content
+      const updatedCode = magic.toString();
+
+      // For safety, do a quick check if the result changed
+      if (updatedCode === originalCode) {
+        throw new Error(
+          `Logic error: found 'relidler-replace-me' but content did not change in ${filePath}`,
+        );
+      }
+
+      // Save the replaced file so we can revert later
+      replacedFiles.push({
+        filePath,
+        newContent: updatedCode,
+        originalContent: originalCode,
+      });
+
+      // Write the updated code back to disk
+      await fs.writeFile(filePath, updatedCode, "utf-8");
+      relinka("info", `Applied pre-build replacement in ${filePath}`);
+    }
+  }
+
+  return replacedFiles;
 }
