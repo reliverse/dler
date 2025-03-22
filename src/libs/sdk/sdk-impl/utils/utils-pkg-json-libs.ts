@@ -22,7 +22,6 @@ export async function library_createPackageJSON(
   libName: string,
   outDirRoot: string,
   isJsr: boolean,
-  coreIsCLI: boolean,
   libsList: Record<string, LibConfig>,
   rmDepsMode: ExcludeMode,
   rmDepsPatterns: string[],
@@ -30,7 +29,7 @@ export async function library_createPackageJSON(
 ): Promise<void> {
   relinka(
     "verbose",
-    `Generating package.json for lib ${libName} (isJsr=${isJsr}, coreIsCLI=${coreIsCLI})...`,
+    `Generating package.json for lib ${libName} (isJsr=${isJsr})...`,
   );
   const originalPkg = await readPackageJSON();
   let { description } = originalPkg;
@@ -41,29 +40,15 @@ export async function library_createPackageJSON(
     description = libsList[libName].libDescription;
     relinka(
       "verbose",
-      `Using lib-specific description from config: "${description}"`,
-    );
-  } else if (!coreIsCLI) {
-    description = "A helper lib for the Reliverse CLI";
-    relinka(
-      "verbose",
-      `Using default helper lib description: "${description}"`,
+      `Using ${libName}'s description from config: "${description}"`,
     );
   } else {
-    description = description || `CLI tool for ${libName}`;
-    relinka("verbose", `Using CLI description: "${description}"`);
+    description = description || `${libName} is a helper library.`;
+    relinka(
+      "verbose",
+      `Using default helper library description: "${description}"`,
+    );
   }
-
-  // Get the root package name for CLI command
-  const rootPackageName = originalPkg.name || "relidler";
-  const cliCommandName = rootPackageName.startsWith("@")
-    ? rootPackageName.split("/").pop() || "cli"
-    : rootPackageName;
-
-  relinka(
-    "verbose",
-    `Root package name: "${rootPackageName}", CLI command name: "${cliCommandName}"`,
-  );
 
   const commonPkg: Partial<PackageJson> = {
     description,
@@ -72,18 +57,6 @@ export async function library_createPackageJSON(
     type: "module",
     version,
   };
-
-  if (coreIsCLI) {
-    relinka("verbose", `Adding CLI-specific fields for lib ${libName}...`);
-    const binPath = "bin/main.js";
-    Object.assign(commonPkg, {
-      bin: { [cliCommandName]: binPath },
-    });
-    relinka(
-      "verbose",
-      `Added bin entry: { "${cliCommandName}": "${binPath}" }`,
-    );
-  }
 
   if (author) {
     const repoOwner = typeof author === "string" ? author : author.name;
@@ -108,16 +81,6 @@ export async function library_createPackageJSON(
     commonPkg.keywords = keywords;
   }
 
-  if (coreIsCLI && commonPkg.keywords) {
-    const cliKeywords = ["cli", "command-line", cliCommandName];
-    relinka("verbose", `Adding CLI keywords: ${JSON.stringify(cliKeywords)}`);
-    commonPkg.keywords = [...new Set([...cliKeywords, ...commonPkg.keywords])];
-    relinka(
-      "verbose",
-      `Updated keywords: ${JSON.stringify(commonPkg.keywords)}`,
-    );
-  }
-
   const outDirBin = path.join(outDirRoot, "bin");
   if (isJsr) {
     relinka("verbose", `Creating JSR package.json for lib ${libName}...`);
@@ -127,7 +90,6 @@ export async function library_createPackageJSON(
       outDirRoot,
       originalPkg,
       commonPkg,
-      coreIsCLI,
       libsList,
       rmDepsMode,
       rmDepsPatterns,
@@ -140,7 +102,6 @@ export async function library_createPackageJSON(
       outDirRoot,
       originalPkg,
       commonPkg,
-      coreIsCLI,
       libsList,
       rmDepsMode,
       rmDepsPatterns,
@@ -268,7 +229,6 @@ async function library_writeJsrPackageJSON(
   outDirRoot: string,
   originalPkg: PackageJson,
   commonPkg: Partial<PackageJson>,
-  coreIsCLI: boolean,
   libsList: Record<string, LibConfig>,
   rmDepsMode: ExcludeMode,
   rmDepsPatterns: string[],
@@ -319,14 +279,6 @@ async function library_writeJsrPackageJSON(
     },
   });
 
-  if (coreIsCLI) {
-    relinka(
-      "verbose",
-      `JSR lib package.json for ${libName} has CLI-specific fields:`,
-    );
-    if (jsrPkg.bin) relinka("verbose", `  bin: ${JSON.stringify(jsrPkg.bin)}`);
-  }
-
   await fs.writeJSON(path.join(outDirRoot, "package.json"), jsrPkg, {
     spaces: 2,
   });
@@ -342,7 +294,6 @@ async function library_writeNpmLibPackageJSON(
   outDirRoot: string,
   originalPkg: PackageJson,
   commonPkg: Partial<PackageJson>,
-  coreIsCLI: boolean,
   libsList: Record<string, LibConfig>,
   rmDepsMode: ExcludeMode,
   rmDepsPatterns: string[],
@@ -350,24 +301,8 @@ async function library_writeNpmLibPackageJSON(
 ): Promise<void> {
   relinka("verbose", `Writing package.json for NPM lib: ${libName}`);
 
-  // If bin is already set in commonPkg (from createLibPackageJSON), use that
-  // Otherwise, set it based on coreIsCLI
-  const binEntry =
-    commonPkg.bin ||
-    (coreIsCLI
-      ? { [libName.split("/").pop() || ""]: `bin/main.${unifiedBundlerOutExt}` }
-      : undefined);
-
-  if (binEntry) {
-    relinka(
-      "verbose",
-      `Using bin entry for NPM lib: ${JSON.stringify(binEntry)}`,
-    );
-  }
-
   const npmPkg = definePackageJSON({
     ...commonPkg,
-    bin: binEntry,
     dependencies: await library_getlibPkgKeepDeps(
       libName,
       originalPkg.dependencies,
@@ -393,14 +328,6 @@ async function library_writeNpmLibPackageJSON(
     module: `./bin/main.${unifiedBundlerOutExt}`,
     publishConfig: { access: "public" },
   });
-
-  if (coreIsCLI) {
-    relinka(
-      "verbose",
-      `NPM lib package.json for ${libName} has CLI-specific fields:`,
-    );
-    if (npmPkg.bin) relinka("verbose", `  bin: ${JSON.stringify(npmPkg.bin)}`);
-  }
 
   await fs.writeJSON(path.join(outDirRoot, "package.json"), npmPkg, {
     spaces: 2,

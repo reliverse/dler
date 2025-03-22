@@ -53,10 +53,6 @@ import { library_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-j
 
 import { ensuredir } from "./bundlers/unified/utils.js";
 
-/* ------------------------------------------------------------------
-   preBuildReplacements 
-   ------------------------------------------------------------------ */
-
 type ReplacementRecord = {
   filePath: string;
   newContent: string;
@@ -77,7 +73,6 @@ export async function library_buildLibrary(
   coreEntrySrcDir: string,
   distNpmBuilder: BundlerName,
   libsList: Record<string, LibConfig>,
-  coreIsCLI: boolean,
   unifiedBundlerOutExt: NpmOutExt,
   rmDepsMode: ExcludeMode,
   rmDepsPatterns: string[],
@@ -85,7 +80,7 @@ export async function library_buildLibrary(
   transpileTarget: transpileTarget,
   transpileFormat: transpileFormat,
   transpileSplitting: boolean,
-  transpileMinify: boolean,
+  libTranspileMinify: boolean,
   transpileSourcemap: Sourcemap,
   transpilePublicPath: string,
   distJsrBuilder: BundlerName,
@@ -111,7 +106,6 @@ export async function library_buildLibrary(
           jsrOutDir,
           distJsrBuilder,
           mainFile,
-          coreIsCLI,
           libsList,
           rmDepsMode,
           rmDepsPatterns,
@@ -119,7 +113,7 @@ export async function library_buildLibrary(
           transpileTarget,
           transpileFormat,
           transpileSplitting,
-          transpileMinify,
+          libTranspileMinify,
           transpileSourcemap,
           transpilePublicPath,
           transpileEsbuild,
@@ -140,7 +134,6 @@ export async function library_buildLibrary(
           coreEntrySrcDir,
           distNpmBuilder,
           libsList,
-          coreIsCLI,
           unifiedBundlerOutExt,
           rmDepsMode,
           rmDepsPatterns,
@@ -148,7 +141,7 @@ export async function library_buildLibrary(
           transpileTarget,
           transpileFormat,
           transpileSplitting,
-          transpileMinify,
+          libTranspileMinify,
           transpileSourcemap,
           transpilePublicPath,
           timer,
@@ -171,7 +164,6 @@ export async function library_buildLibrary(
               coreEntrySrcDir,
               distNpmBuilder,
               libsList,
-              coreIsCLI,
               unifiedBundlerOutExt,
               rmDepsMode,
               rmDepsPatterns,
@@ -179,7 +171,7 @@ export async function library_buildLibrary(
               transpileTarget,
               transpileFormat,
               transpileSplitting,
-              transpileMinify,
+              libTranspileMinify,
               transpileSourcemap,
               transpilePublicPath,
               timer,
@@ -195,7 +187,6 @@ export async function library_buildLibrary(
               jsrOutDir,
               distJsrBuilder,
               mainFile,
-              coreIsCLI,
               libsList,
               rmDepsMode,
               rmDepsPatterns,
@@ -203,7 +194,7 @@ export async function library_buildLibrary(
               transpileTarget,
               transpileFormat,
               transpileSplitting,
-              transpileMinify,
+              libTranspileMinify,
               transpileSourcemap,
               transpilePublicPath,
               transpileEsbuild,
@@ -263,10 +254,6 @@ async function collectTsFilesRecursively(
   }
 }
 
-/* ------------------------------------------------------------------
-     postBuildReplacements 
-     ------------------------------------------------------------------ */
-
 /**
  * Builds a lib distribution for JSR.
  */
@@ -277,7 +264,6 @@ async function library_buildJsrDist(
   distJsrDirName: string,
   distJsrBuilder: BundlerName,
   coreEntryFile: string,
-  coreIsCLI: boolean,
   libsList: Record<string, LibConfig>,
   rmDepsMode: ExcludeMode,
   rmDepsPatterns: string[],
@@ -285,7 +271,7 @@ async function library_buildJsrDist(
   transpileTarget: transpileTarget,
   transpileFormat: transpileFormat,
   transpileSplitting: boolean,
-  transpileMinify: boolean,
+  libTranspileMinify: boolean,
   transpileSourcemap: Sourcemap,
   transpilePublicPath: string,
   transpileEsbuild: Esbuild,
@@ -326,7 +312,7 @@ async function library_buildJsrDist(
     timer,
     transpileEsbuild,
     transpileFormat,
-    transpileMinify,
+    libTranspileMinify,
     transpilePublicPath,
     transpileSourcemap,
     transpileSplitting,
@@ -339,7 +325,6 @@ async function library_buildJsrDist(
   // Perform common steps for JSR
   await library_performCommonBuildSteps({
     coreEntryFile,
-    coreIsCLI,
     isJsr: true,
     libName,
     libsList,
@@ -368,10 +353,6 @@ async function library_buildJsrDist(
   );
 }
 
-/* ------------------------------------------------------------------
-     library_buildLibrary 
-     ------------------------------------------------------------------ */
-
 /**
  * Builds a lib distribution for NPM.
  */
@@ -383,7 +364,6 @@ async function library_buildNpmDist(
   coreEntrySrcDir: string,
   distNpmBuilder: BundlerName,
   libsList: Record<string, LibConfig>,
-  coreIsCLI: boolean,
   unifiedBundlerOutExt: NpmOutExt,
   rmDepsMode: ExcludeMode,
   rmDepsPatterns: string[],
@@ -391,7 +371,7 @@ async function library_buildNpmDist(
   transpileTarget: transpileTarget,
   transpileFormat: transpileFormat,
   transpileSplitting: boolean,
-  transpileMinify: boolean,
+  libTranspileMinify: boolean,
   transpileSourcemap: Sourcemap,
   transpilePublicPath: string,
   timer: PerfTimer,
@@ -460,7 +440,7 @@ async function library_buildNpmDist(
     timer,
     transpileEsbuild,
     transpileFormat,
-    transpileMinify,
+    libTranspileMinify,
     transpilePublicPath,
     transpileSourcemap,
     transpileSplitting,
@@ -475,7 +455,6 @@ async function library_buildNpmDist(
   // =====================================================
   await library_performCommonBuildSteps({
     coreEntryFile: libEntryFile,
-    coreIsCLI,
     deleteFiles: false,
     isJsr: false,
     libName,
@@ -508,7 +487,7 @@ async function library_bundleUsingBun(
   transpileTarget: transpileTarget,
   transpileFormat: transpileFormat,
   transpileSplitting: boolean,
-  transpileMinify: boolean,
+  libTranspileMinify: boolean,
   transpileSourcemap: Sourcemap,
   transpilePublicPath: string,
   timer: PerfTimer,
@@ -535,7 +514,7 @@ async function library_bundleUsingBun(
       entrypoints: [coreEntryFile],
       footer: "/* End of bundle */",
       format: transpileFormat,
-      minify: transpileMinify,
+      minify: libTranspileMinify,
       naming: {
         asset: "[name]-[hash].[ext]",
         chunk: "[name]-[hash].[ext]",
@@ -633,7 +612,7 @@ async function library_bundleUsingUnified(
   transpileStub: boolean,
   transpileWatch: boolean,
   transpileEsbuild: Esbuild,
-  transpileMinify: boolean,
+  libTranspileMinify: boolean,
   transpileSourcemap: Sourcemap,
   timer: PerfTimer,
   libDeclarations: boolean,
@@ -677,7 +656,7 @@ async function library_bundleUsingUnified(
       rollup: {
         emitCJS: false,
         esbuild: {
-          minify: transpileMinify,
+          minify: libTranspileMinify,
           target: transpileEsbuild,
         },
         inlineDependencies: true,
@@ -728,7 +707,7 @@ async function library_bundleWithBuilder(
     timer: PerfTimer;
     transpileEsbuild: Esbuild;
     transpileFormat: transpileFormat;
-    transpileMinify: boolean;
+    libTranspileMinify: boolean;
     transpilePublicPath: string;
     transpileSourcemap: Sourcemap;
     transpileSplitting: boolean;
@@ -746,7 +725,7 @@ async function library_bundleWithBuilder(
     timer,
     transpileEsbuild,
     transpileFormat,
-    transpileMinify,
+    libTranspileMinify,
     transpilePublicPath,
     transpileSourcemap,
     transpileSplitting,
@@ -771,7 +750,7 @@ async function library_bundleWithBuilder(
       transpileTarget,
       transpileFormat,
       transpileSplitting,
-      transpileMinify,
+      libTranspileMinify,
       transpileSourcemap,
       transpilePublicPath,
       timer,
@@ -789,7 +768,7 @@ async function library_bundleWithBuilder(
     transpileStub,
     transpileWatch,
     transpileEsbuild,
-    transpileMinify,
+    libTranspileMinify,
     transpileSourcemap,
     timer,
     libDeclarations,
@@ -801,7 +780,6 @@ async function library_bundleWithBuilder(
  */
 async function library_performCommonBuildSteps({
   coreEntryFile,
-  coreIsCLI,
   deleteFiles = true,
   isJsr,
   libName,
@@ -813,7 +791,6 @@ async function library_performCommonBuildSteps({
   distJsrOutFilesExt,
 }: {
   coreEntryFile: string;
-  coreIsCLI: boolean;
   deleteFiles?: boolean;
   isJsr: boolean;
   libName: string;
@@ -831,7 +808,6 @@ async function library_performCommonBuildSteps({
     libName,
     outDirRoot,
     isJsr,
-    coreIsCLI,
     libsList,
     rmDepsMode,
     rmDepsPatterns,
