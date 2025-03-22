@@ -4,10 +4,11 @@
   "version": "1.1.2",
   "type": "module",
   "license": "MIT",
-  "description": "@reliverse/relidler is a flexible, unified, and fully automated bundler for TypeScript/JavaScript projects, as well as an NPM/JSR publishing tool.",
+  "description": "@reliverse/relidler is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
   "scripts": {
     "pub": "bun src/main.ts",
     "dev": "bun src/main.ts --dev",
+    "dev:tools": "bun src/main.ts tools --dev",
     "latest": "bun update --latest && bun check",
     "check": "tsc --noEmit && knip && eslint --cache --fix . && biome check --fix --unsafe .",
     "vi": "vitest"

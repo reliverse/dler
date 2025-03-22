@@ -17,13 +17,19 @@ const main = defineCommand({
     name: "relidler",
     version: "1.0.12",
   },
+  subCommands: {
+    tools: () => import("./tools.js").then((r) => r.default),
+  },
   run: async ({ args }) => {
     // Get relidler dev flag
     const isDev = args.dev;
+
     // Ensure --dev flag is used only within a valid relidler dev env
     await validateDevCwd(isDev, ["relidler"], "relidler", "reliverse");
+
     // Init config if does not exist
     await initRelidlerConfig(isDev);
+
     // Run Relidler CLI
     await relidler(isDev);
   },

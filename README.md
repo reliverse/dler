@@ -2,7 +2,7 @@
 
 [💖 GitHub Sponsors](https://github.com/sponsors/blefnk) • [💬 Discord](https://discord.gg/Pb8uKbwpsJ) • [✨ Repo](https://github.com/reliverse/relidler-reliverse-bundler) • [📦 NPM](https://npmjs.com/@reliverse/relidler) • [📚 Docs](https://docs.reliverse.org)
 
-**@reliverse/relidler** is a flexible, unified, and fully automated bundler for TypeScript/JavaScript projects, as well as an NPM/JSR publishing tool.
+**@reliverse/relidler** is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.
 
 ## Features
 
@@ -16,7 +16,7 @@
 - 🛠️ Converts TypeScript aliases to relative paths
 - ✨ Packed with powerful features under the hood
 - 📝 Highly configurable flow via a configuration file
-- 🔌 Plugin system with one built-in plugin included
+- 🔌 Plugin system with two built-in plugins included
 
 ## Getting Started
 
@@ -70,9 +70,9 @@ bun dev # bun src/main.ts --dev
     relidler
     ```
 
-    - The `relidler.cfg.ts` file is created automatically on the first run.
+    - The `relidler.cfg.ts` file is automatically created on first run.
     - **It's recommended to customize this file according to your needs.**
-    - Supported names: `relidler.cfg.ts` • `relidler.config.ts` • `build.pub.ts` • `build.cfg.ts`.
+    - Supported filenames: `relidler.cfg.ts` • `relidler.config.ts` • `build.pub.ts` • `build.cfg.ts`.
 
 3. **Run and enjoy**:
 
@@ -82,17 +82,20 @@ bun dev # bun src/main.ts --dev
 
 ## Plugins & SDK
 
-Relidler includes a plugin system, with the following official built-in plugin already available:
+Relidler includes a plugin system with two official built-in plugins:
 
 - **`libraries-relidler-plugin`**: Builds and publishes specified subdirectories of your main project as separate packages.
+- **`tools-relidler-plugin`**: Runs specific Relidler functions, such as generating aggregator files (`export * from "..."`).
 
 ### API (for advanced users)
 
-The SDK allows you to create new Relidler plugins and even extend your own CLI functionality.
+The SDK allows you to create new Relidler plugins or even extend your own CLI functionality.
 
 ```sh
 bun add -D @reliverse/relidler-sdk
 ```
+
+> Example: [@reliverse/cli](https://github.com/reliverse/cli-website-builder) leverages this SDK to extend its functionality.
 
 ## TODO
 
@@ -107,7 +110,7 @@ bun add -D @reliverse/relidler-sdk
 
 ## Related
 
-Kudos to the following project that made Relidler possible:
+Special thanks to the project that inspired Relidler:
 
 - [unjs/unbuild](https://github.com/unjs/unbuild)
 
