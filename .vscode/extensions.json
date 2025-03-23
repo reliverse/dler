@@ -4,6 +4,7 @@
     "yoavbls.pretty-ts-errors",
     "oven.bun-vscode",
     "miguelsolorio.symbols",
-    "biomejs.biome"
+    "biomejs.biome",
+    "usernamehw.errorlens"
   ]
 }

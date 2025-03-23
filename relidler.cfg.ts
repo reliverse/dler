@@ -52,7 +52,7 @@ export default defineConfig({
       libDirName: "cfg",
       libMainFile: "cfg/cfg-main.ts",
       libPkgKeepDeps: false,
-      libTranspileMinify: false,
+      libTranspileMinify: true,
     },
     "@reliverse/relidler-sdk": {
       libDeclarations: true,

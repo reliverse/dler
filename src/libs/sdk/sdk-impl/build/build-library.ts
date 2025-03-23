@@ -6,7 +6,6 @@ import path from "pathe";
 import prettyBytes from "pretty-bytes";
 import prettyMilliseconds from "pretty-ms";
 
-import type { UnifiedBuildConfig } from "~/libs/sdk/sdk-main.js";
 import type {
   BundlerName,
   Esbuild,
@@ -50,6 +49,8 @@ import {
   type PerfTimer,
 } from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
 import { library_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-json-libs.js";
+
+import type { UnifiedBuildConfig } from "./bundlers/unified/types.js";
 
 import { ensuredir } from "./bundlers/unified/utils.js";
 
@@ -308,11 +309,11 @@ async function library_buildJsrDist(
     entryFile: toBundle,
     libDeclarations,
     libName,
+    libTranspileMinify,
     outDir: outDirBinResolved,
     timer,
     transpileEsbuild,
     transpileFormat,
-    libTranspileMinify,
     transpilePublicPath,
     transpileSourcemap,
     transpileSplitting,
@@ -325,6 +326,7 @@ async function library_buildJsrDist(
   // Perform common steps for JSR
   await library_performCommonBuildSteps({
     coreEntryFile,
+    distJsrOutFilesExt,
     isJsr: true,
     libName,
     libsList,
@@ -332,7 +334,6 @@ async function library_buildJsrDist(
     rmDepsMode,
     rmDepsPatterns,
     unifiedBundlerOutExt,
-    distJsrOutFilesExt,
   });
 
   // Additional JSR-specific transformations
@@ -436,11 +437,11 @@ async function library_buildNpmDist(
     entryFile: fullEntryFilePath,
     libDeclarations,
     libName,
+    libTranspileMinify,
     outDir: libOutDirBinResolved,
     timer,
     transpileEsbuild,
     transpileFormat,
-    libTranspileMinify,
     transpilePublicPath,
     transpileSourcemap,
     transpileSplitting,
@@ -456,6 +457,7 @@ async function library_buildNpmDist(
   await library_performCommonBuildSteps({
     coreEntryFile: libEntryFile,
     deleteFiles: false,
+    distJsrOutFilesExt,
     isJsr: false,
     libName,
     libsList,
@@ -463,7 +465,6 @@ async function library_buildNpmDist(
     rmDepsMode,
     rmDepsPatterns,
     unifiedBundlerOutExt,
-    distJsrOutFilesExt,
   });
 
   // =====================================================
@@ -703,11 +704,11 @@ async function library_bundleWithBuilder(
     entryFile: string;
     libDeclarations: boolean;
     libName: string;
+    libTranspileMinify: boolean;
     outDir: string;
     timer: PerfTimer;
     transpileEsbuild: Esbuild;
     transpileFormat: transpileFormat;
-    libTranspileMinify: boolean;
     transpilePublicPath: string;
     transpileSourcemap: Sourcemap;
     transpileSplitting: boolean;
@@ -721,11 +722,11 @@ async function library_bundleWithBuilder(
     entryFile,
     libDeclarations,
     libName,
+    libTranspileMinify,
     outDir,
     timer,
     transpileEsbuild,
     transpileFormat,
-    libTranspileMinify,
     transpilePublicPath,
     transpileSourcemap,
     transpileSplitting,
@@ -781,6 +782,7 @@ async function library_bundleWithBuilder(
 async function library_performCommonBuildSteps({
   coreEntryFile,
   deleteFiles = true,
+  distJsrOutFilesExt,
   isJsr,
   libName,
   libsList,
@@ -788,10 +790,10 @@ async function library_performCommonBuildSteps({
   rmDepsMode,
   rmDepsPatterns,
   unifiedBundlerOutExt,
-  distJsrOutFilesExt,
 }: {
   coreEntryFile: string;
   deleteFiles?: boolean;
+  distJsrOutFilesExt: NpmOutExt;
   isJsr: boolean;
   libName: string;
   libsList: Record<string, LibConfig>;
@@ -799,7 +801,6 @@ async function library_performCommonBuildSteps({
   rmDepsMode: ExcludeMode;
   rmDepsPatterns: string[];
   unifiedBundlerOutExt: NpmOutExt;
-  distJsrOutFilesExt: NpmOutExt;
 }): Promise<void> {
   const outDirBin = path.resolve(outDirRoot, "bin");
 

@@ -34,7 +34,6 @@ const config = tseslint.config(
       "no-relative-import-paths": noRelativeImportPaths,
     },
     rules: {
-      "@stylistic/indent": "off",
       "@stylistic/indent-binary-ops": "off",
       "@stylistic/operator-linebreak": "off",
       "@stylistic/quote-props": "off",

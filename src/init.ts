@@ -85,7 +85,7 @@ function generateConfig(isDev: boolean): string {
     libDirName: "cfg",
     libMainFile: "cfg/cfg-main.ts",
     libPkgKeepDeps: false,
-    libTranspileMinify: false,
+    libTranspileMinify: true,
   },
   "@reliverse/relidler-sdk": {
     libDeclarations: true,
@@ -103,7 +103,7 @@ function generateConfig(isDev: boolean): string {
   //   libDirName: "libName",
   //   libMainFile: "libName/libName-main.ts",
   //   libPkgKeepDeps: true,
-  //   libTranspileMinify: false,
+  //   libTranspileMinify: true,
   // },
 }`;
 

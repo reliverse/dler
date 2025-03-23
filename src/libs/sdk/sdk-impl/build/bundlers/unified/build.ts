@@ -22,9 +22,9 @@ import type {
   UnifiedBuildConfig,
 } from "./types.js";
 
-import { copyBuild } from "./copy/index.js";
-import { mkdistBuild } from "./mkdist/index.js";
-import { rollupBuild } from "./rollup/index.js";
+import { copyBuild } from "./copy/copy.js";
+import { mkdistBuild } from "./mkdist/mkdist.js";
+import { rollupBuild } from "./rollup/build.js";
 import { typesBuild } from "./untyped/index.js";
 import {
   dumpObject,

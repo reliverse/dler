@@ -1,6 +1,6 @@
 # Relidler: Reliverse Bundler
 
-[💖 GitHub Sponsors](https://github.com/sponsors/blefnk) • [💬 Discord](https://discord.gg/Pb8uKbwpsJ) • [✨ Repo](https://github.com/reliverse/relidler-reliverse-bundler) • [📦 NPM](https://npmjs.com/@reliverse/relidler) • [📚 Docs](https://docs.reliverse.org)
+[💖 GitHub Sponsors](https://github.com/sponsors/blefnk) • [💬 Discord](https://discord.gg/Pb8uKbwpsJ) • [✨ Repo](https://github.com/reliverse/relidler-js-bundler) • [📦 NPM](https://npmjs.com/@reliverse/relidler) • [📚 Docs](https://docs.reliverse.org)
 
 **@reliverse/relidler** is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.
 
@@ -73,6 +73,7 @@ bun dev # bun src/main.ts --dev
     - The `relidler.cfg.ts` file is automatically created on first run.
     - **It's recommended to customize this file according to your needs.**
     - Supported filenames: `relidler.cfg.ts` • `relidler.config.ts` • `build.pub.ts` • `build.cfg.ts`.
+    - You can check an example config here: [relidler.cfg.ts](https://github.com/reliverse/relidler-js-bundler/blob/main/relidler.cfg.ts)
 
 3. **Run and enjoy**:
 
@@ -80,14 +81,56 @@ bun dev # bun src/main.ts --dev
     relidler
     ```
 
-## Plugins & SDK
+## Plugins
 
-Relidler includes a plugin system with two official built-in plugins:
+Relidler includes a plugin system with **two built-in** plugins:
 
-- **`libraries-relidler-plugin`**: Builds and publishes specified subdirectories of your main project as separate packages.
-- **`tools-relidler-plugin`**: Runs specific Relidler functions, such as generating aggregator files (`export * from "..."`).
+### 1. `libraries-relidler-plugin`
 
-### API (for advanced users)
+Builds and publishes specified subdirectories of your main project as separate packages.
+
+**Usage example**: The `@reliverse/relidler-cfg` configuration for [src/libs/cfg](https://github.com/reliverse/relidler-js-bundler/tree/main/src/libs/cfg) dir:
+
+```ts
+// relidler.cfg.ts
+libsActMode: "main-and-libs",
+libsDirDist: "dist-libs",
+libsDirSrc: "src/libs",
+libsList: {
+  "@reliverse/relidler-cfg": {
+    libDeclarations: true,
+    libDescription: "@reliverse/relidler defineConfig",
+    libDirName: "cfg",
+    libMainFile: "cfg/cfg-main.ts",
+    libPkgKeepDeps: false,
+    libTranspileMinify: true,
+  },
+},
+```
+
+### 2. `tools-relidler-plugin`
+
+Enables you to run specific Relidler features:
+
+```bash
+relidler tools --tool <tool> --input <dir> --out <file> [options]
+```
+
+**Available tools**:
+
+- `agg`: Generates aggregator file with content like `export { getSomething } from "./utils.js"`. **Note**: Currently it replaces the file content, not appends.
+
+**Usage example**: If you're exploring the [Example Playground](#example-playground), you can try the following:
+
+1. Open [src/libs/sdk/sdk-main.ts](https://github.com/reliverse/relidler-js-bundler/blob/main/src/libs/sdk/sdk-main.ts) in your IDE.
+2. Press `Ctrl+A`, then `Backspace`. Run the command below and watch the magic happen:
+
+```bash
+bun tools:agg # Shortcut for:
+bun src/main.ts tools --dev --tool agg --input src/libs/sdk/sdk-impl --out src/libs/sdk/sdk-main.ts --recursive --named --strip src/libs/sdk
+```
+
+## API (for advanced users)
 
 The SDK allows you to create new Relidler plugins or even extend your own CLI functionality.
 
@@ -95,13 +138,12 @@ The SDK allows you to create new Relidler plugins or even extend your own CLI fu
 bun add -D @reliverse/relidler-sdk
 ```
 
-> Example: [@reliverse/cli](https://github.com/reliverse/cli-website-builder) leverages this SDK to extend its functionality.
+**Usage example**: [@reliverse/cli](https://github.com/reliverse/cli-website-builder) leverages this SDK to extend its functionality.
 
 ## TODO
 
 - [x] ~~Implement stable `regular` build and publish~~
 - [ ] Implement stable `library` build and publish
-- [ ] Allow to minify dist with comments preserved
 - [ ] Achieve full drop-in replacement for `unbuild`
 - [ ] Support auto migration from `build.config.ts`
 - [ ] Allow plugins to extend Relidler's `defineConfig`

@@ -4,7 +4,6 @@ import path from "pathe";
 import prettyBytes from "pretty-bytes";
 import prettyMilliseconds from "pretty-ms";
 
-import type { UnifiedBuildConfig } from "~/libs/sdk/sdk-main.js";
 import type {
   BundlerName,
   ExcludeMode,
@@ -45,6 +44,8 @@ import {
 } from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
 import { regular_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-json-reg.js";
 import { createTSConfig } from "~/libs/sdk/sdk-impl/utils/utils-tsconfig.js";
+
+import type { UnifiedBuildConfig } from "./bundlers/unified/types.js";
 
 import { ensuredir } from "./bundlers/unified/utils.js";
 

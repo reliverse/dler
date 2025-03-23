@@ -1,6 +1,32 @@
 import { relinka } from "./utils-logs.js";
 
 /**
+ * Validates that the current working directory is appropriate for a development environment.
+ * Throws an error if the current directory does not contain any of the required paths.
+ */
+export async function validateDevCwd(
+  isDev: boolean,
+  paths: string[],
+  cliName: string,
+  cliOrg = "",
+): Promise<void> {
+  if (!isDev) return;
+  const projectName = cliOrg ? `@${cliOrg}/${cliName}` : cliName;
+  const currentDir = process.cwd();
+  if (!paths.some((path) => currentDir.includes(path))) {
+    const pathsList = paths.map((p) => `'${p}'`).join(", ");
+    throw new Error(
+      [
+        `│  The '--dev' flag is reserved exclusively for ${projectName} developers`,
+        `│  Your current directory must include one of the following paths: ${pathsList}`,
+        `│  Also please make sure to use 'bun dev' instead of '${cliName} --dev'`,
+        `│  Current working directory: ${currentDir}`,
+      ].join("\n"),
+    );
+  }
+}
+
+/**
  * Runs an async function within a given working directory,
  * ensuring that the original directory is restored afterward.
  */
@@ -24,31 +50,5 @@ export async function withWorkingDirectory<T>(
   } finally {
     process.chdir(originalDir);
     relinka("verbose", `Restored working directory to: ${originalDir}`);
-  }
-}
-
-/**
- * Validates that the current working directory is appropriate for a development environment.
- * Throws an error if the current directory does not contain any of the required paths.
- */
-export async function validateDevCwd(
-  isDev: boolean,
-  paths: string[],
-  cliName: string,
-  cliOrg = "",
-): Promise<void> {
-  if (!isDev) return;
-  const projectName = cliOrg ? `@${cliOrg}/${cliName}` : cliName;
-  const currentDir = process.cwd();
-  if (!paths.some((path) => currentDir.includes(path))) {
-    const pathsList = paths.map((p) => `'${p}'`).join(", ");
-    throw new Error(
-      [
-        `│  The '--dev' flag is reserved exclusively for ${projectName} developers`,
-        `│  Your current directory must include one of the following paths: ${pathsList}`,
-        `│  Also please make sure to use 'bun dev' instead of '${cliName} --dev'`,
-        `│  Current working directory: ${currentDir}`,
-      ].join("\n"),
-    );
   }
 }

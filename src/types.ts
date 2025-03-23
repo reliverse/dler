@@ -499,15 +499,6 @@ export type LibConfig = {
 export type NpmOutExt = "cjs" | "cts" | "js" | "mjs" | "mts" | "ts";
 
 /**
- * Type definition for replacement intranspileFormation.
- */
-export type Replacement = {
-  end: number;
-  replacement: string;
-  start: number;
-};
-
-/**
  * Supported source map options for built packages.
  * - boolean: Enable/disable source maps.
  * - "inline": Include source maps within output files.
