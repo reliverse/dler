@@ -1,12 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "project": ["src/**/*.{ts,js}", "*.{config,cfg}.{ts,js}", "reliverse.ts"],
-  "entry": [
-    "src/main.ts",
-    "src/utils.ts",
-    "reliverse.ts",
-    "src/**/*-main.ts",
-    "*.{config,cfg}.{ts,js}"
-  ],
-  "ignoreDependencies": ["bun", "eslint-plugin-perfectionist"]
+  "project": ["**/*.{ts,js}"],
+  "entry": ["*.{config,cfg}.{ts,js}", "src/main.ts", "src/**/*-main.ts"],
+  "ignore": ["node_modules", "dist-jsr", "dist-npm", "dist-libs"],
+  "ignoreDependencies": ["bun"]
 }

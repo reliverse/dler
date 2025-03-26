@@ -109,30 +109,30 @@ const loadEnvConfig = (): Partial<RelinkaConfig> => {
 
   // RELINKA_LOG_DIR - Directory to store log files
   if (process.env.RELINKA_LOG_DIR) {
-    envConfig.dirs!.logDir = process.env.RELINKA_LOG_DIR;
+    envConfig.dirs.logDir = process.env.RELINKA_LOG_DIR;
   }
 
   // RELINKA_DAILY_LOGS - Whether to create separate log files for each day
   if (process.env.RELINKA_DAILY_LOGS !== undefined) {
     const value = process.env.RELINKA_DAILY_LOGS.toLowerCase().trim();
-    envConfig.dirs!.dailyLogs = !["", "0", "false"].includes(value);
+    envConfig.dirs.dailyLogs = !["", "0", "false"].includes(value);
   }
 
   // RELINKA_MAX_LOG_FILES - Maximum number of log files to keep
   if (process.env.RELINKA_MAX_LOG_FILES) {
     const value = Number.parseInt(process.env.RELINKA_MAX_LOG_FILES, 10);
     if (!Number.isNaN(value)) {
-      envConfig.dirs!.maxLogFiles = value;
+      envConfig.dirs.maxLogFiles = value;
     }
   }
 
   // RELINKA_USE_PARENT_CONFIG - Whether to look for config in parent directory when in dist folders
   if (process.env.RELINKA_USE_PARENT_CONFIG !== undefined) {
     const value = process.env.RELINKA_USE_PARENT_CONFIG.toLowerCase().trim();
-    if (!envConfig.dirs!.specialDirs) {
-      envConfig.dirs!.specialDirs = {};
+    if (!envConfig.dirs.specialDirs) {
+      envConfig.dirs.specialDirs = {};
     }
-    envConfig.dirs!.specialDirs.useParentConfigInDist = ![
+    envConfig.dirs.specialDirs.useParentConfigInDist = ![
       "",
       "0",
       "false",
@@ -258,7 +258,7 @@ const getTimestamp = (): string => {
  */
 const getLogFilePath = (): string => {
   // Use config value or default
-  let logFilePath = config.logFilePath || DEFAULT_RELINKA_CONFIG.logFilePath!;
+  let logFilePath = config.logFilePath || DEFAULT_RELINKA_CONFIG.logFilePath;
 
   // If daily logs are enabled, add date to filename
   if (config.dirs?.dailyLogs) {
@@ -408,7 +408,7 @@ export const relinka = (
 
   // Format the log message
   const details = args.length > 0 ? args.join(" ") : undefined;
-  const displayType = upperType === "VERBOSE" ? "DEBUG" : (upperType as string);
+  const displayType = upperType === "VERBOSE" ? "DEBUG" : (upperType);
   const logMessage = transpileFormatLogMessage(displayType, message, details);
 
   // Check if colors should be disabled

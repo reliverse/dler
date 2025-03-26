@@ -95,7 +95,7 @@ function extractFolderName(libName: string, libConfig?: LibConfig): string {
   // Default behavior (fallback)
   if (libName.startsWith("@")) {
     const parts = libName.split("/");
-    if (parts.length > 1) return parts[1]!;
+    if (parts.length > 1) return parts[1];
   }
   return libName;
 }

@@ -98,7 +98,7 @@ function inferEntries(
     outputs.push({ file: pkg.module, type: "esm" });
   }
   if (pkg.types || pkg.typings) {
-    outputs.push({ file: pkg.types || pkg.typings! });
+    outputs.push({ file: pkg.types || pkg.typings });
   }
 
   // Try to detect output types

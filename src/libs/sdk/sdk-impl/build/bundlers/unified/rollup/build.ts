@@ -38,13 +38,13 @@ export async function rollupBuild(ctx: BuildContext): Promise<void> {
   await ctx.hooks.callHook("rollup:build", ctx, buildResult);
 
   // Collect info about output entries
-  const allOutputOptions = rollupOptions.output! as OutputOptions[];
+  const allOutputOptions = rollupOptions.output as OutputOptions[];
   for (const outputOptions of allOutputOptions) {
     const { output } = await buildResult.write(outputOptions);
     const chunkFileNames = new Set<string>();
     const outputChunks = output.filter(
       (e) => e.type === "chunk",
-    ) as OutputChunk[];
+    );
     for (const entry of outputChunks) {
       chunkFileNames.add(entry.fileName);
       for (const id of entry.imports) {

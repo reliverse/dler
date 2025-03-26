@@ -62,6 +62,11 @@ function generateConfig(isDev: boolean): string {
     : `import { defineConfig } from "@reliverse/relidler-cfg";`;
   const verboseValue = getValue(isDev, true, DEFAULT_CONFIG.commonVerbose);
   const isCLIValue = getValue(isDev, true, DEFAULT_CONFIG.coreIsCLI);
+  const registryValue = getValue(
+    isDev,
+    "npm-jsr",
+    DEFAULT_CONFIG.commonPubRegistry,
+  );
   const pausePublishValue = getValue(
     isDev,
     false,
@@ -125,7 +130,7 @@ export default defineConfig({
   
   // Common configuration
   commonPubPause: ${pausePublishValue},
-  commonPubRegistry: "${DEFAULT_CONFIG.commonPubRegistry}",
+  commonPubRegistry: "${registryValue}",
   commonVerbose: ${verboseValue},
 
   // Core configuration

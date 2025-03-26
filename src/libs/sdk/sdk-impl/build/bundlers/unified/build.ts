@@ -67,7 +67,7 @@ export async function build(
     ((await jiti.import("./package.json", {
       default: true,
       try: true,
-    })) as PackageJson) || ({} as PackageJson);
+    }))) || ({} as PackageJson);
 
   // Invoke build for every build config defined in build.config.ts
   const cleanedDirs: string[] = [];

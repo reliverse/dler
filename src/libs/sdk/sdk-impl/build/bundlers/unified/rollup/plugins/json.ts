@@ -11,7 +11,7 @@ export function JSONPlugin(options: RollupJsonOptions): Plugin {
     ...plugin,
     name: "relidler-json",
     transform(code, id): TransformResult {
-      const res = (plugin.transform as TransformHook)!.call(this, code, id);
+      const res = (plugin.transform as TransformHook).call(this, code, id);
       if (
         res &&
         typeof res !== "string" &&

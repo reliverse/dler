@@ -9,9 +9,10 @@
     "pub": "bun src/main.ts",
     "dev": "bun src/main.ts --dev",
     "dev:tools": "bun src/main.ts tools --dev --tool",
-    "check": "tsc --noEmit && knip && eslint --cache --fix . && biome check --fix --unsafe .",
+    "check": "tsc --noEmit && eslint --cache --fix . && biome check --fix --unsafe .",
     "tools:agg": "bun dev:tools agg --input src/libs/sdk/sdk-impl --out src/libs/sdk/sdk-main.ts --recursive --named --strip src/libs/sdk",
     "latest": "bun update --latest && bun check",
+    "knip": "knip",
     "vi": "vitest"
   },
   "dependencies": {

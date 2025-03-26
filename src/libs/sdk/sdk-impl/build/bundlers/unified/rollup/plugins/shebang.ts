@@ -34,7 +34,7 @@ export function shebangPlugin(): Plugin {
           continue;
         }
         if (SHEBANG_RE.exec(output.code)) {
-          const outFile = resolve(options.dir!, fileName);
+          const outFile = resolve(options.dir, fileName);
           await makeExecutable(outFile);
         }
       }

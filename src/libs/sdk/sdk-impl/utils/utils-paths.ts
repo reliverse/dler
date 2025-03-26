@@ -975,7 +975,7 @@ async function convertsInFile(
         > = {
           absolute: (matchStr) => convertDynamicToAbsolute(matchStr, filePath),
           alias: (matchStr) =>
-            convertDynamicToAlias(matchStr, filePath, baseDir, aliasPrefix!),
+            convertDynamicToAlias(matchStr, filePath, baseDir, aliasPrefix),
           module: (matchStr) =>
             convertDynamicToModule(
               matchStr,

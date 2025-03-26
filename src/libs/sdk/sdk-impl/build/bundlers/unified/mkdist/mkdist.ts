@@ -19,7 +19,7 @@ export async function mkdistBuild(ctx: BuildContext): Promise<void> {
   ) as MkdistBuildEntry[];
   await ctx.hooks.callHook("mkdist:entries", ctx, entries);
   for (const entry of entries) {
-    const distDir = entry.outDir!;
+    const distDir = entry.outDir;
     if (ctx.options.transpileStub) {
       await rmdir(distDir);
       await symlink(entry.input, distDir);

@@ -6,14 +6,23 @@
     "useIgnoreFile": false
   },
   "files": {
-    "ignoreUnknown": true,
     "ignore": [
       "node_modules/",
       "dist-jsr/",
       "dist-npm/",
       "dist-libs/",
       "bun.lock"
-    ]
+    ],
+    "ignoreUnknown": true
+  },
+  "organizeImports": {
+    "enabled": false
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    }
   },
   "formatter": {
     "enabled": true,
@@ -23,28 +32,6 @@
     "indentWidth": 2,
     "lineEnding": "lf",
     "lineWidth": 80
-  },
-  "organizeImports": {
-    "enabled": false
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "suspicious": {
-        "noControlCharactersInRegex": "off",
-        "noExplicitAny": "off",
-        "noAssignInExpressions": "off"
-      },
-      "style": {
-        "noNonNullAssertion": "off",
-        "noParameterAssign": "off",
-        "noUselessElse": "off"
-      },
-      "complexity": {
-        "noForEach": "off"
-      }
-    }
   },
   "javascript": {
     "formatter": {

@@ -19,15 +19,8 @@
     "module": "NodeNext",
     "moduleResolution": "nodenext",
     "noEmit": true,
-    "allowSyntheticDefaultImports": true,
-    "exactOptionalPropertyTypes": false,
-    "noFallthroughCasesInSwitch": false,
-    "noImplicitAny": false,
-    "noImplicitReturns": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "strictNullChecks": false
+    "allowSyntheticDefaultImports": true
   },
   "include": ["**/*.ts", "reset.d.ts", "eslint.config.js"],
-  "exclude": ["node_modules", "dist-jsr", "temp-testing", "dist-libs"]
+  "exclude": ["node_modules", "dist-jsr", "dist-npm", "dist-libs"]
 }

@@ -12,7 +12,7 @@ import { DEFAULT_EXTENSIONS, resolveAliases } from "./utils.js";
 
 export async function rollupStub(ctx: BuildContext): Promise<void> {
   const babelPlugins = ctx.options.transpileStubOptions.jiti.transformOptions
-    ?.babel?.plugins as any;
+    ?.babel?.plugins;
   const importedBabelPlugins: string[] = [];
   const serializedJitiOptions = JSON.stringify(
     {
@@ -60,11 +60,11 @@ export async function rollupStub(ctx: BuildContext): Promise<void> {
     const output = resolve(
       ctx.options.rootDir,
       ctx.options.outDir,
-      entry.name!,
+      entry.name,
     );
 
     const isESM = ctx.pkg.type === "module";
-    const resolvedEntry = fileURLToPath(ctx.jiti.esmResolve(entry.input)!);
+    const resolvedEntry = fileURLToPath(ctx.jiti.esmResolve(entry.input));
     const resolvedEntryWithoutExt = resolvedEntry.slice(
       0,
       Math.max(0, resolvedEntry.length - extname(resolvedEntry).length),

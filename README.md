@@ -1,4 +1,4 @@
-# Relidler: Reliverse Bundler
+# @reliverse/relidler | Relidler | Reliverse Bundler
 
 [💖 GitHub Sponsors](https://github.com/sponsors/blefnk) • [💬 Discord](https://discord.gg/Pb8uKbwpsJ) • [✨ Repo](https://github.com/reliverse/relidler-js-bundler) • [📦 NPM](https://npmjs.com/@reliverse/relidler) • [📚 Docs](https://docs.reliverse.org)
 
@@ -20,11 +20,11 @@
 
 ## Getting Started
 
-Ensure [Git](https://git-scm.com/downloads), [Node.js](https://nodejs.org), and a package manager ([bun](https://bun.sh)/[pnpm](https://pnpm.io)/[yarn](https://yarnpkg.com)/[npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)) are installed. Then follow these steps:
+Ensure git, node.js, and bun/pnpm/yarn/npm are installed. Then:
 
 ### Example Playground
 
-Want to test Relidler before integrating it into your project? Clone the repo and build it using Relidler itself:
+> Want to test Relidler before integrating it into your project? Clone the repo and build it using Relidler itself:
 
 ```sh
 git clone https://github.com/reliverse/relidler.git
@@ -33,7 +33,7 @@ bun i
 bun dev # bun src/main.ts --dev
 ```
 
-### Relidler Usage
+### Relidler Installation
 
 1. **Install globally**:
 

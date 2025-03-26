@@ -69,7 +69,7 @@ export function getRollupOptions(ctx: BuildContext): RollupOptions {
           id.startsWith(".") ||
           isAbsolute(id) ||
           /src[/\\]/.test(id) ||
-          id.startsWith(ctx.pkg.name!)
+          id.startsWith(ctx.pkg.name)
         ) {
           return false;
         }

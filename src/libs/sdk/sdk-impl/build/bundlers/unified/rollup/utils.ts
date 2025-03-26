@@ -28,7 +28,7 @@ export function getChunkFilename(
 
 export function resolveAliases(ctx: BuildContext): Record<string, string> {
   const aliases: Record<string, string> = {
-    [ctx.pkg.name!]: ctx.options.rootDir,
+    [ctx.pkg.name]: ctx.options.rootDir,
     ...ctx.options.alias,
   };
 

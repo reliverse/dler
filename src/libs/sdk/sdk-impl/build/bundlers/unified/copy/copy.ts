@@ -22,7 +22,7 @@ export async function copyBuild(ctx: BuildContext): Promise<void> {
   ) as CopyBuildEntry[];
   await ctx.hooks.callHook("copy:entries", ctx, entries);
   for (const entry of entries) {
-    const distDir = entry.outDir!;
+    const distDir = entry.outDir;
     if (ctx.options.transpileStub) {
       await rmdir(distDir);
       await symlink(entry.input, distDir);

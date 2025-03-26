@@ -39,12 +39,12 @@ export async function typesBuild(ctx: BuildContext): Promise<void> {
 
     const untypedJiti = createJiti(ctx.options.rootDir, options.jiti);
 
-    const distDir = entry.outDir!;
+    const distDir = entry.outDir;
 
     let rawSchema =
       ((await untypedJiti.import(resolve(ctx.options.rootDir, entry.input), {
         try: true,
-      })) as InputObject) || ({} as InputObject);
+      }))) || ({} as InputObject);
 
     const rawSchemaKeys = Object.keys(rawSchema);
     if (rawSchemaKeys.length === 1 && rawSchemaKeys[0] === "default") {

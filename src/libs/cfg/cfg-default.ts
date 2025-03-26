@@ -8,7 +8,7 @@ export const DEFAULT_CONFIG: BuildPublishConfig = {
   bumpFilter: ["package.json", "reliverse.ts"],
   bumpMode: "autoPatch",
   commonPubPause: true,
-  commonPubRegistry: "npm-jsr",
+  commonPubRegistry: "npm",
   commonVerbose: false,
   coreDeclarations: true,
   coreEntryFile: "main.ts",
