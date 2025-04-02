@@ -1,9 +1,9 @@
+import { relinka } from "@reliverse/relinka";
 import fs from "fs-extra";
 import path from "pathe";
 import { defineTSConfig } from "pkg-types";
 
 import { tsconfigJson } from "./utils-consts.js";
-import { relinka } from "./utils-logs.js";
 
 // ==============================
 // tsconfig.json generation utils

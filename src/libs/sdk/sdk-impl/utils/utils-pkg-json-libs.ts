@@ -13,7 +13,7 @@ import type {
 } from "~/libs/sdk/sdk-types.js";
 
 import { filterDeps } from "~/libs/sdk/sdk-impl/utils/utils-deps.js";
-import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
+import { relinka } from "@reliverse/relinka";
 
 /**
  * Creates a package.json for a lib distribution.
@@ -245,9 +245,9 @@ async function library_writeJsrPackageJSON(
     );
     // Convert bin paths to .ts extension for JSR
     const updatedBin: Record<string, string> = {};
-    Object.entries(binEntry).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(binEntry)) {
       updatedBin[key] = value.replace(/\.js$/, ".ts");
-    });
+    }
     commonPkg.bin = updatedBin;
     relinka(
       "verbose",
@@ -262,7 +262,14 @@ async function library_writeJsrPackageJSON(
       originalPkg.dependencies,
       outDirBin,
       true,
-      libsList?.[libName],
+      libsList?.[libName] ?? {
+        libDeclarations: false,
+        libDescription: "",
+        libDirName: libName,
+        libMainFile: "main.ts",
+        libPkgKeepDeps: false,
+        libTranspileMinify: true,
+      },
       rmDepsMode,
       rmDepsPatterns,
     ),
@@ -308,7 +315,14 @@ async function library_writeNpmLibPackageJSON(
       originalPkg.dependencies,
       outDirBin,
       false,
-      libsList?.[libName],
+      libsList?.[libName] ?? {
+        libDeclarations: true,
+        libDescription: "",
+        libDirName: libName,
+        libMainFile: "src/libs/libName/libName-main.ts",
+        libPkgKeepDeps: true,
+        libTranspileMinify: true,
+      },
       rmDepsMode,
       rmDepsPatterns,
     ),

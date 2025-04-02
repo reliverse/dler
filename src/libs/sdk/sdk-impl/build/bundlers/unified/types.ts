@@ -1,7 +1,7 @@
 import type { Hookable } from "hookable";
 import type { Jiti, JitiOptions } from "jiti";
 import type { PackageJson } from "pkg-types";
-import type { RollupOptions as _RollupOptions, WatcherOptions } from "rollup";
+import type { WatcherOptions } from "rollup";
 
 import type { CopyBuildEntry, CopyHooks } from "./copy/types.js";
 import type { MkdistBuildEntry, MkdistHooks } from "./mkdist/types.js";
@@ -100,8 +100,8 @@ export type BuildOptions = {
   entries: BuildEntry[];
 
   /**
-   * Used to specify which modules or libraries should be considered external dependencies
-   * and not included in the final build product.
+   * Used to specify which modules or libraries should be considered
+   * external dependencies and not included in the final build product.
    */
   externals: (RegExp | string)[];
 
@@ -201,6 +201,14 @@ export type UnifiedBuildConfig = DeepPartial<Omit<BuildOptions, "entries">> & {
    * Used to specify the preset build configuration.
    */
   preset?: BuildPreset | string;
+
+  /**
+   * Used to create a stub for the build configuration.
+   * A stub is a simplified version of a mock object that is used to simulate the behavior of a real object.
+   * It is used to test the behavior of the object under test.
+   * @see https://turing.com/kb/stub-vs-mock#what-exactly-is-a-stub?
+   */
+  stub?: boolean;
 };
 
 type DeepPartial<T> = { [P in keyof T]?: DeepPartial<T[P]> };

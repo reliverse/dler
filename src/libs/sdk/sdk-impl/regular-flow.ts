@@ -1,3 +1,4 @@
+import { relinka } from "@reliverse/relinka";
 import pAll from "p-all";
 
 import type {
@@ -17,7 +18,6 @@ import {
 } from "./build/build-regular.js";
 import { regular_pubToJsr, regular_pubToNpm } from "./pub/pub-regular.js";
 import { CONCURRENCY_DEFAULT } from "./utils/utils-consts.js";
-import { relinka } from "./utils/utils-logs.js";
 
 /**
  * Processes the main project based on build mode and commonPubRegistry.
@@ -33,6 +33,7 @@ export async function processRegularFlow(
   distNpmBuilder: BundlerName,
   coreEntryFile: string,
   distJsrDryRun: boolean,
+  distJsrFailOnWarn: boolean,
   commonPubPause: boolean,
   distJsrDirName: string,
   distJsrBuilder: BundlerName,
@@ -89,6 +90,7 @@ export async function processRegularFlow(
       if (!isDev) {
         await regular_pubToJsr(
           distJsrDryRun,
+          distJsrFailOnWarn,
           isDev,
           commonPubPause,
           distJsrDirName,
@@ -190,6 +192,7 @@ export async function processRegularFlow(
           () =>
             regular_pubToJsr(
               distJsrDryRun,
+              distJsrFailOnWarn,
               isDev,
               commonPubPause,
               distJsrDirName,

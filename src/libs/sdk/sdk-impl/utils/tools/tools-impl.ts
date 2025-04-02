@@ -1,4 +1,4 @@
-import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
+import { relinka } from "@reliverse/relinka";
 
 /**
  * Prints usage examples based on whether dev mode or not.
@@ -9,7 +9,7 @@ export function printUsage(isDev?: boolean) {
   relinka("info", "====================");
   relinka(
     "info",
-    `${isDev ? "bun dev:tools" : "relidler tools"} --tool agg --input <dir> --out <file> [options]`,
+    `${isDev ? "bun dev:agg" : "relidler tools"} --tool agg --input <dir> --out <file> [options]`,
   );
   if (isDev) {
     relinka(

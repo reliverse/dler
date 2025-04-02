@@ -6,7 +6,7 @@ import { findStaticImports } from "mlly";
 
 import type { BuildContext } from "~/libs/sdk/sdk-impl/build/bundlers/unified/types.js";
 
-export function cjsPlugin(_opts?: any): Plugin {
+export function cjsPlugin(): Plugin {
   return {
     name: "relidler-cjs",
     renderChunk(code, _chunk, opts) {

@@ -1,4 +1,4 @@
-import { relinka } from "./utils-logs.js";
+import { relinka } from "@reliverse/relinka";
 
 /**
  * Validates that the current working directory is appropriate for a development environment.

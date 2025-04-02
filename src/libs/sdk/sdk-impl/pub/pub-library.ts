@@ -3,7 +3,7 @@ import pAll from "p-all";
 
 import { CONCURRENCY_DEFAULT } from "~/libs/sdk/sdk-impl/utils/utils-consts.js";
 import { withWorkingDirectory } from "~/libs/sdk/sdk-impl/utils/utils-cwd.js";
-import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
+import { relinka } from "@reliverse/relinka";
 import {
   pausePerfTimer,
   type PerfTimer,
@@ -19,6 +19,9 @@ export async function library_publishLibrary(
   npmOutDir: string,
   jsrOutDir: string,
   distJsrDryRun: boolean,
+  distJsrFailOnWarn: boolean,
+  distJsrAllowDirty: boolean,
+  distJsrSlowTypes: boolean,
   isDev: boolean,
   timer: PerfTimer,
 ): Promise<void> {
@@ -32,17 +35,51 @@ export async function library_publishLibrary(
   switch (commonPubRegistry) {
     case "jsr":
       relinka("info", `Publishing lib ${libName} to JSR only...`);
-      await library_pubToJsr(jsrOutDir, distJsrDryRun, libName, isDev, timer);
+      await library_pubToJsr(
+        jsrOutDir,
+        distJsrDryRun,
+        distJsrFailOnWarn,
+        distJsrAllowDirty,
+        distJsrSlowTypes,
+        libName,
+        isDev,
+        timer,
+      );
       break;
     case "npm":
       relinka("info", `Publishing lib ${libName} to NPM only...`);
-      await library_pubToNpm(npmOutDir, distJsrDryRun, libName, isDev, timer);
+      await library_pubToNpm(
+        npmOutDir,
+        distJsrDryRun,
+        distJsrFailOnWarn,
+        libName,
+        isDev,
+        timer,
+      );
       break;
     case "npm-jsr": {
       relinka("info", `Publishing lib ${libName} to both NPM and JSR...`);
       const publishTasks = [
-        () => library_pubToNpm(npmOutDir, distJsrDryRun, libName, isDev, timer),
-        () => library_pubToJsr(jsrOutDir, distJsrDryRun, libName, isDev, timer),
+        () =>
+          library_pubToNpm(
+            npmOutDir,
+            distJsrDryRun,
+            distJsrFailOnWarn,
+            libName,
+            isDev,
+            timer,
+          ),
+        () =>
+          library_pubToJsr(
+            jsrOutDir,
+            distJsrDryRun,
+            distJsrFailOnWarn,
+            distJsrAllowDirty,
+            distJsrSlowTypes,
+            libName,
+            isDev,
+            timer,
+          ),
       ];
       await pAll(publishTasks, { concurrency: CONCURRENCY_DEFAULT });
       break;
@@ -61,6 +98,9 @@ export async function library_publishLibrary(
 async function library_pubToJsr(
   libOutDir: string,
   distJsrDryRun: boolean,
+  distJsrFailOnWarn: boolean,
+  distJsrAllowDirty: boolean,
+  distJsrSlowTypes: boolean,
   libName: string,
   isDev: boolean,
   timer: PerfTimer,
@@ -77,8 +117,9 @@ async function library_pubToJsr(
       const command = [
         "bun x jsr publish",
         distJsrDryRun ? "--dry-run" : "",
-        "--allow-dirty",
-        "--allow-slow-types",
+        distJsrFailOnWarn ? "--fail-on-warn" : "",
+        distJsrAllowDirty ? "--allow-dirty" : "",
+        distJsrSlowTypes ? "--allow-slow-types" : "",
       ]
         .filter(Boolean)
         .join(" ");
@@ -104,6 +145,7 @@ async function library_pubToJsr(
 async function library_pubToNpm(
   libOutDir: string,
   distJsrDryRun: boolean,
+  distJsrFailOnWarn: boolean,
   libName: string,
   isDev: boolean,
   timer: PerfTimer,

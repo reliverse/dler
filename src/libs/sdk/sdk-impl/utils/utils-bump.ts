@@ -9,7 +9,7 @@ import type { BumpFilter, BumpMode } from "~/libs/sdk/sdk-types.js";
 
 import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "./utils-consts.js";
 import { readFileSafe, writeFileSafe } from "./utils-fs.js";
-import { relinka } from "./utils-logs.js";
+import { relinka } from "@reliverse/relinka";
 
 // ============================
 // Version Bumping Functions
@@ -224,13 +224,13 @@ async function bumpVersions(
               // Pattern starting with / in gitignore means root-relative
               // Convert to a relative pattern but ensure it doesn't start with /
               return pattern.substring(1);
-            } else if (pattern.endsWith("/")) {
+            }
+            if (pattern.endsWith("/")) {
               // Pattern ending with / matches directories
               return `**/${pattern}**`;
-            } else {
-              // Regular pattern
-              return `**/${pattern}`;
             }
+            // Regular pattern
+            return `**/${pattern}`;
           });
 
         if (gitignorePatterns.length > 0) {

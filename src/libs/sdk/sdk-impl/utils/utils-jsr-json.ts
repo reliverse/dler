@@ -5,7 +5,7 @@ import { readPackageJSON } from "pkg-types";
 import { glob } from "tinyglobby";
 
 import { cliDomainDocs, CONCURRENCY_DEFAULT } from "./utils-consts.js";
-import { relinka } from "./utils-logs.js";
+import { relinka } from "@reliverse/relinka";
 
 /**
  * Generates a jsr.json configuration file for JSR distributions.

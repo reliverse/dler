@@ -68,7 +68,7 @@ export async function useAggregator({
 
 /**
  * Build a relative import/export path, removing `stripPrefix` if it is truly a prefix,
- * converting .ts -> .js, and ensuring it starts with "./" or "../" as needed.
+ * converting .ts -> .js, and ensuring it starts with "./" or "../".
  */
 function buildPathRelative(
   filePath: string,
@@ -157,10 +157,9 @@ async function generateAggregatorLines(
       // import * as ident from ...
       const ident = guessStarImportIdentifier(filePath);
       return [`import * as ${ident} from "${importPath}";`];
-    } else {
-      // export * from ...
-      return [`export * from "${importPath}";`];
     }
+    // export * from ...
+    return [`export * from "${importPath}";`];
   }
 
   // If named => we parse the file
@@ -186,22 +185,21 @@ async function generateAggregatorLines(
       lines.push(`import { ${valueNames.join(", ")} } from "${importPath}";`);
     }
     return lines;
-  } else {
-    // Example:
-    // export type { T1, T2 } from "...";
-    // export { V1, V2 } from "...";
-    const lines: string[] = [];
-
-    if (typeNames.length > 0) {
-      lines.push(
-        `export type { ${typeNames.join(", ")} } from "${importPath}";`,
-      );
-    }
-    if (valueNames.length > 0) {
-      lines.push(`export { ${valueNames.join(", ")} } from "${importPath}";`);
-    }
-    return lines;
   }
+
+  // Example:
+  // export type { T1, T2 } from "...";
+  // export { V1, V2 } from "...";
+  const lines: string[] = [];
+
+  if (typeNames.length > 0) {
+    lines.push(`export type { ${typeNames.join(", ")} } from "${importPath}";`);
+  }
+  if (valueNames.length > 0) {
+    lines.push(`export { ${valueNames.join(", ")} } from "${importPath}";`);
+  }
+
+  return lines;
 }
 
 /**
@@ -235,10 +233,12 @@ async function getNamedExports(filePath: string): Promise<{
   const typeNames: string[] = [];
   const valueNames: string[] = [];
 
-  let match: null | RegExpExecArray;
-  while ((match = pattern.exec(code)) !== null) {
-    const keyword = match[1]; // e.g. "type", "interface", "function", etc.
-    const name = match[2];
+  let match: null | RegExpExecArray = null;
+  while (true) {
+    match = pattern.exec(code);
+    if (match === null) break;
+    const keyword = match[1] as string; // e.g. "type", "interface", "function", etc.
+    const name = match[2] as string;
 
     if (keyword === "type" || keyword === "interface") {
       typeNames.push(name);

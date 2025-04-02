@@ -20,11 +20,13 @@
 
 ## Getting Started
 
-Ensure git, node.js, and bun/pnpm/yarn/npm are installed. Then:
+Ensure Git, Node.js, and bun/pnpm/yarn/npm are installed. Then:
 
-### Example Playground
+### Playground
 
-> Want to test Relidler before integrating it into your project? Clone the repo and build it using Relidler itself:
+> **💡 Tip**:
+> Want to test Relidler before integrating it into your project?
+> Clone the repo and build it using Relidler itself!
 
 ```sh
 git clone https://github.com/reliverse/relidler.git
@@ -33,7 +35,7 @@ bun i
 bun dev # bun src/main.ts --dev
 ```
 
-### Relidler Installation
+### Installation
 
 1. **Install globally**:
 
@@ -64,35 +66,35 @@ bun dev # bun src/main.ts --dev
     bun add -D @reliverse/relidler-cfg
     ```
 
-    c. **Initialize `relidler.cfg.ts`**:
+    c. **Initialize config**:
 
     ```sh
-    relidler
+    relidler cli
     ```
 
-    - The `relidler.cfg.ts` file is automatically created on first run.
+    - The `.reliverse/relidler.config.ts` file is automatically created on first run.
     - **It's recommended to customize this file according to your needs.**
-    - Supported filenames: `relidler.cfg.ts` • `relidler.config.ts` • `build.pub.ts` • `build.cfg.ts`.
-    - You can check an example config here: [relidler.cfg.ts](https://github.com/reliverse/relidler-js-bundler/blob/main/relidler.cfg.ts)
+    - You can check an example config here: [relidler.config.ts](https://github.com/reliverse/relidler-js-bundler/blob/main/relidler.config.ts)
 
 3. **Run and enjoy**:
 
     ```sh
-    relidler
+    relidler cli
     ```
 
-## Plugins
+## 🔌 Plugins
 
-Relidler includes a plugin system with **two built-in** plugins:
+Relidler includes a plugin system with **two built-in plugins** (from [@reliverse/addons](https://github.com/reliverse/addons)):
 
 ### 1. `libraries-relidler-plugin`
 
-Builds and publishes specified subdirectories of your main project as separate packages.
+Builds and publishes specific subdirectories of your main project as standalone packages.
 
-**Usage example**: The `@reliverse/relidler-cfg` configuration for [src/libs/cfg](https://github.com/reliverse/relidler-js-bundler/tree/main/src/libs/cfg) dir:
+**Usage example**:  
+Using `@reliverse/relidler-cfg` to package [src/libs/cfg](https://github.com/reliverse/relidler-js-bundler/tree/main/src/libs/cfg):
 
 ```ts
-// relidler.cfg.ts
+// relidler.config.ts
 libsActMode: "main-and-libs",
 libsDirDist: "dist-libs",
 libsDirSrc: "src/libs",
@@ -108,9 +110,23 @@ libsList: {
 },
 ```
 
+**Relidler Task Commands**:
+
+- `// relidler-replace-me` tells Relidler to grab the contents of `../../types.ts` and inject them directly in place of your command definition.
+
+  ```ts
+  export * from "../../types.js"; // relidler-replace-me
+  // OR:
+  export type { SpecificTypeName1, SpecificTypeName2 } from "../../types.js"; // relidler-replace-me
+  ```
+
+- More magic commands coming soon...
+
+---
+
 ### 2. `tools-relidler-plugin`
 
-Enables you to run specific Relidler features:
+Lets you run standalone Relidler features directly from the CLI:
 
 ```bash
 relidler tools --tool <tool> --input <dir> --out <file> [options]
@@ -120,7 +136,7 @@ relidler tools --tool <tool> --input <dir> --out <file> [options]
 
 - `agg`: Generates aggregator file with content like `export { getSomething } from "./utils.js"`. **Note**: Currently it replaces the file content, not appends.
 
-**Usage example**: If you're exploring the [Example Playground](#example-playground), you can try the following:
+**Usage example**: If you're exploring the example [Playground](#playground), you can try the following:
 
 1. Open [src/libs/sdk/sdk-main.ts](https://github.com/reliverse/relidler-js-bundler/blob/main/src/libs/sdk/sdk-main.ts) in your IDE.
 2. Press `Ctrl+A`, then `Backspace`. Run the command below and watch the magic happen:
@@ -132,10 +148,10 @@ bun src/main.ts tools --dev --tool agg --input src/libs/sdk/sdk-impl --out src/l
 
 ## API (for advanced users)
 
-The SDK allows you to create new Relidler plugins or even extend your own CLI functionality.
+The SDK lets you build custom Relidler CLI plugins or even extend your own CLI tools.
 
 ```sh
-bun add -D @reliverse/relidler-sdk
+bun add @reliverse/relidler-sdk
 ```
 
 **Usage example**: [@reliverse/cli](https://github.com/reliverse/cli-website-builder) leverages this SDK to extend its functionality.
@@ -152,10 +168,15 @@ bun add -D @reliverse/relidler-sdk
 
 ## Related
 
-Special thanks to the project that inspired Relidler:
+Special thanks to the project that inspired `@reliverse/relidler`:
 
-- [unjs/unbuild](https://github.com/unjs/unbuild)
+- [unjs/unbuild](https://github.com/unjs/unbuild#readme)
+
+## Support
+
+- If Relidler saves you time and effort, please consider supporting its development: [GitHub Sponsors](https://github.com/sponsors/blefnk);
+- Even a simple star on [GitHub](https://github.com/reliverse/relidler) shows your love. Thank you!
 
 ## License
 
-🩷 [MIT](./LICENSE) © [blefnk Nazar Kornienko](https://github.com/blefnk)
+🩷 [MIT](./LICENSE) © 2025 [blefnk Nazar Kornienko](https://github.com/blefnk)

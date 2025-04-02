@@ -12,7 +12,7 @@ import {
   symlink,
   warn,
 } from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils.js";
-import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
+import { relinka } from "@reliverse/relinka";
 
 const copy = fsp.cp || fsp.copyFile;
 
@@ -22,7 +22,11 @@ export async function copyBuild(ctx: BuildContext): Promise<void> {
   ) as CopyBuildEntry[];
   await ctx.hooks.callHook("copy:entries", ctx, entries);
   for (const entry of entries) {
-    const distDir = entry.outDir;
+    const distDir = entry.outDir || entry.input;
+    if (!distDir || !entry.input) {
+      warn(ctx, "Missing required outDir or input for copy entry");
+      continue;
+    }
     if (ctx.options.transpileStub) {
       await rmdir(distDir);
       await symlink(entry.input, distDir);

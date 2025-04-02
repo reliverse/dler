@@ -1,3 +1,4 @@
+import { relinka } from "@reliverse/relinka";
 import { mkdist, type MkdistOptions } from "mkdist";
 import { relative } from "pathe";
 
@@ -11,7 +12,6 @@ import {
   symlink,
   warn,
 } from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils.js";
-import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
 
 export async function mkdistBuild(ctx: BuildContext): Promise<void> {
   const entries = ctx.options.entries.filter(
@@ -19,7 +19,7 @@ export async function mkdistBuild(ctx: BuildContext): Promise<void> {
   ) as MkdistBuildEntry[];
   await ctx.hooks.callHook("mkdist:entries", ctx, entries);
   for (const entry of entries) {
-    const distDir = entry.outDir;
+    const distDir = entry.outDir || entry.input;
     if (ctx.options.transpileStub) {
       await rmdir(distDir);
       await symlink(entry.input, distDir);

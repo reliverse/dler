@@ -69,7 +69,7 @@ export function getRollupOptions(ctx: BuildContext): RollupOptions {
           id.startsWith(".") ||
           isAbsolute(id) ||
           /src[/\\]/.test(id) ||
-          id.startsWith(ctx.pkg.name)
+          (ctx.pkg.name && id.startsWith(ctx.pkg.name))
         ) {
           return false;
         }
@@ -186,7 +186,7 @@ export function getRollupOptions(ctx: BuildContext): RollupOptions {
         },
       },
 
-      ctx.options.rollup.cjsBridge && cjsPlugin({}),
+      ctx.options.rollup.cjsBridge && cjsPlugin(),
 
       rawPlugin(),
     ].filter((p): p is NonNullable<Exclude<typeof p, false>> => !!p),

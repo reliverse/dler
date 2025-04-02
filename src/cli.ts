@@ -1,3 +1,4 @@
+import { relinka } from "@reliverse/relinka";
 import fs from "fs-extra";
 import path from "pathe";
 
@@ -8,7 +9,6 @@ import { removeDistFolders } from "./libs/sdk/sdk-impl/utils/utils-clean.js";
 import { PROJECT_ROOT } from "./libs/sdk/sdk-impl/utils/utils-consts.js";
 import { handleRelidlerError } from "./libs/sdk/sdk-impl/utils/utils-error.js";
 import { finalizeBuild } from "./libs/sdk/sdk-impl/utils/utils-info.js";
-import { relinka } from "./libs/sdk/sdk-impl/utils/utils-logs.js";
 import { createPerfTimer } from "./libs/sdk/sdk-impl/utils/utils-perf.js";
 import { loadConfig } from "./load.js";
 
@@ -72,6 +72,7 @@ export async function relidler(isDev: boolean) {
       config.distNpmBuilder,
       config.coreEntryFile,
       config.distJsrDryRun,
+      config.distJsrFailOnWarn,
       config.commonPubPause,
       config.distJsrDirName,
       config.distJsrBuilder,
@@ -98,6 +99,7 @@ export async function relidler(isDev: boolean) {
       config.libsActMode,
       config.libsList,
       config.distJsrDryRun,
+      config.distJsrFailOnWarn,
       config.libsDirDist,
       config.libsDirSrc,
       config.commonPubPause,

@@ -33,7 +33,7 @@ import {
   createJsrJSON,
   renameTsxFiles,
 } from "~/libs/sdk/sdk-impl/utils/utils-jsr-json.js";
-import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
+import { relinka } from "@reliverse/relinka";
 import {
   convertImportExtensionsJsToTs,
   convertImportPaths,
@@ -117,7 +117,7 @@ export async function regular_buildJsrDist(
   });
 
   // Additional JSR-specific transformations
-  await convertImportExtensionsJsToTs(outDirBin);
+  await convertImportExtensionsJsToTs({ dirPath: outDirBin });
   await renameTsxFiles(outDirBin);
   await createJsrJSON(distJsrDirNameResolved, false);
 
@@ -359,11 +359,7 @@ async function regular_bundleUsingUnified(
 
     // Validate extension
     if (!validExtensions.includes(unifiedBundlerOutExt)) {
-      relinka(
-        "warn",
-        `Invalid output extension: ${unifiedBundlerOutExt}, defaulting to 'js'`,
-      );
-      unifiedBundlerOutExt = "js";
+      throw new Error(`Invalid output extension: ${unifiedBundlerOutExt}`);
     }
 
     // For mkdist, pass the entire directory

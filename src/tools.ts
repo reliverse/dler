@@ -3,7 +3,7 @@ import path from "pathe";
 
 import { useAggregator } from "./libs/sdk/sdk-impl/utils/tools/tools-agg.js";
 import { printUsage } from "./libs/sdk/sdk-impl/utils/tools/tools-impl.js";
-import { relinka } from "./libs/sdk/sdk-impl/utils/utils-logs.js";
+import { relinka } from "@reliverse/relinka";
 
 const TOOLS = ["agg"];
 

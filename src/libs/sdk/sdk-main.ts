@@ -127,7 +127,6 @@ export {
   createJsrJSON,
   renameTsxFiles,
 } from "./sdk-impl/utils/utils-jsr-json.js";
-export { defineConfig, relinka } from "./sdk-impl/utils/utils-logs.js";
 export {
   convertImportExtensionsJsToTs,
   convertImportPaths,

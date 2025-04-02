@@ -1,7 +1,7 @@
 import { fileURLToPath, resolveModuleExportNames, resolvePath } from "mlly";
 import { promises as fsp } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, extname, relative, resolve } from "pathe";
+import { basename, dirname, extname, relative, resolve } from "pathe";
 
 import type { BuildContext } from "~/libs/sdk/sdk-impl/build/bundlers/unified/types.js";
 
@@ -11,8 +11,8 @@ import { getShebang, makeExecutable } from "./plugins/shebang.js";
 import { DEFAULT_EXTENSIONS, resolveAliases } from "./utils.js";
 
 export async function rollupStub(ctx: BuildContext): Promise<void> {
-  const babelPlugins = ctx.options.transpileStubOptions.jiti.transformOptions
-    ?.babel?.plugins;
+  const babelPlugins =
+    ctx.options.transpileStubOptions.jiti.transformOptions?.babel?.plugins;
   const importedBabelPlugins: string[] = [];
   const serializedJitiOptions = JSON.stringify(
     {
@@ -60,7 +60,7 @@ export async function rollupStub(ctx: BuildContext): Promise<void> {
     const output = resolve(
       ctx.options.rootDir,
       ctx.options.outDir,
-      entry.name,
+      entry.name || basename(entry.input, extname(entry.input)),
     );
 
     const isESM = ctx.pkg.type === "module";

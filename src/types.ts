@@ -60,7 +60,7 @@ export type BuildPublishConfig = {
    * - `jsr`: Publish only to the JSR commonPubRegistry.
    * - `npm-jsr`: Publish to both NPM and JSR registries.
    *
-   * @default "npm-jsr"
+   * @default "npm"
    */
   commonPubRegistry: "jsr" | "npm" | "npm-jsr";
 
@@ -155,6 +155,14 @@ export type BuildPublishConfig = {
    * @default false
    */
   distJsrDryRun: boolean;
+
+  /**
+   * When `true`, fails the build if warnings are detected.
+   * Use with caution, as it may lead to inconsistent published versions.
+   *
+   * @default false
+   */
+  distJsrFailOnWarn: boolean;
 
   /**
    * When `true`, generates a `jsconfig.json` file for JSR's dist.

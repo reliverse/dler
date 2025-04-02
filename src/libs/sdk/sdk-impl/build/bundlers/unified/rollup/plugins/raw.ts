@@ -14,8 +14,8 @@ const defaults: RawLoaderOptions = {
 };
 
 export function rawPlugin(opts: RawLoaderOptions = {}): Plugin {
-  opts = { ...opts, ...defaults };
-  const filter = createFilter(opts.include, opts.exclude);
+  const options = { ...defaults, ...opts };
+  const filter = createFilter(options.include, options.exclude);
   return {
     name: "relidler-raw",
     transform(code, id): undefined | { code: string; map: any } {

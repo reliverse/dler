@@ -1,3 +1,4 @@
+import { relinka } from "@reliverse/relinka";
 import pAll from "p-all";
 import path from "pathe";
 
@@ -17,7 +18,6 @@ import type { PerfTimer } from "./utils/utils-perf.js";
 import { library_buildLibrary } from "./build/build-library.js";
 import { library_publishLibrary } from "./pub/pub-library.js";
 import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "./utils/utils-consts.js";
-import { relinka } from "./utils/utils-logs.js";
 
 /**
  * Processes libraries based on build mode.
@@ -28,6 +28,7 @@ export async function processLibraryFlow(
   libsActMode: string,
   libsList: Record<string, LibConfig>,
   distJsrDryRun: boolean,
+  distJsrFailOnWarn: boolean,
   libsDirDist: string,
   libsDirSrc: string,
   commonPubPause: boolean,
@@ -60,6 +61,7 @@ export async function processLibraryFlow(
     timer,
     libsList,
     distJsrDryRun,
+    distJsrFailOnWarn,
     libsDirDist,
     libsDirSrc,
     commonPubPause,
@@ -95,7 +97,7 @@ function extractFolderName(libName: string, libConfig?: LibConfig): string {
   // Default behavior (fallback)
   if (libName.startsWith("@")) {
     const parts = libName.split("/");
-    if (parts.length > 1) return parts[1];
+    if (parts.length > 1) return parts[1] || libName;
   }
   return libName;
 }
@@ -105,7 +107,7 @@ function extractLibDirFromName(name: string): string {
   // For scoped packages like @reliverse/relidler-cfg
   if (name.includes("/")) {
     const parts = name.split("/");
-    const lastPart = parts[parts.length - 1];
+    const lastPart = parts[parts.length - 1] || name;
     // Handle cases like relidler-cfg where we want just "cfg"
     if (lastPart.includes("-")) {
       return lastPart.split("-").pop() || lastPart;
@@ -128,6 +130,7 @@ async function libraries_buildPublish(
   timer: PerfTimer,
   libsList: Record<string, LibConfig>,
   distJsrDryRun: boolean,
+  distJsrFailOnWarn: boolean,
   libsDirDist: string,
   libsDirSrc: string,
   commonPubPause: boolean,
@@ -192,7 +195,7 @@ async function libraries_buildPublish(
         `Processing library ${libName}: libMainDir=${libMainDir}, libMainFile=${libMainFile}`,
       );
       const libTranspileMinify =
-        libConfig?.[libName]?.libTranspileMinify ?? false;
+        (libConfig as any)?.[libName]?.libTranspileMinify ?? false;
       await library_buildLibrary(
         commonPubRegistry,
         libName,
@@ -227,6 +230,9 @@ async function libraries_buildPublish(
           npmOutDir,
           jsrOutDir,
           distJsrDryRun,
+          distJsrFailOnWarn,
+          false,
+          false,
           isDev,
           timer,
         );

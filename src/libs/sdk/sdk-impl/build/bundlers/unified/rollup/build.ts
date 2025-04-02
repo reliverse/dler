@@ -1,4 +1,4 @@
-import type { OutputChunk, OutputOptions } from "rollup";
+import type { OutputOptions } from "rollup";
 
 import { resolve } from "pathe";
 import { rollup } from "rollup";
@@ -6,7 +6,7 @@ import dts from "rollup-plugin-dts";
 
 import type { BuildContext } from "~/libs/sdk/sdk-impl/build/bundlers/unified/types.js";
 
-import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
+import { relinka } from "@reliverse/relinka";
 
 import { getRollupOptions } from "./config.js";
 import { fixCJSExportTypePlugin } from "./plugins/cjs.js";
@@ -42,9 +42,7 @@ export async function rollupBuild(ctx: BuildContext): Promise<void> {
   for (const outputOptions of allOutputOptions) {
     const { output } = await buildResult.write(outputOptions);
     const chunkFileNames = new Set<string>();
-    const outputChunks = output.filter(
-      (e) => e.type === "chunk",
-    );
+    const outputChunks = output.filter((e) => e.type === "chunk");
     for (const entry of outputChunks) {
       chunkFileNames.add(entry.fileName);
       for (const id of entry.imports) {

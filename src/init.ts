@@ -2,7 +2,7 @@ import fs from "fs-extra";
 import path from "pathe";
 
 import { DEFAULT_CONFIG } from "~/libs/cfg/cfg-default.js";
-import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
+import { relinka } from "@reliverse/relinka";
 
 // Supported configuration filenames
 const CONFIG_FILENAMES = [
@@ -20,7 +20,7 @@ export async function initRelidlerConfig(isDev: boolean) {
   }
 
   // Default to the first config filename if none exists
-  const configFilename = CONFIG_FILENAMES[0];
+  const configFilename = CONFIG_FILENAMES[0] ?? "relidler.cfg.ts";
   const configPath = path.resolve(process.cwd(), configFilename);
 
   try {
@@ -36,10 +36,10 @@ export async function initRelidlerConfig(isDev: boolean) {
       relinka("info", "When you're ready, run `bun pub` to build and publish");
     }
     process.exit(0);
-  } catch (error: any) {
+  } catch (error: unknown) {
     relinka(
       "error",
-      `Error creating configuration file: ${error.message || error}`,
+      `Error creating configuration file: ${error instanceof Error ? error.message : String(error)}`,
     );
     process.exit(1);
   }
@@ -145,6 +145,7 @@ export default defineConfig({
   distJsrCopyRootFiles: ${JSON.stringify(DEFAULT_CONFIG.distJsrCopyRootFiles)},
   distJsrDirName: "${DEFAULT_CONFIG.distJsrDirName}",
   distJsrDryRun: ${DEFAULT_CONFIG.distJsrDryRun},
+  distJsrFailOnWarn: ${DEFAULT_CONFIG.distJsrFailOnWarn},
   distJsrGenTsconfig: ${DEFAULT_CONFIG.distJsrGenTsconfig},
   distJsrOutFilesExt: "${DEFAULT_CONFIG.distJsrOutFilesExt}",
   distJsrSlowTypes: ${DEFAULT_CONFIG.distJsrSlowTypes},

@@ -4,7 +4,7 @@ import { glob } from "tinyglobby";
 import type { ExcludeMode } from "~/libs/sdk/sdk-types.js";
 
 import { readFileSafe } from "./utils-fs.js";
-import { relinka } from "./utils-logs.js";
+import { relinka } from "@reliverse/relinka";
 import { extractPackageName } from "./utils-paths.js";
 
 /**
@@ -46,7 +46,7 @@ export async function filterDeps(
   };
 
   // Check if we're filtering dependencies or devDependencies
-  // We assume if the deps object is from package.devDependencies, devDeps should be true
+  // If the deps object is from package.devDependencies, devDeps should be true
   const devDeps = deps === originalPkg.devDependencies;
 
   if (!clearUnused) {

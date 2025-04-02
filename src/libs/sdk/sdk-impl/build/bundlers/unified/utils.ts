@@ -5,7 +5,7 @@ import { readdirSync, statSync } from "node:fs";
 import fsp from "node:fs/promises";
 import { dirname, resolve } from "pathe";
 
-import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
+import { relinka } from "@reliverse/relinka";
 
 import type { BuildContext, BuildPreset, UnifiedBuildConfig } from "./types.js";
 
@@ -61,7 +61,7 @@ export function extractExportFilenames(
 
 export function getpkg(id = ""): string {
   const s = id.split("/");
-  return s[0].startsWith("@") ? `${s[0]}/${s[1]}` : s[0];
+  return s[0]?.startsWith("@") ? `${s[0]}/${s[1] || ""}` : s[0] || "";
 }
 
 export function inferPkgExternals(pkg: PackageJson): (RegExp | string)[] {
@@ -122,18 +122,19 @@ export async function resolvePreset(
   preset: BuildPreset | string,
   rootDir: string,
 ): Promise<UnifiedBuildConfig> {
+  let resolvedPreset = preset;
   if (preset === "auto") {
-    preset = autoPreset;
+    resolvedPreset = autoPreset;
   } else if (typeof preset === "string") {
-    preset =
+    resolvedPreset =
       (await createJiti(rootDir, { interopDefault: true }).import(preset, {
         default: true,
       })) || {};
   }
-  if (typeof preset === "function") {
-    preset = preset();
+  if (typeof resolvedPreset === "function") {
+    resolvedPreset = resolvedPreset();
   }
-  return preset as UnifiedBuildConfig;
+  return resolvedPreset as UnifiedBuildConfig;
 }
 
 export async function rmdir(dir: string): Promise<void> {
@@ -196,11 +197,14 @@ function inferExportType(
     }
     default: {
       if (previousConditions.length === 0) {
-        // TODO: Check against type:module for default
         return "esm";
       }
-      const [newCondition, ...rest] = previousConditions;
-      return inferExportType(newCondition, rest, filename);
+      const [newCondition] = previousConditions;
+      return inferExportType(
+        newCondition || "import",
+        previousConditions.slice(1),
+        filename,
+      );
     }
   }
 }

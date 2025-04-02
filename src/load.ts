@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import type { BuildPublishConfig } from "~/libs/sdk/sdk-types.js";
 
 import { defineConfig } from "~/libs/cfg/cfg-mod.js";
-import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
+import { relinka } from "@reliverse/relinka";
 
 /**
  * Searches for and loads a configuration file in the current dir.

@@ -5,7 +5,7 @@ import { glob } from "tinyglobby";
 
 import { CONCURRENCY_DEFAULT, SHOW_VERBOSE } from "./utils-consts.js";
 import { determineDistName } from "./utils-determine.js";
-import { relinka } from "./utils-logs.js";
+import { relinka } from "@reliverse/relinka";
 
 // ============================
 // File & Directory Utilities
@@ -219,7 +219,7 @@ export async function readFileSafe(
   isJsr: "" | boolean,
   reason: string,
 ): Promise<string> {
-  const distName = determineDistName(filePath, isJsr, null);
+  const distName = determineDistName(filePath, isJsr, undefined);
   try {
     const content = await fs.readFile(filePath, "utf8");
     if (SHOW_VERBOSE.readFileSafe) {

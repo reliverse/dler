@@ -3,7 +3,7 @@ import type { PackageJson } from "pkg-types";
 import { existsSync } from "node:fs";
 import { join, normalize, resolve } from "pathe";
 
-import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
+import { relinka } from "@reliverse/relinka";
 
 import type { BuildEntry, BuildPreset, MkdistBuildEntry } from "./types.js";
 
@@ -98,7 +98,7 @@ function inferEntries(
     outputs.push({ file: pkg.module, type: "esm" });
   }
   if (pkg.types || pkg.typings) {
-    outputs.push({ file: pkg.types || pkg.typings });
+    outputs.push({ file: (pkg.types || pkg.typings) as string });
   }
 
   // Try to detect output types
@@ -163,7 +163,7 @@ function inferEntries(
       dts = true;
     }
 
-    if (isDir) {
+    if (isDir && entry) {
       entry.outDir = outputSlug;
       (entry as MkdistBuildEntry).format = output.type;
     }

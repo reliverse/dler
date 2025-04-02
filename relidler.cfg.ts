@@ -28,6 +28,7 @@ export default defineConfig({
   distJsrCopyRootFiles: ["README.md", "LICENSE"],
   distJsrDirName: "dist-jsr",
   distJsrDryRun: false,
+  distJsrFailOnWarn: false,
   distJsrGenTsconfig: false,
   distJsrOutFilesExt: "ts",
   distJsrSlowTypes: true,

@@ -34,6 +34,9 @@ export function shebangPlugin(): Plugin {
           continue;
         }
         if (SHEBANG_RE.exec(output.code)) {
+          if (!options.dir) {
+            throw new Error("options.dir is required for shebang plugin");
+          }
           const outFile = resolve(options.dir, fileName);
           await makeExecutable(outFile);
         }

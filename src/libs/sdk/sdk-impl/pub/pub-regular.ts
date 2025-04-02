@@ -7,7 +7,7 @@ import path from "pathe";
 
 import { PROJECT_ROOT } from "~/libs/sdk/sdk-impl/utils/utils-consts.js";
 import { withWorkingDirectory } from "~/libs/sdk/sdk-impl/utils/utils-cwd.js";
-import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
+import { relinka } from "@reliverse/relinka";
 import {
   pausePerfTimer,
   type PerfTimer,
@@ -19,6 +19,7 @@ import {
  */
 export async function regular_pubToJsr(
   distJsrDryRun: boolean,
+  distJsrFailOnWarn: boolean,
   isDev: boolean,
   commonPubPause: boolean,
   distJsrDirName: string,
@@ -42,6 +43,7 @@ export async function regular_pubToJsr(
         const command = [
           "bun x jsr publish",
           distJsrDryRun ? "--dry-run" : "",
+          distJsrFailOnWarn ? "--fail-on-warn" : "",
           distJsrAllowDirty ? "--allow-dirty" : "",
           distJsrSlowTypes ? "--allow-slow-types" : "",
         ]

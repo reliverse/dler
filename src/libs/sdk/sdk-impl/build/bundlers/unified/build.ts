@@ -1,5 +1,6 @@
 import type { PackageJson } from "pkg-types";
 
+import { relinka } from "@reliverse/relinka";
 import { defu } from "defu";
 import { createHooks } from "hookable";
 import { createJiti } from "jiti";
@@ -10,7 +11,6 @@ import prettyBytes from "pretty-bytes";
 import prettyMilliseconds from "pretty-ms";
 import { glob } from "tinyglobby";
 
-import { relinka } from "~/libs/sdk/sdk-impl/utils/utils-logs.js";
 import {
   createPerfTimer,
   getElapsedPerfTime,
@@ -38,18 +38,18 @@ import { validateDependencies, validatePackage } from "./validate.js";
 
 export async function build(
   rootDir: string,
-  transpileStub: boolean,
   inputConfig: UnifiedBuildConfig & {
     config?: string;
     showOutLog?: boolean;
   },
   outDir: string,
+  transpileStub = false,
 ): Promise<void> {
   // Determine rootDir
-  rootDir = resolve(process.cwd(), rootDir || ".");
+  const resolvedRootDir = resolve(process.cwd(), rootDir || ".");
 
   // Create jiti instance for loading initial config
-  const jiti = createJiti(rootDir);
+  const jiti = createJiti(resolvedRootDir);
 
   const _buildConfig: UnifiedBuildConfig | UnifiedBuildConfig[] =
     // TODO: add relidler.cfg.ts support
@@ -64,10 +64,10 @@ export async function build(
 
   const pkg: PackageJson &
     Partial<Record<"build" | "relidler", UnifiedBuildConfig>> =
-    ((await jiti.import("./package.json", {
+    (await jiti.import("./package.json", {
       default: true,
       try: true,
-    }))) || ({} as PackageJson);
+    })) || ({} as PackageJson);
 
   // Invoke build for every build config defined in build.config.ts
   const cleanedDirs: string[] = [];
@@ -84,7 +84,7 @@ export async function build(
 
   for (const buildConfig of buildConfigs) {
     await _build(
-      rootDir,
+      resolvedRootDir,
       inputConfig,
       buildConfig,
       pkg,
@@ -122,7 +122,6 @@ async function _build(
   );
 
   // Merge options
-  // @ts-expect-error [2589] Type instantiation is excessively deep and possibly infinite.
   const options = defu(
     buildConfig,
     pkg.relidler || pkg.build,
