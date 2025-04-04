@@ -1,3 +1,4 @@
+import { relinka } from "@reliverse/relinka";
 import { build as bunBuild } from "bun";
 import fs from "fs-extra";
 import path from "pathe";
@@ -33,7 +34,6 @@ import {
   createJsrJSON,
   renameTsxFiles,
 } from "~/libs/sdk/sdk-impl/utils/utils-jsr-json.js";
-import { relinka } from "@reliverse/relinka";
 import {
   convertImportExtensionsJsToTs,
   convertImportPaths,
@@ -395,7 +395,7 @@ async function regular_bundleUsingUnified(
       transpileWatch: transpileWatch ?? false,
     } satisfies UnifiedBuildConfig & { concurrency?: number };
 
-    await unifiedBuild(rootDir, transpileStub, unifiedBuildConfig, outDirBin);
+    await unifiedBuild(rootDir, unifiedBuildConfig, outDirBin);
 
     // Calculate and log build duration
     const duration = getElapsedPerfTime(timer);

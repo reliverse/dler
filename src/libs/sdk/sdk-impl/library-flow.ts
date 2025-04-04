@@ -56,6 +56,7 @@ export async function processLibraryFlow(
     );
     return;
   }
+
   await libraries_buildPublish(
     isDev,
     timer,
@@ -85,47 +86,37 @@ export async function processLibraryFlow(
 }
 
 /**
- * Extracts folder name from library name, handling scoped packages.
- * If libDirName is specified in the library config, that value is used instead.
+ * Extracts the folder name for a library, handling scoped packages or config overrides.
  */
 function extractFolderName(libName: string, libConfig?: LibConfig): string {
-  // Use libDirName if available
+  // If user provided a custom directory name, use that
   if (libConfig?.libDirName) {
     return libConfig.libDirName;
   }
 
-  // Default behavior (fallback)
-  if (libName.startsWith("@")) {
-    const parts = libName.split("/");
-    if (parts.length > 1) return parts[1] || libName;
-  }
-  return libName;
-}
+  // Otherwise, derive from libName
+  const parts = libName.split("/");
+  // If scoped (e.g., "@scope/package"), focus on the last chunk
+  let baseName = parts[parts.length - 1];
 
-// Helper function to extract directory name from library name
-function extractLibDirFromName(name: string): string {
-  // For scoped packages like @reliverse/relidler-cfg
-  if (name.includes("/")) {
-    const parts = name.split("/");
-    const lastPart = parts[parts.length - 1] || name;
-    // Handle cases like relidler-cfg where we want just "cfg"
-    if (lastPart.includes("-")) {
-      return lastPart.split("-").pop() || lastPart;
-    }
-    return lastPart;
+  // If there's a dash, we split on the dash and use the last piece
+  if (baseName?.includes("-")) {
+    const dashParts = baseName.split("-");
+    baseName = dashParts[dashParts.length - 1];
   }
-  // For simple names with prefix like "relidler-cfg"
-  if (name.includes("-")) {
-    return name.split("-").pop() || name;
+
+  if (!baseName) {
+    baseName = libName;
   }
-  return name;
+
+  return baseName;
 }
 
 /**
  * Processes all libs defined in config.libsList.
  * Builds and optionally publishes each library based on configuration.
  */
-async function libraries_buildPublish(
+export async function libraries_buildPublish(
   isDev: boolean,
   timer: PerfTimer,
   libsList: Record<string, LibConfig>,
@@ -152,119 +143,144 @@ async function libraries_buildPublish(
   distJsrOutFilesExt: NpmOutExt,
 ): Promise<void> {
   relinka("verbose", "Starting libraries_buildPublish");
+
   if (!libsList || Object.keys(libsList).length === 0) {
     relinka("info", "No lib configs found in config, skipping libs build.");
     return;
   }
+
   const libsEntries = Object.entries(libsList);
-  const tasks = libsEntries.map(([libName, libConfig]) => async () => {
-    try {
-      if (!libConfig.libMainFile) {
-        relinka(
-          "info",
-          `Library ${libName} is missing "libMainFile" property. Skipping...`,
-        );
-        return;
-      }
-      const folderName = extractFolderName(libName, libConfig);
-      const libBaseDir = path.resolve(PROJECT_ROOT, libsDirDist, folderName);
-      const npmOutDir = path.join(libBaseDir, "npm");
-      const jsrOutDir = path.join(libBaseDir, "jsr");
-      const libMainPath = path.parse(libConfig.libMainFile);
-      const libMainFile = libMainPath.base;
-      let libMainDir: string;
 
-      // Handle three possible formats:
-      // 1. Full path starting with libsDirSrc (e.g., "src/libs/cfg/cfg-main.ts")
-      // 2. Relative path within libs (e.g., "cfg/cfg-main.ts")
-      // 3. Just filename (e.g., "cfg-main.ts")
-      if (libConfig.libMainFile.startsWith(libsDirSrc)) {
-        // Case 1: Already includes the full path
-        libMainDir = libMainPath.dir || ".";
-      } else if (libMainPath.dir) {
-        // Case 2: Has directory component but doesn't start with libsDirSrc
-        libMainDir = path.join(libsDirSrc, libMainPath.dir);
-      } else {
-        // Case 3: Just a filename, use the libDirName or extract from the library name
-        const dirName = libConfig.libDirName || extractLibDirFromName(libName);
-        libMainDir = path.join(libsDirSrc, dirName);
-      }
+  // Create a set of build/publish tasks and run them in parallel (concurrency limited)
+  const tasks = libsEntries.map(([libName, libConfig]) => {
+    return async () => {
+      try {
+        if (!libConfig.libMainFile) {
+          throw new Error(
+            `Library ${libName} is missing "libMainFile" property.`,
+          );
+        }
 
-      relinka(
-        "verbose",
-        `Processing library ${libName}: libMainDir=${libMainDir}, libMainFile=${libMainFile}`,
-      );
-      const libTranspileMinify =
-        (libConfig as any)?.[libName]?.libTranspileMinify ?? false;
-      await library_buildLibrary(
-        commonPubRegistry,
-        libName,
-        libMainDir,
-        npmOutDir,
-        jsrOutDir,
-        libMainFile,
-        isDev,
-        coreEntrySrcDir,
-        distNpmBuilder,
-        libsList,
-        unifiedBundlerOutExt,
-        rmDepsMode,
-        rmDepsPatterns,
-        transpileEsbuild,
-        transpileTarget,
-        transpileFormat,
-        transpileSplitting,
-        libTranspileMinify,
-        transpileSourcemap,
-        transpilePublicPath,
-        distJsrBuilder,
-        timer,
-        transpileStub,
-        transpileWatch,
-        distJsrOutFilesExt,
-      );
-      if (!commonPubPause) {
-        await library_publishLibrary(
-          commonPubRegistry,
-          libName,
-          npmOutDir,
-          jsrOutDir,
-          distJsrDryRun,
-          distJsrFailOnWarn,
-          false,
-          false,
-          isDev,
-          timer,
-        );
-      }
-    } catch (error) {
-      relinka(
-        "error",
-        `Failed to process library ${libName}: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      if (isDev) {
+        // Determine top-level folder name for dist output
+        const folderName = extractFolderName(libName, libConfig);
+        const libBaseDir = path.resolve(PROJECT_ROOT, libsDirDist, folderName);
+        const npmOutDir = path.join(libBaseDir, "npm");
+        const jsrOutDir = path.join(libBaseDir, "jsr");
+
+        // Parse the mainFile path
+        const libMainPath = path.parse(libConfig.libMainFile);
+        const libMainFile = libMainPath.base;
+        let libMainDir: string;
+
+        // Check for various path styles
+        if (libConfig.libMainFile.startsWith(libsDirSrc)) {
+          // Case 1: Fully qualified path already includes libsDirSrc
+          libMainDir = libMainPath.dir || ".";
+        } else if (libMainPath.dir) {
+          // Case 2: Has directory component, but does not start with libsDirSrc
+          libMainDir = path.join(libsDirSrc, libMainPath.dir);
+        } else {
+          // Case 3: Just a filename, use folderName as fallback
+          libMainDir = path.join(libsDirSrc, folderName);
+        }
+
         relinka(
           "verbose",
-          `Error details: ${error instanceof Error ? error.stack : "No stack trace available"}`,
+          `Processing library ${libName}: libMainDir=${libMainDir}, libMainFile=${libMainFile}`,
         );
+
+        // If you have a boolean in config controlling minify:
+        const libTranspileMinify =
+          (libConfig as any)?.libTranspileMinify === true;
+
+        // 1. Build library
+        await library_buildLibrary({
+          commonPubRegistry,
+          libName,
+          mainDir: libMainDir,
+          npm: {
+            npmOutDir,
+            distNpmBuilder,
+            coreEntrySrcDir,
+          },
+          jsr: {
+            jsrOutDir,
+            distJsrBuilder,
+            distJsrOutFilesExt,
+          },
+          libMainFile,
+          isDev,
+          libsList,
+          unifiedBundlerOutExt,
+          rmDepsMode,
+          rmDepsPatterns,
+          transpileEsbuild,
+          transpileTarget,
+          transpileFormat,
+          transpileSplitting,
+          libTranspileMinify,
+          transpileSourcemap,
+          transpilePublicPath,
+          timer,
+          transpileStub,
+          transpileWatch,
+        });
+
+        // 2. Publish if not paused
+        if (!commonPubPause) {
+          await library_publishLibrary(
+            commonPubRegistry,
+            libName,
+            npmOutDir,
+            jsrOutDir,
+            distJsrDryRun,
+            distJsrFailOnWarn,
+            false,
+            false,
+            isDev,
+            timer,
+          );
+        }
+      } catch (error) {
+        relinka(
+          "error",
+          `Failed to process library ${libName}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+        if (isDev && error instanceof Error) {
+          relinka("verbose", `Error details: ${error.stack}`);
+        }
+        throw error;
       }
-      throw error;
-    }
+    };
   });
-  const concurrency = CONCURRENCY_DEFAULT;
+
   try {
     await pAll(tasks, {
-      concurrency,
+      concurrency: CONCURRENCY_DEFAULT,
     });
     relinka("verbose", "Completed libraries_buildPublish");
   } catch (error) {
     if (error instanceof AggregateError) {
+      // For concurrency errors, each error is an entry in the AggregateError
+      for (const individualError of error.errors) {
+        relinka(
+          "error",
+          `AggregateError: ${
+            individualError instanceof Error
+              ? individualError.message
+              : String(individualError)
+          }`,
+        );
+      }
+    } else {
       relinka(
         "error",
-        "Multiple libraries failed to process. See above for details.",
+        `Unhandled error in libraries_buildPublish: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       );
-    } else {
-      relinka("error", "Library processing stopped due to an error.");
     }
     throw error;
   }

@@ -1,6 +1,5 @@
 import type { CopyOptions } from "fs-extra";
 
-// Corrected import path for relinka (removed .js)
 import { relinka } from "@reliverse/relinka";
 import { build as bunBuild, type BuildConfig } from "bun";
 import fs from "fs-extra";
@@ -11,7 +10,6 @@ import prettyBytes from "pretty-bytes";
 import prettyMilliseconds from "pretty-ms";
 
 import type { UnifiedBuildConfig } from "~/libs/sdk/sdk-impl/build/bundlers/unified/types.js";
-// Local SDK Types (Assuming these are correctly defined)
 import type {
   BundlerName,
   Esbuild,
@@ -74,7 +72,7 @@ const ALIAS_PREFIX_TO_CONVERT = "~/"; // Alias prefix used in internal imports
 /** Describes a file whose content was temporarily replaced during pre-build */
 type ReplacementRecord = {
   filePath: string;
-  newContent: string; // Stored for debugging/verification if needed
+  newContent: string; // Stored for debugging/verification
   originalContent: string;
 };
 
@@ -86,10 +84,10 @@ type SourceReplacementConfig = {
 };
 
 /** Options common to both NPM and JSR build targets */
-type BaseBuildOptions = {
+type BaseLibBuildOptions = {
   libName: string;
   mainDir: string; // Source directory (e.g., "src") - Used mainly for pre-build replacements
-  mainFile: string; // Relative path of the main entry file within its source dir
+  libMainFile: string; // Relative path of the main entry file within its source dir
   isDev: boolean;
   libsList: Record<string, LibConfig>;
   rmDepsMode: ExcludeMode;
@@ -130,7 +128,7 @@ export type LibraryBuildOptions = {
   commonPubRegistry: "npm" | "jsr" | "npm-jsr" | string | undefined; // Explicit options + string for flexibility
   npm?: NpmBuildOptions;
   jsr?: JsrBuildOptions;
-} & BaseBuildOptions &
+} & BaseLibBuildOptions &
   TranspileOptions;
 
 /** Parameters for the unified `buildDistributionTarget` function */
@@ -243,13 +241,11 @@ export async function library_buildLibrary(
           revertError instanceof Error
             ? revertError
             : new Error(String(revertError));
-        // Log critical failure, as source files might be left modified
         relinka(
           "error",
           `CRITICAL: Failed to revert pre-build changes for ${libName}: ${error.message}. Source files may be left modified!`,
           error.stack,
         );
-        // Depending on CI/CD, might want to throw here to signal critical failure
         // throw new Error(`Revert failed for ${libName}: ${error.message}`);
       }
     } else {
@@ -326,7 +322,7 @@ async function executeBuildTasks(options: LibraryBuildOptions): Promise<void> {
 async function library_buildJsrDist(
   options: LibraryBuildOptions,
 ): Promise<void> {
-  const { libName, mainFile, libsList } = options;
+  const { libName, libMainFile, libsList } = options;
 
   // Check for JSR options internally, removing need for non-null assertion
   if (!options.jsr) {
@@ -342,7 +338,7 @@ async function library_buildJsrDist(
 
   // Resolve paths
   const libSourceDirResolved = path.resolve(PROJECT_ROOT, options.mainDir);
-  const entryFilePathResolved = path.resolve(libSourceDirResolved, mainFile);
+  const entryFilePathResolved = path.resolve(libSourceDirResolved, libMainFile);
   const outputDirRootResolved = path.resolve(PROJECT_ROOT, jsrOutDir);
   const outputDirBinResolved = path.resolve(
     outputDirRootResolved,
@@ -402,7 +398,7 @@ async function library_buildJsrDist(
 async function library_buildNpmDist(
   options: LibraryBuildOptions,
 ): Promise<void> {
-  const { libName, mainFile, libsList } = options;
+  const { libName, libMainFile, libsList } = options;
 
   // Check for NPM options internally, removing need for non-null assertion
   if (!options.npm) {
@@ -431,14 +427,14 @@ async function library_buildNpmDist(
   // Determine the specific source directory for *this* library within the core source dir
   const { libSpecificSrcDir, libDirName } = await determineNpmSourceDirectory(
     libName,
-    mainFile,
+    libMainFile,
     coreEntrySrcDirResolved,
     libsList,
     distName,
   );
   const entryFilePathResolved = path.resolve(
     libSpecificSrcDir,
-    path.basename(mainFile),
+    path.basename(libMainFile),
   );
 
   // Validate entry file existence
@@ -504,8 +500,8 @@ async function buildDistributionTarget(
     targetType,
     builder,
     entryFilePath, // Entry for bundler (file path or dir path for 'jsr' copy)
-    outputDirRoot, // Corrected variable name
-    outputDirBin, // Corrected variable name
+    outputDirRoot,
+    outputDirBin,
     libDeclarations,
     distJsrOutFilesExt,
     options,
@@ -514,7 +510,7 @@ async function buildDistributionTarget(
   const {
     libName,
     timer,
-    mainFile, // Original base entry filename needed for common steps
+    libMainFile,
     libsList,
     rmDepsMode,
     rmDepsPatterns,
@@ -546,7 +542,7 @@ async function buildDistributionTarget(
   // --- Bundling Step ---
   // Use BundleRequestParams type for the object passed to the dispatcher
   const bundleRequest: BundleRequestParams = {
-    builder, // Include builder here
+    builder,
     entryPoint: entryFilePath,
     outDir: outputDirBin,
     libName,
@@ -567,9 +563,9 @@ async function buildDistributionTarget(
 
   // --- Common Post-Bundling Steps ---
   const commonStepsParams: CommonStepsParams = {
-    coreEntryFileName: path.basename(mainFile),
-    outDirRoot: outputDirRoot, // Use corrected variable name
-    outDirBin: outputDirBin, // Use corrected variable name
+    coreEntryFileName: path.basename(libMainFile),
+    outDirRoot: outputDirRoot,
+    outDirBin: outputDirBin,
     isJsr,
     libName,
     libsList,
@@ -594,7 +590,7 @@ async function buildDistributionTarget(
  * @param params - Parameters required for bundling execution, including the builder name.
  */
 async function library_bundleWithBuilder(
-  params: BundleRequestParams, // Use the combined type here
+  params: BundleRequestParams,
 ): Promise<void> {
   // Destructure builder separately, pass the rest matching BundleExecutorParams
   const { builder, ...executorParams } = params;
@@ -985,11 +981,10 @@ async function determineNpmSourceDirectory(
     // Option 1: Use explicit libDirName if provided
     if (libConfig.libDirName) {
       const potentialLibDirName = libConfig.libDirName;
-      // Construct path assuming libDirName is relative to a 'libs' subdir
       const potentialPath = path.join(
         coreEntrySrcDirResolved,
         "libs",
-        potentialLibDirName, // Use the checked variable
+        potentialLibDirName,
       );
       if (await fs.pathExists(potentialPath)) {
         libSpecificSrcDir = potentialPath;
@@ -1021,7 +1016,9 @@ async function determineNpmSourceDirectory(
           const pathSegments = mainFilePathRelative.split(path.sep);
           if (pathSegments.length > 1) {
             const inferredDirName = pathSegments[0];
-            const potentialPath = path.join(baseLibsDir, inferredDirName);
+            const potentialPath = inferredDirName
+              ? path.join(baseLibsDir, inferredDirName)
+              : baseLibsDir;
             // Check existence before assigning
             if (await fs.pathExists(potentialPath)) {
               libDirName = inferredDirName;
@@ -1179,8 +1176,11 @@ async function preBuildReplacements(
         let lineEndIndex = matchEndIndex;
         while (
           lineEndIndex > lineStartIndex &&
-          /\s/.test(originalCode[lineEndIndex - 1]) &&
-          originalCode[lineEndIndex - 1] !== "\n"
+          lineEndIndex - 1 < originalCode.length &&
+          originalCode[lineEndIndex - 1] !== undefined &&
+          originalCode[lineEndIndex - 1] !== null &&
+          typeof originalCode[lineEndIndex - 1] === "string" &&
+          /\s/.test(originalCode[lineEndIndex - 1] as string)
         ) {
           lineEndIndex--;
         }
@@ -1215,8 +1215,6 @@ async function preBuildReplacements(
             originalContent: originalCode,
           });
           await fs.writeFile(filePath, updatedCode, "utf-8");
-          // Assuming PROJECT_ROOT and filePath are strings, path.relative should work.
-          // If the error persists, it might be an issue with relinka's type signature.
           relinka(
             "info",
             `Applied pre-build replacement in ${path.relative(PROJECT_ROOT, filePath)}`,

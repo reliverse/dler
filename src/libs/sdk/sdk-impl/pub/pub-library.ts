@@ -1,9 +1,9 @@
+import { relinka } from "@reliverse/relinka";
 import { execaCommand } from "execa";
 import pAll from "p-all";
 
 import { CONCURRENCY_DEFAULT } from "~/libs/sdk/sdk-impl/utils/utils-consts.js";
 import { withWorkingDirectory } from "~/libs/sdk/sdk-impl/utils/utils-cwd.js";
-import { relinka } from "@reliverse/relinka";
 import {
   pausePerfTimer,
   type PerfTimer,

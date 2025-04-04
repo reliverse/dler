@@ -224,7 +224,6 @@ function convertAbsoluteToAlias(ip: string, opts: ConversionOptions): string {
   return `${opts.aliasPrefix}${relativePath}`;
 }
 function convertAbsoluteToBare(ip: string): string {
-  // "Bare" here is interpreted as path relative to CWD.
   relinka(
     "warn",
     `Ambiguous conversion: absolute:bare for ${ip}. Using path relative to CWD.`,
@@ -262,10 +261,8 @@ function convertAbsoluteToRelative(
 function convertAliasToAbsolute(ip: string, opts: ConversionOptions): string {
   if (!ip.startsWith(opts.aliasPrefix)) return ip;
   const subPath = ip.slice(opts.aliasPrefix.length);
-  return path.resolve(opts.baseDir, subPath); // Use resolve for absolute path
+  return path.resolve(opts.baseDir, subPath); // resolve for absolute path
 }
-// Note: alias:alias is handled by the dispatcher as no-op if prefixes/bases match.
-// If converting between *different* alias systems, logic would be needed here or in the dispatcher.
 function convertAliasToBare(ip: string, opts: ConversionOptions): string {
   // "bare" means relative to CWD.
   if (!ip.startsWith(opts.aliasPrefix)) return ip;
@@ -382,14 +379,13 @@ function convertModuleToAbsolute(ip: string, opts: ConversionOptions): string {
   const libConfig = packageName ? opts.libsList[packageName] : undefined;
   if (!libConfig?.libMainFile) return ip;
 
-  // Typically convert to the directory of the library's main file for resolving further imports.
+  // convert to the directory of the library's main file for resolving further imports.
   const libMainDir = path.dirname(path.resolve(CWD, libConfig.libMainFile));
   relinka(
     "verbose",
     `Converted module ${packageName} to absolute path ${libMainDir}`,
   );
   return libMainDir;
-  // Alternative: return path.resolve(CWD, libConfig.libMainFile); // to return the file itself
 }
 function convertModuleToAlias(ip: string, opts: ConversionOptions): string {
   const absolutePath = convertModuleToAbsolute(ip, opts);

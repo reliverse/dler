@@ -1,3 +1,4 @@
+import { relinka } from "@reliverse/relinka";
 import fs from "fs-extra";
 import pMap from "p-map";
 import path from "pathe";
@@ -5,7 +6,6 @@ import { glob } from "tinyglobby";
 
 import { CONCURRENCY_DEFAULT, SHOW_VERBOSE } from "./utils-consts.js";
 import { determineDistName } from "./utils-determine.js";
-import { relinka } from "@reliverse/relinka";
 
 // ============================
 // File & Directory Utilities

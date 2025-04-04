@@ -1,11 +1,10 @@
 import type { PackageJson } from "pkg-types";
 
+import { relinka } from "@reliverse/relinka";
 import { createJiti } from "jiti";
 import { readdirSync, statSync } from "node:fs";
 import fsp from "node:fs/promises";
 import { dirname, resolve } from "pathe";
-
-import { relinka } from "@reliverse/relinka";
 
 import type { BuildContext, BuildPreset, UnifiedBuildConfig } from "./types.js";
 

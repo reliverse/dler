@@ -1,3 +1,4 @@
+import { relinka } from "@reliverse/relinka";
 import fs from "fs-extra";
 import pMap from "p-map";
 import path from "pathe";
@@ -9,7 +10,6 @@ import type { BumpFilter, BumpMode } from "~/libs/sdk/sdk-types.js";
 
 import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "./utils-consts.js";
 import { readFileSafe, writeFileSafe } from "./utils-fs.js";
-import { relinka } from "@reliverse/relinka";
 
 // ============================
 // Version Bumping Functions

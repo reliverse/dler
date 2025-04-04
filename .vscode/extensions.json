@@ -1,9 +1,6 @@
 {
   "recommendations": [
     "fabiospampinato.vscode-open-multiple-files",
-    "yoavbls.pretty-ts-errors",
-    "oven.bun-vscode",
-    "miguelsolorio.symbols",
     "biomejs.biome",
     "usernamehw.errorlens"
   ]

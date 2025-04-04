@@ -1,14 +1,16 @@
+import type { CommandContext } from "@reliverse/prompts";
+
 import { defineCommand } from "@reliverse/prompts";
+import { relinka } from "@reliverse/relinka";
 import path from "pathe";
 
 import { useAggregator } from "./libs/sdk/sdk-impl/utils/tools/tools-agg.js";
 import { printUsage } from "./libs/sdk/sdk-impl/utils/tools/tools-impl.js";
-import { relinka } from "@reliverse/relinka";
 
 const TOOLS = ["agg"];
 
-export default defineCommand({
-  args: {
+const tools = defineCommand()
+  .args({
     dev: {
       description: "Run in development mode",
       type: "boolean",
@@ -42,21 +44,21 @@ export default defineCommand({
       description: "Tool to run",
       type: "string",
     },
-  },
-  meta: {
+  })
+  .meta({
     description: `Runs selected Relidler feature. Available tools: ${TOOLS.join(", ")}`,
     name: "tools",
-  },
-
-  run: async ({ args }) => {
-    const isDev = args.dev;
+  })
+  .run(async (context: CommandContext<typeof tools.args>) => {
+    const { args } = context;
+    const isDev = Boolean(args.dev ?? false);
 
     if (!args.tool) {
       relinka("error", "Missing required param: --tool <toolName>");
       printUsage(isDev);
       process.exit(1);
     }
-    if (!TOOLS.includes(args.tool)) {
+    if (!TOOLS.includes(args.tool as string)) {
       relinka("error", `Error: Invalid tool: ${args.tool}`);
       relinka("info", `Available tools: ${TOOLS.join(", ")}`);
       printUsage(isDev);
@@ -75,15 +77,16 @@ export default defineCommand({
         process.exit(1);
       }
       await useAggregator({
-        inputDir: path.resolve(args.input),
+        inputDir: path.resolve(args.input as string),
         isRecursive: !!args.recursive,
-        outFile: path.resolve(args.out),
-        stripPrefix: args.strip ? path.resolve(args.strip) : "",
+        outFile: path.resolve(args.out as string),
+        stripPrefix: args.strip ? path.resolve(args.strip as string) : "",
         useImport: !!args.import,
         useNamed: !!args.named,
       });
     }
 
     process.exit(0);
-  },
-});
+  });
+
+export default tools;

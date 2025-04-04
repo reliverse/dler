@@ -1,3 +1,4 @@
+import { relinka } from "@reliverse/relinka";
 import { createJiti, type JitiOptions } from "jiti";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "pathe";
@@ -15,8 +16,6 @@ import type {
   UntypedBuildEntry,
   UntypedOutputs,
 } from "~/libs/sdk/sdk-impl/build/bundlers/unified/types.js";
-
-import { relinka } from "@reliverse/relinka";
 
 export async function typesBuild(ctx: BuildContext): Promise<void> {
   const entries = ctx.options.entries.filter(

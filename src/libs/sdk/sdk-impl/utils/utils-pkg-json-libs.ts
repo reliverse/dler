@@ -1,3 +1,4 @@
+import { relinka } from "@reliverse/relinka";
 import fs from "fs-extra";
 import path from "pathe";
 import {
@@ -13,7 +14,6 @@ import type {
 } from "~/libs/sdk/sdk-types.js";
 
 import { filterDeps } from "~/libs/sdk/sdk-impl/utils/utils-deps.js";
-import { relinka } from "@reliverse/relinka";
 
 /**
  * Creates a package.json for a lib distribution.
@@ -31,6 +31,12 @@ export async function library_createPackageJSON(
     "verbose",
     `Generating package.json for lib ${libName} (isJsr=${isJsr})...`,
   );
+
+  // Throw error if libsList is empty or not provided
+  if (!libsList) {
+    throw new Error("libsList is empty or not provided");
+  }
+
   const originalPkg = await readPackageJSON();
   let { description } = originalPkg;
   const { author, keywords, license, version } = originalPkg;
@@ -235,6 +241,11 @@ async function library_writeJsrPackageJSON(
 ): Promise<void> {
   relinka("verbose", `Writing package.json for JSR lib: ${libName}`);
 
+  // Throw error if libsList is empty or not provided
+  if (!libsList) {
+    throw new Error("libsList is empty or not provided");
+  }
+
   // For JSR packages, we need to handle bin entries differently
   // JSR uses TypeScript files directly
   const binEntry = commonPkg.bin;
@@ -266,7 +277,7 @@ async function library_writeJsrPackageJSON(
         libDeclarations: false,
         libDescription: "",
         libDirName: libName,
-        libMainFile: "main.ts",
+        libMainFile: "src/libs/libName/libName-main.ts",
         libPkgKeepDeps: false,
         libTranspileMinify: true,
       },
@@ -307,6 +318,11 @@ async function library_writeNpmLibPackageJSON(
   unifiedBundlerOutExt: NpmOutExt,
 ): Promise<void> {
   relinka("verbose", `Writing package.json for NPM lib: ${libName}`);
+
+  // Throw error if libsList is empty or not provided
+  if (!libsList) {
+    throw new Error("libsList is empty or not provided");
+  }
 
   const npmPkg = definePackageJSON({
     ...commonPkg,

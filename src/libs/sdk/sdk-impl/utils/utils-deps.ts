@@ -1,10 +1,10 @@
+import { relinka } from "@reliverse/relinka";
 import { readPackageJSON } from "pkg-types";
 import { glob } from "tinyglobby";
 
 import type { ExcludeMode } from "~/libs/sdk/sdk-types.js";
 
 import { readFileSafe } from "./utils-fs.js";
-import { relinka } from "@reliverse/relinka";
 import { extractPackageName } from "./utils-paths.js";
 
 /**

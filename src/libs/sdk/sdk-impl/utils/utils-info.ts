@@ -1,10 +1,10 @@
+import { relinka } from "@reliverse/relinka";
 import prettyMilliseconds from "pretty-ms";
 
 import type { LibConfig } from "~/libs/sdk/sdk-types.js";
 
 import { setBumpDisabled } from "./utils-bump.js";
 import { removeDistFolders } from "./utils-clean.js";
-import { relinka } from "@reliverse/relinka";
 import { getElapsedPerfTime, type PerfTimer } from "./utils-perf.js";
 
 /**

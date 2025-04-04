@@ -1,3 +1,4 @@
+import { relinka } from "@reliverse/relinka";
 import fs from "fs-extra";
 import path from "pathe";
 import {
@@ -9,7 +10,6 @@ import {
 import type { ExcludeMode, NpmOutExt } from "~/libs/sdk/sdk-types.js";
 
 import { cliDomainDocs } from "~/libs/sdk/sdk-impl/utils/utils-consts.js";
-import { relinka } from "@reliverse/relinka";
 
 /**
  * Creates a package.json for the main distribution.

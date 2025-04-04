@@ -1,3 +1,4 @@
+import { relinka } from "@reliverse/relinka";
 import { promises as fsp } from "node:fs";
 import { relative, resolve } from "pathe";
 import { glob } from "tinyglobby";
@@ -12,7 +13,6 @@ import {
   symlink,
   warn,
 } from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils.js";
-import { relinka } from "@reliverse/relinka";
 
 const copy = fsp.cp || fsp.copyFile;
 

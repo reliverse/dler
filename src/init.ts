@@ -1,8 +1,8 @@
+import { relinka } from "@reliverse/relinka";
 import fs from "fs-extra";
 import path from "pathe";
 
 import { DEFAULT_CONFIG } from "~/libs/cfg/cfg-default.js";
-import { relinka } from "@reliverse/relinka";
 
 // Supported configuration filenames
 const CONFIG_FILENAMES = [

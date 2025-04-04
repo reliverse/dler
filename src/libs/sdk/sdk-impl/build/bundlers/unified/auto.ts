@@ -1,9 +1,8 @@
 import type { PackageJson } from "pkg-types";
 
+import { relinka } from "@reliverse/relinka";
 import { existsSync } from "node:fs";
 import { join, normalize, resolve } from "pathe";
-
-import { relinka } from "@reliverse/relinka";
 
 import type { BuildEntry, BuildPreset, MkdistBuildEntry } from "./types.js";
 

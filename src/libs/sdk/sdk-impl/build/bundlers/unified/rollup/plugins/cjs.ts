@@ -1,4 +1,4 @@
-import type { Plugin } from "rollup";
+import type { Plugin, SourceMapInput } from "rollup";
 
 import { FixDtsDefaultCjsExportsPlugin } from "fix-dts-default-cjs-exports/rollup";
 import MagicString from "magic-string";
@@ -11,11 +11,12 @@ export function cjsPlugin(): Plugin {
     name: "relidler-cjs",
     renderChunk(code, _chunk, opts) {
       if (opts.format === "es") {
-        return CJSToESM(code);
+        const result = CJSToESM(code);
+        return result || null;
       }
       return null;
     },
-  } as Plugin;
+  };
 }
 
 export function fixCJSExportTypePlugin(ctx: BuildContext): Plugin {
@@ -34,7 +35,7 @@ export function fixCJSExportTypePlugin(ctx: BuildContext): Plugin {
       );
     },
     warn: (msg) => ctx.warnings.add(msg),
-  });
+  }) as Plugin;
 }
 
 const CJSyntaxRe = /__filename|__dirname|require\(|require\.resolve\(/;
@@ -51,7 +52,7 @@ const require = __cjs_mod__.createRequire(import.meta.url);
 `;
 
 // Shim __dirname, __filename and require
-function CJSToESM(code: string): null | { code: string; map: any } {
+function CJSToESM(code: string): null | { code: string; map: SourceMapInput } {
   if (code.includes(CJSShim) || !CJSyntaxRe.test(code)) {
     return null;
   }
@@ -63,6 +64,6 @@ function CJSToESM(code: string): null | { code: string; map: any } {
 
   return {
     code: s.toString(),
-    map: s.generateMap(),
+    map: s.generateMap({ hires: true }) as SourceMapInput,
   };
 }
