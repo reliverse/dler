@@ -6,7 +6,7 @@ import { getElapsedPerfTime, type PerfTimer } from "./utils-perf.js";
 /**
  * Handles errors during the build process.
  */
-export function handleRelidlerError(error: unknown, timer: PerfTimer): never {
+export function handleDlerError(error: unknown, timer: PerfTimer): never {
   // Calculate elapsed time
   const elapsedTime = getElapsedPerfTime(timer);
   const transpileFormattedTime = prettyMilliseconds(elapsedTime, {

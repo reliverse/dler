@@ -166,7 +166,7 @@ async function regular_createCommonPackageFields(
     if (commonPkg.keywords) {
       const cliCommandName = name?.startsWith("@")
         ? name.split("/").pop() || "cli"
-        : name || "relidler";
+        : name || "dler";
       relinka(
         "verbose",
         `Adding CLI keywords to existing keywords, CLI command name: "${cliCommandName}"`,

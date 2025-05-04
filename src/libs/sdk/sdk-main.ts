@@ -113,7 +113,7 @@ export {
 } from "./sdk-impl/utils/utils-cwd.js";
 export { filterDeps } from "./sdk-impl/utils/utils-deps.js";
 export { determineDistName } from "./sdk-impl/utils/utils-determine.js";
-export { handleRelidlerError } from "./sdk-impl/utils/utils-error.js";
+export { handleDlerError } from "./sdk-impl/utils/utils-error.js";
 export {
   copyRootFile,
   deleteSpecificFiles,

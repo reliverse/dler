@@ -18,7 +18,7 @@ export async function makeExecutable(filePath: string): Promise<void> {
 
 export function removeShebangPlugin(): Plugin {
   return {
-    name: "relidler-remove-shebang",
+    name: "dler-remove-shebang",
     renderChunk(code): string {
       return code.replace(SHEBANG_RE, "");
     },
@@ -27,7 +27,7 @@ export function removeShebangPlugin(): Plugin {
 
 export function shebangPlugin(): Plugin {
   return {
-    name: "relidler-shebang",
+    name: "dler-shebang",
     async writeBundle(options, bundle): Promise<void> {
       for (const [fileName, output] of Object.entries(bundle)) {
         if (output.type !== "chunk") {

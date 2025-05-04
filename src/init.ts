@@ -4,25 +4,20 @@ import path from "pathe";
 
 import { DEFAULT_CONFIG } from "~/libs/cfg/cfg-default.js";
 
-// Supported configuration filenames
-const CONFIG_FILENAMES = [
-  "relidler.cfg.ts",
-  "relidler.config.ts",
-  "build.cfg.ts",
-  "build.pub.ts",
-];
+// Supported configuration filename
+const CONFIG_FILENAME = ".config/dler.ts";
 
-export async function initRelidlerConfig(isDev: boolean) {
-  // Check if any of the supported config files already exist
-  const existingConfigPath = await findExistingConfig();
-  if (existingConfigPath) {
+export async function initDlerConfig(isDev: boolean) {
+  // Check if the config file already exists
+  const configPath = path.resolve(process.cwd(), CONFIG_FILENAME);
+  const configExists = await fs.pathExists(configPath);
+
+  if (configExists) {
+    // If it exists, no need to do anything.
     return;
   }
 
-  // Default to the first config filename if none exists
-  const configFilename = CONFIG_FILENAMES[0] ?? "relidler.cfg.ts";
-  const configPath = path.resolve(process.cwd(), configFilename);
-
+  // If it doesn't exist, create it.
   try {
     // Generate and write the config file
     const configContent = generateConfig(isDev);
@@ -31,7 +26,7 @@ export async function initRelidlerConfig(isDev: boolean) {
     relinka("info", "Edit this file to customize build and publish settings");
     if (!isDev) {
       relinka("info", "Please note: commonPubPause is set to true by default");
-      relinka("info", "When you're ready, run `relidler` to build and publish");
+      relinka("info", "When you're ready, run `dler` to build and publish");
     } else {
       relinka("info", "When you're ready, run `bun pub` to build and publish");
     }
@@ -45,21 +40,11 @@ export async function initRelidlerConfig(isDev: boolean) {
   }
 }
 
-async function findExistingConfig() {
-  for (const filename of CONFIG_FILENAMES) {
-    const configPath = path.resolve(process.cwd(), filename);
-    if (await fs.pathExists(configPath)) {
-      return configPath;
-    }
-  }
-  return null;
-}
-
 // Generate the config file content
 function generateConfig(isDev: boolean): string {
   const importDefineConfigStatement = isDev
-    ? `import { defineConfig } from "./src/libs/cfg/cfg-main.js";`
-    : `import { defineConfig } from "@reliverse/relidler-cfg";`;
+    ? `import { defineConfig } from "../src/libs/cfg/cfg-main.js";`
+    : `import { defineConfig } from "@reliverse/dler-cfg";`;
   const verboseValue = getValue(isDev, true, DEFAULT_CONFIG.commonVerbose);
   const isCLIValue = getValue(isDev, true, DEFAULT_CONFIG.coreIsCLI);
   const registryValue = getValue(
@@ -84,17 +69,17 @@ function generateConfig(isDev: boolean): string {
   );
   const libsObject = isDev
     ? `{
-  "@reliverse/relidler-cfg": {
+  "@reliverse/dler-cfg": {
     libDeclarations: true,
-    libDescription: "@reliverse/relidler defineConfig",
+    libDescription: "@reliverse/dler defineConfig",
     libDirName: "cfg",
     libMainFile: "cfg/cfg-main.ts",
     libPkgKeepDeps: false,
     libTranspileMinify: true,
   },
-  "@reliverse/relidler-sdk": {
+  "@reliverse/dler-sdk": {
     libDeclarations: true,
-    libDescription: "@reliverse/relidler without cli",
+    libDescription: "@reliverse/dler without cli",
     libDirName: "sdk",
     libMainFile: "sdk/sdk-main.ts",
     libPkgKeepDeps: true,
@@ -113,14 +98,14 @@ function generateConfig(isDev: boolean): string {
 }`;
 
   // ===================================================
-  // relidler.cfg.ts default config template
+  // .config/dler.ts default config template
   // ===================================================
   const configTemplate = `${importDefineConfigStatement}
 
 /**
  * Reliverse Bundler Configuration
  * Hover over a field to see more details
- * @see https://github.com/reliverse/relidler
+ * @see https://github.com/reliverse/dler
  */
 export default defineConfig({
   // Bump configuration
@@ -156,7 +141,7 @@ export default defineConfig({
   distNpmDirName: "${DEFAULT_CONFIG.distNpmDirName}",
   distNpmOutFilesExt: "${DEFAULT_CONFIG.distNpmOutFilesExt}",
 
-  // Libraries Relidler Plugin
+  // Libraries Dler Plugin
   // Publish specific dirs as separate packages
   // This feature is experimental at the moment
   // Please commit your changes before using it

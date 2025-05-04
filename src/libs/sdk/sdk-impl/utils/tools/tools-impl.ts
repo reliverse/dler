@@ -9,7 +9,7 @@ export function printUsage(isDev?: boolean) {
   relinka("info", "====================");
   relinka(
     "info",
-    `${isDev ? "bun dev:agg" : "relidler tools"} --tool agg --input <dir> --out <file> [options]`,
+    `${isDev ? "bun dev:agg" : "dler tools"} --tool agg --input <dir> --out <file> [options]`,
   );
   if (isDev) {
     relinka(
@@ -19,7 +19,7 @@ export function printUsage(isDev?: boolean) {
   } else {
     relinka(
       "info",
-      "relidler tools --tool agg --input src/libs --out aggregator.ts --recursive --named",
+      "dler tools --tool agg --input src/libs --out aggregator.ts --recursive --named",
     );
   }
 }

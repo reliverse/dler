@@ -1,57 +1,57 @@
-# @reliverse/relidler | Relidler | Reliverse Bundler
+# dler (prev. relidler) • reliverse bundler
 
-[💖 GitHub Sponsors](https://github.com/sponsors/blefnk) • [💬 Discord](https://discord.gg/Pb8uKbwpsJ) • [✨ Repo](https://github.com/reliverse/relidler-js-bundler) • [📦 NPM](https://npmjs.com/@reliverse/relidler) • [📚 Docs](https://docs.reliverse.org)
+[💖 github sponsors](https://github.com/sponsors/blefnk) — [💬 discord](https://discord.gg/pb8ukbwpsj) — [✨ repo](https://github.com/reliverse/dler-js-bundler) — [📦 npm](https://npmjs.com/@reliverse/dler) — [📚 docs](https://docs.reliverse.org)
 
-**@reliverse/relidler** is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.
+> @reliverse/dler (`/ˈdiː.lər/`, dealer) is a flexible, unified, and fully automated bundler for typescript and javascript projects, as well as an npm and jsr publishing tool.
 
-## Features
+## features
 
-- 😘 Drop-in replacement for `unbuild`
-- ⚡ `relidler` works via CLI and SDK
-- 📦 Automated NPM/JSR publishing
-- ✅ Ensures reliable JS/TS builds
-- 🔄 Handles automatic version bumps
-- 🔧 Eliminates `package.json` headaches
-- 🎯 Optimized for speed and modern workflows
-- 🛠️ Converts TypeScript aliases to relative paths
-- ✨ Packed with powerful features under the hood
-- 📝 Highly configurable flow via a configuration file
-- 🔌 Plugin system with two built-in plugins included
+- 😘 replacement for `unbuild`
+- ⚡ `dler` works via cli and sdk
+- 📦 automated npm/jsr publishing
+- ✅ ensures reliable js/ts builds
+- 🔄 handles automatic version bumps
+- 🔧 eliminates `package.json` headaches
+- 🎯 optimized for speed and modern workflows
+- ✨ packed with powerful features under the hood
+- 🛠️ converts typescript aliases to relative paths
+- 🔌 plugin system with two built-in plugins included
+- 📝 highly configurable flow via a configuration file
 
-## Getting Started
+## getting started
 
-Ensure Git, Node.js, and bun/pnpm/yarn/npm are installed. Then:
+ensure git, node.js, and bun/pnpm/yarn/npm are installed. then:
 
-### Playground
+### playground
 
-> **💡 Tip**:
-> Want to test Relidler before integrating it into your project?
-> Clone the repo and build it using Relidler itself!
+> **💡 tip**:
+> want to test dler before integrating it into your project?
+> clone the repo and build it using dler itself!
 
 ```sh
-git clone https://github.com/reliverse/relidler.git
-cd relidler
+git clone https://github.com/reliverse/dler.git
+cd dler
 bun i
 bun dev # bun src/main.ts --dev
 ```
 
-### Installation
+### installation
 
-1. **Install globally**:
+1. **install globally**:
 
     ```sh
-    bun i -g @reliverse/relidler
+    bun i -g @reliverse/dler
     ```
 
-    **Or update as needed**:
+    **or update as needed**:
 
     ```sh
     bun -g update --latest
     ```
 
-2. **Prepare your project**:
+2. **prepare your project**:
 
-    a. **Configure `.gitignore`**:
+    a. **configure `.gitignore`**:
 
     ```sh
     echo "*.log" >> .gitignore
@@ -60,123 +60,123 @@ bun dev # bun src/main.ts --dev
     echo "dist-libs" >> .gitignore
     ```
 
-    b. **Install config intellisense**:
+    b. **install config intellisense**:
 
     ```sh
-    bun add -D @reliverse/relidler-cfg
+    bun add -d @reliverse/dler-cfg
     ```
 
-    c. **Initialize config**:
+    c. **initialize config**:
 
     ```sh
-    relidler cli
+    dler cli
     ```
 
-    - The `.reliverse/relidler.config.ts` file is automatically created on first run.
-    - **It's recommended to customize this file according to your needs.**
-    - You can check an example config here: [relidler.config.ts](https://github.com/reliverse/relidler-js-bundler/blob/main/relidler.config.ts)
+    - the `.config/dler.ts` file is automatically created on first run.
+    - **it's recommended to customize this file according to your needs.**
+    - you can check an example config here: [.config/dler.ts](https://github.com/reliverse/dler-js-bundler/blob/main/.config/dler.ts)
 
-3. **Run and enjoy**:
+3. **run and enjoy**:
 
     ```sh
-    relidler cli
+    dler cli
     ```
 
-## 🔌 Plugins
+## 🔌 plugins
 
-Relidler includes a plugin system with **two built-in plugins** (from [@reliverse/addons](https://github.com/reliverse/addons)):
+dler includes a plugin system with **two built-in plugins** (from [@reliverse/addons](https://github.com/reliverse/addons)):
 
-### 1. `libraries-relidler-plugin`
+### 1. `libraries-dler-plugin`
 
-Builds and publishes specific subdirectories of your main project as standalone packages.
+builds and publishes specific subdirectories of your main project as standalone packages.
 
-**Usage example**:  
-Using `@reliverse/relidler-cfg` to package [src/libs/cfg](https://github.com/reliverse/relidler-js-bundler/tree/main/src/libs/cfg):
+**usage example**:  
+using `@reliverse/dler-cfg` to package [src/libs/cfg](https://github.com/reliverse/dler-js-bundler/tree/main/src/libs/cfg):
 
 ```ts
-// relidler.config.ts
-libsActMode: "main-and-libs",
-libsDirDist: "dist-libs",
-libsDirSrc: "src/libs",
-libsList: {
-  "@reliverse/relidler-cfg": {
-    libDeclarations: true,
-    libDescription: "@reliverse/relidler defineConfig",
-    libDirName: "cfg",
-    libMainFile: "cfg/cfg-main.ts",
-    libPkgKeepDeps: false,
-    libTranspileMinify: true,
+// .config/dler.ts
+libsactmode: "main-and-libs",
+libsdirdist: "dist-libs",
+libsdirsrc: "src/libs",
+libslist: {
+  "@reliverse/dler-cfg": {
+    libdeclarations: true,
+    libdescription: "@reliverse/dler defineconfig",
+    libdirname: "cfg",
+    libmainfile: "cfg/cfg-main.ts",
+    libpkgkeepdeps: false,
+    libtranspileminify: true,
   },
 },
 ```
 
-**Relidler Task Commands**:
+**dler task commands**:
 
-- `// relidler-replace-me` tells Relidler to grab the contents of `../../types.ts` and inject them directly in place of your command definition.
+- `// dler-replace-me` tells dler to grab the contents of `../../types.ts` and inject them directly in place of your command definition.
 
   ```ts
-  export * from "../../types.js"; // relidler-replace-me
-  // OR:
-  export type { SpecificTypeName1, SpecificTypeName2 } from "../../types.js"; // relidler-replace-me
+  export * from "../../types.js"; // dler-replace-me
+  // or:
+  export type { specificTypeName1, specificTypeName2 } from "../../types.js"; // dler-replace-me
   ```
 
-- More magic commands coming soon...
+- more magic commands coming soon...
 
 ---
 
-### 2. `tools-relidler-plugin`
+### 2. `tools-dler-plugin`
 
-Lets you run standalone Relidler features directly from the CLI:
+lets you run standalone dler features directly from the cli:
 
 ```bash
-relidler tools --tool <tool> --input <dir> --out <file> [options]
+dler tools --tool <tool> --input <dir> --out <file> [options]
 ```
 
-**Available tools**:
+**available tools**:
 
-- `agg`: Generates aggregator file with content like `export { getSomething } from "./utils.js"`. **Note**: Currently it replaces the file content, not appends.
+- `agg`: generates aggregator file with content like `export { getsomething } from "./utils.js"`. **note**: currently it replaces the file content, not appends.
 
-**Usage example**: If you're exploring the example [Playground](#playground), you can try the following:
+**usage example**: if you're exploring the example [playground](#playground), you can try the following:
 
-1. Open [src/libs/sdk/sdk-main.ts](https://github.com/reliverse/relidler-js-bundler/blob/main/src/libs/sdk/sdk-main.ts) in your IDE.
-2. Press `Ctrl+A`, then `Backspace`. Run the command below and watch the magic happen:
+1. open [src/libs/sdk/sdk-main.ts](https://github.com/reliverse/dler-js-bundler/blob/main/src/libs/sdk/sdk-main.ts) in your ide.
+2. press `ctrl+a`, then `backspace`. run the command below and watch the magic happen:
 
 ```bash
-bun tools:agg # Shortcut for:
+bun tools:agg # shortcut for:
 bun src/main.ts tools --dev --tool agg --input src/libs/sdk/sdk-impl --out src/libs/sdk/sdk-main.ts --recursive --named --strip src/libs/sdk
 ```
 
-## API (for advanced users)
+## api (for advanced users)
 
-The SDK lets you build custom Relidler CLI plugins or even extend your own CLI tools.
+the sdk lets you build custom dler cli plugins or even extend your own cli tools.
 
 ```sh
-bun add @reliverse/relidler-sdk
+bun add @reliverse/dler-sdk
 ```
 
-**Usage example**: [@reliverse/cli](https://github.com/reliverse/cli-website-builder) leverages this SDK to extend its functionality.
+**usage example**: [@reliverse/rse](https://github.com/reliverse/rse-website-builder) leverages this sdk to extend its functionality.
 
-## TODO
+## todo
 
-- [x] ~~Implement stable `regular` build and publish~~
-- [ ] Implement stable `library` build and publish
-- [ ] Achieve full drop-in replacement for `unbuild`
-- [ ] Support auto migration from `build.config.ts`
-- [ ] Allow plugins to extend Relidler's `defineConfig`
-- [ ] Support configuration via `reliverse.{ts,jsonc}`
-- [ ] Make config file optional with sensible defaults
+- [x] ~~implement stable `regular` build and publish~~
+- [ ] implement stable `library` build and publish
+- [ ] achieve full drop-in replacement for `unbuild`
+- [ ] support auto migration from `build.config.ts`
+- [ ] allow plugins to extend dler's `defineconfig`
+- [ ] support configuration via `reliverse.{ts,jsonc}`
+- [ ] make config file optional with sensible defaults
 
-## Related
+## related
 
-Special thanks to the project that inspired `@reliverse/relidler`:
+special thanks to the project that inspired `@reliverse/dler`:
 
 - [unjs/unbuild](https://github.com/unjs/unbuild#readme)
 
-## Support
+## support
 
-- If Relidler saves you time and effort, please consider supporting its development: [GitHub Sponsors](https://github.com/sponsors/blefnk);
-- Even a simple star on [GitHub](https://github.com/reliverse/relidler) shows your love. Thank you!
+- if dler saves you time and effort, please consider supporting its development: [github sponsors](https://github.com/sponsors/blefnk);
+- even a simple star on [github](https://github.com/reliverse/dler) shows your love. thank you!
 
-## License
+## license
 
-🩷 [MIT](./LICENSE) © 2025 [blefnk Nazar Kornienko](https://github.com/blefnk)
+🩷 [mit](./license) © 2025 [blefnk nazar kornienko](https://github.com/blefnk)

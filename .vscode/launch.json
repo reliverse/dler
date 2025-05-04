@@ -6,7 +6,7 @@
     {
       "type": "bun",
       "request": "launch",
-      "name": "Debug Relidler",
+      "name": "Debug dler",
 
       // The path to a JavaScript or TypeScript file to run.
       "program": "${workspaceFolder}/src/main.ts",

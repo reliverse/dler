@@ -241,7 +241,7 @@ async function regular_bundleUsingBun(
 
   try {
     const buildResult = await bunBuild({
-      banner: "/* Bundled by @reliverse/relidler */",
+      banner: "/* Bundled by @reliverse/dler */",
       define: {
         "process.env.NODE_ENV": JSON.stringify(
           process.env.NODE_ENV || "production",

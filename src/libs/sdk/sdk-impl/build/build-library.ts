@@ -60,7 +60,7 @@ import { library_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-j
 // ============================================================================
 
 const BIN_DIR_NAME = "bin"; // Directory name for bundled output within dist
-const REPLACEMENT_MARKER = "// relidler-replace-me"; // Marker for source replacement
+const REPLACEMENT_MARKER = "// dler-replace-me"; // Marker for source replacement
 const FILES_TO_COPY_ROOT = ["README.md", "LICENSE"]; // Common files to copy to dist
 const TYPES_REPLACEMENT_PATH = "src/types.ts"; // Relative path to types file used for replacement
 const ALIAS_PREFIX_TO_CONVERT = "~/"; // Alias prefix used in internal imports
@@ -742,7 +742,7 @@ async function library_bundleUsingBun(
       },
       plugins: [],
       loader: {},
-      banner: `/* ${libName} - Bundled by @reliverse/relidler (Bun) */`,
+      banner: `/* ${libName} - Bundled by @reliverse/dler (Bun) */`,
       throw: true, // Ensure build errors are thrown
     };
 
@@ -1087,8 +1087,8 @@ async function determineNpmSourceDirectory(
  * Scans source files for a specific marker comment and replaces matching lines
  * with the content of a designated file.
  *
- * @example `export * from "../../types.js"; // relidler-replace-me`
- * @example `export type { SpecificTypeName1, SpecificTypeName2 } from "../../types.js"; // relidler-replace-me`
+ * @example `export * from "../../types.js"; // dler-replace-me`
+ * @example `export type { SpecificTypeName1, SpecificTypeName2 } from "../../types.js"; // dler-replace-me`
  *
  * @param config - Configuration for the replacement process.
  * @returns An array of records describing the replacements made.
@@ -1140,8 +1140,8 @@ async function preBuildReplacements(
    * The `.*` prefix allows for any content before the marker.
    * The `^` anchor ensures that the match is at the start of a line.
    *
-   * @example `export * from "../../types.js"; // relidler-replace-me`
-   * @example `export type { SpecificTypeName1, SpecificTypeName2 } from "../../types.js"; // relidler-replace-me`
+   * @example `export * from "../../types.js"; // dler-replace-me`
+   * @example `export type { SpecificTypeName1, SpecificTypeName2 } from "../../types.js"; // dler-replace-me`
    */
   const regex = new RegExp(`^.*${escapedMarker}\\s*$`, "gm");
 

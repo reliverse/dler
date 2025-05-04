@@ -21,6 +21,13 @@
     "noEmit": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["**/*.ts", "reset.d.ts", "eslint.config.js"],
+  "include": [
+    ".config/**/*.ts",
+    "playground/**/*.ts",
+    "src/**/*.ts",
+    "reset.d.ts",
+    "eslint.config.js",
+    "vitest.config.ts"
+  ],
   "exclude": ["node_modules", "dist-jsr", "dist-npm", "dist-libs"]
 }

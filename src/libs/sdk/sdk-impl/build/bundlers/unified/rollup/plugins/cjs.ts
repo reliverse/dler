@@ -8,7 +8,7 @@ import type { BuildContext } from "~/libs/sdk/sdk-impl/build/bundlers/unified/ty
 
 export function cjsPlugin(): Plugin {
   return {
-    name: "relidler-cjs",
+    name: "dler-cjs",
     renderChunk(code, _chunk, opts) {
       if (opts.format === "es") {
         const result = CJSToESM(code);
@@ -42,7 +42,7 @@ const CJSyntaxRe = /__filename|__dirname|require\(|require\.resolve\(/;
 
 const CJSShim = `
 
-// -- relidler CommonJS Shims --
+// -- dler CommonJS Shims --
 import __cjs_url__ from 'url';
 import __cjs_path__ from 'path';
 import __cjs_mod__ from 'module';

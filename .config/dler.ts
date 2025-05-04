@@ -1,9 +1,9 @@
-import { defineConfig } from "./src/libs/cfg/cfg-main.js";
+import { defineConfig } from "../src/libs/cfg/cfg-main.js";
 
 /**
  * Reliverse Bundler Configuration
  * Hover over a field to see more details
- * @see https://github.com/reliverse/relidler
+ * @see https://github.com/reliverse/dler
  */
 export default defineConfig({
   // Bump configuration
@@ -39,7 +39,7 @@ export default defineConfig({
   distNpmDirName: "dist-npm",
   distNpmOutFilesExt: "js",
 
-  // Libraries Relidler Plugin
+  // Libraries Dler Plugin
   // Publish specific dirs as separate packages
   // This feature is experimental at the moment
   // Please commit your changes before using it
@@ -47,17 +47,17 @@ export default defineConfig({
   libsDirDist: "dist-libs",
   libsDirSrc: "src/libs",
   libsList: {
-    "@reliverse/relidler-cfg": {
+    "@reliverse/dler-cfg": {
       libDeclarations: true,
-      libDescription: "@reliverse/relidler defineConfig",
+      libDescription: "@reliverse/dler defineConfig",
       libDirName: "cfg",
       libMainFile: "cfg/cfg-main.ts",
       libPkgKeepDeps: false,
       libTranspileMinify: true,
     },
-    "@reliverse/relidler-sdk": {
+    "@reliverse/dler-sdk": {
       libDeclarations: true,
-      libDescription: "@reliverse/relidler without cli",
+      libDescription: "@reliverse/dler without cli",
       libDirName: "sdk",
       libMainFile: "sdk/sdk-main.ts",
       libPkgKeepDeps: true,

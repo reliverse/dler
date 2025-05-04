@@ -6,42 +6,38 @@ import type { BuildPublishConfig } from "~/libs/sdk/sdk-types.js";
 
 import { defineConfig } from "~/libs/cfg/cfg-mod.js";
 
+const CONFIG_FILENAME = ".config/dler.ts";
+
 /**
- * Searches for and loads a configuration file in the current dir.
- * Falls back to default configuration if no config file is found.
+ * Searches for and loads the configuration file `.config/dler.ts`.
+ * Falls back to default configuration if the file is not found.
  */
 export async function loadConfig(): Promise<BuildPublishConfig> {
   const cwd = process.cwd();
-  const configFileNames = [
-    "relidler.cfg.ts",
-    "build.pub.ts",
-    "build.cfg.ts",
-    "relidler.config.ts",
-  ];
+  const configPath = resolve(cwd, CONFIG_FILENAME);
 
-  // Try to find a config file
-  for (const fileName of configFileNames) {
-    const configPath = resolve(cwd, fileName);
+  if (await fs.pathExists(configPath)) {
+    try {
+      // Dynamic import (works with both ESM and CJS)
+      const configModule = await import(`file://${configPath}`);
+      const config = configModule.default || configModule;
 
-    if (await fs.pathExists(configPath)) {
-      try {
-        // Dynamic import (works with both ESM and CJS)
-        const configModule = await import(`file://${configPath}`);
-        const config = configModule.default || configModule;
-
-        if (typeof config === "function") {
-          // Handle case where user exports a function
-          return defineConfig(config());
-        }
-        // Handle case where user exports an object
-        return defineConfig(config);
-      } catch (error) {
-        relinka("error", `Error loading config from ${configPath}:`, error);
-        // Continue to next file on error
+      if (typeof config === "function") {
+        // Handle case where user exports a function
+        return defineConfig(config());
       }
+      // Handle case where user exports an object
+      return defineConfig(config);
+    } catch (error) {
+      relinka("error", `Error loading config from ${configPath}:`, error);
+      // Fall through to default config on error
     }
   }
 
-  // No config file found, return default config
+  // Config file not found or error loading it, return default config
+  relinka(
+    "info",
+    `Config file not found at ${configPath}. Using default configuration.`, // Inform user about fallback
+  );
   return defineConfig();
 }

@@ -62,7 +62,7 @@ export async function bumpHandler(
   if (bumpDisable || commonPubPause) {
     relinka(
       "info",
-      "Skipping version bump because it is either `bumpDisable: true` or `commonPubPause: true` in your relidler config.",
+      "Skipping version bump because it is either `bumpDisable: true` or `commonPubPause: true` in your dler config.",
     );
     return;
   }
@@ -105,26 +105,19 @@ export async function setBumpDisabled(
     return;
   }
 
-  const relidlerCfgTs = path.join(PROJECT_ROOT, "relidler.cfg.ts");
-  const relidlerCfgJs = path.join(PROJECT_ROOT, "relidler.cfg.js");
-  const relidlerCfgPath = (await fs.pathExists(relidlerCfgTs))
-    ? relidlerCfgTs
-    : relidlerCfgJs;
+  const dlerCfgPath = path.join(PROJECT_ROOT, ".config/dler.ts");
 
-  if (!(await fs.pathExists(relidlerCfgPath))) {
-    relinka(
-      "info",
-      "No relidler.cfg.ts or relidler.cfg.js found to update bumpDisable",
-    );
+  if (!(await fs.pathExists(dlerCfgPath))) {
+    relinka("info", "No .config/dler.ts found to update bumpDisable");
     return;
   }
 
-  let content = await readFileSafe(relidlerCfgPath, "", "bumpDisable update");
+  let content = await readFileSafe(dlerCfgPath, "", "bumpDisable update");
   content = content.replace(
     /bumpDisable\s*:\s*(true|false)/,
     `bumpDisable: ${value}`,
   );
-  await writeFileSafe(relidlerCfgPath, content, "bumpDisable update");
+  await writeFileSafe(dlerCfgPath, content, "bumpDisable update");
 }
 
 /**

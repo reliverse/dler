@@ -17,7 +17,7 @@ export function rawPlugin(opts: RawLoaderOptions = {}): Plugin {
   const options = { ...defaults, ...opts };
   const filter = createFilter(options.include, options.exclude);
   return {
-    name: "relidler-raw",
+    name: "dler-raw",
     transform(code, id): undefined | { code: string; map: any } {
       if (filter(id)) {
         return {

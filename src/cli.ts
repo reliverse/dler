@@ -2,25 +2,25 @@ import { relinka } from "@reliverse/relinka";
 import fs from "fs-extra";
 import path from "pathe";
 
-import { processLibraryFlow } from "./libs/sdk/sdk-impl/library-flow.js";
-import { processRegularFlow } from "./libs/sdk/sdk-impl/regular-flow.js";
-import { bumpHandler } from "./libs/sdk/sdk-impl/utils/utils-bump.js";
-import { removeDistFolders } from "./libs/sdk/sdk-impl/utils/utils-clean.js";
-import { PROJECT_ROOT } from "./libs/sdk/sdk-impl/utils/utils-consts.js";
-import { handleRelidlerError } from "./libs/sdk/sdk-impl/utils/utils-error.js";
-import { finalizeBuild } from "./libs/sdk/sdk-impl/utils/utils-info.js";
-import { createPerfTimer } from "./libs/sdk/sdk-impl/utils/utils-perf.js";
-import { loadConfig } from "./load.js";
+import { processLibraryFlow } from "~/libs/sdk/sdk-impl/library-flow.js";
+import { processRegularFlow } from "~/libs/sdk/sdk-impl/regular-flow.js";
+import { bumpHandler } from "~/libs/sdk/sdk-impl/utils/utils-bump.js";
+import { removeDistFolders } from "~/libs/sdk/sdk-impl/utils/utils-clean.js";
+import { PROJECT_ROOT } from "~/libs/sdk/sdk-impl/utils/utils-consts.js";
+import { handleDlerError } from "~/libs/sdk/sdk-impl/utils/utils-error.js";
+import { finalizeBuild } from "~/libs/sdk/sdk-impl/utils/utils-info.js";
+import { createPerfTimer } from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
+import { loadConfig } from "~/load.js";
 
 // ==========================
-// Relidler CLI Main Function
+// dler CLI Main Function
 // ==========================
 
 /**
- * Main entry point for the relidler build and publish process.
+ * Main entry point for the dler build and publish process.
  * Handles building and publishing for both main project and libraries.
  */
-export async function relidler(isDev: boolean) {
+export async function dler(isDev: boolean) {
   // Create a performance timer
   const timer = createPerfTimer();
 
@@ -121,7 +121,7 @@ export async function relidler(isDev: boolean) {
       config.distJsrOutFilesExt,
     );
 
-    // Finalize relidler
+    // Finalize dler
     await finalizeBuild(
       timer,
       config.commonPubPause,
@@ -132,6 +132,6 @@ export async function relidler(isDev: boolean) {
       isDev,
     );
   } catch (error) {
-    handleRelidlerError(error, timer);
+    handleDlerError(error, timer);
   }
 }

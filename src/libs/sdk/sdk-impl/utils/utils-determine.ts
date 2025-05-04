@@ -46,7 +46,7 @@ export function determineDistName(
   if (libsList) {
     // Try to find the library config by matching the extracted library name
     for (const [libName, libConfig] of Object.entries(libsList)) {
-      // For scoped packages like @reliverse/relidler-cfg, extract the part after /
+      // For scoped packages like @reliverse/dler-cfg, extract the part after /
       const simplifiedLibName = libName.startsWith("@")
         ? libName.split("/")[1]
         : libName;

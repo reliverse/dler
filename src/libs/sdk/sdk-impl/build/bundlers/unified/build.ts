@@ -52,8 +52,7 @@ export async function build(
   const jiti = createJiti(resolvedRootDir);
 
   const _buildConfig: UnifiedBuildConfig | UnifiedBuildConfig[] =
-    // TODO: add relidler.cfg.ts support
-    (await jiti.import(inputConfig?.config || "./build.config", {
+    (await jiti.import(inputConfig?.config || ".config/dler.ts", {
       default: true,
       try: !inputConfig.config,
     })) || {};
@@ -63,13 +62,13 @@ export async function build(
   ).filter(Boolean);
 
   const pkg: PackageJson &
-    Partial<Record<"build" | "relidler", UnifiedBuildConfig>> =
+    Partial<Record<"build" | "dler", UnifiedBuildConfig>> =
     (await jiti.import("./package.json", {
       default: true,
       try: true,
     })) || ({} as PackageJson);
 
-  // Invoke build for every build config defined in build.config.ts
+  // Invoke build for every build config defined in `.config/dler.ts`
   const cleanedDirs: string[] = [];
 
   const _transpileWatchMode = inputConfig.transpileWatch === true;
@@ -101,7 +100,7 @@ async function _build(
   rootDir: string,
   inputConfig: UnifiedBuildConfig,
   buildConfig: UnifiedBuildConfig,
-  pkg: PackageJson & Partial<Record<"build" | "relidler", UnifiedBuildConfig>>,
+  pkg: PackageJson & Partial<Record<"build" | "dler", UnifiedBuildConfig>>,
   cleanedDirs: string[],
   _transpileStubMode: boolean,
   _transpileWatchMode: boolean,
@@ -114,7 +113,7 @@ async function _build(
   // Resolve preset
   const preset = await resolvePreset(
     buildConfig.preset ||
-      pkg.relidler?.preset ||
+      pkg.dler?.preset ||
       pkg.build?.preset ||
       inputConfig.preset ||
       "auto",
@@ -124,7 +123,7 @@ async function _build(
   // Merge options
   const options = defu(
     buildConfig,
-    pkg.relidler || pkg.build,
+    pkg.dler || pkg.build,
     inputConfig,
     preset,
     {

@@ -180,7 +180,7 @@ export function getRollupOptions(ctx: BuildContext): RollupOptions {
         }),
 
       ctx.options.rollup.preserveDynamicImports && {
-        name: "relidler=preserve-dynamic-imports",
+        name: "dler=preserve-dynamic-imports",
         renderDynamicImport(): { left: string; right: string } {
           return { left: "import(", right: ")" };
         },

@@ -1,46 +1,74 @@
-import type { CommandContext } from "@reliverse/prompts";
+import { defineCommand, runMain } from "@reliverse/rempts";
 
-import { defineCommand, errorHandler, runMain } from "@reliverse/prompts";
-
-import { relidler } from "./cli.js";
-import { initRelidlerConfig } from "./init.js";
+import { dler } from "./cli.js";
+import { initDlerConfig } from "./init.js";
 import { validateDevCwd } from "./libs/sdk/sdk-impl/utils/utils-cwd.js";
-const main = defineCommand()
-  .args({
-    dev: {
-      description: "Runs the CLI in dev mode",
-      required: false,
-      type: "boolean",
-    },
-  })
-  .meta({
-    description: "https://docs.reliverse.org",
-    name: "relidler",
-    version: "1.0.12",
-  })
-  .run(async (context: CommandContext<typeof main.args>) => {
-    const { args } = context;
-    // Get relidler dev flag and ensure it's a boolean
-    const isDev = Boolean(args.dev ?? false);
 
-    // Ensure --dev flag is used only within a valid relidler dev env
-    await validateDevCwd(isDev, ["relidler"], "relidler", "reliverse");
+/**
+ * Main command defined using `defineCommand()`.
+ *
+ * This command demonstrates the full range of launcher features along with all supported argument types:
+ *
+ * - Global Usage Handling: Automatically processes `--help` and `--version`.
+ * - File-Based Subcommands: Scans "src/cli/args" for subcommands (e.g., `init`).
+ * - Comprehensive Argument Parsing: Supports positional, boolean, string, number, and array arguments.
+ * - Interactive Prompts: Uses built-in prompt functions for an engaging CLI experience.
+ */
+const mainCommand = defineCommand({
+  meta: {
+    name: "dler",
+    version: "1.2.0",
+    description: "dler CLI https://docs.reliverse.org",
+  },
+  args: {
+    dev: {
+      type: "boolean",
+      description: "Runs the CLI in dev mode",
+    },
+  },
+  async run({ args }) {
+    const isDev = args.dev;
+
+    // if (isDev) {
+    //   relinka("info", "[dler debug] Running in dev mode:", raw);
+    //   relinka("info", "[dler debug] args:", args);
+    //   relinka("info", "[dler debug] raw args:", raw);
+    // }
+
+    // Ensure --dev flag is used only within a valid dler dev env
+    await validateDevCwd(isDev, ["dler"], "dler", "reliverse");
 
     // Init config if does not exist
-    await initRelidlerConfig(isDev);
+    await initDlerConfig(isDev);
 
-    // Run Relidler CLI
-    await relidler(isDev);
-  })
-  .subCommands({
-    tools: () => import("./tools.js").then((r) => r.default),
-  });
+    // Run dler CLI
+    await dler(isDev);
+  },
+});
 
-if (import.meta.main) {
-  await runMain(main).catch((error: unknown) => {
-    errorHandler(
-      error instanceof Error ? error : new Error(String(error)),
-      "An unhandled error occurred, please report it at https://github.com/reliverse/relidler",
-    );
-  });
-}
+/**
+ * The `runMain()` function sets up the launcher with several advanced features:
+ *
+ * - File-Based Subcommands: Enables scanning for subcommands within the "src/cli/args" directory.
+ * - Alias Mapping: Shorthand flags (e.g., `-v`) are mapped to their full names (e.g., `--verbose`).
+ * - Strict Mode & Unknown Flag Warnings: Unknown flags are either warned about or handled via a callback.
+ * - Negated Boolean Support: Allows flags to be negated (e.g., `--no-verbose`).
+ * - Custom Unknown Flag Handler: Provides custom handling for unrecognized flags.
+ */
+await runMain(mainCommand, {
+  fileBasedCmds: {
+    enable: true, // Enables file-based subcommand detection.
+    cmdsRootPath: "src/cli/args", // Directory to scan for subcommands.
+  },
+  alias: {
+    v: "verbose", // Maps shorthand flag -v to --verbose.
+  },
+  strict: false, // Do not throw errors for unknown flags.
+  warnOnUnknown: false, // Warn when encountering unknown flags.
+  negatedBoolean: true, // Support for negated booleans (e.g., --no-verbose).
+  // unknown: (flagName) => {
+  //   relinka("warn", "Unknown flag encountered:", flagName);
+  //   return false;
+  // },
+  // TODO: unknownErrorMsg: "An unhandled error occurred, please report it at https://github.com/reliverse/dler"
+});

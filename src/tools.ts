@@ -1,7 +1,7 @@
-import type { CommandContext } from "@reliverse/prompts";
+import type { CommandContext } from "@reliverse/rempts";
 
-import { defineCommand } from "@reliverse/prompts";
 import { relinka } from "@reliverse/relinka";
+import { defineCommand } from "@reliverse/rempts";
 import path from "pathe";
 
 import { useAggregator } from "./libs/sdk/sdk-impl/utils/tools/tools-agg.js";
@@ -46,7 +46,7 @@ const tools = defineCommand()
     },
   })
   .meta({
-    description: `Runs selected Relidler feature. Available tools: ${TOOLS.join(", ")}`,
+    description: `Runs selected dler feature. Available tools: ${TOOLS.join(", ")}`,
     name: "tools",
   })
   .run(async (context: CommandContext<typeof tools.args>) => {

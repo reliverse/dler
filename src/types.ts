@@ -1,6 +1,6 @@
 /**
  * Defines the configuration for building and publishing packages. This includes: versioning,
- * build settings, publishing options, libraries-relidler-plugin built-in plugin, and more.
+ * build settings, publishing options, libraries-dler-plugin built-in plugin, and more.
  * It customizes the build and publish pipeline for both NPM and JSR registries.
  */
 export type BuildPublishConfig = {
@@ -36,7 +36,7 @@ export type BuildPublishConfig = {
    * - `autoMinor`: Increments the minor version for new backwards-compatible features (1.2.3 → 1.3.0).
    * - `autoMajor`: Increments the major version for breaking changes (1.2.3 → 2.0.0).
    *
-   * Please note: `relidler` infers the version from the `package.json` file.
+   * Please note: `dler` infers the version from the `package.json` file.
    *
    * @default "autoPatch"
    */
@@ -118,7 +118,7 @@ export type BuildPublishConfig = {
    * When `true`, allows JSR publishing even with uncommitted changes.
    * Use with caution, as it may lead to inconsistent published versions.
    *
-   * It is `true` by default to make it easier for new `relidler` users to publish their projects.
+   * It is `true` by default to make it easier for new `dler` users to publish their projects.
    *
    * @default true
    */
@@ -190,7 +190,7 @@ export type BuildPublishConfig = {
    * If "slow types" are present, type checking performance may degrade, and some
    * features may not work as expected.
    *
-   * It is `true` by default to make it easier for new `relidler` users to publish their projects.
+   * It is `true` by default to make it easier for new `dler` users to publish their projects.
    *
    * @see https://jsr.io/docs/about-slow-types
    * @default true
@@ -234,7 +234,7 @@ export type BuildPublishConfig = {
   distNpmOutFilesExt: NpmOutExt;
 
   // ==========================================================================
-  // Libraries Relidler Plugin
+  // Libraries Dler Plugin
   // ==========================================================================
 
   /**
@@ -281,7 +281,7 @@ export type BuildPublishConfig = {
   // ==========================================================================
 
   /**
-   * The name of the log file. Relidler uses `@reliverse/relinka` for logging.
+   * The name of the log file. dler uses `@reliverse/relinka` for logging.
    *
    * @default "relinka.log"
    */

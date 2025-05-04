@@ -9,7 +9,7 @@ export function JSONPlugin(options: RollupJsonOptions): Plugin {
   const plugin = jsonPlugin(options);
   return {
     ...plugin,
-    name: "relidler-json",
+    name: "dler-json",
     transform(code, id): TransformResult {
       const res = (plugin.transform as TransformHook).call(this, code, id);
       if (

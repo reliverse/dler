@@ -17,12 +17,12 @@ export function rollupWatch(rollupOptions: RollupOptions): void {
   }
   relinka(
     "info",
-    `[relidler] [rollup] Starting watchers for entries: ${inputs.map((input) => `./${relative(process.cwd(), input)}`).join(", ")}`,
+    `[dler] [rollup] Starting watchers for entries: ${inputs.map((input) => `./${relative(process.cwd(), input)}`).join(", ")}`,
   );
 
   relinka(
     "warn",
-    "[relidler] [rollup] Watch mode is experimental and may be unstable",
+    "[dler] [rollup] Watch mode is experimental and may be unstable",
   );
 
   transpileWatcher.on("change", (id, { event }) => {
@@ -30,12 +30,12 @@ export function rollupWatch(rollupOptions: RollupOptions): void {
   });
 
   transpileWatcher.on("restart", () => {
-    relinka("info", "[relidler] [rollup] Rebuilding bundle");
+    relinka("info", "[dler] [rollup] Rebuilding bundle");
   });
 
   transpileWatcher.on("event", (event) => {
     if (event.code === "END") {
-      relinka("success", "[relidler] [rollup] Rebuild finished\n");
+      relinka("success", "[dler] [rollup] Rebuild finished\n");
     }
   });
 }

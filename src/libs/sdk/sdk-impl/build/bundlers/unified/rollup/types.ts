@@ -31,7 +31,7 @@ export type RollupBuildOptions = {
   alias: false | RollupAliasOptions;
 
   /**
-   * If enabled, relidler generates CommonJS polyfills for ESM builds.
+   * If enabled, dler generates CommonJS polyfills for ESM builds.
    */
   cjsBridge?: boolean;
 
@@ -50,7 +50,7 @@ export type RollupBuildOptions = {
   dts: RollupDtsOptions;
 
   /**
-   * If enabled, relidler generates a CommonJS build in addition to the ESM build.
+   * If enabled, dler generates a CommonJS build in addition to the ESM build.
    */
   emitCJS?: boolean;
 
