@@ -93,4 +93,8 @@ export default defineConfig({
   transpileStub: false,
   transpileTarget: "node",
   transpileWatch: false,
+
+  // Additionals
+  injectComment: "// @ts-expect-error TODO: fix ts",
+  tscCommand: "tsc --project ./tsconfig.json --noEmit",
 });

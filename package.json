@@ -1,11 +1,12 @@
 {
   "name": "@reliverse/dler",
   "author": "reliverse",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "type": "module",
   "license": "MIT",
   "description": "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
   "scripts": {
+    "dev": "bun src/mod.ts",
     "pub": "bun src/mod.ts pub",
     "dev:build": "bun src/mod.ts build --dev",
     "dev:tools": "bun src/mod.ts tools --dev --tool",
@@ -17,7 +18,7 @@
   "dependencies": {
     "@reliverse/relico": "^1.1.2",
     "@reliverse/relinka": "^1.4.5",
-    "@reliverse/rempts": "^1.7.4",
+    "@reliverse/rempts": "^1.7.8",
     "@rollup/plugin-alias": "^5.1.1",
     "@rollup/plugin-commonjs": "^28.0.3",
     "@rollup/plugin-json": "^6.1.0",

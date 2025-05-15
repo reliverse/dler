@@ -66,14 +66,6 @@ bun dev # bun src/mod.ts --dev
     bun update --latest
     ```
 
-    **or install globally**:
-
-    ```sh
-    bun i -g @reliverse/dler
-    # or update as needed:
-    bun -g update --latest
-    ```
-
 2. **prepare your project**:
 
     a. **configure `.gitignore`**:

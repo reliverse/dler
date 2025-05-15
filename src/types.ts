@@ -406,6 +406,24 @@ export type BuildPublishConfig = {
    * @default false
    */
   transpileWatch: boolean;
+
+  // ==========================================================================
+  // Additionals
+  // ==========================================================================
+
+  /**
+   * The comment to inject into the generated files.
+   *
+   * @default "// @ts-expect-error TODO: fix ts"
+   */
+  injectComment: string;
+
+  /**
+   * The command to run to check the types.
+   *
+   * @default "tsc --project ./tsconfig.json --noEmit"
+   */
+  tscCommand: string;
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

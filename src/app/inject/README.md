@@ -1,10 +1,10 @@
-# @reliverse/reinject | Reinjection CLI & Core
+# dler inject
 
-[💖 GitHub Sponsors](https://github.com/sponsors/blefnk) • [💬 Discord](https://discord.gg/Pb8uKbwpsJ) • [📦 NPM](https://npmjs.com/@reliverse/reinject) • [📚 Docs](https://blefnk.reliverse.org/blog/my-products/reinject)
+[💖 GitHub Sponsors](https://github.com/sponsors/blefnk) • [💬 Discord](https://discord.gg/Pb8uKbwpsJ) • [📦 NPM](https://npmjs.com/@reliverse/inject) • [📚 Docs](https://blefnk.reliverse.org/blog/my-products/inject)
 
-**@reliverse/reinject** handles the boring parts for you. For example:
+**@reliverse/inject** handles the boring parts for you. For example:
 
-- ✅ Need to insert `// @ts-expect-error` above a TypeScript error? Reinject’s got you.
+- ✅ Need to insert `// @ts-expect-error` above a TypeScript error? Inject’s got you.
 - 🔜 Fixing repetitive warns, lint suppressions, or compiler nags? One-liner.
 - 🔜 Even more features to come!
 
@@ -23,18 +23,18 @@ Make sure you have Git, Node.js, and bun•pnpm•yarn•npm installed.
 ### Installation
 
 ```bash
-bun i -g @reliverse/reinject
+bun i -g @reliverse/inject
 ```
 
 Or use with `bun x` (or `npx`):
 
 ```bash
-bun x @reliverse/reinject
+bun x @reliverse/inject
 ```
 
 ### Basic Usage
 
-**User config** in `reinject.config.ts`:
+**User config** in `inject.config.ts`:
 
 ```ts
 export default {
@@ -47,15 +47,15 @@ export default {
 
 ```bash
 # 1) Automatic mode:
-reinject ts-expect-error auto
+inject ts-expect-error auto
 # => runs `tsc`, finds errors, injects comment above them.
 
 # 2) Lines-file mode:
-reinject ts-expect-error linesA.txt linesB.txt
+inject ts-expect-error linesA.txt linesB.txt
 # => no TSC, just parses references from lines files
 
 # 3) Mixed:
-reinject ts-expect-error auto lines.txt
+inject ts-expect-error auto lines.txt
 # => merges TSC errors with references in lines.txt
 ```
 
@@ -63,41 +63,41 @@ reinject ts-expect-error auto lines.txt
 
 ```bash
 # When you need a custom comment:
-reinject ts-expect-error auto --comment="// @ts-expect-error FIXME"
+inject ts-expect-error auto --comment="// @ts-expect-error FIXME"
 ```
 
 Run on a TypeScript file with tsc output:
 
 ```bash
-reinject ts-expect-error src
+inject ts-expect-error src
 ```
 
 You can also run on a specific TypeScript file with manually generated tsc output:
 
 ```bash
 tsc --noEmit > tsc.log
-reinject tsc.log
+inject tsc.log
 rm tsc.log
 ```
 
 You can also run it directly on output from stdin:
 
 ```bash
-tsc --noEmit | reinject
+tsc --noEmit | inject
 ```
 
 Or use with other tools:
 
 ```bash
-eslint . | reinject
-biome check . | reinject
+eslint . | inject
+biome check . | inject
 ```
 
 ### Filter by error code or rule ID
 
 ```bash
-reinject tsc.log --code TS2322
-reinject eslint.log --rule no-unused-vars
+inject tsc.log --code TS2322
+inject eslint.log --rule no-unused-vars
 ```
 
 ## ✨ Examples
@@ -137,9 +137,9 @@ const x: string = 123;
 
 ## 🫶 Show some love
 
-If `@reliverse/reinject` saved you time or sanity:
+If `@reliverse/inject` saved you time or sanity:
 
-- ⭐ [Star the repo](https://github.com/reliverse/reinject)
+- ⭐ [Star the repo](https://github.com/reliverse/inject)
 - 💖 [Sponsor on GitHub](https://github.com/sponsors/blefnk)
 - 🫶 Share it with a dev friend!
 

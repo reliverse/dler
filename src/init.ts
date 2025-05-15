@@ -189,6 +189,10 @@ export default defineConfig({
   transpileStub: ${DEFAULT_CONFIG.transpileStub},
   transpileTarget: "${DEFAULT_CONFIG.transpileTarget}",
   transpileWatch: ${DEFAULT_CONFIG.transpileWatch},
+
+  // Additionals
+  injectComment: "${DEFAULT_CONFIG.injectComment}",
+  tscCommand: "${DEFAULT_CONFIG.tscCommand}",
 });
 `;
   return configTemplate;

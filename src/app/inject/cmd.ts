@@ -1,11 +1,13 @@
 import { relinka } from "@reliverse/relinka";
-import { defineCommand, selectPrompt } from "@reliverse/rempts";
+import { defineCommand, runCmd, selectPrompt } from "@reliverse/rempts";
+
+import { getCmdInjectTsExpectError } from "~/app/cmds.js";
 
 export default defineCommand({
   meta: {
     name: "cli",
     description:
-      "Runs the Reinject CLI interactive menu (displays list of available commands)",
+      "Runs the Inject command interactive menu (displays list of available commands)",
   },
   args: {
     dev: {
@@ -22,7 +24,7 @@ export default defineCommand({
     const isDev = args.dev;
     relinka("verbose", `Running in ${isDev ? "dev" : "prod"} mode`);
 
-    await selectPrompt({
+    const cmd = await selectPrompt({
       title: "Select a command",
       options: [
         {
@@ -31,5 +33,9 @@ export default defineCommand({
         },
       ],
     });
+
+    if (cmd === "ts-expect-error") {
+      await runCmd(await getCmdInjectTsExpectError(), []);
+    }
   },
 });

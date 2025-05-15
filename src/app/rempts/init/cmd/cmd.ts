@@ -23,7 +23,7 @@ export default defineCommand({
     },
   },
   async run({ args }) {
-    const root = path.resolve("src/cli/args");
+    const root = path.resolve("src/app");
 
     for (const cmdName of args.cmd) {
       const dirPath = path.join(root, cmdName);

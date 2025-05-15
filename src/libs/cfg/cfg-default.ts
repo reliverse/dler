@@ -53,4 +53,6 @@ export const DEFAULT_CONFIG: BuildPublishConfig = {
   transpileStub: false,
   transpileTarget: "node",
   transpileWatch: false,
+  injectComment: "// @ts-expect-error TODO: fix ts",
+  tscCommand: "tsc --project ./tsconfig.json --noEmit",
 };
