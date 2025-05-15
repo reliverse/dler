@@ -51,10 +51,11 @@ export async function processRegularFlow(
   transpileWatch: boolean,
   distJsrGenTsconfig: boolean,
   coreDeclarations: boolean,
+  config: { coreDescription?: string },
 ): Promise<void> {
   if (libsActMode !== "main-project-only" && libsActMode !== "main-and-libs") {
     relinka(
-      "info",
+      "log",
       "Skipping main project build/publish as libsActMode is set to 'libs-only'",
     );
     return;
@@ -62,7 +63,7 @@ export async function processRegularFlow(
   switch (commonPubRegistry) {
     case "jsr":
       relinka(
-        "info",
+        "log",
         "Initializing build process for main project to JSR only...",
       );
       await regular_buildJsrDist(
@@ -86,6 +87,7 @@ export async function processRegularFlow(
         transpileWatch,
         distJsrGenTsconfig,
         coreDeclarations,
+        config,
       );
       if (!isDev) {
         await regular_pubToJsr(
@@ -102,7 +104,7 @@ export async function processRegularFlow(
       break;
     case "npm":
       relinka(
-        "info",
+        "log",
         "Initializing build process for main project to NPM only...",
       );
       await regular_buildNpmDist(
@@ -124,6 +126,7 @@ export async function processRegularFlow(
         transpileWatch,
         timer,
         coreDeclarations,
+        config,
       );
       if (!isDev) {
         await regular_pubToNpm(
@@ -137,7 +140,7 @@ export async function processRegularFlow(
       break;
     case "npm-jsr": {
       relinka(
-        "info",
+        "log",
         "Initializing build process for main project to both NPM and JSR...",
       );
       const buildTasks = [
@@ -163,6 +166,7 @@ export async function processRegularFlow(
             transpileWatch,
             distJsrGenTsconfig,
             coreDeclarations,
+            config,
           ),
         () =>
           regular_buildNpmDist(
@@ -184,6 +188,7 @@ export async function processRegularFlow(
             transpileWatch,
             timer,
             coreDeclarations,
+            config,
           ),
       ];
       await pAll(buildTasks, { concurrency: CONCURRENCY_DEFAULT });
@@ -239,6 +244,7 @@ export async function processRegularFlow(
             transpileWatch,
             timer,
             coreDeclarations,
+            config,
           ),
         () =>
           regular_buildJsrDist(
@@ -262,6 +268,7 @@ export async function processRegularFlow(
             transpileWatch,
             distJsrGenTsconfig,
             coreDeclarations,
+            config,
           ),
       ];
       await pAll(fallbackBuildTasks, { concurrency: CONCURRENCY_DEFAULT });

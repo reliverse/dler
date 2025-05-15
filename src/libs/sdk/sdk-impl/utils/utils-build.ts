@@ -60,7 +60,7 @@ export function getUnifiedSourcemapOption(
 
 /**
  * Renames the primary output file (and its declaration file, if applicable)
- * in the output directory to a standardized name (e.g., main.js, main.ts).
+ * in the output directory to a standardized name (e.g., main.js, mod.ts).
  *
  * @param isJsr - Flag indicating if the target platform is JSR.
  * @param outDirBin - The output directory where the compiled files reside.
@@ -98,7 +98,7 @@ export async function renameEntryFile(
     // JSR specifics: Keep .ts if original was .ts, otherwise use specified JSR ext
     if (originalEntryFileBasename.endsWith(".ts")) {
       sourceEntryBasename = originalEntryFileBasename; // e.g., index.ts
-      targetEntryBasename = "main.ts"; // Target for JSR TS file
+      targetEntryBasename = "mod.ts"; // Target for JSR TS file
     } else {
       // Handle cases where entry might be .js or .tsx -> outputExt
       sourceEntryBasename = `${originalBasenameNoExt}.${outputExt}`; // e.g., index.js
@@ -156,10 +156,10 @@ export async function renameEntryFile(
   // 5. Rename Main Entry File
   if (sourceEntryPath !== targetEntryPath) {
     await fs.rename(sourceEntryPath, targetEntryPath);
-    relinka("info", `Renamed entry file to ${targetEntryPath}`);
+    relinka("log", `Renamed entry file to ${targetEntryPath}`);
   } else {
     relinka(
-      "info",
+      "log",
       `Source entry file ${sourceEntryPath} already has the target name. Skipping rename.`,
     );
   }

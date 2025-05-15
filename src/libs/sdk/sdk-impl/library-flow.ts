@@ -145,7 +145,7 @@ export async function libraries_buildPublish(
   relinka("verbose", "Starting libraries_buildPublish");
 
   if (!libsList || Object.keys(libsList).length === 0) {
-    relinka("info", "No lib configs found in config, skipping libs build.");
+    relinka("log", "No lib configs found in config, skipping libs build.");
     return;
   }
 
@@ -189,7 +189,6 @@ export async function libraries_buildPublish(
           `Processing library ${libName}: libMainDir=${libMainDir}, libMainFile=${libMainFile}`,
         );
 
-        // If you have a boolean in config controlling minify:
         const libTranspileMinify =
           (libConfig as any)?.libTranspileMinify === true;
 

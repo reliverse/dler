@@ -1,0 +1,58 @@
+import { glob } from "glob";
+import fs from "node:fs";
+import path from "node:path";
+import util from "node:util";
+
+import type { PackageJson } from "./types.js";
+
+const readFileAsync = util.promisify(fs.readFile);
+
+export const findSourceFiles = async (
+  directory: string,
+  ignorePatterns: string[],
+): Promise<string[]> => {
+  const pattern = `${directory}/**/*.{js,jsx,ts,tsx}`;
+
+  // Default ignore patterns
+  const defaultIgnores = [
+    "**/node_modules/**",
+    "**/.git/**",
+    "**/build/**",
+    "**/dist/**",
+    "**/dist-npm/**",
+    "**/dist-jsr/**",
+    "**/dist-libs/**",
+    "**/coverage/**",
+  ];
+
+  const allIgnores = [...defaultIgnores, ...ignorePatterns];
+
+  return await glob(pattern, {
+    ignore: allIgnores,
+    absolute: true,
+    nodir: true,
+  });
+};
+
+export const readFile = async (filePath: string): Promise<string> => {
+  try {
+    return await readFileAsync(filePath, "utf8");
+  } catch (error) {
+    console.error(`Error reading file ${filePath}:`, error);
+    return "";
+  }
+};
+
+export const readPackageJson = async (
+  directory: string,
+): Promise<PackageJson> => {
+  const packageJsonPath = path.join(directory, "package.json");
+
+  try {
+    const content = await readFile(packageJsonPath);
+    return JSON.parse(content) as PackageJson;
+  } catch (error) {
+    console.error("Error reading package.json:", error);
+    return {};
+  }
+};

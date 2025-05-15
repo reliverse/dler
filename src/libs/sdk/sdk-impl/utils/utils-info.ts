@@ -34,22 +34,22 @@ export async function finalizeBuild(
   });
   if (!commonPubPause) {
     relinka(
-      "success",
+      "info",
       `🎉 Build and publishing completed successfully (in ${transpileFormattedTime})`,
     );
   } else {
     relinka(
-      "success",
+      "info",
       `🎉 Test build completed successfully (in ${transpileFormattedTime})`,
     );
     if (!isDev) {
       relinka(
-        "info",
+        "warn",
         "📝 Publish process is currently paused in your config file",
       );
     } else {
       relinka(
-        "info",
+        "warn",
         "📝 Publish is paused, you're in dev mode (use `bun pub` to publish)",
       );
     }

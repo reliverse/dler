@@ -210,7 +210,7 @@ export async function library_buildLibrary(
 
   try {
     // --- Pre-build Step: Modify source files ---
-    relinka("info", `Running pre-build replacements for ${libName}...`);
+    relinka("log", `Running pre-build replacements for ${libName}...`);
     replacedFiles = await preBuildReplacements(replacementConfig);
     relinka("verbose", `Pre-build: ${replacedFiles.length} files modified.`);
 
@@ -270,7 +270,7 @@ async function executeBuildTasks(options: LibraryBuildOptions): Promise<void> {
         `JSR build requested for ${libName} but 'options.jsr' is missing.`,
       );
     }
-    relinka("info", `Queueing JSR build for lib ${libName}...`);
+    relinka("log", `Queueing JSR build for lib ${libName}...`);
     buildTasks.push(() => library_buildJsrDist(options));
   }
 
@@ -282,7 +282,7 @@ async function executeBuildTasks(options: LibraryBuildOptions): Promise<void> {
         `NPM build requested for ${libName} but 'options.npm' is missing.`,
       );
     }
-    relinka("info", `Queueing NPM build for lib ${libName}...`);
+    relinka("log", `Queueing NPM build for lib ${libName}...`);
     buildTasks.push(() => library_buildNpmDist(options));
   }
 
@@ -296,11 +296,11 @@ async function executeBuildTasks(options: LibraryBuildOptions): Promise<void> {
   }
 
   if (buildTasks.length > 1) {
-    relinka("info", `Building lib ${libName} for NPM and JSR concurrently...`);
+    relinka("log", `Building lib ${libName} for NPM and JSR concurrently...`);
     await pAll(buildTasks, { concurrency: CONCURRENCY_DEFAULT });
   } else {
     relinka(
-      "info",
+      "log",
       `Building lib ${libName} for ${options.commonPubRegistry || "single target"}...`,
     );
     // Execute the single task - Added check for safety although length is 1
@@ -334,7 +334,7 @@ async function library_buildJsrDist(
   const { jsrOutDir, distJsrBuilder, distJsrOutFilesExt } = jsrOptions;
 
   const targetType = "jsr";
-  relinka("info", `[JSR] Initializing JSR build for ${libName}...`);
+  relinka("log", `[JSR] Initializing JSR build for ${libName}...`);
 
   // Resolve paths
   const libSourceDirResolved = path.resolve(PROJECT_ROOT, options.mainDir);
@@ -345,9 +345,18 @@ async function library_buildJsrDist(
     BIN_DIR_NAME,
   );
 
+  // Determine the specific source directory for *this* library within the core source dir
+  const { libSpecificSrcDir, libDirName } = await determineNpmSourceDirectory(
+    libName,
+    libMainFile,
+    libSourceDirResolved,
+    libsList,
+    "jsr",
+  );
+
   // Determine bundler entry point: directory for 'jsr' copy, file for others
   const bundlerEntryPoint =
-    distJsrBuilder === "jsr" ? libSourceDirResolved : entryFilePathResolved;
+    distJsrBuilder === "jsr" ? libSpecificSrcDir : entryFilePathResolved;
 
   const libConfig = libsList[libName];
   const libDeclarations = libConfig?.libDeclarations ?? false;
@@ -356,14 +365,14 @@ async function library_buildJsrDist(
   const buildParams: BuildTargetParams = {
     targetType,
     builder: distJsrBuilder,
-    libSourceDir: libSourceDirResolved,
+    libSourceDir: libSpecificSrcDir,
     entryFilePath: bundlerEntryPoint,
     outputDirRoot: outputDirRootResolved,
     outputDirBin: outputDirBinResolved,
     libDeclarations,
     distJsrOutFilesExt,
     options,
-    // libDirName is generally not needed/used for JSR target logic
+    libDirName, // Pass determined libDirName
   };
 
   await buildDistributionTarget(buildParams);
@@ -414,7 +423,7 @@ async function library_buildNpmDist(
 
   const targetType = "npm";
   const distName = determineDistName(npmOutDir, false, libsList); // For logging
-  relinka("info", `[NPM:${distName}] Initializing NPM build for ${libName}...`);
+  relinka("log", `[NPM:${distName}] Initializing NPM build for ${libName}...`);
 
   // Resolve paths
   const coreEntrySrcDirResolved = path.resolve(PROJECT_ROOT, coreEntrySrcDir);
@@ -532,12 +541,12 @@ async function buildDistributionTarget(
     ? "[JSR]"
     : `[NPM:${determineDistName(path.relative(PROJECT_ROOT, outputDirRoot), false, libsList)}]`;
 
-  relinka("info", `${logPrefix} Starting build target processing...`);
+  relinka("log", `${logPrefix} Starting build target processing...`);
 
   // Ensure output directories exist
   await ensuredir(outputDirRoot);
   await ensuredir(outputDirBin);
-  relinka("info", `${logPrefix} Using builder: ${builder}`);
+  relinka("log", `${logPrefix} Using builder: ${builder}`);
 
   // --- Bundling Step ---
   // Use BundleRequestParams type for the object passed to the dispatcher
@@ -559,26 +568,43 @@ async function buildDistributionTarget(
     transpileWatch,
     unifiedBundlerOutExt,
   };
+
+  // Execute bundling and wait for it to complete
   await library_bundleWithBuilder(bundleRequest);
 
-  // --- Common Post-Bundling Steps ---
-  const commonStepsParams: CommonStepsParams = {
-    coreEntryFileName: path.basename(libMainFile),
-    outDirRoot: outputDirRoot,
-    outDirBin: outputDirBin,
-    isJsr,
-    libName,
-    libsList,
-    rmDepsMode,
-    rmDepsPatterns,
-    unifiedBundlerOutExt,
-    distJsrOutFilesExt,
-    deleteFiles: isJsr,
-    libDirName,
-  };
-  await library_performCommonBuildSteps(commonStepsParams);
+  // --- Common Post-Build Steps ---
+  // Only proceed with common steps if the output directory exists and has files
+  if (await fs.pathExists(outputDirBin)) {
+    const files = await fs.readdir(outputDirBin);
+    if (files.length > 0) {
+      await library_performCommonBuildSteps({
+        coreEntryFileName: path.basename(libMainFile),
+        outDirRoot: outputDirRoot,
+        outDirBin: outputDirBin,
+        isJsr,
+        libName,
+        libsList,
+        rmDepsMode,
+        rmDepsPatterns,
+        unifiedBundlerOutExt,
+        distJsrOutFilesExt,
+        deleteFiles: isJsr, // Only delete files for JSR builds
+        libDirName,
+      });
+    } else {
+      relinka(
+        "warn",
+        `${logPrefix} No files found in ${outputDirBin} after bundling`,
+      );
+    }
+  } else {
+    relinka(
+      "warn",
+      `${logPrefix} Output directory ${outputDirBin} does not exist after bundling`,
+    );
+  }
 
-  relinka("info", `${logPrefix} Completed build target processing.`);
+  relinka("log", `${logPrefix} Completed build target processing.`);
 }
 
 // ============================================================================
@@ -825,20 +851,27 @@ async function library_bundleUsingUnified(
     validatedExt = "js";
   }
 
-  const inputRelative = path.relative(rootDir, entryPoint);
-  const outDirRelative = path.relative(rootDir, outDirBin);
+  // Ensure output directory exists
+  await ensuredir(outDirBin);
 
+  // Prepare the unified build configuration
   const unifiedBuildConfig: UnifiedBuildConfig = {
     clean: false,
     declaration: libDeclarations ? "compatible" : false,
     entries: [
       {
-        builder: builder,
-        input: inputRelative,
-        outDir: outDirRelative,
+        builder,
+        input: entryPoint,
+        outDir: outDirBin, // Explicitly set the output directory
+        rootDir: sourceDirContext,
         ext: validatedExt,
+        ...(builder === "mkdist" && {
+          cleanDist: true, // Clean the output directory before building
+        }),
       },
     ],
+    outDir: outDirBin,
+    rootDir: sourceDirContext,
     rollup: {
       emitCJS: false,
       esbuild: {
@@ -852,6 +885,7 @@ async function library_bundleUsingUnified(
     },
     hooks: {},
     stub: transpileStub,
+    transpileWatch: false, // Not supported by mkdist
   };
 
   try {
@@ -1216,7 +1250,7 @@ async function preBuildReplacements(
           });
           await fs.writeFile(filePath, updatedCode, "utf-8");
           relinka(
-            "info",
+            "log",
             `Applied pre-build replacement in ${path.relative(PROJECT_ROOT, filePath)}`,
           );
         } else {

@@ -154,7 +154,7 @@ async function library_getlibPkgKeepDeps(
 
   // If dependencies is true, include all dependencies from the original package.json
   if (libConfig.libPkgKeepDeps === true) {
-    relinka("info", `Preserving all dependencies for lib ${libName}`);
+    relinka("log", `Preserving all dependencies for lib ${libName}`);
 
     // Read the original package.json to determine if we're dealing with devDependencies
     const originalPkg = await readPackageJSON();
@@ -192,7 +192,7 @@ async function library_getlibPkgKeepDeps(
   // If dependencies is an array, only include those specific dependencies
   if (Array.isArray(libConfig.libPkgKeepDeps)) {
     relinka(
-      "info",
+      "log",
       `Including specific dependencies for lib ${libName}: ${libConfig.libPkgKeepDeps.join(", ")}`,
     );
     const result = Object.entries(originalDeps).reduce<Record<string, string>>(
@@ -277,7 +277,7 @@ async function library_writeJsrPackageJSON(
         libDeclarations: false,
         libDescription: "",
         libDirName: libName,
-        libMainFile: "src/libs/libName/libName-main.ts",
+        libMainFile: "src/libs/libName/libName-mod.ts",
         libPkgKeepDeps: false,
         libTranspileMinify: true,
       },
@@ -293,7 +293,7 @@ async function library_writeJsrPackageJSON(
       rmDepsPatterns,
     ),
     exports: {
-      ".": "./bin/main.ts",
+      ".": "./bin/mod.ts",
     },
   });
 
@@ -335,7 +335,7 @@ async function library_writeNpmLibPackageJSON(
         libDeclarations: true,
         libDescription: "",
         libDirName: libName,
-        libMainFile: "src/libs/libName/libName-main.ts",
+        libMainFile: "src/libs/libName/libName-mod.ts",
         libPkgKeepDeps: true,
         libTranspileMinify: true,
       },
@@ -351,11 +351,11 @@ async function library_writeNpmLibPackageJSON(
       rmDepsPatterns,
     ),
     exports: {
-      ".": `./bin/main.${unifiedBundlerOutExt}`,
+      ".": `./bin/mod.${unifiedBundlerOutExt}`,
     },
     files: ["bin", "package.json", "README.md", "LICENSE"],
-    main: `./bin/main.${unifiedBundlerOutExt}`,
-    module: `./bin/main.${unifiedBundlerOutExt}`,
+    main: `./bin/mod.${unifiedBundlerOutExt}`,
+    module: `./bin/mod.${unifiedBundlerOutExt}`,
     publishConfig: { access: "public" },
   });
 

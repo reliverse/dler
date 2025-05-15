@@ -27,14 +27,14 @@ export async function library_publishLibrary(
 ): Promise<void> {
   if (isDev) {
     relinka(
-      "info",
+      "log",
       `Skipping publishing for lib ${libName} in development mode`,
     );
     return;
   }
   switch (commonPubRegistry) {
     case "jsr":
-      relinka("info", `Publishing lib ${libName} to JSR only...`);
+      relinka("log", `Publishing lib ${libName} to JSR only...`);
       await library_pubToJsr(
         jsrOutDir,
         distJsrDryRun,
@@ -47,7 +47,7 @@ export async function library_publishLibrary(
       );
       break;
     case "npm":
-      relinka("info", `Publishing lib ${libName} to NPM only...`);
+      relinka("log", `Publishing lib ${libName} to NPM only...`);
       await library_pubToNpm(
         npmOutDir,
         distJsrDryRun,
@@ -58,7 +58,7 @@ export async function library_publishLibrary(
       );
       break;
     case "npm-jsr": {
-      relinka("info", `Publishing lib ${libName} to both NPM and JSR...`);
+      relinka("log", `Publishing lib ${libName} to both NPM and JSR...`);
       const publishTasks = [
         () =>
           library_pubToNpm(
@@ -86,7 +86,7 @@ export async function library_publishLibrary(
     }
     default:
       relinka(
-        "info",
+        "log",
         `Registry "${commonPubRegistry}" not recognized for lib ${libName}. Skipping publishing for this lib.`,
       );
   }
@@ -107,13 +107,13 @@ async function library_pubToJsr(
 ): Promise<void> {
   relinka("verbose", `Starting library_pubToJsr for lib: ${libName}`);
   if (isDev) {
-    relinka("info", `Skipping lib ${libName} JSR publish in development mode`);
+    relinka("log", `Skipping lib ${libName} JSR publish in development mode`);
     return;
   }
   try {
     if (timer) pausePerfTimer(timer);
     await withWorkingDirectory(libOutDir, async () => {
-      relinka("info", `Publishing lib ${libName} to JSR from ${libOutDir}`);
+      relinka("log", `Publishing lib ${libName} to JSR from ${libOutDir}`);
       const command = [
         "bun x jsr publish",
         distJsrDryRun ? "--dry-run" : "",
@@ -152,13 +152,13 @@ async function library_pubToNpm(
 ): Promise<void> {
   relinka("verbose", `Starting library_pubToNpm for lib: ${libName}`);
   if (isDev) {
-    relinka("info", `Skipping lib ${libName} NPM publish in development mode`);
+    relinka("log", `Skipping lib ${libName} NPM publish in development mode`);
     return;
   }
   try {
     if (timer) pausePerfTimer(timer);
     await withWorkingDirectory(libOutDir, async () => {
-      relinka("info", `Publishing lib ${libName} to NPM from ${libOutDir}`);
+      relinka("log", `Publishing lib ${libName} to NPM from ${libOutDir}`);
       const command = ["bun publish", distJsrDryRun ? "--dry-run" : ""]
         .filter(Boolean)
         .join(" ");

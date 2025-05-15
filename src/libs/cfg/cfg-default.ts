@@ -5,13 +5,14 @@ import type { BuildPublishConfig } from "./cfg-types.js";
  */
 export const DEFAULT_CONFIG: BuildPublishConfig = {
   bumpDisable: false,
-  bumpFilter: ["package.json", "reliverse.ts"],
+  bumpFilter: ["package.json", ".config/rse.ts"],
   bumpMode: "autoPatch",
   commonPubPause: true,
   commonPubRegistry: "npm",
   commonVerbose: false,
   coreDeclarations: true,
-  coreEntryFile: "main.ts",
+  coreDescription: "",
+  coreEntryFile: "mod.ts",
   coreEntrySrcDir: "src",
   coreIsCLI: false,
   distJsrAllowDirty: true,
@@ -31,7 +32,7 @@ export const DEFAULT_CONFIG: BuildPublishConfig = {
   libsDirDist: "dist-libs",
   libsDirSrc: "src/libs",
   libsList: {},
-  logsFileName: "relinka.log",
+  logsFileName: "logs/relinka.log",
   logsFreshFile: true,
   rmDepsMode: "patterns-and-devdeps",
   rmDepsPatterns: [

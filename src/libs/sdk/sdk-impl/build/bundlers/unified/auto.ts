@@ -39,7 +39,7 @@ export const autoPreset: BuildPreset = definePreset(() => {
           ctx.options.declaration = res.dts ? "compatible" : false;
         }
         relinka(
-          "info",
+          "log",
           "Automatically detected entries:",
           ctx.options.entries
             .map((e) =>

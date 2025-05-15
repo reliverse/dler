@@ -8,6 +8,7 @@ import type {
 } from "~/libs/sdk/sdk-impl/build/bundlers/unified/types.js";
 
 import {
+  ensuredir,
   rmdir,
   symlink,
   warn,
@@ -20,12 +21,13 @@ export async function mkdistBuild(ctx: BuildContext): Promise<void> {
   await ctx.hooks.callHook("mkdist:entries", ctx, entries);
   for (const entry of entries) {
     const distDir = entry.outDir || entry.input;
+    await ensuredir(distDir);
     if (ctx.options.transpileStub) {
       await rmdir(distDir);
       await symlink(entry.input, distDir);
     } else {
       const mkdistOptions: MkdistOptions = {
-        cleanDist: false,
+        cleanDist: true,
         distDir,
         rootDir: ctx.options.rootDir,
         srcDir: entry.input,

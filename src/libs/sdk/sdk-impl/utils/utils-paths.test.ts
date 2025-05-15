@@ -1,7 +1,7 @@
+import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import fs from "fs-extra";
 import os from "node:os";
 import path from "pathe";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   convertImportPaths,

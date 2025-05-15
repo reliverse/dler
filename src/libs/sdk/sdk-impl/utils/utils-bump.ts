@@ -61,7 +61,7 @@ export async function bumpHandler(
 ): Promise<void> {
   if (bumpDisable || commonPubPause) {
     relinka(
-      "info",
+      "log",
       "Skipping version bump because it is either `bumpDisable: true` or `commonPubPause: true` in your dler config.",
     );
     return;
@@ -81,7 +81,7 @@ export async function bumpHandler(
     throw new Error(`Invalid existing version in package.json: ${oldVersion}`);
   }
   relinka(
-    "info",
+    "log",
     `Auto-incrementing version from ${oldVersion} using "${bumpMode}"`,
   );
   const incremented = autoIncrementVersion(oldVersion, bumpMode);
@@ -89,7 +89,7 @@ export async function bumpHandler(
     await bumpVersions(oldVersion, incremented, bumpFilter);
     await setBumpDisabled(true, commonPubPause);
   } else {
-    relinka("info", `Version is already at ${oldVersion}, no bump needed.`);
+    relinka("log", `Version is already at ${oldVersion}, no bump needed.`);
   }
 }
 
@@ -108,7 +108,7 @@ export async function setBumpDisabled(
   const dlerCfgPath = path.join(PROJECT_ROOT, ".config/dler.ts");
 
   if (!(await fs.pathExists(dlerCfgPath))) {
-    relinka("info", "No .config/dler.ts found to update bumpDisable");
+    relinka("log", "No .config/dler.ts found to update bumpDisable");
     return;
   }
 
@@ -150,8 +150,8 @@ async function bumpVersions(
   newVersion: string,
   bumpFilter: BumpFilter[] = [
     "package.json",
-    "reliverse.jsonc",
-    "reliverse.ts",
+    ".config/rse.jsonc",
+    ".config/rse.ts",
   ],
 ): Promise<void> {
   relinka(

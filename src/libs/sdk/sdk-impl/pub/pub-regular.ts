@@ -29,11 +29,11 @@ export async function regular_pubToJsr(
 ): Promise<void> {
   try {
     if (isDev) {
-      relinka("info", "Skipping JSR publish in development mode");
+      relinka("log", "Skipping JSR publish in development mode");
       return;
     }
     if (!commonPubPause) {
-      relinka("info", "Publishing to JSR...");
+      relinka("log", "Publishing to JSR...");
       const distJsrDirNameResolved = path.resolve(PROJECT_ROOT, distJsrDirName);
 
       // Pause the timer before publishing (interactive)
@@ -80,11 +80,11 @@ export async function regular_pubToNpm(
 ): Promise<void> {
   try {
     if (isDev) {
-      relinka("info", "Skipping NPM publish in development mode");
+      relinka("log", "Skipping NPM publish in development mode");
       return;
     }
     if (!commonPubPause) {
-      relinka("info", "Publishing to NPM...");
+      relinka("log", "Publishing to NPM...");
       const distNpmDirNameResolved = path.resolve(PROJECT_ROOT, distNpmDirName);
 
       // Pause the timer before publishing (non-interactive)

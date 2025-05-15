@@ -75,8 +75,9 @@ export async function regular_buildJsrDist(
   transpileWatch: boolean,
   distJsrGenTsconfig: boolean,
   coreDeclarations: boolean,
+  config: { coreDescription?: string },
 ): Promise<void> {
-  relinka("info", "Building JSR distribution...");
+  relinka("log", "Building JSR distribution...");
 
   const coreEntrySrcDirResolved = path.resolve(PROJECT_ROOT, coreEntrySrcDir);
   const coreEntryFilePath = path.join(coreEntrySrcDirResolved, coreEntryFile);
@@ -85,7 +86,7 @@ export async function regular_buildJsrDist(
 
   await ensuredir(distJsrDirNameResolved);
   await ensuredir(outDirBin);
-  relinka("info", `Using JSR builder: ${distJsrBuilder}`);
+  relinka("log", `Using JSR builder: ${distJsrBuilder}`);
 
   // Decide how to do the bundling
   await regular_bundleWithBuilder(distJsrBuilder, {
@@ -114,12 +115,19 @@ export async function regular_buildJsrDist(
     outDirRoot: distJsrDirNameResolved,
     rmDepsMode,
     unifiedBundlerOutExt,
+    coreDescription: config.coreDescription,
   });
 
   // Additional JSR-specific transformations
   await convertImportExtensionsJsToTs({ dirPath: outDirBin });
   await renameTsxFiles(outDirBin);
-  await createJsrJSON(distJsrDirNameResolved, false);
+  await createJsrJSON(
+    distJsrDirNameResolved,
+    false,
+    undefined,
+    undefined,
+    config.coreDescription,
+  );
 
   // Optionally generate a tsconfig if it's a CLI in JSR mode
   if (coreIsCLI && isJsr && distJsrGenTsconfig) {
@@ -130,7 +138,7 @@ export async function regular_buildJsrDist(
   const filesCount = await outDirBinFilesCount(outDirBin);
   relinka(
     "success",
-    `[${distJsrDirNameResolved}] Successfully created regular distribution: "dist-jsr" (${outDirBin}/main.ts) with (${filesCount} files (${prettyBytes(
+    `[${distJsrDirNameResolved}] Successfully created regular distribution: "dist-jsr" (${outDirBin}/mod.ts) with (${filesCount} files (${prettyBytes(
       dirSize,
     )}))`,
   );
@@ -160,8 +168,9 @@ export async function regular_buildNpmDist(
   transpileWatch: boolean,
   timer: PerfTimer,
   coreDeclarations: boolean,
+  config: { coreDescription?: string },
 ): Promise<void> {
-  relinka("info", "Building NPM distribution...");
+  relinka("log", "Building NPM distribution...");
 
   const coreEntrySrcDirResolved = path.resolve(PROJECT_ROOT, coreEntrySrcDir);
   const coreEntryFilePath = path.join(coreEntrySrcDirResolved, coreEntryFile);
@@ -170,7 +179,7 @@ export async function regular_buildNpmDist(
 
   await ensuredir(distNpmDirNameResolved);
   await ensuredir(outDirBin);
-  relinka("info", `Using NPM builder: ${distNpmBuilder}`);
+  relinka("log", `Using NPM builder: ${distNpmBuilder}`);
 
   // Decide how to do the bundling
   await regular_bundleWithBuilder(distNpmBuilder, {
@@ -199,6 +208,7 @@ export async function regular_buildNpmDist(
     outDirRoot: distNpmDirNameResolved,
     rmDepsMode,
     unifiedBundlerOutExt,
+    coreDescription: config.coreDescription,
   });
 
   const dirSize = await getDirectorySize(distNpmDirNameResolved, isDev);
@@ -209,7 +219,7 @@ export async function regular_buildNpmDist(
   );
   relinka(
     "success",
-    `[${distNpmDirNameResolved}] Successfully created regular distribution: "dist-npm" (${outDirBin}/main.js) with (${filesCount} files (${prettyBytes(
+    `[${distNpmDirNameResolved}] Successfully created regular distribution: "dist-npm" (${outDirBin}/mod.js) with (${filesCount} files (${prettyBytes(
       dirSize,
     )}))`,
   );
@@ -304,7 +314,7 @@ async function regular_bundleUsingJsr(
   src: string,
   dest: string,
 ): Promise<void> {
-  relinka("info", `Starting regular_bundleUsingJsr: ${src} -> ${dest}`);
+  relinka("log", `Starting regular_bundleUsingJsr: ${src} -> ${dest}`);
   await ensuredir(path.dirname(dest));
 
   // Validate source is a directory
@@ -515,6 +525,7 @@ async function regular_performCommonBuildSteps({
   outDirRoot,
   rmDepsMode,
   unifiedBundlerOutExt,
+  coreDescription,
 }: {
   coreIsCLI: boolean;
   deleteFiles?: boolean;
@@ -523,6 +534,7 @@ async function regular_performCommonBuildSteps({
   outDirRoot: string;
   rmDepsMode: ExcludeMode;
   unifiedBundlerOutExt: NpmOutExt;
+  coreDescription?: string;
 }): Promise<void> {
   // Convert any "~/..." alias imports to relative
   await convertImportPaths({
@@ -546,6 +558,7 @@ async function regular_performCommonBuildSteps({
     unifiedBundlerOutExt,
     rmDepsMode,
     [],
+    coreDescription,
   );
 
   // Copy some root files (README, LICENSE, etc.)
@@ -555,7 +568,8 @@ async function regular_performCommonBuildSteps({
   if (isJsr) {
     await copyRootFile(outDirRoot, [
       ".gitignore",
-      "reliverse.jsonc",
+      ".config/rse.ts",
+      ".config/rse.jsonc",
       "drizzle.config.ts",
       "schema.json",
     ]);

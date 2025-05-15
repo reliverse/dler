@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
     "paths": {
-      "~/*": ["./src/*"]
+      "~/*": ["./src/*"],
+      "@/*": ["./example/*"]
     },
+
     "baseUrl": ".",
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -21,13 +23,7 @@
     "noEmit": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": [
-    ".config/**/*.ts",
-    "playground/**/*.ts",
-    "src/**/*.ts",
-    "reset.d.ts",
-    "eslint.config.js",
-    "vitest.config.ts"
-  ],
-  "exclude": ["node_modules", "dist-jsr", "dist-npm", "dist-libs"]
+
+  "include": [".*/**/*.ts", "**/*.ts", "**/*.js"],
+  "exclude": ["node_modules", "dist*"]
 }

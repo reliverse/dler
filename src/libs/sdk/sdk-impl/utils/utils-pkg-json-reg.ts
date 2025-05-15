@@ -21,12 +21,16 @@ export async function regular_createPackageJSON(
   unifiedBundlerOutExt: NpmOutExt,
   rmDepsMode: ExcludeMode,
   rmDepsPatterns: string[],
+  coreDescription?: string,
 ): Promise<void> {
   relinka(
-    "info",
+    "log",
     `Generating distribution package.json and tsconfig.json (isJsr=${isJsr})...`,
   );
-  const commonPkg = await regular_createCommonPackageFields(coreIsCLI);
+  const commonPkg = await regular_createCommonPackageFields(
+    coreIsCLI,
+    coreDescription,
+  );
   const originalPkg = await readPackageJSON();
   const packageName = originalPkg.name || "";
   const cliCommandName = packageName.startsWith("@")
@@ -43,13 +47,11 @@ export async function regular_createPackageJSON(
 
   if (isJsr) {
     // For JSR, we need to handle bin entries with .ts extension
-    const binEntry = coreIsCLI
-      ? { [cliCommandName]: "bin/main.ts" }
-      : undefined;
+    const binEntry = coreIsCLI ? { [cliCommandName]: "bin/mod.ts" } : undefined;
     if (coreIsCLI) {
       relinka(
         "verbose",
-        `Adding CLI bin entry for JSR: { "${cliCommandName}": "bin/main.ts" }`,
+        `Adding CLI bin entry for JSR: { "${cliCommandName}": "bin/mod.ts" }`,
       );
     }
 
@@ -71,7 +73,7 @@ export async function regular_createPackageJSON(
         rmDepsPatterns,
       ),
       exports: {
-        ".": "./bin/main.ts",
+        ".": "./bin/mod.ts",
       },
     });
     await fs.writeJSON(path.join(outDirRoot, "package.json"), jsrPkg, {
@@ -86,13 +88,13 @@ export async function regular_createPackageJSON(
     }
   } else {
     const binEntry = coreIsCLI
-      ? { [cliCommandName]: `bin/main.${outExt}` }
+      ? { [cliCommandName]: `bin/mod.${outExt}` }
       : undefined;
 
     if (coreIsCLI) {
       relinka(
         "verbose",
-        `Adding CLI bin entry for NPM: { "${cliCommandName}": "bin/main.${outExt}" }`,
+        `Adding CLI bin entry for NPM: { "${cliCommandName}": "bin/mod.${outExt}" }`,
       );
     }
 
@@ -114,11 +116,11 @@ export async function regular_createPackageJSON(
         rmDepsPatterns,
       ),
       exports: {
-        ".": `./bin/main.${outExt}`,
+        ".": `./bin/mod.${outExt}`,
       },
       files: ["bin", "package.json", "README.md", "LICENSE"],
-      main: `./bin/main.${outExt}`,
-      module: `./bin/main.${outExt}`,
+      main: `./bin/mod.${outExt}`,
+      module: `./bin/mod.${outExt}`,
       publishConfig: { access: "public" },
     });
     await fs.writeJSON(path.join(outDirRoot, "package.json"), npmPkg, {
@@ -140,6 +142,7 @@ export async function regular_createPackageJSON(
  */
 async function regular_createCommonPackageFields(
   coreIsCLI: boolean,
+  coreDescription?: string,
 ): Promise<Partial<PackageJson>> {
   relinka("verbose", "Generating common package fields");
   const originalPkg = await readPackageJSON();
@@ -150,7 +153,7 @@ async function regular_createCommonPackageFields(
   const pkgHomepage = cliDomainDocs;
   const commonPkg: Partial<PackageJson> = {
     dependencies: originalPkg.dependencies || {},
-    description,
+    description: coreDescription || description,
     homepage: pkgHomepage,
     license: license || "MIT",
     name,

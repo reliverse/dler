@@ -1,6 +1,7 @@
 import { relinka } from "@reliverse/relinka";
 import fs from "fs-extra";
 import path from "pathe";
+import { readPackageJSON } from "pkg-types";
 
 import { DEFAULT_CONFIG } from "~/libs/cfg/cfg-default.js";
 
@@ -19,16 +20,30 @@ export async function initDlerConfig(isDev: boolean) {
 
   // If it doesn't exist, create it.
   try {
+    // Read package.json description using pkg-types
+    let pkgDescription: string | undefined = undefined;
+    try {
+      const pkg = await readPackageJSON();
+      if (
+        pkg &&
+        typeof pkg.description === "string" &&
+        pkg.description.trim()
+      ) {
+        pkgDescription = pkg.description.trim();
+      }
+    } catch {
+      // ignore, fallback to default
+    }
     // Generate and write the config file
-    const configContent = generateConfig(isDev);
+    const configContent = generateConfig(isDev, pkgDescription);
     await fs.outputFile(configPath, configContent, "utf-8");
     relinka("success", `Config was created at ${configPath}`);
-    relinka("info", "Edit this file to customize build and publish settings");
+    relinka("log", "Edit this file to customize build and publish settings");
     if (!isDev) {
-      relinka("info", "Please note: commonPubPause is set to true by default");
-      relinka("info", "When you're ready, run `dler` to build and publish");
+      relinka("log", "Please note: commonPubPause is set to true by default");
+      relinka("log", "When you're ready, run `dler` to build and publish");
     } else {
-      relinka("info", "When you're ready, run `bun pub` to build and publish");
+      relinka("log", "When you're ready, run `bun pub` to build and publish");
     }
     process.exit(0);
   } catch (error: unknown) {
@@ -41,9 +56,9 @@ export async function initDlerConfig(isDev: boolean) {
 }
 
 // Generate the config file content
-function generateConfig(isDev: boolean): string {
+function generateConfig(isDev: boolean, pkgDescription?: string): string {
   const importDefineConfigStatement = isDev
-    ? `import { defineConfig } from "../src/libs/cfg/cfg-main.js";`
+    ? `import { defineConfig } from "~/libs/cfg/cfg-mod.js";`
     : `import { defineConfig } from "@reliverse/dler-cfg";`;
   const verboseValue = getValue(isDev, true, DEFAULT_CONFIG.commonVerbose);
   const isCLIValue = getValue(isDev, true, DEFAULT_CONFIG.coreIsCLI);
@@ -62,6 +77,11 @@ function generateConfig(isDev: boolean): string {
     false,
     DEFAULT_CONFIG.coreDeclarations,
   );
+  const coreDescriptionValue = getValue(
+    isDev, // TODO: remove `description` from dler's `package.json` when ensured that whole dler's codebase can optionally read dler.ts' `coreDescription`
+    "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
+    pkgDescription || DEFAULT_CONFIG.coreDescription,
+  );
   const libsActModeValue = getValue(
     isDev,
     "main-and-libs",
@@ -73,7 +93,7 @@ function generateConfig(isDev: boolean): string {
     libDeclarations: true,
     libDescription: "@reliverse/dler defineConfig",
     libDirName: "cfg",
-    libMainFile: "cfg/cfg-main.ts",
+    libMainFile: "cfg/cfg-mod.ts",
     libPkgKeepDeps: false,
     libTranspileMinify: true,
   },
@@ -81,7 +101,7 @@ function generateConfig(isDev: boolean): string {
     libDeclarations: true,
     libDescription: "@reliverse/dler without cli",
     libDirName: "sdk",
-    libMainFile: "sdk/sdk-main.ts",
+    libMainFile: "sdk/sdk-mod.ts",
     libPkgKeepDeps: true,
     libTranspileMinify: true,
   },
@@ -91,7 +111,7 @@ function generateConfig(isDev: boolean): string {
   //   libDeclarations: true,
   //   libDescription: "@acme/cli defineConfig",
   //   libDirName: "libName",
-  //   libMainFile: "libName/libName-main.ts",
+  //   libMainFile: "libName/libName-mod.ts",
   //   libPkgKeepDeps: true,
   //   libTranspileMinify: true,
   // },
@@ -120,6 +140,7 @@ export default defineConfig({
 
   // Core configuration
   coreDeclarations: ${coreDeclarationsValue},
+  coreDescription: ${JSON.stringify(coreDescriptionValue)},
   coreEntryFile: "${DEFAULT_CONFIG.coreEntryFile}",
   coreEntrySrcDir: "${DEFAULT_CONFIG.coreEntrySrcDir}",
   coreIsCLI: ${isCLIValue},

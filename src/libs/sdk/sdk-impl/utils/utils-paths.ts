@@ -947,11 +947,11 @@ export async function convertImportPaths(
   }
 
   relinka(
-    "info",
+    "log",
     `Starting import path conversion (${fromType} -> ${toType}) in directory: ${baseDir}`,
   );
   if (distJsrDryRun) {
-    relinka("info", "Dry run mode enabled: No files will be modified.");
+    relinka("log", "Dry run mode enabled: No files will be modified.");
   }
 
   // --- Define File Processing Logic ---
@@ -992,7 +992,7 @@ export async function convertImportPaths(
   const errorResults = results.filter((r) => !r.success);
 
   relinka(
-    "info",
+    "log",
     `Import path conversion finished. ${successCount} files processed successfully (${changedCount} modified), ${errorResults.length} errors.`,
   );
   // Log specific errors
@@ -1044,11 +1044,11 @@ export async function convertImportExtensionsJsToTs(
   }
 
   relinka(
-    "info",
+    "log",
     `Starting .js -> .ts import extension conversion in directory: ${absoluteDirPath}`,
   );
   if (distJsrDryRun) {
-    relinka("info", "Dry run mode enabled: No files will be modified.");
+    relinka("log", "Dry run mode enabled: No files will be modified.");
   }
 
   // --- Define File Processing Logic ---
@@ -1077,7 +1077,7 @@ export async function convertImportExtensionsJsToTs(
   const errorResults = results.filter((r) => !r.success);
 
   relinka(
-    "info",
+    "log",
     `Extension conversion finished. ${successCount} files processed successfully (${changedCount} modified), ${errorResults.length} errors.`,
   );
   // Log specific errors

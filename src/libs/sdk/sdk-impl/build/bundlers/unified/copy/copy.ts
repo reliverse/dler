@@ -1,3 +1,5 @@
+// todo: merge with `jsr` bundler
+
 import { relinka } from "@reliverse/relinka";
 import { promises as fsp } from "node:fs";
 import { relative, resolve } from "pathe";

@@ -1,3 +1,4 @@
+// @ts-expect-error TODO: temp
 import { defineConfig } from "@reliverse/rse-cfg";
 
 export default defineConfig({
@@ -7,15 +8,15 @@ export default defineConfig({
   $schema: "./schema.json",
 
   // General project information
-  projectName: "@reliverse/rse",
+  projectName: "@reliverse/dler",
   projectAuthor: "reliverse",
   projectDescription:
-    "@reliverse/rse is your all-in-one companion for building and improving web projects — whether you're kicking off something new or upgrading an existing app. It's like having a little AI-powered toolbox in your terminal, ready to help with coding, refactoring, image gen, and more.",
-  version: "1.6.5",
+    "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
+  version: "1.2.2",
   projectLicense: "MIT",
   projectState: "creating",
-  projectRepository: "https://github.com/reliverse/rse",
-  projectDomain: "https://docs.reliverse.org/cli",
+  projectRepository: "https://github.com/reliverse/dler",
+  projectDomain: "https://docs.reliverse.org/reliverse/dler",
   projectCategory: "unknown",
   projectSubcategory: "unknown",
   projectTemplate: "unknown",

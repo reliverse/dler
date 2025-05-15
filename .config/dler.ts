@@ -1,4 +1,4 @@
-import { defineConfig } from "../src/libs/cfg/cfg-main.js";
+import { defineConfig } from "~/libs/cfg/cfg-mod.js";
 
 /**
  * Reliverse Bundler Configuration
@@ -8,7 +8,7 @@ import { defineConfig } from "../src/libs/cfg/cfg-main.js";
 export default defineConfig({
   // Bump configuration
   bumpDisable: false,
-  bumpFilter: ["package.json", "reliverse.ts"],
+  bumpFilter: ["package.json", ".config/rse.ts"],
   bumpMode: "autoPatch",
 
   // Common configuration
@@ -18,7 +18,9 @@ export default defineConfig({
 
   // Core configuration
   coreDeclarations: false,
-  coreEntryFile: "main.ts",
+  coreDescription:
+    "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
+  coreEntryFile: "mod.ts",
   coreEntrySrcDir: "src",
   coreIsCLI: true,
 
@@ -43,7 +45,7 @@ export default defineConfig({
   // Publish specific dirs as separate packages
   // This feature is experimental at the moment
   // Please commit your changes before using it
-  libsActMode: "main-and-libs",
+  libsActMode: "main-project-only", // TODO: change to "main-and-libs" when libs packaging for npm is fixed
   libsDirDist: "dist-libs",
   libsDirSrc: "src/libs",
   libsList: {
@@ -51,7 +53,7 @@ export default defineConfig({
       libDeclarations: true,
       libDescription: "@reliverse/dler defineConfig",
       libDirName: "cfg",
-      libMainFile: "cfg/cfg-main.ts",
+      libMainFile: "cfg/cfg-mod.ts",
       libPkgKeepDeps: false,
       libTranspileMinify: true,
     },
@@ -59,14 +61,14 @@ export default defineConfig({
       libDeclarations: true,
       libDescription: "@reliverse/dler without cli",
       libDirName: "sdk",
-      libMainFile: "sdk/sdk-main.ts",
+      libMainFile: "sdk/sdk-mod.ts",
       libPkgKeepDeps: true,
       libTranspileMinify: true,
     },
   },
 
   // Logger setup
-  logsFileName: "relinka.log",
+  logsFileName: "logs/relinka.log",
   logsFreshFile: true,
 
   // Dependency filtering

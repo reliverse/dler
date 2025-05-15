@@ -204,10 +204,7 @@ export async function deleteSpecificFiles(outDirBin: string): Promise<void> {
     await pMap(snapshotDirs, async (dir) => fs.remove(dir), {
       concurrency: CONCURRENCY_DEFAULT,
     });
-    relinka(
-      "info",
-      `Deleted snapshot directories:\n${snapshotDirs.join("\n")}`,
-    );
+    relinka("log", `Deleted snapshot directories:\n${snapshotDirs.join("\n")}`);
   }
 }
 

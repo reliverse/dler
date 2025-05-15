@@ -16,7 +16,7 @@ export function rollupWatch(rollupOptions: RollupOptions): void {
     inputs = Object.keys(rollupOptions.input || {});
   }
   relinka(
-    "info",
+    "log",
     `[dler] [rollup] Starting watchers for entries: ${inputs.map((input) => `./${relative(process.cwd(), input)}`).join(", ")}`,
   );
 
@@ -26,11 +26,11 @@ export function rollupWatch(rollupOptions: RollupOptions): void {
   );
 
   transpileWatcher.on("change", (id, { event }) => {
-    relinka("info", `${relative(".", id)} was ${event}d`);
+    relinka("log", `${relative(".", id)} was ${event}d`);
   });
 
   transpileWatcher.on("restart", () => {
-    relinka("info", "[dler] [rollup] Rebuilding bundle");
+    relinka("log", "[dler] [rollup] Rebuilding bundle");
   });
 
   transpileWatcher.on("event", (event) => {

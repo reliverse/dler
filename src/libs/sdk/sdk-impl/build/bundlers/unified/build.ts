@@ -289,7 +289,7 @@ async function _build(
   );
   if (process.env.DEBUG) {
     relinka(
-      "info",
+      "log",
       `Root dir: ${options.rootDir}
 Entries:
 ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
@@ -314,7 +314,7 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
       }
       cleanedDirs.push(dir);
       relinka(
-        "info",
+        "log",
         `Cleaning dist directory: \`./${relative(process.cwd(), dir)}\``,
       );
       await rmdir(dir);
@@ -407,7 +407,7 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
           .join("\n")}`;
       }
 
-      relinka("info", entry.chunk ? line : line);
+      relinka("log", entry.chunk ? line : line);
     }
 
     // Calculate elapsed time
@@ -418,9 +418,7 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
 
     relinka(
       "info",
-      "Σ Total dist size:",
-      prettyBytes(ctx.buildEntries.reduce((a, e) => a + (e.bytes || 0), 0)),
-      `(build time: ${transpileFormattedTime})`,
+      `Σ Total dist size: ${prettyBytes(ctx.buildEntries.reduce((a, e) => a + (e.bytes || 0), 0))} (build time: ${transpileFormattedTime})`,
     );
   }
 
@@ -430,8 +428,6 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
 
   // Call build:done
   await ctx.hooks.callHook("build:done", ctx);
-
-  relinka("info", "");
 
   if (ctx.warnings.size > 0) {
     relinka(

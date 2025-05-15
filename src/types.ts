@@ -26,7 +26,7 @@ export type BuildPublishConfig = {
    * When empty, falls back to only updating "package.json".
    * Respects: .gitignore patterns, hidden files, .git & node_modules.
    *
-   * @default ["package.json", "reliverse.ts"]
+   * @default ["package.json", ".config/rse.ts"]
    */
   bumpFilter: BumpFilter[];
 
@@ -89,7 +89,7 @@ export type BuildPublishConfig = {
    * Path to the project's main entry file.
    * Used as the entry point for the NPM package.
    *
-   * @default "main.ts"
+   * @default "mod.ts"
    */
   coreEntryFile: string;
 
@@ -109,6 +109,15 @@ export type BuildPublishConfig = {
    * @default false
    */
   coreIsCLI: boolean;
+
+  /**
+   * Optional description that overrides the description from package.json.
+   * When provided, this description will be used in the dist's package.json.
+   * If not provided, the description from the original package.json will be used.
+   *
+   * @default `package.json`'s "description"
+   */
+  coreDescription?: string;
 
   // ==========================================================================
   // JSR-only config
@@ -269,8 +278,8 @@ export type BuildPublishConfig = {
    *
    * @example
    * {
-   *   "@myorg/ml1": { main: "my-lib-1/main.ts" },
-   *   "@myorg/ml2": { main: "my-lib-2/ml2-main.ts" },
+   *   "@myorg/ml1": { main: "my-lib-1/mod.ts" },
+   *   "@myorg/ml2": { main: "my-lib-2/ml2-mod.ts" },
    *   "@myorg/ml3": { main: "src/libs/my-lib-3/index.js" }
    * }
    */
@@ -283,7 +292,7 @@ export type BuildPublishConfig = {
   /**
    * The name of the log file. dler uses `@reliverse/relinka` for logging.
    *
-   * @default "relinka.log"
+   * @default "logs/relinka.log"
    */
   logsFileName: string;
 
@@ -404,7 +413,10 @@ export type BuildPublishConfig = {
 /**
  * Supported file extensions for version bumping.
  */
-export type BumpFilter = "package.json" | "reliverse.jsonc" | "reliverse.ts";
+export type BumpFilter =
+  | "package.json"
+  | ".config/rse.jsonc"
+  | ".config/rse.ts";
 
 /**
  * Supported bump modes for versioning:
@@ -458,6 +470,8 @@ export type LibConfig = {
    *
    * @example "Utility functions for data manipulation"
    * @example "Core configuration module for the framework"
+   *
+   * @default `package.json`'s "description"
    */
   libDescription: string;
 
@@ -474,8 +488,8 @@ export type LibConfig = {
    * The path should be relative to the project root.
    * The full path to the library's main file is derived by joining `libsDirDist` with `main`.
    *
-   * @example "my-lib-1/main.ts"
-   * @example "my-lib-2/ml2-main.ts"
+   * @example "my-lib-1/mod.ts"
+   * @example "my-lib-2/ml2-mod.ts"
    * @example "src/libs/my-lib-3/index.js"
    */
   libMainFile: string;

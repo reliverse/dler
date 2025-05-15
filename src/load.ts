@@ -36,7 +36,7 @@ export async function loadConfig(): Promise<BuildPublishConfig> {
 
   // Config file not found or error loading it, return default config
   relinka(
-    "info",
+    "log",
     `Config file not found at ${configPath}. Using default configuration.`, // Inform user about fallback
   );
   return defineConfig();
