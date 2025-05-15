@@ -116,7 +116,7 @@ bun dev # bun src/mod.ts --dev
 
 ## 🔌 plugins
 
-dler ships with a flexible plugin system and **15 built-in plugins** (from [@reliverse/addons](https://reliverse.org/addons)).
+dler ships with a flexible plugin system and **14 built-in plugins** (from [@reliverse/addons](https://reliverse.org/addons)).
 
 feel free to create your own plugins. plugins can be implemented as built-in directly in `src/app/plugin-name/impl/*` and then imported from `src/app/plugin-name/cmd.ts`; or implemented in your own library and then imported from `src/app/plugin-name/cmd.ts`.
 
@@ -128,15 +128,7 @@ generates aggregator file with content like `import { getsomething } from "./uti
 dler agg ...
 ```
 
-### 2. `auth`
-
-best friend of auth+db libs like [better-auth](https://better-auth.com) and [drizzle-orm](https://orm.drizzle.team).
-
-```bash
-dler auth better-auth generate
-```
-
-### 3. `build`
+### 2. `build`
 
 since dler is fully modular, build command is separated for its own build-in plugin as well.
 
@@ -144,11 +136,11 @@ since dler is fully modular, build command is separated for its own build-in plu
 dler build ...
 ```
 
-### 4. `conv`
+### 3. `conv`
 
 not yet documented.
 
-### 5. `deps`
+### 4. `deps`
 
 finds missing dependencies in your project by scanning your code for imports and comparing them to your `package.json`.
 
@@ -195,11 +187,11 @@ dler deps --all --directory ./src --include-builtins
 missing dependencies are shown only once, even if used in multiple files.  
 deep imports like `dep/some/file` or `@org/dep/some/thing` are always resolved to their root package.
 
-### 6. `inject`
+### 5. `inject`
 
 not yet documented.
 
-### 7. `libs`
+### 6. `libs`
 
 builds and publishes specific subdirectories of your main project as standalone packages.
 
@@ -235,15 +227,15 @@ libslist: {
 
 - more magic commands coming soon...
 
-### 8. `merge`
+### 7. `merge`
 
 not yet documented.
 
-### 9. `mono`
+### 8. `mono`
 
 not yet documented.
 
-### 10. `pub`
+### 9. `pub`
 
 pub command is separated for its own build-in plugin as well.
 
@@ -253,13 +245,13 @@ it already calls build command by itself, so you don't need to run `dler build` 
 dler pub ...
 ```
 
-### 11. `relifso`
+### 10. `relifso`
 
 ```bash
 dler relifso init ...
 ```
 
-### 12. `relinka`
+### 11. `relinka`
 
 @reliverse/relinka's best friend. learn more in its [docs](https://github.com/reliverse/relinka).
 
@@ -267,7 +259,7 @@ dler relifso init ...
 dler relinka --console-to-relinka
 ```
 
-### 13. `rempts`
+### 12. `rempts`
 
 @reliverse/rempts's best friend. learn more in its [docs](https://github.com/reliverse/rempts).
 
@@ -276,7 +268,7 @@ dler rempts init --cmd my-cmd-1
 dler rempts init --cmds
 ```
 
-### 14. `spell`
+### 13. `spell`
 
 **available spell types:**
 
@@ -334,7 +326,7 @@ await dler.spell({ spells: ["rename-file"], files: [] });
 
 p.s. [see how rse cli uses hooked=true](https://github.com/reliverse/rse/blob/main/src/postbuild.ts)
 
-### 15. `tools`
+### 14. `tools`
 
 lets you run standalone dler features directly from the cli:
 
