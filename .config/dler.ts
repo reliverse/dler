@@ -56,6 +56,7 @@ export default defineConfig({
       libMainFile: "cfg/cfg-mod.ts",
       libPkgKeepDeps: false,
       libTranspileMinify: true,
+      libPubPause: false,
     },
     "@reliverse/dler-sdk": {
       libDeclarations: true,
@@ -64,6 +65,7 @@ export default defineConfig({
       libMainFile: "sdk/sdk-mod.ts",
       libPkgKeepDeps: true,
       libTranspileMinify: true,
+      libPubPause: false,
     },
   },
 

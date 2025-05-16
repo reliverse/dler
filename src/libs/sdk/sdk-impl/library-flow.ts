@@ -226,7 +226,7 @@ export async function libraries_buildPublish(
         });
 
         // 2. Publish if not paused
-        if (!commonPubPause) {
+        if (!commonPubPause && !libConfig.libPubPause) {
           await library_publishLibrary(
             commonPubRegistry,
             libName,
@@ -238,6 +238,11 @@ export async function libraries_buildPublish(
             false,
             isDev,
             timer,
+          );
+        } else if (libConfig.libPubPause && !commonPubPause) {
+          relinka(
+            "log",
+            `Publishing is paused for lib ${libName} (libPubPause: true)`,
           );
         }
       } catch (error) {

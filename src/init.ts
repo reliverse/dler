@@ -96,6 +96,7 @@ function generateConfig(isDev: boolean, pkgDescription?: string): string {
     libMainFile: "cfg/cfg-mod.ts",
     libPkgKeepDeps: false,
     libTranspileMinify: true,
+    libPubPause: false,
   },
   "@reliverse/dler-sdk": {
     libDeclarations: true,
@@ -104,6 +105,7 @@ function generateConfig(isDev: boolean, pkgDescription?: string): string {
     libMainFile: "sdk/sdk-mod.ts",
     libPkgKeepDeps: true,
     libTranspileMinify: true,
+    libPubPause: false,
   },
 }`
     : `{
@@ -114,6 +116,7 @@ function generateConfig(isDev: boolean, pkgDescription?: string): string {
   //   libMainFile: "libName/libName-mod.ts",
   //   libPkgKeepDeps: true,
   //   libTranspileMinify: true,
+  //   libPubPause: false,
   // },
 }`;
 

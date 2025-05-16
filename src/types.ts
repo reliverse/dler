@@ -532,6 +532,14 @@ export type LibConfig = {
    * @default true
    */
   libTranspileMinify: boolean;
+
+  /**
+   * When true, pauses publishing for this specific library (overridden by commonPubPause).
+   * If true, this library will be built but not published, even if other libs are published.
+   *
+   * @default false
+   */
+  libPubPause?: boolean;
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
