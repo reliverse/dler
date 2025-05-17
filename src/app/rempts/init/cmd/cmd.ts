@@ -37,7 +37,9 @@ export default defineCommand({
         continue;
       }
 
-      fs.mkdirSync(dirPath, { recursive: true });
+      fs.mkdirSync(dirPath, {
+        recursive: true,
+      });
 
       const content = generateCommandTemplate(cmdName);
       fs.writeFileSync(filePath, content, "utf-8");

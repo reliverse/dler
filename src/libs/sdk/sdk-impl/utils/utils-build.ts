@@ -60,7 +60,7 @@ export function getUnifiedSourcemapOption(
 
 /**
  * Renames the primary output file (and its declaration file, if applicable)
- * in the output directory to a standardized name (e.g., main.js, mod.ts).
+ * in the output directory to a standardized name (e.g., mod.js, mod.ts).
  *
  * @param isJsr - Flag indicating if the target platform is JSR.
  * @param outDirBin - The output directory where the compiled files reside.
@@ -102,16 +102,16 @@ export async function renameEntryFile(
     } else {
       // Handle cases where entry might be .js or .tsx -> outputExt
       sourceEntryBasename = `${originalBasenameNoExt}.${outputExt}`; // e.g., index.js
-      targetEntryBasename = `main.${outputExt}`; // e.g., main.js
+      targetEntryBasename = `mod.${outputExt}`; // e.g., mod.js
     }
   } else {
     // Standard NPM build specifics
     sourceEntryBasename = `${originalBasenameNoExt}.${outputExt}`; // e.g., index.js
-    targetEntryBasename = `main.${outputExt}`; // e.g., main.js
+    targetEntryBasename = `mod.${outputExt}`; // e.g., mod.js
 
     // Expect a corresponding .d.ts file for standard builds
     sourceDeclarationBasename = `${originalBasenameNoExt}.d.ts`; // e.g., index.d.ts
-    targetDeclarationBasename = "main.d.ts"; // Target declaration name
+    targetDeclarationBasename = "mod.d.ts"; // Target declaration name
   }
 
   // 2. Define Full Paths

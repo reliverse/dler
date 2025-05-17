@@ -17,7 +17,6 @@ export async function finalizeBuild(
   distNpmDirName: string,
   distJsrDirName: string,
   libsDirDist: string,
-  isDev: boolean,
 ): Promise<void> {
   if (!commonPubPause) {
     await removeDistFolders(
@@ -34,24 +33,17 @@ export async function finalizeBuild(
   });
   if (!commonPubPause) {
     relinka(
-      "info",
+      "success",
       `🎉 Build and publishing completed successfully (in ${transpileFormattedTime})`,
     );
   } else {
     relinka(
-      "info",
+      "success",
       `🎉 Test build completed successfully (in ${transpileFormattedTime})`,
     );
-    if (!isDev) {
-      relinka(
-        "warn",
-        "📝 Publish process is currently paused in your config file",
-      );
-    } else {
-      relinka(
-        "warn",
-        "📝 Publish is paused, you're in dev mode (use `bun pub` to publish)",
-      );
-    }
+    relinka(
+      "info",
+      "📝 Publish process is currently paused in your config file",
+    );
   }
 }

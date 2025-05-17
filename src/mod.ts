@@ -1,17 +1,7 @@
-import { runMain, defineCommand, defineArgs } from "@reliverse/rempts";
+import type { BuildPublishConfig } from "./types.js";
 
-import { initDlerConfig } from "./init.js";
+import { DEFAULT_CONFIG } from "./default.js";
 
-const main = defineCommand({
-  args: defineArgs({
-    dev: {
-      type: "boolean",
-      description: "Runs the CLI in dev mode",
-    },
-  }),
-  async onCmdInit({ args }) {
-    await initDlerConfig(args.dev);
-  },
-});
-
-await runMain(main);
+export const defineConfig = (userConfig: Partial<BuildPublishConfig> = {}) => {
+  return { ...DEFAULT_CONFIG, ...userConfig };
+};

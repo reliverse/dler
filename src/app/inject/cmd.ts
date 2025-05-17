@@ -1,7 +1,7 @@
 import { relinka } from "@reliverse/relinka";
 import { defineCommand, runCmd, selectPrompt } from "@reliverse/rempts";
 
-import { getCmdInjectTsExpectError } from "~/app/cmds.js";
+import { cmdInjectExpect } from "~/app/cmds.js";
 
 export default defineCommand({
   meta: {
@@ -35,7 +35,7 @@ export default defineCommand({
     });
 
     if (cmd === "ts-expect-error") {
-      await runCmd(await getCmdInjectTsExpectError(), []);
+      await runCmd(await cmdInjectExpect(), []);
     }
   },
 });

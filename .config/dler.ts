@@ -1,4 +1,4 @@
-import { defineConfig } from "~/libs/cfg/cfg-mod.js";
+import { defineConfig } from "~/mod.js";
 
 /**
  * Reliverse Bundler Configuration
@@ -8,21 +8,25 @@ import { defineConfig } from "~/libs/cfg/cfg-mod.js";
 export default defineConfig({
   // Bump configuration
   bumpDisable: false,
-  bumpFilter: ["package.json", ".config/rse.ts"],
+  bumpFilter: ["package.json", ".config/rse.ts", "src/info.ts"],
   bumpMode: "autoPatch",
 
   // Common configuration
   commonPubPause: false,
-  commonPubRegistry: "npm-jsr",
+  commonPubRegistry: "npm", // TODO: switch to "npm-jsr" when `libPubRegistry` is implemented
   commonVerbose: true,
 
   // Core configuration
-  coreDeclarations: false,
+  coreDeclarations: true,
   coreDescription:
     "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
   coreEntryFile: "mod.ts",
   coreEntrySrcDir: "src",
-  coreIsCLI: true,
+  coreBuildOutDir: "bin",
+  coreIsCLI: {
+    enabled: true,
+    scripts: { dler: "dler.ts" },
+  },
 
   // JSR-only config
   distJsrAllowDirty: true,
@@ -45,19 +49,11 @@ export default defineConfig({
   // Publish specific dirs as separate packages
   // This feature is experimental at the moment
   // Please commit your changes before using it
-  libsActMode: "main-project-only", // TODO: change to "main-and-libs" when libs packaging for npm is fixed
+  libsActMode: "main-and-libs",
   libsDirDist: "dist-libs",
   libsDirSrc: "src/libs",
   libsList: {
-    "@reliverse/dler-cfg": {
-      libDeclarations: true,
-      libDescription: "@reliverse/dler defineConfig",
-      libDirName: "cfg",
-      libMainFile: "cfg/cfg-mod.ts",
-      libPkgKeepDeps: false,
-      libTranspileMinify: true,
-      libPubPause: false,
-    },
+    // TODO: implement `libPubRegistry`
     "@reliverse/dler-sdk": {
       libDeclarations: true,
       libDescription: "@reliverse/dler without cli",
@@ -95,8 +91,4 @@ export default defineConfig({
   transpileStub: false,
   transpileTarget: "node",
   transpileWatch: false,
-
-  // Additionals
-  injectComment: "// @ts-expect-error TODO: fix ts",
-  tscCommand: "tsc --project ./tsconfig.json --noEmit",
 });

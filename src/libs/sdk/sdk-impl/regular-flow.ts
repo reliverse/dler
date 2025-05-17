@@ -25,7 +25,7 @@ import { CONCURRENCY_DEFAULT } from "./utils/utils-consts.js";
 export async function processRegularFlow(
   timer: PerfTimer,
   isDev: boolean,
-  coreIsCLI: boolean,
+  coreIsCLI: { enabled: boolean; scripts: Record<string, string> },
   libsActMode: string,
   commonPubRegistry: string,
   coreEntrySrcDir: string,
@@ -45,21 +45,22 @@ export async function processRegularFlow(
   transpilePublicPath: string,
   distJsrAllowDirty: boolean,
   distJsrSlowTypes: boolean,
-  unifiedBundlerOutExt: NpmOutExt,
+  distNpmOutFilesExt: NpmOutExt,
   rmDepsMode: ExcludeMode,
   transpileStub: boolean,
   transpileWatch: boolean,
   distJsrGenTsconfig: boolean,
   coreDeclarations: boolean,
-  config: { coreDescription?: string },
+  config: { coreDescription: string; coreBuildOutDir: string },
 ): Promise<void> {
-  if (libsActMode !== "main-project-only" && libsActMode !== "main-and-libs") {
+  if (libsActMode === "libs-only") {
     relinka(
       "log",
       "Skipping main project build/publish as libsActMode is set to 'libs-only'",
     );
     return;
   }
+
   switch (commonPubRegistry) {
     case "jsr":
       relinka(
@@ -80,7 +81,7 @@ export async function processRegularFlow(
         transpileMinify,
         transpileSourcemap,
         transpilePublicPath,
-        unifiedBundlerOutExt,
+        distNpmOutFilesExt,
         rmDepsMode,
         timer,
         transpileStub,
@@ -89,18 +90,16 @@ export async function processRegularFlow(
         coreDeclarations,
         config,
       );
-      if (!isDev) {
-        await regular_pubToJsr(
-          distJsrDryRun,
-          distJsrFailOnWarn,
-          isDev,
-          commonPubPause,
-          distJsrDirName,
-          distJsrAllowDirty,
-          distJsrSlowTypes,
-          timer,
-        );
-      }
+      await regular_pubToJsr(
+        distJsrDryRun,
+        distJsrFailOnWarn,
+        isDev,
+        commonPubPause,
+        distJsrDirName,
+        distJsrAllowDirty,
+        distJsrSlowTypes,
+        timer,
+      );
       break;
     case "npm":
       relinka(
@@ -113,7 +112,7 @@ export async function processRegularFlow(
         distNpmDirName,
         distNpmBuilder,
         coreEntryFile,
-        unifiedBundlerOutExt,
+        distNpmOutFilesExt,
         rmDepsMode,
         coreIsCLI,
         transpileTarget,
@@ -128,21 +127,20 @@ export async function processRegularFlow(
         coreDeclarations,
         config,
       );
-      if (!isDev) {
-        await regular_pubToNpm(
-          distJsrDryRun,
-          isDev,
-          commonPubPause,
-          distNpmDirName,
-          timer,
-        );
-      }
+      await regular_pubToNpm(
+        distJsrDryRun,
+        isDev,
+        commonPubPause,
+        distNpmDirName,
+        timer,
+      );
       break;
     case "npm-jsr": {
       relinka(
         "log",
         "Initializing build process for main project to both NPM and JSR...",
       );
+
       const buildTasks = [
         () =>
           regular_buildJsrDist(
@@ -159,7 +157,7 @@ export async function processRegularFlow(
             transpileMinify,
             transpileSourcemap,
             transpilePublicPath,
-            unifiedBundlerOutExt,
+            distNpmOutFilesExt,
             rmDepsMode,
             timer,
             transpileStub,
@@ -175,7 +173,7 @@ export async function processRegularFlow(
             distNpmDirName,
             distNpmBuilder,
             coreEntryFile,
-            unifiedBundlerOutExt,
+            distNpmOutFilesExt,
             rmDepsMode,
             coreIsCLI,
             transpileTarget,
@@ -192,30 +190,28 @@ export async function processRegularFlow(
           ),
       ];
       await pAll(buildTasks, { concurrency: CONCURRENCY_DEFAULT });
-      if (!isDev) {
-        const publishTasks = [
-          () =>
-            regular_pubToJsr(
-              distJsrDryRun,
-              distJsrFailOnWarn,
-              isDev,
-              commonPubPause,
-              distJsrDirName,
-              distJsrAllowDirty,
-              distJsrSlowTypes,
-              timer,
-            ),
-          () =>
-            regular_pubToNpm(
-              distJsrDryRun,
-              isDev,
-              commonPubPause,
-              distNpmDirName,
-              timer,
-            ),
-        ];
-        await pAll(publishTasks, { concurrency: CONCURRENCY_DEFAULT });
-      }
+      const publishTasks = [
+        () =>
+          regular_pubToJsr(
+            distJsrDryRun,
+            distJsrFailOnWarn,
+            isDev,
+            commonPubPause,
+            distJsrDirName,
+            distJsrAllowDirty,
+            distJsrSlowTypes,
+            timer,
+          ),
+        () =>
+          regular_pubToNpm(
+            distJsrDryRun,
+            isDev,
+            commonPubPause,
+            distNpmDirName,
+            timer,
+          ),
+      ];
+      await pAll(publishTasks, { concurrency: CONCURRENCY_DEFAULT });
       break;
     }
     default: {
@@ -223,6 +219,7 @@ export async function processRegularFlow(
         "warn",
         `Registry "${commonPubRegistry}" not recognized. Building main project only...`,
       );
+
       const fallbackBuildTasks = [
         () =>
           regular_buildNpmDist(
@@ -231,7 +228,7 @@ export async function processRegularFlow(
             distNpmDirName,
             distNpmBuilder,
             coreEntryFile,
-            unifiedBundlerOutExt,
+            distNpmOutFilesExt,
             rmDepsMode,
             coreIsCLI,
             transpileTarget,
@@ -261,7 +258,7 @@ export async function processRegularFlow(
             transpileMinify,
             transpileSourcemap,
             transpilePublicPath,
-            unifiedBundlerOutExt,
+            distNpmOutFilesExt,
             rmDepsMode,
             timer,
             transpileStub,

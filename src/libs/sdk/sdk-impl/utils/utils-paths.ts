@@ -1,7 +1,7 @@
 import type { SourceMap } from "magic-string";
 
 import { relinka } from "@reliverse/relinka";
-import fs from "fs-extra";
+import { readFile, writeFile, readdir, stat } from "fs-extra";
 import MagicString from "magic-string";
 import pMap from "p-map";
 import path from "pathe";
@@ -529,12 +529,36 @@ function convertSingleImportPath(
       const normalizedStripSegment = stripSegment.endsWith("/")
         ? stripSegment
         : `${stripSegment}/`;
-      // Remove the segment if it appears at the beginning of the path
-      if (processedPath.startsWith(normalizedStripSegment)) {
-        processedPath = processedPath.slice(normalizedStripSegment.length);
+      // Remove the segment if it appears after any leading ../ or ./
+      // Find the index after all leading ../ or ./
+      const leadingMatch = processedPath.match(/^((\.\.\/|\.\/)+)/);
+      const leading = leadingMatch ? leadingMatch[0] : "";
+      const afterLeading = processedPath.slice(leading.length);
+      if (afterLeading.startsWith(normalizedStripSegment)) {
+        processedPath =
+          leading + afterLeading.slice(normalizedStripSegment.length);
       }
     }
     convertedPath = processedPath;
+
+    // --- Recalculate minimal relative path if result is still relative ---
+    if (
+      convertedPath.startsWith(".") &&
+      fullOptions.sourceFile &&
+      !convertedPath.startsWith("./node_modules") // don't touch node_modules
+    ) {
+      // Resolve the absolute path of the import target
+      const importingFileDir = path.dirname(fullOptions.sourceFile);
+      const absoluteTarget = path.resolve(importingFileDir, convertedPath);
+      const minimalRelative = path
+        .relative(importingFileDir, absoluteTarget)
+        .replace(/\\/g, "/");
+      // Ensure it starts with ./ or ../
+      convertedPath =
+        minimalRelative.startsWith(".") || minimalRelative.startsWith("/")
+          ? minimalRelative
+          : `./${minimalRelative}`;
+    }
   }
 
   return convertedPath;
@@ -562,7 +586,7 @@ async function processFileContent(
 ): Promise<FileResult> {
   const { distJsrDryRun = false, generateSourceMap = false } = options;
   try {
-    const originalContent = await fs.readFile(filePath, "utf-8");
+    const originalContent = await readFile(filePath, "utf-8");
     const s = new MagicString(originalContent);
 
     // Apply the specific transformation logic (e.g., path conversion, extension change)
@@ -599,9 +623,9 @@ async function processFileContent(
 
     // Write changes if not a dry run
     if (!distJsrDryRun) {
-      await fs.writeFile(filePath, newContent, "utf-8");
+      await writeFile(filePath, newContent, "utf-8");
       if (map) {
-        await fs.writeFile(`${filePath}.map`, map.toString(), "utf-8");
+        await writeFile(`${filePath}.map`, map.toString(), "utf-8");
       }
     }
 
@@ -635,7 +659,7 @@ async function processDirectoryRecursively<T>(
 ): Promise<T[]> {
   let results: T[] = [];
   try {
-    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+    const entries = await readdir(dirPath, { withFileTypes: true });
 
     const filesToProcess: string[] = [];
     const directoriesToRecurse: string[] = [];
@@ -701,7 +725,6 @@ async function transformImportPathsLogic(
     fromType: ImportType;
     toType: ImportType;
     filePath: string; // The file being processed (absolute path)
-    // Pass relevant parts of ConversionOptions
     aliasPrefix?: string;
     baseDir: string; // Absolute path
     currentLibName?: string;
@@ -716,9 +739,9 @@ async function transformImportPathsLogic(
   // Define the options object once for convertSingleImportPath
   const converterOptions = {
     ...conversionArgs,
-    sourceFile: filePath, // Pass the absolute file path
-    strip: conversionArgs.strip ?? [], // Provide default empty array
-    urlMap: conversionArgs.urlMap ?? {}, // Provide default empty object
+    sourceFile: filePath, // absolute file path
+    strip: conversionArgs.strip ?? [],
+    urlMap: conversionArgs.urlMap ?? {},
   };
 
   // --- Process Static Imports/Exports (`from "..."`) ---
@@ -932,7 +955,7 @@ export async function convertImportPaths(
   }
 
   try {
-    const stats = await fs.stat(baseDir);
+    const stats = await stat(baseDir);
     if (!stats.isDirectory()) {
       throw new Error(`Specified baseDir is not a directory: ${baseDir}`);
     }
@@ -946,12 +969,16 @@ export async function convertImportPaths(
     throw error; // Re-throw other errors (e.g., permissions)
   }
 
-  relinka(
-    "log",
-    `Starting import path conversion (${fromType} -> ${toType}) in directory: ${baseDir}`,
-  );
   if (distJsrDryRun) {
-    relinka("log", "Dry run mode enabled: No files will be modified.");
+    relinka(
+      "log",
+      "[path conversion] Dry run mode enabled: No files will be modified.",
+    );
+  } else {
+    relinka(
+      "log",
+      `Starting import path conversion (${fromType} -> ${toType}) in directory: ${baseDir}`,
+    );
   }
 
   // --- Define File Processing Logic ---
@@ -961,18 +988,17 @@ export async function convertImportPaths(
       filePath,
       (content, s) =>
         transformImportPathsLogic(content, s, {
-          // Pass necessary context for the transformation
           fromType,
           toType,
-          filePath, // Pass the absolute file path
-          aliasPrefix: rawAliasPrefix, // Pass raw prefix, normalization happens inside
-          baseDir, // Pass the resolved absolute baseDir
+          filePath, // absolute file path
+          aliasPrefix: rawAliasPrefix, // raw prefix, normalization happens inside
+          baseDir, // resolved absolute baseDir
           currentLibName,
           libsList,
           strip,
           urlMap,
         }),
-      { distJsrDryRun, generateSourceMap }, // Pass options for file writing
+      { distJsrDryRun, generateSourceMap }, // file writing options
     );
   };
 
@@ -1027,7 +1053,7 @@ export async function convertImportExtensionsJsToTs(
   const absoluteDirPath = path.resolve(CWD, rawDirPath); // Ensure absolute path
 
   try {
-    const stats = await fs.stat(absoluteDirPath);
+    const stats = await stat(absoluteDirPath);
     if (!stats.isDirectory()) {
       throw new Error(
         `Specified dirPath is not a directory: ${absoluteDirPath}`,
@@ -1056,8 +1082,8 @@ export async function convertImportExtensionsJsToTs(
   const fileProcessor = async (filePath: string): Promise<FileResult> => {
     return processFileContent(
       filePath,
-      transformJsToTsExtensionLogic, // Pass the dedicated logic function
-      { distJsrDryRun, generateSourceMap }, // Pass options for file writing
+      transformJsToTsExtensionLogic,
+      { distJsrDryRun, generateSourceMap }, // file writing options
     );
   };
 

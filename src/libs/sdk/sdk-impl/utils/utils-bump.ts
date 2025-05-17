@@ -6,7 +6,7 @@ import { readPackageJSON } from "pkg-types";
 import semver from "semver";
 import { glob } from "tinyglobby";
 
-import type { BumpFilter, BumpMode } from "~/libs/sdk/sdk-types.js";
+import type { BumpMode } from "~/libs/sdk/sdk-types.js";
 
 import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "./utils-consts.js";
 import { readFileSafe, writeFileSafe } from "./utils-fs.js";
@@ -57,7 +57,7 @@ export async function bumpHandler(
   bumpMode: BumpMode,
   bumpDisable: boolean,
   commonPubPause: boolean,
-  bumpFilter: BumpFilter[],
+  bumpFilter: string[],
 ): Promise<void> {
   if (bumpDisable || commonPubPause) {
     relinka(
@@ -105,10 +105,15 @@ export async function setBumpDisabled(
     return;
   }
 
-  const dlerCfgPath = path.join(PROJECT_ROOT, ".config/dler.ts");
+  const dlerCfgTs = path.join(PROJECT_ROOT, ".config/dler.ts");
+  const dlerCfgJs = path.join(PROJECT_ROOT, ".config/dler.js");
+  const dlerCfgPath = (await fs.pathExists(dlerCfgTs)) ? dlerCfgTs : dlerCfgJs;
 
   if (!(await fs.pathExists(dlerCfgPath))) {
-    relinka("log", "No .config/dler.ts found to update bumpDisable");
+    relinka(
+      "log",
+      "No .config/dler.ts or .config/dler.js found to update bumpDisable",
+    );
     return;
   }
 
@@ -148,11 +153,7 @@ function autoIncrementVersion(
 async function bumpVersions(
   oldVersion: string,
   newVersion: string,
-  bumpFilter: BumpFilter[] = [
-    "package.json",
-    ".config/rse.jsonc",
-    ".config/rse.ts",
-  ],
+  bumpFilter: string[],
 ): Promise<void> {
   relinka(
     "verbose",

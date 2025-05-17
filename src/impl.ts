@@ -1,4 +1,3 @@
-import { relinka } from "@reliverse/relinka";
 import fs from "fs-extra";
 import path from "pathe";
 
@@ -29,15 +28,8 @@ export async function dlerBuild(isDev: boolean) {
     // This config load is a single source of truth
     const config = await loadConfig();
 
-    // Prepare dev environment
-    if (isDev) {
-      config.commonPubPause = true;
-      config.bumpDisable = true;
-      relinka(
-        "log",
-        "Development mode: Publishing paused and version bumping disabled.",
-      );
-    }
+    // TODO: remove this once pub will call dlerBuild instead of replicating its code
+    const pausePublishing = config.commonPubPause;
 
     // Clean up previous run artifacts
     if (config.logsFreshFile) {
@@ -55,7 +47,7 @@ export async function dlerBuild(isDev: boolean) {
       await bumpHandler(
         config.bumpMode,
         config.bumpDisable,
-        config.commonPubPause,
+        pausePublishing,
         config.bumpFilter,
       );
     }
@@ -73,7 +65,7 @@ export async function dlerBuild(isDev: boolean) {
       config.coreEntryFile,
       config.distJsrDryRun,
       config.distJsrFailOnWarn,
-      config.commonPubPause,
+      pausePublishing,
       config.distJsrDirName,
       config.distJsrBuilder,
       config.transpileTarget,
@@ -90,7 +82,10 @@ export async function dlerBuild(isDev: boolean) {
       config.transpileWatch,
       config.distJsrGenTsconfig,
       config.coreDeclarations,
-      { coreDescription: config.coreDescription },
+      {
+        coreDescription: config.coreDescription,
+        coreBuildOutDir: config.coreBuildOutDir,
+      },
     );
 
     // Process libraries
@@ -103,7 +98,7 @@ export async function dlerBuild(isDev: boolean) {
       config.distJsrFailOnWarn,
       config.libsDirDist,
       config.libsDirSrc,
-      config.commonPubPause,
+      pausePublishing,
       config.commonPubRegistry,
       config.distNpmOutFilesExt,
       config.distNpmBuilder,
@@ -125,12 +120,11 @@ export async function dlerBuild(isDev: boolean) {
     // Finalize dler
     await finalizeBuild(
       timer,
-      config.commonPubPause,
+      pausePublishing,
       config.libsList,
       config.distNpmDirName,
       config.distJsrDirName,
       config.libsDirDist,
-      isDev,
     );
   } catch (error) {
     handleDlerError(error, timer);
@@ -150,16 +144,6 @@ export async function dlerPub(isDev: boolean) {
     // This config load is a single source of truth
     const config = await loadConfig();
 
-    // Prepare dev environment
-    if (isDev) {
-      config.commonPubPause = true;
-      config.bumpDisable = true;
-      relinka(
-        "log",
-        "Development mode: Publishing paused and version bumping disabled.",
-      );
-    }
-
     // Clean up previous run artifacts
     if (config.logsFreshFile) {
       await fs.remove(path.join(PROJECT_ROOT, config.logsFileName));
@@ -172,6 +156,7 @@ export async function dlerPub(isDev: boolean) {
     );
 
     // Handle version bumping if enabled
+    // TODO: remove this once pub will call dlerBuild instead of replicating its code
     if (!config.bumpDisable) {
       await bumpHandler(
         config.bumpMode,
@@ -211,7 +196,10 @@ export async function dlerPub(isDev: boolean) {
       config.transpileWatch,
       config.distJsrGenTsconfig,
       config.coreDeclarations,
-      { coreDescription: config.coreDescription },
+      {
+        coreDescription: config.coreDescription,
+        coreBuildOutDir: config.coreBuildOutDir,
+      },
     );
 
     // Process libraries
@@ -251,7 +239,6 @@ export async function dlerPub(isDev: boolean) {
       config.distNpmDirName,
       config.distJsrDirName,
       config.libsDirDist,
-      isDev,
     );
   } catch (error) {
     handleDlerError(error, timer);

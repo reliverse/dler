@@ -1,7 +1,7 @@
 import { relinka } from "@reliverse/relinka";
 import { defineCommand, runCmd, selectPrompt } from "@reliverse/rempts";
 
-import { getCmdRelifsoInit } from "~/app/cmds.js";
+import { cmdRelifsoInit } from "~/app/cmds.js";
 
 export default defineCommand({
   meta: {
@@ -35,7 +35,7 @@ export default defineCommand({
     });
 
     if (cmd === "init") {
-      await runCmd(await getCmdRelifsoInit(), []);
+      await runCmd(await cmdRelifsoInit(), []);
     }
   },
 });

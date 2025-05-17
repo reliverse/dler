@@ -38,7 +38,10 @@ export async function copyRootFile(
         outputName: "LICENSE",
         variants: ["LICENSE", "LICENSE.md"],
       },
-      "README.md": {},
+      README: {
+        outputName: "README.md",
+        variants: ["README.md", "README"],
+      },
     };
 
     // Process files in parallel

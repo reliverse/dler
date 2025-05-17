@@ -34,28 +34,19 @@ bun x @reliverse/inject
 
 ### Basic Usage
 
-**User config** in `inject.config.ts`:
-
-```ts
-export default {
-  injectComment: "// @ts-expect-error TODO: fix ts",
-  tscCommand: "tsc --project ./tsconfig.json --noEmit"
-}
-```
-
 **Running**:
 
 ```bash
 # 1) Automatic mode:
-inject ts-expect-error auto
+bun dler inject expect auto
 # => runs `tsc`, finds errors, injects comment above them.
 
 # 2) Lines-file mode:
-inject ts-expect-error linesA.txt linesB.txt
+bun dler inject expect linesA.txt linesB.txt
 # => no TSC, just parses references from lines files
 
 # 3) Mixed:
-inject ts-expect-error auto lines.txt
+bun dler inject expect auto lines.txt
 # => merges TSC errors with references in lines.txt
 ```
 

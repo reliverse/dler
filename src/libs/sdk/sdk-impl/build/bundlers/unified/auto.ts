@@ -25,7 +25,12 @@ export const autoPreset: BuildPreset = definePreset(() => {
           return;
         }
         const sourceFiles = listRecursively(join(ctx.options.rootDir, "src"));
-        const res = inferEntries(ctx.pkg, sourceFiles, ctx.options.rootDir);
+        const res = inferEntries(
+          ctx.pkg,
+          sourceFiles,
+          ctx.options.isLib,
+          ctx.options.rootDir,
+        );
         for (const message of res.warnings) {
           warn(ctx, message);
         }
@@ -73,6 +78,7 @@ const getEntrypointPaths = (path: string): string[] => {
 function inferEntries(
   pkg: PackageJson,
   sourceFiles: string[],
+  isLib: boolean,
   rootDir?: string,
 ): InferEntriesResult {
   const warnings = [];
@@ -156,7 +162,7 @@ function inferEntries(
 
     const entry =
       entries.find((i) => i.input === input) ||
-      entries[entries.push({ input }) - 1];
+      entries[entries.push({ input, isLib }) - 1];
 
     if (/\.d\.(m|c)?ts$/.test(output.file)) {
       dts = true;

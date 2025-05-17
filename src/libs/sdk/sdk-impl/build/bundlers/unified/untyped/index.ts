@@ -55,7 +55,7 @@ export async function typesBuild(ctx: BuildContext): Promise<void> {
         jitiOptions,
       );
 
-      // Pass the modified jitiOptions object to createJiti
+      // Passing the modified jitiOptions object to createJiti
       const untypedJiti = createJiti(ctx.options.rootDir, jitiOptions);
 
       // --- Schema Loading ---

@@ -1,6 +1,7 @@
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 
-import { dlerBuild } from "~/cli.js";
+import { dlerBuild } from "~/impl.js";
+import { ensureDlerConfig } from "~/init.js";
 
 export default defineCommand({
   meta: {
@@ -14,6 +15,7 @@ export default defineCommand({
     },
   }),
   async run({ args }) {
+    await ensureDlerConfig(args.dev);
     await dlerBuild(args.dev);
   },
 });

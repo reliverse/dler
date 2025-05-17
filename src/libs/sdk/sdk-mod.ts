@@ -1,10 +1,12 @@
+// AUTO-GENERATED AGGREGATOR START
+export type { LibraryBuildOptions } from "./sdk-impl/build/build-library.js";
 export { library_buildLibrary } from "./sdk-impl/build/build-library.js";
 export {
   regular_buildJsrDist,
   regular_buildNpmDist,
 } from "./sdk-impl/build/build-regular.js";
 export { autoPreset } from "./sdk-impl/build/bundlers/unified/auto.js";
-export { build } from "./sdk-impl/build/bundlers/unified/build.js";
+export { unifiedBuild } from "./sdk-impl/build/bundlers/unified/build.js";
 export { copyBuild } from "./sdk-impl/build/bundlers/unified/copy/copy.js";
 export type {
   CopyBuildEntry,
@@ -83,13 +85,54 @@ export {
   validateDependencies,
   validatePackage,
 } from "./sdk-impl/build/bundlers/unified/validate.js";
-export { processLibraryFlow } from "./sdk-impl/library-flow.js";
+export {
+  processLibraryFlow,
+  libraries_buildPublish,
+} from "./sdk-impl/library-flow.js";
 export { library_publishLibrary } from "./sdk-impl/pub/pub-library.js";
 export {
   regular_pubToJsr,
   regular_pubToNpm,
 } from "./sdk-impl/pub/pub-regular.js";
 export { processRegularFlow } from "./sdk-impl/regular-flow.js";
+export {
+  replaceLineExecutor,
+  renameFileExecutor,
+  removeCommentExecutor,
+  removeLineExecutor,
+  removeFileExecutor,
+  copyFileExecutor,
+  moveFileExecutor,
+  transformContentExecutor,
+  insertAtExecutor,
+} from "./sdk-impl/spell/spell-executors.js";
+export {
+  fileExists,
+  readFile,
+  writeFile,
+  removeFile,
+  renameFile,
+  copyFile,
+  findFiles,
+} from "./sdk-impl/spell/spell-filesystem.js";
+export {
+  executeSpell,
+  processFile,
+  spells,
+} from "./sdk-impl/spell/spell-mod.js";
+export {
+  parseParams,
+  parseSpellFromComment,
+  extractSpellsFromFile,
+} from "./sdk-impl/spell/spell-parser.js";
+export type {
+  SpellType,
+  SpellParams,
+  Spell,
+  SpellExecutionOptions,
+  FileOperation,
+  SpellResult,
+} from "./sdk-impl/spell/spell-types.js";
 export { useAggregator } from "./sdk-impl/utils/tools/tools-agg.js";
 export { printUsage } from "./sdk-impl/utils/tools/tools-impl.js";
 export {
@@ -100,12 +143,12 @@ export {
 export { bumpHandler, setBumpDisabled } from "./sdk-impl/utils/utils-bump.js";
 export { removeDistFolders } from "./sdk-impl/utils/utils-clean.js";
 export {
-  cliDomainDocs,
-  CONCURRENCY_DEFAULT,
   PROJECT_ROOT,
-  SHOW_VERBOSE,
+  CONCURRENCY_DEFAULT,
   tsconfigJson,
+  cliDomainDocs,
   validExtensions,
+  SHOW_VERBOSE,
 } from "./sdk-impl/utils/utils-consts.js";
 export {
   validateDevCwd,
@@ -116,9 +159,9 @@ export { determineDistName } from "./sdk-impl/utils/utils-determine.js";
 export { handleDlerError } from "./sdk-impl/utils/utils-error.js";
 export {
   copyRootFile,
-  deleteSpecificFiles,
   getDirectorySize,
   outDirBinFilesCount,
+  deleteSpecificFiles,
   readFileSafe,
   writeFileSafe,
 } from "./sdk-impl/utils/utils-fs.js";
@@ -127,10 +170,15 @@ export {
   createJsrJSON,
   renameTsxFiles,
 } from "./sdk-impl/utils/utils-jsr-json.js";
+export type {
+  FileResult,
+  ConvertImportPathsOptions,
+  ConvertImportExtensionsOptions,
+} from "./sdk-impl/utils/utils-paths.js";
 export {
-  convertImportExtensionsJsToTs,
-  convertImportPaths,
   extractPackageName,
+  convertImportPaths,
+  convertImportExtensionsJsToTs,
   normalizeQuotes,
 } from "./sdk-impl/utils/utils-paths.js";
 export type { PerfTimer } from "./sdk-impl/utils/utils-perf.js";
@@ -143,3 +191,4 @@ export {
 export { library_createPackageJSON } from "./sdk-impl/utils/utils-pkg-json-libs.js";
 export { regular_createPackageJSON } from "./sdk-impl/utils/utils-pkg-json-reg.js";
 export { createTSConfig } from "./sdk-impl/utils/utils-tsconfig.js";
+// AUTO-GENERATED AGGREGATOR END

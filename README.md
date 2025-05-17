@@ -51,7 +51,7 @@ ensure git, node.js, and bun/pnpm/yarn/npm are installed. then:
 git clone https://github.com/reliverse/dler.git
 cd dler
 bun i
-bun dev # bun src/mod.ts --dev
+bun dev # bun src/dler.ts --dev
 ```
 
 ### installation
@@ -66,6 +66,14 @@ bun dev # bun src/mod.ts --dev
     bun update --latest
     ```
 
+    **and/or install globally**:
+
+    ```sh
+    bun add -g @reliverse/dler
+    # or update as needed:
+    bun i -g update --latest
+    ```
+
 2. **prepare your project**:
 
     a. **configure `.gitignore`**:
@@ -75,19 +83,13 @@ bun dev # bun src/mod.ts --dev
     echo "logs" >> .gitignore
     ```
 
-    b. **install config intellisense**:
-
-    ```sh
-    bun add -d @reliverse/dler-cfg
-    ```
-
-    c. **add `".config/**/*.ts"` to `include` in `tsconfig.json`**:
+    b. **add `".config/**/*.ts"` to `include` in `tsconfig.json`**:
 
     ```json
     "include": [".config/**/*.ts", ...]
     ```
 
-    d. **package.json**:
+    c. **package.json**:
 
     ```json
     "scripts": {
@@ -96,7 +98,7 @@ bun dev # bun src/mod.ts --dev
     }
     ```
 
-    e. **initialize config**:
+    d. **initialize config**:
 
     ```sh
     bun [build|pub] # if installed as dev dep
@@ -114,18 +116,37 @@ bun dev # bun src/mod.ts --dev
     dler [build|pub] # if installed globally
     ```
 
-## 🔌 plugins
+## 🔌 addons
 
-dler ships with a flexible plugin system and **14 built-in plugins** (from [@reliverse/addons](https://reliverse.org/addons)).
+dler ships with a flexible addon system (aka plugins) and **14 built-in addons** (from [@reliverse/addons](https://reliverse.org/addons)).
 
-feel free to create your own plugins. plugins can be implemented as built-in directly in `src/app/plugin-name/impl/*` and then imported from `src/app/plugin-name/cmd.ts`; or implemented in your own library and then imported from `src/app/plugin-name/cmd.ts`.
+feel free to create your own addons. addons can be implemented as built-in directly in `src/app/<addon>/impl/*` and then imported from `src/app/<addon>/cmd.ts`; or implemented in your own library and then imported from `src/app/<addon>/cmd.ts`.
+
+if you run just `dler` — it will display a list of addons which you can launch interactively.
+
+## **available addons**
+
+[agg](#1-agg), [build](#2-build), [conv](#3-conv), [deps](#4-deps), [inject](#5-inject), [libs](#6-libs), [merge](#7-merge), [mono](#8-mono), [pub](#9-pub), [relifso](#10-relifso), [relinka](#11-relinka), [rempts](#12-rempts), [spell](#13-spell), [split](#14-split).
 
 ### 1. `agg`
 
 generates aggregator file with content like `import { getsomething } from "./utils.js"`.
 
 ```bash
-dler agg ...
+# interactively:
+dler > "agg"
+# non-interactively:
+dler agg --input <dir> --out <file> [options]
+```
+
+**usage example**: if you're exploring the example [playground](#playground), you can try the following:
+
+1. open [src/libs/sdk/sdk-mod.ts](https://github.com/reliverse/dler/blob/main/src/libs/sdk/sdk-mod.ts) in your ide.
+2. press `ctrl+a`, then `backspace`. run the command below and watch the magic happen:
+
+```bash
+bun tools:agg # shortcut for:
+bun src/dler.ts tools --dev --tool agg --input src/libs/sdk/sdk-impl --out src/libs/sdk/sdk-mod.ts --recursive --named --strip src/libs/sdk
 ```
 
 ### 2. `build`
@@ -196,7 +217,7 @@ not yet documented.
 builds and publishes specific subdirectories of your main project as standalone packages.
 
 **usage example**:  
-using `@reliverse/dler-cfg` to package [src/libs/cfg](https://github.com/reliverse/dler/tree/main/src/libs/cfg):
+using `dler` to package [src/libs/sdk](https://github.com/reliverse/dler/tree/main/src/libs/sdk):
 
 ```ts
 // .config/dler.ts
@@ -204,11 +225,11 @@ libsactmode: "main-and-libs",
 libsdirdist: "dist-libs",
 libsdirsrc: "src/libs",
 libslist: {
-  "@reliverse/dler-cfg": {
+  "@reliverse/dler-sdk": {
     libdeclarations: true,
-    libdescription: "@reliverse/dler defineconfig",
-    libdirname: "cfg",
-    libmainfile: "cfg/cfg-mod.ts",
+    libdescription: "@reliverse/dler without cli",
+    libdirname: "sdk",
+    libmainfile: "sdk/sdk-mod.ts",
     libpkgkeepdeps: false,
     libtranspileminify: true,
   },
@@ -326,26 +347,12 @@ await dler.spell({ spells: ["rename-file"], files: [] });
 
 p.s. [see how rse cli uses hooked=true](https://github.com/reliverse/rse/blob/main/src/postbuild.ts)
 
-### 14. `tools`
+### 14. `split`
 
-lets you run standalone dler features directly from the cli:
-
-```bash
-dler tools --tool <tool> --input <dir> --out <file> [options]
-```
-
-**available tools**:
-
-- `agg`: generates aggregator file with content like `export { getsomething } from "./utils.js"`. **note**: currently it replaces the file content, not appends.
-
-**usage example**: if you're exploring the example [playground](#playground), you can try the following:
-
-1. open [src/libs/sdk/sdk-mod.ts](https://github.com/reliverse/dler/blob/main/src/libs/sdk/sdk-mod.ts) in your ide.
-2. press `ctrl+a`, then `backspace`. run the command below and watch the magic happen:
+splits your code/text file into multiple files.
 
 ```bash
-bun tools:agg # shortcut for:
-bun src/mod.ts tools --dev --tool agg --input src/libs/sdk/sdk-impl --out src/libs/sdk/sdk-mod.ts --recursive --named --strip src/libs/sdk
+dler split ...
 ```
 
 ## api (for advanced users)

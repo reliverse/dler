@@ -21,7 +21,7 @@ export const formatOutput = (
   output += `${chalk.gray("• ")}Total dependencies found: ${result.allDependencies.length}\n`;
   output += `${chalk.gray("• ")}Listed in package.json: ${result.listedDependencies.length}\n`;
   output += `${chalk.gray("• ")}Missing from package.json: ${result.missingDependencies.length}\n`;
-  if (options.includeBuiltins) {
+  if (options.builtins) {
     output += `${chalk.gray("• ")}Node.js built-in modules: ${result.builtinModules.length}\n`;
   }
   output += "\n";
@@ -44,7 +44,7 @@ export const formatOutput = (
   }
 
   // Show built-in modules if enabled
-  if (options.includeBuiltins && result.builtinModules.length > 0) {
+  if (options.builtins && result.builtinModules.length > 0) {
     output += chalk.bold.blue("Node.js Built-in Modules Used:\n");
     for (const dep of result.builtinModules) {
       output += `${chalk.gray("• ")}${chalk.blue(dep)}\n`;

@@ -18,6 +18,7 @@ export type BaseBuildEntry = {
   input: string;
   name?: string;
   outDir?: string;
+  isLib: boolean;
 };
 
 export type { CopyBuildEntry } from "./copy/types.js";
@@ -42,6 +43,7 @@ export type BuildContext = {
     exports?: string[];
     modules?: { bytes: number; id: string }[];
     path: string;
+    isLib: boolean;
   }[];
   hooks: Hookable<BuildHooks>;
   jiti: Jiti;
@@ -50,6 +52,7 @@ export type BuildContext = {
   pkg: PackageJson;
   usedImports: Set<string>;
   warnings: Set<string>;
+  isLib: boolean;
 };
 
 export type BuildEntry =
@@ -109,6 +112,11 @@ export type BuildOptions = {
    * Terminate the build process when a warning appears
    */
   failOnWarn?: boolean;
+
+  /**
+   * Whether the current build is for a library.
+   */
+  isLib: boolean;
 
   /**
    * The name of the project.

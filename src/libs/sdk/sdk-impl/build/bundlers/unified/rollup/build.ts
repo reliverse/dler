@@ -59,6 +59,7 @@ export async function rollupBuild(ctx: BuildContext): Promise<void> {
             id,
           })),
           path: entry.fileName,
+          isLib: ctx.options.isLib,
         });
       }
     }

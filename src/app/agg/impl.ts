@@ -172,7 +172,7 @@ export async function useAggregator({
 
     relinka(
       "success",
-      `Aggregator done: processed ${allLines.length} lines in:\n  ${outFile}`,
+      `Aggregator done: processed ${allLines.length} lines in: ${outFile}`,
     );
   } catch (error) {
     relinka("error", `Aggregator failed: ${error}`);

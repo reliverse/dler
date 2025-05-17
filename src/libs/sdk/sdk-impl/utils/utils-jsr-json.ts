@@ -14,8 +14,7 @@ export async function createJsrJSON(
   outDirRoot: string,
   isLib: boolean,
   libName = "unknown-lib-name",
-  libDescription = "unknown-lib-description",
-  coreDescription?: string,
+  pkgDescription = "unknown-lib-description",
 ): Promise<void> {
   relinka("verbose", `Creating jsr.json configuration (isLib: ${isLib})`);
   const originalPkg = await readPackageJSON();
@@ -23,10 +22,7 @@ export async function createJsrJSON(
   const { author, license, version } = originalPkg;
   if (isLib) {
     name = libName;
-    description = libDescription;
-  } else {
-    // For main package, use coreDescription if provided, otherwise use original description
-    description = coreDescription || description;
+    description = pkgDescription;
   }
   const pkgHomepage = cliDomainDocs;
   const jsrConfig = {

@@ -3,20 +3,18 @@ import fs from "fs-extra";
 import path from "pathe";
 import { readPackageJSON } from "pkg-types";
 
-import { DEFAULT_CONFIG } from "~/libs/cfg/cfg-default.js";
+import { DEFAULT_CONFIG } from "~/default.js";
 
 // Supported configuration filename
 const CONFIG_FILENAME = ".config/dler.ts";
 
-export async function initDlerConfig(isDev: boolean) {
+export async function ensureDlerConfig(isDev: boolean) {
   // Check if the config file already exists
   const configPath = path.resolve(process.cwd(), CONFIG_FILENAME);
   const configExists = await fs.pathExists(configPath);
 
-  if (configExists) {
-    // If it exists, no need to do anything.
-    return;
-  }
+  // If it exists, no need to do anything.
+  if (configExists) return;
 
   // If it doesn't exist, create it.
   try {
@@ -41,7 +39,7 @@ export async function initDlerConfig(isDev: boolean) {
     relinka("log", "Edit this file to customize build and publish settings");
     if (!isDev) {
       relinka("log", "Please note: commonPubPause is set to true by default");
-      relinka("log", "When you're ready, run `dler` to build and publish");
+      relinka("log", "When you're ready, run `dler pub` to build and publish");
     } else {
       relinka("log", "When you're ready, run `bun pub` to build and publish");
     }
@@ -55,13 +53,25 @@ export async function initDlerConfig(isDev: boolean) {
   }
 }
 
+function getCoreIsCLI(isDev: boolean): string {
+  return isDev
+    ? `coreIsCLI: {
+        enabled: true,
+        scripts: { dler: "dler.ts" },
+      },`
+    : `// coreIsCLI: {
+  // enabled: false,
+  // scripts: { mycli: "mycli.ts" },
+  // },`;
+}
+
 // Generate the config file content
 function generateConfig(isDev: boolean, pkgDescription?: string): string {
   const importDefineConfigStatement = isDev
-    ? `import { defineConfig } from "~/libs/cfg/cfg-mod.js";`
-    : `import { defineConfig } from "@reliverse/dler-cfg";`;
+    ? `import { defineConfig } from "~/mod.js";`
+    : `import { defineConfig } from "@reliverse/dler";`;
   const verboseValue = getValue(isDev, true, DEFAULT_CONFIG.commonVerbose);
-  const isCLIValue = getValue(isDev, true, DEFAULT_CONFIG.coreIsCLI);
+  const coreIsCLI = getCoreIsCLI(isDev);
   const registryValue = getValue(
     isDev,
     "npm-jsr",
@@ -71,11 +81,6 @@ function generateConfig(isDev: boolean, pkgDescription?: string): string {
     isDev,
     false,
     DEFAULT_CONFIG.commonPubPause,
-  );
-  const coreDeclarationsValue = getValue(
-    isDev,
-    false,
-    DEFAULT_CONFIG.coreDeclarations,
   );
   const coreDescriptionValue = getValue(
     isDev, // TODO: remove `description` from dler's `package.json` when ensured that whole dler's codebase can optionally read dler.ts' `coreDescription`
@@ -89,15 +94,6 @@ function generateConfig(isDev: boolean, pkgDescription?: string): string {
   );
   const libsObject = isDev
     ? `{
-  "@reliverse/dler-cfg": {
-    libDeclarations: true,
-    libDescription: "@reliverse/dler defineConfig",
-    libDirName: "cfg",
-    libMainFile: "cfg/cfg-mod.ts",
-    libPkgKeepDeps: false,
-    libTranspileMinify: true,
-    libPubPause: false,
-  },
   "@reliverse/dler-sdk": {
     libDeclarations: true,
     libDescription: "@reliverse/dler without cli",
@@ -142,11 +138,12 @@ export default defineConfig({
   commonVerbose: ${verboseValue},
 
   // Core configuration
-  coreDeclarations: ${coreDeclarationsValue},
+  coreDeclarations: ${DEFAULT_CONFIG.coreDeclarations},
   coreDescription: ${JSON.stringify(coreDescriptionValue)},
   coreEntryFile: "${DEFAULT_CONFIG.coreEntryFile}",
   coreEntrySrcDir: "${DEFAULT_CONFIG.coreEntrySrcDir}",
-  coreIsCLI: ${isCLIValue},
+  coreBuildOutDir: "${DEFAULT_CONFIG.coreBuildOutDir}",
+  ${coreIsCLI}
 
   // JSR-only config
   distJsrAllowDirty: ${DEFAULT_CONFIG.distJsrAllowDirty},
@@ -192,10 +189,6 @@ export default defineConfig({
   transpileStub: ${DEFAULT_CONFIG.transpileStub},
   transpileTarget: "${DEFAULT_CONFIG.transpileTarget}",
   transpileWatch: ${DEFAULT_CONFIG.transpileWatch},
-
-  // Additionals
-  injectComment: "${DEFAULT_CONFIG.injectComment}",
-  tscCommand: "${DEFAULT_CONFIG.tscCommand}",
 });
 `;
   return configTemplate;

@@ -28,7 +28,7 @@ const config = tseslint.config(
       "no-relative-import-paths": noRelativeImportPaths,
     },
     rules: {
-      "max-lines": ["error", 1400],
+      "max-lines": ["error", 1600],
       "perfectionist/sort-imports": "warn",
       "@typescript-eslint/no-explicit-any": "off",
       "no-relative-import-paths/no-relative-import-paths": [

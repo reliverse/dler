@@ -1,6 +1,6 @@
 import { relinka } from "@reliverse/relinka";
 import { mkdist, type MkdistOptions } from "mkdist";
-import { relative } from "pathe";
+import { relative, dirname as pathDirname } from "pathe";
 
 import type {
   BuildContext,
@@ -8,7 +8,6 @@ import type {
 } from "~/libs/sdk/sdk-impl/build/bundlers/unified/types.js";
 
 import {
-  ensuredir,
   rmdir,
   symlink,
   warn,
@@ -21,18 +20,38 @@ export async function mkdistBuild(ctx: BuildContext): Promise<void> {
   await ctx.hooks.callHook("mkdist:entries", ctx, entries);
   for (const entry of entries) {
     const distDir = entry.outDir || entry.input;
-    await ensuredir(distDir);
     if (ctx.options.transpileStub) {
       await rmdir(distDir);
       await symlink(entry.input, distDir);
     } else {
+      // Resolve source directory from input
+      let srcDir: string;
+      if (typeof entry.input === "string" && !entry.input.endsWith("/")) {
+        srcDir = ctx.options.isLib ? pathDirname(entry.input) : entry.input;
+        relinka(
+          "verbose",
+          `[mkdist] Using directory from file path: ${srcDir} (from: ${entry.input})`,
+        );
+      } else {
+        srcDir = entry.input;
+        relinka("verbose", `[mkdist] Using directory directly: ${srcDir}`);
+      }
+
       const mkdistOptions: MkdistOptions = {
-        cleanDist: true,
+        cleanDist: false,
         distDir,
         rootDir: ctx.options.rootDir,
-        srcDir: entry.input,
+        srcDir,
+        format: "esm",
+        ext: entry.ext || "js",
         ...entry,
       };
+
+      relinka(
+        "verbose",
+        `[mkdist] Building with options: srcDir=${mkdistOptions.srcDir}, distDir=${mkdistOptions.distDir}, rootDir=${mkdistOptions.rootDir}`,
+      );
+
       await ctx.hooks.callHook(
         "mkdist:entry:options",
         ctx,
@@ -43,6 +62,7 @@ export async function mkdistBuild(ctx: BuildContext): Promise<void> {
       ctx.buildEntries.push({
         chunks: output.writtenFiles.map((p) => relative(ctx.options.outDir, p)),
         path: distDir,
+        isLib: ctx.options.isLib,
       });
       await ctx.hooks.callHook("mkdist:entry:build", ctx, entry, output);
       if (output.errors) {

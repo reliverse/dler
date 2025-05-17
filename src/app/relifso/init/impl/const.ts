@@ -13,7 +13,7 @@ export const FILE_TYPES = [
   { type: "git:gitattributes", variations: [".gitattributes"] },
   { type: "git:gitignore", variations: [".gitignore"] },
   { type: "md:LICENSE", variations: ["LICENSE.md", "LICENSE"] },
-  { type: "md:README", variations: ["README.md"] },
+  { type: "md:README", variations: ["README.md", "README"] },
 ] as const;
 
 export const INIT_BEHAVIOURS = [

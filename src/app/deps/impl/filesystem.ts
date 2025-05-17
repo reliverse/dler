@@ -1,11 +1,8 @@
+import fs from "fs-extra";
 import { glob } from "glob";
-import fs from "node:fs";
 import path from "node:path";
-import util from "node:util";
 
 import type { PackageJson } from "./types.js";
-
-const readFileAsync = util.promisify(fs.readFile);
 
 export const findSourceFiles = async (
   directory: string,
@@ -36,7 +33,7 @@ export const findSourceFiles = async (
 
 export const readFile = async (filePath: string): Promise<string> => {
   try {
-    return await readFileAsync(filePath, "utf8");
+    return await fs.readFile(filePath, "utf8");
   } catch (error) {
     console.error(`Error reading file ${filePath}:`, error);
     return "";

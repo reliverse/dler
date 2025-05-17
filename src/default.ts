@@ -1,4 +1,4 @@
-import type { BuildPublishConfig } from "./cfg-types.js";
+import type { BuildPublishConfig } from "./types.js";
 
 /**
  * Default configuration for the build and publish logic.
@@ -14,7 +14,11 @@ export const DEFAULT_CONFIG: BuildPublishConfig = {
   coreDescription: "",
   coreEntryFile: "mod.ts",
   coreEntrySrcDir: "src",
-  coreIsCLI: false,
+  coreBuildOutDir: "bin",
+  coreIsCLI: {
+    enabled: false,
+    scripts: {},
+  },
   distJsrAllowDirty: true,
   distJsrBuilder: "jsr",
   distJsrCopyRootFiles: ["README.md", "LICENSE"],
@@ -53,6 +57,4 @@ export const DEFAULT_CONFIG: BuildPublishConfig = {
   transpileStub: false,
   transpileTarget: "node",
   transpileWatch: false,
-  injectComment: "// @ts-expect-error TODO: fix ts",
-  tscCommand: "tsc --project ./tsconfig.json --noEmit",
 };

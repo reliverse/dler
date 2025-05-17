@@ -28,7 +28,7 @@ export type BuildPublishConfig = {
    *
    * @default ["package.json", ".config/rse.ts"]
    */
-  bumpFilter: BumpFilter[];
+  bumpFilter: string[];
 
   /**
    * Specifies how the version number should be incremented automatically:
@@ -103,12 +103,37 @@ export type BuildPublishConfig = {
   coreEntrySrcDir: string;
 
   /**
-   * When `true`, indicates that the package is a CLI.
-   * Affects how the package is built and published (e.g., bin entries).
+   * Directory where built files will be placed within the distribution directory.
+   * For example, if set to "bin", CLI scripts will be placed in "dist-npm/bin" or "dist-jsr/bin".
    *
-   * @default false
+   * @default "bin"
    */
-  coreIsCLI: boolean;
+  coreBuildOutDir: string;
+
+  /**
+   * Configuration for CLI functionality:
+   * - enabled: When `true`, indicates that the package has CLI capabilities
+   * - scripts: Map of CLI script names to their entry file paths
+   *   The key will be used as the command name in package.json's bin field
+   *   The value should be the path to the executable script (e.g. "cli.ts")
+   *
+   * **The source scripts should be in your "coreEntrySrcDir" directory (by default "src")**
+   *
+   * @example
+   * {
+   *   enabled: true,
+   *   scripts: {
+   *     "mycli": "cli.ts",
+   *     "othercmd": "other-cmd.ts"
+   *   }
+   * }
+   *
+   * @default { enabled: false, scripts: {} }
+   */
+  coreIsCLI: {
+    enabled: boolean;
+    scripts: Record<string, string>;
+  };
 
   /**
    * Optional description that overrides the description from package.json.
@@ -117,7 +142,7 @@ export type BuildPublishConfig = {
    *
    * @default `package.json`'s "description"
    */
-  coreDescription?: string;
+  coreDescription: string;
 
   // ==========================================================================
   // JSR-only config
@@ -221,7 +246,7 @@ export type BuildPublishConfig = {
    * Files to copy to the NPM distribution directory.
    * Useful for including additional files like configuration or documentation.
    *
-   * @default ["LICENSE", "README.md"]
+   * @default ["README.md", "LICENSE"]
    */
   distNpmCopyRootFiles: string[];
 
@@ -406,35 +431,9 @@ export type BuildPublishConfig = {
    * @default false
    */
   transpileWatch: boolean;
-
-  // ==========================================================================
-  // Additionals
-  // ==========================================================================
-
-  /**
-   * The comment to inject into the generated files.
-   *
-   * @default "// @ts-expect-error TODO: fix ts"
-   */
-  injectComment: string;
-
-  /**
-   * The command to run to check the types.
-   *
-   * @default "tsc --project ./tsconfig.json --noEmit"
-   */
-  tscCommand: string;
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-/**
- * Supported file extensions for version bumping.
- */
-export type BumpFilter =
-  | "package.json"
-  | ".config/rse.jsonc"
-  | ".config/rse.ts";
 
 /**
  * Supported bump modes for versioning:

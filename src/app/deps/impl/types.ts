@@ -13,7 +13,7 @@ export type FinderOptions = {
   showAll: boolean;
   ignorePatterns: string[];
   json: boolean;
-  includeBuiltins: boolean;
+  builtins: boolean;
 };
 
 export type DependencyResult = {

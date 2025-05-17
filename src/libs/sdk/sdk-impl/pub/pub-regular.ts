@@ -28,10 +28,6 @@ export async function regular_pubToJsr(
   timer: PerfTimer,
 ): Promise<void> {
   try {
-    if (isDev) {
-      relinka("log", "Skipping JSR publish in development mode");
-      return;
-    }
     if (!commonPubPause) {
       relinka("log", "Publishing to JSR...");
       const distJsrDirNameResolved = path.resolve(PROJECT_ROOT, distJsrDirName);
@@ -50,7 +46,12 @@ export async function regular_pubToJsr(
           .filter(Boolean)
           .join(" ");
         relinka("verbose", `Running publish command: ${command}`);
-        await execaCommand(command, { stdio: "inherit" });
+        try {
+          await execaCommand(command, { stdio: "inherit" });
+        } catch (error) {
+          relinka("error", `Failed to publish main project to JSR: ${error}`);
+          throw error;
+        }
         relinka(
           "success",
           `Successfully ${distJsrDryRun ? "validated" : "published"} to JSR registry`,
@@ -79,10 +80,6 @@ export async function regular_pubToNpm(
   timer: PerfTimer,
 ): Promise<void> {
   try {
-    if (isDev) {
-      relinka("log", "Skipping NPM publish in development mode");
-      return;
-    }
     if (!commonPubPause) {
       relinka("log", "Publishing to NPM...");
       const distNpmDirNameResolved = path.resolve(PROJECT_ROOT, distNpmDirName);
@@ -95,7 +92,12 @@ export async function regular_pubToNpm(
           .filter(Boolean)
           .join(" ");
         relinka("verbose", `Running publish command: ${command}`);
-        await execaCommand(command, { stdio: "inherit" });
+        try {
+          await execaCommand(command, { stdio: "inherit" });
+        } catch (error) {
+          relinka("error", `Failed to publish main project to NPM: ${error}`);
+          throw error;
+        }
         relinka(
           "success",
           `Successfully ${distJsrDryRun ? "validated" : "published"} to NPM registry`,

@@ -14,7 +14,7 @@ import type {
   transpileTarget,
 } from "~/libs/sdk/sdk-types.js";
 
-import { build as unifiedBuild } from "~/libs/sdk/sdk-impl/build/bundlers/unified/build.js";
+import { unifiedBuild } from "~/libs/sdk/sdk-impl/build/bundlers/unified/build.js";
 import {
   getBunSourcemapOption,
   getUnifiedSourcemapOption,
@@ -57,7 +57,7 @@ import { ensuredir } from "./bundlers/unified/utils.js";
 export async function regular_buildJsrDist(
   isDev: boolean,
   isJsr: boolean,
-  coreIsCLI: boolean,
+  coreIsCLI: { enabled: boolean; scripts: Record<string, string> },
   coreEntrySrcDir: string,
   distJsrDirName: string,
   distJsrBuilder: BundlerName,
@@ -75,14 +75,17 @@ export async function regular_buildJsrDist(
   transpileWatch: boolean,
   distJsrGenTsconfig: boolean,
   coreDeclarations: boolean,
-  config: { coreDescription?: string },
+  config: { coreDescription: string; coreBuildOutDir?: string },
 ): Promise<void> {
   relinka("log", "Building JSR distribution...");
 
   const coreEntrySrcDirResolved = path.resolve(PROJECT_ROOT, coreEntrySrcDir);
   const coreEntryFilePath = path.join(coreEntrySrcDirResolved, coreEntryFile);
   const distJsrDirNameResolved = path.resolve(PROJECT_ROOT, distJsrDirName);
-  const outDirBin = path.resolve(distJsrDirNameResolved, "bin");
+  const outDirBin = path.resolve(
+    distJsrDirNameResolved,
+    config.coreBuildOutDir || "bin",
+  );
 
   await ensuredir(distJsrDirNameResolved);
   await ensuredir(outDirBin);
@@ -116,6 +119,7 @@ export async function regular_buildJsrDist(
     rmDepsMode,
     unifiedBundlerOutExt,
     coreDescription: config.coreDescription,
+    coreBuildOutDir: config.coreBuildOutDir,
   });
 
   // Additional JSR-specific transformations
@@ -125,12 +129,11 @@ export async function regular_buildJsrDist(
     distJsrDirNameResolved,
     false,
     undefined,
-    undefined,
     config.coreDescription,
   );
 
   // Optionally generate a tsconfig if it's a CLI in JSR mode
-  if (coreIsCLI && isJsr && distJsrGenTsconfig) {
+  if (coreIsCLI.enabled && isJsr && distJsrGenTsconfig) {
     await createTSConfig(distJsrDirNameResolved, true);
   }
 
@@ -157,7 +160,7 @@ export async function regular_buildNpmDist(
   coreEntryFile: string,
   unifiedBundlerOutExt: NpmOutExt,
   rmDepsMode: ExcludeMode,
-  coreIsCLI: boolean,
+  coreIsCLI: { enabled: boolean; scripts: Record<string, string> },
   transpileTarget: transpileTarget,
   transpileFormat: transpileFormat,
   transpileSplitting: boolean,
@@ -168,14 +171,17 @@ export async function regular_buildNpmDist(
   transpileWatch: boolean,
   timer: PerfTimer,
   coreDeclarations: boolean,
-  config: { coreDescription?: string },
+  config: { coreDescription: string; coreBuildOutDir?: string },
 ): Promise<void> {
   relinka("log", "Building NPM distribution...");
 
   const coreEntrySrcDirResolved = path.resolve(PROJECT_ROOT, coreEntrySrcDir);
   const coreEntryFilePath = path.join(coreEntrySrcDirResolved, coreEntryFile);
   const distNpmDirNameResolved = path.resolve(PROJECT_ROOT, distNpmDirName);
-  const outDirBin = path.resolve(distNpmDirNameResolved, "bin");
+  const outDirBin = path.resolve(
+    distNpmDirNameResolved,
+    config.coreBuildOutDir || "bin",
+  );
 
   await ensuredir(distNpmDirNameResolved);
   await ensuredir(outDirBin);
@@ -209,14 +215,11 @@ export async function regular_buildNpmDist(
     rmDepsMode,
     unifiedBundlerOutExt,
     coreDescription: config.coreDescription,
+    coreBuildOutDir: config.coreBuildOutDir,
   });
 
   const dirSize = await getDirectorySize(distNpmDirNameResolved, isDev);
   const filesCount = await outDirBinFilesCount(outDirBin);
-  relinka(
-    "success",
-    `NPM distribution built successfully (${filesCount} files, ${prettyBytes(dirSize)})`,
-  );
   relinka(
     "success",
     `[${distNpmDirNameResolved}] Successfully created regular distribution: "dist-npm" (${outDirBin}/mod.js) with (${filesCount} files (${prettyBytes(
@@ -365,7 +368,8 @@ async function regular_bundleUsingUnified(
       "verbose",
       `Starting regular_bundleUsingUnified (builder: ${builder}): ${coreEntryFile} -> ${outDirBin}`,
     );
-    const rootDir = path.resolve(PROJECT_ROOT, coreEntrySrcDir || ".");
+    const rootDir = PROJECT_ROOT;
+    const srcDirResolved = path.resolve(PROJECT_ROOT, coreEntrySrcDir);
 
     // Validate extension
     if (!validExtensions.includes(unifiedBundlerOutExt)) {
@@ -385,8 +389,12 @@ async function regular_bundleUsingUnified(
         {
           builder,
           ext: unifiedBundlerOutExt,
-          input: builder === "mkdist" ? rootDir : input,
-          outDir: outDirBin,
+          input:
+            builder === "mkdist"
+              ? path.relative(rootDir, srcDirResolved) // Use relative path from PROJECT_ROOT to src dir
+              : path.relative(rootDir, input), // For other builders, use relative path to entry file
+          outDir: path.relative(rootDir, outDirBin),
+          isLib: false,
         },
       ],
       rollup: {
@@ -405,7 +413,7 @@ async function regular_bundleUsingUnified(
       transpileWatch: transpileWatch ?? false,
     } satisfies UnifiedBuildConfig & { concurrency?: number };
 
-    await unifiedBuild(rootDir, unifiedBuildConfig, outDirBin);
+    await unifiedBuild(false, rootDir, unifiedBuildConfig, outDirBin);
 
     // Calculate and log build duration
     const duration = getElapsedPerfTime(timer);
@@ -526,17 +534,22 @@ async function regular_performCommonBuildSteps({
   rmDepsMode,
   unifiedBundlerOutExt,
   coreDescription,
+  coreBuildOutDir,
 }: {
-  coreIsCLI: boolean;
+  coreIsCLI: { enabled: boolean; scripts: Record<string, string> };
   deleteFiles?: boolean;
   isJsr: boolean;
   outDirBin: string;
   outDirRoot: string;
   rmDepsMode: ExcludeMode;
   unifiedBundlerOutExt: NpmOutExt;
-  coreDescription?: string;
+  coreDescription: string;
+  coreBuildOutDir?: string;
 }): Promise<void> {
+  relinka("log", `Performing common build steps in ${outDirBin} (regular)`);
+
   // Convert any "~/..." alias imports to relative
+  relinka("log", `Performing alias path conversion in ${outDirBin}`);
   await convertImportPaths({
     aliasPrefix: "~/",
     baseDir: outDirBin,
@@ -559,13 +572,14 @@ async function regular_performCommonBuildSteps({
     rmDepsMode,
     [],
     coreDescription,
+    coreBuildOutDir,
   );
 
   // Copy some root files (README, LICENSE, etc.)
   await copyRootFile(outDirRoot, ["README.md", "LICENSE"]);
 
-  // Optionally copy a few more if it's JSR
-  if (isJsr) {
+  // Copy a few more if it's JSR and it's a CLI
+  if (isJsr && coreIsCLI.enabled) {
     await copyRootFile(outDirRoot, [
       ".gitignore",
       ".config/rse.ts",

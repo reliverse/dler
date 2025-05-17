@@ -36,7 +36,8 @@ import {
 } from "./utils.js";
 import { validateDependencies, validatePackage } from "./validate.js";
 
-export async function build(
+export async function unifiedBuild(
+  isLib: boolean,
   rootDir: string,
   inputConfig: UnifiedBuildConfig & {
     config?: string;
@@ -92,6 +93,7 @@ export async function build(
       _transpileWatchMode,
       outDir,
       inputConfig.showOutLog || true,
+      isLib,
     );
   }
 }
@@ -106,6 +108,7 @@ async function _build(
   _transpileWatchMode: boolean,
   outDir: string,
   showOutLog: boolean,
+  isLib: boolean,
 ): Promise<void> {
   // Start timing the build process
   const timer = createPerfTimer();
@@ -204,6 +207,7 @@ async function _build(
             include: "src/**",
           }
         : undefined,
+      isLib,
     } satisfies BuildOptions,
   ) as BuildOptions;
 
@@ -222,6 +226,7 @@ async function _build(
     pkg,
     usedImports: new Set(),
     warnings: new Set(),
+    isLib,
   };
 
   // Register hooks
@@ -240,7 +245,7 @@ async function _build(
 
   // Normalize entries
   options.entries = options.entries.map((entry) =>
-    typeof entry === "string" ? { input: entry } : entry,
+    typeof entry === "string" ? { input: entry, isLib } : entry,
   );
 
   for (const entry of options.entries) {
@@ -268,6 +273,7 @@ async function _build(
 
     entry.input = resolve(options.rootDir, entry.input);
     entry.outDir = resolve(options.rootDir, entry.outDir || options.outDir);
+    entry.isLib = isLib;
   }
 
   // Infer dependencies from pkg
@@ -360,6 +366,7 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
       entry = {
         chunk: true,
         path: file,
+        isLib: ctx.options.isLib,
       };
       ctx.buildEntries.push(entry);
     }

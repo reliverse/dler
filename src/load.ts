@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 
 import type { BuildPublishConfig } from "~/libs/sdk/sdk-types.js";
 
-import { defineConfig } from "~/libs/cfg/cfg-mod.js";
+import { defineConfig } from "~/mod.js";
 
 const CONFIG_FILENAME = ".config/dler.ts";
 

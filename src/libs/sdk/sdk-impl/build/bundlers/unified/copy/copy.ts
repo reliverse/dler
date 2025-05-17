@@ -1,5 +1,3 @@
-// todo: merge with `jsr` bundler
-
 import { relinka } from "@reliverse/relinka";
 import { promises as fsp } from "node:fs";
 import { relative, resolve } from "pathe";
@@ -66,6 +64,7 @@ export async function copyBuild(ctx: BuildContext): Promise<void> {
             ),
           ),
         path: distDir,
+        isLib: entry.isLib,
       });
     }
   }

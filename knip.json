@@ -16,7 +16,8 @@
     "dist-jsr",
     "dist-npm",
     "dist-libs",
-    "src/libs/sdk/sdk-impl/**/*.ts"
+    "src/libs/sdk/sdk-impl/**/*.ts",
+    "src/types.ts"
   ],
-  "ignoreDependencies": ["bun", "@reliverse/relico"]
+  "ignoreDependencies": ["bun", "@reliverse/relifso"]
 }

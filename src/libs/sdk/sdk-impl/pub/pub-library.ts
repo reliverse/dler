@@ -25,13 +25,6 @@ export async function library_publishLibrary(
   isDev: boolean,
   timer: PerfTimer,
 ): Promise<void> {
-  if (isDev) {
-    relinka(
-      "log",
-      `Skipping publishing for lib ${libName} in development mode`,
-    );
-    return;
-  }
   switch (commonPubRegistry) {
     case "jsr":
       relinka("log", `Publishing lib ${libName} to JSR only...`);
@@ -106,10 +99,6 @@ async function library_pubToJsr(
   timer: PerfTimer,
 ): Promise<void> {
   relinka("verbose", `Starting library_pubToJsr for lib: ${libName}`);
-  if (isDev) {
-    relinka("log", `Skipping lib ${libName} JSR publish in development mode`);
-    return;
-  }
   try {
     if (timer) pausePerfTimer(timer);
     await withWorkingDirectory(libOutDir, async () => {
@@ -123,7 +112,12 @@ async function library_pubToJsr(
       ]
         .filter(Boolean)
         .join(" ");
-      await execaCommand(command, { stdio: "inherit" });
+      try {
+        await execaCommand(command, { stdio: "inherit" });
+      } catch (error) {
+        relinka("error", `Failed to publish lib ${libName} to JSR`, error);
+        throw error;
+      }
       relinka(
         "success",
         `Successfully ${distJsrDryRun ? "validated" : "published"} lib ${libName} to JSR registry`,
@@ -151,10 +145,6 @@ async function library_pubToNpm(
   timer: PerfTimer,
 ): Promise<void> {
   relinka("verbose", `Starting library_pubToNpm for lib: ${libName}`);
-  if (isDev) {
-    relinka("log", `Skipping lib ${libName} NPM publish in development mode`);
-    return;
-  }
   try {
     if (timer) pausePerfTimer(timer);
     await withWorkingDirectory(libOutDir, async () => {

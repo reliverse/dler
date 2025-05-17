@@ -1,5 +1,5 @@
 import { glob } from "@reliverse/reglob";
-import { readFile, writeFile, ensureDir } from "@reliverse/relifso";
+import { readFile, writeFile, ensureDir } from "fs-extra";
 import {
   defineCommand,
   runMain,

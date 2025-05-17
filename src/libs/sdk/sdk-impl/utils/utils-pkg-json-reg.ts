@@ -17,11 +17,12 @@ import { cliDomainDocs } from "~/libs/sdk/sdk-impl/utils/utils-consts.js";
 export async function regular_createPackageJSON(
   outDirRoot: string,
   isJsr: boolean,
-  coreIsCLI: boolean,
+  coreIsCLI: { enabled: boolean; scripts: Record<string, string> },
   unifiedBundlerOutExt: NpmOutExt,
   rmDepsMode: ExcludeMode,
   rmDepsPatterns: string[],
-  coreDescription?: string,
+  coreDescription: string,
+  coreBuildOutDir = "bin",
 ): Promise<void> {
   relinka(
     "log",
@@ -33,25 +34,30 @@ export async function regular_createPackageJSON(
   );
   const originalPkg = await readPackageJSON();
   const packageName = originalPkg.name || "";
-  const cliCommandName = packageName.startsWith("@")
-    ? packageName.split("/").pop() || "cli"
-    : packageName;
 
   relinka(
     "verbose",
-    `Package name: "${packageName}", CLI command name: "${cliCommandName}", coreIsCLI: ${coreIsCLI}`,
+    `Package name: "${packageName}", CLI enabled: ${coreIsCLI.enabled}, scripts: ${JSON.stringify(coreIsCLI.scripts)}`,
   );
 
-  const outDirBin = path.join(outDirRoot, "bin");
+  const outDirBin = path.join(outDirRoot, coreBuildOutDir);
   const outExt = unifiedBundlerOutExt || "js";
 
   if (isJsr) {
     // For JSR, we need to handle bin entries with .ts extension
-    const binEntry = coreIsCLI ? { [cliCommandName]: "bin/mod.ts" } : undefined;
-    if (coreIsCLI) {
+    const binEntry = coreIsCLI.enabled
+      ? Object.fromEntries(
+          Object.entries(coreIsCLI.scripts).map(([name, script]) => [
+            name,
+            `${coreBuildOutDir}/${path.basename(script)}`,
+          ]),
+        )
+      : undefined;
+
+    if (coreIsCLI.enabled) {
       relinka(
         "verbose",
-        `Adding CLI bin entry for JSR: { "${cliCommandName}": "bin/mod.ts" }`,
+        `Adding CLI bin entries for JSR: ${JSON.stringify(binEntry)}`,
       );
     }
 
@@ -73,28 +79,33 @@ export async function regular_createPackageJSON(
         rmDepsPatterns,
       ),
       exports: {
-        ".": "./bin/mod.ts",
+        ".": `./${coreBuildOutDir}/mod.ts`,
       },
     });
     await fs.writeJSON(path.join(outDirRoot, "package.json"), jsrPkg, {
       spaces: 2,
     });
 
-    if (coreIsCLI) {
+    if (coreIsCLI.enabled) {
       relinka(
         "verbose",
-        `JSR package.json created with CLI bin entry: ${JSON.stringify(jsrPkg.bin)}`,
+        `JSR package.json created with CLI bin entries: ${JSON.stringify(jsrPkg.bin)}`,
       );
     }
   } else {
-    const binEntry = coreIsCLI
-      ? { [cliCommandName]: `bin/mod.${outExt}` }
+    const binEntry = coreIsCLI.enabled
+      ? Object.fromEntries(
+          Object.entries(coreIsCLI.scripts).map(([name, script]) => [
+            name,
+            `${coreBuildOutDir}/${path.basename(script).replace(/\.ts$/, `.${outExt}`)}`,
+          ]),
+        )
       : undefined;
 
-    if (coreIsCLI) {
+    if (coreIsCLI.enabled) {
       relinka(
         "verbose",
-        `Adding CLI bin entry for NPM: { "${cliCommandName}": "bin/mod.${outExt}" }`,
+        `Adding CLI bin entries for NPM: ${JSON.stringify(binEntry)}`,
       );
     }
 
@@ -116,21 +127,21 @@ export async function regular_createPackageJSON(
         rmDepsPatterns,
       ),
       exports: {
-        ".": `./bin/mod.${outExt}`,
+        ".": `./${coreBuildOutDir}/mod.${outExt}`,
       },
-      files: ["bin", "package.json", "README.md", "LICENSE"],
-      main: `./bin/mod.${outExt}`,
-      module: `./bin/mod.${outExt}`,
+      files: [coreBuildOutDir, "package.json", "README.md", "LICENSE"],
+      main: `./${coreBuildOutDir}/mod.${outExt}`,
+      module: `./${coreBuildOutDir}/mod.${outExt}`,
       publishConfig: { access: "public" },
     });
     await fs.writeJSON(path.join(outDirRoot, "package.json"), npmPkg, {
       spaces: 2,
     });
 
-    if (coreIsCLI) {
+    if (coreIsCLI.enabled) {
       relinka(
         "verbose",
-        `NPM package.json created with CLI bin entry: ${JSON.stringify(npmPkg.bin)}`,
+        `NPM package.json created with CLI bin entries: ${JSON.stringify(npmPkg.bin)}`,
       );
     }
   }
@@ -141,8 +152,8 @@ export async function regular_createPackageJSON(
  * Creates common package.json fields based on the original package.json.
  */
 async function regular_createCommonPackageFields(
-  coreIsCLI: boolean,
-  coreDescription?: string,
+  coreIsCLI: { enabled: boolean; scripts: Record<string, string> },
+  coreDescription: string,
 ): Promise<Partial<PackageJson>> {
   relinka("verbose", "Generating common package fields");
   const originalPkg = await readPackageJSON();
@@ -161,23 +172,21 @@ async function regular_createCommonPackageFields(
     version,
   };
 
-  if (coreIsCLI) {
+  if (coreIsCLI.enabled) {
     relinka(
       "verbose",
-      "coreIsCLI is true, adding CLI-specific fields to common package fields",
+      "coreIsCLI is enabled, adding CLI-specific fields to common package fields",
     );
     if (commonPkg.keywords) {
-      const cliCommandName = name?.startsWith("@")
-        ? name.split("/").pop() || "cli"
-        : name || "dler";
+      const cliKeywords = Object.keys(coreIsCLI.scripts);
       relinka(
         "verbose",
-        `Adding CLI keywords to existing keywords, CLI command name: "${cliCommandName}"`,
+        `Adding CLI keywords to existing keywords: ${JSON.stringify(cliKeywords)}`,
       );
       commonPkg.keywords = [
         ...new Set([
           "cli",
-          cliCommandName,
+          ...cliKeywords,
           "command-line",
           ...commonPkg.keywords,
         ]),
@@ -187,14 +196,12 @@ async function regular_createCommonPackageFields(
         `Updated keywords: ${JSON.stringify(commonPkg.keywords)}`,
       );
     } else if (name) {
-      const cliCommandName = name.startsWith("@")
-        ? name.split("/").pop() || "cli"
-        : name;
+      const cliKeywords = Object.keys(coreIsCLI.scripts);
       relinka(
         "verbose",
-        `Setting new CLI keywords, CLI command name: "${cliCommandName}"`,
+        `Setting new CLI keywords: ${JSON.stringify(cliKeywords)}`,
       );
-      commonPkg.keywords = ["cli", "command-line", cliCommandName];
+      commonPkg.keywords = ["cli", "command-line", ...cliKeywords];
       relinka("verbose", `Set keywords: ${JSON.stringify(commonPkg.keywords)}`);
     }
   } else {

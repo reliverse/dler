@@ -42,7 +42,7 @@ export const analyzeDependencies = async (
   for (const dependency of allDependencies) {
     if (!listedDependencies.has(dependency)) {
       if (builtinModules.has(dependency)) {
-        if (options.includeBuiltins) {
+        if (options.builtins) {
           builtinModulesList.push(dependency);
         }
       } else {

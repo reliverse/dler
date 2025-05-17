@@ -88,5 +88,3 @@ function main() {
     hugeFunctionB();
     console.log("Main end");
 }
-
-main();

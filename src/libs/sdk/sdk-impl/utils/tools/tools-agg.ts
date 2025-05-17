@@ -1,3 +1,4 @@
+import { relinka } from "@reliverse/relinka";
 import fs from "fs-extra";
 import path from "pathe";
 
@@ -25,7 +26,7 @@ export async function useAggregator({
   // Validate input
   const st = await fs.stat(inputDir).catch(() => null);
   if (!st?.isDirectory()) {
-    console.error(`Error: --input is not a valid directory: ${inputDir}`);
+    relinka("error", `Error: --input is not a valid directory: ${inputDir}`);
     process.exit(1);
   }
 
@@ -33,7 +34,7 @@ export async function useAggregator({
   const exts = [".ts", ".js"];
   const filePaths = await collectFiles(inputDir, exts, isRecursive);
   if (!filePaths.length) {
-    console.warn(`No matching .ts/.js files found in ${inputDir}`);
+    relinka("warn", `No matching .ts/.js files found in ${inputDir}`);
   }
 
   // Build aggregator lines
@@ -51,7 +52,8 @@ export async function useAggregator({
 
   // Warn if outFile is inside inputDir
   if (outFile.startsWith(inputDir)) {
-    console.warn(
+    relinka(
+      "warn",
       `Warning: The output file is inside (or overlaps with) the input directory.\nMight re-import (or re-export) itself.\n   input: ${inputDir}\n   out: ${outFile}\n`,
     );
   }
@@ -61,8 +63,9 @@ export async function useAggregator({
   await fs.ensureFile(outFile);
   await fs.writeFile(outFile, finalText, "utf8");
 
-  console.log(
-    `\nAggregator done: wrote ${allLines.length} lines to:\n  ${outFile}`,
+  relinka(
+    "log",
+    `Aggregator done: wrote ${allLines.length} lines to:\n  ${outFile}`,
   );
 }
 

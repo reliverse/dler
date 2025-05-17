@@ -1,5 +1,3 @@
-// todo: merge with `jsr` bundler
-
 import type {
   BaseBuildEntry,
   BuildContext,
