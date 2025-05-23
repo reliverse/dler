@@ -17,9 +17,11 @@ type LibConfig = {
   libPkgKeepDeps: boolean;
   libTranspileMinify: boolean;
   libPubPause: boolean;
+  libPubRegistry?: "jsr" | "npm" | "npm-jsr";
 };
 
 type DlerConfig = {
+  commonPubRegistry: "jsr" | "npm" | "npm-jsr";
   libsDirSrc: string;
   libsList: Record<string, LibConfig>;
 };

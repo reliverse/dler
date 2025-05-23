@@ -1,10 +1,11 @@
-import type { FilterPattern } from "@rollup/pluginutils";
-import type { CommonOptions, Loader, TransformResult } from "esbuild";
+import type { Loader, TransformResult } from "esbuild";
 import type { Plugin, PluginContext } from "rollup";
 
+import { extname, relative } from "@reliverse/pathkit";
 import { createFilter } from "@rollup/pluginutils";
 import { transform } from "esbuild";
-import { extname, relative } from "pathe";
+
+import type { EsbuildOptions } from "~/libs/sdk/sdk-types.js";
 
 const DefaultLoaders: Record<string, Loader> = {
   ".cjs": "js",
@@ -17,17 +18,6 @@ const DefaultLoaders: Record<string, Loader> = {
 
   ".ts": "ts",
   ".tsx": "tsx",
-};
-
-export type EsbuildOptions = CommonOptions & {
-  exclude?: FilterPattern;
-  include?: FilterPattern;
-
-  /**
-   * Map extension to transpileEsbuild loader
-   * Note that each entry (the extension) needs to start with a dot
-   */
-  loaders?: Record<string, false | Loader>;
 };
 
 export function esbuild(options: EsbuildOptions): Plugin {

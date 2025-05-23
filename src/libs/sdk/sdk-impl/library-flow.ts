@@ -1,6 +1,6 @@
+import path from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
 import pAll from "p-all";
-import path from "pathe";
 
 import type {
   BundlerName,
@@ -32,7 +32,7 @@ export async function processLibraryFlow(
   libsDirDist: string,
   libsDirSrc: string,
   commonPubPause: boolean,
-  commonPubRegistry: string,
+  commonPubRegistry: "jsr" | "npm" | "npm-jsr",
   unifiedBundlerOutExt: NpmOutExt,
   distNpmBuilder: BundlerName,
   coreEntrySrcDir: string,
@@ -48,6 +48,8 @@ export async function processLibraryFlow(
   transpileStub: boolean,
   transpileWatch: boolean,
   distJsrOutFilesExt: NpmOutExt,
+  distJsrAllowDirty: boolean,
+  distJsrSlowTypes: boolean,
 ): Promise<void> {
   if (libsActMode !== "libs-only" && libsActMode !== "main-and-libs") {
     relinka(
@@ -82,6 +84,8 @@ export async function processLibraryFlow(
     transpileStub,
     transpileWatch,
     distJsrOutFilesExt,
+    distJsrAllowDirty,
+    distJsrSlowTypes,
   );
 }
 
@@ -125,7 +129,7 @@ export async function libraries_buildPublish(
   libsDirDist: string,
   libsDirSrc: string,
   commonPubPause: boolean,
-  commonPubRegistry: string,
+  commonPubRegistry: "jsr" | "npm" | "npm-jsr",
   unifiedBundlerOutExt: NpmOutExt,
   distNpmBuilder: BundlerName,
   coreEntrySrcDir: string,
@@ -141,6 +145,8 @@ export async function libraries_buildPublish(
   transpileStub: boolean,
   transpileWatch: boolean,
   distJsrOutFilesExt: NpmOutExt,
+  distJsrAllowDirty: boolean,
+  distJsrSlowTypes: boolean,
 ): Promise<void> {
   relinka("verbose", "Starting libraries_buildPublish");
 
@@ -194,7 +200,7 @@ export async function libraries_buildPublish(
 
         // 1. Build library
         await library_buildLibrary({
-          commonPubRegistry,
+          effectivePubRegistry: libConfig.libPubRegistry || commonPubRegistry,
           libName,
           mainDir: libMainDir,
           npm: {
@@ -227,15 +233,18 @@ export async function libraries_buildPublish(
 
         // 2. Publish if not paused
         if (!commonPubPause && !libConfig.libPubPause) {
+          const effectivePubRegistry =
+            libConfig.libPubRegistry ||
+            (commonPubRegistry as "jsr" | "npm" | "npm-jsr");
           await library_publishLibrary(
-            commonPubRegistry,
+            effectivePubRegistry,
             libName,
             npmOutDir,
             jsrOutDir,
             distJsrDryRun,
             distJsrFailOnWarn,
-            false,
-            false,
+            distJsrAllowDirty,
+            distJsrSlowTypes,
             isDev,
             timer,
           );

@@ -1,7 +1,7 @@
+import path from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import fs from "fs-extra";
 import pMap from "p-map";
-import path from "pathe";
 import { readPackageJSON } from "pkg-types";
 import { glob } from "tinyglobby";
 

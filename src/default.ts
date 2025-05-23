@@ -1,4 +1,4 @@
-import type { BuildPublishConfig } from "./types.js";
+import type { BuildPublishConfig } from "~/libs/sdk/sdk-types.js";
 
 /**
  * Default configuration for the build and publish logic.
@@ -6,7 +6,8 @@ import type { BuildPublishConfig } from "./types.js";
 export const DEFAULT_CONFIG: BuildPublishConfig = {
   bumpDisable: false,
   bumpFilter: ["package.json", ".config/rse.ts"],
-  bumpMode: "autoPatch",
+  bumpMode: "patch",
+  bumpSet: "",
   commonPubPause: true,
   commonPubRegistry: "npm",
   commonVerbose: false,

@@ -5,7 +5,7 @@ import { glob } from "tinyglobby";
 import type { ExcludeMode } from "~/libs/sdk/sdk-types.js";
 
 import { readFileSafe } from "./utils-fs.js";
-import { extractPackageName } from "./utils-paths.js";
+import { extractPackageName } from "./utils-misc.js";
 
 /**
  * Filters out development dependencies from a dependency record.

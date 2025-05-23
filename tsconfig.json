@@ -24,6 +24,6 @@
     "allowSyntheticDefaultImports": true
   },
 
-  "include": [".*/**/*.ts", "**/*.ts", "**/*.js", ".config/dler.ts="],
+  "include": [".*/**/*.ts", "**/*.ts", "**/*.js"],
   "exclude": ["node_modules", "dist*"]
 }

@@ -1,12 +1,9 @@
+import { relative, resolve } from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
 import { promises as fsp } from "node:fs";
-import { relative, resolve } from "pathe";
 import { glob } from "tinyglobby";
 
-import type {
-  BuildContext,
-  CopyBuildEntry,
-} from "~/libs/sdk/sdk-impl/build/bundlers/unified/types.js";
+import type { BuildContext, CopyBuildEntry } from "~/libs/sdk/sdk-types.js";
 
 import {
   rmdir,

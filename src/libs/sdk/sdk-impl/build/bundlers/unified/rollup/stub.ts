@@ -1,9 +1,15 @@
+import {
+  basename,
+  dirname,
+  extname,
+  relative,
+  resolve,
+} from "@reliverse/pathkit";
 import { fileURLToPath, resolveModuleExportNames, resolvePath } from "mlly";
 import { promises as fsp } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
-import { basename, dirname, extname, relative, resolve } from "pathe";
 
-import type { BuildContext } from "~/libs/sdk/sdk-impl/build/bundlers/unified/types.js";
+import type { BuildContext } from "~/libs/sdk/sdk-types.js";
 
 import { warn } from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils.js";
 

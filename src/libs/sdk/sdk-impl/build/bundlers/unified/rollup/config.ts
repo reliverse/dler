@@ -1,13 +1,10 @@
 import type { OutputOptions, PreRenderedChunk } from "rollup";
 
+import { isAbsolute, resolve } from "@reliverse/pathkit";
+import { resolveAlias } from "@reliverse/pathkit";
 import { parseNodeModulePath } from "mlly";
-import { isAbsolute, resolve } from "pathe";
-import { resolveAlias } from "pathe/utils";
 
-import type {
-  BuildContext,
-  RollupOptions,
-} from "~/libs/sdk/sdk-impl/build/bundlers/unified/types.js";
+import type { BuildContext, RollupOptions } from "~/libs/sdk/sdk-types.js";
 
 import {
   arrayIncludes,

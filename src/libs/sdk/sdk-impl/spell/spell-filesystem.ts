@@ -1,5 +1,5 @@
-import fs from "fs-extra";
-import path from "pathe";
+import path from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
 
 export const fileExists = async (filePath: string): Promise<boolean> => {
   try {

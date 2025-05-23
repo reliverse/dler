@@ -3,11 +3,10 @@
   "project": ["**/*.{ts,js}"],
   "entry": [
     "src/app/**/*.ts",
-    ".config/**/*.ts",
+    ".{config,tests}/**/*.ts",
     "*.{config,cfg}.{ts,js}",
     "src/mod.ts",
     "src/**/*-mod.ts",
-    "src/cli/args/**/*.ts",
     "example/**/*.ts"
   ],
   "ignore": [
@@ -19,5 +18,5 @@
     "src/libs/sdk/sdk-impl/**/*.ts",
     "src/types.ts"
   ],
-  "ignoreDependencies": ["bun", "@reliverse/relifso"]
+  "ignoreDependencies": ["bun"]
 }

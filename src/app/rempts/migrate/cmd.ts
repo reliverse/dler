@@ -1,5 +1,5 @@
+import fs from "@reliverse/relifso";
 import { defineCommand, defineArgs, confirmPrompt } from "@reliverse/rempts";
-import fs from "fs-extra";
 
 import { commanderToRempts } from "./impl/commander.js";
 

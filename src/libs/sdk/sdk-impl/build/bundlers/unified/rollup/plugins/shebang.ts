@@ -1,7 +1,7 @@
 import type { Plugin } from "rollup";
 
+import { resolve } from "@reliverse/pathkit";
 import { promises as fsp } from "node:fs";
-import { resolve } from "pathe";
 
 const SHEBANG_RE = /^#![^\n]*/;
 

@@ -18,6 +18,7 @@
 - 🔌 plugin system with two built-in plugins included
 - 📝 highly configurable flow via a configuration file
 - 🔜 `libraries` plugin —> dler monorepo implementation
+- 🧼 cleans up your internal logs from the build dist
 - 🪄 magic spells (built-in plugin)
 
 ### supported bundlers

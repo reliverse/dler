@@ -1,15 +1,17 @@
-import type { CopyOptions } from "fs-extra";
-
+import path, {
+  convertImportsAliasToRelative,
+  convertImportsExt,
+  stripPathSegmentsInDirectory,
+} from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { build as bunBuild, type BuildConfig } from "bun";
-import fs from "fs-extra";
 import MagicString from "magic-string";
 import pAll from "p-all";
-import path from "pathe";
 import prettyBytes from "pretty-bytes";
 import prettyMilliseconds from "pretty-ms";
 
-import type { UnifiedBuildConfig } from "~/libs/sdk/sdk-impl/build/bundlers/unified/types.js";
+import type { UnifiedBuildConfig } from "~/libs/sdk/sdk-types.js";
 import type {
   BundlerName,
   Esbuild,
@@ -22,12 +24,12 @@ import type {
 } from "~/libs/sdk/sdk-types.js";
 
 import { unifiedBuild } from "~/libs/sdk/sdk-impl/build/bundlers/unified/build.js";
-import { ensuredir } from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils.js";
 import {
   getBunSourcemapOption,
   getUnifiedSourcemapOption,
   renameEntryFile,
 } from "~/libs/sdk/sdk-impl/utils/utils-build.js";
+import { removeLogInternalCalls } from "~/libs/sdk/sdk-impl/utils/utils-clean.js";
 import {
   CONCURRENCY_DEFAULT,
   PROJECT_ROOT,
@@ -45,10 +47,6 @@ import {
   renameTsxFiles,
 } from "~/libs/sdk/sdk-impl/utils/utils-jsr-json.js";
 import {
-  convertImportExtensionsJsToTs,
-  convertImportPaths,
-} from "~/libs/sdk/sdk-impl/utils/utils-paths.js";
-import {
   getElapsedPerfTime,
   type PerfTimer,
 } from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
@@ -62,7 +60,7 @@ const BIN_DIR_NAME = "bin"; // Directory name for bundled output within dist
 const REPLACEMENT_MARKER = "// dler-replace-me"; // Marker for source replacement
 const FILES_TO_COPY_ROOT = ["README.md", "LICENSE"]; // Common files to copy to dist
 const TYPES_REPLACEMENT_PATH = "src/types.ts"; // Relative path to types file used for replacement
-const ALIAS_PREFIX_TO_CONVERT = "~/"; // Alias prefix used in internal imports
+const ALIAS_PREFIX_TO_CONVERT = "~"; // Alias prefix used in internal imports
 
 // ============================================================================
 // Type Definitions
@@ -124,7 +122,7 @@ type JsrBuildOptions = {
 
 /** Consolidated options for the main library build function */
 export type LibraryBuildOptions = {
-  commonPubRegistry: "npm" | "jsr" | "npm-jsr" | string | undefined; // Explicit options + string for flexibility
+  effectivePubRegistry: "npm" | "jsr" | "npm-jsr" | undefined;
   npm?: NpmBuildOptions;
   jsr?: JsrBuildOptions;
 } & BaseLibBuildOptions &
@@ -172,9 +170,13 @@ type BundleRequestParams = {
 /** Parameters for common post-bundling steps */
 type CommonStepsParams = {
   coreEntryFileName: string; // Original base name of the entry file (e.g., "index.ts")
-  outDirRoot: string; // Absolute path to root output dir for the target
+  outputDirRoot: string; // Absolute path to root output dir for the target (e.g. dist/my-lib/npm or dist/my-lib/jsr)
+  // We need separate roots for npm and jsr for package.json creation if publishing to both
+  npmOutputDirRoot?: string; // Root for npm specific outputs if applicable
+  jsrOutputDirRoot?: string; // Root for jsr specific outputs if applicable
+  effectivePubRegistry: "npm" | "jsr" | "npm-jsr" | undefined;
   outDirBin: string; // Absolute path to 'bin' subdirectory
-  isJsr: boolean;
+  isJsr: boolean; // Still useful for JSR specific steps like renaming .ts files
   libName: string;
   libsList: Record<string, LibConfig>;
   rmDepsMode: ExcludeMode;
@@ -258,56 +260,42 @@ export async function library_buildLibrary(
  * @param options - The consolidated build configuration.
  */
 async function executeBuildTasks(options: LibraryBuildOptions): Promise<void> {
-  const { commonPubRegistry, libName } = options;
+  const { libName, npm, jsr, effectivePubRegistry } = options;
+  relinka(
+    "log",
+    `Executing build tasks for ${libName} (Registry: ${effectivePubRegistry})...`,
+  );
+
   const buildTasks: (() => Promise<void>)[] = [];
 
-  // Queue JSR build task if requested
-  if (commonPubRegistry === "jsr" || commonPubRegistry === "npm-jsr") {
-    if (!options.jsr) {
-      // This check ensures options.jsr exists before queueing the task
+  if (effectivePubRegistry === "jsr" || effectivePubRegistry === "npm-jsr") {
+    if (!jsr) {
       throw new Error(
-        `JSR build requested for ${libName} but 'options.jsr' is missing.`,
+        `Build Error (executeBuildTasks): JSR config missing for ${libName} when registry includes JSR.`,
       );
     }
-    relinka("log", `Queueing JSR build for lib ${libName}...`);
-    buildTasks.push(() => library_buildJsrDist(options));
+    buildTasks.push(() => library_buildJsrDist(options)); // options includes jsr.jsrOutDir
   }
 
-  // Queue NPM build task if requested
-  if (commonPubRegistry === "npm" || commonPubRegistry === "npm-jsr") {
-    if (!options.npm) {
-      // This check ensures options.npm exists before queueing the task
+  if (effectivePubRegistry === "npm" || effectivePubRegistry === "npm-jsr") {
+    if (!npm) {
       throw new Error(
-        `NPM build requested for ${libName} but 'options.npm' is missing.`,
+        `Build Error (executeBuildTasks): NPM config missing for ${libName} when registry includes NPM.`,
       );
     }
-    relinka("log", `Queueing NPM build for lib ${libName}...`);
-    buildTasks.push(() => library_buildNpmDist(options));
+    buildTasks.push(() => library_buildNpmDist(options)); // options includes npm.npmOutDir
   }
 
-  // Execute tasks
   if (buildTasks.length === 0) {
     relinka(
       "warn",
-      `No valid build targets specified by 'commonPubRegistry' ("${commonPubRegistry}") for lib ${libName}. Skipping build.`,
+      `No build tasks for ${libName} based on registry: ${effectivePubRegistry}`,
     );
     return;
   }
 
-  if (buildTasks.length > 1) {
-    relinka("log", `Building lib ${libName} for NPM and JSR concurrently...`);
-    await pAll(buildTasks, { concurrency: CONCURRENCY_DEFAULT });
-  } else {
-    relinka(
-      "log",
-      `Building lib ${libName} for ${options.commonPubRegistry || "single target"}...`,
-    );
-    // Execute the single task - Added check for safety although length is 1
-    const task = buildTasks[0];
-    if (task) {
-      await task();
-    }
-  }
+  await pAll(buildTasks, { concurrency: CONCURRENCY_DEFAULT });
+  relinka("success", `All build tasks completed for ${libName}.`);
 }
 
 // ============================================================================
@@ -385,7 +373,6 @@ async function library_buildJsrDist(
     "verbose",
     `[JSR] Performing JSR-specific transformations in ${outputDirBinResolved}`,
   );
-  await convertImportExtensionsJsToTs({ dirPath: outputDirBinResolved });
   await renameTsxFiles(outputDirBinResolved);
   await createJsrJSON(
     outputDirRootResolved,
@@ -507,7 +494,7 @@ async function library_buildNpmDist(
  * @param params - Parameters specific to the build target. Includes optional libDirName.
  */
 async function library_buildDistributionTarget(
-  params: BuildTargetParams,
+  params: BuildTargetParams & { npmOutDir?: string; jsrOutDir?: string },
 ): Promise<void> {
   const {
     targetType,
@@ -519,6 +506,8 @@ async function library_buildDistributionTarget(
     distJsrOutFilesExt,
     options,
     libDirName,
+    npmOutDir,
+    jsrOutDir,
   } = params;
   const {
     libName,
@@ -548,8 +537,8 @@ async function library_buildDistributionTarget(
   relinka("log", `${logPrefix} Starting build target processing...`);
 
   // Ensure output directories exist
-  await ensuredir(outputDirRoot);
-  await ensuredir(outputDirBin);
+  await fs.ensureDir(outputDirRoot);
+  await fs.ensureDir(outputDirBin);
   relinka("log", `${logPrefix} Using builder: ${builder}`);
 
   // --- Bundling Step ---
@@ -577,7 +566,7 @@ async function library_buildDistributionTarget(
   // --- Common Post-Bundling Steps ---
   const commonStepsParams: CommonStepsParams = {
     coreEntryFileName: path.basename(libMainFile),
-    outDirRoot: outputDirRoot,
+    outputDirRoot,
     outDirBin: outputDirBin,
     isJsr,
     libName,
@@ -588,6 +577,11 @@ async function library_buildDistributionTarget(
     distJsrOutFilesExt,
     deleteFiles: isJsr,
     libDirName,
+    npmOutputDirRoot:
+      npmOutDir || (options.npm ? options.npm.npmOutDir : undefined),
+    jsrOutputDirRoot:
+      jsrOutDir || (options.jsr ? options.jsr.jsrOutDir : undefined),
+    effectivePubRegistry: options.effectivePubRegistry,
   };
   await library_performCommonBuildSteps(commonStepsParams);
 
@@ -671,12 +665,11 @@ async function library_bundleUsingJsrCopy(
     "verbose",
     `[JSR Copy:${libName}] Starting copy: ${srcDir} -> ${destDir}`,
   );
-  await ensuredir(destDir);
+  await fs.ensureDir(destDir);
 
   try {
-    // Copy directory contents - recursive is implied for dir copy in fs-extra
-    const copyOptions: CopyOptions = { overwrite: true };
-    await fs.copy(srcDir, destDir, copyOptions);
+    // Copy directory contents
+    await fs.copy(srcDir, destDir, { overwrite: true });
     relinka(
       "success",
       `[JSR Copy:${libName}] Completed copying library source from ${srcDir} to ${destDir}`,
@@ -901,7 +894,7 @@ async function library_performCommonBuildSteps(
 ): Promise<void> {
   const {
     coreEntryFileName,
-    outDirRoot,
+    outputDirRoot,
     outDirBin,
     isJsr,
     libName,
@@ -912,26 +905,38 @@ async function library_performCommonBuildSteps(
     distJsrOutFilesExt,
     deleteFiles = false,
     libDirName,
+    npmOutputDirRoot,
+    jsrOutputDirRoot,
+    effectivePubRegistry,
   } = params;
 
   const targetType = isJsr ? "JSR" : "NPM";
   const logPrefix = `[Common:${targetType}:${libName}]`;
 
-  relinka("verbose", `${logPrefix} Performing common steps in ${outDirRoot}`);
-
-  // 1. Create package.json
-  await library_createPackageJSON(
-    libName,
-    outDirRoot,
-    isJsr,
-    libsList,
-    rmDepsMode,
-    rmDepsPatterns,
-    unifiedBundlerOutExt,
+  relinka(
+    "verbose",
+    `${logPrefix} Performing common steps in ${outputDirRoot}`,
   );
+
+  // Create package.json
+  if (npmOutputDirRoot || jsrOutputDirRoot) {
+    await library_createPackageJSON(
+      libName,
+      npmOutputDirRoot || outputDirRoot,
+      jsrOutputDirRoot || outputDirRoot,
+      effectivePubRegistry,
+      libsList,
+      rmDepsMode,
+      rmDepsPatterns,
+      unifiedBundlerOutExt,
+    );
+  }
   relinka("verbose", `${logPrefix} Created package.json.`);
 
-  // 2. Delete specific intermediate/unwanted files if requested
+  // Clean up the dist from potential internal logging
+  await removeLogInternalCalls(outDirBin);
+
+  // Delete specific intermediate/unwanted files if requested
   if (deleteFiles) {
     await deleteSpecificFiles(outDirBin);
     relinka(
@@ -940,32 +945,59 @@ async function library_performCommonBuildSteps(
     );
   }
 
-  // 3. Copy root-level files
-  await copyRootFile(outDirRoot, FILES_TO_COPY_ROOT);
+  // Copy root-level files
+  await copyRootFile(outputDirRoot, FILES_TO_COPY_ROOT);
   relinka(
     "verbose",
-    `${logPrefix} Copied root files (${FILES_TO_COPY_ROOT.join(", ")}) to ${outDirRoot}`,
+    `${logPrefix} Copied root files (${FILES_TO_COPY_ROOT.join(", ")}) to ${outputDirRoot}`,
   );
 
-  // 4. Convert internal alias imports
+  // Convert internal alias imports
   const stripSegments = libDirName ? [`libs/${libDirName}`] : [];
   relinka(
     "verbose",
     `${logPrefix} Converting alias paths in ${outDirBin}, stripping: [${stripSegments.join(", ")}]`,
   );
 
-  // Convert any "~/..." alias imports to relative
-  relinka("log", `Performing alias path conversion in ${outDirBin}`);
-  await convertImportPaths({
-    aliasPrefix: ALIAS_PREFIX_TO_CONVERT,
-    baseDir: outDirBin,
-    fromType: "alias",
-    toType: "relative",
-    libsList,
-    strip: stripSegments,
+  // relinka("info", `[${libName}] Step 2: Stripping segments`);
+  relinka("info", `[${libName}] Stripping segments`);
+  await stripPathSegmentsInDirectory({
+    targetDir: outDirBin,
+    segmentsToStrip: 2,
+    alias: ALIAS_PREFIX_TO_CONVERT,
   });
+  // await convertImportPaths({
+  //   aliasPrefix: ALIAS_PREFIX_TO_CONVERT,
+  //   baseDir: outDirBin,
+  //   fromType: "alias",
+  //   toType: "relative",
+  //   libsList,
+  //   strip: stripSegments,
+  // });
+  // Convert any "~/..." alias imports to relative
+  // relinka("info", `[${libName}] Step 3: Performing alias path conversion in ${outDirBin}`);
+  relinka(
+    "info",
+    `[${libName}] Performing alias path conversion in ${outDirBin}`,
+  );
+  await convertImportsAliasToRelative({
+    targetDir: outDirBin,
+    aliasToReplace: ALIAS_PREFIX_TO_CONVERT,
+    pathExtFilter: "js",
+  });
+  if (isJsr) {
+    relinka(
+      "info",
+      `[${libName}] Performing paths ext conversion in ${outDirBin} (from js to ts)`,
+    );
+    await convertImportsExt({
+      targetDir: outDirBin,
+      extFrom: "js",
+      extTo: "ts",
+    });
+  }
 
-  // 5. Rename the main entry file
+  // Rename the main entry file
   relinka("verbose", `${logPrefix} Renaming entry file in ${outDirBin}.`);
   await renameEntryFile(
     isJsr,

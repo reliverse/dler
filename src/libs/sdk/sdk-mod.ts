@@ -1,4 +1,3 @@
-// AUTO-GENERATED AGGREGATOR START
 export type { LibraryBuildOptions } from "./sdk-impl/build/build-library.js";
 export { library_buildLibrary } from "./sdk-impl/build/build-library.js";
 export {
@@ -8,22 +7,13 @@ export {
 export { autoPreset } from "./sdk-impl/build/bundlers/unified/auto.js";
 export { unifiedBuild } from "./sdk-impl/build/bundlers/unified/build.js";
 export { copyBuild } from "./sdk-impl/build/bundlers/unified/copy/copy.js";
-export type {
-  CopyBuildEntry,
-  CopyHooks,
-} from "./sdk-impl/build/bundlers/unified/copy/types.js";
 export { mkdistBuild } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist.js";
-export type {
-  MkdistBuildEntry,
-  MkdistHooks,
-} from "./sdk-impl/build/bundlers/unified/mkdist/types.js";
 export { rollupBuild } from "./sdk-impl/build/bundlers/unified/rollup/build.js";
 export { getRollupOptions } from "./sdk-impl/build/bundlers/unified/rollup/config.js";
 export {
   cjsPlugin,
   fixCJSExportTypePlugin,
 } from "./sdk-impl/build/bundlers/unified/rollup/plugins/cjs.js";
-export type { EsbuildOptions } from "./sdk-impl/build/bundlers/unified/rollup/plugins/esbuild.js";
 export { esbuild } from "./sdk-impl/build/bundlers/unified/rollup/plugins/esbuild.js";
 export { JSONPlugin } from "./sdk-impl/build/bundlers/unified/rollup/plugins/json.js";
 export { rawPlugin } from "./sdk-impl/build/bundlers/unified/rollup/plugins/raw.js";
@@ -34,42 +24,16 @@ export {
   shebangPlugin,
 } from "./sdk-impl/build/bundlers/unified/rollup/plugins/shebang.js";
 export { rollupStub } from "./sdk-impl/build/bundlers/unified/rollup/stub.js";
-export type {
-  RollupBuildEntry,
-  RollupBuildOptions,
-  RollupHooks,
-  RollupOptions,
-} from "./sdk-impl/build/bundlers/unified/rollup/types.js";
 export {
   DEFAULT_EXTENSIONS,
   getChunkFilename,
   resolveAliases,
 } from "./sdk-impl/build/bundlers/unified/rollup/utils.js";
 export { rollupWatch } from "./sdk-impl/build/bundlers/unified/rollup/watch.js";
-export type {
-  BaseBuildEntry,
-  BuildContext,
-  BuildEntry,
-  BuildHooks,
-  BuildOptions,
-  BuildPreset,
-  UnifiedBuildConfig,
-} from "./sdk-impl/build/bundlers/unified/types.js";
-export {
-  defineBuildConfig,
-  definePreset,
-} from "./sdk-impl/build/bundlers/unified/types.js";
 export { typesBuild } from "./sdk-impl/build/bundlers/unified/untyped/index.js";
-export type {
-  UntypedBuildEntry,
-  UntypedHooks,
-  UntypedOutput,
-  UntypedOutputs,
-} from "./sdk-impl/build/bundlers/unified/untyped/types.js";
 export {
   arrayIncludes,
   dumpObject,
-  ensuredir,
   extractExportFilenames,
   getpkg,
   inferPkgExternals,
@@ -140,7 +104,6 @@ export {
   getUnifiedSourcemapOption,
   renameEntryFile,
 } from "./sdk-impl/utils/utils-build.js";
-export { bumpHandler, setBumpDisabled } from "./sdk-impl/utils/utils-bump.js";
 export { removeDistFolders } from "./sdk-impl/utils/utils-clean.js";
 export {
   PROJECT_ROOT,
@@ -165,22 +128,12 @@ export {
   readFileSafe,
   writeFileSafe,
 } from "./sdk-impl/utils/utils-fs.js";
-export { finalizeBuild } from "./sdk-impl/utils/utils-info.js";
+export { finalizeBuildPub } from "./sdk-impl/utils/finalize.js";
 export {
   createJsrJSON,
   renameTsxFiles,
 } from "./sdk-impl/utils/utils-jsr-json.js";
-export type {
-  FileResult,
-  ConvertImportPathsOptions,
-  ConvertImportExtensionsOptions,
-} from "./sdk-impl/utils/utils-paths.js";
-export {
-  extractPackageName,
-  convertImportPaths,
-  convertImportExtensionsJsToTs,
-  normalizeQuotes,
-} from "./sdk-impl/utils/utils-paths.js";
+export { extractPackageName } from "./sdk-impl/utils/utils-misc.js";
 export type { PerfTimer } from "./sdk-impl/utils/utils-perf.js";
 export {
   createPerfTimer,
@@ -191,4 +144,14 @@ export {
 export { library_createPackageJSON } from "./sdk-impl/utils/utils-pkg-json-libs.js";
 export { regular_createPackageJSON } from "./sdk-impl/utils/utils-pkg-json-reg.js";
 export { createTSConfig } from "./sdk-impl/utils/utils-tsconfig.js";
-// AUTO-GENERATED AGGREGATOR END
+export type {
+  CopyHooks,
+  MkdistHooks,
+  RollupBuildEntry,
+  RollupBuildOptions,
+  RollupHooks,
+  UntypedHooks,
+  UntypedOutput,
+  BaseBuildEntry,
+  BuildHooks,
+} from "./sdk-types.js";

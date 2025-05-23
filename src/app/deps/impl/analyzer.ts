@@ -1,4 +1,4 @@
-import type { DependencyResult, FinderOptions } from "./types.js";
+import type { DependencyResult, FinderOptions } from "./deps-types.js";
 
 import { readFile, findSourceFiles, readPackageJson } from "./filesystem.js";
 import {

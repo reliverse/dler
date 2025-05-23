@@ -2,7 +2,7 @@ import type {
   DEST_FILE_EXISTS_BEHAVIOURS,
   FILE_TYPES,
   INIT_BEHAVIOURS,
-} from "./const.js";
+} from "./init-const.js";
 
 export type FileType = (typeof FILE_TYPES)[number]["type"];
 export type InitBehaviour = (typeof INIT_BEHAVIOURS)[number];

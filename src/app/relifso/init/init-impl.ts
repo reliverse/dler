@@ -1,8 +1,8 @@
+import path from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { selectPrompt } from "@reliverse/rempts";
-import fs from "fs-extra";
 import pMap from "p-map";
-import path from "pathe";
 
 import type {
   DestFileExistsBehaviour,
@@ -11,13 +11,12 @@ import type {
   InitFileRequest,
   InitFileResult,
   ReinitUserConfig,
-} from "./types.js";
+} from "./init-types.js";
 
-import { FILE_TYPES } from "./const.js";
+import { FILE_TYPES } from "./init-const.js";
 import { gitignoreTemplate } from "./templates/t-gitignore.js";
 import { licenseTemplate } from "./templates/t-license.js";
 import { readmeTemplate } from "./templates/t-readme.js";
-import { escapeMarkdownCodeBlocks } from "./utils.js";
 
 // Default configuration
 const DEFAULT_CONFIG: ReinitUserConfig = {
@@ -354,4 +353,12 @@ async function attachIndex(originalPath: string): Promise<string> {
   } while (await checkFileExists(newPath));
 
   return newPath;
+}
+
+/**
+ * Escapes custom markdown code blocks (''' → ```).
+ * Useful for safely embedding markdown in template literals.
+ */
+export function escapeMarkdownCodeBlocks(input: string): string {
+  return input.replace(/'''/g, "```");
 }

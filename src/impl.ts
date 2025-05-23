@@ -1,13 +1,17 @@
-import fs from "fs-extra";
-import path from "pathe";
+import {
+  bumpHandler,
+  isBumpDisabled,
+  setBumpDisabledValueTo,
+} from "@reliverse/bleump";
+import path from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
 
 import { processLibraryFlow } from "~/libs/sdk/sdk-impl/library-flow.js";
 import { processRegularFlow } from "~/libs/sdk/sdk-impl/regular-flow.js";
-import { bumpHandler } from "~/libs/sdk/sdk-impl/utils/utils-bump.js";
+import { finalizeBuildPub } from "~/libs/sdk/sdk-impl/utils/finalize.js";
 import { removeDistFolders } from "~/libs/sdk/sdk-impl/utils/utils-clean.js";
 import { PROJECT_ROOT } from "~/libs/sdk/sdk-impl/utils/utils-consts.js";
 import { handleDlerError } from "~/libs/sdk/sdk-impl/utils/utils-error.js";
-import { finalizeBuild } from "~/libs/sdk/sdk-impl/utils/utils-info.js";
 import { createPerfTimer } from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
 import { loadConfig } from "~/load.js";
 
@@ -20,6 +24,8 @@ import { loadConfig } from "~/load.js";
  * Handles building and publishing for both main project and libraries.
  */
 export async function dlerBuild(isDev: boolean) {
+  // TODO: remove config.commonPubPause once pub will call dlerBuild instead of replicating its code
+
   // Create a performance timer
   const timer = createPerfTimer();
 
@@ -27,9 +33,6 @@ export async function dlerBuild(isDev: boolean) {
     // Load config with defaults and user overrides
     // This config load is a single source of truth
     const config = await loadConfig();
-
-    // TODO: remove this once pub will call dlerBuild instead of replicating its code
-    const pausePublishing = config.commonPubPause;
 
     // Clean up previous run artifacts
     if (config.logsFreshFile) {
@@ -43,13 +46,19 @@ export async function dlerBuild(isDev: boolean) {
     );
 
     // Handle version bumping if enabled
-    if (!config.bumpDisable) {
-      await bumpHandler(
-        config.bumpMode,
-        config.bumpDisable,
-        pausePublishing,
-        config.bumpFilter,
-      );
+    try {
+      const bumpIsDisabled = await isBumpDisabled();
+      if (!bumpIsDisabled && !config.commonPubPause) {
+        await bumpHandler(
+          config.bumpMode,
+          false,
+          config.bumpFilter,
+          config.bumpSet,
+        );
+        await setBumpDisabledValueTo(true);
+      }
+    } catch {
+      throw new Error("[.config/dler.ts] Failed to set bumpDisable to true");
     }
 
     // Process main project
@@ -65,7 +74,7 @@ export async function dlerBuild(isDev: boolean) {
       config.coreEntryFile,
       config.distJsrDryRun,
       config.distJsrFailOnWarn,
-      pausePublishing,
+      config.commonPubPause,
       config.distJsrDirName,
       config.distJsrBuilder,
       config.transpileTarget,
@@ -98,7 +107,7 @@ export async function dlerBuild(isDev: boolean) {
       config.distJsrFailOnWarn,
       config.libsDirDist,
       config.libsDirSrc,
-      pausePublishing,
+      config.commonPubPause,
       config.commonPubRegistry,
       config.distNpmOutFilesExt,
       config.distNpmBuilder,
@@ -115,12 +124,14 @@ export async function dlerBuild(isDev: boolean) {
       config.transpileStub,
       config.transpileWatch,
       config.distJsrOutFilesExt,
+      config.distJsrAllowDirty,
+      config.distJsrSlowTypes,
     );
 
     // Finalize dler
-    await finalizeBuild(
+    await finalizeBuildPub(
       timer,
-      pausePublishing,
+      config.commonPubPause,
       config.libsList,
       config.distNpmDirName,
       config.distJsrDirName,
@@ -155,15 +166,21 @@ export async function dlerPub(isDev: boolean) {
       config.libsList,
     );
 
-    // Handle version bumping if enabled
     // TODO: remove this once pub will call dlerBuild instead of replicating its code
-    if (!config.bumpDisable) {
-      await bumpHandler(
-        config.bumpMode,
-        config.bumpDisable,
-        config.commonPubPause,
-        config.bumpFilter,
-      );
+    // Handle version bumping if enabled
+    const bumpIsDisabled = await isBumpDisabled();
+    if (!bumpIsDisabled && !config.commonPubPause) {
+      try {
+        await bumpHandler(
+          config.bumpMode,
+          false,
+          config.bumpFilter,
+          config.bumpSet,
+        );
+        await setBumpDisabledValueTo(true);
+      } catch {
+        throw new Error("[.config/dler.ts] Failed to set bumpDisable to true");
+      }
     }
 
     // Process main project
@@ -229,10 +246,12 @@ export async function dlerPub(isDev: boolean) {
       config.transpileStub,
       config.transpileWatch,
       config.distJsrOutFilesExt,
+      config.distJsrAllowDirty,
+      config.distJsrSlowTypes,
     );
 
     // Finalize dler
-    await finalizeBuild(
+    await finalizeBuildPub(
       timer,
       config.commonPubPause,
       config.libsList,

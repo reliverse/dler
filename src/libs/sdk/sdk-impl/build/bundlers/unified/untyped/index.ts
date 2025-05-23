@@ -1,7 +1,7 @@
+import { resolve } from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
 import { createJiti, type JitiOptions } from "jiti";
 import { mkdir, writeFile } from "node:fs/promises";
-import { resolve } from "pathe";
 import { pascalCase } from "scule";
 import {
   generateMarkdown,
@@ -15,7 +15,7 @@ import type {
   BuildContext,
   UntypedBuildEntry,
   UntypedOutputs,
-} from "~/libs/sdk/sdk-impl/build/bundlers/unified/types.js";
+} from "~/libs/sdk/sdk-types.js";
 
 export async function typesBuild(ctx: BuildContext): Promise<void> {
   const entries = ctx.options.entries.filter(

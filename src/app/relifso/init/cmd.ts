@@ -5,14 +5,14 @@ import {
   selectPrompt,
 } from "@reliverse/rempts";
 
-import type { FileType, InitFileRequest } from "./impl/types.js";
+import type { FileType, InitFileRequest } from "./init-types.js";
 
-import { FILE_TYPES } from "./impl/const.js";
-import { initFile, initFiles } from "./impl/mod.js";
+import { FILE_TYPES } from "./init-const.js";
+import { initFile, initFiles } from "./init-impl.js";
 
 export default defineCommand({
   meta: {
-    name: "relifso",
+    name: "init",
     version: "1.0.0",
     description: "relifso helper utils",
   },

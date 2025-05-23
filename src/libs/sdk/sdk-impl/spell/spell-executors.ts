@@ -1,4 +1,4 @@
-import path from "pathe";
+import path from "@reliverse/pathkit";
 
 import type { Spell, SpellResult } from "./spell-types.js";
 

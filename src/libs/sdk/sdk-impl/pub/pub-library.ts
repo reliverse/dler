@@ -14,7 +14,7 @@ import {
  * Publishes a library to the specified commonPubRegistry.
  */
 export async function library_publishLibrary(
-  commonPubRegistry: string | undefined,
+  effectivePubRegistry: "jsr" | "npm" | "npm-jsr" | undefined,
   libName: string,
   npmOutDir: string,
   jsrOutDir: string,
@@ -25,7 +25,7 @@ export async function library_publishLibrary(
   isDev: boolean,
   timer: PerfTimer,
 ): Promise<void> {
-  switch (commonPubRegistry) {
+  switch (effectivePubRegistry) {
     case "jsr":
       relinka("log", `Publishing lib ${libName} to JSR only...`);
       await library_pubToJsr(
@@ -80,7 +80,7 @@ export async function library_publishLibrary(
     default:
       relinka(
         "log",
-        `Registry "${commonPubRegistry}" not recognized for lib ${libName}. Skipping publishing for this lib.`,
+        `Registry "${effectivePubRegistry}" not recognized for lib ${libName}. Skipping publishing for this lib.`,
       );
   }
 }

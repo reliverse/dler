@@ -1,36 +1,6 @@
-import fs from "fs-extra";
-import path from "pathe";
+import path from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
 import ts from "typescript";
-
-type SplitOptions = {
-  directory: string;
-  fileLineThreshold: number;
-  funcLineThreshold: number;
-};
-
-export function parseCommandLineArgs(): SplitOptions {
-  // A temporary simple argument parser
-  const args = process.argv.slice(2);
-  let directory = ".";
-  let fileLineThreshold = 300;
-  let funcLineThreshold = 50;
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (arg === "--dir" && args[i + 1]) {
-      directory = args[i + 1] ?? ".";
-      i++;
-    } else if (arg === "--file-threshold" && args[i + 1]) {
-      fileLineThreshold = Number(args[i + 1]);
-      i++;
-    } else if (arg === "--func-threshold" && args[i + 1]) {
-      funcLineThreshold = Number(args[i + 1]);
-      i++;
-    }
-  }
-
-  return { directory, fileLineThreshold, funcLineThreshold };
-}
 
 /**
  * 1) Reads all *.ts or *.js files from the given directory (recursively).

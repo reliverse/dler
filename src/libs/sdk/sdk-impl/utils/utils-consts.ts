@@ -1,4 +1,4 @@
-import path from "pathe";
+import path from "@reliverse/pathkit";
 
 import type { NpmOutExt } from "~/libs/sdk/sdk-types.js";
 

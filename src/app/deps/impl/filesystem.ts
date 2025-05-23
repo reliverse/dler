@@ -1,8 +1,8 @@
-import fs from "fs-extra";
+import fs from "@reliverse/relifso";
 import { glob } from "glob";
 import path from "node:path";
 
-import type { PackageJson } from "./types.js";
+import type { PackageJson } from "./deps-types.js";
 
 export const findSourceFiles = async (
   directory: string,

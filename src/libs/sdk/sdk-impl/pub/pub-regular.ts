@@ -2,9 +2,9 @@
 // Distribution Publish Functions
 // ============================
 
+import path from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
 import { execaCommand } from "execa";
-import path from "pathe";
 
 import { PROJECT_ROOT } from "~/libs/sdk/sdk-impl/utils/utils-consts.js";
 import { withWorkingDirectory } from "~/libs/sdk/sdk-impl/utils/utils-cwd.js";

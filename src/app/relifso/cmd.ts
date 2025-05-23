@@ -5,7 +5,7 @@ import { cmdRelifsoInit } from "~/app/cmds.js";
 
 export default defineCommand({
   meta: {
-    name: "cli",
+    name: "relifso",
     description:
       "Runs the Relifso helper interactive menu (displays list of available commands)",
   },

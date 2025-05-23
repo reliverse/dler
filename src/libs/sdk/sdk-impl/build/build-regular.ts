@@ -1,7 +1,10 @@
+import path, {
+  convertImportsAliasToRelative,
+  convertImportsExt,
+} from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { build as bunBuild } from "bun";
-import fs from "fs-extra";
-import path from "pathe";
 import prettyBytes from "pretty-bytes";
 import prettyMilliseconds from "pretty-ms";
 
@@ -13,12 +16,14 @@ import type {
   transpileFormat,
   transpileTarget,
 } from "~/libs/sdk/sdk-types.js";
+import type { UnifiedBuildConfig } from "~/libs/sdk/sdk-types.js";
 
 import { unifiedBuild } from "~/libs/sdk/sdk-impl/build/bundlers/unified/build.js";
 import {
   getBunSourcemapOption,
   getUnifiedSourcemapOption,
 } from "~/libs/sdk/sdk-impl/utils/utils-build.js";
+import { removeLogInternalCalls } from "~/libs/sdk/sdk-impl/utils/utils-clean.js";
 import {
   CONCURRENCY_DEFAULT,
   PROJECT_ROOT,
@@ -35,19 +40,13 @@ import {
   renameTsxFiles,
 } from "~/libs/sdk/sdk-impl/utils/utils-jsr-json.js";
 import {
-  convertImportExtensionsJsToTs,
-  convertImportPaths,
-} from "~/libs/sdk/sdk-impl/utils/utils-paths.js";
-import {
   getElapsedPerfTime,
   type PerfTimer,
 } from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
 import { regular_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-json-reg.js";
 import { createTSConfig } from "~/libs/sdk/sdk-impl/utils/utils-tsconfig.js";
 
-import type { UnifiedBuildConfig } from "./bundlers/unified/types.js";
-
-import { ensuredir } from "./bundlers/unified/utils.js";
+const ALIAS_PREFIX_TO_CONVERT = "~";
 
 /**
  * Builds a regular JSR distribution.
@@ -87,8 +86,8 @@ export async function regular_buildJsrDist(
     config.coreBuildOutDir || "bin",
   );
 
-  await ensuredir(distJsrDirNameResolved);
-  await ensuredir(outDirBin);
+  await fs.ensureDir(distJsrDirNameResolved);
+  await fs.ensureDir(outDirBin);
   relinka("log", `Using JSR builder: ${distJsrBuilder}`);
 
   // Decide how to do the bundling
@@ -123,7 +122,6 @@ export async function regular_buildJsrDist(
   });
 
   // Additional JSR-specific transformations
-  await convertImportExtensionsJsToTs({ dirPath: outDirBin });
   await renameTsxFiles(outDirBin);
   await createJsrJSON(
     distJsrDirNameResolved,
@@ -183,8 +181,8 @@ export async function regular_buildNpmDist(
     config.coreBuildOutDir || "bin",
   );
 
-  await ensuredir(distNpmDirNameResolved);
-  await ensuredir(outDirBin);
+  await fs.ensureDir(distNpmDirNameResolved);
+  await fs.ensureDir(outDirBin);
   relinka("log", `Using NPM builder: ${distNpmBuilder}`);
 
   // Decide how to do the bundling
@@ -318,25 +316,44 @@ async function regular_bundleUsingJsr(
   dest: string,
 ): Promise<void> {
   relinka("log", `Starting regular_bundleUsingJsr: ${src} -> ${dest}`);
-  await ensuredir(path.dirname(dest));
+  await fs.ensureDir(path.dirname(dest));
 
   // Validate source is a directory
   const stats = await fs.stat(src);
   if (!stats.isDirectory()) {
     throw new Error(
-      "You are using the 'jsr' builder, but path to file was provided. Please provide path to directory instead.",
+      "Please provide path to directory instead of path to file when using 'jsr' builder.",
     );
   }
 
   try {
-    await fs.copy(src, dest);
+    // Copy the files
+    await fs.copy(src, dest, { overwrite: true });
     relinka("verbose", `Copied directory from ${src} to ${dest}`);
-    relinka("success", "Completed regular JSR bundling");
+
+    // Convert import paths in the copied files
+    // const results = await convertImportPaths({
+    //   baseDir: dest,
+    //   fromType: "alias",
+    //   toType: "relative",
+    //   aliasPrefix: "~/",
+    //   libsList: {},
+    //   distJsrDryRun: false,
+    // });
+    // const successCount = results.filter((r) => r.success).length;
+    // const changedCount = results.filter((r) =>
+    //   r.message.startsWith("Processed"),
+    // ).length;
+
+    relinka(
+      "success",
+      `Completed regular bundling via 'jsr' builder`,
+      // `${successCount} files processed, ${changedCount} modified`,
+    );
   } catch (error) {
-    // Fallback if there's an error
+    // crash if there's an error
     const errorMessage = error instanceof Error ? error.message : String(error);
-    relinka("warn", `${errorMessage}, falling back to copying ${src}`);
-    await fs.copy(src, dest);
+    throw new Error(errorMessage);
   }
 }
 
@@ -548,15 +565,37 @@ async function regular_performCommonBuildSteps({
 }): Promise<void> {
   relinka("log", `Performing common build steps in ${outDirBin} (regular)`);
 
+  // await convertImportPaths({
+  //   aliasPrefix: "~/",
+  //   baseDir: outDirBin,
+  //   fromType: "alias",
+  //   libsList: {},
+  //   toType: "relative",
+  // });
   // Convert any "~/..." alias imports to relative
-  relinka("log", `Performing alias path conversion in ${outDirBin}`);
-  await convertImportPaths({
-    aliasPrefix: "~/",
-    baseDir: outDirBin,
-    fromType: "alias",
-    libsList: {},
-    toType: "relative",
+  relinka(
+    "info",
+    `[${isJsr ? "dist-jsr" : "dist-npm"}] Performing alias path conversion in ${outDirBin}`,
+  );
+  await convertImportsAliasToRelative({
+    targetDir: outDirBin,
+    aliasToReplace: ALIAS_PREFIX_TO_CONVERT,
+    pathExtFilter: "js",
   });
+  if (isJsr) {
+    relinka(
+      "info",
+      `[dist-jsr] Performing paths ext conversion in ${outDirBin} (from js to ts)`,
+    );
+    await convertImportsExt({
+      targetDir: outDirBin,
+      extFrom: "js",
+      extTo: "ts",
+    });
+  }
+
+  // Clean up the dist from potential internal logging
+  await removeLogInternalCalls(outDirBin);
 
   // Delete undesired files
   if (deleteFiles) {

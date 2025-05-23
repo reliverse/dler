@@ -23,7 +23,7 @@ export default defineConfig({
   disableColors: false,
 
   // Log file path
-  logFilePath: "relinka.log",
+  logFilePath: ".logs/relinka.log",
 
   levels: {
     success: {

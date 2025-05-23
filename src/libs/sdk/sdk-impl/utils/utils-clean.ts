@@ -1,7 +1,7 @@
+import path from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import fs from "fs-extra";
 import pMap from "p-map";
-import path from "pathe";
 
 import type { LibConfig } from "~/libs/sdk/sdk-types.js";
 
@@ -49,5 +49,61 @@ export async function removeDistFolders(
     relinka("success", "Distribution folders removed successfully");
   }
 
+  return true;
+}
+
+/**
+ * Removes logInternal and relinka "internal" calls from TypeScript/JavaScript files
+ * @param targetDir Directory to process recursively
+ * @returns Promise<boolean> True if successful
+ */
+export async function removeLogInternalCalls(
+  targetDir: string,
+): Promise<boolean> {
+  const files = await fs.readdir(targetDir, { recursive: true });
+  const tsJsFiles = files.filter(
+    (file) =>
+      file.endsWith(".ts") ||
+      file.endsWith(".js") ||
+      file.endsWith(".tsx") ||
+      file.endsWith(".jsx"),
+  );
+
+  await pMap(
+    tsJsFiles,
+    async (file) => {
+      const filePath = path.join(targetDir, file);
+      const content = await fs.readFile(filePath, "utf-8");
+
+      // Remove logInternal calls
+      let newContent = content.replace(
+        /logInternal\s*\(\s*(?:`[^`]*`|'[^']*'|"[^"]*"|(?:[^;]*?,\s*)*[^;]*?)\s*\)\s*;?/g,
+        "",
+      );
+
+      // Remove relinka("internal", ...) calls
+      newContent = newContent.replace(
+        /relinka\s*\(\s*["']internal["']\s*,\s*(?:`[^`]*`|'[^']*'|"[^"]*"|(?:[^;]*?,\s*)*[^;]*?)\s*\)\s*;?/g,
+        "",
+      );
+
+      // Clean up any resulting empty lines
+      newContent = newContent
+        .replace(/\n\s*\n\s*\n/g, "\n\n") // Replace 3+ empty lines with 2
+        .replace(/^\s*\n/gm, "") // Remove empty lines at start of file
+        .replace(/\n\s*$/g, "\n"); // Ensure single newline at end
+
+      if (newContent !== content) {
+        await fs.writeFile(filePath, newContent);
+        relinka("verbose", `Processed: ${filePath}`);
+      }
+    },
+    { concurrency: CONCURRENCY_DEFAULT },
+  );
+
+  relinka(
+    "success",
+    "Successfully removed logInternal and relinka internal calls from files",
+  );
   return true;
 }

@@ -1,16 +1,19 @@
+import { setBumpDisabledValueTo } from "@reliverse/bleump";
 import { relinka } from "@reliverse/relinka";
 import prettyMilliseconds from "pretty-ms";
 
 import type { LibConfig } from "~/libs/sdk/sdk-types.js";
 
-import { setBumpDisabled } from "./utils-bump.js";
-import { removeDistFolders } from "./utils-clean.js";
-import { getElapsedPerfTime, type PerfTimer } from "./utils-perf.js";
+import { removeDistFolders } from "~/libs/sdk/sdk-impl/utils/utils-clean.js";
+import {
+  getElapsedPerfTime,
+  type PerfTimer,
+} from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
 
 /**
  * Finalizes the build process and reports completion.
  */
-export async function finalizeBuild(
+export async function finalizeBuildPub(
   timer: PerfTimer,
   commonPubPause: boolean,
   libsList: Record<string, LibConfig>,
@@ -25,7 +28,12 @@ export async function finalizeBuild(
       libsDirDist,
       libsList,
     );
-    await setBumpDisabled(false, commonPubPause);
+
+    try {
+      await setBumpDisabledValueTo(false);
+    } catch {
+      throw new Error("[.config/dler.ts] Failed to set bumpDisable to false");
+    }
   }
   const elapsedTime = getElapsedPerfTime(timer);
   const transpileFormattedTime = prettyMilliseconds(elapsedTime, {

@@ -1,9 +1,9 @@
 import type { PackageJson } from "pkg-types";
 
+import { resolve } from "@reliverse/pathkit";
 import { existsSync } from "node:fs";
-import { resolve } from "pathe";
 
-import type { BuildContext } from "./types.js";
+import type { BuildContext } from "~/libs/sdk/sdk-types.js";
 
 import {
   arrayIncludes,

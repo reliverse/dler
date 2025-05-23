@@ -7,7 +7,7 @@ export async function showStartPrompt(isDev: boolean) {
     // packageName: getPkgName(),
     // packageVersion: getPkgVersion(),
     packageName: "dler",
-    packageVersion: "1.3.0",
+    packageVersion: "1.3.5",
     isDev,
   });
 }
@@ -21,6 +21,9 @@ export async function showEndPrompt() {
     titleAnimationDelay: 800,
   });
 }
+
+// export const FILL_ISSUE =
+//   "If you believe this is an error, please fill in the issue on https://github.com/reliverse/dler/issues";
 
 /* import { relinka } from "@reliverse/relinka";
 import { readPackageJSON } from "pkg-types";

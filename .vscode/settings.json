@@ -1,5 +1,4 @@
 {
-  "editor.transpileFormatOnSave": true,
   "editor.codeActionsOnSave": {
     "quickfix.biome": "explicit",
     "source.addMissingImports": "never",

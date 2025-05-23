@@ -1,12 +1,15 @@
 import type { PackageJson } from "pkg-types";
 
+import { join, normalize, resolve } from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
 import { existsSync } from "node:fs";
-import { join, normalize, resolve } from "pathe";
 
-import type { BuildEntry, BuildPreset, MkdistBuildEntry } from "./types.js";
+import type {
+  BuildEntry,
+  BuildPreset,
+  MkdistBuildEntry,
+} from "~/libs/sdk/sdk-types.js";
 
-import { definePreset } from "./types.js";
 import { extractExportFilenames, listRecursively, warn } from "./utils.js";
 
 type InferEntriesResult = {
@@ -15,6 +18,10 @@ type InferEntriesResult = {
   entries: BuildEntry[];
   warnings: string[];
 };
+
+export function definePreset(preset: BuildPreset): BuildPreset {
+  return preset;
+}
 
 export const autoPreset: BuildPreset = definePreset(() => {
   return {

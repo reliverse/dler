@@ -1,12 +1,17 @@
 import type { PackageJson } from "pkg-types";
 
+import { resolve } from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { createJiti } from "jiti";
 import { readdirSync, statSync } from "node:fs";
 import fsp from "node:fs/promises";
-import { dirname, resolve } from "pathe";
 
-import type { BuildContext, BuildPreset, UnifiedBuildConfig } from "./types.js";
+import type {
+  BuildContext,
+  BuildPreset,
+  UnifiedBuildConfig,
+} from "~/libs/sdk/sdk-types.js";
 
 import { autoPreset } from "./auto.js";
 
@@ -27,10 +32,6 @@ export function dumpObject(obj: Record<string, any>): string {
   return `{ ${Object.keys(obj)
     .map((key) => `${key}: ${JSON.stringify(obj[key])}`)
     .join(", ")} }`;
-}
-
-export async function ensuredir(path: string): Promise<void> {
-  await fsp.mkdir(dirname(path), { recursive: true });
 }
 
 export function extractExportFilenames(
@@ -150,7 +151,7 @@ export async function symlink(
   to: string,
   force = true,
 ): Promise<void> {
-  await ensuredir(to);
+  await fs.ensureDir(to);
   if (force) {
     await fsp.unlink(to).catch(() => {
       /* Ignore error if file doesn't exist */

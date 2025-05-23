@@ -1,11 +1,11 @@
 import type { OutputOptions } from "rollup";
 
+import { resolve } from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
-import { resolve } from "pathe";
 import { rollup } from "rollup";
 import dts from "rollup-plugin-dts";
 
-import type { BuildContext } from "~/libs/sdk/sdk-impl/build/bundlers/unified/types.js";
+import type { BuildContext } from "~/libs/sdk/sdk-types.js";
 
 import { getRollupOptions } from "./config.js";
 import { fixCJSExportTypePlugin } from "./plugins/cjs.js";

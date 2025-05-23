@@ -8,18 +8,18 @@ import { defineConfig } from "~/mod.js";
 export default defineConfig({
   // Bump configuration
   bumpDisable: false,
-  bumpFilter: ["package.json", ".config/rse.ts", "src/info.ts"],
-  bumpMode: "autoPatch",
+  bumpFilter: ["package.json", ".config/rse.ts"],
+  bumpMode: "patch",
 
   // Common configuration
   commonPubPause: false,
-  commonPubRegistry: "npm", // TODO: switch to "npm-jsr" when `libPubRegistry` is implemented
+  commonPubRegistry: "npm-jsr",
   commonVerbose: true,
 
   // Core configuration
   coreDeclarations: true,
   coreDescription:
-    "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
+    "@reliverse/dler is a flexible, unified, and fully automated bundler for typescript and javascript projects, as well as an npm and jsr publishing tool. dler is not only a bundler, it also tries to serve as the most powerful codemod toolkit for js/ts.",
   coreEntryFile: "mod.ts",
   coreEntrySrcDir: "src",
   coreBuildOutDir: "bin",
@@ -53,7 +53,6 @@ export default defineConfig({
   libsDirDist: "dist-libs",
   libsDirSrc: "src/libs",
   libsList: {
-    // TODO: implement `libPubRegistry`
     "@reliverse/dler-sdk": {
       libDeclarations: true,
       libDescription: "@reliverse/dler without cli",
@@ -62,11 +61,12 @@ export default defineConfig({
       libPkgKeepDeps: true,
       libTranspileMinify: true,
       libPubPause: false,
+      libPubRegistry: "npm-jsr",
     },
   },
 
   // Logger setup
-  logsFileName: "logs/relinka.log",
+  logsFileName: ".logs/relinka.log",
   logsFreshFile: true,
 
   // Dependency filtering

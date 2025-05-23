@@ -1,7 +1,7 @@
+import path from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import fs from "fs-extra";
 import MagicString from "magic-string";
-import path from "pathe";
 
 const AGGREGATOR_START = "// AUTO-GENERATED AGGREGATOR START";
 const AGGREGATOR_END = "// AUTO-GENERATED AGGREGATOR END";
@@ -37,6 +37,7 @@ export async function useAggregator({
   includeInternal = false,
   internalMarker = "#",
   overrideFile = false,
+  fileExtensions = [".ts", ".js", ".mts", ".cts", ".mjs", ".cjs"],
 }: {
   inputDir: string;
   isRecursive: boolean;
@@ -51,6 +52,7 @@ export async function useAggregator({
   includeInternal?: boolean;
   internalMarker?: string;
   overrideFile?: boolean;
+  fileExtensions?: string[];
 }) {
   try {
     // Validate input directory
@@ -60,26 +62,66 @@ export async function useAggregator({
       process.exit(1);
     }
 
-    // Collect .ts/.js files
-    const exts = [".ts", ".js"];
+    // Validate output file directory exists or can be created
+    const outDir = path.dirname(outFile);
+    try {
+      await fs.ensureDir(outDir);
+    } catch (error) {
+      relinka(
+        "error",
+        `Error: Cannot create output directory: ${outDir}\n${error}`,
+      );
+      process.exit(1);
+    }
+
+    // Validate output file extension matches input extensions
+    const outExt = path.extname(outFile).toLowerCase();
+    if (!fileExtensions.includes(outExt)) {
+      relinka(
+        "warn",
+        `Warning: Output file extension (${outExt}) doesn't match any of the input extensions: ${fileExtensions.join(", ")}`,
+      );
+    }
+
+    // Validate strip prefix is a valid directory if provided
+    if (stripPrefix) {
+      const stripSt = await fs.stat(stripPrefix).catch(() => null);
+      if (!stripSt?.isDirectory()) {
+        relinka(
+          "error",
+          `Error: --strip is not a valid directory: ${stripPrefix}`,
+        );
+        process.exit(1);
+      }
+    }
+
+    // Collect files with specified extensions
     if (verbose)
       relinka(
         "log",
-        `Scanning directory ${inputDir} for files with extensions: ${exts.join(
+        `Scanning directory ${inputDir} for files with extensions: ${fileExtensions.join(
           ", ",
         )}`,
       );
     const filePaths = await collectFiles(
       inputDir,
-      exts,
+      fileExtensions,
       isRecursive,
       ignoreDirs,
       verbose,
       includeInternal,
       internalMarker,
+      outFile,
     );
     if (!filePaths.length) {
-      relinka("warn", `No matching .ts/.js files found in ${inputDir}`);
+      relinka(
+        "warn",
+        `No matching files found in ${inputDir} with extensions: ${fileExtensions.join(", ")}`,
+      );
+      if (!overrideFile) {
+        relinka("warn", "No changes will be made to the output file.");
+        return;
+      }
     }
 
     // Generate aggregator lines concurrently with unique star-import identifiers
@@ -93,7 +135,10 @@ export async function useAggregator({
           useImport,
           useNamed,
           usedIdentifiers,
-        ),
+        ).catch((error) => {
+          relinka("error", `Error processing file ${fp}: ${error}`);
+          return [];
+        }),
       ),
     );
     const allLines = aggregatorLinesArrays.flat();
@@ -102,14 +147,6 @@ export async function useAggregator({
     if (sortLines) {
       allLines.sort();
       if (verbose) relinka("log", "Sorted aggregator lines alphabetically.");
-    }
-
-    // Warn if outFile is inside inputDir (to avoid self-import/export)
-    if (outFile.startsWith(inputDir)) {
-      relinka(
-        "warn",
-        `Warning: The output file is inside (or overlaps with) the input directory.\nMight re-import (or re-export) itself.\n   input: ${inputDir}\n   out: ${outFile}\n`,
-      );
     }
 
     // Build the aggregator block content
@@ -232,12 +269,22 @@ async function collectFiles(
   verbose: boolean,
   includeInternal: boolean,
   internalMarker: string,
+  outFile?: string,
 ): Promise<string[]> {
   const found: string[] = [];
   const entries = await fs.readdir(dir, { withFileTypes: true });
 
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
+
+    // Skip the output file if it matches
+    if (outFile && path.resolve(fullPath) === path.resolve(outFile)) {
+      if (verbose) {
+        relinka("log", `Skipping output file: ${fullPath}`);
+      }
+      continue;
+    }
+
     if (entry.isDirectory()) {
       if (ignoreDirs.includes(entry.name)) {
         if (verbose) {
@@ -254,6 +301,7 @@ async function collectFiles(
           verbose,
           includeInternal,
           internalMarker,
+          outFile,
         );
         found.push(...sub);
       }
@@ -358,36 +406,74 @@ async function getNamedExports(
 ): Promise<{ typeNames: string[]; valueNames: string[] }> {
   try {
     const code = await fs.readFile(filePath, "utf-8");
-    // Regex captures lines like:
-    //   export async function <NAME>
-    //   export function <NAME>
-    //   export const <NAME>
-    //   export let <NAME>
-    //   export class <NAME>
-    //   export type <NAME>
-    //   export interface <NAME>
-    // Group 1: keyword; Group 2: exported name.
-    const pattern =
-      /^export\s+(?:async\s+)?(function|const|class|let|type|interface)\s+([A-Za-z0-9_$]+)/gm;
     const typeNamesSet = new Set<string>();
     const valueNamesSet = new Set<string>();
 
-    let match: RegExpExecArray | null;
-    while (true) {
-      match = pattern.exec(code);
-      if (match === null) break;
+    // Match various export patterns:
+    // 1. Regular exports: export const/let/var/function/class/interface/type/enum
+    // 2. Default exports: export default class/function/const/interface
+    // 3. Named exports: export { name, name2 as alias }
+    // 4. Re-exports: export { name } from './other'
+    // 5. Export assignments: export = name
+    const patterns = [
+      // Regular exports and default exports
+      /^export\s+(?:default\s+)?(?:async\s+)?(function|const|class|let|var|type|interface|enum)\s+([A-Za-z0-9_$]+)/gm,
+      // Named exports and re-exports
+      /^export\s*{([^}]+)}(?:\s+from\s+['"][^'"]+['"])?/gm,
+      // Export assignments
+      /^export\s*=\s*([A-Za-z0-9_$]+)/gm,
+    ];
 
-      const keyword = match[1];
-      const name = match[2];
+    for (const pattern of patterns) {
+      let match: RegExpExecArray | null;
+      while (true) {
+        match = pattern.exec(code);
+        if (!match) break;
 
-      if (keyword && name) {
-        if (keyword === "type" || keyword === "interface") {
-          typeNamesSet.add(name);
+        const matchGroups = match as RegExpExecArray & Record<number, string>;
+        if (pattern.source.includes("{([^}]+)}") && matchGroups[1]) {
+          // Handle named exports/re-exports
+          const exports = (matchGroups[1] ?? "").split(",").map(
+            (e) =>
+              e
+                ?.trim()
+                ?.split(/\s+as\s+/)?.[0]
+                ?.trim() ?? "",
+          );
+          for (const exp of exports) {
+            // Skip 'type' keyword in named exports
+            const name = exp.replace(/^type\s+/, "");
+            if (exp.startsWith("type ")) {
+              typeNamesSet.add(name);
+            } else {
+              valueNamesSet.add(name);
+            }
+          }
+        } else if (
+          pattern.source.includes("=\\s*([A-Za-z0-9_$]+)") &&
+          matchGroups[1]
+        ) {
+          // Handle export assignments
+          valueNamesSet.add(matchGroups[1]);
         } else {
-          valueNamesSet.add(name);
+          // Handle regular exports
+          const keyword = matchGroups[1];
+          const name = matchGroups[2];
+          if (keyword && name) {
+            if (
+              keyword === "type" ||
+              keyword === "interface" ||
+              keyword === "enum"
+            ) {
+              typeNamesSet.add(name);
+            } else {
+              valueNamesSet.add(name);
+            }
+          }
         }
       }
     }
+
     return {
       typeNames: Array.from(typeNamesSet),
       valueNames: Array.from(valueNamesSet),

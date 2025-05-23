@@ -1,7 +1,7 @@
+import path from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { defineCommand } from "@reliverse/rempts";
-import fs from "fs-extra";
-import path from "pathe";
 
 export default defineCommand({
   meta: {

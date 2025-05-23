@@ -1,6 +1,6 @@
+import path from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import fs from "fs-extra";
-import path from "pathe";
 import {
   definePackageJSON,
   type PackageJson,
@@ -20,8 +20,9 @@ import { filterDeps } from "~/libs/sdk/sdk-impl/utils/utils-deps.js";
  */
 export async function library_createPackageJSON(
   libName: string,
-  outDirRoot: string,
-  isJsr: boolean,
+  npmOutDirRoot: string,
+  jsrOutDirRoot: string,
+  effectivePubRegistry: "jsr" | "npm" | "npm-jsr" | undefined,
   libsList: Record<string, LibConfig>,
   rmDepsMode: ExcludeMode,
   rmDepsPatterns: string[],
@@ -29,7 +30,7 @@ export async function library_createPackageJSON(
 ): Promise<void> {
   relinka(
     "verbose",
-    `Generating package.json for lib ${libName} (isJsr=${isJsr})...`,
+    `Generating package.json for lib ${libName} (registry: ${effectivePubRegistry})...`,
   );
 
   // Throw error if libsList is empty or not provided
@@ -87,33 +88,66 @@ export async function library_createPackageJSON(
     commonPkg.keywords = keywords;
   }
 
-  const outDirBin = path.join(outDirRoot, "bin");
-  if (isJsr) {
-    relinka("verbose", `Creating JSR package.json for lib ${libName}...`);
-    await library_writeJsrPackageJSON(
-      libName,
-      outDirBin,
-      outDirRoot,
-      originalPkg,
-      commonPkg,
-      libsList,
-      rmDepsMode,
-      rmDepsPatterns,
-    );
-  } else {
-    relinka("verbose", `Creating NPM package.json for lib ${libName}...`);
-    await library_writeNpmLibPackageJSON(
-      libName,
-      outDirBin,
-      outDirRoot,
-      originalPkg,
-      commonPkg,
-      libsList,
-      rmDepsMode,
-      rmDepsPatterns,
-      unifiedBundlerOutExt,
-    );
+  switch (effectivePubRegistry) {
+    case "jsr":
+      relinka("verbose", `Creating JSR package.json for lib ${libName}...`);
+      await library_writeJsrPackageJSON(
+        libName,
+        jsrOutDirRoot,
+        jsrOutDirRoot,
+        originalPkg,
+        commonPkg,
+        libsList,
+        rmDepsMode,
+        rmDepsPatterns,
+      );
+      break;
+    case "npm":
+      relinka("verbose", `Creating NPM package.json for lib ${libName}...`);
+      await library_writeNpmLibPackageJSON(
+        libName,
+        npmOutDirRoot,
+        npmOutDirRoot,
+        originalPkg,
+        commonPkg,
+        libsList,
+        rmDepsMode,
+        rmDepsPatterns,
+        unifiedBundlerOutExt,
+      );
+      break;
+    case "npm-jsr":
+      relinka("verbose", `Creating JSR package.json for lib ${libName}...`);
+      await library_writeJsrPackageJSON(
+        libName,
+        jsrOutDirRoot,
+        jsrOutDirRoot,
+        originalPkg,
+        commonPkg,
+        libsList,
+        rmDepsMode,
+        rmDepsPatterns,
+      );
+      relinka("verbose", `Creating NPM package.json for lib ${libName}...`);
+      await library_writeNpmLibPackageJSON(
+        libName,
+        npmOutDirRoot,
+        npmOutDirRoot,
+        originalPkg,
+        commonPkg,
+        libsList,
+        rmDepsMode,
+        rmDepsPatterns,
+        unifiedBundlerOutExt,
+      );
+      break;
+    default:
+      relinka(
+        "warn",
+        `Unknown registry "${effectivePubRegistry}" for lib ${libName}. Skipping package.json generation.`,
+      );
   }
+
   relinka("verbose", `Completed creation of package.json for lib: ${libName}`);
 }
 
@@ -232,7 +266,7 @@ async function library_getlibPkgKeepDeps(
 async function library_writeJsrPackageJSON(
   libName: string,
   outDirBin: string,
-  outDirRoot: string,
+  pkgJsonDir: string,
   originalPkg: PackageJson,
   commonPkg: Partial<PackageJson>,
   libsList: Record<string, LibConfig>,
@@ -297,9 +331,9 @@ async function library_writeJsrPackageJSON(
     },
   });
 
-  await fs.writeJSON(path.join(outDirRoot, "package.json"), jsrPkg, {
-    spaces: 2,
-  });
+  const pkgPath = path.join(pkgJsonDir, "package.json");
+  await fs.ensureDir(path.dirname(pkgPath));
+  await fs.writeJson(pkgPath, jsrPkg, { spaces: 2 });
   relinka("verbose", `Completed writing package.json for JSR lib: ${libName}`);
 }
 
@@ -309,7 +343,7 @@ async function library_writeJsrPackageJSON(
 async function library_writeNpmLibPackageJSON(
   libName: string,
   outDirBin: string,
-  outDirRoot: string,
+  pkgJsonDir: string,
   originalPkg: PackageJson,
   commonPkg: Partial<PackageJson>,
   libsList: Record<string, LibConfig>,
@@ -359,8 +393,8 @@ async function library_writeNpmLibPackageJSON(
     publishConfig: { access: "public" },
   });
 
-  await fs.writeJSON(path.join(outDirRoot, "package.json"), npmPkg, {
-    spaces: 2,
-  });
+  const pkgPath = path.join(pkgJsonDir, "package.json");
+  await fs.ensureDir(path.dirname(pkgPath));
+  await fs.writeJson(pkgPath, npmPkg, { spaces: 2 });
   relinka("verbose", `Completed writing package.json for NPM lib: ${libName}`);
 }

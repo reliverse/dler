@@ -1,8 +1,8 @@
+import path from "@reliverse/pathkit";
 import { re } from "@reliverse/relico";
 import { defineArgs, defineCommand } from "@reliverse/rempts";
-import path from "pathe";
 
-import type { FinderOptions } from "./impl/types.js";
+import type { FinderOptions } from "./impl/deps-types.js";
 
 import { analyzeDependencies } from "./impl/analyzer.js";
 import { formatOutput } from "./impl/formatter.js";

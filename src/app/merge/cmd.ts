@@ -1,12 +1,7 @@
+import path from "@reliverse/pathkit";
 import { glob } from "@reliverse/reglob";
-import { readFile, writeFile, ensureDir } from "fs-extra";
-import {
-  defineCommand,
-  runMain,
-  inputPrompt,
-  confirmPrompt,
-} from "@reliverse/rempts";
-import path from "@reliverse/repath";
+import fs from "@reliverse/relifso";
+import { defineCommand, inputPrompt, confirmPrompt } from "@reliverse/rempts";
 
 // ---------- constants ----------
 
@@ -103,6 +98,7 @@ const parseCSV = (s: string) =>
     .map((t) => t.trim())
     .filter(Boolean);
 
+// biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
 const unescape = (s: string) => s.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
 
 // prompt wrappers that honour batch mode
@@ -131,7 +127,7 @@ const readSections = async (
 ) => {
   const cwd = process.cwd();
   const reads = files.map(async (f) => {
-    const raw = (await readFile(f, "utf8")) as string;
+    const raw = (await fs.readFile(f, "utf8")) as string;
     if (!injectPath) return raw;
     const rel = path.relative(cwd, f);
     return `${ensureTrailingNL(raw)}${getPrefix(f)}${rel}`;
@@ -151,13 +147,13 @@ const writeResult = async (
     return;
   }
   const dir = path.dirname(toFile);
-  if (dir && dir !== ".") await ensureDir(dir);
-  await writeFile(toFile, content, "utf8");
+  if (dir && dir !== ".") await fs.ensureDir(dir);
+  await fs.writeFile(toFile, content, "utf8");
 };
 
 // ---------- command ----------
 
-const cmd = defineCommand({
+export default defineCommand({
   meta: {
     name: "remege",
     version: "1.0.0",
@@ -243,7 +239,7 @@ const cmd = defineCommand({
     const forceComment = args.forceComment ?? false;
 
     // ----- path footer toggle -----
-    const injectPath = args.noPath ? false : true;
+    const injectPath = !args.noPath;
 
     // ----- separator -----
     const sepRaw =
@@ -302,5 +298,3 @@ const cmd = defineCommand({
     await writeResult(sections, separator, outFile, stdoutFlag);
   },
 });
-
-await runMain(cmd);
