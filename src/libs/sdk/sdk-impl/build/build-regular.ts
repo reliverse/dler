@@ -5,23 +5,24 @@ import path, {
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { build as bunBuild } from "bun";
-import prettyBytes from "pretty-bytes";
 import prettyMilliseconds from "pretty-ms";
 
 import type {
   BundlerName,
-  ExcludeMode,
   NpmOutExt,
   Sourcemap,
   transpileFormat,
   transpileTarget,
+  BuildPublishConfig,
+  UnifiedBuildConfig,
+  PerfTimer,
 } from "~/libs/sdk/sdk-types.js";
-import type { UnifiedBuildConfig } from "~/libs/sdk/sdk-types.js";
 
 import { unifiedBuild } from "~/libs/sdk/sdk-impl/build/bundlers/unified/build.js";
 import {
   getBunSourcemapOption,
   getUnifiedSourcemapOption,
+  renameEntryFile,
 } from "~/libs/sdk/sdk-impl/utils/utils-build.js";
 import { removeLogInternalCalls } from "~/libs/sdk/sdk-impl/utils/utils-clean.js";
 import {
@@ -32,19 +33,13 @@ import {
 import {
   copyRootFile,
   deleteSpecificFiles,
-  getDirectorySize,
-  outDirBinFilesCount,
 } from "~/libs/sdk/sdk-impl/utils/utils-fs.js";
 import {
   createJsrJSON,
   renameTsxFiles,
 } from "~/libs/sdk/sdk-impl/utils/utils-jsr-json.js";
-import {
-  getElapsedPerfTime,
-  type PerfTimer,
-} from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
+import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
 import { regular_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-json-reg.js";
-import { createTSConfig } from "~/libs/sdk/sdk-impl/utils/utils-tsconfig.js";
 
 const ALIAS_PREFIX_TO_CONVERT = "~";
 
@@ -68,81 +63,95 @@ export async function regular_buildJsrDist(
   transpileSourcemap: Sourcemap,
   transpilePublicPath: string,
   unifiedBundlerOutExt: NpmOutExt,
-  rmDepsMode: ExcludeMode,
+  config: BuildPublishConfig,
   timer: PerfTimer,
   transpileStub: boolean,
   transpileWatch: boolean,
   distJsrGenTsconfig: boolean,
   coreDeclarations: boolean,
-  config: { coreDescription: string; coreBuildOutDir?: string },
 ): Promise<void> {
-  relinka("log", "Building JSR distribution...");
+  const outDirRoot = path.join(process.cwd(), distJsrDirName);
+  const outDirBin = path.join(outDirRoot, config.coreBuildOutDir || "bin");
+  const singleFile = path.join(process.cwd(), coreEntrySrcDir, coreEntryFile);
+  const srcDir = path.join(process.cwd(), coreEntrySrcDir);
 
-  const coreEntrySrcDirResolved = path.resolve(PROJECT_ROOT, coreEntrySrcDir);
-  const coreEntryFilePath = path.join(coreEntrySrcDirResolved, coreEntryFile);
-  const distJsrDirNameResolved = path.resolve(PROJECT_ROOT, distJsrDirName);
-  const outDirBin = path.resolve(
-    distJsrDirNameResolved,
-    config.coreBuildOutDir || "bin",
-  );
-
-  await fs.ensureDir(distJsrDirNameResolved);
-  await fs.ensureDir(outDirBin);
-  relinka("log", `Using JSR builder: ${distJsrBuilder}`);
-
-  // Decide how to do the bundling
-  await regular_bundleWithBuilder(distJsrBuilder, {
-    coreDeclarations,
-    outDir: outDirBin,
-    packageName: "", // not strictly needed, keeping it for logs
-    singleFile: coreEntryFilePath, // single entry (used if "bun"/"unified")
-    srcDir: coreEntrySrcDirResolved, // entire dir (used if "jsr")
-    timer,
-    transpileFormat,
-    transpileMinify,
-    transpilePublicPath,
-    transpileSourcemap,
-    transpileSplitting,
-    transpileStub,
-    transpileTarget,
-    transpileWatch,
-    unifiedBundlerOutExt,
-  });
-
-  // Perform standard steps after bundling
-  await regular_performCommonBuildSteps({
-    coreIsCLI,
-    isJsr,
-    outDirBin,
-    outDirRoot: distJsrDirNameResolved,
-    rmDepsMode,
-    unifiedBundlerOutExt,
-    coreDescription: config.coreDescription,
-    coreBuildOutDir: config.coreBuildOutDir,
-  });
-
-  // Additional JSR-specific transformations
-  await renameTsxFiles(outDirBin);
-  await createJsrJSON(
-    distJsrDirNameResolved,
-    false,
-    undefined,
-    config.coreDescription,
-  );
-
-  // Optionally generate a tsconfig if it's a CLI in JSR mode
-  if (coreIsCLI.enabled && isJsr && distJsrGenTsconfig) {
-    await createTSConfig(distJsrDirNameResolved, true);
-  }
-
-  const dirSize = await getDirectorySize(distJsrDirNameResolved, isDev);
-  const filesCount = await outDirBinFilesCount(outDirBin);
   relinka(
-    "success",
-    `[${distJsrDirNameResolved}] Successfully created regular distribution: "dist-jsr" (${outDirBin}/mod.ts) with (${filesCount} files (${prettyBytes(
-      dirSize,
-    )}))`,
+    "log",
+    `Building JSR distribution (isDev=${isDev}, isJsr=${isJsr})...`,
   );
+
+  try {
+    // Create the output directory
+    await fs.ensureDir(outDirBin);
+
+    // Bundle the project
+    await regular_bundleWithBuilder(distJsrBuilder, {
+      coreDeclarations,
+      outDir: outDirBin,
+      singleFile,
+      srcDir,
+      timer,
+      transpileFormat,
+      transpileMinify,
+      transpilePublicPath,
+      transpileSourcemap,
+      transpileSplitting,
+      transpileStub,
+      transpileTarget,
+      transpileWatch,
+      unifiedBundlerOutExt,
+    });
+
+    // Perform common build steps
+    await regular_performCommonBuildSteps({
+      coreIsCLI,
+      isJsr,
+      outDirBin,
+      outDirRoot,
+      config,
+      unifiedBundlerOutExt,
+      coreDescription: config.coreDescription,
+      coreBuildOutDir: config.coreBuildOutDir,
+    });
+
+    // Generate tsconfig.json for JSR
+    if (distJsrGenTsconfig) {
+      await regular_createTsconfig(outDirRoot);
+    }
+
+    // JSR-specific post-build steps
+    relinka(
+      "verbose",
+      `Performing JSR-specific transformations in ${outDirBin}`,
+    );
+    await renameTsxFiles(outDirBin);
+    await createJsrJSON(
+      outDirRoot,
+      false, // isLib
+      config.coreDescription,
+    );
+
+    // Calculate and log build duration
+    const duration = getElapsedPerfTime(timer);
+    const transpileFormattedDuration = prettyMilliseconds(duration, {
+      verbose: true,
+    });
+    relinka(
+      "success",
+      `JSR distribution built in ${transpileFormattedDuration}`,
+    );
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    relinka("error", `Failed to build JSR distribution: ${errorMessage}`);
+
+    const enhancedError = new Error(
+      `JSR distribution build failed: ${errorMessage}`,
+    );
+    if (error instanceof Error && error.stack) {
+      enhancedError.stack = error.stack;
+    }
+    throw enhancedError;
+  }
 }
 
 /**
@@ -157,7 +166,7 @@ export async function regular_buildNpmDist(
   distNpmBuilder: BundlerName,
   coreEntryFile: string,
   unifiedBundlerOutExt: NpmOutExt,
-  rmDepsMode: ExcludeMode,
+  config: BuildPublishConfig,
   coreIsCLI: { enabled: boolean; scripts: Record<string, string> },
   transpileTarget: transpileTarget,
   transpileFormat: transpileFormat,
@@ -169,61 +178,69 @@ export async function regular_buildNpmDist(
   transpileWatch: boolean,
   timer: PerfTimer,
   coreDeclarations: boolean,
-  config: { coreDescription: string; coreBuildOutDir?: string },
 ): Promise<void> {
-  relinka("log", "Building NPM distribution...");
+  const outDirRoot = path.join(process.cwd(), distNpmDirName);
+  const outDirBin = path.join(outDirRoot, config.coreBuildOutDir || "bin");
+  const singleFile = path.join(process.cwd(), coreEntrySrcDir, coreEntryFile);
+  const srcDir = path.join(process.cwd(), coreEntrySrcDir);
 
-  const coreEntrySrcDirResolved = path.resolve(PROJECT_ROOT, coreEntrySrcDir);
-  const coreEntryFilePath = path.join(coreEntrySrcDirResolved, coreEntryFile);
-  const distNpmDirNameResolved = path.resolve(PROJECT_ROOT, distNpmDirName);
-  const outDirBin = path.resolve(
-    distNpmDirNameResolved,
-    config.coreBuildOutDir || "bin",
-  );
+  relinka("log", `Building NPM distribution (isDev=${isDev})...`);
 
-  await fs.ensureDir(distNpmDirNameResolved);
-  await fs.ensureDir(outDirBin);
-  relinka("log", `Using NPM builder: ${distNpmBuilder}`);
+  try {
+    // Create the output directory
+    await fs.ensureDir(outDirBin);
 
-  // Decide how to do the bundling
-  await regular_bundleWithBuilder(distNpmBuilder, {
-    coreDeclarations,
-    outDir: outDirBin,
-    packageName: "", // For logging
-    singleFile: coreEntryFilePath,
-    srcDir: coreEntrySrcDirResolved,
-    timer,
-    transpileFormat,
-    transpileMinify,
-    transpilePublicPath,
-    transpileSourcemap,
-    transpileSplitting,
-    transpileStub,
-    transpileTarget,
-    transpileWatch,
-    unifiedBundlerOutExt,
-  });
+    // Bundle the project
+    await regular_bundleWithBuilder(distNpmBuilder, {
+      coreDeclarations,
+      outDir: outDirBin,
+      singleFile,
+      srcDir,
+      timer,
+      transpileFormat,
+      transpileMinify,
+      transpilePublicPath,
+      transpileSourcemap,
+      transpileSplitting,
+      transpileStub,
+      transpileTarget,
+      transpileWatch,
+      unifiedBundlerOutExt,
+    });
 
-  // Perform standard steps after bundling
-  await regular_performCommonBuildSteps({
-    coreIsCLI,
-    isJsr: false,
-    outDirBin,
-    outDirRoot: distNpmDirNameResolved,
-    rmDepsMode,
-    unifiedBundlerOutExt,
-    coreDescription: config.coreDescription,
-    coreBuildOutDir: config.coreBuildOutDir,
-  });
+    // Perform common build steps
+    await regular_performCommonBuildSteps({
+      coreIsCLI,
+      isJsr: false,
+      outDirBin,
+      outDirRoot,
+      config,
+      unifiedBundlerOutExt,
+      coreDescription: config.coreDescription,
+      coreBuildOutDir: config.coreBuildOutDir,
+    });
 
-  const dirSize = await getDirectorySize(distNpmDirNameResolved, isDev);
-  const filesCount = await outDirBinFilesCount(outDirBin);
-  relinka(
-    "success",
-    `[${distNpmDirNameResolved}] Successfully created regular distribution: "dist-npm" (${outDirBin}/mod.js) with (${filesCount} files (${prettyBytes(
-      dirSize,
-    )}))`,
-  );
+    // Calculate and log build duration
+    const duration = getElapsedPerfTime(timer);
+    const transpileFormattedDuration = prettyMilliseconds(duration, {
+      verbose: true,
+    });
+    relinka(
+      "success",
+      `NPM distribution built in ${transpileFormattedDuration}`,
+    );
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    relinka("error", `Failed to build NPM distribution: ${errorMessage}`);
+
+    const enhancedError = new Error(
+      `NPM distribution build failed: ${errorMessage}`,
+    );
+    if (error instanceof Error && error.stack) {
+      enhancedError.stack = error.stack;
+    }
+    throw enhancedError;
+  }
 }
 
 /**
@@ -466,7 +483,6 @@ async function regular_bundleWithBuilder(
   params: {
     coreDeclarations: boolean;
     outDir: string;
-    packageName?: string;
     singleFile: string; // single entry file (used if bun/unified)
     srcDir: string; // entire directory (used if builder=jsr)
     timer: PerfTimer;
@@ -548,7 +564,7 @@ async function regular_performCommonBuildSteps({
   isJsr,
   outDirBin,
   outDirRoot,
-  rmDepsMode,
+  config,
   unifiedBundlerOutExt,
   coreDescription,
   coreBuildOutDir,
@@ -558,7 +574,7 @@ async function regular_performCommonBuildSteps({
   isJsr: boolean;
   outDirBin: string;
   outDirRoot: string;
-  rmDepsMode: ExcludeMode;
+  config: BuildPublishConfig;
   unifiedBundlerOutExt: NpmOutExt;
   coreDescription: string;
   coreBuildOutDir?: string;
@@ -608,8 +624,7 @@ async function regular_performCommonBuildSteps({
     isJsr,
     coreIsCLI,
     unifiedBundlerOutExt,
-    rmDepsMode,
-    [],
+    config,
     coreDescription,
     coreBuildOutDir,
   );
@@ -627,4 +642,45 @@ async function regular_performCommonBuildSteps({
       "schema.json",
     ]);
   }
+
+  // Rename the main entry file
+  relinka("verbose", `Renaming entry file in ${outDirBin}.`);
+  await renameEntryFile(
+    isJsr,
+    outDirBin,
+    config.coreEntryFile,
+    unifiedBundlerOutExt,
+    config.distJsrOutFilesExt,
+  );
+}
+
+/**
+ * Creates a tsconfig.json file for JSR distribution.
+ */
+async function regular_createTsconfig(outDirRoot: string): Promise<void> {
+  const tsconfigPath = path.join(outDirRoot, "tsconfig.json");
+  const tsconfig = {
+    compilerOptions: {
+      target: "ES2022",
+      module: "ESNext",
+      moduleResolution: "bundler",
+      declaration: true,
+      declarationMap: true,
+      sourceMap: true,
+      strict: true,
+      skipLibCheck: true,
+      esModuleInterop: true,
+      resolveJsonModule: true,
+      isolatedModules: true,
+      noUnusedLocals: true,
+      noUnusedParameters: true,
+      noImplicitReturns: true,
+      noFallthroughCasesInSwitch: true,
+    },
+    include: ["**/*.ts"],
+    exclude: ["node_modules", "dist"],
+  };
+
+  await fs.writeFile(tsconfigPath, JSON.stringify(tsconfig, null, 2));
+  relinka("verbose", `Created tsconfig.json at ${tsconfigPath}`);
 }

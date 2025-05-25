@@ -2,13 +2,10 @@ import { setBumpDisabledValueTo } from "@reliverse/bleump";
 import { relinka } from "@reliverse/relinka";
 import prettyMilliseconds from "pretty-ms";
 
-import type { LibConfig } from "~/libs/sdk/sdk-types.js";
+import type { LibConfig, PerfTimer } from "~/libs/sdk/sdk-types.js";
 
 import { removeDistFolders } from "~/libs/sdk/sdk-impl/utils/utils-clean.js";
-import {
-  getElapsedPerfTime,
-  type PerfTimer,
-} from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
+import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
 
 /**
  * Finalizes the build process and reports completion.

@@ -3,7 +3,7 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { readPackageJSON } from "pkg-types";
 
-import { DEFAULT_CONFIG } from "~/default.js";
+import { DEFAULT_CONFIG } from "~/libs/sdk/default.js";
 
 // Supported configuration filename
 const CONFIG_FILENAME = ".config/dler.ts";
@@ -176,8 +176,26 @@ export default defineConfig({
   logsFreshFile: ${DEFAULT_CONFIG.logsFreshFile},
 
   // Dependency filtering
-  rmDepsMode: "${DEFAULT_CONFIG.rmDepsMode}",
-  rmDepsPatterns: ${JSON.stringify(DEFAULT_CONFIG.rmDepsPatterns)},
+  // Global is always applied
+  removeDepsPatterns: {
+    global: [
+      "@types",
+      "biome",
+      "eslint",
+      "knip",
+      "prettier",
+      "typescript",
+      "@reliverse/dler",
+    ],
+    "dist-npm": [],
+    "dist-jsr": [],
+    "dist-libs": {
+      "@reliverse/dler-sdk": {
+        npm: [],
+        jsr: [],
+      },
+    },
+  },
 
   // Build setup
   transpileEsbuild: "${DEFAULT_CONFIG.transpileEsbuild}",

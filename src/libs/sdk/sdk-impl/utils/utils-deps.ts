@@ -2,7 +2,7 @@ import { relinka } from "@reliverse/relinka";
 import { readPackageJSON } from "pkg-types";
 import { glob } from "tinyglobby";
 
-import type { ExcludeMode } from "~/libs/sdk/sdk-types.js";
+import type { BuildPublishConfig } from "~/libs/sdk/sdk-types.js";
 
 import { readFileSafe } from "./utils-fs.js";
 import { extractPackageName } from "./utils-misc.js";
@@ -15,15 +15,54 @@ export async function filterDeps(
   clearUnused: boolean,
   outDirBin: string,
   isJsr: boolean,
-  rmDepsMode: ExcludeMode,
-  rmDepsPatterns: string[],
+  config: BuildPublishConfig,
+  libName?: string,
 ): Promise<Record<string, string>> {
   relinka("verbose", `Filtering dependencies (clearUnused=${clearUnused})`);
   if (!deps) return {};
 
+  // Get the appropriate patterns based on the build type and library
+  const patterns = new Set<string>();
+
+  // Always include global patterns
+  for (const pattern of config.removeDepsPatterns.global) {
+    patterns.add(pattern);
+  }
+
+  // Add NPM-specific patterns if not JSR
+  if (!isJsr) {
+    for (const pattern of config.removeDepsPatterns["dist-npm"]) {
+      patterns.add(pattern);
+    }
+  }
+
+  // Add JSR-specific patterns if JSR
+  if (isJsr) {
+    for (const pattern of config.removeDepsPatterns["dist-jsr"]) {
+      patterns.add(pattern);
+    }
+  }
+
+  // Add library-specific patterns if a library is specified
+  if (libName && config.removeDepsPatterns["dist-libs"][libName]) {
+    const libPatterns = config.removeDepsPatterns["dist-libs"][libName];
+    // Add NPM-specific patterns if not JSR
+    if (!isJsr) {
+      for (const pattern of libPatterns.npm) {
+        patterns.add(pattern);
+      }
+    }
+    // Add JSR-specific patterns if JSR
+    if (isJsr) {
+      for (const pattern of libPatterns.jsr) {
+        patterns.add(pattern);
+      }
+    }
+  }
+
   // Function to check if a dependency should be excluded based on patterns
   const shouldExcludeByPattern = (depName: string) => {
-    return rmDepsPatterns.some((pattern) =>
+    return Array.from(patterns).some((pattern) =>
       depName.toLowerCase().includes(pattern.toLowerCase()),
     );
   };
@@ -31,18 +70,14 @@ export async function filterDeps(
   // Read the original package.json to determine if we're dealing with devDependencies
   const originalPkg = await readPackageJSON();
 
-  // Function to determine if a dependency should be excluded based on the rmDepsMode
+  // Function to determine if a dependency should be excluded
   const shouldExcludeDep = (depName: string, isDev: boolean) => {
-    if (rmDepsMode === "patterns-only") {
-      // Only exclude dependencies matching patterns, regardless if they're dev dependencies
+    // For CLI packages building for JSR, only exclude dependencies matching patterns
+    if (isJsr && config.coreIsCLI.enabled) {
       return shouldExcludeByPattern(depName);
     }
-    if (rmDepsMode === "patterns-and-devdeps") {
-      // Exclude both dev dependencies and dependencies matching patterns
-      return isDev || shouldExcludeByPattern(depName);
-    }
-    // Default fallback (should not happen with proper typing)
-    return shouldExcludeByPattern(depName);
+    // For all other cases, exclude both dev dependencies and dependencies matching patterns
+    return isDev || shouldExcludeByPattern(depName);
   };
 
   // Check if we're filtering dependencies or devDependencies

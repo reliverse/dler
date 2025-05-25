@@ -134,7 +134,6 @@ export {
   renameTsxFiles,
 } from "./sdk-impl/utils/utils-jsr-json.js";
 export { extractPackageName } from "./sdk-impl/utils/utils-misc.js";
-export type { PerfTimer } from "./sdk-impl/utils/utils-perf.js";
 export {
   createPerfTimer,
   getElapsedPerfTime,

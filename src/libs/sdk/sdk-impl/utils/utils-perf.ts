@@ -2,11 +2,7 @@
 // Timer (TODO: Move to a separate repo)
 // ========================================
 
-export type PerfTimer = {
-  pausedAt: null | number;
-  pausedDuration: number;
-  startTime: number;
-};
+import type { PerfTimer } from "~/libs/sdk/sdk-types.js";
 
 export function createPerfTimer(): PerfTimer {
   return {

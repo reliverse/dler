@@ -11,11 +11,11 @@ import pAll from "p-all";
 import prettyBytes from "pretty-bytes";
 import prettyMilliseconds from "pretty-ms";
 
-import type { UnifiedBuildConfig } from "~/libs/sdk/sdk-types.js";
+import type { PerfTimer, UnifiedBuildConfig } from "~/libs/sdk/sdk-types.js";
 import type {
   BundlerName,
+  BuildPublishConfig,
   Esbuild,
-  ExcludeMode,
   LibConfig,
   NpmOutExt,
   Sourcemap,
@@ -46,10 +46,7 @@ import {
   createJsrJSON,
   renameTsxFiles,
 } from "~/libs/sdk/sdk-impl/utils/utils-jsr-json.js";
-import {
-  getElapsedPerfTime,
-  type PerfTimer,
-} from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
+import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
 import { library_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-json-libs.js";
 
 // ============================================================================
@@ -80,32 +77,6 @@ type SourceReplacementConfig = {
   replacementMarker: string; // Comment marker indicating replacement line
 };
 
-/** Options common to both NPM and JSR build targets */
-type BaseLibBuildOptions = {
-  libName: string;
-  mainDir: string; // Source directory (e.g., "src") - Used mainly for pre-build replacements
-  libMainFile: string; // Relative path of the main entry file within its source dir
-  isDev: boolean;
-  libsList: Record<string, LibConfig>;
-  rmDepsMode: ExcludeMode;
-  rmDepsPatterns: string[];
-  timer: PerfTimer;
-};
-
-/** Options specific to the transpilation/bundling process */
-type TranspileOptions = {
-  transpileTarget: transpileTarget;
-  transpileFormat: transpileFormat;
-  transpileSplitting: boolean;
-  libTranspileMinify: boolean;
-  transpileSourcemap: Sourcemap;
-  transpilePublicPath: string;
-  transpileEsbuild: Esbuild;
-  transpileStub: boolean;
-  transpileWatch: boolean; // Potentially used by bundlers
-  unifiedBundlerOutExt: NpmOutExt; // Output extension for bun/unified builders
-};
-
 /** Options specific to the NPM build target */
 type NpmBuildOptions = {
   npmOutDir: string; // Output directory for NPM build (relative to project root)
@@ -121,12 +92,27 @@ type JsrBuildOptions = {
 };
 
 /** Consolidated options for the main library build function */
-export type LibraryBuildOptions = {
+export type LibraryBuildOptions = BuildPublishConfig & {
   effectivePubRegistry: "npm" | "jsr" | "npm-jsr" | undefined;
   npm?: NpmBuildOptions;
   jsr?: JsrBuildOptions;
-} & BaseLibBuildOptions &
-  TranspileOptions;
+  libName: string;
+  mainDir: string;
+  libMainFile: string;
+  isDev: boolean;
+  libsList: Record<string, LibConfig>;
+  timer: PerfTimer;
+  libTranspileMinify: boolean;
+  transpileTarget: transpileTarget;
+  transpileFormat: transpileFormat;
+  transpileSplitting: boolean;
+  transpileSourcemap: Sourcemap;
+  transpilePublicPath: string;
+  transpileEsbuild: Esbuild;
+  transpileStub: boolean;
+  transpileWatch: boolean;
+  unifiedBundlerOutExt: NpmOutExt;
+};
 
 /** Parameters for the unified `library_buildDistributionTarget` function */
 type BuildTargetParams = {
@@ -169,22 +155,20 @@ type BundleRequestParams = {
 
 /** Parameters for common post-bundling steps */
 type CommonStepsParams = {
-  coreEntryFileName: string; // Original base name of the entry file (e.g., "index.ts")
-  outputDirRoot: string; // Absolute path to root output dir for the target (e.g. dist/my-lib/npm or dist/my-lib/jsr)
-  // We need separate roots for npm and jsr for package.json creation if publishing to both
-  npmOutputDirRoot?: string; // Root for npm specific outputs if applicable
-  jsrOutputDirRoot?: string; // Root for jsr specific outputs if applicable
+  coreEntryFileName: string;
+  outputDirRoot: string;
+  npmOutputDirRoot?: string;
+  jsrOutputDirRoot?: string;
   effectivePubRegistry: "npm" | "jsr" | "npm-jsr" | undefined;
-  outDirBin: string; // Absolute path to 'bin' subdirectory
-  isJsr: boolean; // Still useful for JSR specific steps like renaming .ts files
+  outDirBin: string;
+  isJsr: boolean;
   libName: string;
   libsList: Record<string, LibConfig>;
-  rmDepsMode: ExcludeMode;
-  rmDepsPatterns: string[];
-  unifiedBundlerOutExt: NpmOutExt; // Used for package.json generation and renaming
-  distJsrOutFilesExt: NpmOutExt; // Used for renaming JSR entry file
-  deleteFiles?: boolean; // Whether to delete specific files (usually true for JSR)
-  libDirName?: string; // Optional specific directory name of the lib (e.g., my-lib)
+  config: BuildPublishConfig;
+  unifiedBundlerOutExt: NpmOutExt;
+  distJsrOutFilesExt: NpmOutExt;
+  deleteFiles?: boolean;
+  libDirName?: string;
 };
 
 // ============================================================================
@@ -514,8 +498,6 @@ async function library_buildDistributionTarget(
     timer,
     libMainFile,
     libsList,
-    rmDepsMode,
-    rmDepsPatterns,
     // Transpile/Bundle Options from `options`
     libTranspileMinify,
     transpileTarget,
@@ -571,8 +553,7 @@ async function library_buildDistributionTarget(
     isJsr,
     libName,
     libsList,
-    rmDepsMode,
-    rmDepsPatterns,
+    config: options,
     unifiedBundlerOutExt,
     distJsrOutFilesExt,
     deleteFiles: isJsr,
@@ -899,8 +880,7 @@ async function library_performCommonBuildSteps(
     isJsr,
     libName,
     libsList,
-    rmDepsMode,
-    rmDepsPatterns,
+    config,
     unifiedBundlerOutExt,
     distJsrOutFilesExt,
     deleteFiles = false,
@@ -919,18 +899,15 @@ async function library_performCommonBuildSteps(
   );
 
   // Create package.json
-  if (npmOutputDirRoot || jsrOutputDirRoot) {
-    await library_createPackageJSON(
-      libName,
-      npmOutputDirRoot || outputDirRoot,
-      jsrOutputDirRoot || outputDirRoot,
-      effectivePubRegistry,
-      libsList,
-      rmDepsMode,
-      rmDepsPatterns,
-      unifiedBundlerOutExt,
-    );
-  }
+  await library_createPackageJSON(
+    libName,
+    npmOutputDirRoot || outputDirRoot,
+    jsrOutputDirRoot || outputDirRoot,
+    effectivePubRegistry,
+    libsList,
+    config,
+    unifiedBundlerOutExt,
+  );
   relinka("verbose", `${logPrefix} Created package.json.`);
 
   // Clean up the dist from potential internal logging

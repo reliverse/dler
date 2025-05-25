@@ -39,16 +39,29 @@ export const DEFAULT_CONFIG: BuildPublishConfig = {
   libsList: {},
   logsFileName: "logs/relinka.log",
   logsFreshFile: true,
-  rmDepsMode: "patterns-and-devdeps",
-  rmDepsPatterns: [
-    "@types",
-    "biome",
-    "eslint",
-    "knip",
-    "prettier",
-    "typescript",
-    "@reliverse/config",
-  ],
+
+  // Dependency filtering
+  removeDepsPatterns: {
+    global: [
+      "@types",
+      "biome",
+      "eslint",
+      "knip",
+      "prettier",
+      "typescript",
+      "@reliverse/dler",
+    ],
+    "dist-npm": [],
+    "dist-jsr": [],
+    "dist-libs": {
+      "@reliverse/dler-sdk": {
+        npm: [],
+        jsr: [],
+      },
+    },
+  },
+
+  // Build setup
   transpileEsbuild: "es2023",
   transpileFormat: "esm",
   transpileMinify: true,

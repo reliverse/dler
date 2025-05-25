@@ -140,11 +140,16 @@ export async function renameEntryFile(
   // 4. Rename Declaration File (if applicable)
   if (sourceDeclarationPath && targetDeclarationPath) {
     if (await fs.pathExists(sourceDeclarationPath)) {
-      relinka(
-        "verbose",
-        `Renaming declaration ${sourceDeclarationPath} to ${targetDeclarationPath}`,
-      );
-      await fs.rename(sourceDeclarationPath, targetDeclarationPath);
+      // Skip if source and target are the same
+      if (sourceDeclarationPath !== targetDeclarationPath) {
+        relinka(
+          "verbose",
+          `Renaming declaration ${sourceDeclarationPath} to ${targetDeclarationPath}`,
+        );
+        await fs.rename(sourceDeclarationPath, targetDeclarationPath);
+      } else {
+        // Source and target declaration paths are identical, skipping
+      }
     } else {
       relinka(
         "verbose",

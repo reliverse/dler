@@ -353,23 +353,45 @@ export type BuildPublishConfig = {
   // ==========================================================================
 
   /**
-   * Controls how dependencies are excluded from the final package:
-   * - `patterns-and-devdeps`: Excludes all `devDependencies` and dependencies matching specified patterns.
-   * - `patterns-only`: Excludes only dependencies matching `rmDepsPatterns`.
+   * Configuration for dependency removal patterns.
+   * Controls which dependencies are excluded from the final package.
    *
-   * @default "patterns-and-devdeps"
-   */
-  rmDepsMode: ExcludeMode;
-
-  /**
-   * A list of dependency name patterns to exclude when filtering `dependencies` and `devDependencies`.
-   * Any dependency whose name matches or contains any of these patterns will be excluded from the final package.
-   * Helps prevent known `devDependencies` from being mistakenly included in `dependencies`.
+   * Structure:
+   * - `global`: Patterns that are always applied to all builds
+   * - `dist-npm`: NPM-specific patterns (merged with global)
+   * - `dist-jsr`: JSR-specific patterns (merged with global)
+   * - `dist-libs`: Library-specific patterns (merged with global)
+   *   Each library can have separate NPM and JSR patterns
    *
-   * @example ["eslint", "prettier", "test"]
-   * @default ["eslint", "prettier", "biome"]
+   * @example
+   * {
+   *   global: ["@types", "eslint"],
+   *   "dist-npm": ["npm-specific"],
+   *   "dist-jsr": ["jsr-specific"],
+   *   "dist-libs": {
+   *     "@myorg/lib1": {
+   *       npm: ["lib1-npm-specific"],
+   *       jsr: ["lib1-jsr-specific"]
+   *     },
+   *     "@myorg/lib2": {
+   *       npm: ["lib2-npm-specific"],
+   *       jsr: ["lib2-jsr-specific"]
+   *     }
+   *   }
+   * }
    */
-  rmDepsPatterns: string[];
+  removeDepsPatterns: {
+    global: string[];
+    "dist-npm": string[];
+    "dist-jsr": string[];
+    "dist-libs": Record<
+      string,
+      {
+        npm: string[];
+        jsr: string[];
+      }
+    >;
+  };
 
   // ==========================================================================
   // Build setup
@@ -474,13 +496,6 @@ export type BundlerName =
 
 export type Esbuild = "es2019" | "es2020" | "es2021" | "es2022" | "es2023";
 
-/**
- * Supported modes for filtering dependencies.
- * - patterns-and-devdeps: Excludes all `devDependencies` and dependencies matching specified patterns.
- * - patterns-only: Excludes only dependencies matching `rmDepsPatterns`.
- */
-export type ExcludeMode = "patterns-and-devdeps" | "patterns-only";
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /**
@@ -525,7 +540,7 @@ export type LibConfig = {
 
   /**
    * Dependencies to include in the dist's package.json.
-   * The final output may vary based on `rmDepsMode` and `rmDepsPatterns`.
+   * The final output may vary based on `removeDepsPatterns`.
    * Defines how dependencies are handled during publishing:
    * - `string[]`: Includes only the specified dependencies.
    * - `true`: Includes all dependencies from the main package.json.
@@ -1003,3 +1018,41 @@ export type UnifiedBuildConfig = DeepPartial<Omit<BuildOptions, "entries">> & {
 };
 
 type DeepPartial<T> = { [P in keyof T]?: DeepPartial<T[P]> };
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+export type PerfTimer = {
+  pausedAt: null | number;
+  pausedDuration: number;
+  startTime: number;
+};
+
+/** Options common to both NPM and JSR build targets */
+/* export type BaseLibBuildOptions = {
+  libName: string;
+  mainDir: string; // Source directory (e.g., "src") - Used mainly for pre-build replacements
+  libMainFile: string; // Relative path of the main entry file within its source dir
+  isDev: boolean;
+  libsList: Record<string, LibConfig>;
+  removeDepsPatterns: {
+    global: string[];
+    "dist-npm": string[];
+    "dist-jsr": string[];
+    "dist-libs": Record<string, { npm: string[]; jsr: string[] }>;
+  };
+  timer: PerfTimer;
+}; */
+
+/** Options specific to the transpilation/bundling process */
+/* export type TranspileOptions = {
+  transpileTarget: transpileTarget;
+  transpileFormat: transpileFormat;
+  transpileSplitting: boolean;
+  libTranspileMinify: boolean;
+  transpileSourcemap: Sourcemap;
+  transpilePublicPath: string;
+  transpileEsbuild: Esbuild;
+  transpileStub: boolean;
+  transpileWatch: boolean; // Potentially used by bundlers
+  unifiedBundlerOutExt: NpmOutExt; // Output extension for bun/unified builders
+}; */

@@ -8,36 +8,67 @@ import {
 } from "pkg-types";
 
 import type {
-  ExcludeMode,
-  LibConfig,
   NpmOutExt,
+  BuildPublishConfig,
+  LibConfig,
 } from "~/libs/sdk/sdk-types.js";
 
-import { filterDeps } from "~/libs/sdk/sdk-impl/utils/utils-deps.js";
+import { filterDeps } from "./utils-deps.js";
 
 /**
  * Creates a package.json for a lib distribution.
  */
 export async function library_createPackageJSON(
   libName: string,
-  npmOutDirRoot: string,
-  jsrOutDirRoot: string,
-  effectivePubRegistry: "jsr" | "npm" | "npm-jsr" | undefined,
+  npmOutDir: string,
+  jsrOutDir: string,
+  effectivePubRegistry: "npm" | "jsr" | "npm-jsr" | undefined,
   libsList: Record<string, LibConfig>,
-  rmDepsMode: ExcludeMode,
-  rmDepsPatterns: string[],
+  config: BuildPublishConfig,
   unifiedBundlerOutExt: NpmOutExt,
 ): Promise<void> {
-  relinka(
-    "verbose",
-    `Generating package.json for lib ${libName} (registry: ${effectivePubRegistry})...`,
-  );
+  relinka("verbose", `Creating package.json for library ${libName}`);
 
-  // Throw error if libsList is empty or not provided
-  if (!libsList) {
-    throw new Error("libsList is empty or not provided");
+  // Read the original package.json
+  const originalPkg = await readPackageJSON();
+  const commonPkg = await library_createCommonPackageFields(libName, libsList);
+
+  // Create NPM package.json if needed
+  if (effectivePubRegistry === "npm" || effectivePubRegistry === "npm-jsr") {
+    await library_writeNpmLibPackageJSON(
+      libName,
+      npmOutDir,
+      npmOutDir,
+      originalPkg,
+      commonPkg,
+      libsList,
+      config,
+      unifiedBundlerOutExt,
+    );
   }
 
+  // Create JSR package.json if needed
+  if (effectivePubRegistry === "jsr" || effectivePubRegistry === "npm-jsr") {
+    await library_writeJsrPackageJSON(
+      libName,
+      jsrOutDir,
+      jsrOutDir,
+      originalPkg,
+      commonPkg,
+      libsList,
+      config,
+    );
+  }
+}
+
+/**
+ * Creates common package.json fields based on the library name and config.
+ */
+async function library_createCommonPackageFields(
+  libName: string,
+  libsList: Record<string, LibConfig>,
+): Promise<Partial<PackageJson>> {
+  relinka("verbose", `Generating common package fields for ${libName}`);
   const originalPkg = await readPackageJSON();
   let { description } = originalPkg;
   const { author, keywords, license, version } = originalPkg;
@@ -88,67 +119,7 @@ export async function library_createPackageJSON(
     commonPkg.keywords = keywords;
   }
 
-  switch (effectivePubRegistry) {
-    case "jsr":
-      relinka("verbose", `Creating JSR package.json for lib ${libName}...`);
-      await library_writeJsrPackageJSON(
-        libName,
-        jsrOutDirRoot,
-        jsrOutDirRoot,
-        originalPkg,
-        commonPkg,
-        libsList,
-        rmDepsMode,
-        rmDepsPatterns,
-      );
-      break;
-    case "npm":
-      relinka("verbose", `Creating NPM package.json for lib ${libName}...`);
-      await library_writeNpmLibPackageJSON(
-        libName,
-        npmOutDirRoot,
-        npmOutDirRoot,
-        originalPkg,
-        commonPkg,
-        libsList,
-        rmDepsMode,
-        rmDepsPatterns,
-        unifiedBundlerOutExt,
-      );
-      break;
-    case "npm-jsr":
-      relinka("verbose", `Creating JSR package.json for lib ${libName}...`);
-      await library_writeJsrPackageJSON(
-        libName,
-        jsrOutDirRoot,
-        jsrOutDirRoot,
-        originalPkg,
-        commonPkg,
-        libsList,
-        rmDepsMode,
-        rmDepsPatterns,
-      );
-      relinka("verbose", `Creating NPM package.json for lib ${libName}...`);
-      await library_writeNpmLibPackageJSON(
-        libName,
-        npmOutDirRoot,
-        npmOutDirRoot,
-        originalPkg,
-        commonPkg,
-        libsList,
-        rmDepsMode,
-        rmDepsPatterns,
-        unifiedBundlerOutExt,
-      );
-      break;
-    default:
-      relinka(
-        "warn",
-        `Unknown registry "${effectivePubRegistry}" for lib ${libName}. Skipping package.json generation.`,
-      );
-  }
-
-  relinka("verbose", `Completed creation of package.json for lib: ${libName}`);
+  return commonPkg;
 }
 
 /**
@@ -162,8 +133,7 @@ async function library_getlibPkgKeepDeps(
   outDirBin: string,
   isJsr: boolean,
   libConfig: LibConfig,
-  rmDepsMode: ExcludeMode,
-  rmDepsPatterns: string[],
+  config: BuildPublishConfig,
 ): Promise<Record<string, string>> {
   relinka("verbose", `Getting lib dependencies for: ${libName}`);
   if (!originalDeps) return {};
@@ -176,8 +146,8 @@ async function library_getlibPkgKeepDeps(
       true,
       outDirBin,
       isJsr,
-      rmDepsMode,
-      rmDepsPatterns,
+      config,
+      libName,
     );
     relinka(
       "verbose",
@@ -196,22 +166,51 @@ async function library_getlibPkgKeepDeps(
 
     const result = Object.entries(originalDeps).reduce<Record<string, string>>(
       (acc, [k, v]) => {
-        // Determine if the dependency should be excluded based on the rmDepsMode
-        let shouldExclude = false;
+        // Get the appropriate patterns based on the build type and library
+        const patterns = new Set<string>();
 
-        if (rmDepsMode === "patterns-only") {
-          // Only exclude dependencies matching patterns
-          shouldExclude = rmDepsPatterns.some((pattern) =>
+        // Always include global patterns
+        for (const pattern of config.removeDepsPatterns.global) {
+          patterns.add(pattern);
+        }
+
+        // Add NPM-specific patterns if not JSR
+        if (!isJsr) {
+          for (const pattern of config.removeDepsPatterns["dist-npm"]) {
+            patterns.add(pattern);
+          }
+        }
+
+        // Add JSR-specific patterns if JSR
+        if (isJsr) {
+          for (const pattern of config.removeDepsPatterns["dist-jsr"]) {
+            patterns.add(pattern);
+          }
+        }
+
+        // Add library-specific patterns if a library is specified
+        if (libName && config.removeDepsPatterns["dist-libs"][libName]) {
+          const libPatterns = config.removeDepsPatterns["dist-libs"][libName];
+          // Add NPM-specific patterns if not JSR
+          if (!isJsr) {
+            for (const pattern of libPatterns.npm) {
+              patterns.add(pattern);
+            }
+          }
+          // Add JSR-specific patterns if JSR
+          if (isJsr) {
+            for (const pattern of libPatterns.jsr) {
+              patterns.add(pattern);
+            }
+          }
+        }
+
+        // Check if the dependency should be excluded
+        const shouldExclude =
+          devDeps ||
+          Array.from(patterns).some((pattern) =>
             k.toLowerCase().includes(pattern.toLowerCase()),
           );
-        } else if (rmDepsMode === "patterns-and-devdeps") {
-          // Exclude both dev dependencies and dependencies matching patterns
-          shouldExclude =
-            devDeps ||
-            rmDepsPatterns.some((pattern) =>
-              k.toLowerCase().includes(pattern.toLowerCase()),
-            );
-        }
 
         if (!shouldExclude) {
           acc[k] = v;
@@ -250,8 +249,8 @@ async function library_getlibPkgKeepDeps(
     true,
     outDirBin,
     isJsr,
-    rmDepsMode,
-    rmDepsPatterns,
+    config,
+    libName,
   );
   relinka(
     "verbose",
@@ -270,8 +269,7 @@ async function library_writeJsrPackageJSON(
   originalPkg: PackageJson,
   commonPkg: Partial<PackageJson>,
   libsList: Record<string, LibConfig>,
-  rmDepsMode: ExcludeMode,
-  rmDepsPatterns: string[],
+  config: BuildPublishConfig,
 ): Promise<void> {
   relinka("verbose", `Writing package.json for JSR lib: ${libName}`);
 
@@ -315,16 +313,15 @@ async function library_writeJsrPackageJSON(
         libPkgKeepDeps: false,
         libTranspileMinify: true,
       },
-      rmDepsMode,
-      rmDepsPatterns,
+      config,
     ),
     devDependencies: await filterDeps(
       originalPkg.devDependencies,
       true,
       outDirBin,
       true,
-      rmDepsMode,
-      rmDepsPatterns,
+      config,
+      libName,
     ),
     exports: {
       ".": "./bin/mod.ts",
@@ -347,8 +344,7 @@ async function library_writeNpmLibPackageJSON(
   originalPkg: PackageJson,
   commonPkg: Partial<PackageJson>,
   libsList: Record<string, LibConfig>,
-  rmDepsMode: ExcludeMode,
-  rmDepsPatterns: string[],
+  config: BuildPublishConfig,
   unifiedBundlerOutExt: NpmOutExt,
 ): Promise<void> {
   relinka("verbose", `Writing package.json for NPM lib: ${libName}`);
@@ -373,16 +369,15 @@ async function library_writeNpmLibPackageJSON(
         libPkgKeepDeps: true,
         libTranspileMinify: true,
       },
-      rmDepsMode,
-      rmDepsPatterns,
+      config,
     ),
     devDependencies: await filterDeps(
       originalPkg.devDependencies,
       true,
       outDirBin,
       false,
-      rmDepsMode,
-      rmDepsPatterns,
+      config,
+      libName,
     ),
     exports: {
       ".": `./bin/mod.${unifiedBundlerOutExt}`,

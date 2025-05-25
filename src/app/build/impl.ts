@@ -6,6 +6,7 @@ import {
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 
+import { loadConfig } from "~/init/load.js";
 import { processLibraryFlow } from "~/libs/sdk/sdk-impl/library-flow.js";
 import { processRegularFlow } from "~/libs/sdk/sdk-impl/regular-flow.js";
 import { finalizeBuildPub } from "~/libs/sdk/sdk-impl/utils/finalize.js";
@@ -13,7 +14,6 @@ import { removeDistFolders } from "~/libs/sdk/sdk-impl/utils/utils-clean.js";
 import { PROJECT_ROOT } from "~/libs/sdk/sdk-impl/utils/utils-consts.js";
 import { handleDlerError } from "~/libs/sdk/sdk-impl/utils/utils-error.js";
 import { createPerfTimer } from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
-import { loadConfig } from "~/load.js";
 
 // ==========================
 // dler CLI Main Function
@@ -62,71 +62,10 @@ export async function dlerBuild(isDev: boolean) {
     }
 
     // Process main project
-    await processRegularFlow(
-      timer,
-      isDev,
-      config.coreIsCLI,
-      config.libsActMode,
-      config.commonPubRegistry,
-      config.coreEntrySrcDir,
-      config.distNpmDirName,
-      config.distNpmBuilder,
-      config.coreEntryFile,
-      config.distJsrDryRun,
-      config.distJsrFailOnWarn,
-      config.commonPubPause,
-      config.distJsrDirName,
-      config.distJsrBuilder,
-      config.transpileTarget,
-      config.transpileFormat,
-      config.transpileSplitting,
-      config.transpileMinify,
-      config.transpileSourcemap,
-      config.transpilePublicPath,
-      config.distJsrAllowDirty,
-      config.distJsrSlowTypes,
-      config.distNpmOutFilesExt,
-      config.rmDepsMode,
-      config.transpileStub,
-      config.transpileWatch,
-      config.distJsrGenTsconfig,
-      config.coreDeclarations,
-      {
-        coreDescription: config.coreDescription,
-        coreBuildOutDir: config.coreBuildOutDir,
-      },
-    );
+    await processRegularFlow(timer, isDev, config);
 
     // Process libraries
-    await processLibraryFlow(
-      timer,
-      isDev,
-      config.libsActMode,
-      config.libsList,
-      config.distJsrDryRun,
-      config.distJsrFailOnWarn,
-      config.libsDirDist,
-      config.libsDirSrc,
-      config.commonPubPause,
-      config.commonPubRegistry,
-      config.distNpmOutFilesExt,
-      config.distNpmBuilder,
-      config.coreEntrySrcDir,
-      config.rmDepsMode,
-      config.rmDepsPatterns,
-      config.transpileEsbuild,
-      config.transpileTarget,
-      config.transpileFormat,
-      config.transpileSplitting,
-      config.transpileSourcemap,
-      config.transpilePublicPath,
-      config.distJsrBuilder,
-      config.transpileStub,
-      config.transpileWatch,
-      config.distJsrOutFilesExt,
-      config.distJsrAllowDirty,
-      config.distJsrSlowTypes,
-    );
+    await processLibraryFlow(timer, isDev, config);
 
     // Finalize dler
     await finalizeBuildPub(
@@ -184,71 +123,10 @@ export async function dlerPub(isDev: boolean) {
     }
 
     // Process main project
-    await processRegularFlow(
-      timer,
-      isDev,
-      config.coreIsCLI,
-      config.libsActMode,
-      config.commonPubRegistry,
-      config.coreEntrySrcDir,
-      config.distNpmDirName,
-      config.distNpmBuilder,
-      config.coreEntryFile,
-      config.distJsrDryRun,
-      config.distJsrFailOnWarn,
-      config.commonPubPause,
-      config.distJsrDirName,
-      config.distJsrBuilder,
-      config.transpileTarget,
-      config.transpileFormat,
-      config.transpileSplitting,
-      config.transpileMinify,
-      config.transpileSourcemap,
-      config.transpilePublicPath,
-      config.distJsrAllowDirty,
-      config.distJsrSlowTypes,
-      config.distNpmOutFilesExt,
-      config.rmDepsMode,
-      config.transpileStub,
-      config.transpileWatch,
-      config.distJsrGenTsconfig,
-      config.coreDeclarations,
-      {
-        coreDescription: config.coreDescription,
-        coreBuildOutDir: config.coreBuildOutDir,
-      },
-    );
+    await processRegularFlow(timer, isDev, config);
 
     // Process libraries
-    await processLibraryFlow(
-      timer,
-      isDev,
-      config.libsActMode,
-      config.libsList,
-      config.distJsrDryRun,
-      config.distJsrFailOnWarn,
-      config.libsDirDist,
-      config.libsDirSrc,
-      config.commonPubPause,
-      config.commonPubRegistry,
-      config.distNpmOutFilesExt,
-      config.distNpmBuilder,
-      config.coreEntrySrcDir,
-      config.rmDepsMode,
-      config.rmDepsPatterns,
-      config.transpileEsbuild,
-      config.transpileTarget,
-      config.transpileFormat,
-      config.transpileSplitting,
-      config.transpileSourcemap,
-      config.transpilePublicPath,
-      config.distJsrBuilder,
-      config.transpileStub,
-      config.transpileWatch,
-      config.distJsrOutFilesExt,
-      config.distJsrAllowDirty,
-      config.distJsrSlowTypes,
-    );
+    await processLibraryFlow(timer, isDev, config);
 
     // Finalize dler
     await finalizeBuildPub(

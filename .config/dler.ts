@@ -25,7 +25,7 @@ export default defineConfig({
   coreBuildOutDir: "bin",
   coreIsCLI: {
     enabled: true,
-    scripts: { dler: "dler.ts" },
+    scripts: { dler: "cli.ts" },
   },
 
   // JSR-only config
@@ -70,16 +70,26 @@ export default defineConfig({
   logsFreshFile: true,
 
   // Dependency filtering
-  rmDepsMode: "patterns-and-devdeps",
-  rmDepsPatterns: [
-    "@types",
-    "biome",
-    "eslint",
-    "knip",
-    "prettier",
-    "typescript",
-    "@reliverse/config",
-  ],
+  // Global is always applied
+  removeDepsPatterns: {
+    global: [
+      "@types",
+      "biome",
+      "eslint",
+      "knip",
+      "prettier",
+      "typescript",
+      "@reliverse/dler",
+    ],
+    "dist-npm": ["bun"],
+    "dist-jsr": [],
+    "dist-libs": {
+      "@reliverse/dler-sdk": {
+        npm: ["bun"],
+        jsr: [],
+      },
+    },
+  },
 
   // Build setup
   transpileEsbuild: "es2023",

@@ -5,15 +5,14 @@ import pAll from "p-all";
 import type {
   BundlerName,
   Esbuild,
-  ExcludeMode,
   LibConfig,
   NpmOutExt,
   Sourcemap,
   transpileFormat,
   transpileTarget,
+  BuildPublishConfig,
+  PerfTimer,
 } from "~/libs/sdk/sdk-types.js";
-
-import type { PerfTimer } from "./utils/utils-perf.js";
 
 import { library_buildLibrary } from "./build/build-library.js";
 import { library_publishLibrary } from "./pub/pub-library.js";
@@ -25,33 +24,12 @@ import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "./utils/utils-consts.js";
 export async function processLibraryFlow(
   timer: PerfTimer,
   isDev: boolean,
-  libsActMode: string,
-  libsList: Record<string, LibConfig>,
-  distJsrDryRun: boolean,
-  distJsrFailOnWarn: boolean,
-  libsDirDist: string,
-  libsDirSrc: string,
-  commonPubPause: boolean,
-  commonPubRegistry: "jsr" | "npm" | "npm-jsr",
-  unifiedBundlerOutExt: NpmOutExt,
-  distNpmBuilder: BundlerName,
-  coreEntrySrcDir: string,
-  rmDepsMode: ExcludeMode,
-  rmDepsPatterns: string[],
-  transpileEsbuild: Esbuild,
-  transpileTarget: transpileTarget,
-  transpileFormat: transpileFormat,
-  transpileSplitting: boolean,
-  transpileSourcemap: Sourcemap,
-  transpilePublicPath: string,
-  distJsrBuilder: BundlerName,
-  transpileStub: boolean,
-  transpileWatch: boolean,
-  distJsrOutFilesExt: NpmOutExt,
-  distJsrAllowDirty: boolean,
-  distJsrSlowTypes: boolean,
+  config: BuildPublishConfig,
 ): Promise<void> {
-  if (libsActMode !== "libs-only" && libsActMode !== "main-and-libs") {
+  if (
+    config.libsActMode !== "libs-only" &&
+    config.libsActMode !== "main-and-libs"
+  ) {
     relinka(
       "verbose",
       "Skipping libs build/publish as libsActMode is set to 'main-project-only'",
@@ -62,30 +40,30 @@ export async function processLibraryFlow(
   await libraries_buildPublish(
     isDev,
     timer,
-    libsList,
-    distJsrDryRun,
-    distJsrFailOnWarn,
-    libsDirDist,
-    libsDirSrc,
-    commonPubPause,
-    commonPubRegistry,
-    unifiedBundlerOutExt,
-    distNpmBuilder,
-    coreEntrySrcDir,
-    rmDepsMode,
-    rmDepsPatterns,
-    transpileEsbuild,
-    transpileTarget,
-    transpileFormat,
-    transpileSplitting,
-    transpileSourcemap,
-    transpilePublicPath,
-    distJsrBuilder,
-    transpileStub,
-    transpileWatch,
-    distJsrOutFilesExt,
-    distJsrAllowDirty,
-    distJsrSlowTypes,
+    config.libsList,
+    config.distJsrDryRun,
+    config.distJsrFailOnWarn,
+    config.libsDirDist,
+    config.libsDirSrc,
+    config.commonPubPause,
+    config.commonPubRegistry,
+    config.distNpmOutFilesExt,
+    config.distNpmBuilder,
+    config.coreEntrySrcDir,
+    config.removeDepsPatterns,
+    config.transpileEsbuild,
+    config.transpileTarget,
+    config.transpileFormat,
+    config.transpileSplitting,
+    config.transpileSourcemap,
+    config.transpilePublicPath,
+    config.distJsrBuilder,
+    config.transpileStub,
+    config.transpileWatch,
+    config.distJsrOutFilesExt,
+    config.distJsrAllowDirty,
+    config.distJsrSlowTypes,
+    config,
   );
 }
 
@@ -133,8 +111,12 @@ export async function libraries_buildPublish(
   unifiedBundlerOutExt: NpmOutExt,
   distNpmBuilder: BundlerName,
   coreEntrySrcDir: string,
-  rmDepsMode: ExcludeMode,
-  rmDepsPatterns: string[],
+  removeDepsPatterns: {
+    global: string[];
+    "dist-npm": string[];
+    "dist-jsr": string[];
+    "dist-libs": Record<string, { npm: string[]; jsr: string[] }>;
+  },
   transpileEsbuild: Esbuild,
   transpileTarget: transpileTarget,
   transpileFormat: transpileFormat,
@@ -147,6 +129,7 @@ export async function libraries_buildPublish(
   distJsrOutFilesExt: NpmOutExt,
   distJsrAllowDirty: boolean,
   distJsrSlowTypes: boolean,
+  config: BuildPublishConfig,
 ): Promise<void> {
   relinka("verbose", "Starting libraries_buildPublish");
 
@@ -200,6 +183,7 @@ export async function libraries_buildPublish(
 
         // 1. Build library
         await library_buildLibrary({
+          ...config,
           effectivePubRegistry: libConfig.libPubRegistry || commonPubRegistry,
           libName,
           mainDir: libMainDir,
@@ -217,8 +201,7 @@ export async function libraries_buildPublish(
           isDev,
           libsList,
           unifiedBundlerOutExt,
-          rmDepsMode,
-          rmDepsPatterns,
+          removeDepsPatterns,
           transpileEsbuild,
           transpileTarget,
           transpileFormat,

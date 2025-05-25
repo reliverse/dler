@@ -1,16 +1,7 @@
 import { relinka } from "@reliverse/relinka";
 import pAll from "p-all";
 
-import type {
-  BundlerName,
-  ExcludeMode,
-  NpmOutExt,
-  Sourcemap,
-  transpileFormat,
-  transpileTarget,
-} from "~/libs/sdk/sdk-types.js";
-
-import type { PerfTimer } from "./utils/utils-perf.js";
+import type { BuildPublishConfig, PerfTimer } from "~/libs/sdk/sdk-types.js";
 
 import {
   regular_buildJsrDist,
@@ -25,35 +16,9 @@ import { CONCURRENCY_DEFAULT } from "./utils/utils-consts.js";
 export async function processRegularFlow(
   timer: PerfTimer,
   isDev: boolean,
-  coreIsCLI: { enabled: boolean; scripts: Record<string, string> },
-  libsActMode: string,
-  commonPubRegistry: string,
-  coreEntrySrcDir: string,
-  distNpmDirName: string,
-  distNpmBuilder: BundlerName,
-  coreEntryFile: string,
-  distJsrDryRun: boolean,
-  distJsrFailOnWarn: boolean,
-  commonPubPause: boolean,
-  distJsrDirName: string,
-  distJsrBuilder: BundlerName,
-  transpileTarget: transpileTarget,
-  transpileFormat: transpileFormat,
-  transpileSplitting: boolean,
-  transpileMinify: boolean,
-  transpileSourcemap: Sourcemap,
-  transpilePublicPath: string,
-  distJsrAllowDirty: boolean,
-  distJsrSlowTypes: boolean,
-  distNpmOutFilesExt: NpmOutExt,
-  rmDepsMode: ExcludeMode,
-  transpileStub: boolean,
-  transpileWatch: boolean,
-  distJsrGenTsconfig: boolean,
-  coreDeclarations: boolean,
-  config: { coreDescription: string; coreBuildOutDir: string },
+  config: BuildPublishConfig,
 ): Promise<void> {
-  if (libsActMode === "libs-only") {
+  if (config.libsActMode === "libs-only") {
     relinka(
       "log",
       "Skipping main project build/publish as libsActMode is set to 'libs-only'",
@@ -61,7 +26,7 @@ export async function processRegularFlow(
     return;
   }
 
-  switch (commonPubRegistry) {
+  switch (config.commonPubRegistry) {
     case "jsr":
       relinka(
         "log",
@@ -70,34 +35,33 @@ export async function processRegularFlow(
       await regular_buildJsrDist(
         isDev,
         true,
-        coreIsCLI,
-        coreEntrySrcDir,
-        distJsrDirName,
-        distJsrBuilder,
-        coreEntryFile,
-        transpileTarget,
-        transpileFormat,
-        transpileSplitting,
-        transpileMinify,
-        transpileSourcemap,
-        transpilePublicPath,
-        distNpmOutFilesExt,
-        rmDepsMode,
-        timer,
-        transpileStub,
-        transpileWatch,
-        distJsrGenTsconfig,
-        coreDeclarations,
+        config.coreIsCLI,
+        config.coreEntrySrcDir,
+        config.distJsrDirName,
+        config.distJsrBuilder,
+        config.coreEntryFile,
+        config.transpileTarget,
+        config.transpileFormat,
+        config.transpileSplitting,
+        config.transpileMinify,
+        config.transpileSourcemap,
+        config.transpilePublicPath,
+        config.distNpmOutFilesExt,
         config,
+        timer,
+        config.transpileStub,
+        config.transpileWatch,
+        config.distJsrGenTsconfig,
+        config.coreDeclarations,
       );
       await regular_pubToJsr(
-        distJsrDryRun,
-        distJsrFailOnWarn,
+        config.distJsrDryRun,
+        config.distJsrFailOnWarn,
         isDev,
-        commonPubPause,
-        distJsrDirName,
-        distJsrAllowDirty,
-        distJsrSlowTypes,
+        config.commonPubPause,
+        config.distJsrDirName,
+        config.distJsrAllowDirty,
+        config.distJsrSlowTypes,
         timer,
       );
       break;
@@ -108,30 +72,29 @@ export async function processRegularFlow(
       );
       await regular_buildNpmDist(
         isDev,
-        coreEntrySrcDir,
-        distNpmDirName,
-        distNpmBuilder,
-        coreEntryFile,
-        distNpmOutFilesExt,
-        rmDepsMode,
-        coreIsCLI,
-        transpileTarget,
-        transpileFormat,
-        transpileSplitting,
-        transpileMinify,
-        transpileSourcemap,
-        transpilePublicPath,
-        transpileStub,
-        transpileWatch,
-        timer,
-        coreDeclarations,
+        config.coreEntrySrcDir,
+        config.distNpmDirName,
+        config.distNpmBuilder,
+        config.coreEntryFile,
+        config.distNpmOutFilesExt,
         config,
+        config.coreIsCLI,
+        config.transpileTarget,
+        config.transpileFormat,
+        config.transpileSplitting,
+        config.transpileMinify,
+        config.transpileSourcemap,
+        config.transpilePublicPath,
+        config.transpileStub,
+        config.transpileWatch,
+        timer,
+        config.coreDeclarations,
       );
       await regular_pubToNpm(
-        distJsrDryRun,
+        config.distJsrDryRun,
         isDev,
-        commonPubPause,
-        distNpmDirName,
+        config.commonPubPause,
+        config.distNpmDirName,
         timer,
       );
       break;
@@ -146,129 +109,77 @@ export async function processRegularFlow(
           regular_buildJsrDist(
             isDev,
             true,
-            coreIsCLI,
-            coreEntrySrcDir,
-            distJsrDirName,
-            distJsrBuilder,
-            coreEntryFile,
-            transpileTarget,
-            transpileFormat,
-            transpileSplitting,
-            transpileMinify,
-            transpileSourcemap,
-            transpilePublicPath,
-            distNpmOutFilesExt,
-            rmDepsMode,
-            timer,
-            transpileStub,
-            transpileWatch,
-            distJsrGenTsconfig,
-            coreDeclarations,
+            config.coreIsCLI,
+            config.coreEntrySrcDir,
+            config.distJsrDirName,
+            config.distJsrBuilder,
+            config.coreEntryFile,
+            config.transpileTarget,
+            config.transpileFormat,
+            config.transpileSplitting,
+            config.transpileMinify,
+            config.transpileSourcemap,
+            config.transpilePublicPath,
+            config.distNpmOutFilesExt,
             config,
+            timer,
+            config.transpileStub,
+            config.transpileWatch,
+            config.distJsrGenTsconfig,
+            config.coreDeclarations,
           ),
         () =>
           regular_buildNpmDist(
             isDev,
-            coreEntrySrcDir,
-            distNpmDirName,
-            distNpmBuilder,
-            coreEntryFile,
-            distNpmOutFilesExt,
-            rmDepsMode,
-            coreIsCLI,
-            transpileTarget,
-            transpileFormat,
-            transpileSplitting,
-            transpileMinify,
-            transpileSourcemap,
-            transpilePublicPath,
-            transpileStub,
-            transpileWatch,
-            timer,
-            coreDeclarations,
+            config.coreEntrySrcDir,
+            config.distNpmDirName,
+            config.distNpmBuilder,
+            config.coreEntryFile,
+            config.distNpmOutFilesExt,
             config,
+            config.coreIsCLI,
+            config.transpileTarget,
+            config.transpileFormat,
+            config.transpileSplitting,
+            config.transpileMinify,
+            config.transpileSourcemap,
+            config.transpilePublicPath,
+            config.transpileStub,
+            config.transpileWatch,
+            timer,
+            config.coreDeclarations,
           ),
       ];
       await pAll(buildTasks, { concurrency: CONCURRENCY_DEFAULT });
       const publishTasks = [
         () =>
           regular_pubToJsr(
-            distJsrDryRun,
-            distJsrFailOnWarn,
+            config.distJsrDryRun,
+            config.distJsrFailOnWarn,
             isDev,
-            commonPubPause,
-            distJsrDirName,
-            distJsrAllowDirty,
-            distJsrSlowTypes,
+            config.commonPubPause,
+            config.distJsrDirName,
+            config.distJsrAllowDirty,
+            config.distJsrSlowTypes,
             timer,
           ),
         () =>
           regular_pubToNpm(
-            distJsrDryRun,
+            config.distJsrDryRun,
             isDev,
-            commonPubPause,
-            distNpmDirName,
+            config.commonPubPause,
+            config.distNpmDirName,
             timer,
           ),
       ];
       await pAll(publishTasks, { concurrency: CONCURRENCY_DEFAULT });
       break;
     }
-    default: {
+    default:
       relinka(
-        "warn",
-        `Registry "${commonPubRegistry}" not recognized. Building main project only...`,
+        "error",
+        `Invalid commonPubRegistry: ${config.commonPubRegistry}`,
       );
-
-      const fallbackBuildTasks = [
-        () =>
-          regular_buildNpmDist(
-            isDev,
-            coreEntrySrcDir,
-            distNpmDirName,
-            distNpmBuilder,
-            coreEntryFile,
-            distNpmOutFilesExt,
-            rmDepsMode,
-            coreIsCLI,
-            transpileTarget,
-            transpileFormat,
-            transpileSplitting,
-            transpileMinify,
-            transpileSourcemap,
-            transpilePublicPath,
-            transpileStub,
-            transpileWatch,
-            timer,
-            coreDeclarations,
-            config,
-          ),
-        () =>
-          regular_buildJsrDist(
-            isDev,
-            true,
-            coreIsCLI,
-            coreEntrySrcDir,
-            distJsrDirName,
-            distJsrBuilder,
-            coreEntryFile,
-            transpileTarget,
-            transpileFormat,
-            transpileSplitting,
-            transpileMinify,
-            transpileSourcemap,
-            transpilePublicPath,
-            distNpmOutFilesExt,
-            rmDepsMode,
-            timer,
-            transpileStub,
-            transpileWatch,
-            distJsrGenTsconfig,
-            coreDeclarations,
-            config,
-          ),
-      ];
-      await pAll(fallbackBuildTasks, { concurrency: CONCURRENCY_DEFAULT });
-    }
+      throw new Error(`Invalid commonPubRegistry: ${config.commonPubRegistry}`);
   }
 }

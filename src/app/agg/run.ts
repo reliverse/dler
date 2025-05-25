@@ -7,7 +7,7 @@ import {
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { cmdAgg } from "./app/cmds.js";
+import { cmdAgg } from "~/app/cmds.js";
 
 type LibConfig = {
   libDeclarations: boolean;

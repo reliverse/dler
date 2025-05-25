@@ -8,9 +8,9 @@ import {
   runCmd,
 } from "@reliverse/rempts";
 
-import { promptAggCommand } from "./addons.js";
+import { promptAggCommand } from "./app/agg/run.js";
 import { cmdBuild, cmdPub } from "./app/cmds.js";
-import { showEndPrompt, showStartPrompt } from "./info.js";
+import { showEndPrompt, showStartPrompt } from "./init/info.js";
 
 const INTERACTIVE_CMDS = ["agg", "build", "pub"];
 

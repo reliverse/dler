@@ -1,14 +1,14 @@
 {
   "name": "@reliverse/dler",
   "author": "reliverse",
-  "version": "1.4.7",
+  "version": "1.5.0",
   "type": "module",
   "license": "MIT",
   "description": "@reliverse/dler is a flexible, unified, and fully automated bundler for typescript and javascript projects, as well as an npm and jsr publishing tool. dler is not only a bundler, it also tries to serve as the most powerful codemod toolkit for js/ts.",
   "scripts": {
     "dev": "bun example/mod.ts",
-    "dler": "bun src/dler.ts --dev",
-    "pub": "bun src/dler.ts pub --dev",
+    "dler": "bun src/cli.ts --dev",
+    "pub": "bun src/cli.ts pub --dev",
     "latest": "bun update --latest && bun check",
     "check": "tsc --noEmit && eslint --cache --fix . && biome check --fix --unsafe . && knip",
     "tests": "bun test ./.tests"
@@ -44,24 +44,24 @@
     "pkg-types": "^2.1.0",
     "pretty-bytes": "^7.0.0",
     "pretty-ms": "^9.2.0",
-    "rollup": "^4.41.0",
+    "rollup": "^4.41.1",
     "rollup-plugin-dts": "^6.2.1",
     "scule": "^1.3.0",
-    "tinyglobby": "^0.2.13",
+    "tinyglobby": "^0.2.14",
     "ts-morph": "^26.0.0",
     "untyped": "^2.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@eslint/js": "^9.27.0",
-    "@stylistic/eslint-plugin": "^4.2.0",
+    "@stylistic/eslint-plugin": "^4.4.0",
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/bun": "^1.2.14",
     "@types/node": "^22.15.21",
     "eslint": "^9.27.0",
     "eslint-plugin-no-relative-import-paths": "^1.6.1",
     "eslint-plugin-perfectionist": "^4.13.0",
-    "knip": "^5.57.2",
+    "knip": "^5.58.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.32.1"
   }

@@ -7,9 +7,11 @@ import {
   readPackageJSON,
 } from "pkg-types";
 
-import type { ExcludeMode, NpmOutExt } from "~/libs/sdk/sdk-types.js";
+import type { NpmOutExt, BuildPublishConfig } from "~/libs/sdk/sdk-types.js";
 
 import { cliDomainDocs } from "~/libs/sdk/sdk-impl/utils/utils-consts.js";
+
+import { filterDeps } from "./utils-deps.js";
 
 /**
  * Creates a package.json for the main distribution.
@@ -19,8 +21,7 @@ export async function regular_createPackageJSON(
   isJsr: boolean,
   coreIsCLI: { enabled: boolean; scripts: Record<string, string> },
   unifiedBundlerOutExt: NpmOutExt,
-  rmDepsMode: ExcludeMode,
-  rmDepsPatterns: string[],
+  config: BuildPublishConfig,
   coreDescription: string,
   coreBuildOutDir = "bin",
 ): Promise<void> {
@@ -67,16 +68,15 @@ export async function regular_createPackageJSON(
       dependencies: await regular_getPkgKeepDeps(
         originalPkg.dependencies,
         outDirBin,
-        isJsr,
-        rmDepsMode,
-        rmDepsPatterns,
+        true,
+        config,
       ),
-      devDependencies: await regular_getPkgKeepDeps(
+      devDependencies: await filterDeps(
         originalPkg.devDependencies,
+        true,
         outDirBin,
-        isJsr,
-        rmDepsMode,
-        rmDepsPatterns,
+        true,
+        config,
       ),
       exports: {
         ".": `./${coreBuildOutDir}/mod.ts`,
@@ -115,16 +115,15 @@ export async function regular_createPackageJSON(
       dependencies: await regular_getPkgKeepDeps(
         originalPkg.dependencies,
         outDirBin,
-        isJsr,
-        rmDepsMode,
-        rmDepsPatterns,
+        false,
+        config,
       ),
-      devDependencies: await regular_getPkgKeepDeps(
+      devDependencies: await filterDeps(
         originalPkg.devDependencies,
+        true,
         outDirBin,
-        isJsr,
-        rmDepsMode,
-        rmDepsPatterns,
+        false,
+        config,
       ),
       exports: {
         ".": `./${coreBuildOutDir}/mod.${outExt}`,
@@ -244,46 +243,11 @@ async function regular_getPkgKeepDeps(
   originalDeps: Record<string, string> | undefined,
   outDirBin: string,
   isJsr: boolean,
-  rmDepsMode: ExcludeMode,
-  rmDepsPatterns: string[],
+  config: BuildPublishConfig,
 ): Promise<Record<string, string>> {
-  relinka("verbose", "Getting main package dependencies");
-  if (!originalDeps) return {};
+  if (!originalDeps) {
+    return {};
+  }
 
-  // Read the original package.json to determine if we're dealing with devDependencies
-  const originalPkg = await readPackageJSON();
-  const devDeps = originalDeps === originalPkg.devDependencies;
-
-  const result = Object.entries(originalDeps).reduce<Record<string, string>>(
-    (acc, [k, v]) => {
-      // Determine if the dependency should be excluded based on the rmDepsMode
-      let shouldExclude = false;
-
-      if (rmDepsMode === "patterns-only") {
-        // Only exclude dependencies matching patterns
-        shouldExclude = rmDepsPatterns.some((pattern) =>
-          k.toLowerCase().includes(pattern.toLowerCase()),
-        );
-      } else if (rmDepsMode === "patterns-and-devdeps") {
-        // Exclude both dev dependencies and dependencies matching patterns
-        shouldExclude =
-          devDeps ||
-          rmDepsPatterns.some((pattern) =>
-            k.toLowerCase().includes(pattern.toLowerCase()),
-          );
-      }
-
-      if (!shouldExclude) {
-        acc[k] = v;
-      }
-      return acc;
-    },
-    {},
-  );
-
-  relinka(
-    "verbose",
-    `Main package dependencies filtered, count: ${Object.keys(result).length}`,
-  );
-  return result;
+  return filterDeps(originalDeps, false, outDirBin, isJsr, config);
 }

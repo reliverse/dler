@@ -15,7 +15,7 @@
 - 🎯 optimized for speed and modern workflows
 - ✨ packed with powerful features under the hood
 - 🛠️ converts typescript aliases to relative paths
-- 🔌 plugin system with two built-in plugins included
+- 🔌 plugin system with 14 built-in plugins included
 - 📝 highly configurable flow via a configuration file
 - 🔜 `libraries` plugin —> dler monorepo implementation
 - 🧼 cleans up your internal logs from the build dist
@@ -52,7 +52,7 @@ ensure git, node.js, and bun/pnpm/yarn/npm are installed. then:
 git clone https://github.com/reliverse/dler.git
 cd dler
 bun i
-bun dev # bun src/dler.ts --dev
+bun dev # bun src/cli.ts --dev
 ```
 
 ### installation
@@ -117,15 +117,15 @@ bun dev # bun src/dler.ts --dev
     dler [build|pub] # if installed globally
     ```
 
-## 🔌 addons
+## 🔌 plugins
 
-dler ships with a flexible addon system (aka plugins) and **14 built-in addons** (from [@reliverse/addons](https://reliverse.org/addons)).
+dler ships with a flexible plugin system (aka plugins) and **14 built-in plugins** (from [reliverse addons](https://reliverse.org/addons) collection).
 
-feel free to create your own addons. addons can be implemented as built-in directly in `src/app/<addon>/impl/*` and then imported from `src/app/<addon>/cmd.ts`; or implemented in your own library and then imported from `src/app/<addon>/cmd.ts`.
+feel free to create your own plugins. plugins can be implemented as built-in directly in `src/app/<plugin>/impl/*` and then imported from `src/app/<plugin>/cmd.ts`; or implemented in your own library and then imported from `src/app/<plugin>/cmd.ts`.
 
-if you run just `dler` — it will display a list of addons which you can launch interactively.
+if you run just `dler` — it will display a list of plugins which you can launch interactively.
 
-## **available addons**
+## **available plugins**
 
 [agg](#1-agg), [build](#2-build), [conv](#3-conv), [deps](#4-deps), [inject](#5-inject), [libs](#6-libs), [merge](#7-merge), [mono](#8-mono), [pub](#9-pub), [relifso](#10-relifso), [relinka](#11-relinka), [rempts](#12-rempts), [spell](#13-spell), [split](#14-split).
 
@@ -147,7 +147,7 @@ dler agg --input <dir> --out <file> [options]
 
 ```bash
 bun tools:agg # shortcut for:
-bun src/dler.ts tools --dev --tool agg --input src/libs/sdk/sdk-impl --out src/libs/sdk/sdk-mod.ts --recursive --named --strip src/libs/sdk
+bun src/cli.ts tools --dev --tool agg --input src/libs/sdk/sdk-impl --out src/libs/sdk/sdk-mod.ts --recursive --named --strip src/libs/sdk
 ```
 
 ### 2. `build`
