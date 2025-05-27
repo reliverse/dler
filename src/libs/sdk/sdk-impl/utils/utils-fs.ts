@@ -4,8 +4,8 @@ import { relinka } from "@reliverse/relinka";
 import pMap from "p-map";
 import { glob } from "tinyglobby";
 
-import { CONCURRENCY_DEFAULT, SHOW_VERBOSE } from "./utils-consts.js";
-import { determineDistName } from "./utils-determine.js";
+import { CONCURRENCY_DEFAULT, SHOW_VERBOSE } from "./utils-consts";
+import { determineDistName } from "./utils-determine";
 
 // ============================
 // File & Directory Utilities

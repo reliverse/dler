@@ -1,6 +1,6 @@
-import type { BuildPublishConfig } from "~/libs/sdk/sdk-types.js";
+import type { BuildPublishConfig } from "~/libs/sdk/sdk-types";
 
-import { DEFAULT_CONFIG } from "./libs/sdk/default.js";
+import { DEFAULT_CONFIG } from "./libs/sdk/default";
 
 // TODO: implement migrator from build.config.ts to .config/dler.ts
 // export function defineBuildConfig(

@@ -1,5 +1,7 @@
 import { endPrompt, startPrompt } from "@reliverse/rempts";
 
+const version= "1.6.1";
+
 export async function showStartPrompt(isDev: boolean) {
   await startPrompt({
     titleColor: "inverse",
@@ -7,7 +9,7 @@ export async function showStartPrompt(isDev: boolean) {
     // packageName: getPkgName(),
     // packageVersion: getPkgVersion(),
     packageName: "dler",
-    packageVersion: "1.3.5",
+    packageVersion: version,
     isDev,
   });
 }

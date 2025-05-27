@@ -1,4 +1,4 @@
-import type { BuildPublishConfig } from "~/libs/sdk/sdk-types.js";
+import type { BuildPublishConfig } from "~/libs/sdk/sdk-types";
 
 /**
  * Default configuration for the build and publish logic.
@@ -62,6 +62,7 @@ export const DEFAULT_CONFIG: BuildPublishConfig = {
   },
 
   // Build setup
+  transpileFailOnWarn: false,
   transpileEsbuild: "es2023",
   transpileFormat: "esm",
   transpileMinify: true,

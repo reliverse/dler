@@ -4,24 +4,20 @@ import { isAbsolute, resolve } from "@reliverse/pathkit";
 import { resolveAlias } from "@reliverse/pathkit";
 import { parseNodeModulePath } from "mlly";
 
-import type { BuildContext, RollupOptions } from "~/libs/sdk/sdk-types.js";
+import type { BuildContext, RollupOptions } from "~/libs/sdk/sdk-types";
 
 import {
   arrayIncludes,
   getpkg,
   warn,
-} from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils.js";
+} from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils";
 
-import { cjsPlugin } from "./plugins/cjs.js";
-import { esbuild } from "./plugins/esbuild.js";
-import { JSONPlugin } from "./plugins/json.js";
-import { rawPlugin } from "./plugins/raw.js";
-import { shebangPlugin } from "./plugins/shebang.js";
-import {
-  DEFAULT_EXTENSIONS,
-  getChunkFilename,
-  resolveAliases,
-} from "./utils.js";
+import { cjsPlugin } from "./plugins/cjs";
+import { esbuild } from "./plugins/esbuild";
+import { JSONPlugin } from "./plugins/json";
+import { rawPlugin } from "./plugins/raw";
+import { shebangPlugin } from "./plugins/shebang";
+import { DEFAULT_EXTENSIONS, getChunkFilename, resolveAliases } from "./utils";
 
 const replaceModule = (await import("@rollup/plugin-replace")) as any;
 const replace = replaceModule.default || replaceModule;

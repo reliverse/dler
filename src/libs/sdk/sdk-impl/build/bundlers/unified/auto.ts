@@ -8,9 +8,9 @@ import type {
   BuildEntry,
   BuildPreset,
   MkdistBuildEntry,
-} from "~/libs/sdk/sdk-types.js";
+} from "~/libs/sdk/sdk-types";
 
-import { extractExportFilenames, listRecursively, warn } from "./utils.js";
+import { extractExportFilenames, listRecursively, warn } from "./utils";
 
 type InferEntriesResult = {
   cjs?: boolean;

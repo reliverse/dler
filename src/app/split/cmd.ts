@@ -17,7 +17,7 @@ import {
   getAllSourceFiles,
   splitLargeFileByLines,
   splitLargeFunctions,
-} from "./impl.js";
+} from "./impl";
 
 export default defineCommand({
   args: defineArgs({

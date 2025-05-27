@@ -3,14 +3,9 @@ import type { PackageJson } from "pkg-types";
 import { resolve } from "@reliverse/pathkit";
 import { existsSync } from "node:fs";
 
-import type { BuildContext } from "~/libs/sdk/sdk-types.js";
+import type { BuildContext } from "~/libs/sdk/sdk-types";
 
-import {
-  arrayIncludes,
-  extractExportFilenames,
-  getpkg,
-  warn,
-} from "./utils.js";
+import { arrayIncludes, extractExportFilenames, getpkg, warn } from "./utils";
 
 export function validateDependencies(ctx: BuildContext): void {
   const usedDependencies = new Set<string>();

@@ -6,14 +6,14 @@ import path from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
 import { execaCommand } from "execa";
 
-import type { PerfTimer } from "~/libs/sdk/sdk-types.js";
+import type { PerfTimer } from "~/libs/sdk/sdk-types";
 
-import { PROJECT_ROOT } from "~/libs/sdk/sdk-impl/utils/utils-consts.js";
-import { withWorkingDirectory } from "~/libs/sdk/sdk-impl/utils/utils-cwd.js";
+import { PROJECT_ROOT } from "~/libs/sdk/sdk-impl/utils/utils-consts";
+import { withWorkingDirectory } from "~/libs/sdk/sdk-impl/utils/utils-cwd";
 import {
   pausePerfTimer,
   resumePerfTimer,
-} from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
+} from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 /**
  * Publishes the JSR distribution.

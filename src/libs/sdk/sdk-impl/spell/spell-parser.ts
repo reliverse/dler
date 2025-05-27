@@ -1,4 +1,4 @@
-import type { Spell, SpellParams, SpellType } from "./spell-types.js";
+import type { Spell, SpellParams, SpellType } from "./spell-types";
 
 const SPELL_REGEX = /<dler-([a-z-]+)-(?:"([^"]+)")?-?(?:{([^}]+)})?>/;
 

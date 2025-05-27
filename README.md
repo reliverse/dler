@@ -127,7 +127,7 @@ if you run just `dler` — it will display a list of plugins which you can launc
 
 ## **available plugins**
 
-[agg](#1-agg), [build](#2-build), [conv](#3-conv), [deps](#4-deps), [inject](#5-inject), [libs](#6-libs), [merge](#7-merge), [mono](#8-mono), [pub](#9-pub), [relifso](#10-relifso), [relinka](#11-relinka), [rempts](#12-rempts), [spell](#13-spell), [split](#14-split).
+[agg](#1-agg), [build](#2-build), [conv](#3-conv), [deps](#4-deps), [inject](#5-inject), [libs](#6-libs), [merge](#7-merge), [migrate](#8-migrate), [mono](#9-mono), [pub](#10-pub), [relifso](#11-relifso), [relinka](#12-relinka), [rempts](#13-rempts), [spell](#14-spell), [split](#15-split).
 
 ### 1. `agg`
 
@@ -242,9 +242,9 @@ libslist: {
 - `// dler-replace-line` tells dler to grab the contents of `../../types.ts` and inject them directly in place of your command definition.
 
   ```ts
-  export * from "../../types.js"; // dler-replace-line
+  export * from "../../types"; // dler-replace-line
   // or:
-  export type { specificTypeName1, specificTypeName2 } from "../../types.js"; // dler-replace-line
+  export type { specificTypeName1, specificTypeName2 } from "../../types"; // dler-replace-line
   ```
 
 - more magic commands coming soon...
@@ -253,11 +253,61 @@ libslist: {
 
 not yet documented.
 
-### 8. `mono`
+### 8. `migrate`
+
+helps migrate between different libraries and module resolution strategies. currently supports:
+
+- `pathe-to-pathkit`: migrate from pathe to pathkit library
+- `pathkit-to-pathe`: migrate from pathkit to pathe library
+- `module-resolution`: migrate between module resolution strategies
+
+**module resolution targets:**
+
+- `nodenext`: adds `.js` extensions to imports and updates tsconfig
+- `bundler`: removes extensions from imports and updates tsconfig
+
+**usage examples:**
+
+```bash
+# Migrate from pathe to pathkit
+dler migrate --lib pathe-to-pathkit
+
+# Migrate to nodenext module resolution
+dler migrate --lib module-resolution --target nodenext
+
+# Migrate to bundler module resolution
+dler migrate --lib module-resolution --target bundler
+
+# Preview changes without applying them
+dler migrate --lib module-resolution --target nodenext --dryRun
+```
+
+**what it does:**
+
+- updates import statements in your code
+- modifies tsconfig.json settings
+- updates package.json type field
+- provides a dry run option to preview changes
+- handles both relative and alias imports
+- supports both .ts and .tsx files
+
+**next steps after migration:**
+
+- for pathe-to-pathkit:
+  1. run 'bun install' to install @reliverse/pathkit
+  2. test your application
+  3. consider using advanced pathkit features
+
+- for module-resolution:
+  1. test your application
+  2. ensure your build tools support the new module resolution
+  3. review any warnings in the migration output
+
+### 9. `mono`
 
 not yet documented.
 
-### 9. `pub`
+### 10. `pub`
 
 pub command is separated for its own build-in plugin as well.
 
@@ -267,13 +317,13 @@ it already calls build command by itself, so you don't need to run `dler build` 
 dler pub ...
 ```
 
-### 10. `relifso`
+### 11. `relifso`
 
 ```bash
 dler relifso init ...
 ```
 
-### 11. `relinka`
+### 12. `relinka`
 
 @reliverse/relinka's best friend. learn more in its [docs](https://github.com/reliverse/relinka).
 
@@ -281,7 +331,7 @@ dler relifso init ...
 dler relinka --console-to-relinka
 ```
 
-### 12. `rempts`
+### 13. `rempts`
 
 @reliverse/rempts's best friend. learn more in its [docs](https://github.com/reliverse/rempts).
 
@@ -290,47 +340,58 @@ dler rempts init --cmd my-cmd-1
 dler rempts init --cmds
 ```
 
-### 13. `spell`
+### 14. `spell`
 
 **available spell types:**
 
 - `replace-line` — injects contents from one file into another
+- `replace-range` — replaces a range of lines with content from another file
 - `rename-file` — renames the current file
 - `remove-comment` — removes a specific comment from code
 - `remove-line` — removes a specific line from code
 - `remove-file` — deletes the current file
 - `transform-content` — applies a transformation to the file content
+- `transform-line` — applies a transformation to a specific line
 - `copy-file` — copies the current file to a new location
 - `move-file` — moves the current file to a new location
 - `insert-at` — inserts content at a specific position in the file
+- `insert-before` — inserts content before a specific line
+- `insert-after` — inserts content after a specific line
+- `conditional-execute` — executes spells conditionally
 
 **params:**
 
 params are optional and comma-separated.
 
-currently, only the first param is supported:
-
-- `hooked` (boolean, default: `false`)  
-  - `false`: dler handles the spell automatically at postbuild  
+- `hooked` (boolean, default: `true`)  
   - `true`: disables default behavior, so you can trigger the spell yourself (e.g. from your own cli function)
-
-more params coming soon...
+  - `false`: dler handles the spell automatically at postbuild
+- `startLine` (number) — line number to start the operation (for range operations)
+- `endLine` (number) — line number to end the operation (for range operations)
+- `condition` (string) — condition to check before executing the spell
+- `skipIfMissing` (boolean) — whether to skip the spell if the target file doesn't exist
+- `createDir` (boolean) — whether to create the target directory if it doesn't exist
 
 **usage examples:**
 
-- `export * from "../../types.js"; // <dler-replace-line-{hooked=false}>` — injects file contents at this line
-- `// @ts-expect-error <dler-remove-comment-{hooked=false}>` — removes just this comment
-- `// <dler-remove-line-{hooked=false}>` — removes this line
-- `// <dler-remove-file-{hooked=false}>` — deletes this file
-- `// <dler-rename-file-"tsconfig.json"-{hooked=false}>` — renames this file (runs at postbuild because `hooked=false`)
+- `export * from "../../types"; // dler-replace-line` — injects file contents at this line (hooked=true by default)
+- `// @ts-expect-error dler-remove-comment` — removes just this comment (hooked=true by default)
+- `// dler-remove-line` — removes this line (hooked=true by default)
+- `// dler-remove-file` — deletes this file (hooked=true by default)
+- `// dler-rename-file-"tsconfig.json"-{hooked=false}` — renames this file (runs at postbuild because `hooked=false`)
+- `// dler-replace-range-"../../types.js"-{startLine=1,endLine=5}` — replaces lines 1-5 with content from types.js
+- `// dler-transform-line-"return line.toUpperCase()"` — transforms the line to uppercase
+- `// dler-insert-before-"import { x } from 'y';"` — inserts import statement before this line
+- `// dler-insert-after-"export { x };"` — inserts export statement after this line
+- `// dler-conditional-execute-{condition="content.includes('TODO')"}` — executes spells only if file contains TODO
 
-**using `hooked=true`:**
+**using `hooked=false`:**
 
-- `// <dler-rename-file-"tsconfig.json"-{hooked=true}>` — renames the file, but only when you trigger it yourself (hooked from your side)
+- `// dler-rename-file-"tsconfig.json"-{hooked=false}` — renames the file immediately at postbuild (not hooked)
 
 **triggering spells:**
 
-from dler’s cli:  
+from dler's cli:  
 
 - `dler spell --trigger rename-file,... --files tsconfig.json,...`
 - `dler spell --trigger all`
@@ -340,15 +401,15 @@ from your own code:
 
 ```ts
 await dler.spell({ spells: ["rename-file"], files: [] });
-// await dler.spell({}) // means all spells and all files
-// spell: ["all"] // means all spells
-// spell: [] // means all spells
-// files: [] // means all files
+await dler.spell({}) // all spells, all files
+spells: ["all"] // means all spells
+spells: [] // also means all spells
+files: [] // means all files
 ```
 
 p.s. [see how rse cli uses hooked=true](https://github.com/reliverse/rse/blob/main/src/postbuild.ts)
 
-### 14. `split`
+### 15. `split`
 
 splits your code/text file into multiple files.
 

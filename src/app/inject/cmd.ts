@@ -1,7 +1,7 @@
 import { relinka } from "@reliverse/relinka";
 import { defineCommand, runCmd, selectPrompt } from "@reliverse/rempts";
 
-import { cmdInjectExpect } from "~/app/cmds.js";
+import { cmdInjectExpect } from "~/app/cmds";
 
 export default defineCommand({
   meta: {

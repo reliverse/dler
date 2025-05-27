@@ -1,6 +1,6 @@
 import { builtinModules } from "node:module";
 
-import type { PackageJson } from "./deps-types.js";
+import type { PackageJson } from "./deps-types";
 
 // Regular expressions for different import patterns
 const importRegexes = [

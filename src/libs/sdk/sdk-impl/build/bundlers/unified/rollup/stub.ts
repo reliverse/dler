@@ -9,12 +9,12 @@ import { fileURLToPath, resolveModuleExportNames, resolvePath } from "mlly";
 import { promises as fsp } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 
-import type { BuildContext } from "~/libs/sdk/sdk-types.js";
+import type { BuildContext } from "~/libs/sdk/sdk-types";
 
-import { warn } from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils.js";
+import { warn } from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils";
 
-import { getShebang, makeExecutable } from "./plugins/shebang.js";
-import { DEFAULT_EXTENSIONS, resolveAliases } from "./utils.js";
+import { getShebang, makeExecutable } from "./plugins/shebang";
+import { DEFAULT_EXTENSIONS, resolveAliases } from "./utils";
 
 export async function rollupStub(ctx: BuildContext): Promise<void> {
   const babelPlugins =

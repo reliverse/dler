@@ -1,7 +1,7 @@
 import { relinka } from "@reliverse/relinka";
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 
-import { useTsExpectError } from "./impl.js";
+import { useTsExpectError } from "./impl";
 
 export default defineCommand({
   meta: {

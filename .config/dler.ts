@@ -1,4 +1,4 @@
-import { defineConfig } from "~/mod.js";
+import { defineConfig } from "~/mod";
 
 /**
  * Reliverse Bundler Configuration
@@ -8,11 +8,11 @@ import { defineConfig } from "~/mod.js";
 export default defineConfig({
   // Bump configuration
   bumpDisable: false,
-  bumpFilter: ["package.json", ".config/rse.ts"],
+  bumpFilter: ["package.json", ".config/rse.ts", "src/init/info.ts"],
   bumpMode: "patch",
 
   // Common configuration
-  commonPubPause: false,
+  commonPubPause: true,
   commonPubRegistry: "npm-jsr",
   commonVerbose: true,
 
@@ -92,6 +92,7 @@ export default defineConfig({
   },
 
   // Build setup
+  transpileFailOnWarn: false,
   transpileEsbuild: "es2023",
   transpileFormat: "esm",
   transpileMinify: true,
@@ -101,4 +102,24 @@ export default defineConfig({
   transpileStub: false,
   transpileTarget: "node",
   transpileWatch: false,
+  // transpileAlias: {},
+  // transpileEntries: [],
+  // transpileExternals: [],
+  // transpileClean: true,
+  // transpileParallel: false,
+  // transpileReplace: {},
+  // transpileRollup: {
+  //   alias: {},
+  //   commonjs: {},
+  //   dts: {},
+  //   esbuild: {},
+  //   json: {},
+  //   replace: {},
+  //   resolve: {},
+  // },
+  // transpileShowOutLog: false,
+  // transpileStubOptions: {
+  //   jiti: {},
+  // },
+  // transpileWatchOptions: undefined,
 });

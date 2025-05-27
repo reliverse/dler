@@ -11,7 +11,7 @@ import pAll from "p-all";
 import prettyBytes from "pretty-bytes";
 import prettyMilliseconds from "pretty-ms";
 
-import type { PerfTimer, UnifiedBuildConfig } from "~/libs/sdk/sdk-types.js";
+import type { PerfTimer, UnifiedBuildConfig } from "~/libs/sdk/sdk-types";
 import type {
   BundlerName,
   BuildPublishConfig,
@@ -21,33 +21,33 @@ import type {
   Sourcemap,
   transpileFormat,
   transpileTarget,
-} from "~/libs/sdk/sdk-types.js";
+} from "~/libs/sdk/sdk-types";
 
-import { unifiedBuild } from "~/libs/sdk/sdk-impl/build/bundlers/unified/build.js";
+import { unifiedBuild } from "~/libs/sdk/sdk-impl/build/bundlers/unified/build";
 import {
   getBunSourcemapOption,
   getUnifiedSourcemapOption,
   renameEntryFile,
-} from "~/libs/sdk/sdk-impl/utils/utils-build.js";
-import { removeLogInternalCalls } from "~/libs/sdk/sdk-impl/utils/utils-clean.js";
+} from "~/libs/sdk/sdk-impl/utils/utils-build";
+import { removeLogInternalCalls } from "~/libs/sdk/sdk-impl/utils/utils-clean";
 import {
   CONCURRENCY_DEFAULT,
   PROJECT_ROOT,
   validExtensions,
-} from "~/libs/sdk/sdk-impl/utils/utils-consts.js";
-import { determineDistName } from "~/libs/sdk/sdk-impl/utils/utils-determine.js";
+} from "~/libs/sdk/sdk-impl/utils/utils-consts";
+import { determineDistName } from "~/libs/sdk/sdk-impl/utils/utils-determine";
 import {
   copyRootFile,
   deleteSpecificFiles,
   getDirectorySize,
   outDirBinFilesCount,
-} from "~/libs/sdk/sdk-impl/utils/utils-fs.js";
+} from "~/libs/sdk/sdk-impl/utils/utils-fs";
 import {
   createJsrJSON,
   renameTsxFiles,
-} from "~/libs/sdk/sdk-impl/utils/utils-jsr-json.js";
-import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
-import { library_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-json-libs.js";
+} from "~/libs/sdk/sdk-impl/utils/utils-jsr-json";
+import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
+import { library_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-json-libs";
 
 // ============================================================================
 // Constants
@@ -960,7 +960,7 @@ async function library_performCommonBuildSteps(
   await convertImportsAliasToRelative({
     targetDir: outDirBin,
     aliasToReplace: ALIAS_PREFIX_TO_CONVERT,
-    pathExtFilter: "js",
+    pathExtFilter: "js-ts-none",
   });
   if (isJsr) {
     relinka(
@@ -969,7 +969,7 @@ async function library_performCommonBuildSteps(
     );
     await convertImportsExt({
       targetDir: outDirBin,
-      extFrom: "js",
+      extFrom: "none",
       extTo: "ts",
     });
   }
@@ -1113,8 +1113,8 @@ async function determineNpmSourceDirectory(
  * Scans source files for a specific marker comment and replaces matching lines
  * with the content of a designated file.
  *
- * @example `export * from "../../types.js"; // dler-replace-me`
- * @example `export type { SpecificTypeName1, SpecificTypeName2 } from "../../types.js"; // dler-replace-me`
+ * @example `export * from "../../types"; // dler-replace-me`
+ * @example `export type { SpecificTypeName1, SpecificTypeName2 } from "../../types"; // dler-replace-me`
  *
  * @param config - Configuration for the replacement process.
  * @returns An array of records describing the replacements made.
@@ -1166,8 +1166,8 @@ async function preBuildReplacements(
    * The `.*` prefix allows for any content before the marker.
    * The `^` anchor ensures that the match is at the start of a line.
    *
-   * @example `export * from "../../types.js"; // dler-replace-me`
-   * @example `export type { SpecificTypeName1, SpecificTypeName2 } from "../../types.js"; // dler-replace-me`
+   * @example `export * from "../../types"; // dler-replace-me`
+   * @example `export type { SpecificTypeName1, SpecificTypeName2 } from "../../types"; // dler-replace-me`
    */
   const regex = new RegExp(`^.*${escapedMarker}\\s*$`, "gm");
 

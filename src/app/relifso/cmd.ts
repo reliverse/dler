@@ -1,7 +1,7 @@
 import { relinka } from "@reliverse/relinka";
 import { defineCommand, runCmd, selectPrompt } from "@reliverse/rempts";
 
-import { cmdRelifsoInit } from "~/app/cmds.js";
+import { cmdRelifsoInit, cmdRelifsoRename } from "~/app/cmds";
 
 export default defineCommand({
   meta: {
@@ -31,11 +31,24 @@ export default defineCommand({
           value: "init",
           label: "Initialize files",
         },
+        {
+          value: "rename-prepare",
+          label:
+            "My project is a bootstrapper CLI (apply rename optimizations)",
+        },
+        {
+          value: "rename-prepare-revert",
+          label: "Revert rename CLI files optimizations",
+        },
       ],
     });
 
     if (cmd === "init") {
       await runCmd(await cmdRelifsoInit(), []);
+    } else if (cmd === "rename-prepare") {
+      await runCmd(await cmdRelifsoRename(), ["--prepareMyCLI"]);
+    } else if (cmd === "rename-prepare-revert") {
+      await runCmd(await cmdRelifsoRename(), ["--prepareMyCLI", "--revert"]);
     }
   },
 });

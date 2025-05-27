@@ -3,13 +3,13 @@ import { relinka } from "@reliverse/relinka";
 import { promises as fsp } from "node:fs";
 import { glob } from "tinyglobby";
 
-import type { BuildContext, CopyBuildEntry } from "~/libs/sdk/sdk-types.js";
+import type { BuildContext, CopyBuildEntry } from "~/libs/sdk/sdk-types";
 
 import {
   rmdir,
   symlink,
   warn,
-} from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils.js";
+} from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils";
 
 const copy = fsp.cp || fsp.copyFile;
 

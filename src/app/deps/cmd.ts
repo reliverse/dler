@@ -2,10 +2,10 @@ import path from "@reliverse/pathkit";
 import { re } from "@reliverse/relico";
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 
-import type { FinderOptions } from "./impl/deps-types.js";
+import type { FinderOptions } from "./impl/deps-types";
 
-import { analyzeDependencies } from "./impl/analyzer.js";
-import { formatOutput } from "./impl/formatter.js";
+import { analyzeDependencies } from "./impl/analyzer";
+import { formatOutput } from "./impl/formatter";
 
 export default defineCommand({
   meta: {

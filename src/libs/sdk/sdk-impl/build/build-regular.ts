@@ -16,30 +16,30 @@ import type {
   BuildPublishConfig,
   UnifiedBuildConfig,
   PerfTimer,
-} from "~/libs/sdk/sdk-types.js";
+} from "~/libs/sdk/sdk-types";
 
-import { unifiedBuild } from "~/libs/sdk/sdk-impl/build/bundlers/unified/build.js";
+import { unifiedBuild } from "~/libs/sdk/sdk-impl/build/bundlers/unified/build";
 import {
   getBunSourcemapOption,
   getUnifiedSourcemapOption,
   renameEntryFile,
-} from "~/libs/sdk/sdk-impl/utils/utils-build.js";
-import { removeLogInternalCalls } from "~/libs/sdk/sdk-impl/utils/utils-clean.js";
+} from "~/libs/sdk/sdk-impl/utils/utils-build";
+import { removeLogInternalCalls } from "~/libs/sdk/sdk-impl/utils/utils-clean";
 import {
   CONCURRENCY_DEFAULT,
   PROJECT_ROOT,
   validExtensions,
-} from "~/libs/sdk/sdk-impl/utils/utils-consts.js";
+} from "~/libs/sdk/sdk-impl/utils/utils-consts";
 import {
   copyRootFile,
   deleteSpecificFiles,
-} from "~/libs/sdk/sdk-impl/utils/utils-fs.js";
+} from "~/libs/sdk/sdk-impl/utils/utils-fs";
 import {
   createJsrJSON,
   renameTsxFiles,
-} from "~/libs/sdk/sdk-impl/utils/utils-jsr-json.js";
-import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
-import { regular_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-json-reg.js";
+} from "~/libs/sdk/sdk-impl/utils/utils-jsr-json";
+import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
+import { regular_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-json-reg";
 
 const ALIAS_PREFIX_TO_CONVERT = "~";
 
@@ -596,7 +596,7 @@ async function regular_performCommonBuildSteps({
   await convertImportsAliasToRelative({
     targetDir: outDirBin,
     aliasToReplace: ALIAS_PREFIX_TO_CONVERT,
-    pathExtFilter: "js",
+    pathExtFilter: "js-ts-none",
   });
   if (isJsr) {
     relinka(
@@ -605,7 +605,7 @@ async function regular_performCommonBuildSteps({
     );
     await convertImportsExt({
       targetDir: outDirBin,
-      extFrom: "js",
+      extFrom: "none",
       extTo: "ts",
     });
   }

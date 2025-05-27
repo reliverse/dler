@@ -2,7 +2,7 @@ import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 
-import type { NpmOutExt, Sourcemap } from "~/libs/sdk/sdk-types.js";
+import type { NpmOutExt, Sourcemap } from "~/libs/sdk/sdk-types";
 
 // ============================
 // Bundling Functions

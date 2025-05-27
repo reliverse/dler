@@ -15,7 +15,7 @@ import type {
   BuildContext,
   UntypedBuildEntry,
   UntypedOutputs,
-} from "~/libs/sdk/sdk-types.js";
+} from "~/libs/sdk/sdk-types";
 
 export async function typesBuild(ctx: BuildContext): Promise<void> {
   const entries = ctx.options.entries.filter(

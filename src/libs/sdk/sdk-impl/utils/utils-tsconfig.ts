@@ -3,7 +3,7 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { defineTSConfig } from "pkg-types";
 
-import { tsconfigJson } from "./utils-consts.js";
+import { tsconfigJson } from "./utils-consts";
 
 // ==============================
 // tsconfig.json generation utils

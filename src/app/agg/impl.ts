@@ -1,7 +1,6 @@
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import MagicString from "magic-string";
 
 const AGGREGATOR_START = "// AUTO-GENERATED AGGREGATOR START";
 const AGGREGATOR_END = "// AUTO-GENERATED AGGREGATOR END";
@@ -38,6 +37,8 @@ export async function useAggregator({
   internalMarker = "#",
   overrideFile = false,
   fileExtensions = [".ts", ".js", ".mts", ".cts", ".mjs", ".cjs"],
+  separateTypesFile = false,
+  typesOutFile,
 }: {
   inputDir: string;
   isRecursive: boolean;
@@ -53,6 +54,8 @@ export async function useAggregator({
   internalMarker?: string;
   overrideFile?: boolean;
   fileExtensions?: string[];
+  separateTypesFile?: boolean;
+  typesOutFile?: string;
 }) {
   try {
     // Validate input directory
@@ -72,6 +75,20 @@ export async function useAggregator({
         `Error: Cannot create output directory: ${outDir}\n${error}`,
       );
       process.exit(1);
+    }
+
+    // Validate types output file directory if separateTypesFile is true
+    if (separateTypesFile && typesOutFile) {
+      const typesOutDir = path.dirname(typesOutFile);
+      try {
+        await fs.ensureDir(typesOutDir);
+      } catch (error) {
+        relinka(
+          "error",
+          `Error: Cannot create types output directory: ${typesOutDir}\n${error}`,
+        );
+        process.exit(1);
+      }
     }
 
     // Validate output file extension matches input extensions
@@ -141,76 +158,60 @@ export async function useAggregator({
         }),
       ),
     );
+
+    // Separate type and value lines
     const allLines = aggregatorLinesArrays.flat();
+    const typeLines: string[] = [];
+    const valueLines: string[] = [];
+
+    for (const line of allLines) {
+      if (line.includes("type {")) {
+        typeLines.push(line);
+      } else {
+        valueLines.push(line);
+      }
+    }
 
     // Optionally sort lines alphabetically
     if (sortLines) {
-      allLines.sort();
+      typeLines.sort();
+      valueLines.sort();
       if (verbose) relinka("log", "Sorted aggregator lines alphabetically.");
     }
 
     // Build the aggregator block content
-    const aggregatorContent = allLines.join("\n");
-    const aggregatorBlock = `${
-      headerComment ? `${headerComment}\n` : ""
-    }${AGGREGATOR_START}\n${aggregatorContent}\n${AGGREGATOR_END}\n`;
+    const buildAggregatorBlock = (lines: string[]) =>
+      `${headerComment ? `${headerComment}\n` : ""}${AGGREGATOR_START}\n${lines.join("\n")}\n${AGGREGATOR_END}\n`;
 
-    // Write aggregator file: update only the aggregator block unless overrideFile is true
-    let finalText: string;
-    if (overrideFile) {
-      // Overwrite entire file with aggregator block
-      finalText = aggregatorBlock;
-      if (verbose) {
-        relinka("log", "Override mode: rewriting entire file.");
-      }
+    if (separateTypesFile && typesOutFile) {
+      // Write type exports to separate file
+      const typeBlock = buildAggregatorBlock(typeLines);
+      await fs.ensureFile(typesOutFile);
+      await fs.writeFile(typesOutFile, typeBlock, "utf8");
+
+      // Write value exports to main file, including type file import
+      const valueBlock = buildAggregatorBlock([
+        ...valueLines,
+        `export * from "${path.relative(path.dirname(outFile), typesOutFile).replace(/\\/g, "/")}";`,
+      ]);
+      await fs.ensureFile(outFile);
+      await fs.writeFile(outFile, valueBlock, "utf8");
+
+      relinka(
+        "success",
+        `Aggregator done: processed ${typeLines.length} type lines in: ${typesOutFile} and ${valueLines.length} value lines in: ${outFile}`,
+      );
     } else {
-      // Check if file exists
-      let existingContent = "";
-      try {
-        existingContent = await fs.readFile(outFile, "utf8");
-      } catch {
-        // File does not exist, so we'll create it
-        if (verbose)
-          relinka("log", "Aggregator file does not exist. Creating new one.");
-      }
-      if (
-        existingContent?.includes(AGGREGATOR_START) &&
-        existingContent.includes(AGGREGATOR_END)
-      ) {
-        if (verbose) {
-          relinka(
-            "log",
-            "Existing aggregator block found. Updating auto-generated section.",
-          );
-        }
-        const s = new MagicString(existingContent);
-        const startIdx = existingContent.indexOf(AGGREGATOR_START);
-        const endIdx =
-          existingContent.indexOf(AGGREGATOR_END) + AGGREGATOR_END.length;
-        s.update(startIdx, endIdx, aggregatorBlock.trim());
-        finalText = s.toString();
-      } else {
-        if (existingContent) {
-          if (verbose)
-            relinka(
-              "log",
-              "No aggregator block found. Appending auto-generated section.",
-            );
-          finalText = `${existingContent.trim()}\n\n${aggregatorBlock}`;
-        } else {
-          finalText = aggregatorBlock;
-        }
-      }
+      // Write all lines to single file
+      const aggregatorBlock = buildAggregatorBlock(allLines);
+      await fs.ensureFile(outFile);
+      await fs.writeFile(outFile, aggregatorBlock, "utf8");
+
+      relinka(
+        "success",
+        `Aggregator done: processed ${allLines.length} lines in: ${outFile}`,
+      );
     }
-
-    // Write final content to file
-    await fs.ensureFile(outFile);
-    await fs.writeFile(outFile, finalText, "utf8");
-
-    relinka(
-      "success",
-      `Aggregator done: processed ${allLines.length} lines in: ${outFile}`,
-    );
   } catch (error) {
     relinka("error", `Aggregator failed: ${error}`);
     process.exit(1);

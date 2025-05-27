@@ -257,7 +257,7 @@ async function getNamedExports(filePath: string): Promise<{
 /**
  * For star imports, we generate an identifier from the filename, e.g.
  *  'utils-cwd.ts' -> 'utils_cwd'
- * so we do: import * as utils_cwd from "./utils-cwd.js";
+ * so we do: import * as utils_cwd from "./utils-cwd";
  */
 function guessStarImportIdentifier(filePath: string): string {
   // e.g. "foo-bar.ts" => baseName is "foo-bar"

@@ -12,11 +12,11 @@ import type {
   transpileTarget,
   BuildPublishConfig,
   PerfTimer,
-} from "~/libs/sdk/sdk-types.js";
+} from "~/libs/sdk/sdk-types";
 
-import { library_buildLibrary } from "./build/build-library.js";
-import { library_publishLibrary } from "./pub/pub-library.js";
-import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "./utils/utils-consts.js";
+import { library_buildLibrary } from "./build/build-library";
+import { library_publishLibrary } from "./pub/pub-library";
+import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "./utils/utils-consts";
 
 /**
  * Processes libraries based on build mode.

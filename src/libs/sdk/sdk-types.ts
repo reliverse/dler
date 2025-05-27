@@ -398,6 +398,14 @@ export type BuildPublishConfig = {
   // ==========================================================================
 
   /**
+   * When `true`, fails the build if warnings are detected.
+   * Use with caution, as it may lead to inconsistent published versions.
+   *
+   * @default false
+   */
+  transpileFailOnWarn: boolean;
+
+  /**
    * The transpileTarget runtime environment for the built package.
    *
    * @default "es2023"
@@ -909,7 +917,7 @@ export type BuildOptions = {
   /**
    * Terminate the build process when a warning appears
    */
-  failOnWarn?: boolean;
+  transpileFailOnWarn?: boolean;
 
   /**
    * Whether the current build is for a library.

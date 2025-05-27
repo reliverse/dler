@@ -107,7 +107,7 @@ function generateExports(cmdDirs: string[]): string {
       .join("")}`;
 
     return `export async function ${funcName}() {
-  return (await import("./${dir}/cmd.js")).default;
+  return (await import("./${dir}/cmd")).default;
 }`;
   });
 

@@ -2,9 +2,9 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { resolve } from "node:path";
 
-import type { BuildPublishConfig } from "~/libs/sdk/sdk-types.js";
+import type { BuildPublishConfig } from "~/libs/sdk/sdk-types";
 
-import { defineConfig } from "~/mod.js";
+import { defineConfig } from "~/mod";
 
 const CONFIG_FILENAME = ".config/dler.ts";
 

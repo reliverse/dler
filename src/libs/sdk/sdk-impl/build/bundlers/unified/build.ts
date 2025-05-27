@@ -15,17 +15,17 @@ import type {
   BuildContext,
   BuildOptions,
   UnifiedBuildConfig,
-} from "~/libs/sdk/sdk-types.js";
+} from "~/libs/sdk/sdk-types";
 
 import {
   createPerfTimer,
   getElapsedPerfTime,
-} from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
+} from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
-import { copyBuild } from "./copy/copy.js";
-import { mkdistBuild } from "./mkdist/mkdist.js";
-import { rollupBuild } from "./rollup/build.js";
-import { typesBuild } from "./untyped/index.js";
+import { copyBuild } from "./copy/copy";
+import { mkdistBuild } from "./mkdist/mkdist";
+import { rollupBuild } from "./rollup/build";
+import { typesBuild } from "./untyped/index";
 import {
   dumpObject,
   inferPkgExternals,
@@ -33,8 +33,8 @@ import {
   resolvePreset,
   rmdir,
   withTrailingSlash,
-} from "./utils.js";
-import { validateDependencies, validatePackage } from "./validate.js";
+} from "./utils";
+import { validateDependencies, validatePackage } from "./validate";
 
 export async function unifiedBuild(
   isLib: boolean,
@@ -140,7 +140,7 @@ async function _build(
         ...Module.builtinModules,
         ...Module.builtinModules.map((m) => `node:${m}`),
       ],
-      failOnWarn: true,
+      transpileFailOnWarn: true,
       name: (pkg?.name || "").split("/").pop() || "default",
       outDir: outDir,
       parallel: false,
@@ -443,10 +443,10 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
         .map((msg) => `- ${msg}`)
         .join("\n")}`,
     );
-    if (ctx.options.failOnWarn) {
+    if (ctx.options.transpileFailOnWarn) {
       relinka(
         "error",
-        "Exiting with code (1). You can change this behavior by setting `failOnWarn: false` .",
+        "Exiting with code (1). You can change this behavior by setting `transpileFailOnWarn: false` .",
       );
       process.exit(1);
     }

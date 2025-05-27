@@ -11,9 +11,9 @@ import type {
   NpmOutExt,
   BuildPublishConfig,
   LibConfig,
-} from "~/libs/sdk/sdk-types.js";
+} from "~/libs/sdk/sdk-types";
 
-import { filterDeps } from "./utils-deps.js";
+import { filterDeps } from "./utils-deps";
 
 /**
  * Creates a package.json for a lib distribution.

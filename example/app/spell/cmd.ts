@@ -1,7 +1,7 @@
 // Using the dler spells SDK in your own CLI tool
 import { defineCommand } from "@reliverse/rempts";
 
-import { spells } from "~/libs/sdk/sdk-impl/spell/spell-mod.js";
+import { spells } from "~/libs/sdk/sdk-impl/spell/spell-mod";
 
 export default defineCommand({
   async run() {

@@ -2,13 +2,13 @@ import { relative, dirname as pathDirname } from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
 import { mkdist, type MkdistOptions } from "mkdist";
 
-import type { BuildContext, MkdistBuildEntry } from "~/libs/sdk/sdk-types.js";
+import type { BuildContext, MkdistBuildEntry } from "~/libs/sdk/sdk-types";
 
 import {
   rmdir,
   symlink,
   warn,
-} from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils.js";
+} from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils";
 
 export async function mkdistBuild(ctx: BuildContext): Promise<void> {
   const entries = ctx.options.entries.filter(

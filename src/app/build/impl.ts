@@ -6,14 +6,14 @@ import {
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 
-import { loadConfig } from "~/init/load.js";
-import { processLibraryFlow } from "~/libs/sdk/sdk-impl/library-flow.js";
-import { processRegularFlow } from "~/libs/sdk/sdk-impl/regular-flow.js";
-import { finalizeBuildPub } from "~/libs/sdk/sdk-impl/utils/finalize.js";
-import { removeDistFolders } from "~/libs/sdk/sdk-impl/utils/utils-clean.js";
-import { PROJECT_ROOT } from "~/libs/sdk/sdk-impl/utils/utils-consts.js";
-import { handleDlerError } from "~/libs/sdk/sdk-impl/utils/utils-error.js";
-import { createPerfTimer } from "~/libs/sdk/sdk-impl/utils/utils-perf.js";
+import { loadConfig } from "~/init/load";
+import { processLibraryFlow } from "~/libs/sdk/sdk-impl/library-flow";
+import { processRegularFlow } from "~/libs/sdk/sdk-impl/regular-flow";
+import { finalizeBuildPub } from "~/libs/sdk/sdk-impl/utils/finalize";
+import { removeDistFolders } from "~/libs/sdk/sdk-impl/utils/utils-clean";
+import { PROJECT_ROOT } from "~/libs/sdk/sdk-impl/utils/utils-consts";
+import { handleDlerError } from "~/libs/sdk/sdk-impl/utils/utils-error";
+import { createPerfTimer } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 // ==========================
 // dler CLI Main Function

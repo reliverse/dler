@@ -1,8 +1,8 @@
 import path from "@reliverse/pathkit";
 
-import type { Spell, SpellResult } from "./spell-types.js";
+import type { Spell, SpellResult } from "./spell-types";
 
-import * as fs from "./spell-filesystem.js";
+import * as fs from "./spell-filesystem";
 
 export const replaceLineExecutor = async (
   spell: Spell,

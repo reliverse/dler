@@ -7,7 +7,7 @@ import {
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { cmdAgg } from "~/app/cmds.js";
+import { cmdAgg } from "~/app/cmds";
 
 type LibConfig = {
   libDeclarations: boolean;
@@ -61,6 +61,8 @@ export async function promptAggCommand() {
   let out = "";
   let recursive = true;
   let strip = "";
+  let separateTypesFile = false;
+  let typesOut = "";
 
   if (selectedLibName && selectedLibName !== "") {
     const libConfig = config?.libsList?.[selectedLibName];
@@ -111,6 +113,18 @@ export async function promptAggCommand() {
     });
   }
 
+  separateTypesFile = await confirmPrompt({
+    title: "Do you want to create a separate file for type exports?",
+    defaultValue: separateTypesFile,
+  });
+
+  if (separateTypesFile) {
+    typesOut = await inputPrompt({
+      title: "Enter the output file for types",
+      defaultValue: out.replace(/\.(ts|js)$/, ".types.$1"),
+    });
+  }
+
   await runCmd(await cmdAgg(), [
     `--imports=${imports}`,
     `--input=${input}`,
@@ -118,5 +132,7 @@ export async function promptAggCommand() {
     `--out=${out}`,
     `--recursive=${recursive}`,
     `--strip=${strip}`,
+    `--separateTypesFile=${separateTypesFile}`,
+    ...(separateTypesFile ? [`--typesOut=${typesOut}`] : []),
   ]);
 }

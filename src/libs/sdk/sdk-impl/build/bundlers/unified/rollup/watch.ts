@@ -2,7 +2,7 @@ import { relative } from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
 import { watch as _rollupWatch } from "rollup";
 
-import type { RollupOptions } from "~/libs/sdk/sdk-types.js";
+import type { RollupOptions } from "~/libs/sdk/sdk-types";
 
 export function rollupWatch(rollupOptions: RollupOptions): void {
   const transpileWatcher = _rollupWatch(rollupOptions);

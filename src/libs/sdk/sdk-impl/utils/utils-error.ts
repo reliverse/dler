@@ -1,9 +1,9 @@
 import { relinka } from "@reliverse/relinka";
 import prettyMilliseconds from "pretty-ms";
 
-import type { PerfTimer } from "~/libs/sdk/sdk-types.js";
+import type { PerfTimer } from "~/libs/sdk/sdk-types";
 
-import { getElapsedPerfTime } from "./utils-perf.js";
+import { getElapsedPerfTime } from "./utils-perf";
 
 /**
  * Handles errors during the build process.

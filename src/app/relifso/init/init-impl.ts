@@ -11,12 +11,12 @@ import type {
   InitFileRequest,
   InitFileResult,
   ReinitUserConfig,
-} from "./init-types.js";
+} from "./init-types";
 
-import { FILE_TYPES } from "./init-const.js";
-import { gitignoreTemplate } from "./templates/t-gitignore.js";
-import { licenseTemplate } from "./templates/t-license.js";
-import { readmeTemplate } from "./templates/t-readme.js";
+import { FILE_TYPES } from "./init-const";
+import { gitignoreTemplate } from "./templates/t-gitignore";
+import { licenseTemplate } from "./templates/t-license";
+import { readmeTemplate } from "./templates/t-readme";
 
 // Default configuration
 const DEFAULT_CONFIG: ReinitUserConfig = {

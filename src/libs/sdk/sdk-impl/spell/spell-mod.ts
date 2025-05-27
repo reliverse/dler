@@ -3,11 +3,11 @@ import type {
   SpellExecutionOptions,
   SpellResult,
   SpellType,
-} from "./spell-types.js";
+} from "./spell-types";
 
-import * as executors from "./spell-executors.js";
-import * as fs from "./spell-filesystem.js";
-import { extractSpellsFromFile } from "./spell-parser.js";
+import * as executors from "./spell-executors";
+import * as fs from "./spell-filesystem";
+import { extractSpellsFromFile } from "./spell-parser";
 
 export const executeSpell = async (
   spell: Spell,

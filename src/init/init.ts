@@ -3,7 +3,7 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { readPackageJSON } from "pkg-types";
 
-import { DEFAULT_CONFIG } from "~/libs/sdk/default.js";
+import { DEFAULT_CONFIG } from "~/libs/sdk/default";
 
 // Supported configuration filename
 const CONFIG_FILENAME = ".config/dler.ts";
@@ -68,7 +68,7 @@ function getCoreIsCLI(isDev: boolean): string {
 // Generate the config file content
 function generateConfig(isDev: boolean, pkgDescription?: string): string {
   const importDefineConfigStatement = isDev
-    ? `import { defineConfig } from "~/mod.js";`
+    ? `import { defineConfig } from "~/mod";`
     : `import { defineConfig } from "@reliverse/dler";`;
   const verboseValue = getValue(isDev, true, DEFAULT_CONFIG.commonVerbose);
   const coreIsCLI = getCoreIsCLI(isDev);
@@ -198,6 +198,7 @@ export default defineConfig({
   },
 
   // Build setup
+  transpileFailOnWarn: ${DEFAULT_CONFIG.transpileFailOnWarn},
   transpileEsbuild: "${DEFAULT_CONFIG.transpileEsbuild}",
   transpileFormat: "${DEFAULT_CONFIG.transpileFormat}",
   transpileMinify: ${DEFAULT_CONFIG.transpileMinify},
@@ -207,6 +208,26 @@ export default defineConfig({
   transpileStub: ${DEFAULT_CONFIG.transpileStub},
   transpileTarget: "${DEFAULT_CONFIG.transpileTarget}",
   transpileWatch: ${DEFAULT_CONFIG.transpileWatch},
+  transpileAlias: {},
+  transpileEntries: [],
+  transpileExternals: [],
+  transpileClean: true,
+  transpileParallel: false,
+  transpileReplace: {},
+  transpileRollup: {
+    alias: {},
+    commonjs: {},
+    dts: {},
+    esbuild: {},
+    json: {},
+    replace: {},
+    resolve: {},
+  },
+  transpileShowOutLog: false,
+  transpileStubOptions: {
+    jiti: {},
+  },
+  transpileWatchOptions: undefined,
 });
 `;
   return configTemplate;

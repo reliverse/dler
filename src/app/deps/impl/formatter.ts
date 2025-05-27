@@ -1,6 +1,6 @@
 import chalk from "chalk";
 
-import type { DependencyResult, FinderOptions } from "./deps-types.js";
+import type { DependencyResult, FinderOptions } from "./deps-types";
 
 export const formatOutput = (
   result: DependencyResult,

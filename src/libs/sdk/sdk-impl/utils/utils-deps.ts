@@ -2,10 +2,10 @@ import { relinka } from "@reliverse/relinka";
 import { readPackageJSON } from "pkg-types";
 import { glob } from "tinyglobby";
 
-import type { BuildPublishConfig } from "~/libs/sdk/sdk-types.js";
+import type { BuildPublishConfig } from "~/libs/sdk/sdk-types";
 
-import { readFileSafe } from "./utils-fs.js";
-import { extractPackageName } from "./utils-misc.js";
+import { readFileSafe } from "./utils-fs";
+import { extractPackageName } from "./utils-misc";
 
 /**
  * Filters out development dependencies from a dependency record.

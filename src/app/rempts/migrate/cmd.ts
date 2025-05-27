@@ -1,7 +1,7 @@
 import fs from "@reliverse/relifso";
 import { defineCommand, defineArgs, confirmPrompt } from "@reliverse/rempts";
 
-import { commanderToRempts } from "./impl/commander.js";
+import { commanderToRempts } from "./impl/commander";
 
 export default defineCommand({
   args: defineArgs({

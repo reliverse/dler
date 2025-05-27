@@ -1,7 +1,7 @@
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 
-import { dlerBuild } from "~/app/build/impl.js";
-import { ensureDlerConfig } from "~/init/init.js";
+import { dlerBuild } from "~/app/build/impl";
+import { ensureDlerConfig } from "~/init/init";
 
 export default defineCommand({
   meta: {

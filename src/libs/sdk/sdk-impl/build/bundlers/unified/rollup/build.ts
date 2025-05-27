@@ -5,14 +5,14 @@ import { relinka } from "@reliverse/relinka";
 import { rollup } from "rollup";
 import dts from "rollup-plugin-dts";
 
-import type { BuildContext } from "~/libs/sdk/sdk-types.js";
+import type { BuildContext } from "~/libs/sdk/sdk-types";
 
-import { getRollupOptions } from "./config.js";
-import { fixCJSExportTypePlugin } from "./plugins/cjs.js";
-import { removeShebangPlugin } from "./plugins/shebang.js";
-import { rollupStub } from "./stub.js";
-import { getChunkFilename } from "./utils.js";
-import { rollupWatch } from "./watch.js";
+import { getRollupOptions } from "./config";
+import { fixCJSExportTypePlugin } from "./plugins/cjs";
+import { removeShebangPlugin } from "./plugins/shebang";
+import { rollupStub } from "./stub";
+import { getChunkFilename } from "./utils";
+import { rollupWatch } from "./watch";
 
 export async function rollupBuild(ctx: BuildContext): Promise<void> {
   // Stub mode

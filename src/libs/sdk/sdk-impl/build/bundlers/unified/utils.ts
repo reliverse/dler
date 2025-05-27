@@ -11,9 +11,9 @@ import type {
   BuildContext,
   BuildPreset,
   UnifiedBuildConfig,
-} from "~/libs/sdk/sdk-types.js";
+} from "~/libs/sdk/sdk-types";
 
-import { autoPreset } from "./auto.js";
+import { autoPreset } from "./auto";
 
 type OutputDescriptor = { file: string; type?: "cjs" | "esm" };
 

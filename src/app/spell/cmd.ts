@@ -1,8 +1,8 @@
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 
-import type { SpellType } from "~/libs/sdk/sdk-impl/spell/spell-types.js";
+import type { SpellType } from "~/libs/sdk/sdk-impl/spell/spell-types";
 
-import { spells } from "~/libs/sdk/sdk-impl/spell/spell-mod.js";
+import { spells } from "~/libs/sdk/sdk-impl/spell/spell-mod";
 
 export default defineCommand({
   meta: {
@@ -64,19 +64,19 @@ export default defineCommand({
 /*
 **usage examples:**
 
-- `export * from "../../types.js"; // <dler-replace-line-{hooked=false}>` — injects file contents at this line
-- `// @ts-expect-error <dler-remove-comment-{hooked=false}>` — removes just this comment
-- `// <dler-remove-line-{hooked=false}>` — removes this line
-- `// <dler-remove-file-{hooked=false}>` — deletes this file
-- `// <dler-rename-file-"tsconfig.json"-{hooked=false}>` — renames this file (runs at postbuild because `hooked=false`)
+- `export * from "../../types"; // dler-replace-line` — injects file contents at this line (hooked=true by default)
+- `// @ts-expect-error dler-remove-comment` — removes just this comment (hooked=true by default)
+- `// dler-remove-line` — removes this line (hooked=true by default)
+- `// dler-remove-file` — deletes this file (hooked=true by default)
+- `// dler-rename-file-"tsconfig.json"-{hooked=false}` — renames this file (runs at postbuild because `hooked=false`)
 
-**using `hooked=true`:**
+**using `hooked=false`:**
 
-- `// <dler-rename-file-"tsconfig.json"-{hooked=true}>` — renames the file, but only when you trigger it yourself (hooked from your side)
+- `// dler-rename-file-"tsconfig.json"-{hooked=false}` — renames the file immediately at postbuild (not hooked)
 
 **triggering spells:**
 
-from dler’s cli:  
+from dler's cli:  
 
 - `dler spells --trigger rename-file,... --files tsconfig.json,...`
 - `dler spells --trigger all`

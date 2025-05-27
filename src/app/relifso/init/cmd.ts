@@ -5,10 +5,10 @@ import {
   selectPrompt,
 } from "@reliverse/rempts";
 
-import type { FileType, InitFileRequest } from "./init-types.js";
+import type { FileType, InitFileRequest } from "./init-types";
 
-import { FILE_TYPES } from "./init-const.js";
-import { initFile, initFiles } from "./init-impl.js";
+import { FILE_TYPES } from "./init-const";
+import { initFile, initFiles } from "./init-impl";
 
 export default defineCommand({
   meta: {

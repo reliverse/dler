@@ -1,14 +1,14 @@
 import { relinka } from "@reliverse/relinka";
 import pAll from "p-all";
 
-import type { BuildPublishConfig, PerfTimer } from "~/libs/sdk/sdk-types.js";
+import type { BuildPublishConfig, PerfTimer } from "~/libs/sdk/sdk-types";
 
 import {
   regular_buildJsrDist,
   regular_buildNpmDist,
-} from "./build/build-regular.js";
-import { regular_pubToJsr, regular_pubToNpm } from "./pub/pub-regular.js";
-import { CONCURRENCY_DEFAULT } from "./utils/utils-consts.js";
+} from "./build/build-regular";
+import { regular_pubToJsr, regular_pubToNpm } from "./pub/pub-regular";
+import { CONCURRENCY_DEFAULT } from "./utils/utils-consts";
 
 /**
  * Processes the main project based on build mode and commonPubRegistry.

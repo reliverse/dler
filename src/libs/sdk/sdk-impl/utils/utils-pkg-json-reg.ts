@@ -7,11 +7,11 @@ import {
   readPackageJSON,
 } from "pkg-types";
 
-import type { NpmOutExt, BuildPublishConfig } from "~/libs/sdk/sdk-types.js";
+import type { NpmOutExt, BuildPublishConfig } from "~/libs/sdk/sdk-types";
 
-import { cliDomainDocs } from "~/libs/sdk/sdk-impl/utils/utils-consts.js";
+import { cliDomainDocs } from "~/libs/sdk/sdk-impl/utils/utils-consts";
 
-import { filterDeps } from "./utils-deps.js";
+import { filterDeps } from "./utils-deps";
 
 /**
  * Creates a package.json for the main distribution.

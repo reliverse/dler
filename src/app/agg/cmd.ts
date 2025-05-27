@@ -1,7 +1,7 @@
 import path from "@reliverse/pathkit";
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 
-import { useAggregator } from "./impl.js";
+import { useAggregator } from "./impl";
 
 export default defineCommand({
   args: defineArgs({
@@ -75,6 +75,17 @@ export default defineCommand({
       type: "string",
       default: ".ts,.js,.mts,.cts,.mjs,.cjs",
     },
+    separateTypesFile: {
+      description: "Create a separate file for type exports",
+      type: "boolean",
+      default: false,
+    },
+    typesOut: {
+      description:
+        "Output file path for types (used when separateTypesFile is true)",
+      type: "string",
+      required: false,
+    },
   }),
   async run({ args }) {
     await useAggregator({
@@ -91,6 +102,8 @@ export default defineCommand({
       internalMarker: args.internalMarker,
       overrideFile: !!args.override,
       fileExtensions: args.extensions.split(",").map((ext) => ext.trim()),
+      separateTypesFile: !!args.separateTypesFile,
+      typesOutFile: args.typesOut ? path.resolve(args.typesOut) : undefined,
     });
   },
 });

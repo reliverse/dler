@@ -1,11 +1,11 @@
-import type { DependencyResult, FinderOptions } from "./deps-types.js";
+import type { DependencyResult, FinderOptions } from "./deps-types";
 
-import { readFile, findSourceFiles, readPackageJson } from "./filesystem.js";
+import { readFile, findSourceFiles, readPackageJson } from "./filesystem";
 import {
   extractPackageNames,
   getListedDependencies,
   getBuiltinModules,
-} from "./parser.js";
+} from "./parser";
 
 export const analyzeDependencies = async (
   options: FinderOptions,
