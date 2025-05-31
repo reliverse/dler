@@ -384,11 +384,15 @@ async function library_writeJsrPackageJSON(
     exports: {
       ".": `./bin/${path.basename(libsList[libName].libMainFile)}`,
     },
-    files: config.publishArtifacts?.global || [
-      "bin",
-      "package.json",
-      "README.md",
-      "LICENSE",
+    files: [
+      ...new Set([
+        "bin",
+        ...(config.publishArtifacts?.global || [
+          "package.json",
+          "README.md",
+          "LICENSE",
+        ]),
+      ]),
     ],
     main: `./bin/${path.basename(libsList[libName].libMainFile)}`,
     module: `./bin/${path.basename(libsList[libName].libMainFile)}`,
@@ -455,11 +459,15 @@ async function library_writeNpmLibPackageJSON(
     exports: {
       ".": `./bin/${path.basename(libsList[libName].libMainFile).replace(/\.ts$/, `.${unifiedBundlerOutExt}`)}`,
     },
-    files: config.publishArtifacts?.global || [
-      "bin",
-      "package.json",
-      "README.md",
-      "LICENSE",
+    files: [
+      ...new Set([
+        "bin",
+        ...(config.publishArtifacts?.global || [
+          "package.json",
+          "README.md",
+          "LICENSE",
+        ]),
+      ]),
     ],
     main: `./bin/${path.basename(libsList[libName].libMainFile).replace(/\.ts$/, `.${unifiedBundlerOutExt}`)}`,
     module: `./bin/${path.basename(libsList[libName].libMainFile).replace(/\.ts$/, `.${unifiedBundlerOutExt}`)}`,

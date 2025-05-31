@@ -38,7 +38,7 @@ import {
   renameTsxFiles,
 } from "~/libs/sdk/sdk-impl/utils/utils-jsr-json";
 import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
-import { regular_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-json-reg";
+import { regular_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-package-json-regular";
 
 const ALIAS_PREFIX_TO_CONVERT = "~";
 

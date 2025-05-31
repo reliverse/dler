@@ -81,6 +81,16 @@ export async function regular_createPackageJSON(
       exports: {
         ".": `./${coreBuildOutDir}/${config.coreEntryFile}`,
       },
+      files: [
+        ...new Set([
+          coreBuildOutDir,
+          ...(config.publishArtifacts?.global || [
+            "package.json",
+            "README.md",
+            "LICENSE",
+          ]),
+        ]),
+      ],
     });
     await fs.writeJSON(path.join(outDirRoot, "package.json"), jsrPkg, {
       spaces: 2,
@@ -129,11 +139,13 @@ export async function regular_createPackageJSON(
         ".": `./${coreBuildOutDir}/${config.coreEntryFile.replace(/\.ts$/, `.${outExt}`)}`,
       },
       files: [
-        coreBuildOutDir,
-        ...(config.publishArtifacts?.global || [
-          "package.json",
-          "README.md",
-          "LICENSE",
+        ...new Set([
+          coreBuildOutDir,
+          ...(config.publishArtifacts?.global || [
+            "package.json",
+            "README.md",
+            "LICENSE",
+          ]),
         ]),
       ],
       main: `./${coreBuildOutDir}/${config.coreEntryFile.replace(/\.ts$/, `.${outExt}`)}`,

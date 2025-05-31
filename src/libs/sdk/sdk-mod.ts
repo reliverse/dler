@@ -140,8 +140,8 @@ export {
   pausePerfTimer,
   resumePerfTimer,
 } from "./sdk-impl/utils/utils-perf";
-export { library_createPackageJSON } from "./sdk-impl/utils/utils-pkg-json-libs";
-export { regular_createPackageJSON } from "./sdk-impl/utils/utils-pkg-json-reg";
+export { library_createPackageJSON } from "./sdk-impl/utils/utils-package-json-libraries";
+export { regular_createPackageJSON } from "./sdk-impl/utils/utils-package-json-regular";
 export { createTSConfig } from "./sdk-impl/utils/utils-tsconfig";
 export type {
   CopyHooks,

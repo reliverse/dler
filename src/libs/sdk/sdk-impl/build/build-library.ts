@@ -46,7 +46,7 @@ import {
   renameTsxFiles,
 } from "~/libs/sdk/sdk-impl/utils/utils-jsr-json";
 import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
-import { library_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-json-libs";
+import { library_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-package-json-libraries";
 
 // ============================================================================
 // Constants

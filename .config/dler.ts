@@ -74,7 +74,7 @@ export default defineConfig({
   // - global: ["package.json", "README.md", "LICENSE"]
   // - dist-jsr,dist-libs/jsr: ["jsr.json"]
   publishArtifacts: {
-    global: ["package.json", "README.md", "LICENSE"],
+    global: ["package.json", "README.md", "LICENSE", "LICENSES"],
     "dist-jsr": ["jsr.json"],
     "dist-npm": [],
     "dist-libs": {
