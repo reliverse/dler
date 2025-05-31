@@ -1,11 +1,18 @@
-// simple example: dler copy src/**/*.ts dist
-// advanced example: dler copy putout/packages/*/lib/**/* src/libs/sdk/sdk-impl/rules/putout
+// simple example: `bun dler copy --s "src/**/*.ts" --d "dist"`
+// advanced example: `bun dler copy --s ".temp/packages/*/lib/**/*" --d "src/libs/sdk/sdk-impl/rules/external"`
 
 import { relinka } from "@reliverse/relinka";
 import { defineCommand, selectPrompt, inputPrompt } from "@reliverse/rempts";
 import { copyFile, access, mkdir } from "node:fs/promises";
-import { join, dirname } from "node:path";
+import { join, dirname, basename } from "node:path";
+import pMap from "p-map";
+import prettyMilliseconds from "pretty-ms";
 import { glob } from "tinyglobby";
+
+import {
+  createPerfTimer,
+  getElapsedPerfTime,
+} from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 async function fileExists(path: string): Promise<boolean> {
   try {
@@ -14,13 +21,6 @@ async function fileExists(path: string): Promise<boolean> {
   } catch {
     return false;
   }
-}
-
-async function safeCopy(source: string, destination: string): Promise<void> {
-  if (await fileExists(destination)) {
-    throw new Error(`Destination file already exists: ${destination}`);
-  }
-  await copyFile(source, destination);
 }
 
 async function ensureDir(path: string): Promise<void> {
@@ -38,11 +38,11 @@ export default defineCommand({
     description: "Copy files and directories",
   },
   args: {
-    source: {
+    s: {
       type: "string",
       description: "Source file or directory to copy (supports glob patterns)",
     },
-    destination: {
+    d: {
       type: "string",
       description: "Destination path for the copy operation",
     },
@@ -52,30 +52,36 @@ export default defineCommand({
         "Recursively process all files in subdirectories (default: true)",
       default: true,
     },
-    force: {
-      type: "boolean",
-      description: "Overwrite existing files (default: false)",
-      default: false,
-    },
     preserveStructure: {
       type: "boolean",
       description:
         "Preserve source directory structure in destination (default: true)",
       default: true,
     },
+    increment: {
+      type: "boolean",
+      description:
+        "Attach an incrementing index to each destination filename before the extension if set (default: true)",
+      default: true,
+    },
+    concurrency: {
+      type: "number",
+      description: "Number of concurrent copy operations (default: 8)",
+      default: 8,
+    },
   },
   async run({ args }) {
     const {
-      source,
-      destination,
+      s,
+      d,
       recursive = true,
-      force = false,
       preserveStructure = true,
+      increment = false,
+      concurrency = 8,
     } = args;
 
-    // Interactive mode if source or destination is not provided
-    let finalSource = source;
-    let finalDestination = destination;
+    let finalSource = s;
+    let finalDestination = d;
 
     if (!finalSource) {
       finalSource = await inputPrompt({
@@ -92,12 +98,11 @@ export default defineCommand({
     }
 
     if (!finalSource || !finalDestination) {
-      relinka("error", "Usage: dler copy <source> <destination>");
+      relinka("error", "Usage: dler copy --s <source> --d <destination>");
       process.exit(1);
     }
 
     try {
-      // Find all matching files using glob
       const files = await glob(finalSource, {
         dot: true,
         ignore: recursive ? [] : ["**/*"],
@@ -108,7 +113,6 @@ export default defineCommand({
         process.exit(1);
       }
 
-      // If multiple files are found, confirm with user
       if (files.length > 1) {
         const confirm = await selectPrompt({
           title: `Found ${files.length} files to copy. Proceed?`,
@@ -124,44 +128,69 @@ export default defineCommand({
         }
       }
 
-      // Copy each file
-      for (const file of files) {
-        let destPath: string;
-        if (preserveStructure) {
-          // Extract package name from path (assuming structure: packages/package-name/lib/...)
-          const match = file.match(/packages\/([^/]+)\/lib\/(.*)/);
-          if (match?.[1] && match?.[2]) {
-            const packageName = match[1];
-            const relativePath = match[2];
-            destPath = join(finalDestination, packageName, relativePath);
-          } else {
-            destPath = join(finalDestination, file);
-          }
-        } else {
-          destPath = join(finalDestination, file);
-        }
+      const timer = createPerfTimer();
 
-        try {
-          // Ensure destination directory exists
+      // Track file name counts per directory for increment logic
+      const fileNameCounts = new Map<string, Map<string, number>>();
+
+      await pMap(
+        files,
+        async (file) => {
+          let destPath: string;
+          if (preserveStructure) {
+            const match = file.match(/packages\/([^/]+)\/lib\/(.*)/);
+            if (match?.[1] && match?.[2]) {
+              const packageName = match[1];
+              const relativePath = match[2];
+              destPath = join(finalDestination, packageName, relativePath);
+            } else {
+              destPath = join(finalDestination, file);
+            }
+          } else {
+            destPath = join(finalDestination, basename(file));
+          }
+
+          if (increment) {
+            const dir = dirname(destPath);
+            const base: string = basename(destPath);
+            let dirMap = fileNameCounts.get(dir);
+            if (!dirMap) {
+              dirMap = new Map();
+              fileNameCounts.set(dir, dirMap);
+            }
+            const count = dirMap.get(base) || 0;
+            if (count > 0) {
+              const extMatch = base.match(/(.*)(\.[^./\\]+)$/);
+              let newBase: string;
+              if (extMatch) {
+                newBase = `${extMatch[1]}-${count + 1}${extMatch[2]}`;
+              } else {
+                newBase = `${base}-${count + 1}`;
+              }
+              destPath = join(dir, newBase);
+            }
+            dirMap.set(base, count + 1);
+          }
+
           await ensureDir(dirname(destPath));
 
-          if (force) {
-            await copyFile(file, destPath);
-          } else {
-            await safeCopy(file, destPath);
+          if (await fileExists(destPath)) {
+            throw new Error(`Destination file already exists: ${destPath}`);
           }
-          relinka("log", `Copied '${file}' to '${destPath}'`);
-        } catch (error: unknown) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
-          relinka("error", `Error copying '${file}': ${errorMessage}`);
-          if (!force) {
-            process.exit(1);
-          }
-        }
-      }
 
-      relinka("log", `Successfully copied ${files.length} file(s)`);
+          await copyFile(file, destPath);
+          relinka("log", `Copied '${file}' to '${destPath}'`);
+        },
+        { concurrency, stopOnError: true },
+      );
+
+      const elapsed = getElapsedPerfTime(timer);
+      relinka(
+        "log",
+        `Successfully copied ${files.length} file(s) in ${prettyMilliseconds(
+          elapsed,
+        )}`,
+      );
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);

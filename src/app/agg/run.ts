@@ -9,7 +9,7 @@ import { resolve } from "node:path";
 
 import type { DlerConfig } from "~/libs/sdk/sdk-types";
 
-import { getCmdAgg } from "~/app/cmds";
+import { getAggCmd } from "~/app/cmds";
 
 // Helper to load config if exists
 async function loadConfig(): Promise<DlerConfig | null> {
@@ -110,7 +110,7 @@ export async function promptAggCommand() {
     });
   }
 
-  await runCmd(await getCmdAgg(), [
+  await runCmd(await getAggCmd(), [
     `--imports=${imports}`,
     `--input=${input}`,
     `--named=${named}`,

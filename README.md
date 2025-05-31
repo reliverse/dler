@@ -127,7 +127,7 @@ if you run just `dler` — it will display a list of commands which you can laun
 
 ## **available commands**
 
-[agg](#1-agg), [check](#2-check-aka-rules-of-dler), [build](#3-build), [conv](#4-conv), [deps](#5-deps), [inject](#6-inject), [libs](#7-libs), [merge](#8-merge), [migrate](#9-migrate), [pub](#10-pub), [relifso](#11-relifso), [relinka](#12-relinka), [rempts](#13-rempts), [spell](#14-spell), [split](#15-split)
+[agg](#1-agg) [build](#2-build) [check](#3-check) [conv](#4-conv) [copy](#5-copy) [init](#6-init) [inject](#7-inject) [libs](#8-libs) [merge](#9-merge) [migrate](#10-migrate) [pub](#11-pub) [rempts](#13-rempts) [rename](#13-rename) [spell](#14-spell) [split](#15-split)
 
 ### 1. `agg`
 
@@ -150,9 +150,17 @@ bun tools:agg # shortcut for:
 bun src/cli.ts tools --dev --tool agg --input src/libs/sdk/sdk-impl --out src/libs/sdk/sdk-mod.ts --recursive --named --strip src/libs/sdk
 ```
 
-### 2. `check` (aka rules of dler)
+### 2. `build`
 
-checks your project for common issues and potential improvements. This command performs several types of checks:
+since dler is fully modular, build command is separated for its own build-in plugin as well.
+
+```bash
+bun dler build ...
+```
+
+### 3. `check`
+
+checks your project for common issues and potential improvements. This command performs several types of checks (aka rules of dler):
 
 - **File Extensions**: Validates that files have the correct extensions based on their location and module resolution strategy
   - Enforces `.ts` files in source and JSR distributions
@@ -216,14 +224,6 @@ dler check --json
 **pro tip:**  
 the command will prompt you only for the arguments you haven't provided. for example, if you specify `--directory` but not `--checks`, it will only prompt you to select which checks to run.
 
-### 3. `build`
-
-since dler is fully modular, build command is separated for its own build-in plugin as well.
-
-```bash
-dler build ...
-```
-
 ### 4. `conv`
 
 not yet documented.
@@ -284,11 +284,25 @@ deep imports like `dep/some/file` or `@org/dep/some/thing` are always resolved t
 - **Dev-only Dependencies**: Packages that are only in `devDependencies` but imported in production code
 - **Duplicate Dependencies**: Packages listed in both `dependencies` and `devDependencies`
 
-### 6. `inject`
+### 5. `copy`
+
+```bash
+# simple example:
+bun dler copy --s "src/**/*.ts" --d "dist"
+
+# advanced example:
+bun dler copy --s ".temp/packages/*/lib/**/*" --d "src/libs/sdk/sdk-impl/rules/external"
+```
+
+### 6. `init`
 
 not yet documented.
 
-### 7. `libs`
+### 7. `inject`
+
+not yet documented.
+
+### 8. `libs`
 
 builds and publishes specific subdirectories of your main project as standalone packages.
 
@@ -324,11 +338,19 @@ libslist: {
 
 - more magic commands coming soon...
 
-### 8. `merge`
+### 9. `merge`
 
-not yet documented.
+merges multiple files into a single file.
 
-### 9. `migrate`
+```bash
+# simple example:
+bun dler merge --s "src/**/*.ts" --d "dist/merged.ts"
+
+# advanced example:
+bun dler merge --s ".temp1/packages/*/lib/**/*" --d ".temp2/merged.ts" --sort "mtime" --header "// Header" --footer "// Footer" --dedupe
+```
+
+### 10. `migrate`
 
 helps migrate between different libraries and module resolution strategies. currently supports:
 
@@ -427,53 +449,7 @@ dler migrate --lib nodenext-bundler --target nodenext --dryRun
 - handles both relative and alias imports
 - supports both .ts and .tsx files
 
-**next steps after migration:**
-
-- for path-pathkit:
-  1. run 'bun install' to install @reliverse/pathkit
-  2. test your application
-  3. consider using advanced pathkit features
-
-- for fs-relifso:
-  1. run 'bun install' to install @reliverse/relifso
-  2. test your application
-  3. review any file system operations that might need manual updates
-
-- for nodenext-bundler:
-  1. test your application
-  2. ensure your build tools support the new module resolution
-  3. review any warnings in the migration output
-
-- for anything-bun:
-  1. run 'bun install' to install dependencies with Bun
-  2. test your application thoroughly
-  3. review async/await usage in converted file operations
-  4. update any custom database queries to use Bun.sql syntax
-  5. review and update any custom middleware in Express apps
-
-- for readdir-glob:
-  1. run 'bun install' to install globby
-  2. test your application
-  3. review any file system operations that might need manual updates
-  4. consider using globby's advanced features like pattern matching and recursive searching
-
-### 10. `pub`
-
-pub command is separated for its own build-in plugin as well.
-
-it already calls build command by itself, so you don't need to run `dler build` separately.
-
-```bash
-dler pub ...
-```
-
-### 11. `relifso`
-
-```bash
-dler relifso init ...
-```
-
-### 12. `relinka`
+#### `console-relinka`
 
 [@reliverse/relinka](https://github.com/reliverse/relinka)'s best friend. Converts between different logging formats (console, consola method/object, and relinka's function/method/object styles).
 
@@ -512,13 +488,59 @@ dler relinka --input src/app.ts --from relinkaFunction --to consolaObject
 - Supports conversion between any combination of formats
 - Supports both consola method and object styles
 
+#### next steps after migration
+
+- for path-pathkit:
+  1. run 'bun install' to install @reliverse/pathkit
+  2. test your application
+  3. consider using advanced pathkit features
+
+- for fs-relifso:
+  1. run 'bun install' to install @reliverse/relifso
+  2. test your application
+  3. review any file system operations that might need manual updates
+
+- for nodenext-bundler:
+  1. test your application
+  2. ensure your build tools support the new module resolution
+  3. review any warnings in the migration output
+
+- for anything-bun:
+  1. run 'bun install' to install dependencies with Bun
+  2. test your application thoroughly
+  3. review async/await usage in converted file operations
+  4. update any custom database queries to use Bun.sql syntax
+  5. review and update any custom middleware in Express apps
+
+- for readdir-glob:
+  1. run 'bun install' to install globby
+  2. test your application
+  3. review any file system operations that might need manual updates
+  4. consider using globby's advanced features like pattern matching and recursive searching
+
+### 11. `pub`
+
+pub command is separated for its own build-in plugin as well.
+
+it already calls build command by itself, so you don't need to run `dler build` separately.
+
+```bash
+bun dler pub ...
+```
+
 ### 13. `rempts`
 
 @reliverse/rempts's best friend. learn more in its [docs](https://github.com/reliverse/rempts).
 
 ```bash
-dler rempts init --cmd my-cmd-1
-dler rempts init --cmds
+bun dler rempts
+bun dler rempts --init cmd1 cmd2
+```
+
+### 13. `rename`
+
+```bash
+bun dler rename ...
 ```
 
 ### 14. `spell`
@@ -595,7 +617,7 @@ p.s. [see how rse cli uses hooked=true](https://github.com/reliverse/rse/blob/ma
 splits your code/text file into multiple files.
 
 ```bash
-dler split ...
+bun dler split ...
 ```
 
 ## api (for advanced users)

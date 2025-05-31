@@ -1,3 +1,5 @@
+import path from "@reliverse/pathkit";
+import { re } from "@reliverse/relico";
 import { relinka } from "@reliverse/relinka";
 import {
   defineCommand,
@@ -7,11 +9,14 @@ import {
   defineArgs,
 } from "@reliverse/rempts";
 
+import type { FinderOptions } from "~/libs/sdk/sdk-impl/rules/reliverse/missing-deps/deps-types";
 import type { AllowedFileExtensionsType } from "~/libs/sdk/sdk-impl/rules/rules-consts";
 
 import { checkDlerConfigHealth } from "~/libs/sdk/sdk-impl/rules/reliverse/dler-config-health/dler-config-health";
 import { checkFileExtensions } from "~/libs/sdk/sdk-impl/rules/reliverse/file-extensions/file-extensions";
+import { analyzeDependencies } from "~/libs/sdk/sdk-impl/rules/reliverse/missing-deps/analyzer";
 import { checkMissingDependencies } from "~/libs/sdk/sdk-impl/rules/reliverse/missing-deps/deps-mod";
+import { formatOutput } from "~/libs/sdk/sdk-impl/rules/reliverse/missing-deps/formatter";
 import { checkNoIndexFiles } from "~/libs/sdk/sdk-impl/rules/reliverse/no-index-files/no-index-files";
 import { checkPackageJsonHealth } from "~/libs/sdk/sdk-impl/rules/reliverse/package-json-health/package-json-health";
 import { checkPathExtensions } from "~/libs/sdk/sdk-impl/rules/reliverse/path-extensions/path-extensions";
@@ -22,10 +27,12 @@ import { displayCheckResults } from "~/libs/sdk/sdk-impl/rules/rules-mod";
 export default defineCommand({
   meta: {
     name: "check",
-    version: "1.0.0",
-    description: "check your codebase source and dists for any issues.",
+    version: "2.0.0",
+    description:
+      "Check your codebase for issues (deps, extensions, config, etc) or analyze dependencies.",
   },
   args: defineArgs({
+    // --- check args ---
     directory: {
       type: "string",
       description:
@@ -44,8 +51,87 @@ export default defineCommand({
       type: "boolean",
       description: "output results in JSON format",
     },
+
+    // --- deps args ---
+    deps: {
+      type: "boolean",
+      description: "run dependency analysis instead of codebase checks",
+    },
+    all: {
+      type: "boolean",
+      description: "show all dependencies (both listed and not listed)",
+    },
+    ignore: {
+      type: "string",
+      description: "comma-separated patterns to ignore (for deps)",
+    },
+    builtins: {
+      type: "boolean",
+      description: "include Node.js built-in modules in the output (for deps)",
+    },
+    dev: {
+      type: "boolean",
+      description: "check devDependencies instead of dependencies (for deps)",
+    },
+    peer: {
+      type: "boolean",
+      description: "check peerDependencies instead of dependencies (for deps)",
+    },
+    optional: {
+      type: "boolean",
+      description:
+        "check optionalDependencies instead of dependencies (for deps)",
+    },
+    fix: {
+      type: "boolean",
+      description:
+        "automatically add missing dependencies to package.json (for deps)",
+    },
+    depth: {
+      type: "number",
+      description:
+        "maximum directory depth to scan (0 for unlimited, for deps)",
+      default: 0,
+    },
   }),
   async run({ args }) {
+    // --- If --deps is set, run dependency analysis and exit ---
+    if (args.deps) {
+      try {
+        const directory = path.resolve(args.directory ?? ".");
+        const ignorePatterns = args.ignore ? args.ignore.split(",") : [];
+
+        const options: FinderOptions = {
+          directory,
+          showAll: args.all,
+          ignorePatterns,
+          json: args.json,
+          builtins: args.builtins,
+          dev: args.dev,
+          peer: args.peer,
+          optional: args.optional,
+          fix: args.fix,
+          depth: args.depth,
+        };
+
+        console.log(re.gray(`Scanning directory: ${directory}`));
+
+        const result = await analyzeDependencies(options);
+        const output = formatOutput(result, options);
+
+        console.log(output);
+
+        if (result.missingDependencies.length > 0) {
+          process.exit(1);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        process.exit(1);
+      }
+      return;
+    }
+
+    // --- Otherwise, run the original check logic ---
     relinka(
       "info",
       "this command checks your codebase for extension and dependency issues.",
@@ -79,11 +165,7 @@ export default defineCommand({
         title: "select a directory to check",
         options: [
           { label: "all directories", value: "all" },
-
-          // TODO: run this automatically BEFORE `dler build`
           { label: "src (typescript source)", value: "src" },
-
-          // TODO: run this automatically AFTER `dler build`
           { label: "dist-npm (compiled js)", value: "dist-npm" },
           { label: "dist-jsr (typescript)", value: "dist-jsr" },
           { label: "dist-libs/npm (compiled js)", value: "dist-libs/npm" },

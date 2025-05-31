@@ -1,5 +1,5 @@
 import { relinka } from "@reliverse/relinka";
-import { defineArgs, defineCommand } from "@reliverse/rempts";
+import { confirmPrompt, defineArgs, defineCommand } from "@reliverse/rempts";
 
 import { migrateAnythingToBun } from "./codemods/anything-bun";
 import { consoleToRelinka } from "./codemods/console-relinka";
@@ -23,6 +23,11 @@ export default defineCommand({
     description: "Migrate between different libraries and usages",
   },
   args: defineArgs({
+    interactive: {
+      type: "boolean",
+      description: "Interactive mode",
+      default: true,
+    },
     codemod: {
       type: "string",
       description:
@@ -65,6 +70,16 @@ export default defineCommand({
     },
   }),
   async run({ args }) {
+    if (args.interactive) {
+      const confidence = await confirmPrompt({
+        title: `This is an experimental feature and probably may broke some things.\nIt will be improved in the future.\nAre you sure you want to migrate files in ${args.project}?`,
+        defaultValue: false,
+      });
+      if (!confidence) {
+        throw new Error("Migration cancelled");
+      }
+    }
+
     if (args.codemod === "anything-bun") {
       relinka("log", "Migrating to Bun...");
       await migrateAnythingToBun({

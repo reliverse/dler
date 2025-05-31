@@ -1,14 +1,28 @@
+// simple example: `bun dler merge --s "src/**/*.ts" --d "dist/merged.ts"`
+// advanced example: `bun dler merge --s ".temp1/packages/*/lib/**/*" --d ".temp2/merged.ts" --sort "mtime" --header "// Header" --footer "// Footer" --dedupe`
+
 import path from "@reliverse/pathkit";
 import { glob } from "@reliverse/reglob";
 import fs from "@reliverse/relifso";
-import { defineCommand, inputPrompt, confirmPrompt } from "@reliverse/rempts";
+import { relinka } from "@reliverse/relinka";
+import {
+  defineCommand,
+  inputPrompt,
+  confirmPrompt,
+  multiselectPrompt,
+} from "@reliverse/rempts";
+import pMap from "p-map";
+import prettyMilliseconds from "pretty-ms";
+
+import {
+  createPerfTimer,
+  getElapsedPerfTime,
+} from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 // ---------- constants ----------
 
-// always-ignored directories
 const DEFAULT_IGNORES = ["**/.git/**", "**/node_modules/**"] as const;
 
-// binary / media extensions (stored in a Set for O(1) lookups)
 const BINARY_EXTS = [
   "png",
   "jpg",
@@ -44,7 +58,6 @@ const BINARY_EXTS = [
 ] as const;
 const BINARY_SET = new Set<string>(BINARY_EXTS);
 
-// known comment prefixes per extension
 const COMMENT_MAP: Record<string, string> = {
   js: "// ",
   jsx: "// ",
@@ -81,7 +94,7 @@ const COMMENT_MAP: Record<string, string> = {
 };
 
 const DEFAULT_COMMENT = "// ";
-const DEFAULT_SEPARATOR_RAW = "\\n\\n"; // two newlines (escaped form)
+const DEFAULT_SEPARATOR_RAW = "\\n\\n";
 
 // ---------- helpers ----------
 
@@ -101,7 +114,6 @@ const parseCSV = (s: string) =>
 // biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
 const unescape = (s: string) => s.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
 
-// prompt wrappers that honour batch mode
 const maybePrompt = async <T>(
   batch: boolean,
   value: T | undefined,
@@ -111,28 +123,31 @@ const maybePrompt = async <T>(
   return promptFn();
 };
 
-// collect and pre-filter files (dedup + binary skip early)
-const collectFiles = async (include: string[], extraIgnore: string[]) => {
+const collectFiles = async (
+  include: string[],
+  extraIgnore: string[],
+  recursive: boolean,
+  sortBy: "name" | "path" | "mtime" | "none",
+) => {
   const files = await glob(include, {
     ignore: [...DEFAULT_IGNORES, ...extraIgnore],
     absolute: true,
+    onlyFiles: true,
+    deep: recursive ? undefined : 1,
   });
-  return [...new Set(files)].filter((f) => !isBinaryExt(f)).sort();
-};
-
-const readSections = async (
-  files: string[],
-  injectPath: boolean,
-  getPrefix: (f: string) => string,
-) => {
-  const cwd = process.cwd();
-  const reads = files.map(async (f) => {
-    const raw = (await fs.readFile(f, "utf8")) as string;
-    if (!injectPath) return raw;
-    const rel = path.relative(cwd, f);
-    return `${ensureTrailingNL(raw)}${getPrefix(f)}${rel}`;
-  });
-  return Promise.all(reads);
+  let filtered = [...new Set(files)].filter((f) => !isBinaryExt(f));
+  if (sortBy === "name") {
+    filtered.sort((a, b) => path.basename(a).localeCompare(path.basename(b)));
+  } else if (sortBy === "path") {
+    filtered.sort();
+  } else if (sortBy === "mtime") {
+    filtered = await pMap(
+      filtered,
+      async (f) => ({ f, mtime: (await fs.stat(f)).mtimeMs }),
+      { concurrency: 8 },
+    ).then((arr) => arr.sort((a, b) => a.mtime - b.mtime).map((x) => x.f));
+  }
+  return filtered;
 };
 
 const writeResult = async (
@@ -140,6 +155,8 @@ const writeResult = async (
   separator: string,
   toFile: string | undefined,
   toStdout: boolean,
+  dryRun: boolean,
+  backup: boolean,
 ) => {
   const content = `${sections.join(separator)}\n`;
   if (toStdout || !toFile) {
@@ -148,22 +165,84 @@ const writeResult = async (
   }
   const dir = path.dirname(toFile);
   if (dir && dir !== ".") await fs.ensureDir(dir);
-  await fs.writeFile(toFile, content, "utf8");
+  if (backup && (await fs.pathExists(toFile))) {
+    const backupPath = `${toFile}.${Date.now()}.bak`;
+    await fs.copyFile(toFile, backupPath);
+  }
+  if (!dryRun) {
+    await fs.writeFile(toFile, content, "utf8");
+  }
+};
+
+const writeFilesPreserveStructure = async (
+  files: string[],
+  outDir: string,
+  preserveStructure: boolean,
+  increment: boolean,
+  concurrency: number,
+  dryRun: boolean,
+  backup: boolean,
+) => {
+  const cwd = process.cwd();
+  const fileNameCounts = new Map<string, Map<string, number>>();
+
+  await pMap(
+    files,
+    async (file) => {
+      const relPath = preserveStructure
+        ? path.relative(cwd, file)
+        : path.basename(file);
+
+      let destPath = path.join(outDir, relPath);
+
+      if (increment) {
+        const dir = path.dirname(destPath);
+        const base = path.basename(destPath);
+        let dirMap = fileNameCounts.get(dir);
+        if (!dirMap) {
+          dirMap = new Map();
+          fileNameCounts.set(dir, dirMap);
+        }
+        const count = dirMap.get(base) || 0;
+        if (count > 0) {
+          const extMatch = base.match(/(.*)(\.[^./\\]+)$/);
+          let newBase: string;
+          if (extMatch) {
+            newBase = `${extMatch[1]}-${count + 1}${extMatch[2]}`;
+          } else {
+            newBase = `${base}-${count + 1}`;
+          }
+          destPath = path.join(dir, newBase);
+        }
+        dirMap.set(base, count + 1);
+      }
+
+      await fs.ensureDir(path.dirname(destPath));
+      if (backup && (await fs.pathExists(destPath))) {
+        const backupPath = `${destPath}.${Date.now()}.bak`;
+        await fs.copyFile(destPath, backupPath);
+      }
+      if (!dryRun) {
+        await fs.copyFile(file, destPath);
+      }
+    },
+    { concurrency },
+  );
 };
 
 // ---------- command ----------
 
 export default defineCommand({
   meta: {
-    name: "remege",
+    name: "merge",
     version: "1.0.0",
     description:
-      "Merge text files with optional commented path footer, skips binaries/media, built for CI & interactive use.",
+      "Merge text files with optional commented path header/footer, skips binaries/media, built for CI & interactive use. Supports copy-like patterns and advanced options.",
   },
   args: {
-    in: { type: "array", description: "Input glob patterns" },
+    s: { type: "array", description: "Input glob patterns" },
+    d: { type: "string", description: "Output file path or directory" },
     ignore: { type: "array", description: "Extra ignore patterns" },
-    out: { type: "string", description: "Output file path" },
     format: {
       type: "string",
       default: "txt",
@@ -173,6 +252,11 @@ export default defineCommand({
     noPath: {
       type: "boolean",
       description: "Don't inject relative path below each file",
+    },
+    pathAbove: {
+      type: "boolean",
+      description: "Print file path above each file's content (default: true)",
+      default: true,
     },
     separator: {
       type: "string",
@@ -190,12 +274,68 @@ export default defineCommand({
       type: "boolean",
       description: "Disable interactive prompts (CI/non-interactive mode)",
     },
+    recursive: {
+      type: "boolean",
+      description:
+        "Recursively process all files in subdirectories (default: true)",
+      default: true,
+    },
+    preserveStructure: {
+      type: "boolean",
+      description:
+        "Preserve source directory structure in output (default: true)",
+      default: true,
+    },
+    increment: {
+      type: "boolean",
+      description:
+        "Attach an incrementing index to each output filename if set (default: false)",
+      default: false,
+    },
+    concurrency: {
+      type: "number",
+      description: "Number of concurrent file operations (default: 8)",
+      default: 8,
+    },
+    sort: {
+      type: "string",
+      description: "Sort files by: name, path, mtime, none (default: path)",
+      default: "path",
+    },
+    dryRun: {
+      type: "boolean",
+      description: "Show what would be done, but don't write files",
+      default: false,
+    },
+    backup: {
+      type: "boolean",
+      description: "Backup output files before overwriting",
+      default: false,
+    },
+    dedupe: {
+      type: "boolean",
+      description: "Remove duplicate file contents in merge",
+      default: false,
+    },
+    header: {
+      type: "string",
+      description: "Header text to add at the start of merged output",
+    },
+    footer: {
+      type: "string",
+      description: "Footer text to add at the end of merged output",
+    },
+    interactive: {
+      type: "boolean",
+      description: "Prompt for file selection before merging",
+      default: false,
+    },
   },
   async run({ args }) {
+    const timer = createPerfTimer();
     const batch = Boolean(args.batch);
 
-    // ----- include patterns -----
-    let include = args.in ?? [];
+    let include = args.s ?? [];
     if (include.length === 0) {
       const raw = await maybePrompt(batch, undefined, () =>
         inputPrompt({
@@ -208,7 +348,6 @@ export default defineCommand({
     if (include.length === 0)
       throw new Error("No input patterns supplied and prompts disabled");
 
-    // ----- ignore patterns -----
     let ignore = args.ignore ?? [];
     if (ignore.length === 0) {
       const raw = await maybePrompt(batch, undefined, () =>
@@ -220,7 +359,6 @@ export default defineCommand({
       if (raw) ignore = parseCSV(raw as string);
     }
 
-    // ----- comment settings -----
     let customComment = args.comment;
     if (customComment === undefined) {
       const want = await maybePrompt(batch, undefined, () =>
@@ -237,11 +375,9 @@ export default defineCommand({
       }
     }
     const forceComment = args.forceComment ?? false;
-
-    // ----- path footer toggle -----
     const injectPath = !args.noPath;
+    const pathAbove = args.pathAbove ?? true;
 
-    // ----- separator -----
     const sepRaw =
       args.separator ??
       ((await maybePrompt(batch, undefined, () =>
@@ -254,9 +390,8 @@ export default defineCommand({
       DEFAULT_SEPARATOR_RAW;
     const separator = unescape(sepRaw);
 
-    // ----- output location / stdout -----
     let stdoutFlag = args.stdout ?? false;
-    let outFile = args.out;
+    let outFile = args.d;
 
     if (!stdoutFlag && !outFile && !batch) {
       stdoutFlag = await confirmPrompt({
@@ -278,23 +413,100 @@ export default defineCommand({
       }
     }
 
-    // ----- gather files -----
-    const files = await collectFiles(include, ignore);
+    const recursive = args.recursive ?? true;
+    const preserveStructure = args.preserveStructure ?? true;
+    const increment = args.increment ?? false;
+    const concurrency = args.concurrency ?? 8;
+    const sortBy = args.sort as "name" | "path" | "mtime" | "none";
+    const dryRun = args.dryRun ?? false;
+    const backup = args.backup ?? false;
+    const dedupe = args.dedupe ?? false;
+    const header = args.header;
+    const footer = args.footer;
+    const interactive = args.interactive ?? false;
+
+    let files = await collectFiles(include, ignore, recursive, sortBy);
+
     if (files.length === 0) {
       throw new Error(
         "No text files matched given patterns (binary/media files are skipped)",
       );
     }
 
-    // ----- comment prefix resolver -----
+    if (interactive && !batch) {
+      const selected = await multiselectPrompt({
+        title: "Select files to merge",
+        options: files.map((f) => ({
+          label: path.relative(process.cwd(), f),
+          value: f,
+        })),
+      });
+      files = Array.isArray(selected) ? selected : [selected];
+      if (files.length === 0) {
+        throw new Error("No files selected for merging");
+      }
+    }
+
     const getPrefix = (filePath: string): string => {
       if (forceComment && customComment) return customComment;
       const ext = path.extname(filePath).slice(1).toLowerCase();
       return COMMENT_MAP[ext] ?? customComment ?? DEFAULT_COMMENT;
     };
 
-    // ----- read, merge, write -----
-    const sections = await readSections(files, injectPath, getPrefix);
-    await writeResult(sections, separator, outFile, stdoutFlag);
+    if (
+      outFile &&
+      (await fs.pathExists(outFile)) &&
+      (await fs.stat(outFile)).isDirectory()
+    ) {
+      await writeFilesPreserveStructure(
+        files,
+        outFile,
+        preserveStructure,
+        increment,
+        concurrency,
+        dryRun,
+        backup,
+      );
+      return;
+    }
+
+    const cwd = process.cwd();
+    const seen = new Set<string>();
+    const sections = await pMap(
+      files,
+      async (f) => {
+        const raw = (await fs.readFile(f, "utf8")) as string;
+        if (dedupe) {
+          const hash = raw.trim();
+          if (seen.has(hash)) return null;
+          seen.add(hash);
+        }
+        const rel = path.relative(cwd, f);
+        const prefix = getPrefix(f);
+        let section = raw;
+        if (pathAbove) {
+          section = `${prefix}${rel}\n${section}`;
+        }
+        if (injectPath) {
+          section = `${ensureTrailingNL(section)}${prefix}${rel}`;
+        }
+        return section;
+      },
+      { concurrency },
+    );
+    const filteredSections = sections.filter(Boolean) as string[];
+    if (header) filteredSections.unshift(header);
+    if (footer) filteredSections.push(footer);
+
+    await writeResult(
+      filteredSections,
+      separator,
+      outFile,
+      stdoutFlag,
+      dryRun,
+      backup,
+    );
+    const elapsed = getElapsedPerfTime(timer);
+    relinka("success", `Merge completed in ${prettyMilliseconds(elapsed)}`);
   },
 });

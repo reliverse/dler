@@ -1,4 +1,4 @@
-# @reliverse/reinit | Reinit CLI & Core
+# dler init
 
 [💖 GitHub Sponsors](https://github.com/sponsors/blefnk) • [💬 Discord](https://discord.gg/Pb8uKbwpsJ) • [📦 NPM](https://npmjs.com/@reliverse/reinit-cli) • [📚 Docs](https://blefnk.reliverse.org/blog/my-products/reinit)
 

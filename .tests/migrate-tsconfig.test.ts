@@ -4,7 +4,7 @@ import { existsSync, rmSync } from "node:fs";
 import { readFile, mkdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
-import { getCmdMigrate } from "../src/app/cmds";
+import { getMigrateCmd } from "~/app/cmds";
 
 type TsConfig = {
   compilerOptions: {
@@ -110,7 +110,7 @@ import { third } from "@/components/third.ts";
   });
 
   test("should migrate to nodenext module resolution", async () => {
-    const cmd = await getCmdMigrate();
+    const cmd = await getMigrateCmd();
     await runCmd(cmd, ["--lib", "nodenext-bundler", "--target", "nodenext"]);
 
     // Check tsconfig.json
@@ -134,7 +134,7 @@ import { third } from "@/components/third.ts";
   });
 
   test("should migrate to bundler module resolution", async () => {
-    const cmd = await getCmdMigrate();
+    const cmd = await getMigrateCmd();
     await runCmd(cmd, ["--lib", "nodenext-bundler", "--target", "bundler"]);
 
     // Check tsconfig.json
@@ -159,7 +159,7 @@ import { third } from "@/components/third.ts";
   });
 
   test("should handle dry run correctly ()", async () => {
-    const cmd = await getCmdMigrate();
+    const cmd = await getMigrateCmd();
     await runCmd(cmd, [
       "--lib",
       "nodenext-bundler",
@@ -187,7 +187,7 @@ import { third } from "@/components/third.ts";
   });
 
   test("should handle invalid target (`Invalid target: invalid` should be printed)", async () => {
-    const cmd = await getCmdMigrate();
+    const cmd = await getMigrateCmd();
     try {
       await runCmd(cmd, ["--lib", "nodenext-bundler", "--target", "invalid"]);
       throw new Error("Expected command to fail");

@@ -10,12 +10,7 @@ import {
 } from "@reliverse/rempts";
 
 import { promptAggCommand } from "./app/agg/run";
-import {
-  getCmdBuild,
-  getCmdPub,
-  getCmdRelifsoInit,
-  getCmdRelifsoRename,
-} from "./app/cmds";
+import { getBuildCmd, getPubCmd, getInitCmd, getRenameCmd } from "./app/cmds";
 import { showEndPrompt, showStartPrompt } from "./libs/sdk/sdk-impl/cfg/info";
 
 const INTERACTIVE_CMDS = ["agg", "build", "pub"];
@@ -90,15 +85,15 @@ const main = defineCommand({
     if (cmdToRun === "agg") {
       await promptAggCommand();
     } else if (cmdToRun === "build") {
-      await runCmd(getCmdBuild(), [`--dev=${args.dev}`]);
+      await runCmd(getBuildCmd(), [`--dev=${args.dev}`]);
     } else if (cmdToRun === "pub") {
-      await runCmd(getCmdPub(), [`--dev=${args.dev}`]);
+      await runCmd(getPubCmd(), [`--dev=${args.dev}`]);
     } else if (cmdToRun === "init") {
-      await runCmd(getCmdRelifsoInit(), []);
+      await runCmd(getInitCmd(), []);
     } else if (cmdToRun === "rename-prepare") {
-      await runCmd(getCmdRelifsoRename(), ["--prepareMyCLI"]);
+      await runCmd(getRenameCmd(), ["--prepareMyCLI"]);
     } else if (cmdToRun === "rename-prepare-revert") {
-      await runCmd(getCmdRelifsoRename(), ["--prepareMyCLI", "--revert"]);
+      await runCmd(getRenameCmd(), ["--prepareMyCLI", "--revert"]);
     }
 
     relinka("log", " ");
