@@ -2,10 +2,10 @@ import path from "@reliverse/pathkit";
 import { re } from "@reliverse/relico";
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 
-import type { FinderOptions } from "./impl/deps-types";
+import type { FinderOptions } from "~/libs/sdk/sdk-impl/rules/reliverse/missing-deps/deps-types";
 
-import { analyzeDependencies } from "./impl/analyzer";
-import { formatOutput } from "./impl/formatter";
+import { analyzeDependencies } from "~/libs/sdk/sdk-impl/rules/reliverse/missing-deps/analyzer";
+import { formatOutput } from "~/libs/sdk/sdk-impl/rules/reliverse/missing-deps/formatter";
 
 export default defineCommand({
   meta: {
@@ -22,22 +22,39 @@ export default defineCommand({
     all: {
       type: "boolean",
       description: "show all dependencies (both listed and not listed)",
-      default: false,
     },
     ignore: {
       type: "string",
       description: "comma-separated patterns to ignore",
-      default: "",
     },
     json: {
       type: "boolean",
       description: "output in JSON format",
-      default: false,
     },
     builtins: {
       type: "boolean",
       description: "include Node.js built-in modules in the output",
-      default: false,
+    },
+    dev: {
+      type: "boolean",
+      description: "check devDependencies instead of dependencies",
+    },
+    peer: {
+      type: "boolean",
+      description: "check peerDependencies instead of dependencies",
+    },
+    optional: {
+      type: "boolean",
+      description: "check optionalDependencies instead of dependencies",
+    },
+    fix: {
+      type: "boolean",
+      description: "automatically add missing dependencies to package.json",
+    },
+    depth: {
+      type: "number",
+      description: "maximum directory depth to scan (0 for unlimited)",
+      default: 0,
     },
   }),
   async run({ args }) {
@@ -51,6 +68,11 @@ export default defineCommand({
         ignorePatterns,
         json: args.json,
         builtins: args.builtins,
+        dev: args.dev,
+        peer: args.peer,
+        optional: args.optional,
+        fix: args.fix,
+        depth: args.depth,
       };
 
       console.log(re.gray(`Scanning directory: ${directory}`));

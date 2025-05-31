@@ -22,24 +22,23 @@ export async function copyRootFile(
     return;
   }
 
+  // List of files that should be excluded from being copied as they are generated
+  const EXCLUDED_FILES = ["bin", "jsr.json", "jsr.jsonc", "package.json"];
+
   try {
-    // Ensure output directory exists
     await fs.ensureDir(outDirRoot);
 
-    // Define special file handling configurations
+    // Special file handling configurations
     const specialFileHandlers: Record<
       string,
       {
-        outputName?: string;
-        variants?: string[];
+        variants: string[];
       }
     > = {
       LICENSE: {
-        outputName: "LICENSE",
-        variants: ["LICENSE", "LICENSE.md"],
+        variants: ["LICENSE", "LICENSE.md", "LICENSES"],
       },
       README: {
-        outputName: "README.md",
         variants: ["README.md", "README"],
       },
     };
@@ -49,27 +48,48 @@ export async function copyRootFile(
       fileNames,
       async (fileName) => {
         try {
+          // Skip excluded files
+          if (EXCLUDED_FILES.includes(fileName)) {
+            relinka(
+              "verbose",
+              `The following artifact is auto-generated in dist and will not be copied from the root: ${fileName}`,
+            );
+            return;
+          }
+
           const specialConfig = specialFileHandlers[fileName];
 
           if (specialConfig?.variants) {
-            // Handle files with variants (like LICENSE)
+            // Handle files with variants (like LICENSE and README)
             for (const variant of specialConfig.variants) {
               const file = await findFileCaseInsensitive(variant);
               if (file) {
-                const outputName = specialConfig.outputName || fileName;
-                await fs.copy(file, path.join(outDirRoot, outputName));
+                const targetPath = path.join(outDirRoot, variant);
+
+                // Remove existing file if it exists
+                if (await fs.pathExists(targetPath)) {
+                  await fs.remove(targetPath);
+                }
+
+                await fs.copy(file, targetPath);
                 relinka(
                   "verbose",
-                  `Copied ${file} to ${outDirRoot}/${outputName}`,
+                  `Copied ${file} to ${outDirRoot}/${variant}`,
                 );
-                break;
               }
             }
           } else {
             // Handle standard files
             const file = await findFileCaseInsensitive(fileName);
             if (file) {
-              await fs.copy(file, path.join(outDirRoot, fileName));
+              const targetPath = path.join(outDirRoot, fileName);
+
+              // Remove existing file if it exists
+              if (await fs.pathExists(targetPath)) {
+                await fs.remove(targetPath);
+              }
+
+              await fs.copy(file, targetPath);
               relinka("verbose", `Copied ${file} to ${outDirRoot}/${fileName}`);
             }
           }

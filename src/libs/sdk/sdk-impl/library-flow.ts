@@ -10,7 +10,7 @@ import type {
   Sourcemap,
   transpileFormat,
   transpileTarget,
-  BuildPublishConfig,
+  DlerConfig,
   PerfTimer,
 } from "~/libs/sdk/sdk-types";
 
@@ -24,7 +24,7 @@ import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "./utils/utils-consts";
 export async function processLibraryFlow(
   timer: PerfTimer,
   isDev: boolean,
-  config: BuildPublishConfig,
+  config: DlerConfig,
 ): Promise<void> {
   if (
     config.libsActMode !== "libs-only" &&
@@ -50,7 +50,7 @@ export async function processLibraryFlow(
     config.distNpmOutFilesExt,
     config.distNpmBuilder,
     config.coreEntrySrcDir,
-    config.removeDepsPatterns,
+    config.filterDepsPatterns,
     config.transpileEsbuild,
     config.transpileTarget,
     config.transpileFormat,
@@ -111,7 +111,7 @@ export async function libraries_buildPublish(
   unifiedBundlerOutExt: NpmOutExt,
   distNpmBuilder: BundlerName,
   coreEntrySrcDir: string,
-  removeDepsPatterns: {
+  filterDepsPatterns: {
     global: string[];
     "dist-npm": string[];
     "dist-jsr": string[];
@@ -129,7 +129,7 @@ export async function libraries_buildPublish(
   distJsrOutFilesExt: NpmOutExt,
   distJsrAllowDirty: boolean,
   distJsrSlowTypes: boolean,
-  config: BuildPublishConfig,
+  config: DlerConfig,
 ): Promise<void> {
   relinka("verbose", "Starting libraries_buildPublish");
 
@@ -201,7 +201,7 @@ export async function libraries_buildPublish(
           isDev,
           libsList,
           unifiedBundlerOutExt,
-          removeDepsPatterns,
+          filterDepsPatterns,
           transpileEsbuild,
           transpileTarget,
           transpileFormat,

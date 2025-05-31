@@ -52,10 +52,20 @@ export const renameFile = async (
 export const copyFile = async (
   sourcePath: string,
   targetPath: string,
+  overwrite = true,
 ): Promise<void> => {
   try {
     const dir = path.dirname(targetPath);
     await fs.mkdir(dir, { recursive: true });
+
+    // Check if target file exists
+    const exists = await fileExists(targetPath);
+    if (exists && !overwrite) {
+      throw new Error(
+        `Destination ${targetPath} already exists and overwrite is false.`,
+      );
+    }
+
     await fs.copyFile(sourcePath, targetPath);
   } catch (error) {
     throw new Error(

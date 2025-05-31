@@ -5,14 +5,32 @@ import {
   defineArgs,
   selectPrompt,
   showUsage,
-  runCmd,
+  runCmd as remptsRunCmd,
+  type Command,
 } from "@reliverse/rempts";
 
 import { promptAggCommand } from "./app/agg/run";
-import { cmdBuild, cmdPub } from "./app/cmds";
-import { showEndPrompt, showStartPrompt } from "./init/info";
+import {
+  getCmdBuild,
+  getCmdPub,
+  getCmdRelifsoInit,
+  getCmdRelifsoRename,
+} from "./app/cmds";
+import { showEndPrompt, showStartPrompt } from "./libs/sdk/sdk-impl/cfg/info";
 
 const INTERACTIVE_CMDS = ["agg", "build", "pub"];
+
+/**
+ * Wrapper around rempts' runCmd to handle jiti-loaded modules
+ */
+async function runCmd(cmdPromise: Promise<Command>, args: string[]) {
+  const cmd = await cmdPromise;
+  // Ensure we have a valid command object with required properties
+  if (!cmd || typeof cmd !== "object" || !cmd.meta || !cmd.run) {
+    throw new Error("Invalid command module: missing required properties");
+  }
+  return remptsRunCmd(cmd, args);
+}
 
 const main = defineCommand({
   meta: {
@@ -24,8 +42,16 @@ const main = defineCommand({
       type: "boolean",
       description: "Runs the CLI in dev mode",
     },
+    cwd: {
+      type: "string",
+      description: "The working directory to run the CLI in",
+      default: process.cwd(),
+    },
   }),
   async run({ args }) {
+    const isDev = args.dev;
+    relinka("verbose", `Running in ${isDev ? "dev" : "prod"} mode`);
+
     const isCI = process.env.CI === "true";
     const isNonInteractive = !process.stdout.isTTY;
     if (isCI || isNonInteractive) {
@@ -44,19 +70,35 @@ const main = defineCommand({
         { value: "agg", label: "agg" },
         { value: "build", label: "build" },
         { value: "pub", label: "pub" },
+        { value: "copy", label: "copy" },
+        {
+          value: "init",
+          label: "Initialize files",
+        },
+        {
+          value: "rename-prepare",
+          label:
+            "My project is a bootstrapper CLI (apply rename optimizations)",
+        },
+        {
+          value: "rename-prepare-revert",
+          label: "Revert rename CLI files optimizations",
+        },
       ],
     });
 
     if (cmdToRun === "agg") {
       await promptAggCommand();
-    }
-
-    if (cmdToRun === "build") {
-      await runCmd(await cmdBuild(), [`--dev=${args.dev}`]);
-    }
-
-    if (cmdToRun === "pub") {
-      await runCmd(await cmdPub(), [`--dev=${args.dev}`]);
+    } else if (cmdToRun === "build") {
+      await runCmd(getCmdBuild(), [`--dev=${args.dev}`]);
+    } else if (cmdToRun === "pub") {
+      await runCmd(getCmdPub(), [`--dev=${args.dev}`]);
+    } else if (cmdToRun === "init") {
+      await runCmd(getCmdRelifsoInit(), []);
+    } else if (cmdToRun === "rename-prepare") {
+      await runCmd(getCmdRelifsoRename(), ["--prepareMyCLI"]);
+    } else if (cmdToRun === "rename-prepare-revert") {
+      await runCmd(getCmdRelifsoRename(), ["--prepareMyCLI", "--revert"]);
     }
 
     relinka("log", " ");

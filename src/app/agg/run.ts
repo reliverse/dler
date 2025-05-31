@@ -7,24 +7,9 @@ import {
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { cmdAgg } from "~/app/cmds";
+import type { DlerConfig } from "~/libs/sdk/sdk-types";
 
-type LibConfig = {
-  libDeclarations: boolean;
-  libDescription: string;
-  libDirName: string;
-  libMainFile: string;
-  libPkgKeepDeps: boolean;
-  libTranspileMinify: boolean;
-  libPubPause: boolean;
-  libPubRegistry?: "jsr" | "npm" | "npm-jsr";
-};
-
-type DlerConfig = {
-  commonPubRegistry: "jsr" | "npm" | "npm-jsr";
-  libsDirSrc: string;
-  libsList: Record<string, LibConfig>;
-};
+import { getCmdAgg } from "~/app/cmds";
 
 // Helper to load config if exists
 async function loadConfig(): Promise<DlerConfig | null> {
@@ -125,7 +110,7 @@ export async function promptAggCommand() {
     });
   }
 
-  await runCmd(await cmdAgg(), [
+  await runCmd(await getCmdAgg(), [
     `--imports=${imports}`,
     `--input=${input}`,
     `--named=${named}`,

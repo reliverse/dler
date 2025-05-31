@@ -14,7 +14,7 @@ import prettyMilliseconds from "pretty-ms";
 import type { PerfTimer, UnifiedBuildConfig } from "~/libs/sdk/sdk-types";
 import type {
   BundlerName,
-  BuildPublishConfig,
+  DlerConfig,
   Esbuild,
   LibConfig,
   NpmOutExt,
@@ -27,7 +27,6 @@ import { unifiedBuild } from "~/libs/sdk/sdk-impl/build/bundlers/unified/build";
 import {
   getBunSourcemapOption,
   getUnifiedSourcemapOption,
-  renameEntryFile,
 } from "~/libs/sdk/sdk-impl/utils/utils-build";
 import { removeLogInternalCalls } from "~/libs/sdk/sdk-impl/utils/utils-clean";
 import {
@@ -55,7 +54,6 @@ import { library_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-pkg-j
 
 const BIN_DIR_NAME = "bin"; // Directory name for bundled output within dist
 const REPLACEMENT_MARKER = "// dler-replace-me"; // Marker for source replacement
-const FILES_TO_COPY_ROOT = ["README.md", "LICENSE"]; // Common files to copy to dist
 const TYPES_REPLACEMENT_PATH = "src/types.ts"; // Relative path to types file used for replacement
 const ALIAS_PREFIX_TO_CONVERT = "~"; // Alias prefix used in internal imports
 
@@ -92,7 +90,7 @@ type JsrBuildOptions = {
 };
 
 /** Consolidated options for the main library build function */
-export type LibraryBuildOptions = BuildPublishConfig & {
+export type LibraryBuildOptions = DlerConfig & {
   effectivePubRegistry: "npm" | "jsr" | "npm-jsr" | undefined;
   npm?: NpmBuildOptions;
   jsr?: JsrBuildOptions;
@@ -164,7 +162,7 @@ type CommonStepsParams = {
   isJsr: boolean;
   libName: string;
   libsList: Record<string, LibConfig>;
-  config: BuildPublishConfig;
+  config: DlerConfig;
   unifiedBundlerOutExt: NpmOutExt;
   distJsrOutFilesExt: NpmOutExt;
   deleteFiles?: boolean;
@@ -361,6 +359,8 @@ async function library_buildJsrDist(
   await createJsrJSON(
     outputDirRootResolved,
     true,
+    options.libsList,
+    options,
     libName,
     libConfig?.libDescription ?? "",
   );
@@ -649,8 +649,23 @@ async function library_bundleUsingJsrCopy(
   await fs.ensureDir(destDir);
 
   try {
-    // Copy directory contents
-    await fs.copy(srcDir, destDir, { overwrite: true });
+    // Get all files in the source directory
+    const files = await fs.readdir(srcDir, { withFileTypes: true });
+
+    // Copy each file/directory individually to maintain the correct structure
+    for (const file of files) {
+      const srcPath = path.join(srcDir, file.name);
+      const destPath = path.join(destDir, file.name);
+
+      if (file.isDirectory()) {
+        // Recursively copy directories
+        await fs.copy(srcPath, destPath, { overwrite: true });
+      } else {
+        // Copy individual files
+        await fs.copy(srcPath, destPath, { overwrite: true });
+      }
+    }
+
     relinka(
       "success",
       `[JSR Copy:${libName}] Completed copying library source from ${srcDir} to ${destDir}`,
@@ -895,7 +910,7 @@ async function library_performCommonBuildSteps(
 
   relinka(
     "verbose",
-    `${logPrefix} Performing common steps in ${outputDirRoot}`,
+    `${logPrefix} Performing common steps in ${outputDirRoot}. Entry file: ${coreEntryFileName}. ${isJsr ? `JSR out files ext: ${distJsrOutFilesExt}` : `NPM out files ext: ${unifiedBundlerOutExt}`}`,
   );
 
   // Create package.json
@@ -923,10 +938,25 @@ async function library_performCommonBuildSteps(
   }
 
   // Copy root-level files
-  await copyRootFile(outputDirRoot, FILES_TO_COPY_ROOT);
+  const filesToCopy = isJsr
+    ? config.publishArtifacts?.["dist-libs"]?.[libName]?.jsr ||
+      config.publishArtifacts?.["dist-jsr"] || ["jsr.json"]
+    : config.publishArtifacts?.["dist-libs"]?.[libName]?.npm ||
+      config.publishArtifacts?.["dist-npm"] ||
+      [];
+
+  // Always include global files, but exclude jsr.json/jsonc, package.json, and bin since they are generated
+  const globalFiles = config.publishArtifacts?.global || [
+    "package.json",
+    "README.md",
+    "LICENSE",
+  ];
+  const allFilesToCopy = [...new Set([...globalFiles, ...filesToCopy])];
+
+  await copyRootFile(outputDirRoot, allFilesToCopy);
   relinka(
     "verbose",
-    `${logPrefix} Copied root files (${FILES_TO_COPY_ROOT.join(", ")}) to ${outputDirRoot}`,
+    `${logPrefix} Copied root files (${allFilesToCopy.join(", ")}) to ${outputDirRoot}`,
   );
 
   // Convert internal alias imports
@@ -969,20 +999,26 @@ async function library_performCommonBuildSteps(
     );
     await convertImportsExt({
       targetDir: outDirBin,
+      extFrom: "js",
+      extTo: "ts",
+    });
+    await convertImportsExt({
+      targetDir: outDirBin,
       extFrom: "none",
       extTo: "ts",
     });
   }
 
   // Rename the main entry file
-  relinka("verbose", `${logPrefix} Renaming entry file in ${outDirBin}.`);
-  await renameEntryFile(
-    isJsr,
-    outDirBin,
-    coreEntryFileName,
-    unifiedBundlerOutExt,
-    distJsrOutFilesExt,
-  );
+  // TODO: remove in the future (deprecated)
+  // relinka("verbose", `${logPrefix} Renaming entry file in ${outDirBin}.`);
+  // await renameEntryFile(
+  //   isJsr,
+  //   outDirBin,
+  //   coreEntryFileName,
+  //   unifiedBundlerOutExt,
+  //   distJsrOutFilesExt,
+  // );
 
   relinka("verbose", `${logPrefix} Completed common build steps.`);
 }
@@ -1127,10 +1163,8 @@ async function preBuildReplacements(
 
   // Validate inputs
   if (!(await fs.pathExists(replacementFilePath))) {
-    relinka(
-      "warn",
-      `Replacement content file not found: ${replacementFilePath}. Skipping pre-build replacements.`,
-    );
+    // Replacement content file not found,
+    // skipping pre-build replacements...
     return [];
   }
   if (!(await fs.pathExists(librarySrcDir))) {

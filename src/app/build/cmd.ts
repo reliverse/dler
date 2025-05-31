@@ -1,7 +1,7 @@
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 
 import { dlerBuild } from "~/app/build/impl";
-import { ensureDlerConfig } from "~/init/init";
+import { ensureDlerConfig } from "~/libs/sdk/sdk-impl/cfg/init";
 
 export default defineCommand({
   meta: {

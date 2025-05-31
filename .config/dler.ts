@@ -8,30 +8,30 @@ import { defineConfig } from "~/mod";
 export default defineConfig({
   // Bump configuration
   bumpDisable: false,
-  bumpFilter: ["package.json", ".config/rse.ts", "src/init/info.ts"],
+  bumpFilter: [
+    "package.json",
+    ".config/rse.ts",
+    "src/libs/sdk/sdk-impl/cfg/info.ts",
+  ],
   bumpMode: "patch",
 
   // Common configuration
-  commonPubPause: true,
+  commonPubPause: false,
   commonPubRegistry: "npm-jsr",
   commonVerbose: true,
 
   // Core configuration
+  coreBuildOutDir: "bin",
   coreDeclarations: true,
   coreDescription:
     "@reliverse/dler is a flexible, unified, and fully automated bundler for typescript and javascript projects, as well as an npm and jsr publishing tool. dler is not only a bundler, it also tries to serve as the most powerful codemod toolkit for js/ts.",
   coreEntryFile: "mod.ts",
   coreEntrySrcDir: "src",
-  coreBuildOutDir: "bin",
-  coreIsCLI: {
-    enabled: true,
-    scripts: { dler: "cli.ts" },
-  },
+  coreIsCLI: { enabled: true, scripts: { dler: "cli.ts" } },
 
   // JSR-only config
   distJsrAllowDirty: true,
   distJsrBuilder: "jsr",
-  distJsrCopyRootFiles: ["README.md", "LICENSE"],
   distJsrDirName: "dist-jsr",
   distJsrDryRun: false,
   distJsrFailOnWarn: false,
@@ -41,7 +41,6 @@ export default defineConfig({
 
   // NPM-only config
   distNpmBuilder: "mkdist",
-  distNpmCopyRootFiles: ["README.md", "LICENSE"],
   distNpmDirName: "dist-npm",
   distNpmOutFilesExt: "js",
 
@@ -65,48 +64,64 @@ export default defineConfig({
     },
   },
 
-  // Logger setup
+  // @reliverse/relinka logger setup
   logsFileName: ".logs/relinka.log",
   logsFreshFile: true,
 
+  // Specifies what resources to send to npm and jsr registries.
+  // coreBuildOutDir (e.g. "bin") dir is automatically included.
+  // The following is also included if publishArtifacts is {}:
+  // - global: ["package.json", "README.md", "LICENSE"]
+  // - dist-jsr,dist-libs/jsr: ["jsr.json"]
+  publishArtifacts: {
+    global: ["package.json", "README.md", "LICENSE"],
+    "dist-jsr": ["jsr.json"],
+    "dist-npm": [],
+    "dist-libs": {
+      "@reliverse/dler-sdk": {
+        jsr: ["jsr.json"],
+        npm: [],
+      },
+    },
+  },
+
   // Dependency filtering
   // Global is always applied
-  removeDepsPatterns: {
+  filterDepsPatterns: {
     global: [
+      "bun",
       "@types",
       "biome",
       "eslint",
       "knip",
       "prettier",
       "typescript",
+      "@reliverse/rse",
       "@reliverse/dler",
+      "!@reliverse/rse-sdk",
+      "!@reliverse/dler-sdk",
     ],
-    "dist-npm": ["bun"],
     "dist-jsr": [],
+    "dist-npm": [],
     "dist-libs": {
       "@reliverse/dler-sdk": {
-        npm: ["bun"],
-        jsr: [],
+        jsr: ["!bun"],
+        npm: [],
       },
     },
   },
 
   // Build setup
-  transpileFailOnWarn: false,
+  // transpileAlias: {},
+  // transpileClean: true,
+  // transpileEntries: [],
   transpileEsbuild: "es2023",
+  // transpileExternals: [],
+  transpileFailOnWarn: false,
   transpileFormat: "esm",
   transpileMinify: true,
-  transpilePublicPath: "/",
-  transpileSourcemap: "none",
-  transpileSplitting: false,
-  transpileStub: false,
-  transpileTarget: "node",
-  transpileWatch: false,
-  // transpileAlias: {},
-  // transpileEntries: [],
-  // transpileExternals: [],
-  // transpileClean: true,
   // transpileParallel: false,
+  transpilePublicPath: "/",
   // transpileReplace: {},
   // transpileRollup: {
   //   alias: {},
@@ -118,8 +133,11 @@ export default defineConfig({
   //   resolve: {},
   // },
   // transpileShowOutLog: false,
-  // transpileStubOptions: {
-  //   jiti: {},
-  // },
+  transpileSourcemap: "none",
+  transpileSplitting: false,
+  transpileStub: false,
+  // transpileStubOptions: { jiti: {} },
+  transpileTarget: "node",
+  transpileWatch: false,
   // transpileWatchOptions: undefined,
 });

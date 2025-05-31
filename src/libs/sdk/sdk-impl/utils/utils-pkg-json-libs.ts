@@ -7,11 +7,7 @@ import {
   readPackageJSON,
 } from "pkg-types";
 
-import type {
-  NpmOutExt,
-  BuildPublishConfig,
-  LibConfig,
-} from "~/libs/sdk/sdk-types";
+import type { NpmOutExt, DlerConfig, LibConfig } from "~/libs/sdk/sdk-types";
 
 import { filterDeps } from "./utils-deps";
 
@@ -24,7 +20,7 @@ export async function library_createPackageJSON(
   jsrOutDir: string,
   effectivePubRegistry: "npm" | "jsr" | "npm-jsr" | undefined,
   libsList: Record<string, LibConfig>,
-  config: BuildPublishConfig,
+  config: DlerConfig,
   unifiedBundlerOutExt: NpmOutExt,
 ): Promise<void> {
   relinka("verbose", `Creating package.json for library ${libName}`);
@@ -133,7 +129,7 @@ async function library_getlibPkgKeepDeps(
   outDirBin: string,
   isJsr: boolean,
   libConfig: LibConfig,
-  config: BuildPublishConfig,
+  config: DlerConfig,
 ): Promise<Record<string, string>> {
   relinka("verbose", `Getting lib dependencies for: ${libName}`);
   if (!originalDeps) return {};
@@ -164,52 +160,97 @@ async function library_getlibPkgKeepDeps(
     const originalPkg = await readPackageJSON();
     const devDeps = originalDeps === originalPkg.devDependencies;
 
-    const result = Object.entries(originalDeps).reduce<Record<string, string>>(
-      (acc, [k, v]) => {
-        // Get the appropriate patterns based on the build type and library
-        const patterns = new Set<string>();
+    // Get the appropriate patterns based on the build type and library
+    const patterns = new Set<string>();
+    const addPatterns = new Set<string>(); // Track patterns that should be added
+    const negPatterns = new Set<string>(); // Track negation patterns
 
-        // Always include global patterns
-        for (const pattern of config.removeDepsPatterns.global) {
+    // Always include global patterns
+    for (const pattern of config.filterDepsPatterns.global) {
+      if (pattern.startsWith("+")) {
+        addPatterns.add(pattern.slice(1));
+      } else if (pattern.startsWith("!")) {
+        negPatterns.add(pattern.slice(1));
+      } else {
+        patterns.add(pattern);
+      }
+    }
+
+    // Add NPM-specific patterns if not JSR
+    if (!isJsr) {
+      for (const pattern of config.filterDepsPatterns["dist-npm"]) {
+        if (pattern.startsWith("+")) {
+          addPatterns.add(pattern.slice(1));
+        } else if (pattern.startsWith("!")) {
+          negPatterns.add(pattern.slice(1));
+        } else {
           patterns.add(pattern);
         }
+      }
+    }
 
-        // Add NPM-specific patterns if not JSR
-        if (!isJsr) {
-          for (const pattern of config.removeDepsPatterns["dist-npm"]) {
+    // Add JSR-specific patterns if JSR
+    if (isJsr) {
+      for (const pattern of config.filterDepsPatterns["dist-jsr"]) {
+        if (pattern.startsWith("+")) {
+          addPatterns.add(pattern.slice(1));
+        } else if (pattern.startsWith("!")) {
+          negPatterns.add(pattern.slice(1));
+        } else {
+          patterns.add(pattern);
+        }
+      }
+    }
+
+    // Add library-specific patterns if a library is specified
+    if (libName && config.filterDepsPatterns["dist-libs"][libName]) {
+      const libPatterns = config.filterDepsPatterns["dist-libs"][libName];
+      // Add NPM-specific patterns if not JSR
+      if (!isJsr) {
+        for (const pattern of libPatterns.npm) {
+          if (pattern.startsWith("+")) {
+            addPatterns.add(pattern.slice(1));
+          } else if (pattern.startsWith("!")) {
+            negPatterns.add(pattern.slice(1));
+          } else {
             patterns.add(pattern);
           }
         }
-
-        // Add JSR-specific patterns if JSR
-        if (isJsr) {
-          for (const pattern of config.removeDepsPatterns["dist-jsr"]) {
+      }
+      // Add JSR-specific patterns if JSR
+      if (isJsr) {
+        for (const pattern of libPatterns.jsr) {
+          if (pattern.startsWith("+")) {
+            addPatterns.add(pattern.slice(1));
+          } else if (pattern.startsWith("!")) {
+            negPatterns.add(pattern.slice(1));
+          } else {
             patterns.add(pattern);
           }
         }
+      }
+    }
 
-        // Add library-specific patterns if a library is specified
-        if (libName && config.removeDepsPatterns["dist-libs"][libName]) {
-          const libPatterns = config.removeDepsPatterns["dist-libs"][libName];
-          // Add NPM-specific patterns if not JSR
-          if (!isJsr) {
-            for (const pattern of libPatterns.npm) {
-              patterns.add(pattern);
-            }
-          }
-          // Add JSR-specific patterns if JSR
-          if (isJsr) {
-            for (const pattern of libPatterns.jsr) {
-              patterns.add(pattern);
-            }
-          }
+    const result = Object.entries(originalDeps).reduce<Record<string, string>>(
+      (acc, [k, v]) => {
+        const depNameLower = k.toLowerCase();
+
+        // First check if the dependency matches any negation pattern
+        const isNegated = Array.from(negPatterns).some((pattern) =>
+          depNameLower.includes(pattern.toLowerCase()),
+        );
+
+        // If negated, don't exclude
+        if (isNegated) {
+          acc[k] = v;
+          return acc;
         }
 
-        // Check if the dependency should be excluded
+        // Then check if it should be excluded by regular patterns
         const shouldExclude =
           devDeps ||
           Array.from(patterns).some((pattern) =>
-            k.toLowerCase().includes(pattern.toLowerCase()),
+            depNameLower.includes(pattern.toLowerCase()),
           );
 
         if (!shouldExclude) {
@@ -219,6 +260,16 @@ async function library_getlibPkgKeepDeps(
       },
       {},
     );
+
+    // Add dependencies from addPatterns if they don't exist
+    for (const pattern of addPatterns) {
+      if (!result[pattern] && !originalPkg.dependencies?.[pattern]) {
+        // Use the version from the original package.json if it exists in devDependencies
+        // Otherwise use the latest version
+        result[pattern] = originalPkg.devDependencies?.[pattern] || "latest";
+      }
+    }
+
     return result;
   }
 
@@ -269,13 +320,20 @@ async function library_writeJsrPackageJSON(
   originalPkg: PackageJson,
   commonPkg: Partial<PackageJson>,
   libsList: Record<string, LibConfig>,
-  config: BuildPublishConfig,
+  config: DlerConfig,
 ): Promise<void> {
   relinka("verbose", `Writing package.json for JSR lib: ${libName}`);
 
   // Throw error if libsList is empty or not provided
   if (!libsList) {
     throw new Error("libsList is empty or not provided");
+  }
+
+  // Check if libMainFile is defined
+  if (!libsList[libName]?.libMainFile) {
+    throw new Error(
+      `libsList.${libName}.libMainFile is not defined for library ${libName}`,
+    );
   }
 
   // For JSR packages, we need to handle bin entries differently
@@ -309,7 +367,7 @@ async function library_writeJsrPackageJSON(
         libDeclarations: false,
         libDescription: "",
         libDirName: libName,
-        libMainFile: "src/libs/libName/libName-mod.ts",
+        libMainFile: libsList[libName].libMainFile,
         libPkgKeepDeps: false,
         libTranspileMinify: true,
       },
@@ -324,8 +382,16 @@ async function library_writeJsrPackageJSON(
       libName,
     ),
     exports: {
-      ".": "./bin/mod.ts",
+      ".": `./bin/${path.basename(libsList[libName].libMainFile)}`,
     },
+    files: config.publishArtifacts?.global || [
+      "bin",
+      "package.json",
+      "README.md",
+      "LICENSE",
+    ],
+    main: `./bin/${path.basename(libsList[libName].libMainFile)}`,
+    module: `./bin/${path.basename(libsList[libName].libMainFile)}`,
   });
 
   const pkgPath = path.join(pkgJsonDir, "package.json");
@@ -344,7 +410,7 @@ async function library_writeNpmLibPackageJSON(
   originalPkg: PackageJson,
   commonPkg: Partial<PackageJson>,
   libsList: Record<string, LibConfig>,
-  config: BuildPublishConfig,
+  config: DlerConfig,
   unifiedBundlerOutExt: NpmOutExt,
 ): Promise<void> {
   relinka("verbose", `Writing package.json for NPM lib: ${libName}`);
@@ -352,6 +418,13 @@ async function library_writeNpmLibPackageJSON(
   // Throw error if libsList is empty or not provided
   if (!libsList) {
     throw new Error("libsList is empty or not provided");
+  }
+
+  // Check if libMainFile is defined
+  if (!libsList[libName]?.libMainFile) {
+    throw new Error(
+      `libsList.${libName}.libMainFile is not defined for library ${libName}`,
+    );
   }
 
   const npmPkg = definePackageJSON({
@@ -365,7 +438,7 @@ async function library_writeNpmLibPackageJSON(
         libDeclarations: true,
         libDescription: "",
         libDirName: libName,
-        libMainFile: "src/libs/libName/libName-mod.ts",
+        libMainFile: libsList[libName].libMainFile,
         libPkgKeepDeps: true,
         libTranspileMinify: true,
       },
@@ -380,11 +453,16 @@ async function library_writeNpmLibPackageJSON(
       libName,
     ),
     exports: {
-      ".": `./bin/mod.${unifiedBundlerOutExt}`,
+      ".": `./bin/${path.basename(libsList[libName].libMainFile).replace(/\.ts$/, `.${unifiedBundlerOutExt}`)}`,
     },
-    files: ["bin", "package.json", "README.md", "LICENSE"],
-    main: `./bin/mod.${unifiedBundlerOutExt}`,
-    module: `./bin/mod.${unifiedBundlerOutExt}`,
+    files: config.publishArtifacts?.global || [
+      "bin",
+      "package.json",
+      "README.md",
+      "LICENSE",
+    ],
+    main: `./bin/${path.basename(libsList[libName].libMainFile).replace(/\.ts$/, `.${unifiedBundlerOutExt}`)}`,
+    module: `./bin/${path.basename(libsList[libName].libMainFile).replace(/\.ts$/, `.${unifiedBundlerOutExt}`)}`,
     publishConfig: { access: "public" },
   });
 
@@ -393,3 +471,47 @@ async function library_writeNpmLibPackageJSON(
   await fs.writeJson(pkgPath, npmPkg, { spaces: 2 });
   relinka("verbose", `Completed writing package.json for NPM lib: ${libName}`);
 }
+
+/**
+ * Creates a JSR configuration file for a library.
+ */
+async function library_createJsrConfig(
+  libName: string,
+  pkgJsonDir: string,
+  libsList: Record<string, LibConfig>,
+  config: DlerConfig,
+): Promise<void> {
+  relinka("verbose", `Creating JSR config for lib: ${libName}`);
+
+  // Get the JSR artifacts for this library
+  const jsrArtifacts = config.publishArtifacts?.["dist-libs"]?.[libName]?.jsr ||
+    config.publishArtifacts?.["dist-jsr"] || ["jsr.json"];
+
+  // Determine the JSR config file extension
+  const jsrConfigExt =
+    jsrArtifacts
+      .find((artifact) => artifact.startsWith("jsr.json"))
+      ?.split(".")
+      .pop() || "json";
+  const jsrConfigPath = path.join(pkgJsonDir, `jsr.${jsrConfigExt}`);
+
+  const originalPkg = await readPackageJSON();
+  const jsrConfig = {
+    name: libName,
+    version: libsList[libName]?.version || originalPkg.version || "0.0.0",
+    exports: `./bin/${path.basename(libsList[libName]?.libMainFile || "")}`,
+    files: config.publishArtifacts?.global || [
+      "bin",
+      "package.json",
+      "README.md",
+      "LICENSE",
+    ],
+  };
+
+  await fs.ensureDir(path.dirname(jsrConfigPath));
+  await fs.writeJson(jsrConfigPath, jsrConfig, { spaces: 2 });
+  relinka("verbose", `Completed creating JSR config for lib: ${libName}`);
+}
+
+// Export the function so it can be used by other modules
+export { library_createJsrConfig };

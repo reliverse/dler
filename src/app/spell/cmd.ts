@@ -20,12 +20,10 @@ export default defineCommand({
       type: "string",
       description:
         "Comma-separated list of files to process (or all if not specified)",
-      default: "",
     },
     dryRun: {
       type: "boolean",
       description: "Preview changes without applying them",
-      default: false,
     },
   }),
   async run({ args }) {

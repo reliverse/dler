@@ -42,7 +42,6 @@ export default defineCommand({
     sort: {
       description: "Sort aggregated lines alphabetically",
       type: "boolean",
-      default: false,
     },
     header: {
       description: "Add a header comment to the aggregator output",
@@ -51,12 +50,10 @@ export default defineCommand({
     verbose: {
       description: "Enable verbose logging",
       type: "boolean",
-      default: false,
     },
     includeInternal: {
       description: "Include files marked as internal (starting with #)",
       type: "boolean",
-      default: false,
     },
     internalMarker: {
       description: "Marker for internal files (default: #)",
@@ -67,7 +64,6 @@ export default defineCommand({
       description:
         "Override entire file instead of updating only the aggregator block",
       type: "boolean",
-      default: false,
     },
     extensions: {
       description:
@@ -78,13 +74,11 @@ export default defineCommand({
     separateTypesFile: {
       description: "Create a separate file for type exports",
       type: "boolean",
-      default: false,
     },
     typesOut: {
       description:
         "Output file path for types (used when separateTypesFile is true)",
       type: "string",
-      required: false,
     },
   }),
   async run({ args }) {

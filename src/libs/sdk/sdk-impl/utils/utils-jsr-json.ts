@@ -5,6 +5,8 @@ import pMap from "p-map";
 import { readPackageJSON } from "pkg-types";
 import { glob } from "tinyglobby";
 
+import type { DlerConfig, LibConfig } from "~/libs/sdk/sdk-types";
+
 import { cliDomainDocs, CONCURRENCY_DEFAULT } from "./utils-consts";
 
 /**
@@ -13,6 +15,8 @@ import { cliDomainDocs, CONCURRENCY_DEFAULT } from "./utils-consts";
 export async function createJsrJSON(
   outDirRoot: string,
   isLib: boolean,
+  libsList: Record<string, LibConfig>,
+  config: DlerConfig,
   libName = "unknown-lib-name",
   pkgDescription = "unknown-lib-description",
 ): Promise<void> {
@@ -23,12 +27,22 @@ export async function createJsrJSON(
   if (isLib) {
     name = libName;
     description = pkgDescription;
+
+    // Check if libMainFile is defined
+    if (!libsList[libName]?.libMainFile) {
+      throw new Error(
+        `libsList.${libName}.libMainFile is not defined for library ${libName}`,
+      );
+    }
   }
   const pkgHomepage = cliDomainDocs;
   const jsrConfig = {
     author,
     description,
-    exports: "./bin/mod.ts",
+    exports:
+      isLib && libsList[libName]?.libMainFile
+        ? `./bin/${path.basename(libsList[libName].libMainFile)}`
+        : `./bin/${config.coreEntryFile}`,
     homepage: pkgHomepage,
     license: license || "MIT",
     name,
@@ -37,10 +51,27 @@ export async function createJsrJSON(
     },
     version,
   };
-  await fs.writeJSON(path.join(outDirRoot, "jsr.json"), jsrConfig, {
+
+  // Get the JSR artifacts for this library
+  const jsrArtifacts = isLib
+    ? config.publishArtifacts?.["dist-libs"]?.[libName]?.jsr
+    : config.publishArtifacts?.["dist-jsr"] || ["jsr.json"];
+
+  // Determine the JSR config file extension
+  const jsrConfigExt =
+    jsrArtifacts
+      ?.find((artifact) => artifact.startsWith("jsr.json"))
+      ?.split(".")
+      .pop() || "json";
+  const jsrConfigPath = path.join(outDirRoot, `jsr.${jsrConfigExt}`);
+
+  await fs.writeJSON(jsrConfigPath, jsrConfig, {
     spaces: 2,
   });
-  relinka("verbose", `Generated jsr.json file in ${outDirRoot}/jsr.json`);
+  relinka(
+    "verbose",
+    `Generated jsr.${jsrConfigExt} file in ${outDirRoot}/jsr.${jsrConfigExt}`,
+  );
 }
 
 /**

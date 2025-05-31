@@ -7,7 +7,7 @@ import {
   readPackageJSON,
 } from "pkg-types";
 
-import type { NpmOutExt, BuildPublishConfig } from "~/libs/sdk/sdk-types";
+import type { NpmOutExt, DlerConfig } from "~/libs/sdk/sdk-types";
 
 import { cliDomainDocs } from "~/libs/sdk/sdk-impl/utils/utils-consts";
 
@@ -21,7 +21,7 @@ export async function regular_createPackageJSON(
   isJsr: boolean,
   coreIsCLI: { enabled: boolean; scripts: Record<string, string> },
   unifiedBundlerOutExt: NpmOutExt,
-  config: BuildPublishConfig,
+  config: DlerConfig,
   coreDescription: string,
   coreBuildOutDir = "bin",
 ): Promise<void> {
@@ -79,7 +79,7 @@ export async function regular_createPackageJSON(
         config,
       ),
       exports: {
-        ".": `./${coreBuildOutDir}/mod.ts`,
+        ".": `./${coreBuildOutDir}/${config.coreEntryFile}`,
       },
     });
     await fs.writeJSON(path.join(outDirRoot, "package.json"), jsrPkg, {
@@ -126,11 +126,18 @@ export async function regular_createPackageJSON(
         config,
       ),
       exports: {
-        ".": `./${coreBuildOutDir}/mod.${outExt}`,
+        ".": `./${coreBuildOutDir}/${config.coreEntryFile.replace(/\.ts$/, `.${outExt}`)}`,
       },
-      files: [coreBuildOutDir, "package.json", "README.md", "LICENSE"],
-      main: `./${coreBuildOutDir}/mod.${outExt}`,
-      module: `./${coreBuildOutDir}/mod.${outExt}`,
+      files: [
+        coreBuildOutDir,
+        ...(config.publishArtifacts?.global || [
+          "package.json",
+          "README.md",
+          "LICENSE",
+        ]),
+      ],
+      main: `./${coreBuildOutDir}/${config.coreEntryFile.replace(/\.ts$/, `.${outExt}`)}`,
+      module: `./${coreBuildOutDir}/${config.coreEntryFile.replace(/\.ts$/, `.${outExt}`)}`,
       publishConfig: { access: "public" },
     });
     await fs.writeJSON(path.join(outDirRoot, "package.json"), npmPkg, {
@@ -243,7 +250,7 @@ async function regular_getPkgKeepDeps(
   originalDeps: Record<string, string> | undefined,
   outDirBin: string,
   isJsr: boolean,
-  config: BuildPublishConfig,
+  config: DlerConfig,
 ): Promise<Record<string, string>> {
   if (!originalDeps) {
     return {};

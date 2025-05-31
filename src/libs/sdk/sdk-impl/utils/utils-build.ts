@@ -3,6 +3,7 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 
 import type { NpmOutExt, Sourcemap } from "~/libs/sdk/sdk-types";
+import type { DlerConfig } from "~/libs/sdk/sdk-types";
 
 // ============================
 // Bundling Functions
@@ -60,13 +61,18 @@ export function getUnifiedSourcemapOption(
 
 /**
  * Renames the primary output file (and its declaration file, if applicable)
- * in the output directory to a standardized name (e.g., mod.js, mod.ts).
+ * in the output directory.
+ *
+ * @deprecated Earlier dler used to rename to a standardized name (e.g., mod.js, mod.ts).
+ *
+ * TODO: It will be removed in the future.
  *
  * @param isJsr - Flag indicating if the target platform is JSR.
  * @param outDirBin - The output directory where the compiled files reside.
  * @param originalEntryFileBasename - The base name (file name only) of the original entry file processed by the bundler.
  * @param unifiedBundlerOutExt - The file extension used for standard (non-JSR) builds (e.g., 'js', 'mjs').
  * @param distJsrOutFilesExt - The file extension used for JSR builds (likely 'ts' or 'js').
+ * @param config - The configuration object.
  * @returns An object containing the new base name of the entry file.
  * @throws If the expected source entry file is not found in the output directory.
  */
@@ -76,6 +82,7 @@ export async function renameEntryFile(
   originalEntryFileBasename: string,
   unifiedBundlerOutExt: NpmOutExt,
   distJsrOutFilesExt: NpmOutExt,
+  config: DlerConfig,
 ): Promise<{ updatedEntryFile: string }> {
   relinka(
     "verbose",
@@ -98,20 +105,20 @@ export async function renameEntryFile(
     // JSR specifics: Keep .ts if original was .ts, otherwise use specified JSR ext
     if (originalEntryFileBasename.endsWith(".ts")) {
       sourceEntryBasename = originalEntryFileBasename; // e.g., index.ts
-      targetEntryBasename = "mod.ts"; // Target for JSR TS file
+      targetEntryBasename = config.coreEntryFile; // Use coreEntryFile from config
     } else {
       // Handle cases where entry might be .js or .tsx -> outputExt
       sourceEntryBasename = `${originalBasenameNoExt}.${outputExt}`; // e.g., index.js
-      targetEntryBasename = `mod.${outputExt}`; // e.g., mod.js
+      targetEntryBasename = `${config.coreEntryFile.replace(/\.ts$/, `.${outputExt}`)}`; // e.g., mod.js
     }
   } else {
     // Standard NPM build specifics
     sourceEntryBasename = `${originalBasenameNoExt}.${outputExt}`; // e.g., index.js
-    targetEntryBasename = `mod.${outputExt}`; // e.g., mod.js
+    targetEntryBasename = `${config.coreEntryFile.replace(/\.ts$/, `.${outputExt}`)}`; // e.g., mod.js
 
     // Expect a corresponding .d.ts file for standard builds
     sourceDeclarationBasename = `${originalBasenameNoExt}.d.ts`; // e.g., index.d.ts
-    targetDeclarationBasename = "mod.d.ts"; // Target declaration name
+    targetDeclarationBasename = `${config.coreEntryFile.replace(/\.ts$/, ".d.ts")}`; // Target declaration name
   }
 
   // 2. Define Full Paths

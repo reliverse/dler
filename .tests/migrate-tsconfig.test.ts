@@ -4,7 +4,7 @@ import { existsSync, rmSync } from "node:fs";
 import { readFile, mkdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
-import { cmdMigrate } from "../src/app/cmds";
+import { getCmdMigrate } from "../src/app/cmds";
 
 type TsConfig = {
   compilerOptions: {
@@ -110,8 +110,8 @@ import { third } from "@/components/third.ts";
   });
 
   test("should migrate to nodenext module resolution", async () => {
-    const cmd = await cmdMigrate();
-    await runCmd(cmd, ["--lib", "module-resolution", "--target", "nodenext"]);
+    const cmd = await getCmdMigrate();
+    await runCmd(cmd, ["--lib", "nodenext-bundler", "--target", "nodenext"]);
 
     // Check tsconfig.json
     const tsConfig = JSON.parse(
@@ -134,8 +134,8 @@ import { third } from "@/components/third.ts";
   });
 
   test("should migrate to bundler module resolution", async () => {
-    const cmd = await cmdMigrate();
-    await runCmd(cmd, ["--lib", "module-resolution", "--target", "bundler"]);
+    const cmd = await getCmdMigrate();
+    await runCmd(cmd, ["--lib", "nodenext-bundler", "--target", "bundler"]);
 
     // Check tsconfig.json
     const tsConfig = JSON.parse(
@@ -159,10 +159,10 @@ import { third } from "@/components/third.ts";
   });
 
   test("should handle dry run correctly ()", async () => {
-    const cmd = await cmdMigrate();
+    const cmd = await getCmdMigrate();
     await runCmd(cmd, [
       "--lib",
-      "module-resolution",
+      "nodenext-bundler",
       "--target",
       "nodenext",
       "--dryRun",
@@ -187,9 +187,9 @@ import { third } from "@/components/third.ts";
   });
 
   test("should handle invalid target (`Invalid target: invalid` should be printed)", async () => {
-    const cmd = await cmdMigrate();
+    const cmd = await getCmdMigrate();
     try {
-      await runCmd(cmd, ["--lib", "module-resolution", "--target", "invalid"]);
+      await runCmd(cmd, ["--lib", "nodenext-bundler", "--target", "invalid"]);
       throw new Error("Expected command to fail");
     } catch (error) {
       expect(error).toBeDefined();

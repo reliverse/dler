@@ -1,7 +1,7 @@
 import { relinka } from "@reliverse/relinka";
 import { defineCommand, runCmd, selectPrompt } from "@reliverse/rempts";
 
-import { cmdInjectExpect } from "~/app/cmds";
+import { getCmdInjectExpect } from "~/app/cmds";
 
 export default defineCommand({
   meta: {
@@ -17,7 +17,6 @@ export default defineCommand({
     cwd: {
       type: "string",
       description: "The working directory to run the CLI in",
-      required: false,
     },
   },
   run: async ({ args }) => {
@@ -35,7 +34,7 @@ export default defineCommand({
     });
 
     if (cmd === "ts-expect-error") {
-      await runCmd(await cmdInjectExpect(), []);
+      await runCmd(await getCmdInjectExpect(), []);
     }
   },
 });

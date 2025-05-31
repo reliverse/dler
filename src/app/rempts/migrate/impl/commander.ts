@@ -1,33 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import type {
-  StringLiteral,
-  NewExpression,
-  Expression,
-  Node as TSNode,
-  VariableDeclaration,
-  CallExpression,
-  SourceFile,
-  Identifier,
-  ObjectLiteralExpression,
-  BooleanLiteral,
-  NumericLiteral,
-  PrefixUnaryExpression,
-  PropertyAccessExpression,
-  ArrowFunction,
-  FunctionDeclaration,
-} from "ts-morph";
+import type { VariableDeclaration, CallExpression, SourceFile } from "ts-morph";
 
-import fs from "@reliverse/relifso";
-import { glob } from "glob";
-import path from "node:path";
-import {
-  Project,
-  Node,
-  ScriptTarget,
-  ModuleKind,
-  ts,
-  SyntaxKind,
-} from "ts-morph";
+import { glob } from "tinyglobby";
+import { Project, Node, ScriptTarget, ModuleKind, SyntaxKind } from "ts-morph";
 
 type CommanderOption = {
   name: string;

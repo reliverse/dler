@@ -13,7 +13,7 @@ import type {
   Sourcemap,
   transpileFormat,
   transpileTarget,
-  BuildPublishConfig,
+  DlerConfig,
   UnifiedBuildConfig,
   PerfTimer,
 } from "~/libs/sdk/sdk-types";
@@ -22,7 +22,6 @@ import { unifiedBuild } from "~/libs/sdk/sdk-impl/build/bundlers/unified/build";
 import {
   getBunSourcemapOption,
   getUnifiedSourcemapOption,
-  renameEntryFile,
 } from "~/libs/sdk/sdk-impl/utils/utils-build";
 import { removeLogInternalCalls } from "~/libs/sdk/sdk-impl/utils/utils-clean";
 import {
@@ -63,7 +62,7 @@ export async function regular_buildJsrDist(
   transpileSourcemap: Sourcemap,
   transpilePublicPath: string,
   unifiedBundlerOutExt: NpmOutExt,
-  config: BuildPublishConfig,
+  config: DlerConfig,
   timer: PerfTimer,
   transpileStub: boolean,
   transpileWatch: boolean,
@@ -128,6 +127,9 @@ export async function regular_buildJsrDist(
     await createJsrJSON(
       outDirRoot,
       false, // isLib
+      {}, // libsList (empty for regular builds)
+      config,
+      undefined, // libName (not needed for regular builds)
       config.coreDescription,
     );
 
@@ -166,7 +168,7 @@ export async function regular_buildNpmDist(
   distNpmBuilder: BundlerName,
   coreEntryFile: string,
   unifiedBundlerOutExt: NpmOutExt,
-  config: BuildPublishConfig,
+  config: DlerConfig,
   coreIsCLI: { enabled: boolean; scripts: Record<string, string> },
   transpileTarget: transpileTarget,
   transpileFormat: transpileFormat,
@@ -574,7 +576,7 @@ async function regular_performCommonBuildSteps({
   isJsr: boolean;
   outDirBin: string;
   outDirRoot: string;
-  config: BuildPublishConfig;
+  config: DlerConfig;
   unifiedBundlerOutExt: NpmOutExt;
   coreDescription: string;
   coreBuildOutDir?: string;
@@ -605,6 +607,11 @@ async function regular_performCommonBuildSteps({
     );
     await convertImportsExt({
       targetDir: outDirBin,
+      extFrom: "js",
+      extTo: "ts",
+    });
+    await convertImportsExt({
+      targetDir: outDirBin,
       extFrom: "none",
       extTo: "ts",
     });
@@ -630,28 +637,33 @@ async function regular_performCommonBuildSteps({
   );
 
   // Copy some root files (README, LICENSE, etc.)
-  await copyRootFile(outDirRoot, ["README.md", "LICENSE"]);
+  await copyRootFile(
+    outDirRoot,
+    config.publishArtifacts?.global || ["README.md", "LICENSE"],
+  );
 
   // Copy a few more if it's JSR and it's a CLI
   if (isJsr && coreIsCLI.enabled) {
-    await copyRootFile(outDirRoot, [
+    const jsrFiles = config.publishArtifacts?.["dist-jsr"] || [
       ".gitignore",
       ".config/rse.ts",
       ".config/rse.jsonc",
       "drizzle.config.ts",
       "schema.json",
-    ]);
+    ];
+    await copyRootFile(outDirRoot, jsrFiles);
   }
 
   // Rename the main entry file
-  relinka("verbose", `Renaming entry file in ${outDirBin}.`);
-  await renameEntryFile(
-    isJsr,
-    outDirBin,
-    config.coreEntryFile,
-    unifiedBundlerOutExt,
-    config.distJsrOutFilesExt,
-  );
+  // TODO: remove in the future (deprecated)
+  // relinka("verbose", `Renaming entry file in ${outDirBin}.`);
+  // await renameEntryFile(
+  //   isJsr,
+  //   outDirBin,
+  //   config.coreEntryFile,
+  //   unifiedBundlerOutExt,
+  //   config.distJsrOutFilesExt,
+  // );
 }
 
 /**

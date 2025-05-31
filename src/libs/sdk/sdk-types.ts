@@ -13,7 +13,7 @@ import type { Schema } from "untyped";
  * build settings, publishing options, libraries-dler-plugin built-in plugin, and more.
  * It customizes the build and publish pipeline for both NPM and JSR registries.
  */
-export type BuildPublishConfig = {
+export type DlerConfig = {
   // ==========================================================================
   // Bump configuration
   // ==========================================================================
@@ -99,7 +99,9 @@ export type BuildPublishConfig = {
   /**
    * When `true`, generates TypeScript declaration files (.d.ts) for NPM packages.
    * Essential for providing type intranspileFormation to TypeScript users.
-   * Tip: set to `false` if your main project is a CLI to reduce bundle size.
+   *
+   * To reduce bundle size you can set this to `false` if your main project
+   * is planned to be used only as a global CLI tool (e.g. `bunx dler`).
    *
    * @default true
    */
@@ -187,14 +189,6 @@ export type BuildPublishConfig = {
   distJsrBuilder: BundlerName;
 
   /**
-   * Files to copy to the JSR distribution directory.
-   * Useful for including additional files like configuration or documentation.
-   *
-   * @default ["README.md", "LICENSE"]
-   */
-  distJsrCopyRootFiles: string[];
-
-  /**
    * Directory where JSR build artifacts are generated.
    * This directory will contain the package ready for JSR publishing.
    *
@@ -263,14 +257,6 @@ export type BuildPublishConfig = {
   distNpmBuilder: BundlerName;
 
   /**
-   * Files to copy to the NPM distribution directory.
-   * Useful for including additional files like configuration or documentation.
-   *
-   * @default ["README.md", "LICENSE"]
-   */
-  distNpmCopyRootFiles: string[];
-
-  /**
    * Directory where NPM build artifacts are generated.
    * This directory will contain the package ready for NPM publishing.
    *
@@ -337,7 +323,7 @@ export type BuildPublishConfig = {
   /**
    * The name of the log file. dler uses `@reliverse/relinka` for logging.
    *
-   * @default "logs/relinka.log"
+   * @default ".logs/relinka.log"
    */
   logsFileName: string;
 
@@ -353,34 +339,35 @@ export type BuildPublishConfig = {
   // ==========================================================================
 
   /**
-   * Configuration for dependency removal patterns.
-   * Controls which dependencies are excluded from the final package.
+   * Configuration for dependency removal/injection patterns.
+   * Controls which dependencies are excluded from (or injected into) the final package.
    *
-   * Structure:
+   * Pattern types:
+   * - Regular patterns: Exclude deps that match the pattern
+   * - Negation patterns (starting with !): Don't exclude deps that match the pattern
+   * - Add patterns (starting with +): Inject deps into specific dists even if original package.json doesn't have them
+   *
+   * Structure (dist-specific patterns are merged with global):
    * - `global`: Patterns that are always applied to all builds
-   * - `dist-npm`: NPM-specific patterns (merged with global)
-   * - `dist-jsr`: JSR-specific patterns (merged with global)
-   * - `dist-libs`: Library-specific patterns (merged with global)
+   * - `dist-npm`: NPM-specific patterns
+   * - `dist-jsr`: JSR-specific patterns
+   * - `dist-libs`: Library-specific patterns
    *   Each library can have separate NPM and JSR patterns
    *
    * @example
    * {
    *   global: ["@types", "eslint"],
    *   "dist-npm": ["npm-specific"],
-   *   "dist-jsr": ["jsr-specific"],
+   *   "dist-jsr": ["+bun"], // Explicitly include 'bun' in JSR builds
    *   "dist-libs": {
    *     "@myorg/lib1": {
    *       npm: ["lib1-npm-specific"],
-   *       jsr: ["lib1-jsr-specific"]
-   *     },
-   *     "@myorg/lib2": {
-   *       npm: ["lib2-npm-specific"],
-   *       jsr: ["lib2-jsr-specific"]
+   *       jsr: ["+bun"] // Explicitly include 'bun' in this lib's JSR build
    *     }
    *   }
    * }
    */
-  removeDepsPatterns: {
+  filterDepsPatterns: {
     global: string[];
     "dist-npm": string[];
     "dist-jsr": string[];
@@ -481,6 +468,48 @@ export type BuildPublishConfig = {
    * @default false
    */
   transpileWatch: boolean;
+
+  /**
+   * Specifies what resources to send to npm and jsr registries.
+   * coreBuildOutDir (e.g. "bin") dir is automatically included.
+   * The following is also included if publishArtifacts is {}:
+   * - global: ["package.json", "README.md", "LICENSE"]
+   * - dist-jsr,dist-libs/jsr: ["jsr.json"]
+   *
+   * Structure:
+   * - `global`: Files to include in all distributions
+   * - `dist-jsr`: Files specific to JSR distribution
+   * - `dist-npm`: Files specific to NPM distribution
+   * - `dist-libs`: Library-specific files for each distribution type
+   *
+   * Useful for including additional files like configuration or documentation.
+   * Pro tip: set jsr.jsonc to generate jsr.jsonc instead of jsr.json config.
+   *
+   * @default
+   * {
+   *   global: ["bin", "package.json", "README.md", "LICENSE"],
+   *   "dist-jsr": ["jsr.json"],
+   *   "dist-npm": [],
+   *   "dist-libs": {
+   *     "@myorg/lib1": {
+   *       jsr: ["jsr.json"],
+   *       npm: []
+   *     }
+   *   }
+   * }
+   */
+  publishArtifacts?: {
+    global: string[];
+    "dist-jsr": string[];
+    "dist-npm": string[];
+    "dist-libs": Record<
+      string,
+      {
+        jsr: string[];
+        npm: string[];
+      }
+    >;
+  };
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -548,7 +577,7 @@ export type LibConfig = {
 
   /**
    * Dependencies to include in the dist's package.json.
-   * The final output may vary based on `removeDepsPatterns`.
+   * The final output may vary based on `filterDepsPatterns`.
    * Defines how dependencies are handled during publishing:
    * - `string[]`: Includes only the specified dependencies.
    * - `true`: Includes all dependencies from the main package.json.
@@ -581,6 +610,14 @@ export type LibConfig = {
    * @default "npm"
    */
   libPubRegistry?: "jsr" | "npm" | "npm-jsr";
+
+  /**
+   * Optional version override for the library.
+   * If not provided, falls back to the version from the main package.json.
+   *
+   * @default `package.json`'s "version"
+   */
+  version?: string;
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1042,7 +1079,7 @@ export type PerfTimer = {
   libMainFile: string; // Relative path of the main entry file within its source dir
   isDev: boolean;
   libsList: Record<string, LibConfig>;
-  removeDepsPatterns: {
+  filterDepsPatterns: {
     global: string[];
     "dist-npm": string[];
     "dist-jsr": string[];
@@ -1064,3 +1101,52 @@ export type PerfTimer = {
   transpileWatch: boolean; // Potentially used by bundlers
   unifiedBundlerOutExt: NpmOutExt; // Output extension for bun/unified builders
 }; */
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+type DirectoryType =
+  | "src"
+  | "dist-npm"
+  | "dist-jsr"
+  | "dist-libs/npm"
+  | "dist-libs/jsr";
+
+export type RulesCheckOptions = {
+  directory: DirectoryType;
+  strict: boolean;
+  moduleResolution: "bundler" | "nodenext";
+  onProgress?: (current: number, total: number, file: string) => void;
+  json?: boolean;
+  builtins?: boolean;
+  dev?: boolean;
+  peer?: boolean;
+  optional?: boolean;
+  fix?: boolean;
+  depth?: number;
+};
+
+export type CheckIssue = {
+  type:
+    | "file-extension"
+    | "path-extension"
+    | "missing-dependency"
+    | "builtin-module"
+    | "dler-config-health"
+    | "self-include"
+    | "tsconfig-health"
+    | "no-index-files";
+  message: string;
+  file: string;
+  line?: number;
+  column?: number;
+};
+
+export type CheckResult = {
+  success: boolean;
+  issues: CheckIssue[];
+  stats: {
+    filesChecked: number;
+    importsChecked: number;
+    timeElapsed: number;
+  };
+};

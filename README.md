@@ -1,6 +1,6 @@
-# dler (prev. relidler) • reliverse bundler
+# dler (prev. relidler) • framework for ts/js libs/cli/apps
 
-> @reliverse/dler (`/ˈdiː.lər/`, dealer) is a flexible, unified, and fully automated bundler for typescript and javascript projects, as well as an npm and jsr publishing tool. dler is not only a bundler, it also tries to serve as the most powerful codemod toolkit for js/ts.
+> @reliverse/dler (`/ˈdiː.lər/`, dealer) is a flexible, unified, and fully automated bundler for ts/js projects, as well as an npm/jsr publishing tool. dler is not only a bundler, it also tries to serve as the most powerful codemod toolkit for ts/js.
 
 [sponsor](https://github.com/sponsors/blefnk) — [discord](https://discord.gg/pb8ukbwpsj) — [repo](https://github.com/reliverse/dler) — [npm](https://npmjs.com/@reliverse/dler) — [docs](https://docs.reliverse.org/reliverse/dler)
 
@@ -9,13 +9,13 @@
 - 😘 replacement for `unjs/unbuild`
 - ⚡ `dler` works via cli and sdk
 - 📦 automated npm/jsr publishing
-- ✅ ensures reliable js/ts builds
+- ✅ ensures reliable ts/js builds
 - 🔄 handles automatic version bumps
 - 🔧 eliminates `package.json` headaches
 - 🎯 optimized for speed and modern workflows
 - ✨ packed with powerful features under the hood
 - 🛠️ converts typescript aliases to relative paths
-- 🔌 plugin system with 14 built-in plugins included
+- 🔌 [15 built-in helper dler commands](#-commands) included
 - 📝 highly configurable flow via a configuration file
 - 🔜 `libraries` plugin —> dler monorepo implementation
 - 🧼 cleans up your internal logs from the build dist
@@ -117,17 +117,17 @@ bun dev # bun src/cli.ts --dev
     dler [build|pub] # if installed globally
     ```
 
-## 🔌 plugins
+## 🔌 commands
 
-dler ships with a flexible plugin system (aka plugins) and **14 built-in plugins** (from [reliverse addons](https://reliverse.org/addons) collection).
+dler ships with a flexible command system (prev. plugins) and **15 built-in commands** (from [reliverse addons](https://reliverse.org/addons) collection).
 
-feel free to create your own plugins. plugins can be implemented as built-in directly in `src/app/<plugin>/impl/*` and then imported from `src/app/<plugin>/cmd.ts`; or implemented in your own library and then imported from `src/app/<plugin>/cmd.ts`.
+feel free to create your own commands. commands can be implemented as built-in directly in `src/app/<command>/impl/*` and then imported from `src/app/<command>/cmd.ts`; or implemented in your own library and then imported from `src/app/<command>/cmd.ts`.
 
-if you run just `dler` — it will display a list of plugins which you can launch interactively.
+if you run just `dler` — it will display a list of commands which you can launch interactively.
 
-## **available plugins**
+## **available commands**
 
-[agg](#1-agg), [build](#2-build), [conv](#3-conv), [deps](#4-deps), [inject](#5-inject), [libs](#6-libs), [merge](#7-merge), [migrate](#8-migrate), [mono](#9-mono), [pub](#10-pub), [relifso](#11-relifso), [relinka](#12-relinka), [rempts](#13-rempts), [spell](#14-spell), [split](#15-split).
+[agg](#1-agg), [check](#2-check-aka-rules-of-dler), [build](#3-build), [conv](#4-conv), [deps](#5-deps), [inject](#6-inject), [libs](#7-libs), [merge](#8-merge), [migrate](#9-migrate), [pub](#10-pub), [relifso](#11-relifso), [relinka](#12-relinka), [rempts](#13-rempts), [spell](#14-spell), [split](#15-split)
 
 ### 1. `agg`
 
@@ -150,7 +150,73 @@ bun tools:agg # shortcut for:
 bun src/cli.ts tools --dev --tool agg --input src/libs/sdk/sdk-impl --out src/libs/sdk/sdk-mod.ts --recursive --named --strip src/libs/sdk
 ```
 
-### 2. `build`
+### 2. `check` (aka rules of dler)
+
+checks your project for common issues and potential improvements. This command performs several types of checks:
+
+- **File Extensions**: Validates that files have the correct extensions based on their location and module resolution strategy
+  - Enforces `.ts` files in source and JSR distributions
+  - Enforces `.js` files in NPM distributions
+  - Supports `.css` and `.json` files in all environments
+  - Adapts to your module resolution strategy (bundler/nodenext)
+
+- **Path Extensions**: Ensures import statements use the correct file extensions
+  - Validates import paths match your module resolution strategy
+  - Checks for proper extension usage in import statements
+  - Supports both relative and absolute imports
+
+- **Dependencies**: Identifies missing dependencies in your project
+  - Scans all source files for imports
+  - Compares against package.json
+  - Reports missing dependencies
+
+- **Self-Include**: Prevents circular dependencies and self-imports
+  - Checks for imports from the main package in dist directories
+  - Prevents libraries from importing themselves
+  - Allows libraries to import from other libraries
+
+- **Module Resolution**: Validates TypeScript module resolution settings
+  - Ensures proper moduleResolution in tsconfig.json
+  - Supports both "bundler" and "nodenext" strategies
+  - Reports configuration issues
+
+- **Dler Config Health**: Validates your dler configuration
+  - Checks libs main file format
+  - Ensures proper configuration structure
+  - Reports configuration issues
+
+- **Package.json Validation**: Ensures your package.json follows best practices
+  - Requires: name, version, type=module, keywords
+  - Forbids: bin, exports, files, main, module (they are auto-generated by dler)
+  - Helps maintain consistent package configuration
+
+```bash
+# Fully interactive mode (when no args provided)
+dler check
+
+# Mixed mode (some args provided, prompts for the rest)
+dler check --directory src
+dler check --checks file-extensions,path-extensions
+dler check --strict
+
+# Fully automated mode (all args provided)
+dler check --directory src --checks file-extensions,path-extensions --strict
+
+# Output in JSON format
+dler check --json
+```
+
+**arguments:**
+
+- `--directory`: directory to check (src, dist-npm, dist-jsr, dist-libs/npm, dist-libs/jsr, or all)
+- `--checks`: comma-separated list of checks to run (missing-deps, file-extensions, path-extensions, dler-config-health, self-include, tsconfig-health, package-json-health)
+- `--strict`: enable strict mode (requires explicit extensions)
+- `--json`: output results in JSON format
+
+**pro tip:**  
+the command will prompt you only for the arguments you haven't provided. for example, if you specify `--directory` but not `--checks`, it will only prompt you to select which checks to run.
+
+### 3. `build`
 
 since dler is fully modular, build command is separated for its own build-in plugin as well.
 
@@ -158,13 +224,13 @@ since dler is fully modular, build command is separated for its own build-in plu
 dler build ...
 ```
 
-### 3. `conv`
+### 4. `conv`
 
 not yet documented.
 
-### 4. `deps`
+### 5. `deps`
 
-finds missing dependencies in your project by scanning your code for imports and comparing them to your `package.json`.
+finds missing dependencies in your project by scanning your code for imports and comparing them to your `package.json`. This command is particularly useful for maintaining clean dependency lists and preventing runtime errors.
 
 **what it does:**
 
@@ -179,6 +245,9 @@ finds missing dependencies in your project by scanning your code for imports and
 - can also show all used dependencies (listed and missing)
 - optionally includes node.js built-in modules in the report
 - outputs results in a readable format or as json
+- exits with error code 1 if missing dependencies are found
+- detects packages that are only in `devDependencies` but used in production code
+- identifies packages listed in both `dependencies` and `devDependencies`
 
 **usage examples:**
 
@@ -209,11 +278,17 @@ dler deps --all --directory ./src --include-builtins
 missing dependencies are shown only once, even if used in multiple files.  
 deep imports like `dep/some/file` or `@org/dep/some/thing` are always resolved to their root package.
 
-### 5. `inject`
+**warning types:**
+
+- **Missing Dependencies**: Packages that are imported but not listed in `package.json`
+- **Dev-only Dependencies**: Packages that are only in `devDependencies` but imported in production code
+- **Duplicate Dependencies**: Packages listed in both `dependencies` and `devDependencies`
+
+### 6. `inject`
 
 not yet documented.
 
-### 6. `libs`
+### 7. `libs`
 
 builds and publishes specific subdirectories of your main project as standalone packages.
 
@@ -230,7 +305,7 @@ libslist: {
     libdeclarations: true,
     libdescription: "@reliverse/dler without cli",
     libdirname: "sdk",
-    libmainfile: "sdk/sdk-mod.ts",
+    libmainfile: "sdk-mod.ts",
     libpkgkeepdeps: false,
     libtranspileminify: true,
   },
@@ -249,17 +324,75 @@ libslist: {
 
 - more magic commands coming soon...
 
-### 7. `merge`
+### 8. `merge`
 
 not yet documented.
 
-### 8. `migrate`
+### 9. `migrate`
 
 helps migrate between different libraries and module resolution strategies. currently supports:
 
-- `pathe-to-pathkit`: migrate from pathe to pathkit library
-- `pathkit-to-pathe`: migrate from pathkit to pathe library
-- `module-resolution`: migrate between module resolution strategies
+- `anything-bun`: migrate Node.js projects to Bun runtime
+- `path-pathkit`: migrate from node:path and unjs/pathe to pathkit library
+- `fs-relifso`: migrate from node:fs and fs-extra to relifso library
+- `nodenext-bundler`: migrate between module resolution strategies
+- `readdir-glob`: migrate from fs.readdir to globby for better file system operations
+
+**path-pathkit features:**
+
+- Migrates from both `pathe` and `node:path` to `@reliverse/pathkit`
+- Handles both default and named exports
+- Supports multi-line imports
+- Converts require statements
+- Updates package.json dependencies
+
+**fs-relifso features:**
+
+- Migrates from both `node:fs` and `fs-extra` to `@reliverse/relifso`
+- Handles both default and named exports
+- Supports multi-line imports
+- Converts require statements
+- Updates package.json dependencies
+- Preserves import structure and formatting
+
+**anything-bun features:**
+
+- Migrates Node.js imports to use `node:` prefix
+- Replaces npm/yarn/pnpm features with bun equivalents
+- Converts to Bun-native APIs:
+  - Database: `pg`/`postgres` → `Bun.sql`, `sqlite3` → `bun:sqlite`
+  - Redis: `redis`/`ioredis` → `Bun.redis`
+  - Utilities: `glob` → `Bun.Glob`, `bcrypt`/`argon2` → `Bun.password`
+  - Testing: `jest`/`vitest` → `bun:test`
+  - FFI: `node-ffi` → `bun:ffi`
+- Transforms file operations to `Bun.file` API
+- Converts Express apps to `Bun.serve`
+- Updates package.json scripts and dependencies
+- Generates Bun configuration files
+- Creates Dockerfile for Bun deployment
+
+**readdir-glob features:**
+
+- Migrates from `fs.readdir` and `fs.readdirSync` to `globby`
+- Handles both synchronous and asynchronous readdir operations
+- Supports `fs.promises.readdir` migration
+- Adds globby import if not present
+- Updates package.json with globby dependency
+- Preserves target directory paths
+- Maintains async/await usage
+
+**usage examples:**
+
+```bash
+# Preview changes without applying them
+dler migrate --lib readdir-glob --dryRun
+
+# Apply changes
+dler migrate --lib readdir-glob
+
+# Migrate specific project
+dler migrate --lib readdir-glob --project ./my-app
+```
 
 **module resolution targets:**
 
@@ -269,17 +402,20 @@ helps migrate between different libraries and module resolution strategies. curr
 **usage examples:**
 
 ```bash
-# Migrate from pathe to pathkit
-dler migrate --lib pathe-to-pathkit
+# Migrate from node:path and/or pathe to pathkit
+dler migrate --lib path-pathkit
+
+# Migrate from node:fs and/or fs-extra to relifso
+dler migrate --lib fs-relifso
 
 # Migrate to nodenext module resolution
-dler migrate --lib module-resolution --target nodenext
+dler migrate --lib nodenext-bundler --target nodenext
 
 # Migrate to bundler module resolution
-dler migrate --lib module-resolution --target bundler
+dler migrate --lib nodenext-bundler --target bundler
 
 # Preview changes without applying them
-dler migrate --lib module-resolution --target nodenext --dryRun
+dler migrate --lib nodenext-bundler --target nodenext --dryRun
 ```
 
 **what it does:**
@@ -293,19 +429,33 @@ dler migrate --lib module-resolution --target nodenext --dryRun
 
 **next steps after migration:**
 
-- for pathe-to-pathkit:
+- for path-pathkit:
   1. run 'bun install' to install @reliverse/pathkit
   2. test your application
   3. consider using advanced pathkit features
 
-- for module-resolution:
+- for fs-relifso:
+  1. run 'bun install' to install @reliverse/relifso
+  2. test your application
+  3. review any file system operations that might need manual updates
+
+- for nodenext-bundler:
   1. test your application
   2. ensure your build tools support the new module resolution
   3. review any warnings in the migration output
 
-### 9. `mono`
+- for anything-bun:
+  1. run 'bun install' to install dependencies with Bun
+  2. test your application thoroughly
+  3. review async/await usage in converted file operations
+  4. update any custom database queries to use Bun.sql syntax
+  5. review and update any custom middleware in Express apps
 
-not yet documented.
+- for readdir-glob:
+  1. run 'bun install' to install globby
+  2. test your application
+  3. review any file system operations that might need manual updates
+  4. consider using globby's advanced features like pattern matching and recursive searching
 
 ### 10. `pub`
 
@@ -325,11 +475,42 @@ dler relifso init ...
 
 ### 12. `relinka`
 
-@reliverse/relinka's best friend. learn more in its [docs](https://github.com/reliverse/relinka).
+[@reliverse/relinka](https://github.com/reliverse/relinka)'s best friend. Converts between different logging formats (console, consola method/object, and relinka's function/method/object styles).
 
 ```bash
-dler relinka --console-to-relinka
+# Basic usage
+dler relinka --input <file> --from <source> --to <target>
+
+# Examples:
+# Convert console.log to relinka function style
+dler relinka --input src/app.ts --from console --to relinkaFunction
+
+# Convert consola method to relinka method style
+dler relinka --input src/app.ts --from consolaMethod --to relinkaMethod
+
+# Convert between relinka styles
+dler relinka --input src/app.ts --from relinkaMethod --to relinkaObject
+
+# Convert to consola object style
+dler relinka --input src/app.ts --from relinkaFunction --to consolaObject
 ```
+
+**Supported formats:**
+
+- `console`: Standard console logging (`console.log(message, ...args)`)
+- `consolaMethod`: Consola method style (`consola.log(message, ...args)`)
+- `consolaObject`: Consola object style (`consola({ level, message, title?, args? })`)
+- `relinkaFunction`: Relinka function style (`relinka("level", message, ...args)`)
+- `relinkaMethod`: Relinka method style (`relinka.level(message, ...args)`)
+- `relinkaObject`: Relinka object style (`relinka({ level, message, title?, args? })`)
+
+**Special features:**
+
+- Preserves additional arguments in all formats
+- Handles special box format with title and message
+- Maintains proper escaping and formatting
+- Supports conversion between any combination of formats
+- Supports both consola method and object styles
 
 ### 13. `rempts`
 
@@ -436,6 +617,7 @@ bun add @reliverse/dler-sdk
 - [ ] allow plugins to extend dler's `defineconfig`
 - [ ] support configuration via `.config/rse.{ts,jsonc}`
 - [ ] make config file optional with sensible defaults
+- [ ] use [@reliverse/remdn](https://github.com/reliverse/remdn) to generate npm/jsr readme
 
 ## related
 

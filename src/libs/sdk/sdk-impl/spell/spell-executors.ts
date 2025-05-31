@@ -225,7 +225,7 @@ export const copyFileExecutor = async (
   const targetPath = path.resolve(path.dirname(filePath), spell.value);
 
   try {
-    await fs.copyFile(filePath, targetPath);
+    await fs.copyFile(filePath, targetPath, true);
 
     return {
       spell,

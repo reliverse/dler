@@ -1,7 +1,7 @@
 import { relinka } from "@reliverse/relinka";
 import pAll from "p-all";
 
-import type { BuildPublishConfig, PerfTimer } from "~/libs/sdk/sdk-types";
+import type { DlerConfig, PerfTimer } from "~/libs/sdk/sdk-types";
 
 import {
   regular_buildJsrDist,
@@ -16,7 +16,7 @@ import { CONCURRENCY_DEFAULT } from "./utils/utils-consts";
 export async function processRegularFlow(
   timer: PerfTimer,
   isDev: boolean,
-  config: BuildPublishConfig,
+  config: DlerConfig,
 ): Promise<void> {
   if (config.libsActMode === "libs-only") {
     relinka(

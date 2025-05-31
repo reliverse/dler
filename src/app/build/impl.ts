@@ -6,7 +6,7 @@ import {
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 
-import { loadConfig } from "~/init/load";
+import { loadConfig } from "~/libs/sdk/sdk-impl/cfg/load";
 import { processLibraryFlow } from "~/libs/sdk/sdk-impl/library-flow";
 import { processRegularFlow } from "~/libs/sdk/sdk-impl/regular-flow";
 import { finalizeBuildPub } from "~/libs/sdk/sdk-impl/utils/finalize";
