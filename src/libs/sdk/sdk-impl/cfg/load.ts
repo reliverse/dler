@@ -49,9 +49,6 @@ export async function loadConfig(): Promise<DlerConfig> {
   }
 
   // Config file not found or error loading it, return default config
-  relinka(
-    "log",
-    `Config file not found at ${configPath}. Using default configuration.`,
-  );
+  relinka("log", `Config file not found at ${configPath}. Using default configuration.`);
   return defineConfig();
 }

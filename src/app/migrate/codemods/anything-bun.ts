@@ -125,9 +125,7 @@ const BUN_API_REPLACEMENTS = {
 };
 
 // Core analysis functions
-const analyzeProject = async (
-  projectRoot: string,
-): Promise<ProjectAnalysis> => {
+const analyzeProject = async (projectRoot: string): Promise<ProjectAnalysis> => {
   const packageJsonPath = join(projectRoot, "package.json");
 
   if (!existsSync(packageJsonPath)) {
@@ -153,12 +151,9 @@ const analyzeProject = async (
     ignore: ["node_modules/**"],
   });
 
-  const configFiles = await glob(
-    "{*.config.{js,ts,json},.*rc*,tsconfig.json}",
-    {
-      cwd: projectRoot,
-    },
-  );
+  const configFiles = await glob("{*.config.{js,ts,json},.*rc*,tsconfig.json}", {
+    cwd: projectRoot,
+  });
 
   return {
     packageJson,
@@ -271,9 +266,7 @@ const transformPackageJson = (analysis: ProjectAnalysis): TransformResult => {
     }
     if (newDevDependencies[oldDep]) {
       delete newDevDependencies[oldDep];
-      changes.push(
-        `Removed dev dependency: ${oldDep} (replaced by Bun built-in)`,
-      );
+      changes.push(`Removed dev dependency: ${oldDep} (replaced by Bun built-in)`);
     }
   }
 
@@ -293,10 +286,7 @@ const transformPackageJson = (analysis: ProjectAnalysis): TransformResult => {
 };
 
 // Source code transformations
-const transformSourceFile = (
-  filePath: string,
-  content: string,
-): TransformResult => {
+const transformSourceFile = (filePath: string, content: string): TransformResult => {
   let transformedContent = content;
   const changes: string[] = [];
 
@@ -327,10 +317,7 @@ const transformSourceFile = (
 
   // Transform to Bun-specific APIs
   for (const [oldModule, newImport] of Object.entries(BUN_API_REPLACEMENTS)) {
-    if (
-      content.includes(`from "${oldModule}"`) ||
-      content.includes(`from '${oldModule}'`)
-    ) {
+    if (content.includes(`from "${oldModule}"`) || content.includes(`from '${oldModule}'`)) {
       // Replace import statements
       const importPattern = new RegExp(
         `import\\s+.*?from\\s+['"]${oldModule.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}['"];?\\s*`,
@@ -338,10 +325,7 @@ const transformSourceFile = (
       );
 
       if (importPattern.test(transformedContent)) {
-        transformedContent = transformedContent.replace(
-          importPattern,
-          `${newImport}\n`,
-        );
+        transformedContent = transformedContent.replace(importPattern, `${newImport}\n`);
         changes.push(`Replaced ${oldModule} import with Bun alternative`);
       }
     }
@@ -363,10 +347,7 @@ const transformSourceFile = (
     "await Bun.file($1).exists()",
   );
 
-  if (
-    transformedContent.includes("Bun.file") ||
-    transformedContent.includes("Bun.write")
-  ) {
+  if (transformedContent.includes("Bun.file") || transformedContent.includes("Bun.write")) {
     changes.push("Converted fs operations to Bun file API");
   }
 
@@ -389,10 +370,7 @@ const transformSourceFile = (
       /glob\.sync\((.*?)\)/g,
       "new Glob($1).scanSync('.')",
     );
-    transformedContent = transformedContent.replace(
-      /glob\((.*?)\)/g,
-      "new Glob($1).scan('.')",
-    );
+    transformedContent = transformedContent.replace(/glob\((.*?)\)/g, "new Glob($1).scan('.')");
     changes.push("Converted glob operations to Bun.Glob");
   }
 
@@ -420,10 +398,7 @@ const transformSourceFile = (
       /redis\.createClient\((.*?)\)/g,
       "Bun.redis($1)",
     );
-    transformedContent = transformedContent.replace(
-      /new Redis\((.*?)\)/g,
-      "Bun.redis($1)",
-    );
+    transformedContent = transformedContent.replace(/new Redis\((.*?)\)/g, "Bun.redis($1)");
     changes.push("Converted Redis client to Bun.redis");
   }
 
@@ -463,18 +438,13 @@ relinka("log", \`Server running on localhost:\${server.port}\`);
         /const app = express\(\);[\s\S]*?app\.listen\(.*?\);?/,
         expressReplacement,
       );
-      changes.push(
-        "Converted Express app to Bun.serve (manual route migration needed)",
-      );
+      changes.push("Converted Express app to Bun.serve (manual route migration needed)");
     }
   }
 
   // Transform child_process to Bun.$
   if (content.includes("exec") || content.includes("spawn")) {
-    transformedContent = transformedContent.replace(
-      /exec\((.*?)\)/g,
-      "await Bun.$`$1`",
-    );
+    transformedContent = transformedContent.replace(/exec\((.*?)\)/g, "await Bun.$`$1`");
     transformedContent = transformedContent.replace(
       /spawn\((.*?),\s*(.*?)\)/g,
       "await Bun.$`$1 ${$2.join(' ')}`",
@@ -491,10 +461,7 @@ relinka("log", \`Server running on localhost:\${server.port}\`);
 };
 
 // Test file transformations
-const transformTestFile = (
-  filePath: string,
-  content: string,
-): TransformResult => {
+const transformTestFile = (filePath: string, content: string): TransformResult => {
   let transformedContent = content;
   const changes: string[] = [];
 
@@ -521,9 +488,7 @@ const transformTestFile = (
 
   // Add bun:test import if test functions are used but no import exists
   if (
-    (content.includes("describe(") ||
-      content.includes("it(") ||
-      content.includes("test(")) &&
+    (content.includes("describe(") || content.includes("it(") || content.includes("test(")) &&
     !content.includes('from "bun:test"') &&
     !content.includes("from 'bun:test'")
   ) {
@@ -629,9 +594,7 @@ const writeTransformedFile = async (
 };
 
 // Main migration function
-const migrateProject = async (
-  config: MigrationConfig,
-): Promise<MigrationReport> => {
+const migrateProject = async (config: MigrationConfig): Promise<MigrationReport> => {
   const { projectRoot, dryRun, backup } = config;
 
   relinka("log", "🔍 Analyzing project...");
@@ -715,9 +678,7 @@ const migrateProject = async (
 
     // Add manual steps
     manualSteps.push("Run 'bun install' to install dependencies with Bun");
-    manualSteps.push(
-      "Update your CI/CD scripts to use 'bun' instead of npm/yarn",
-    );
+    manualSteps.push("Update your CI/CD scripts to use 'bun' instead of npm/yarn");
     manualSteps.push("Test your application thoroughly after migration");
     manualSteps.push("Review async/await usage in converted file operations");
 
@@ -726,10 +687,7 @@ const migrateProject = async (
       manualSteps.push("Review middleware conversions");
     }
 
-    if (
-      analysis.dependencies.includes("pg") ||
-      analysis.dependencies.includes("postgres")
-    ) {
+    if (analysis.dependencies.includes("pg") || analysis.dependencies.includes("postgres")) {
       manualSteps.push("Update database queries to use Bun.sql syntax");
     }
 
@@ -740,17 +698,11 @@ const migrateProject = async (
       manualSteps.push("Update SQLite usage to bun:sqlite API");
     }
 
-    if (
-      analysis.dependencies.includes("redis") ||
-      analysis.dependencies.includes("ioredis")
-    ) {
+    if (analysis.dependencies.includes("redis") || analysis.dependencies.includes("ioredis")) {
       manualSteps.push("Update Redis client usage to Bun.redis API");
     }
 
-    if (
-      analysis.dependencies.includes("bcrypt") ||
-      analysis.dependencies.includes("argon2")
-    ) {
+    if (analysis.dependencies.includes("bcrypt") || analysis.dependencies.includes("argon2")) {
       manualSteps.push("Update password hashing to Bun.password API");
     }
   } catch (error) {

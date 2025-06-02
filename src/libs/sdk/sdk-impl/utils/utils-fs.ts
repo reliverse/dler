@@ -14,10 +14,7 @@ import { determineDistName } from "./utils-determine";
 /**
  * Copies specified files from the root directory to the output directory.
  */
-export async function copyRootFile(
-  outDirRoot: string,
-  fileNames: string[],
-): Promise<void> {
+export async function copyRootFile(outDirRoot: string, fileNames: string[]): Promise<void> {
   if (fileNames.length === 0) {
     return;
   }
@@ -72,10 +69,7 @@ export async function copyRootFile(
                 }
 
                 await fs.copy(file, targetPath);
-                relinka(
-                  "verbose",
-                  `Copied ${file} to ${outDirRoot}/${variant}`,
-                );
+                relinka("verbose", `Copied ${file} to ${outDirRoot}/${variant}`);
               }
             }
           } else {
@@ -108,10 +102,7 @@ export async function copyRootFile(
 /**
  * Calculates the total size (in bytes) of a directory.
  */
-export async function getDirectorySize(
-  outDirRoot: string,
-  isDev: boolean,
-): Promise<number> {
+export async function getDirectorySize(outDirRoot: string, isDev: boolean): Promise<number> {
   if (SHOW_VERBOSE.getDirectorySize) {
     relinka("verbose", `Calculating directory size for: ${outDirRoot}`);
   }
@@ -128,18 +119,11 @@ export async function getDirectorySize(
     );
     const totalSize = sizes.reduce((total, s) => total + s, 0);
     if (SHOW_VERBOSE.getDirectorySize) {
-      relinka(
-        "verbose",
-        `Calculated directory size: ${totalSize} bytes for ${outDirRoot}`,
-      );
+      relinka("verbose", `Calculated directory size: ${totalSize} bytes for ${outDirRoot}`);
     }
     return totalSize;
   } catch (error) {
-    relinka(
-      "error",
-      `Failed to calculate directory size for ${outDirRoot}`,
-      error,
-    );
+    relinka("error", `Failed to calculate directory size for ${outDirRoot}`, error);
     return 0;
   }
 }
@@ -151,10 +135,7 @@ export async function outDirBinFilesCount(outDirBin: string): Promise<number> {
   relinka("verbose", `Counting files in directory: ${outDirBin}`);
   let fileCount = 0;
   if (!(await fs.pathExists(outDirBin))) {
-    relinka(
-      "error",
-      `[outDirBinFilesCount] Directory does not exist: ${outDirBin}`,
-    );
+    relinka("error", `[outDirBinFilesCount] Directory does not exist: ${outDirBin}`);
     return fileCount;
   }
   async function traverse(dir: string) {
@@ -177,13 +158,9 @@ export async function outDirBinFilesCount(outDirBin: string): Promise<number> {
 /**
  * Finds a file in the current directory regardless of case.
  */
-async function findFileCaseInsensitive(
-  transpileTargetFile: string,
-): Promise<null | string> {
+async function findFileCaseInsensitive(transpileTargetFile: string): Promise<null | string> {
   const files = await fs.readdir(".");
-  const found = files.find(
-    (file) => file.toLowerCase() === transpileTargetFile.toLowerCase(),
-  );
+  const found = files.find((file) => file.toLowerCase() === transpileTargetFile.toLowerCase());
   return found || null;
 }
 
@@ -243,18 +220,11 @@ export async function readFileSafe(
   try {
     const content = await fs.readFile(filePath, "utf8");
     if (SHOW_VERBOSE.readFileSafe) {
-      relinka(
-        "verbose",
-        `[${distName}] Successfully read file: ${filePath} [Reason: ${reason}]`,
-      );
+      relinka("verbose", `[${distName}] Successfully read file: ${filePath} [Reason: ${reason}]`);
     }
     return content;
   } catch (error) {
-    relinka(
-      "error",
-      `[${distName}] Failed to read file: ${filePath} [Reason: ${reason}]`,
-      error,
-    );
+    relinka("error", `[${distName}] Failed to read file: ${filePath} [Reason: ${reason}]`, error);
     throw error;
   }
 }
@@ -269,16 +239,141 @@ export async function writeFileSafe(
 ): Promise<void> {
   try {
     await fs.writeFile(filePath, content, "utf8");
-    relinka(
-      "verbose",
-      `Successfully wrote file: ${filePath} [Reason: ${reason}]`,
-    );
+    relinka("verbose", `Successfully wrote file: ${filePath} [Reason: ${reason}]`);
   } catch (error) {
-    relinka(
-      "error",
-      `Failed to write file: ${filePath} [Reason: ${reason}]`,
-      error,
-    );
+    relinka("error", `Failed to write file: ${filePath} [Reason: ${reason}]`, error);
     throw error;
   }
+}
+
+/**
+ * Copies files/folders that match patterns in dontBuildCopyInstead to the output directory.
+ *
+ * We call this **after** all build steps have completed so that the clean step
+ * inside `_build` cannot accidentally wipe the copied assets.
+ */
+export async function copyInsteadOfBuild(
+  rootDir: string,
+  outDir: string,
+  patterns: string[],
+): Promise<void> {
+  if (!patterns.length) return;
+
+  relinka("info", "Copying files/folders that should not be built...");
+
+  // Validate patterns for security and correctness
+  const SENSITIVE_PATTERNS = [
+    "node_modules",
+    ".git",
+    ".env",
+    "package-lock.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+  ];
+
+  const invalidPatterns = patterns.filter((pattern) =>
+    SENSITIVE_PATTERNS.some((sensitive) => pattern.includes(sensitive)),
+  );
+
+  if (invalidPatterns.length > 0) {
+    relinka("warn", `Potentially sensitive patterns detected: ${invalidPatterns.join(", ")}`);
+  }
+
+  // Create filtered patterns array
+  const filteredPatterns = patterns.filter(
+    (pattern) => !SENSITIVE_PATTERNS.some((sensitive) => pattern.includes(sensitive)),
+  );
+
+  // Process patterns in batches to manage memory
+  const BATCH_SIZE = 50;
+  const BATCH_DELAY = 100; // ms delay between batches to prevent memory spikes
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY = 1000; // 1 second delay between retries
+
+  async function copyWithRetry(
+    source: string,
+    dest: string,
+    relativePath: string,
+    retryCount = 0,
+  ): Promise<void> {
+    try {
+      // Create parent directory if it doesn't exist
+      await fs.mkdir(path.dirname(dest), { recursive: true });
+
+      // Check if source exists and is accessible
+      try {
+        await fs.access(source);
+      } catch {
+        relinka("warn", `Source not accessible: ${relativePath}`);
+        return;
+      }
+
+      // Copy with optimized options
+      await fs.cp(source, dest, {
+        recursive: true,
+        dereference: true,
+        force: true,
+        errorOnExist: false,
+      });
+
+      relinka("verbose", `Copied instead of building: ${relativePath}`);
+    } catch (error: any) {
+      if (error.code === "EBUSY" && retryCount < MAX_RETRIES) {
+        relinka(
+          "warn",
+          `File ${relativePath} is busy, retrying in ${RETRY_DELAY}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
+        return copyWithRetry(source, dest, relativePath, retryCount + 1);
+      }
+      // Throw error after max retries or for non-EBUSY errors
+      throw new Error(
+        `Failed to copy ${relativePath} after ${retryCount} retries: ${error.message}`,
+      );
+    }
+  }
+
+  for (let i = 0; i < filteredPatterns.length; i += BATCH_SIZE) {
+    const batchPatterns = filteredPatterns.slice(i, i + BATCH_SIZE);
+    const batchCopyTasks: Promise<unknown>[] = [];
+
+    // Process each pattern in the current batch
+    for (const pattern of batchPatterns) {
+      const matches = await glob(pattern, {
+        cwd: rootDir,
+        dot: true,
+        absolute: true,
+        onlyFiles: false,
+        followSymbolicLinks: false,
+      });
+
+      for (const match of matches) {
+        const relativePath = path.relative(rootDir, match);
+        const destPath = path.resolve(outDir, relativePath);
+        batchCopyTasks.push(copyWithRetry(match, destPath, relativePath));
+      }
+    }
+
+    // Process current batch
+    if (batchCopyTasks.length > 0) {
+      await Promise.all(batchCopyTasks);
+
+      // Add delay between batches if not the last batch
+      if (i + BATCH_SIZE < filteredPatterns.length) {
+        await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY));
+      }
+    }
+
+    // Log progress
+    const progress = Math.min(
+      100,
+      Math.round(((i + batchPatterns.length) / filteredPatterns.length) * 100),
+    );
+    relinka(
+      "verbose",
+      `Copy progress: ${progress}% (${i + batchPatterns.length}/${filteredPatterns.length} patterns)`,
+    );
+  }
+
+  relinka("success", "Completed copying files/folders that should not be built");
 }

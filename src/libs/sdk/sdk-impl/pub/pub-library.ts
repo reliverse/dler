@@ -6,10 +6,7 @@ import type { PerfTimer } from "~/libs/sdk/sdk-types";
 
 import { CONCURRENCY_DEFAULT } from "~/libs/sdk/sdk-impl/utils/utils-consts";
 import { withWorkingDirectory } from "~/libs/sdk/sdk-impl/utils/utils-cwd";
-import {
-  pausePerfTimer,
-  resumePerfTimer,
-} from "~/libs/sdk/sdk-impl/utils/utils-perf";
+import { pausePerfTimer, resumePerfTimer } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 /**
  * Publishes a library to the specified commonPubRegistry.
@@ -42,27 +39,12 @@ export async function library_publishLibrary(
       break;
     case "npm":
       relinka("log", `Publishing lib ${libName} to NPM only...`);
-      await library_pubToNpm(
-        npmOutDir,
-        distJsrDryRun,
-        distJsrFailOnWarn,
-        libName,
-        isDev,
-        timer,
-      );
+      await library_pubToNpm(npmOutDir, distJsrDryRun, distJsrFailOnWarn, libName, isDev, timer);
       break;
     case "npm-jsr": {
       relinka("log", `Publishing lib ${libName} to both NPM and JSR...`);
       const publishTasks = [
-        () =>
-          library_pubToNpm(
-            npmOutDir,
-            distJsrDryRun,
-            distJsrFailOnWarn,
-            libName,
-            isDev,
-            timer,
-          ),
+        () => library_pubToNpm(npmOutDir, distJsrDryRun, distJsrFailOnWarn, libName, isDev, timer),
         () =>
           library_pubToJsr(
             jsrOutDir,
@@ -96,7 +78,7 @@ async function library_pubToJsr(
   distJsrAllowDirty: boolean,
   distJsrSlowTypes: boolean,
   libName: string,
-  isDev: boolean,
+  _isDev: boolean,
   timer: PerfTimer,
 ): Promise<void> {
   relinka("verbose", `Starting library_pubToJsr for lib: ${libName}`);
@@ -140,9 +122,9 @@ async function library_pubToJsr(
 async function library_pubToNpm(
   libOutDir: string,
   distJsrDryRun: boolean,
-  distJsrFailOnWarn: boolean,
+  _distJsrFailOnWarn: boolean,
   libName: string,
-  isDev: boolean,
+  _isDev: boolean,
   timer: PerfTimer,
 ): Promise<void> {
   relinka("verbose", `Starting library_pubToNpm for lib: ${libName}`);
@@ -150,9 +132,7 @@ async function library_pubToNpm(
     if (timer) pausePerfTimer(timer);
     await withWorkingDirectory(libOutDir, async () => {
       relinka("log", `Publishing lib ${libName} to NPM from ${libOutDir}`);
-      const command = ["bun publish", distJsrDryRun ? "--dry-run" : ""]
-        .filter(Boolean)
-        .join(" ");
+      const command = ["bun publish", distJsrDryRun ? "--dry-run" : ""].filter(Boolean).join(" ");
       await execaCommand(command, { stdio: "inherit" });
       relinka(
         "success",

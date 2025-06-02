@@ -24,11 +24,7 @@ async function getAllTsFiles(dir: string): Promise<string[]> {
       const fullPath = join(dir, entry);
       const stats = await stat(fullPath);
 
-      if (
-        stats.isDirectory() &&
-        !entry.startsWith(".") &&
-        entry !== "node_modules"
-      ) {
+      if (stats.isDirectory() && !entry.startsWith(".") && entry !== "node_modules") {
         const subFiles = await getAllTsFiles(fullPath);
         files.push(...subFiles);
       } else if (stats.isFile()) {
@@ -45,9 +41,7 @@ async function getAllTsFiles(dir: string): Promise<string[]> {
   return files;
 }
 
-export async function migrateFsToRelifso(
-  dryRun = false,
-): Promise<MigrationResult[]> {
+export async function migrateFsToRelifso(dryRun = false): Promise<MigrationResult[]> {
   const results: MigrationResult[] = [];
   const files = await getAllTsFiles(".");
 
@@ -58,18 +52,14 @@ export async function migrateFsToRelifso(
       const changes: string[] = [];
 
       // replace node:fs imports with relifso (handles both default and named exports)
-      const nodeFsImportRegex =
-        /import\s+(?:(\{[^}]*\})|(\w+))\s+from\s+["']node:fs["']/g;
+      const nodeFsImportRegex = /import\s+(?:(\{[^}]*\})|(\w+))\s+from\s+["']node:fs["']/g;
       if (nodeFsImportRegex.test(content)) {
-        modified = modified.replace(
-          nodeFsImportRegex,
-          (match, namedExports, defaultExport) => {
-            if (namedExports) {
-              return `import ${namedExports} from "@reliverse/relifso"`;
-            }
-            return `import ${defaultExport} from "@reliverse/relifso"`;
-          },
-        );
+        modified = modified.replace(nodeFsImportRegex, (_match, namedExports, defaultExport) => {
+          if (namedExports) {
+            return `import ${namedExports} from "@reliverse/relifso"`;
+          }
+          return `import ${defaultExport} from "@reliverse/relifso"`;
+        });
         changes.push("Updated node:fs imports to @reliverse/relifso");
       }
 
@@ -79,7 +69,7 @@ export async function migrateFsToRelifso(
       if (nodeFsPromisesImportRegex.test(content)) {
         modified = modified.replace(
           nodeFsPromisesImportRegex,
-          (match, namedExports, defaultExport) => {
+          (_match, namedExports, defaultExport) => {
             if (namedExports) {
               return `import ${namedExports} from "@reliverse/relifso"`;
             }
@@ -90,47 +80,33 @@ export async function migrateFsToRelifso(
       }
 
       // replace fs-extra imports with relifso
-      const fsExtraImportRegex =
-        /import\s+(?:(\{[^}]*\})|(\w+))\s+from\s+["']fs-extra["']/g;
+      const fsExtraImportRegex = /import\s+(?:(\{[^}]*\})|(\w+))\s+from\s+["']fs-extra["']/g;
       if (fsExtraImportRegex.test(content)) {
-        modified = modified.replace(
-          fsExtraImportRegex,
-          (match, namedExports, defaultExport) => {
-            if (namedExports) {
-              return `import ${namedExports} from "@reliverse/relifso"`;
-            }
-            return `import ${defaultExport} from "@reliverse/relifso"`;
-          },
-        );
+        modified = modified.replace(fsExtraImportRegex, (_match, namedExports, defaultExport) => {
+          if (namedExports) {
+            return `import ${namedExports} from "@reliverse/relifso"`;
+          }
+          return `import ${defaultExport} from "@reliverse/relifso"`;
+        });
         changes.push("Updated fs-extra imports to @reliverse/relifso");
       }
 
       // replace require statements
       const nodeFsRequireRegex = /require\s*\(\s*["']node:fs["']\s*\)/g;
       if (nodeFsRequireRegex.test(content)) {
-        modified = modified.replace(
-          nodeFsRequireRegex,
-          'require("@reliverse/relifso")',
-        );
+        modified = modified.replace(nodeFsRequireRegex, 'require("@reliverse/relifso")');
         changes.push("Updated node:fs require to @reliverse/relifso");
       }
 
-      const nodeFsPromisesRequireRegex =
-        /require\s*\(\s*["']node:fs\/promises["']\s*\)/g;
+      const nodeFsPromisesRequireRegex = /require\s*\(\s*["']node:fs\/promises["']\s*\)/g;
       if (nodeFsPromisesRequireRegex.test(content)) {
-        modified = modified.replace(
-          nodeFsPromisesRequireRegex,
-          'require("@reliverse/relifso")',
-        );
+        modified = modified.replace(nodeFsPromisesRequireRegex, 'require("@reliverse/relifso")');
         changes.push("Updated node:fs/promises require to @reliverse/relifso");
       }
 
       const fsExtraRequireRegex = /require\s*\(\s*["']fs-extra["']\s*\)/g;
       if (fsExtraRequireRegex.test(content)) {
-        modified = modified.replace(
-          fsExtraRequireRegex,
-          'require("@reliverse/relifso")',
-        );
+        modified = modified.replace(fsExtraRequireRegex, 'require("@reliverse/relifso")');
         changes.push("Updated fs-extra require to @reliverse/relifso");
       }
 
@@ -181,9 +157,7 @@ async function updatePackageJson(
       for (const pkg of config.remove) {
         if (packageJson.dependencies?.[pkg]) {
           packageJson.dependencies = Object.fromEntries(
-            Object.entries(packageJson.dependencies).filter(
-              ([key]) => key !== pkg,
-            ),
+            Object.entries(packageJson.dependencies).filter(([key]) => key !== pkg),
           );
           packageChanged = true;
           packageChanges.push(`Removed ${pkg} from dependencies`);
@@ -191,9 +165,7 @@ async function updatePackageJson(
 
         if (packageJson.devDependencies?.[pkg]) {
           packageJson.devDependencies = Object.fromEntries(
-            Object.entries(packageJson.devDependencies).filter(
-              ([key]) => key !== pkg,
-            ),
+            Object.entries(packageJson.devDependencies).filter(([key]) => key !== pkg),
           );
           packageChanged = true;
           packageChanges.push(`Removed ${pkg} from devDependencies`);
@@ -211,11 +183,7 @@ async function updatePackageJson(
 
       if (packageChanged) {
         if (!dryRun) {
-          await writeFile(
-            packageJsonPath,
-            JSON.stringify(packageJson, null, 2) + "\n",
-            "utf-8",
-          );
+          await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n", "utf-8");
         }
 
         results.push({

@@ -16,17 +16,8 @@ export const FILE_TYPES = [
   { type: "md:README", variations: ["README.md", "README"] },
 ] as const;
 
-export const INIT_BEHAVIOURS = [
-  "create",
-  "copy",
-  "create-if-copy-failed",
-] as const;
+export const INIT_BEHAVIOURS = ["create", "copy", "create-if-copy-failed"] as const;
 
-export const DEST_FILE_EXISTS_BEHAVIOURS = [
-  "rewrite",
-  "skip",
-  "attach-index",
-  "prompt",
-] as const;
+export const DEST_FILE_EXISTS_BEHAVIOURS = ["rewrite", "skip", "attach-index", "prompt"] as const;
 
 export const CONTENT_CREATE_MODES = ["license-basic", "simple-readme"];

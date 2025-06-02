@@ -13,11 +13,7 @@
 import fs from "@reliverse/relifso";
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 
-import {
-  getAllSourceFiles,
-  splitLargeFileByLines,
-  splitLargeFunctions,
-} from "./impl";
+import { getAllSourceFiles, splitLargeFileByLines, splitLargeFunctions } from "./impl";
 
 export default defineCommand({
   args: defineArgs({

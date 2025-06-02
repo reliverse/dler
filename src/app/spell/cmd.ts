@@ -18,8 +18,7 @@ export default defineCommand({
     },
     files: {
       type: "string",
-      description:
-        "Comma-separated list of files to process (or all if not specified)",
+      description: "Comma-separated list of files to process (or all if not specified)",
     },
     dryRun: {
       type: "boolean",
@@ -52,9 +51,7 @@ export default defineCommand({
     console.log("\nResults:");
     for (const result of results) {
       const status = result.success ? "✓" : "✗";
-      console.log(
-        `${status} ${result.file}: ${result.spell.type} - ${result.message}`,
-      );
+      console.log(`${status} ${result.file}: ${result.spell.type} - ${result.message}`);
     }
   },
 });

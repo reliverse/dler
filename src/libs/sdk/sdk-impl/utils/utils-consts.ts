@@ -14,14 +14,7 @@ export const tsconfigJson = "tsconfig.json";
 
 export const cliDomainDocs = "https://docs.reliverse.org";
 
-export const validExtensions = [
-  "cjs",
-  "js",
-  "mjs",
-  "ts",
-  "mts",
-  "cts",
-] satisfies NpmOutExt[];
+export const validExtensions = ["cjs", "js", "mjs", "ts", "mts", "cts"] satisfies NpmOutExt[];
 
 export const SHOW_VERBOSE = {
   getDirectorySize: false,

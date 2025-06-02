@@ -10,10 +10,7 @@ import type { PerfTimer } from "~/libs/sdk/sdk-types";
 
 import { PROJECT_ROOT } from "~/libs/sdk/sdk-impl/utils/utils-consts";
 import { withWorkingDirectory } from "~/libs/sdk/sdk-impl/utils/utils-cwd";
-import {
-  pausePerfTimer,
-  resumePerfTimer,
-} from "~/libs/sdk/sdk-impl/utils/utils-perf";
+import { pausePerfTimer, resumePerfTimer } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 /**
  * Publishes the JSR distribution.
@@ -21,7 +18,7 @@ import {
 export async function regular_pubToJsr(
   distJsrDryRun: boolean,
   distJsrFailOnWarn: boolean,
-  isDev: boolean,
+  _isDev: boolean,
   commonPubPause: boolean,
   distJsrDirName: string,
   distJsrAllowDirty: boolean,
@@ -75,7 +72,7 @@ export async function regular_pubToJsr(
  */
 export async function regular_pubToNpm(
   distJsrDryRun: boolean,
-  isDev: boolean,
+  _isDev: boolean,
   commonPubPause: boolean,
   distNpmDirName: string,
   timer: PerfTimer,
@@ -89,9 +86,7 @@ export async function regular_pubToNpm(
       if (timer) pausePerfTimer(timer);
 
       await withWorkingDirectory(distNpmDirNameResolved, async () => {
-        const command = ["bun publish", distJsrDryRun ? "--dry-run" : ""]
-          .filter(Boolean)
-          .join(" ");
+        const command = ["bun publish", distJsrDryRun ? "--dry-run" : ""].filter(Boolean).join(" ");
         relinka("verbose", `Running publish command: ${command}`);
         try {
           await execaCommand(command, { stdio: "inherit" });

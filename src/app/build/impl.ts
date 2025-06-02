@@ -1,8 +1,4 @@
-import {
-  bumpHandler,
-  isBumpDisabled,
-  setBumpDisabledValueTo,
-} from "@reliverse/bleump";
+import { bumpHandler, isBumpDisabled, setBumpDisabledValueTo } from "@reliverse/bleump";
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 
@@ -49,12 +45,7 @@ export async function dlerBuild(isDev: boolean) {
     try {
       const bumpIsDisabled = await isBumpDisabled();
       if (!bumpIsDisabled && !config.commonPubPause) {
-        await bumpHandler(
-          config.bumpMode,
-          false,
-          config.bumpFilter,
-          config.bumpSet,
-        );
+        await bumpHandler(config.bumpMode, false, config.bumpFilter, config.bumpSet);
         await setBumpDisabledValueTo(true);
       }
     } catch {
@@ -110,12 +101,7 @@ export async function dlerPub(isDev: boolean) {
     const bumpIsDisabled = await isBumpDisabled();
     if (!bumpIsDisabled && !config.commonPubPause) {
       try {
-        await bumpHandler(
-          config.bumpMode,
-          false,
-          config.bumpFilter,
-          config.bumpSet,
-        );
+        await bumpHandler(config.bumpMode, false, config.bumpFilter, config.bumpSet);
         await setBumpDisabledValueTo(true);
       } catch {
         throw new Error("[.config/dler.ts] Failed to set bumpDisable to true");

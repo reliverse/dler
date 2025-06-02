@@ -34,10 +34,7 @@ export async function withWorkingDirectory<T>(
   transpileTargetDir: string,
   fn: () => Promise<T>,
 ): Promise<T> {
-  relinka(
-    "verbose",
-    `Entering withWorkingDirectory, transpileTargetDir: ${transpileTargetDir}`,
-  );
+  relinka("verbose", `Entering withWorkingDirectory, transpileTargetDir: ${transpileTargetDir}`);
   const originalDir = process.cwd();
   try {
     process.chdir(transpileTargetDir);

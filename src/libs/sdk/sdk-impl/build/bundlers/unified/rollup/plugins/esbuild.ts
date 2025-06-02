@@ -49,10 +49,7 @@ export function esbuild(options: EsbuildOptions): Plugin {
   return {
     name: "transpileEsbuild",
 
-    async renderChunk(
-      code,
-      { fileName },
-    ): Promise<null | undefined | { code: string; map: any }> {
+    async renderChunk(code, { fileName }): Promise<null | undefined | { code: string; map: any }> {
       if (!options.minify) {
         return null;
       }
@@ -101,11 +98,7 @@ export function esbuild(options: EsbuildOptions): Plugin {
   };
 }
 
-function printWarnings(
-  id: string,
-  result: TransformResult,
-  plugin: PluginContext,
-): void {
+function printWarnings(id: string, result: TransformResult, plugin: PluginContext): void {
   if (result.warnings) {
     for (const warning of result.warnings) {
       let message = "[transpileEsbuild]";

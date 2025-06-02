@@ -14,11 +14,7 @@ export const DEFAULT_EXTENSIONS: string[] = [
   ".json",
 ];
 
-export function getChunkFilename(
-  ctx: BuildContext,
-  chunk: PreRenderedChunk,
-  ext: string,
-): string {
+export function getChunkFilename(ctx: BuildContext, chunk: PreRenderedChunk, ext: string): string {
   if (chunk.isDynamicEntry) {
     return `chunks/[name].${ext}`;
   }
@@ -44,10 +40,7 @@ export function resolveAliases(ctx: BuildContext): Record<string, string> {
         ),
       );
     } else {
-      Object.assign(
-        aliases,
-        ctx.options.rollup.alias.entries || ctx.options.rollup.alias,
-      );
+      Object.assign(aliases, ctx.options.rollup.alias.entries || ctx.options.rollup.alias);
     }
   }
 

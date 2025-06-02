@@ -14,3 +14,4 @@ NOTICES
 
 Some parts of this project are based on and significantly adapt:
 - https://github.com/unjs/unbuild/tree/a6570a5 – MIT © Pooya Parsa (pi0)
+- https://github.com/unjs/mkdist/tree/a7f029d – MIT © Pooya Parsa (pi0), Daniel Roe (danielroe)

@@ -8,23 +8,19 @@ import { defineConfig } from "~/mod";
 export default defineConfig({
   // Bump configuration
   bumpDisable: false,
-  bumpFilter: [
-    "package.json",
-    ".config/rse.ts",
-    "src/libs/sdk/sdk-impl/cfg/info.ts",
-  ],
+  bumpFilter: ["package.json", ".config/rse.ts", "src/libs/sdk/sdk-impl/cfg/info.ts"],
   bumpMode: "patch",
 
   // Common configuration
-  commonPubPause: false,
-  commonPubRegistry: "npm-jsr",
+  commonPubPause: true,
+  commonPubRegistry: "npm",
   commonVerbose: true,
 
   // Core configuration
   coreBuildOutDir: "bin",
   coreDeclarations: true,
   coreDescription:
-    "@reliverse/dler is a flexible, unified, and fully automated bundler for typescript and javascript projects, as well as an npm and jsr publishing tool. dler is not only a bundler, it also tries to serve as the most powerful codemod toolkit for js/ts.",
+    "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
   coreEntryFile: "mod.ts",
   coreEntrySrcDir: "src",
   coreIsCLI: { enabled: true, scripts: { dler: "cli.ts" } },
@@ -48,7 +44,7 @@ export default defineConfig({
   // Publish specific dirs as separate packages
   // This feature is experimental at the moment
   // Please commit your changes before using it
-  libsActMode: "main-and-libs",
+  libsActMode: "libs-only",
   libsDirDist: "dist-libs",
   libsDirSrc: "src/libs",
   libsList: {
@@ -60,7 +56,7 @@ export default defineConfig({
       libPkgKeepDeps: true,
       libTranspileMinify: true,
       libPubPause: false,
-      libPubRegistry: "npm-jsr",
+      libPubRegistry: "npm",
     },
   },
 
@@ -75,11 +71,11 @@ export default defineConfig({
   // - dist-jsr,dist-libs/jsr: ["jsr.json"]
   publishArtifacts: {
     global: ["package.json", "README.md", "LICENSE", "LICENSES"],
-    "dist-jsr": ["jsr.json"],
+    "dist-jsr": [],
     "dist-npm": [],
     "dist-libs": {
       "@reliverse/dler-sdk": {
-        jsr: ["jsr.json"],
+        jsr: [],
         npm: [],
       },
     },
@@ -101,8 +97,8 @@ export default defineConfig({
       "!@reliverse/rse-sdk",
       "!@reliverse/dler-sdk",
     ],
-    "dist-jsr": [],
     "dist-npm": [],
+    "dist-jsr": [],
     "dist-libs": {
       "@reliverse/dler-sdk": {
         jsr: ["!bun"],

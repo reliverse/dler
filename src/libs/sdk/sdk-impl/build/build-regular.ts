@@ -1,7 +1,4 @@
-import path, {
-  convertImportsAliasToRelative,
-  convertImportsExt,
-} from "@reliverse/pathkit";
+import path, { convertImportsAliasToRelative, convertImportsExt } from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { build as bunBuild } from "bun";
@@ -29,16 +26,10 @@ import {
   PROJECT_ROOT,
   validExtensions,
 } from "~/libs/sdk/sdk-impl/utils/utils-consts";
-import {
-  copyRootFile,
-  deleteSpecificFiles,
-} from "~/libs/sdk/sdk-impl/utils/utils-fs";
-import {
-  createJsrJSON,
-  renameTsxFiles,
-} from "~/libs/sdk/sdk-impl/utils/utils-jsr-json";
-import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
+import { copyRootFile, deleteSpecificFiles } from "~/libs/sdk/sdk-impl/utils/utils-fs";
+import { createJsrJSON, renameTsxFiles } from "~/libs/sdk/sdk-impl/utils/utils-jsr-json";
 import { regular_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-package-json-regular";
+import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 const ALIAS_PREFIX_TO_CONVERT = "~";
 
@@ -69,15 +60,13 @@ export async function regular_buildJsrDist(
   distJsrGenTsconfig: boolean,
   coreDeclarations: boolean,
 ): Promise<void> {
+  const isCLI = coreIsCLI.enabled;
   const outDirRoot = path.join(process.cwd(), distJsrDirName);
   const outDirBin = path.join(outDirRoot, config.coreBuildOutDir || "bin");
   const singleFile = path.join(process.cwd(), coreEntrySrcDir, coreEntryFile);
   const srcDir = path.join(process.cwd(), coreEntrySrcDir);
 
-  relinka(
-    "log",
-    `Building JSR distribution (isDev=${isDev}, isJsr=${isJsr})...`,
-  );
+  relinka("log", `Building JSR distribution (isDev=${isDev}, isJsr=${isJsr})...`);
 
   try {
     // Create the output directory
@@ -85,6 +74,7 @@ export async function regular_buildJsrDist(
 
     // Bundle the project
     await regular_bundleWithBuilder(distJsrBuilder, {
+      isCLI,
       coreDeclarations,
       outDir: outDirBin,
       singleFile,
@@ -119,10 +109,7 @@ export async function regular_buildJsrDist(
     }
 
     // JSR-specific post-build steps
-    relinka(
-      "verbose",
-      `Performing JSR-specific transformations in ${outDirBin}`,
-    );
+    relinka("verbose", `Performing JSR-specific transformations in ${outDirBin}`);
     await renameTsxFiles(outDirBin);
     await createJsrJSON(
       outDirRoot,
@@ -138,17 +125,12 @@ export async function regular_buildJsrDist(
     const transpileFormattedDuration = prettyMilliseconds(duration, {
       verbose: true,
     });
-    relinka(
-      "success",
-      `JSR distribution built in ${transpileFormattedDuration}`,
-    );
+    relinka("success", `JSR distribution built in ${transpileFormattedDuration}`);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     relinka("error", `Failed to build JSR distribution: ${errorMessage}`);
 
-    const enhancedError = new Error(
-      `JSR distribution build failed: ${errorMessage}`,
-    );
+    const enhancedError = new Error(`JSR distribution build failed: ${errorMessage}`);
     if (error instanceof Error && error.stack) {
       enhancedError.stack = error.stack;
     }
@@ -163,6 +145,7 @@ export async function regular_buildJsrDist(
  */
 export async function regular_buildNpmDist(
   isDev: boolean,
+  isCLI: boolean,
   coreEntrySrcDir: string,
   distNpmDirName: string,
   distNpmBuilder: BundlerName,
@@ -194,6 +177,7 @@ export async function regular_buildNpmDist(
 
     // Bundle the project
     await regular_bundleWithBuilder(distNpmBuilder, {
+      isCLI,
       coreDeclarations,
       outDir: outDirBin,
       singleFile,
@@ -227,17 +211,12 @@ export async function regular_buildNpmDist(
     const transpileFormattedDuration = prettyMilliseconds(duration, {
       verbose: true,
     });
-    relinka(
-      "success",
-      `NPM distribution built in ${transpileFormattedDuration}`,
-    );
+    relinka("success", `NPM distribution built in ${transpileFormattedDuration}`);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     relinka("error", `Failed to build NPM distribution: ${errorMessage}`);
 
-    const enhancedError = new Error(
-      `NPM distribution build failed: ${errorMessage}`,
-    );
+    const enhancedError = new Error(`NPM distribution build failed: ${errorMessage}`);
     if (error instanceof Error && error.stack) {
       enhancedError.stack = error.stack;
     }
@@ -273,9 +252,7 @@ async function regular_bundleUsingBun(
     const buildResult = await bunBuild({
       banner: "/* Bundled by @reliverse/dler */",
       define: {
-        "process.env.NODE_ENV": JSON.stringify(
-          process.env.NODE_ENV || "production",
-        ),
+        "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "production"),
       },
       drop: ["debugger"],
       entrypoints: [coreEntryFile],
@@ -312,14 +289,9 @@ async function regular_bundleUsingBun(
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    relinka(
-      "error",
-      `Regular build failed while using bun bundler: ${errorMessage}`,
-    );
+    relinka("error", `Regular build failed while using bun bundler: ${errorMessage}`);
 
-    const enhancedError = new Error(
-      `Regular bundle failed for ${outDirBin}: ${errorMessage}`,
-    );
+    const enhancedError = new Error(`Regular bundle failed for ${outDirBin}: ${errorMessage}`);
     if (error instanceof Error && error.stack) {
       enhancedError.stack = error.stack;
     }
@@ -330,10 +302,7 @@ async function regular_bundleUsingBun(
 /**
  * Bundles a regular project using JSR by copying the source directory.
  */
-async function regular_bundleUsingJsr(
-  src: string,
-  dest: string,
-): Promise<void> {
+async function regular_bundleUsingJsr(src: string, dest: string): Promise<void> {
   relinka("log", `Starting regular_bundleUsingJsr: ${src} -> ${dest}`);
   await fs.ensureDir(path.dirname(dest));
 
@@ -380,6 +349,7 @@ async function regular_bundleUsingJsr(
  * Bundles a regular project using a unified builder (rollup, mkdist, etc.).
  */
 async function regular_bundleUsingUnified(
+  isCLI: boolean,
   coreEntryFile: string,
   outDirBin: string,
   builder: BundlerName,
@@ -394,9 +364,7 @@ async function regular_bundleUsingUnified(
   coreDeclarations: boolean,
 ): Promise<void> {
   if (builder === "jsr" || builder === "bun") {
-    throw new Error(
-      "'jsr'/'bun' builder not supported for regular_bundleUsingUnified",
-    );
+    throw new Error("'jsr'/'bun' builder not supported for regular_bundleUsingUnified");
   }
 
   try {
@@ -414,8 +382,7 @@ async function regular_bundleUsingUnified(
 
     // For mkdist, pass the entire directory
     // For other unified builders, pass the single file
-    const input =
-      builder === "mkdist" ? path.dirname(coreEntryFile) : coreEntryFile;
+    const input = builder === "mkdist" ? path.dirname(coreEntryFile) : coreEntryFile;
 
     const unifiedBuildConfig = {
       clean: false,
@@ -447,9 +414,10 @@ async function regular_bundleUsingUnified(
       showOutLog: true,
       transpileStub,
       transpileWatch: transpileWatch ?? false,
+      dontBuildCopyInstead: ["**/templates/**"],
     } satisfies UnifiedBuildConfig & { concurrency?: number };
 
-    await unifiedBuild(false, rootDir, unifiedBuildConfig, outDirBin);
+    await unifiedBuild(coreEntrySrcDir, isCLI, false, rootDir, unifiedBuildConfig, outDirBin);
 
     // Calculate and log build duration
     const duration = getElapsedPerfTime(timer);
@@ -462,14 +430,9 @@ async function regular_bundleUsingUnified(
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    relinka(
-      "error",
-      `Failed to bundle regular project using ${builder}: ${errorMessage}`,
-    );
+    relinka("error", `Failed to bundle regular project using ${builder}: ${errorMessage}`);
 
-    const enhancedError = new Error(
-      `Regular bundle failed for ${outDirBin}: ${errorMessage}`,
-    );
+    const enhancedError = new Error(`Regular bundle failed for ${outDirBin}: ${errorMessage}`);
     if (error instanceof Error && error.stack) {
       enhancedError.stack = error.stack;
     }
@@ -483,6 +446,7 @@ async function regular_bundleUsingUnified(
 async function regular_bundleWithBuilder(
   builder: BundlerName,
   params: {
+    isCLI: boolean;
     coreDeclarations: boolean;
     outDir: string;
     singleFile: string; // single entry file (used if bun/unified)
@@ -500,6 +464,7 @@ async function regular_bundleWithBuilder(
   },
 ): Promise<void> {
   const {
+    isCLI,
     coreDeclarations,
     outDir,
     singleFile,
@@ -540,6 +505,7 @@ async function regular_bundleWithBuilder(
 
   // Everything else is a "unified" type builder (rollup, mkdist, etc.)
   await regular_bundleUsingUnified(
+    isCLI,
     singleFile,
     outDir,
     builder,
@@ -601,10 +567,7 @@ async function regular_performCommonBuildSteps({
     pathExtFilter: "js-ts-none",
   });
   if (isJsr) {
-    relinka(
-      "info",
-      `[dist-jsr] Performing paths ext conversion in ${outDirBin} (from js to ts)`,
-    );
+    relinka("info", `[dist-jsr] Performing paths ext conversion in ${outDirBin} (from js to ts)`);
     await convertImportsExt({
       targetDir: outDirBin,
       extFrom: "js",
@@ -637,10 +600,7 @@ async function regular_performCommonBuildSteps({
   );
 
   // Copy some root files (README, LICENSE, etc.)
-  await copyRootFile(
-    outDirRoot,
-    config.publishArtifacts?.global || ["README.md", "LICENSE"],
-  );
+  await copyRootFile(outDirRoot, config.publishArtifacts?.global || ["README.md", "LICENSE"]);
 
   // Copy a few more if it's JSR and it's a CLI
   if (isJsr && coreIsCLI.enabled) {

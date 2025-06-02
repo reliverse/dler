@@ -14,10 +14,7 @@ export const readFile = async (filePath: string): Promise<string> => {
   return await fs.readFile(filePath, "utf-8");
 };
 
-export const writeFile = async (
-  filePath: string,
-  content: string,
-): Promise<void> => {
+export const writeFile = async (filePath: string, content: string): Promise<void> => {
   const dir = path.dirname(filePath);
 
   try {
@@ -36,10 +33,7 @@ export const removeFile = async (filePath: string): Promise<void> => {
   }
 };
 
-export const renameFile = async (
-  oldPath: string,
-  newPath: string,
-): Promise<void> => {
+export const renameFile = async (oldPath: string, newPath: string): Promise<void> => {
   try {
     const dir = path.dirname(newPath);
     await fs.mkdir(dir, { recursive: true });
@@ -61,16 +55,12 @@ export const copyFile = async (
     // Check if target file exists
     const exists = await fileExists(targetPath);
     if (exists && !overwrite) {
-      throw new Error(
-        `Destination ${targetPath} already exists and overwrite is false.`,
-      );
+      throw new Error(`Destination ${targetPath} already exists and overwrite is false.`);
     }
 
     await fs.copyFile(sourcePath, targetPath);
   } catch (error) {
-    throw new Error(
-      `Failed to copy file ${sourcePath} to ${targetPath}: ${error}`,
-    );
+    throw new Error(`Failed to copy file ${sourcePath} to ${targetPath}: ${error}`);
   }
 };
 

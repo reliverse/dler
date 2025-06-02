@@ -41,12 +41,9 @@ import {
   getDirectorySize,
   outDirBinFilesCount,
 } from "~/libs/sdk/sdk-impl/utils/utils-fs";
-import {
-  createJsrJSON,
-  renameTsxFiles,
-} from "~/libs/sdk/sdk-impl/utils/utils-jsr-json";
-import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
+import { createJsrJSON, renameTsxFiles } from "~/libs/sdk/sdk-impl/utils/utils-jsr-json";
 import { library_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-package-json-libraries";
+import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 // ============================================================================
 // Constants
@@ -144,6 +141,7 @@ type BundleExecutorParams = {
   transpileStub: boolean; // For unified
   transpileWatch: boolean; // For unified (or potentially others)
   unifiedBundlerOutExt: NpmOutExt; // For bun/unified
+  coreEntrySrcDir: string; // For unified
 };
 
 /** Parameters for the central bundler dispatcher function `library_bundleWithBuilder` */
@@ -178,9 +176,7 @@ type CommonStepsParams = {
  * Manages pre-build source modifications, orchestrates target builds, and ensures post-build cleanup.
  * @param options - The consolidated build configuration.
  */
-export async function library_buildLibrary(
-  options: LibraryBuildOptions,
-): Promise<void> {
+export async function library_buildLibrary(options: LibraryBuildOptions): Promise<void> {
   const { libName, mainDir } = options;
   let replacedFiles: ReplacementRecord[] = [];
 
@@ -202,28 +198,18 @@ export async function library_buildLibrary(
   } catch (err) {
     // --- Error Handling ---
     const error = err instanceof Error ? err : new Error(String(err));
-    relinka(
-      "error",
-      `Build process for ${libName} failed: ${error.message}`,
-      error.stack,
-    );
+    relinka("error", `Build process for ${libName} failed: ${error.message}`, error.stack);
     // Re-throw to halt the overall process if this is part of a larger sequence
     throw error;
   } finally {
     // --- Post-build Step: Revert source file modifications ---
     if (replacedFiles.length > 0) {
-      relinka(
-        "verbose",
-        `Reverting ${replacedFiles.length} pre-build changes for ${libName}...`,
-      );
+      relinka("verbose", `Reverting ${replacedFiles.length} pre-build changes for ${libName}...`);
       try {
         await postBuildReplacements(replacedFiles);
         relinka("verbose", `Done reverting changes for ${libName}.`);
       } catch (revertError) {
-        const error =
-          revertError instanceof Error
-            ? revertError
-            : new Error(String(revertError));
+        const error = revertError instanceof Error ? revertError : new Error(String(revertError));
         relinka(
           "error",
           `CRITICAL: Failed to revert pre-build changes for ${libName}: ${error.message}. Source files may be left modified!`,
@@ -243,10 +229,7 @@ export async function library_buildLibrary(
  */
 async function executeBuildTasks(options: LibraryBuildOptions): Promise<void> {
   const { libName, npm, jsr, effectivePubRegistry } = options;
-  relinka(
-    "log",
-    `Executing build tasks for ${libName} (Registry: ${effectivePubRegistry})...`,
-  );
+  relinka("log", `Executing build tasks for ${libName} (Registry: ${effectivePubRegistry})...`);
 
   const buildTasks: (() => Promise<void>)[] = [];
 
@@ -269,10 +252,7 @@ async function executeBuildTasks(options: LibraryBuildOptions): Promise<void> {
   }
 
   if (buildTasks.length === 0) {
-    relinka(
-      "warn",
-      `No build tasks for ${libName} based on registry: ${effectivePubRegistry}`,
-    );
+    relinka("warn", `No build tasks for ${libName} based on registry: ${effectivePubRegistry}`);
     return;
   }
 
@@ -288,9 +268,7 @@ async function executeBuildTasks(options: LibraryBuildOptions): Promise<void> {
  * Prepares configuration and initiates the build process for the JSR target.
  * @param options - The consolidated build configuration.
  */
-async function library_buildJsrDist(
-  options: LibraryBuildOptions,
-): Promise<void> {
+async function library_buildJsrDist(options: LibraryBuildOptions): Promise<void> {
   const { libName, libMainFile, libsList } = options;
 
   // Check for JSR options internally, removing need for non-null assertion
@@ -309,18 +287,14 @@ async function library_buildJsrDist(
   const libSourceDirResolved = path.resolve(PROJECT_ROOT, options.mainDir);
   const entryFilePathResolved = path.resolve(libSourceDirResolved, libMainFile);
   const outputDirRootResolved = path.resolve(PROJECT_ROOT, jsrOutDir);
-  const outputDirBinResolved = path.resolve(
-    outputDirRootResolved,
-    BIN_DIR_NAME,
-  );
+  const outputDirBinResolved = path.resolve(outputDirRootResolved, BIN_DIR_NAME);
 
   // Ensure output directories exist
   await fs.ensureDir(outputDirRootResolved);
   await fs.ensureDir(outputDirBinResolved);
 
   // Determine bundler entry point: directory for 'jsr' copy, file for others
-  const bundlerEntryPoint =
-    distJsrBuilder === "jsr" ? libSourceDirResolved : entryFilePathResolved;
+  const bundlerEntryPoint = distJsrBuilder === "jsr" ? libSourceDirResolved : entryFilePathResolved;
 
   const libConfig = libsList[libName];
   const libDeclarations = libConfig?.libDeclarations ?? false;
@@ -351,10 +325,7 @@ async function library_buildJsrDist(
   await library_buildDistributionTarget(buildParams);
 
   // --- JSR Specific Post-Build Steps ---
-  relinka(
-    "verbose",
-    `[JSR] Performing JSR-specific transformations in ${outputDirBinResolved}`,
-  );
+  relinka("verbose", `[JSR] Performing JSR-specific transformations in ${outputDirBinResolved}`);
   await renameTsxFiles(outputDirBinResolved);
   await createJsrJSON(
     outputDirRootResolved,
@@ -378,9 +349,7 @@ async function library_buildJsrDist(
  * Prepares configuration and initiates the build process for the NPM target.
  * @param options - The consolidated build configuration.
  */
-async function library_buildNpmDist(
-  options: LibraryBuildOptions,
-): Promise<void> {
+async function library_buildNpmDist(options: LibraryBuildOptions): Promise<void> {
   const { libName, libMainFile, libsList } = options;
 
   // Check for NPM options internally, removing need for non-null assertion
@@ -401,10 +370,7 @@ async function library_buildNpmDist(
 
   // Ensure output directories exist
   const outputDirRootResolved = path.resolve(PROJECT_ROOT, npmOutDir);
-  const outputDirBinResolved = path.resolve(
-    outputDirRootResolved,
-    BIN_DIR_NAME,
-  );
+  const outputDirBinResolved = path.resolve(outputDirRootResolved, BIN_DIR_NAME);
   await fs.ensureDir(outputDirRootResolved);
   await fs.ensureDir(outputDirBinResolved);
 
@@ -416,26 +382,17 @@ async function library_buildNpmDist(
     libsList,
     distName,
   );
-  const entryFilePathResolved = path.resolve(
-    libSpecificSrcDir,
-    path.basename(libMainFile),
-  );
+  const entryFilePathResolved = path.resolve(libSpecificSrcDir, path.basename(libMainFile));
 
   // Validate entry file existence
   if (!(await fs.pathExists(entryFilePathResolved))) {
-    const relativeEntryPath = path.relative(
-      PROJECT_ROOT,
-      entryFilePathResolved,
-    );
+    const relativeEntryPath = path.relative(PROJECT_ROOT, entryFilePathResolved);
     const relativeSrcDir = path.relative(PROJECT_ROOT, libSpecificSrcDir);
     throw new Error(
       `[NPM:${distName}] Library entry file not found: ${relativeEntryPath} (expected in: ${relativeSrcDir})`,
     );
   }
-  relinka(
-    "verbose",
-    `[NPM:${distName}] Using entry file: ${entryFilePathResolved}`,
-  );
+  relinka("verbose", `[NPM:${distName}] Using entry file: ${entryFilePathResolved}`);
 
   const libConfig = libsList[libName];
   const libDeclarations = libConfig?.libDeclarations ?? false;
@@ -542,6 +499,7 @@ async function library_buildDistributionTarget(
     transpileStub,
     transpileWatch,
     unifiedBundlerOutExt,
+    coreEntrySrcDir: params.libSourceDir,
   };
   await library_bundleWithBuilder(bundleRequest);
 
@@ -558,10 +516,8 @@ async function library_buildDistributionTarget(
     distJsrOutFilesExt,
     deleteFiles: isJsr,
     libDirName,
-    npmOutputDirRoot:
-      npmOutDir || (options.npm ? options.npm.npmOutDir : undefined),
-    jsrOutputDirRoot:
-      jsrOutDir || (options.jsr ? options.jsr.jsrOutDir : undefined),
+    npmOutputDirRoot: npmOutDir || (options.npm ? options.npm.npmOutDir : undefined),
+    jsrOutputDirRoot: jsrOutDir || (options.jsr ? options.jsr.jsrOutDir : undefined),
     effectivePubRegistry: options.effectivePubRegistry,
   };
   await library_performCommonBuildSteps(commonStepsParams);
@@ -577,9 +533,7 @@ async function library_buildDistributionTarget(
  * Centralized helper to dispatch to the correct bundler function based on builder name.
  * @param params - Parameters required for bundling execution, including the builder name.
  */
-async function library_bundleWithBuilder(
-  params: BundleRequestParams,
-): Promise<void> {
+async function library_bundleWithBuilder(params: BundleRequestParams): Promise<void> {
   // Destructure builder separately, pass the rest matching BundleExecutorParams
   const { builder, ...executorParams } = params;
   const { entryPoint, outDir, libName } = executorParams; // Get some details for logging
@@ -625,6 +579,7 @@ async function library_bundleWithBuilder(
           transpileEsbuild: executorParams.transpileEsbuild,
           transpileStub: executorParams.transpileStub,
           unifiedBundlerOutExt: executorParams.unifiedBundlerOutExt,
+          coreEntrySrcDir: executorParams.coreEntrySrcDir,
         },
       );
       break;
@@ -642,10 +597,7 @@ async function library_bundleUsingJsrCopy(
   destDir: string, // Expecting a destination directory path
   libName: string,
 ): Promise<void> {
-  relinka(
-    "verbose",
-    `[JSR Copy:${libName}] Starting copy: ${srcDir} -> ${destDir}`,
-  );
+  relinka("verbose", `[JSR Copy:${libName}] Starting copy: ${srcDir} -> ${destDir}`);
   await fs.ensureDir(destDir);
 
   try {
@@ -712,14 +664,10 @@ async function library_bundleUsingBun(
 
   // Input validation
   if (!(await fs.pathExists(entryPoint))) {
-    throw new Error(
-      `[Bun:${libName}] Library entry file not found: ${entryPoint}`,
-    );
+    throw new Error(`[Bun:${libName}] Library entry file not found: ${entryPoint}`);
   }
   if (!(await fs.stat(entryPoint)).isFile()) {
-    throw new Error(
-      `[Bun:${libName}] Entry point must be a file for Bun bundler: ${entryPoint}`,
-    );
+    throw new Error(`[Bun:${libName}] Entry point must be a file for Bun bundler: ${entryPoint}`);
   }
 
   try {
@@ -738,9 +686,7 @@ async function library_bundleUsingBun(
         asset: "[name]-[hash].[ext]",
       },
       define: {
-        "process.env.NODE_ENV": JSON.stringify(
-          process.env.NODE_ENV || "production",
-        ),
+        "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "production"),
       },
       plugins: [],
       loader: {},
@@ -771,9 +717,7 @@ async function library_bundleUsingBun(
           relinka("error", `[Bun Log:${log.level}] ${log.message}`);
         }
       }
-      throw new Error(
-        `[Bun:${libName}] Build process reported failure. Check logs.`,
-      );
+      throw new Error(`[Bun:${libName}] Build process reported failure. Check logs.`);
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -791,7 +735,7 @@ async function library_bundleUsingUnified(
   entryPoint: string, // File path (rollup) or directory path (mkdist)
   outDirBin: string,
   builder: Extract<BundlerName, "rollup" | "mkdist">, // Specific unified builder
-  sourceDirContext: string, // Directory containing the entryPoint, relative to project root
+  _sourceDirContext: string, // Directory containing the entryPoint, relative to project root
   // Select only options relevant to Unified/Unbuild
   options: Pick<
     BundleExecutorParams,
@@ -802,6 +746,7 @@ async function library_bundleUsingUnified(
     | "transpileEsbuild"
     | "transpileStub"
     | "unifiedBundlerOutExt"
+    | "coreEntrySrcDir"
   >,
 ): Promise<void> {
   const {
@@ -812,6 +757,7 @@ async function library_bundleUsingUnified(
     transpileEsbuild,
     transpileStub,
     unifiedBundlerOutExt,
+    coreEntrySrcDir,
   } = options;
 
   relinka("verbose", `[Unified:${builder}] Starting ${builder} build...`);
@@ -855,10 +801,17 @@ async function library_bundleUsingUnified(
     },
     hooks: {},
     stub: transpileStub,
+    typescript: {
+      compilerOptions: {
+        emitDeclarationOnly: false,
+        declaration: true,
+        noEmit: false,
+      },
+    },
   };
 
   try {
-    await unifiedBuild(true, rootDir, unifiedBuildConfig, outDirBin);
+    await unifiedBuild(coreEntrySrcDir, false, true, rootDir, unifiedBuildConfig, outDirBin);
 
     const duration = getElapsedPerfTime(timer);
     relinka(
@@ -885,9 +838,7 @@ async function library_bundleUsingUnified(
  * (Creates package.json, copies root files, converts paths, renames entry file, deletes files).
  * @param params - Parameters for the common steps.
  */
-async function library_performCommonBuildSteps(
-  params: CommonStepsParams,
-): Promise<void> {
+async function library_performCommonBuildSteps(params: CommonStepsParams): Promise<void> {
   const {
     coreEntryFileName,
     outputDirRoot,
@@ -931,10 +882,7 @@ async function library_performCommonBuildSteps(
   // Delete specific intermediate/unwanted files if requested
   if (deleteFiles) {
     await deleteSpecificFiles(outDirBin);
-    relinka(
-      "verbose",
-      `${logPrefix} Deleted specific files from ${outDirBin}.`,
-    );
+    relinka("verbose", `${logPrefix} Deleted specific files from ${outDirBin}.`);
   }
 
   // Copy root-level files
@@ -946,11 +894,7 @@ async function library_performCommonBuildSteps(
       [];
 
   // Always include global files, but exclude jsr.json/jsonc, package.json, and bin since they are generated
-  const globalFiles = config.publishArtifacts?.global || [
-    "package.json",
-    "README.md",
-    "LICENSE",
-  ];
+  const globalFiles = config.publishArtifacts?.global || ["package.json", "README.md", "LICENSE"];
   const allFilesToCopy = [...new Set([...globalFiles, ...filesToCopy])];
 
   await copyRootFile(outputDirRoot, allFilesToCopy);
@@ -983,20 +927,14 @@ async function library_performCommonBuildSteps(
   // });
   // Convert any "~/..." alias imports to relative
   // relinka("info", `[${libName}] Step 3: Performing alias path conversion in ${outDirBin}`);
-  relinka(
-    "info",
-    `[${libName}] Performing alias path conversion in ${outDirBin}`,
-  );
+  relinka("info", `[${libName}] Performing alias path conversion in ${outDirBin}`);
   await convertImportsAliasToRelative({
     targetDir: outDirBin,
     aliasToReplace: ALIAS_PREFIX_TO_CONVERT,
     pathExtFilter: "js-ts-none",
   });
   if (isJsr) {
-    relinka(
-      "info",
-      `[${libName}] Performing paths ext conversion in ${outDirBin} (from js to ts)`,
-    );
+    relinka("info", `[${libName}] Performing paths ext conversion in ${outDirBin} (from js to ts)`);
     await convertImportsExt({
       targetDir: outDirBin,
       extFrom: "js",
@@ -1029,7 +967,7 @@ async function library_performCommonBuildSteps(
  */
 async function determineNpmSourceDirectory(
   libName: string,
-  mainFile: string, // Base name of the main file
+  _mainFile: string, // Base name of the main file
   coreEntrySrcDirResolved: string, // Absolute path to the base dir containing libs
   libsList: Record<string, LibConfig>,
   distName: string, // For logging context
@@ -1043,11 +981,7 @@ async function determineNpmSourceDirectory(
     // Option 1: Use explicit libDirName if provided
     if (libConfig.libDirName) {
       const potentialLibDirName = libConfig.libDirName;
-      const potentialPath = path.join(
-        coreEntrySrcDirResolved,
-        "libs",
-        potentialLibDirName,
-      );
+      const potentialPath = path.join(coreEntrySrcDirResolved, "libs", potentialLibDirName);
       if (await fs.pathExists(potentialPath)) {
         libSpecificSrcDir = potentialPath;
         libDirName = potentialLibDirName; // Assign only if path exists
@@ -1066,15 +1000,9 @@ async function determineNpmSourceDirectory(
       // Option 2: Infer directory from libMainFile path
       const baseLibsDir = path.join(PROJECT_ROOT, "src", "libs");
       try {
-        const absoluteLibMainFile = path.resolve(
-          PROJECT_ROOT,
-          libConfig.libMainFile,
-        );
+        const absoluteLibMainFile = path.resolve(PROJECT_ROOT, libConfig.libMainFile);
         if (absoluteLibMainFile.startsWith(baseLibsDir + path.sep)) {
-          const mainFilePathRelative = path.relative(
-            baseLibsDir,
-            absoluteLibMainFile,
-          );
+          const mainFilePathRelative = path.relative(baseLibsDir, absoluteLibMainFile);
           const pathSegments = mainFilePathRelative.split(path.sep);
           if (pathSegments.length > 1) {
             const inferredDirName = pathSegments[0];
@@ -1155,9 +1083,7 @@ async function determineNpmSourceDirectory(
  * @param config - Configuration for the replacement process.
  * @returns An array of records describing the replacements made.
  */
-async function preBuildReplacements(
-  config: SourceReplacementConfig,
-): Promise<ReplacementRecord[]> {
+async function preBuildReplacements(config: SourceReplacementConfig): Promise<ReplacementRecord[]> {
   const { librarySrcDir, replacementFilePath, replacementMarker } = config;
   const replacedFiles: ReplacementRecord[] = [];
 
@@ -1175,24 +1101,15 @@ async function preBuildReplacements(
     return [];
   }
 
-  relinka(
-    "verbose",
-    `Reading replacement content from: ${replacementFilePath}`,
-  );
+  relinka("verbose", `Reading replacement content from: ${replacementFilePath}`);
   const replacementContent = await fs.readFile(replacementFilePath, "utf-8");
 
   const allFiles: string[] = [];
   relinka("verbose", `Scanning for .ts/.tsx files in: ${librarySrcDir}`);
   await collectTsFilesRecursively(librarySrcDir, allFiles);
-  relinka(
-    "verbose",
-    `Found ${allFiles.length} potential files for replacement scan.`,
-  );
+  relinka("verbose", `Found ${allFiles.length} potential files for replacement scan.`);
 
-  const escapedMarker = replacementMarker.replace(
-    /[.*+?^${}()|[\]\\]/g,
-    "\\$&",
-  );
+  const escapedMarker = replacementMarker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   /**
    * Regular expression to match lines ending with the replacement marker.
    * The marker is expected to be at the end of the line, with optional trailing whitespace.
@@ -1226,10 +1143,7 @@ async function preBuildReplacements(
         const matchEndIndex = matchStartIndex + lineContent.length;
 
         let lineStartIndex = matchStartIndex;
-        while (
-          lineStartIndex > 0 &&
-          originalCode[lineStartIndex - 1] !== "\n"
-        ) {
+        while (lineStartIndex > 0 && originalCode[lineStartIndex - 1] !== "\n") {
           lineStartIndex--;
         }
 
@@ -1244,15 +1158,9 @@ async function preBuildReplacements(
         ) {
           lineEndIndex--;
         }
-        if (
-          lineEndIndex < originalCode.length &&
-          originalCode[lineEndIndex] === "\r"
-        )
+        if (lineEndIndex < originalCode.length && originalCode[lineEndIndex] === "\r")
           lineEndIndex++;
-        if (
-          lineEndIndex < originalCode.length &&
-          originalCode[lineEndIndex] === "\n"
-        )
+        if (lineEndIndex < originalCode.length && originalCode[lineEndIndex] === "\n")
           lineEndIndex++;
 
         relinka(
@@ -1301,31 +1209,19 @@ async function preBuildReplacements(
  * Reverts changes made by `preBuildReplacements` by writing the original content back.
  * @param replacedFiles - The records of files that were modified.
  */
-async function postBuildReplacements(
-  replacedFiles: ReplacementRecord[],
-): Promise<void> {
+async function postBuildReplacements(replacedFiles: ReplacementRecord[]): Promise<void> {
   if (replacedFiles.length === 0) {
     return;
   }
-  relinka(
-    "verbose",
-    `Reverting modifications in ${replacedFiles.length} files...`,
-  );
+  relinka("verbose", `Reverting modifications in ${replacedFiles.length} files...`);
 
   const revertTasks = replacedFiles.map((record) => async () => {
     try {
       await fs.writeFile(record.filePath, record.originalContent, "utf-8");
-      relinka(
-        "verbose",
-        `Reverted changes in ${path.relative(PROJECT_ROOT, record.filePath)}`,
-      );
+      relinka("verbose", `Reverted changes in ${path.relative(PROJECT_ROOT, record.filePath)}`);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
-      relinka(
-        "error",
-        `Failed to revert file ${record.filePath}: ${error.message}`,
-        error.stack,
-      );
+      relinka("error", `Failed to revert file ${record.filePath}: ${error.message}`, error.stack);
       throw new Error(`Failed to revert ${record.filePath}`);
     }
   });
@@ -1348,10 +1244,7 @@ async function postBuildReplacements(
  * @param dir - The absolute directory path to scan.
  * @param fileList - An array accumulator for the found file paths.
  */
-async function collectTsFilesRecursively(
-  dir: string,
-  fileList: string[],
-): Promise<void> {
+async function collectTsFilesRecursively(dir: string, fileList: string[]): Promise<void> {
   try {
     if (!(await fs.pathExists(dir))) {
       relinka("warn", `Directory not found for scanning: ${dir}`);

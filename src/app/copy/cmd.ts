@@ -9,10 +9,7 @@ import pMap from "p-map";
 import prettyMilliseconds from "pretty-ms";
 import { glob } from "tinyglobby";
 
-import {
-  createPerfTimer,
-  getElapsedPerfTime,
-} from "~/libs/sdk/sdk-impl/utils/utils-perf";
+import { createPerfTimer, getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 async function fileExists(path: string): Promise<boolean> {
   try {
@@ -48,14 +45,12 @@ export default defineCommand({
     },
     recursive: {
       type: "boolean",
-      description:
-        "Recursively process all files in subdirectories (default: true)",
+      description: "Recursively process all files in subdirectories (default: true)",
       default: true,
     },
     preserveStructure: {
       type: "boolean",
-      description:
-        "Preserve source directory structure in destination (default: true)",
+      description: "Preserve source directory structure in destination (default: true)",
       default: true,
     },
     increment: {
@@ -187,13 +182,10 @@ export default defineCommand({
       const elapsed = getElapsedPerfTime(timer);
       relinka(
         "log",
-        `Successfully copied ${files.length} file(s) in ${prettyMilliseconds(
-          elapsed,
-        )}`,
+        `Successfully copied ${files.length} file(s) in ${prettyMilliseconds(elapsed)}`,
       );
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
       relinka("error", `Error during copy operation: ${errorMessage}`);
       process.exit(1);
     }

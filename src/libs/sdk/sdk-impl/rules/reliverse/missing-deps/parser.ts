@@ -60,9 +60,7 @@ export const normalizePackageName = (importPath: string): string | null => {
   return match ? (match[1] ?? null) : null;
 };
 
-export const getListedDependencies = (
-  packageJson: PackageJson,
-): Set<string> => {
+export const getListedDependencies = (packageJson: PackageJson): Set<string> => {
   const listedDependencies = new Set<string>();
 
   // Combine all dependency types

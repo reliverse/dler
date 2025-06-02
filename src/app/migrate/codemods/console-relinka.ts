@@ -10,11 +10,7 @@ type LogFormat =
   | "relinkaMethod"
   | "relinkaObject";
 
-export async function consoleToRelinka(
-  input?: string,
-  from?: LogFormat,
-  to?: LogFormat,
-) {
+export async function consoleToRelinka(input?: string, from?: LogFormat, to?: LogFormat) {
   // Interactive prompts if arguments are not provided
   const finalInput =
     input ??
@@ -52,10 +48,7 @@ export async function consoleToRelinka(
     })) as LogFormat);
 
   if (!finalInput || !finalFrom || !finalTo) {
-    relinka(
-      "error",
-      "Missing required arguments for console-relinka migration",
-    );
+    relinka("error", "Missing required arguments for console-relinka migration");
     return;
   }
 
@@ -99,10 +92,7 @@ export async function consoleToRelinka(
           "g",
         );
       case "relinkaFunction":
-        return new RegExp(
-          `relinka\\("${level}",\\s*(.*?)(?:,\\s*(.*))?\\)`,
-          "g",
-        );
+        return new RegExp(`relinka\\("${level}",\\s*(.*?)(?:,\\s*(.*))?\\)`, "g");
       case "relinkaMethod":
         return new RegExp(`relinka\\.${level}\\((.*?)(?:,\\s*(.*))?\\)`, "g");
       case "relinkaObject":
@@ -167,26 +157,17 @@ export async function consoleToRelinka(
   for (const level of levels) {
     const pattern = getSourcePattern(level, finalFrom);
 
-    const newContent = content.replace(
-      pattern,
-      (_, message, titleOrArgs, args) => {
-        changes = true;
-        if (
-          (finalFrom === "consolaMethod" || finalFrom === "relinkaMethod") &&
-          level === "box"
-        ) {
-          return createReplacement(level, message, titleOrArgs, args);
-        }
-        return createReplacement(level, message, undefined, titleOrArgs);
-      },
-    );
+    const newContent = content.replace(pattern, (_, message, titleOrArgs, args) => {
+      changes = true;
+      if ((finalFrom === "consolaMethod" || finalFrom === "relinkaMethod") && level === "box") {
+        return createReplacement(level, message, titleOrArgs, args);
+      }
+      return createReplacement(level, message, undefined, titleOrArgs);
+    });
 
     if (newContent !== content) {
       content = newContent;
-      relinka(
-        "log",
-        `✅ Converted ${level} calls from ${finalFrom} to ${finalTo} format`,
-      );
+      relinka("log", `✅ Converted ${level} calls from ${finalFrom} to ${finalTo} format`);
     }
   }
 
@@ -195,9 +176,6 @@ export async function consoleToRelinka(
   } else {
     // Write the modified content back to the file
     await fs.writeFile(finalInput, content, "utf-8");
-    relinka(
-      "success",
-      "✨ Successfully converted all logging calls to the target format",
-    );
+    relinka("success", "✨ Successfully converted all logging calls to the target format");
   }
 }

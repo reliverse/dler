@@ -22,8 +22,7 @@ export const getLibsCmd = async (): Promise<Command> => loadCommand("libs");
 
 export const getMergeCmd = async (): Promise<Command> => loadCommand("merge");
 
-export const getMigrateCmd = async (): Promise<Command> =>
-  loadCommand("migrate");
+export const getMigrateCmd = async (): Promise<Command> => loadCommand("migrate");
 
 export const getPubCmd = async (): Promise<Command> => loadCommand("pub");
 

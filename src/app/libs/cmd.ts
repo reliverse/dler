@@ -18,8 +18,7 @@ export default defineCommand({
     init: {
       type: "string",
       required: true,
-      description:
-        "Names of libraries to initialize (space-separated or quoted)",
+      description: "Names of libraries to initialize (space-separated or quoted)",
     },
     overwrite: {
       type: "boolean",
@@ -86,10 +85,7 @@ export default defineCommand({
       return;
     }
 
-    relinka(
-      "info",
-      `🚀 Processing ${libNames.length} library(s): ${libNames.join(", ")}`,
-    );
+    relinka("info", `🚀 Processing ${libNames.length} library(s): ${libNames.join(", ")}`);
 
     // Process each library
     for (const libName of libNames) {
@@ -103,10 +99,7 @@ export default defineCommand({
       const { libDirName, libMainFile } = libConfig;
 
       if (!libDirName || !libMainFile) {
-        relinka(
-          "warn",
-          `❌ Missing libDirName or libMainFile for "${libName}"`,
-        );
+        relinka("warn", `❌ Missing libDirName or libMainFile for "${libName}"`);
         continue;
       }
 
@@ -128,10 +121,7 @@ export default defineCommand({
         await fs.writeFile(mainFilePath, mainFileContent, "utf-8");
         relinka("log", `✅ Created/Updated main file: ${mainFilePath}`);
       } else {
-        relinka(
-          "warn",
-          `⚠️ Main file already exists: ${mainFilePath}. Use --overwrite to update.`,
-        );
+        relinka("warn", `⚠️ Main file already exists: ${mainFilePath}. Use --overwrite to update.`);
       }
     }
   },

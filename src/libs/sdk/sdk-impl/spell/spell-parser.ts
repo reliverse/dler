@@ -38,9 +38,7 @@ export const parseSpellFromComment = (
   const [fullMatch, spellType, value, paramsStr] = match;
 
   if (!spellType || !isValidSpellType(spellType)) {
-    console.warn(
-      `Unknown spell type: ${spellType} in file ${fileName}:${lineNumber}`,
-    );
+    console.warn(`Unknown spell type: ${spellType} in file ${fileName}:${lineNumber}`);
     return null;
   }
 

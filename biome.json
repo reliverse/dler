@@ -6,13 +6,7 @@
     "useIgnoreFile": false
   },
   "files": {
-    "ignore": [
-      "node_modules/",
-      "dist-jsr/",
-      "dist-npm/",
-      "dist-libs/",
-      "bun.lock"
-    ],
+    "ignore": ["node_modules/", "dist-jsr/", "dist-npm/", "dist-libs/", "bun.lock"],
     "ignoreUnknown": true
   },
   "organizeImports": {
@@ -26,7 +20,8 @@
         "noExplicitAny": "off"
       },
       "style": {
-        "useTemplate": "off"
+        "useTemplate": "off",
+        "useDefaultParameterLast": "off"
       }
     }
   },
@@ -37,7 +32,7 @@
     "formatWithErrors": false,
     "indentWidth": 2,
     "lineEnding": "lf",
-    "lineWidth": 80
+    "lineWidth": 100
   },
   "javascript": {
     "formatter": {
@@ -50,7 +45,7 @@
       "indentWidth": 2,
       "jsxQuoteStyle": "double",
       "lineEnding": "lf",
-      "lineWidth": 80,
+      "lineWidth": 100,
       "quoteProperties": "asNeeded",
       "quoteStyle": "double",
       "semicolons": "always",

@@ -1,11 +1,7 @@
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import {
-  definePackageJSON,
-  type PackageJson,
-  readPackageJSON,
-} from "pkg-types";
+import { definePackageJSON, type PackageJson, readPackageJSON } from "pkg-types";
 
 import type { NpmOutExt, DlerConfig, LibConfig } from "~/libs/sdk/sdk-types";
 
@@ -72,16 +68,10 @@ async function library_createCommonPackageFields(
   // Set description based on config
   if (libsList?.[libName]?.libDescription) {
     description = libsList[libName].libDescription;
-    relinka(
-      "verbose",
-      `Using ${libName}'s description from config: "${description}"`,
-    );
+    relinka("verbose", `Using ${libName}'s description from config: "${description}"`);
   } else {
     description = description || `${libName} is a helper library.`;
-    relinka(
-      "verbose",
-      `Using default helper library description: "${description}"`,
-    );
+    relinka("verbose", `Using default helper library description: "${description}"`);
   }
 
   const commonPkg: Partial<PackageJson> = {
@@ -137,14 +127,7 @@ async function library_getlibPkgKeepDeps(
   // Check if the lib has a dependencies configuration
   if (!libConfig) {
     // Default behavior - filter based on usage
-    const result = await filterDeps(
-      originalDeps,
-      true,
-      outDirBin,
-      isJsr,
-      config,
-      libName,
-    );
+    const result = await filterDeps(originalDeps, true, outDirBin, isJsr, config, libName);
     relinka(
       "verbose",
       `Lib ${libName} dependencies filtered by usage, count: ${Object.keys(result).length}`,
@@ -231,35 +214,30 @@ async function library_getlibPkgKeepDeps(
       }
     }
 
-    const result = Object.entries(originalDeps).reduce<Record<string, string>>(
-      (acc, [k, v]) => {
-        const depNameLower = k.toLowerCase();
+    const result = Object.entries(originalDeps).reduce<Record<string, string>>((acc, [k, v]) => {
+      const depNameLower = k.toLowerCase();
 
-        // First check if the dependency matches any negation pattern
-        const isNegated = Array.from(negPatterns).some((pattern) =>
-          depNameLower.includes(pattern.toLowerCase()),
-        );
+      // First check if the dependency matches any negation pattern
+      const isNegated = Array.from(negPatterns).some((pattern) =>
+        depNameLower.includes(pattern.toLowerCase()),
+      );
 
-        // If negated, don't exclude
-        if (isNegated) {
-          acc[k] = v;
-          return acc;
-        }
-
-        // Then check if it should be excluded by regular patterns
-        const shouldExclude =
-          devDeps ||
-          Array.from(patterns).some((pattern) =>
-            depNameLower.includes(pattern.toLowerCase()),
-          );
-
-        if (!shouldExclude) {
-          acc[k] = v;
-        }
+      // If negated, don't exclude
+      if (isNegated) {
+        acc[k] = v;
         return acc;
-      },
-      {},
-    );
+      }
+
+      // Then check if it should be excluded by regular patterns
+      const shouldExclude =
+        devDeps ||
+        Array.from(patterns).some((pattern) => depNameLower.includes(pattern.toLowerCase()));
+
+      if (!shouldExclude) {
+        acc[k] = v;
+      }
+      return acc;
+    }, {});
 
     // Add dependencies from addPatterns if they don't exist
     for (const pattern of addPatterns) {
@@ -279,30 +257,17 @@ async function library_getlibPkgKeepDeps(
       "log",
       `Including specific dependencies for lib ${libName}: ${libConfig.libPkgKeepDeps.join(", ")}`,
     );
-    const result = Object.entries(originalDeps).reduce<Record<string, string>>(
-      (acc, [k, v]) => {
-        if (
-          Array.isArray(libConfig.libPkgKeepDeps) &&
-          libConfig.libPkgKeepDeps.includes(k)
-        ) {
-          acc[k] = v;
-        }
-        return acc;
-      },
-      {},
-    );
+    const result = Object.entries(originalDeps).reduce<Record<string, string>>((acc, [k, v]) => {
+      if (Array.isArray(libConfig.libPkgKeepDeps) && libConfig.libPkgKeepDeps.includes(k)) {
+        acc[k] = v;
+      }
+      return acc;
+    }, {});
     return result;
   }
 
   // Default behavior - filter based on usage
-  const result = await filterDeps(
-    originalDeps,
-    true,
-    outDirBin,
-    isJsr,
-    config,
-    libName,
-  );
+  const result = await filterDeps(originalDeps, true, outDirBin, isJsr, config, libName);
   relinka(
     "verbose",
     `Default filtering for lib ${libName} done, count: ${Object.keys(result).length}`,
@@ -331,29 +296,21 @@ async function library_writeJsrPackageJSON(
 
   // Check if libMainFile is defined
   if (!libsList[libName]?.libMainFile) {
-    throw new Error(
-      `libsList.${libName}.libMainFile is not defined for library ${libName}`,
-    );
+    throw new Error(`libsList.${libName}.libMainFile is not defined for library ${libName}`);
   }
 
   // For JSR packages, we need to handle bin entries differently
   // JSR uses TypeScript files directly
   const binEntry = commonPkg.bin;
   if (binEntry) {
-    relinka(
-      "verbose",
-      `Found bin entry in commonPkg: ${JSON.stringify(binEntry)}`,
-    );
+    relinka("verbose", `Found bin entry in commonPkg: ${JSON.stringify(binEntry)}`);
     // Convert bin paths to .ts extension for JSR
     const updatedBin: Record<string, string> = {};
     for (const [key, value] of Object.entries(binEntry)) {
       updatedBin[key] = value.replace(/\.js$/, ".ts");
     }
     commonPkg.bin = updatedBin;
-    relinka(
-      "verbose",
-      `Updated bin entry for JSR: ${JSON.stringify(updatedBin)}`,
-    );
+    relinka("verbose", `Updated bin entry for JSR: ${JSON.stringify(updatedBin)}`);
   }
 
   const jsrPkg = definePackageJSON({
@@ -387,11 +344,7 @@ async function library_writeJsrPackageJSON(
     files: [
       ...new Set([
         "bin",
-        ...(config.publishArtifacts?.global || [
-          "package.json",
-          "README.md",
-          "LICENSE",
-        ]),
+        ...(config.publishArtifacts?.global || ["package.json", "README.md", "LICENSE"]),
       ]),
     ],
     main: `./bin/${path.basename(libsList[libName].libMainFile)}`,
@@ -426,9 +379,7 @@ async function library_writeNpmLibPackageJSON(
 
   // Check if libMainFile is defined
   if (!libsList[libName]?.libMainFile) {
-    throw new Error(
-      `libsList.${libName}.libMainFile is not defined for library ${libName}`,
-    );
+    throw new Error(`libsList.${libName}.libMainFile is not defined for library ${libName}`);
   }
 
   const npmPkg = definePackageJSON({
@@ -462,11 +413,7 @@ async function library_writeNpmLibPackageJSON(
     files: [
       ...new Set([
         "bin",
-        ...(config.publishArtifacts?.global || [
-          "package.json",
-          "README.md",
-          "LICENSE",
-        ]),
+        ...(config.publishArtifacts?.global || ["package.json", "README.md", "LICENSE"]),
       ]),
     ],
     main: `./bin/${path.basename(libsList[libName].libMainFile).replace(/\.ts$/, `.${unifiedBundlerOutExt}`)}`,
@@ -508,12 +455,7 @@ async function library_createJsrConfig(
     name: libName,
     version: libsList[libName]?.version || originalPkg.version || "0.0.0",
     exports: `./bin/${path.basename(libsList[libName]?.libMainFile || "")}`,
-    files: config.publishArtifacts?.global || [
-      "bin",
-      "package.json",
-      "README.md",
-      "LICENSE",
-    ],
+    files: config.publishArtifacts?.global || ["bin", "package.json", "README.md", "LICENSE"],
   };
 
   await fs.ensureDir(path.dirname(jsrConfigPath));

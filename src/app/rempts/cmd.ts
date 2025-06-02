@@ -16,8 +16,7 @@ export default defineCommand({
   args: defineArgs({
     init: {
       type: "string",
-      description:
-        "Names of commands to initialize (space-separated or quoted)",
+      description: "Names of commands to initialize (space-separated or quoted)",
     },
     overwrite: {
       type: "boolean",
@@ -80,8 +79,7 @@ export default defineCommand({
         if (await fs.pathExists(defaultCmdsRoot)) {
           cmdsRoot = defaultCmdsRoot;
         } else {
-          const { cmdsRoot: configCmdsRoot, cliFile } =
-            await handleDlerConfig();
+          const { cmdsRoot: configCmdsRoot, cliFile } = await handleDlerConfig();
           cmdsRoot = configCmdsRoot;
           cliFilePath = cliFile;
         }
@@ -89,19 +87,13 @@ export default defineCommand({
         cmdsRoot = path.resolve(cmdsRoot);
       }
 
-      relinka(
-        "info",
-        `🚀 Creating ${cmdNames.length} command(s): ${cmdNames.join(", ")}`,
-      );
+      relinka("info", `🚀 Creating ${cmdNames.length} command(s): ${cmdNames.join(", ")}`);
 
       for (const cmdName of cmdNames) {
         const dirPath = path.join(cmdsRoot, cmdName);
         const filePath = path.join(dirPath, "cmd.ts");
         if ((await fs.pathExists(filePath)) && !args.overwrite) {
-          relinka(
-            "warn",
-            `Command "${cmdName}" already exists. Use --overwrite to overwrite.`,
-          );
+          relinka("warn", `Command "${cmdName}" already exists. Use --overwrite to overwrite.`);
           continue;
         }
         await fs.ensureDir(dirPath);
@@ -127,9 +119,7 @@ export default defineCommand({
       const outPath = path.resolve(args.outFile ?? "src/app/cmds.ts");
 
       const cmdDirs =
-        (args.cmdDirs ?? []).length > 0
-          ? (args.cmdDirs ?? [])
-          : await findCommandDirs(root);
+        (args.cmdDirs ?? []).length > 0 ? (args.cmdDirs ?? []) : await findCommandDirs(root);
 
       if (cmdDirs.length === 0) {
         relinka(
@@ -140,10 +130,7 @@ export default defineCommand({
       }
 
       if ((await fs.pathExists(outPath)) && !args.overwrite) {
-        relinka(
-          "warn",
-          `❌ File "${outPath}" already exists. Use --overwrite to overwrite.`,
-        );
+        relinka("warn", `❌ File "${outPath}" already exists. Use --overwrite to overwrite.`);
         return;
       }
 
@@ -151,10 +138,7 @@ export default defineCommand({
       await fs.ensureDir(path.dirname(outPath));
       await fs.writeFile(outPath, exports, "utf-8");
       relinka("success", `✅ Generated command exports at: ${outPath}`);
-      relinka(
-        "log",
-        `Found ${cmdDirs.length} command(s): ${cmdDirs.join(", ")}`,
-      );
+      relinka("log", `Found ${cmdDirs.length} command(s): ${cmdDirs.join(", ")}`);
       return;
     }
 
@@ -163,23 +147,15 @@ export default defineCommand({
     const outPath = path.resolve(args.outFile ?? "src/app/cmds.ts");
 
     if ((await fs.pathExists(outPath)) && !args.overwrite) {
-      relinka(
-        "warn",
-        `❌ File "${outPath}" already exists. Use --overwrite to overwrite.`,
-      );
+      relinka("warn", `❌ File "${outPath}" already exists. Use --overwrite to overwrite.`);
       return;
     }
 
     const cmdDirs =
-      (args.cmdDirs ?? []).length > 0
-        ? (args.cmdDirs ?? [])
-        : await findCommandDirs(root);
+      (args.cmdDirs ?? []).length > 0 ? (args.cmdDirs ?? []) : await findCommandDirs(root);
 
     if (cmdDirs.length === 0) {
-      relinka(
-        "warn",
-        "No command directories found with cmd.ts or cmd.js files.",
-      );
+      relinka("warn", "No command directories found with cmd.ts or cmd.js files.");
       return;
     }
 
@@ -241,9 +217,7 @@ async function handleDlerConfig() {
         const content = await fs.readFile(scriptPath, "utf-8");
         if (content.includes("@reliverse/rempts")) {
           if (content.includes("runMain")) {
-            const cmdsRootMatch = content.match(
-              /cmdsRootPath:\s*["']([^"']+)["']/,
-            );
+            const cmdsRootMatch = content.match(/cmdsRootPath:\s*["']([^"']+)["']/);
             if (cmdsRootMatch?.[1]) {
               cmdsRoot = path.resolve(cmdsRootMatch[1]);
             }
@@ -313,11 +287,7 @@ function generateExports(cmdDirs: string[]): string {
       "get" +
       dir
         .split(/[/\\]/)
-        .map(
-          (part) =>
-            part.charAt(0).toUpperCase() +
-            part.slice(1).replace(/[^a-zA-Z0-9]/g, ""),
-        )
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1).replace(/[^a-zA-Z0-9]/g, ""))
         .join("") +
       "Cmd";
     lines.push(

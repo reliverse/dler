@@ -9,9 +9,7 @@ import { arrayIncludes, extractExportFilenames, getpkg, warn } from "./utils";
 
 export function validateDependencies(ctx: BuildContext): void {
   const usedDependencies = new Set<string>();
-  const unusedDependencies = new Set<string>(
-    Object.keys(ctx.pkg.dependencies || {}),
-  );
+  const unusedDependencies = new Set<string>(Object.keys(ctx.pkg.dependencies || {}));
   const implicitDependencies = new Set<string>();
   for (const id of ctx.usedImports) {
     unusedDependencies.delete(id);
@@ -33,33 +31,21 @@ export function validateDependencies(ctx: BuildContext): void {
     }
   }
   if (unusedDependencies.size > 0) {
-    warn(
-      ctx,
-      `Potential unused dependencies found: ${[...unusedDependencies].join(", ")}`,
-    );
+    warn(ctx, `Potential unused dependencies found: ${[...unusedDependencies].join(", ")}`);
   }
   if (implicitDependencies.size > 0 && !ctx.options.rollup.inlineDependencies) {
-    warn(
-      ctx,
-      `Potential implicit dependencies found: ${[...implicitDependencies].join(", ")}`,
-    );
+    warn(ctx, `Potential implicit dependencies found: ${[...implicitDependencies].join(", ")}`);
   }
 }
 
-export function validatePackage(
-  pkg: PackageJson,
-  rootDir: string,
-  ctx: BuildContext,
-): void {
+export function validatePackage(pkg: PackageJson, rootDir: string, ctx: BuildContext): void {
   if (!pkg) {
     return;
   }
 
   const filenames = new Set(
     [
-      ...(typeof pkg.bin === "string"
-        ? [pkg.bin]
-        : Object.values(pkg.bin || {})),
+      ...(typeof pkg.bin === "string" ? [pkg.bin] : Object.values(pkg.bin || {})),
       pkg.main,
       pkg.module,
       pkg.types,
@@ -76,9 +62,6 @@ export function validatePackage(
     }
   }
   if (missingOutputs.length > 0) {
-    warn(
-      ctx,
-      `Potential missing package.json files: ${missingOutputs.join(", ")}`,
-    );
+    warn(ctx, `Potential missing package.json files: ${missingOutputs.join(", ")}`);
   }
 }

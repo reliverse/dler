@@ -50,9 +50,7 @@ export async function rollupBuild(ctx: BuildContext): Promise<void> {
       if (entry.isEntry) {
         ctx.buildEntries.push({
           bytes: Buffer.byteLength(entry.code, "utf8"),
-          chunks: entry.imports.filter((i) =>
-            outputChunks.find((c) => c.fileName === i),
-          ),
+          chunks: entry.imports.filter((i) => outputChunks.find((c) => c.fileName === i)),
           exports: entry.exports,
           modules: Object.entries(entry.modules).map(([id, mod]) => ({
             bytes: mod.renderedLength,
@@ -73,10 +71,7 @@ export async function rollupBuild(ctx: BuildContext): Promise<void> {
     rollupWatch(rollupOptions);
     // TODO: Clone rollup options to continue types transpileWatching
     if (ctx.options.declaration && ctx.options.transpileWatch) {
-      relinka(
-        "warn",
-        "`rollup` DTS builder does not support transpileWatch mode yet.",
-      );
+      relinka("warn", "`rollup` DTS builder does not support transpileWatch mode yet.");
     }
     return;
   }
@@ -119,10 +114,7 @@ export async function rollupBuild(ctx: BuildContext): Promise<void> {
     });
     // #endregion
     // #region .d.ts for node10 compatibility (TypeScript version < 4.7)
-    if (
-      ctx.options.declaration === true ||
-      ctx.options.declaration === "compatible"
-    ) {
+    if (ctx.options.declaration === true || ctx.options.declaration === "compatible") {
       await typesBuild.write({
         chunkFileNames: (chunk) => getChunkFilename(ctx, chunk, "d.ts"),
         dir: resolve(ctx.options.rootDir, ctx.options.outDir),

@@ -19,12 +19,7 @@ export async function finalizeBuildPub(
   libsDirDist: string,
 ): Promise<void> {
   if (!commonPubPause) {
-    await removeDistFolders(
-      distNpmDirName,
-      distJsrDirName,
-      libsDirDist,
-      libsList,
-    );
+    await removeDistFolders(distNpmDirName, distJsrDirName, libsDirDist, libsList);
 
     try {
       await setBumpDisabledValueTo(false);
@@ -42,13 +37,7 @@ export async function finalizeBuildPub(
       `🎉 Build and publishing completed successfully (in ${transpileFormattedTime})`,
     );
   } else {
-    relinka(
-      "success",
-      `🎉 Test build completed successfully (in ${transpileFormattedTime})`,
-    );
-    relinka(
-      "info",
-      "📝 Publish process is currently paused in your config file",
-    );
+    relinka("success", `🎉 Test build completed successfully (in ${transpileFormattedTime})`);
+    relinka("info", "📝 Publish process is currently paused in your config file");
   }
 }

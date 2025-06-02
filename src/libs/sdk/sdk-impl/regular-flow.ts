@@ -3,10 +3,7 @@ import pAll from "p-all";
 
 import type { DlerConfig, PerfTimer } from "~/libs/sdk/sdk-types";
 
-import {
-  regular_buildJsrDist,
-  regular_buildNpmDist,
-} from "./build/build-regular";
+import { regular_buildJsrDist, regular_buildNpmDist } from "./build/build-regular";
 import { regular_pubToJsr, regular_pubToNpm } from "./pub/pub-regular";
 import { CONCURRENCY_DEFAULT } from "./utils/utils-consts";
 
@@ -19,19 +16,13 @@ export async function processRegularFlow(
   config: DlerConfig,
 ): Promise<void> {
   if (config.libsActMode === "libs-only") {
-    relinka(
-      "log",
-      "Skipping main project build/publish as libsActMode is set to 'libs-only'",
-    );
+    relinka("log", "Skipping main project build/publish as libsActMode is set to 'libs-only'");
     return;
   }
 
   switch (config.commonPubRegistry) {
     case "jsr":
-      relinka(
-        "log",
-        "Initializing build process for main project to JSR only...",
-      );
+      relinka("log", "Initializing build process for main project to JSR only...");
       await regular_buildJsrDist(
         isDev,
         true,
@@ -66,12 +57,10 @@ export async function processRegularFlow(
       );
       break;
     case "npm":
-      relinka(
-        "log",
-        "Initializing build process for main project to NPM only...",
-      );
+      relinka("log", "Initializing build process for main project to NPM only...");
       await regular_buildNpmDist(
         isDev,
+        config.coreIsCLI.enabled,
         config.coreEntrySrcDir,
         config.distNpmDirName,
         config.distNpmBuilder,
@@ -99,10 +88,7 @@ export async function processRegularFlow(
       );
       break;
     case "npm-jsr": {
-      relinka(
-        "log",
-        "Initializing build process for main project to both NPM and JSR...",
-      );
+      relinka("log", "Initializing build process for main project to both NPM and JSR...");
 
       const buildTasks = [
         () =>
@@ -131,6 +117,7 @@ export async function processRegularFlow(
         () =>
           regular_buildNpmDist(
             isDev,
+            config.coreIsCLI.enabled,
             config.coreEntrySrcDir,
             config.distNpmDirName,
             config.distNpmBuilder,
@@ -176,10 +163,7 @@ export async function processRegularFlow(
       break;
     }
     default:
-      relinka(
-        "error",
-        `Invalid commonPubRegistry: ${config.commonPubRegistry}`,
-      );
+      relinka("error", `Invalid commonPubRegistry: ${config.commonPubRegistry}`);
       throw new Error(`Invalid commonPubRegistry: ${config.commonPubRegistry}`);
   }
 }

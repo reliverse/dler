@@ -5,19 +5,11 @@ import path from "@reliverse/pathkit";
 import { glob } from "@reliverse/reglob";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import {
-  defineCommand,
-  inputPrompt,
-  confirmPrompt,
-  multiselectPrompt,
-} from "@reliverse/rempts";
+import { defineCommand, inputPrompt, confirmPrompt, multiselectPrompt } from "@reliverse/rempts";
 import pMap from "p-map";
 import prettyMilliseconds from "pretty-ms";
 
-import {
-  createPerfTimer,
-  getElapsedPerfTime,
-} from "~/libs/sdk/sdk-impl/utils/utils-perf";
+import { createPerfTimer, getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 // ---------- constants ----------
 
@@ -141,11 +133,9 @@ const collectFiles = async (
   } else if (sortBy === "path") {
     filtered.sort();
   } else if (sortBy === "mtime") {
-    filtered = await pMap(
-      filtered,
-      async (f) => ({ f, mtime: (await fs.stat(f)).mtimeMs }),
-      { concurrency: 8 },
-    ).then((arr) => arr.sort((a, b) => a.mtime - b.mtime).map((x) => x.f));
+    filtered = await pMap(filtered, async (f) => ({ f, mtime: (await fs.stat(f)).mtimeMs }), {
+      concurrency: 8,
+    }).then((arr) => arr.sort((a, b) => a.mtime - b.mtime).map((x) => x.f));
   }
   return filtered;
 };
@@ -189,9 +179,7 @@ const writeFilesPreserveStructure = async (
   await pMap(
     files,
     async (file) => {
-      const relPath = preserveStructure
-        ? path.relative(cwd, file)
-        : path.basename(file);
+      const relPath = preserveStructure ? path.relative(cwd, file) : path.basename(file);
 
       let destPath = path.join(outDir, relPath);
 
@@ -276,20 +264,17 @@ export default defineCommand({
     },
     recursive: {
       type: "boolean",
-      description:
-        "Recursively process all files in subdirectories (default: true)",
+      description: "Recursively process all files in subdirectories (default: true)",
       default: true,
     },
     preserveStructure: {
       type: "boolean",
-      description:
-        "Preserve source directory structure in output (default: true)",
+      description: "Preserve source directory structure in output (default: true)",
       default: true,
     },
     increment: {
       type: "boolean",
-      description:
-        "Attach an incrementing index to each output filename if set (default: false)",
+      description: "Attach an incrementing index to each output filename if set (default: false)",
       default: false,
     },
     concurrency: {
@@ -345,8 +330,7 @@ export default defineCommand({
       );
       if (raw) include = parseCSV(raw as string);
     }
-    if (include.length === 0)
-      throw new Error("No input patterns supplied and prompts disabled");
+    if (include.length === 0) throw new Error("No input patterns supplied and prompts disabled");
 
     let ignore = args.ignore ?? [];
     if (ignore.length === 0) {
@@ -382,8 +366,7 @@ export default defineCommand({
       args.separator ??
       ((await maybePrompt(batch, undefined, () =>
         inputPrompt({
-          title:
-            "Separator between files (\\n for newline, blank → blank line)",
+          title: "Separator between files (\\n for newline, blank → blank line)",
           placeholder: DEFAULT_SEPARATOR_RAW,
         }),
       )) as string | undefined) ??
@@ -428,9 +411,7 @@ export default defineCommand({
     let files = await collectFiles(include, ignore, recursive, sortBy);
 
     if (files.length === 0) {
-      throw new Error(
-        "No text files matched given patterns (binary/media files are skipped)",
-      );
+      throw new Error("No text files matched given patterns (binary/media files are skipped)");
     }
 
     if (interactive && !batch) {
@@ -453,11 +434,7 @@ export default defineCommand({
       return COMMENT_MAP[ext] ?? customComment ?? DEFAULT_COMMENT;
     };
 
-    if (
-      outFile &&
-      (await fs.pathExists(outFile)) &&
-      (await fs.stat(outFile)).isDirectory()
-    ) {
+    if (outFile && (await fs.pathExists(outFile)) && (await fs.stat(outFile)).isDirectory()) {
       await writeFilesPreserveStructure(
         files,
         outFile,
@@ -498,14 +475,7 @@ export default defineCommand({
     if (header) filteredSections.unshift(header);
     if (footer) filteredSections.push(footer);
 
-    await writeResult(
-      filteredSections,
-      separator,
-      outFile,
-      stdoutFlag,
-      dryRun,
-      backup,
-    );
+    await writeResult(filteredSections, separator, outFile, stdoutFlag, dryRun, backup);
     const elapsed = getElapsedPerfTime(timer);
     relinka("success", `Merge completed in ${prettyMilliseconds(elapsed)}`);
   },

@@ -1,6 +1,6 @@
 import { endPrompt, startPrompt } from "@reliverse/rempts";
 
-const version= "1.7.4";
+const version = "1.7.7";
 
 export async function showStartPrompt(isDev: boolean) {
   await startPrompt({
@@ -15,8 +15,7 @@ export async function showStartPrompt(isDev: boolean) {
 }
 export async function showEndPrompt() {
   await endPrompt({
-    title:
-      "│  ❤️  Please consider supporting dler: https://github.com/sponsors/blefnk",
+    title: "│  ❤️  Please consider supporting dler: https://github.com/sponsors/blefnk",
     titleAnimation: "glitch",
     titleColor: "dim",
     titleTypography: "bold",

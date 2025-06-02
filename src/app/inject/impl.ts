@@ -90,9 +90,7 @@ async function runTscAndParseErrors(
   }
 }
 
-function parseErrorOutput(
-  output: string,
-): { filePath: string; lineNumber: number }[] {
+function parseErrorOutput(output: string): { filePath: string; lineNumber: number }[] {
   const results: { filePath: string; lineNumber: number }[] = [];
   const splitted = output.split(/\r?\n/);
   const regex = /^(.+?)\((\d+),(\d+)\): error TS\d+: /;
@@ -118,9 +116,7 @@ function isWithin(filePath: string, dirs: string[]): boolean {
   const absFile = path.resolve(filePath);
   return dirs.some((dir) => {
     const absDir = path.resolve(dir);
-    const normalizedDir = absDir.endsWith(path.sep)
-      ? absDir
-      : absDir + path.sep;
+    const normalizedDir = absDir.endsWith(path.sep) ? absDir : absDir + path.sep;
     return absFile.startsWith(normalizedDir);
   });
 }
@@ -142,10 +138,7 @@ async function injectCommentIntoFiles(
   for (const [filePath, lineNums] of byFile.entries()) {
     lineNums.sort((a, b) => b - a);
     const absPath = path.resolve(filePath);
-    relinka(
-      "log",
-      `Injecting into ${absPath} at lines: ${lineNums.join(", ")}`,
-    );
+    relinka("log", `Injecting into ${absPath} at lines: ${lineNums.join(", ")}`);
 
     try {
       const original = await fs.readFile(absPath, "utf-8");

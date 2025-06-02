@@ -1,9 +1,5 @@
 import { relinka } from "@reliverse/relinka";
-import {
-  defineCommand,
-  multiselectPrompt,
-  selectPrompt,
-} from "@reliverse/rempts";
+import { defineCommand, multiselectPrompt, selectPrompt } from "@reliverse/rempts";
 
 import type { FileType, InitFileRequest } from "./init-types";
 

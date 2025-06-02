@@ -16,14 +16,9 @@ export function handleDlerError(error: unknown, timer: PerfTimer): never {
   });
 
   // Log detailed error intranspileFormation
-  const errorStack =
-    error instanceof Error ? error.stack : "No stack trace available";
+  const errorStack = error instanceof Error ? error.stack : "No stack trace available";
 
-  relinka(
-    "error",
-    `An unexpected error occurred after ${transpileFormattedTime}:`,
-    error,
-  );
+  relinka("error", `An unexpected error occurred after ${transpileFormattedTime}:`, error);
   relinka("verbose", `Error details: ${errorStack}`);
 
   // Exit with error code

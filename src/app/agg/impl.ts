@@ -70,10 +70,7 @@ export async function useAggregator({
     try {
       await fs.ensureDir(outDir);
     } catch (error) {
-      relinka(
-        "error",
-        `Error: Cannot create output directory: ${outDir}\n${error}`,
-      );
+      relinka("error", `Error: Cannot create output directory: ${outDir}\n${error}`);
       process.exit(1);
     }
 
@@ -83,10 +80,7 @@ export async function useAggregator({
       try {
         await fs.ensureDir(typesOutDir);
       } catch (error) {
-        relinka(
-          "error",
-          `Error: Cannot create types output directory: ${typesOutDir}\n${error}`,
-        );
+        relinka("error", `Error: Cannot create types output directory: ${typesOutDir}\n${error}`);
         process.exit(1);
       }
     }
@@ -104,10 +98,7 @@ export async function useAggregator({
     if (stripPrefix) {
       const stripSt = await fs.stat(stripPrefix).catch(() => null);
       if (!stripSt?.isDirectory()) {
-        relinka(
-          "error",
-          `Error: --strip is not a valid directory: ${stripPrefix}`,
-        );
+        relinka("error", `Error: --strip is not a valid directory: ${stripPrefix}`);
         process.exit(1);
       }
     }
@@ -116,9 +107,7 @@ export async function useAggregator({
     if (verbose)
       relinka(
         "log",
-        `Scanning directory ${inputDir} for files with extensions: ${fileExtensions.join(
-          ", ",
-        )}`,
+        `Scanning directory ${inputDir} for files with extensions: ${fileExtensions.join(", ")}`,
       );
     const filePaths = await collectFiles(
       inputDir,
@@ -207,10 +196,7 @@ export async function useAggregator({
       await fs.ensureFile(outFile);
       await fs.writeFile(outFile, aggregatorBlock, "utf8");
 
-      relinka(
-        "success",
-        `Aggregator done: processed ${allLines.length} lines in: ${outFile}`,
-      );
+      relinka("success", `Aggregator done: processed ${allLines.length} lines in: ${outFile}`);
     }
   } catch (error) {
     relinka("error", `Aggregator failed: ${error}`);
@@ -222,11 +208,7 @@ export async function useAggregator({
  * Build a relative import/export path, removing `stripPrefix` if it is truly a prefix,
  * converting .ts -> .js, and ensuring it starts with "./" or "../".
  */
-function buildPathRelative(
-  filePath: string,
-  inputDir: string,
-  stripPrefix: string,
-): string {
+function buildPathRelative(filePath: string, inputDir: string, stripPrefix: string): string {
   let resolved = path.resolve(filePath);
   const resolvedStrip = stripPrefix ? path.resolve(stripPrefix) : "";
 
@@ -308,10 +290,7 @@ async function collectFiles(
       }
     } else if (entry.isFile()) {
       // Skip file if its basename starts with the internal marker and internal files are not included.
-      if (
-        !includeInternal &&
-        path.basename(fullPath).startsWith(internalMarker)
-      ) {
+      if (!includeInternal && path.basename(fullPath).startsWith(internalMarker)) {
         if (verbose) {
           relinka("log", `Skipping internal file: ${fullPath}`);
         }
@@ -377,9 +356,7 @@ async function generateAggregatorLines(
   if (useImport) {
     const lines: string[] = [];
     if (typeNames.length > 0) {
-      lines.push(
-        `import type { ${typeNames.join(", ")} } from "${importPath}";`,
-      );
+      lines.push(`import type { ${typeNames.join(", ")} } from "${importPath}";`);
     }
     if (valueNames.length > 0) {
       lines.push(`import { ${valueNames.join(", ")} } from "${importPath}";`);
@@ -450,10 +427,7 @@ async function getNamedExports(
               valueNamesSet.add(name);
             }
           }
-        } else if (
-          pattern.source.includes("=\\s*([A-Za-z0-9_$]+)") &&
-          matchGroups[1]
-        ) {
+        } else if (pattern.source.includes("=\\s*([A-Za-z0-9_$]+)") && matchGroups[1]) {
           // Handle export assignments
           valueNamesSet.add(matchGroups[1]);
         } else {
@@ -461,11 +435,7 @@ async function getNamedExports(
           const keyword = matchGroups[1];
           const name = matchGroups[2];
           if (keyword && name) {
-            if (
-              keyword === "type" ||
-              keyword === "interface" ||
-              keyword === "enum"
-            ) {
+            if (keyword === "type" || keyword === "interface" || keyword === "enum") {
               typeNamesSet.add(name);
             } else {
               valueNamesSet.add(name);

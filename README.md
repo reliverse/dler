@@ -15,7 +15,7 @@
 - 🎯 optimized for speed and modern workflows
 - ✨ packed with powerful features under the hood
 - 🛠️ converts typescript aliases to relative paths
-- 🔌 [15 built-in helper dler commands](#-commands) included
+- 🔌 15 built-in helper [dler commands](#-commands) included
 - 📝 highly configurable flow via a configuration file
 - 🔜 `libraries` plugin —> dler monorepo implementation
 - 🧼 cleans up your internal logs from the build dist

@@ -40,13 +40,7 @@ export async function useAggregator({
   // Build aggregator lines
   const allLines: string[] = [];
   for (const fp of filePaths) {
-    const lines = await generateAggregatorLines(
-      fp,
-      inputDir,
-      stripPrefix,
-      useImport,
-      useNamed,
-    );
+    const lines = await generateAggregatorLines(fp, inputDir, stripPrefix, useImport, useNamed);
     allLines.push(...lines);
   }
 
@@ -63,21 +57,14 @@ export async function useAggregator({
   await fs.ensureFile(outFile);
   await fs.writeFile(outFile, finalText, "utf8");
 
-  relinka(
-    "log",
-    `Aggregator done: wrote ${allLines.length} lines to:\n  ${outFile}`,
-  );
+  relinka("log", `Aggregator done: wrote ${allLines.length} lines to:\n  ${outFile}`);
 }
 
 /**
  * Build a relative import/export path, removing `stripPrefix` if it is truly a prefix,
  * converting .ts -> .js, and ensuring it starts with "./" or "../".
  */
-function buildPathRelative(
-  filePath: string,
-  inputDir: string,
-  stripPrefix: string,
-): string {
+function buildPathRelative(filePath: string, inputDir: string, stripPrefix: string): string {
   let resolved = path.resolve(filePath);
   const resolvedStrip = stripPrefix ? path.resolve(stripPrefix) : "";
 
@@ -112,11 +99,7 @@ function buildPathRelative(
 /**
  * Collects files with given extensions.
  */
-async function collectFiles(
-  dir: string,
-  exts: string[],
-  recursive: boolean,
-): Promise<string[]> {
+async function collectFiles(dir: string, exts: string[], recursive: boolean): Promise<string[]> {
   const found: string[] = [];
   const entries = await fs.readdir(dir, { withFileTypes: true });
 
@@ -180,9 +163,7 @@ async function generateAggregatorLines(
     const lines: string[] = [];
 
     if (typeNames.length > 0) {
-      lines.push(
-        `import type { ${typeNames.join(", ")} } from "${importPath}";`,
-      );
+      lines.push(`import type { ${typeNames.join(", ")} } from "${importPath}";`);
     }
     if (valueNames.length > 0) {
       lines.push(`import { ${valueNames.join(", ")} } from "${importPath}";`);

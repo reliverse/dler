@@ -30,9 +30,7 @@ export async function createJsrJSON(
 
     // Check if libMainFile is defined
     if (!libsList[libName]?.libMainFile) {
-      throw new Error(
-        `libsList.${libName}.libMainFile is not defined for library ${libName}`,
-      );
+      throw new Error(`libsList.${libName}.libMainFile is not defined for library ${libName}`);
     }
   }
   const pkgHomepage = cliDomainDocs;
@@ -68,10 +66,7 @@ export async function createJsrJSON(
   await fs.writeJSON(jsrConfigPath, jsrConfig, {
     spaces: 2,
   });
-  relinka(
-    "verbose",
-    `Generated jsr.${jsrConfigExt} file in ${outDirRoot}/jsr.${jsrConfigExt}`,
-  );
+  relinka("verbose", `Generated jsr.${jsrConfigExt} file in ${outDirRoot}/jsr.${jsrConfigExt}`);
 }
 
 /**

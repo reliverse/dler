@@ -82,8 +82,7 @@ export default defineCommand({
     },
     output: {
       type: "string",
-      description:
-        "Output file or directory path (required for copy/move/rename operations)",
+      description: "Output file or directory path (required for copy/move/rename operations)",
     },
     pattern: {
       type: "string",
@@ -116,10 +115,7 @@ export default defineCommand({
     switch (type) {
       case "replace":
         if (!pattern || !replacement) {
-          relinka(
-            "error",
-            "❌ Pattern and replacement are required for replace operation",
-          );
+          relinka("error", "❌ Pattern and replacement are required for replace operation");
           return;
         }
         spell = {
@@ -144,10 +140,7 @@ export default defineCommand({
 
       case "remove-comment":
         if (!pattern) {
-          relinka(
-            "error",
-            "❌ Pattern is required for remove-comment operation",
-          );
+          relinka("error", "❌ Pattern is required for remove-comment operation");
           return;
         }
         spell = {
@@ -202,10 +195,7 @@ export default defineCommand({
 
       case "transform":
         if (!transform) {
-          relinka(
-            "error",
-            "❌ Transform function name is required for transform operation",
-          );
+          relinka("error", "❌ Transform function name is required for transform operation");
           return;
         }
         spell = {
@@ -217,10 +207,7 @@ export default defineCommand({
 
       case "insert":
         if (!line || !replacement) {
-          relinka(
-            "error",
-            "❌ Line number and replacement are required for insert operation",
-          );
+          relinka("error", "❌ Line number and replacement are required for insert operation");
           return;
         }
         spell = {
@@ -244,10 +231,7 @@ export default defineCommand({
       const result = await executeSpell(spell, input, content);
 
       if (result.success) {
-        relinka(
-          "log",
-          `✅ Successfully performed ${type} operation on ${input}`,
-        );
+        relinka("log", `✅ Successfully performed ${type} operation on ${input}`);
         if (result.changes) {
           relinka(
             "log",
@@ -255,10 +239,7 @@ export default defineCommand({
           );
         }
       } else {
-        relinka(
-          "error",
-          `❌ Failed to perform ${type} operation: ${result.message}`,
-        );
+        relinka("error", `❌ Failed to perform ${type} operation: ${result.message}`);
       }
     } catch (error) {
       relinka("error", `❌ Error during conversion: ${error}`);

@@ -24,11 +24,7 @@ async function getAllTsFiles(dir: string): Promise<string[]> {
       const fullPath = join(dir, entry);
       const stats = await stat(fullPath);
 
-      if (
-        stats.isDirectory() &&
-        !entry.startsWith(".") &&
-        entry !== "node_modules"
-      ) {
+      if (stats.isDirectory() && !entry.startsWith(".") && entry !== "node_modules") {
         const subFiles = await getAllTsFiles(fullPath);
         files.push(...subFiles);
       } else if (stats.isFile()) {
@@ -45,9 +41,7 @@ async function getAllTsFiles(dir: string): Promise<string[]> {
   return files;
 }
 
-export async function migrateReaddirToGlob(
-  dryRun = false,
-): Promise<MigrationResult[]> {
+export async function migrateReaddirToGlob(dryRun = false): Promise<MigrationResult[]> {
   const results: MigrationResult[] = [];
   const files = await getAllTsFiles(".");
 
@@ -65,10 +59,9 @@ export async function migrateReaddirToGlob(
       }
 
       // Replace fs.readdir with globby
-      const readdirRegex =
-        /(?:await\s+)?(?:fs\.)?readdir(?:Sync)?\s*\(\s*([^)]+)\s*\)/g;
+      const readdirRegex = /(?:await\s+)?(?:fs\.)?readdir(?:Sync)?\s*\(\s*([^)]+)\s*\)/g;
       if (readdirRegex.test(content)) {
-        modified = modified.replace(readdirRegex, (match, targetDir) => {
+        modified = modified.replace(readdirRegex, (_match, targetDir) => {
           // Remove any quotes and trim the targetDir
           const cleanTargetDir = targetDir.replace(/["']/g, "").trim();
           return `await globby("*", { cwd: ${cleanTargetDir}, onlyFiles: false })`;
@@ -77,16 +70,12 @@ export async function migrateReaddirToGlob(
       }
 
       // Replace fs.promises.readdir with globby
-      const promisesReaddirRegex =
-        /(?:await\s+)?fs\.promises\.readdir\s*\(\s*([^)]+)\s*\)/g;
+      const promisesReaddirRegex = /(?:await\s+)?fs\.promises\.readdir\s*\(\s*([^)]+)\s*\)/g;
       if (promisesReaddirRegex.test(content)) {
-        modified = modified.replace(
-          promisesReaddirRegex,
-          (match, targetDir) => {
-            const cleanTargetDir = targetDir.replace(/["']/g, "").trim();
-            return `await globby("*", { cwd: ${cleanTargetDir}, onlyFiles: false })`;
-          },
-        );
+        modified = modified.replace(promisesReaddirRegex, (_match, targetDir) => {
+          const cleanTargetDir = targetDir.replace(/["']/g, "").trim();
+          return `await globby("*", { cwd: ${cleanTargetDir}, onlyFiles: false })`;
+        });
         changes.push("Converted fs.promises.readdir to globby");
       }
 
@@ -137,9 +126,7 @@ async function updatePackageJson(
         for (const pkg of config.remove) {
           if (packageJson.dependencies?.[pkg]) {
             packageJson.dependencies = Object.fromEntries(
-              Object.entries(packageJson.dependencies).filter(
-                ([key]) => key !== pkg,
-              ),
+              Object.entries(packageJson.dependencies).filter(([key]) => key !== pkg),
             );
             packageChanged = true;
             packageChanges.push(`Removed ${pkg} from dependencies`);
@@ -147,9 +134,7 @@ async function updatePackageJson(
 
           if (packageJson.devDependencies?.[pkg]) {
             packageJson.devDependencies = Object.fromEntries(
-              Object.entries(packageJson.devDependencies).filter(
-                ([key]) => key !== pkg,
-              ),
+              Object.entries(packageJson.devDependencies).filter(([key]) => key !== pkg),
             );
             packageChanged = true;
             packageChanges.push(`Removed ${pkg} from devDependencies`);
@@ -170,11 +155,7 @@ async function updatePackageJson(
       }
 
       if (packageChanged && !dryRun) {
-        await writeFile(
-          packageJsonPath,
-          JSON.stringify(packageJson, null, 2),
-          "utf-8",
-        );
+        await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2), "utf-8");
       }
 
       if (packageChanges.length > 0) {

@@ -1,11 +1,7 @@
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import {
-  definePackageJSON,
-  type PackageJson,
-  readPackageJSON,
-} from "pkg-types";
+import { definePackageJSON, type PackageJson, readPackageJSON } from "pkg-types";
 
 import type { NpmOutExt, DlerConfig } from "~/libs/sdk/sdk-types";
 
@@ -25,14 +21,8 @@ export async function regular_createPackageJSON(
   coreDescription: string,
   coreBuildOutDir = "bin",
 ): Promise<void> {
-  relinka(
-    "log",
-    `Generating distribution package.json and tsconfig.json (isJsr=${isJsr})...`,
-  );
-  const commonPkg = await regular_createCommonPackageFields(
-    coreIsCLI,
-    coreDescription,
-  );
+  relinka("log", `Generating distribution package.json and tsconfig.json (isJsr=${isJsr})...`);
+  const commonPkg = await regular_createCommonPackageFields(coreIsCLI, coreDescription);
   const originalPkg = await readPackageJSON();
   const packageName = originalPkg.name || "";
 
@@ -56,39 +46,21 @@ export async function regular_createPackageJSON(
       : undefined;
 
     if (coreIsCLI.enabled) {
-      relinka(
-        "verbose",
-        `Adding CLI bin entries for JSR: ${JSON.stringify(binEntry)}`,
-      );
+      relinka("verbose", `Adding CLI bin entries for JSR: ${JSON.stringify(binEntry)}`);
     }
 
     const jsrPkg = definePackageJSON({
       ...commonPkg,
       bin: binEntry,
-      dependencies: await regular_getPkgKeepDeps(
-        originalPkg.dependencies,
-        outDirBin,
-        true,
-        config,
-      ),
-      devDependencies: await filterDeps(
-        originalPkg.devDependencies,
-        true,
-        outDirBin,
-        true,
-        config,
-      ),
+      dependencies: await regular_getPkgKeepDeps(originalPkg.dependencies, outDirBin, true, config),
+      devDependencies: await filterDeps(originalPkg.devDependencies, true, outDirBin, true, config),
       exports: {
         ".": `./${coreBuildOutDir}/${config.coreEntryFile}`,
       },
       files: [
         ...new Set([
           coreBuildOutDir,
-          ...(config.publishArtifacts?.global || [
-            "package.json",
-            "README.md",
-            "LICENSE",
-          ]),
+          ...(config.publishArtifacts?.global || ["package.json", "README.md", "LICENSE"]),
         ]),
       ],
     });
@@ -113,10 +85,7 @@ export async function regular_createPackageJSON(
       : undefined;
 
     if (coreIsCLI.enabled) {
-      relinka(
-        "verbose",
-        `Adding CLI bin entries for NPM: ${JSON.stringify(binEntry)}`,
-      );
+      relinka("verbose", `Adding CLI bin entries for NPM: ${JSON.stringify(binEntry)}`);
     }
 
     const npmPkg = definePackageJSON({
@@ -141,11 +110,7 @@ export async function regular_createPackageJSON(
       files: [
         ...new Set([
           coreBuildOutDir,
-          ...(config.publishArtifacts?.global || [
-            "package.json",
-            "README.md",
-            "LICENSE",
-          ]),
+          ...(config.publishArtifacts?.global || ["package.json", "README.md", "LICENSE"]),
         ]),
       ],
       main: `./${coreBuildOutDir}/${config.coreEntryFile.replace(/\.ts$/, `.${outExt}`)}`,
@@ -191,10 +156,7 @@ async function regular_createCommonPackageFields(
   };
 
   if (coreIsCLI.enabled) {
-    relinka(
-      "verbose",
-      "coreIsCLI is enabled, adding CLI-specific fields to common package fields",
-    );
+    relinka("verbose", "coreIsCLI is enabled, adding CLI-specific fields to common package fields");
     if (commonPkg.keywords) {
       const cliKeywords = Object.keys(coreIsCLI.scripts);
       relinka(
@@ -202,23 +164,12 @@ async function regular_createCommonPackageFields(
         `Adding CLI keywords to existing keywords: ${JSON.stringify(cliKeywords)}`,
       );
       commonPkg.keywords = [
-        ...new Set([
-          "cli",
-          ...cliKeywords,
-          "command-line",
-          ...commonPkg.keywords,
-        ]),
+        ...new Set(["cli", ...cliKeywords, "command-line", ...commonPkg.keywords]),
       ];
-      relinka(
-        "verbose",
-        `Updated keywords: ${JSON.stringify(commonPkg.keywords)}`,
-      );
+      relinka("verbose", `Updated keywords: ${JSON.stringify(commonPkg.keywords)}`);
     } else if (name) {
       const cliKeywords = Object.keys(coreIsCLI.scripts);
-      relinka(
-        "verbose",
-        `Setting new CLI keywords: ${JSON.stringify(cliKeywords)}`,
-      );
+      relinka("verbose", `Setting new CLI keywords: ${JSON.stringify(cliKeywords)}`);
       commonPkg.keywords = ["cli", "command-line", ...cliKeywords];
       relinka("verbose", `Set keywords: ${JSON.stringify(commonPkg.keywords)}`);
     }
@@ -228,11 +179,7 @@ async function regular_createCommonPackageFields(
 
   if (author) {
     const repoOwner = typeof author === "string" ? author : author.name;
-    const repoName = name
-      ? name.startsWith("@")
-        ? name.split("/").pop() || name
-        : name
-      : "";
+    const repoName = name ? (name.startsWith("@") ? name.split("/").pop() || name : name) : "";
     Object.assign(commonPkg, {
       author,
       bugs: {

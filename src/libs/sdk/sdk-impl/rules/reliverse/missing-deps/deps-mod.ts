@@ -1,16 +1,10 @@
-import type {
-  CheckIssue,
-  CheckResult,
-  RulesCheckOptions,
-} from "~/libs/sdk/sdk-types";
+import type { CheckIssue, CheckResult, RulesCheckOptions } from "~/libs/sdk/sdk-types";
 
 import { IGNORE_PATTERNS } from "~/libs/sdk/sdk-impl/constants";
 import { analyzeDependencies } from "~/libs/sdk/sdk-impl/rules/reliverse/missing-deps/analyzer";
 
 // check missing dependencies
-export async function checkMissingDependencies(
-  options: RulesCheckOptions,
-): Promise<CheckResult> {
+export async function checkMissingDependencies(options: RulesCheckOptions): Promise<CheckResult> {
   const startTime = Date.now();
   const issues: CheckIssue[] = [];
   const {

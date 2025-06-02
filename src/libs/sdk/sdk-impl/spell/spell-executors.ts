@@ -61,10 +61,7 @@ export const replaceLineExecutor = async (
   }
 };
 
-export const renameFileExecutor = async (
-  spell: Spell,
-  filePath: string,
-): Promise<SpellResult> => {
+export const renameFileExecutor = async (spell: Spell, filePath: string): Promise<SpellResult> => {
   if (!spell.value) {
     return {
       spell,
@@ -113,9 +110,7 @@ export const removeCommentExecutor = async (
     const lines = content.split("\n");
     const originalLine = lines[spell.lineNumber - 1];
     // Remove the comment but keep the rest of the line
-    lines[spell.lineNumber - 1] = (originalLine ?? "")
-      .replace(spell.fullMatch, "")
-      .trim();
+    lines[spell.lineNumber - 1] = (originalLine ?? "").replace(spell.fullMatch, "").trim();
 
     const newContent = lines.join("\n");
 
@@ -186,10 +181,7 @@ export const removeLineExecutor = async (
   }
 };
 
-export const removeFileExecutor = async (
-  spell: Spell,
-  filePath: string,
-): Promise<SpellResult> => {
+export const removeFileExecutor = async (spell: Spell, filePath: string): Promise<SpellResult> => {
   try {
     await fs.removeFile(filePath);
 
@@ -209,10 +201,7 @@ export const removeFileExecutor = async (
   }
 };
 
-export const copyFileExecutor = async (
-  spell: Spell,
-  filePath: string,
-): Promise<SpellResult> => {
+export const copyFileExecutor = async (spell: Spell, filePath: string): Promise<SpellResult> => {
   if (!spell.value) {
     return {
       spell,
@@ -243,10 +232,7 @@ export const copyFileExecutor = async (
   }
 };
 
-export const moveFileExecutor = async (
-  spell: Spell,
-  filePath: string,
-): Promise<SpellResult> => {
+export const moveFileExecutor = async (spell: Spell, filePath: string): Promise<SpellResult> => {
   if (!spell.value) {
     return {
       spell,

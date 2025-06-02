@@ -1,22 +1,16 @@
 import { relative, resolve } from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { promises as fsp } from "node:fs";
 import { glob } from "tinyglobby";
 
 import type { BuildContext, CopyBuildEntry } from "~/libs/sdk/sdk-types";
 
-import {
-  rmdir,
-  symlink,
-  warn,
-} from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils";
+import { rmdir, symlink, warn } from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils";
 
-const copy = fsp.cp || fsp.copyFile;
+const copy = fs.cp || fs.copyFile;
 
 export async function copyBuild(ctx: BuildContext): Promise<void> {
-  const entries = ctx.options.entries.filter(
-    (e) => e.builder === "copy",
-  ) as CopyBuildEntry[];
+  const entries = ctx.options.entries.filter((e) => e.builder === "copy") as CopyBuildEntry[];
   await ctx.hooks.callHook("copy:entries", ctx, entries);
   for (const entry of entries) {
     const distDir = entry.outDir || entry.input;
@@ -28,9 +22,7 @@ export async function copyBuild(ctx: BuildContext): Promise<void> {
       await rmdir(distDir);
       await symlink(entry.input, distDir);
     } else {
-      const patterns = Array.isArray(entry.pattern)
-        ? entry.pattern
-        : [entry.pattern || "**"];
+      const patterns = Array.isArray(entry.pattern) ? entry.pattern : [entry.pattern || "**"];
       const paths = await glob(patterns, {
         absolute: false,
         cwd: resolve(ctx.options.rootDir, entry.input),
@@ -54,12 +46,7 @@ export async function copyBuild(ctx: BuildContext): Promise<void> {
       ctx.buildEntries.push({
         chunks: outputList
           .filter(({ status }) => status === "fulfilled")
-          .map((p) =>
-            relative(
-              ctx.options.outDir,
-              (p as PromiseFulfilledResult<string>).value,
-            ),
-          ),
+          .map((p) => relative(ctx.options.outDir, (p as PromiseFulfilledResult<string>).value)),
         path: distDir,
         isLib: entry.isLib,
       });
@@ -68,9 +55,6 @@ export async function copyBuild(ctx: BuildContext): Promise<void> {
   await ctx.hooks.callHook("copy:done", ctx);
 
   if (entries.length > 0 && ctx.options.transpileWatch) {
-    relinka(
-      "warn",
-      "`untyped` builder does not support transpileWatch mode yet.",
-    );
+    relinka("warn", "`untyped` builder does not support transpileWatch mode yet.");
   }
 }

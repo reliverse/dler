@@ -1,12 +1,6 @@
-import {
-  basename,
-  dirname,
-  extname,
-  relative,
-  resolve,
-} from "@reliverse/pathkit";
+import { basename, dirname, extname, relative, resolve } from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
 import { fileURLToPath, resolveModuleExportNames, resolvePath } from "mlly";
-import { promises as fsp } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 
 import type { BuildContext } from "~/libs/sdk/sdk-types";
@@ -17,8 +11,7 @@ import { getShebang, makeExecutable } from "./plugins/shebang";
 import { DEFAULT_EXTENSIONS, resolveAliases } from "./utils";
 
 export async function rollupStub(ctx: BuildContext): Promise<void> {
-  const babelPlugins =
-    ctx.options.transpileStubOptions.jiti.transformOptions?.babel?.plugins;
+  const babelPlugins = ctx.options.transpileStubOptions.jiti.transformOptions?.babel?.plugins;
   const importedBabelPlugins: string[] = [];
   const serializedJitiOptions = JSON.stringify(
     {
@@ -47,10 +40,7 @@ export async function rollupStub(ctx: BuildContext): Promise<void> {
               const [name, ...args] = plugin;
               // @ts-expect-error TODO: fix (reset.d.ts)
               importedBabelPlugins.push(name);
-              return `[${[
-                `plugin${i}`,
-                ...args.map((val) => JSON.stringify(val)),
-              ].join(", ")}]`;
+              return `[${[`plugin${i}`, ...args.map((val) => JSON.stringify(val))].join(", ")}]`;
             }
             // @ts-expect-error TODO: fix (reset.d.ts)
             importedBabelPlugins.push(plugin);
@@ -60,9 +50,7 @@ export async function rollupStub(ctx: BuildContext): Promise<void> {
       : "[]",
   );
 
-  for (const entry of ctx.options.entries.filter(
-    (entry) => entry.builder === "rollup",
-  )) {
+  for (const entry of ctx.options.entries.filter((entry) => entry.builder === "rollup")) {
     const output = resolve(
       ctx.options.rootDir,
       ctx.options.outDir,
@@ -78,7 +66,7 @@ export async function rollupStub(ctx: BuildContext): Promise<void> {
     const resolvedEntryForTypeImport = isESM
       ? resolvedEntry.replace(/(\.m?)(ts)$/, "$1js")
       : resolvedEntryWithoutExt;
-    const code = await fsp.readFile(resolvedEntry, "utf8");
+    const code = await fs.readFile(resolvedEntry, "utf8");
     const shebang = getShebang(code);
 
     await mkdir(dirname(output), { recursive: true });
@@ -98,15 +86,12 @@ export async function rollupStub(ctx: BuildContext): Promise<void> {
           [
             `const { createJiti } = require(${JSON.stringify(jitiCJSPath)})`,
             ...importedBabelPlugins.map(
-              (plugin, i) =>
-                `const plugin${i} = require(${JSON.stringify(plugin)})`,
+              (plugin, i) => `const plugin${i} = require(${JSON.stringify(plugin)})`,
             ),
             "",
             `const jiti = createJiti(__filename, ${serializedJitiOptions})`,
             "",
-            `/** @type {import(${JSON.stringify(
-              resolvedEntryForTypeImport,
-            )})} */`,
+            `/** @type {import(${JSON.stringify(resolvedEntryForTypeImport)})} */`,
             `module.exports = jiti(${JSON.stringify(resolvedEntry)})`,
           ].join("\n"),
       );
@@ -114,17 +99,13 @@ export async function rollupStub(ctx: BuildContext): Promise<void> {
 
     // MJS Stub
     // Try to analyze exports
-    const namedExports: string[] = await resolveModuleExportNames(
-      resolvedEntry,
-      {
-        extensions: DEFAULT_EXTENSIONS,
-      },
-    ).catch((error) => {
+    const namedExports: string[] = await resolveModuleExportNames(resolvedEntry, {
+      extensions: DEFAULT_EXTENSIONS,
+    }).catch((error) => {
       warn(ctx, `Cannot analyze ${resolvedEntry} for exports:${error}`);
       return [];
     });
-    const hasDefaultExport =
-      namedExports.includes("default") || namedExports.length === 0;
+    const hasDefaultExport = namedExports.includes("default") || namedExports.length === 0;
 
     const jitiESMPath = relative(
       dirname(output),
@@ -146,12 +127,8 @@ export async function rollupStub(ctx: BuildContext): Promise<void> {
           `const jiti = createJiti(import.meta.url, ${serializedJitiOptions})`,
           "",
           `/** @type {import(${JSON.stringify(resolvedEntryForTypeImport)})} */`,
-          `const _module = await jiti.import(${JSON.stringify(
-            resolvedEntry,
-          )});`,
-          hasDefaultExport
-            ? "\nexport default _module?.default ?? _module;"
-            : "",
+          `const _module = await jiti.import(${JSON.stringify(resolvedEntry)});`,
+          hasDefaultExport ? "\nexport default _module?.default ?? _module;" : "",
           ...namedExports
             .filter((name) => name !== "default")
             .map((name) => `export const ${name} = _module.${name};`),
@@ -168,10 +145,7 @@ export async function rollupStub(ctx: BuildContext): Promise<void> {
       ].join("\n");
       await writeFile(`${output}.d.cts`, dtsContent);
       await writeFile(`${output}.d.mts`, dtsContent);
-      if (
-        ctx.options.declaration === "compatible" ||
-        ctx.options.declaration === true
-      ) {
+      if (ctx.options.declaration === "compatible" || ctx.options.declaration === true) {
         await writeFile(`${output}.d.ts`, dtsContent);
       }
     }

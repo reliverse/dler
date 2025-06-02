@@ -3,9 +3,7 @@ import { glob } from "tinyglobby";
 
 import type { CheckResult, RulesCheckOptions } from "~/libs/sdk/sdk-types";
 
-export async function checkNoIndexFiles(
-  options: RulesCheckOptions,
-): Promise<CheckResult> {
+export async function checkNoIndexFiles(options: RulesCheckOptions): Promise<CheckResult> {
   const { directory } = options;
   const startTime = Date.now();
 

@@ -6,11 +6,7 @@ import { parseNodeModulePath } from "mlly";
 
 import type { BuildContext, RollupOptions } from "~/libs/sdk/sdk-types";
 
-import {
-  arrayIncludes,
-  getpkg,
-  warn,
-} from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils";
+import { arrayIncludes, getpkg, warn } from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils";
 
 import { cjsPlugin } from "./plugins/cjs";
 import { esbuild } from "./plugins/esbuild";
@@ -29,10 +25,7 @@ const commonjsModule = (await import("@rollup/plugin-commonjs")) as any;
 const commonjs = commonjsModule.default || commonjsModule;
 
 const nodeResolveModule = (await import("@rollup/plugin-node-resolve")) as any;
-const nodeResolve =
-  nodeResolveModule.nodeResolve ||
-  nodeResolveModule.default ||
-  nodeResolveModule;
+const nodeResolve = nodeResolveModule.nodeResolve || nodeResolveModule.default || nodeResolveModule;
 
 export function getRollupOptions(ctx: BuildContext): RollupOptions {
   const _aliases = resolveAliases(ctx);
@@ -87,10 +80,7 @@ export function getRollupOptions(ctx: BuildContext): RollupOptions {
     input: Object.fromEntries(
       ctx.options.entries
         .filter((entry) => entry.builder === "rollup")
-        .map((entry) => [
-          entry.name,
-          resolve(ctx.options.rootDir, entry.input),
-        ]),
+        .map((entry) => [entry.name, resolve(ctx.options.rootDir, entry.input)]),
     ),
 
     onwarn(warning, rollupWarn): void {
@@ -102,8 +92,7 @@ export function getRollupOptions(ctx: BuildContext): RollupOptions {
     output: [
       ctx.options.rollup.emitCJS &&
         ({
-          chunkFileNames: (chunk: PreRenderedChunk) =>
-            getChunkFilename(ctx, chunk, "cjs"),
+          chunkFileNames: (chunk: PreRenderedChunk) => getChunkFilename(ctx, chunk, "cjs"),
           dir: resolve(ctx.options.rootDir, ctx.options.outDir),
           entryFileNames: "[name].cjs",
           exports: "auto",
@@ -116,8 +105,7 @@ export function getRollupOptions(ctx: BuildContext): RollupOptions {
           ...ctx.options.rollup.output,
         } satisfies OutputOptions),
       {
-        chunkFileNames: (chunk: PreRenderedChunk) =>
-          getChunkFilename(ctx, chunk, "mjs"),
+        chunkFileNames: (chunk: PreRenderedChunk) => getChunkFilename(ctx, chunk, "mjs"),
         dir: resolve(ctx.options.rootDir, ctx.options.outDir),
         entryFileNames: "[name].mjs",
         exports: "auto",

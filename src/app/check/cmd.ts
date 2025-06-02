@@ -79,18 +79,15 @@ export default defineCommand({
     },
     optional: {
       type: "boolean",
-      description:
-        "check optionalDependencies instead of dependencies (for deps)",
+      description: "check optionalDependencies instead of dependencies (for deps)",
     },
     fix: {
       type: "boolean",
-      description:
-        "automatically add missing dependencies to package.json (for deps)",
+      description: "automatically add missing dependencies to package.json (for deps)",
     },
     depth: {
       type: "number",
-      description:
-        "maximum directory depth to scan (0 for unlimited, for deps)",
+      description: "maximum directory depth to scan (0 for unlimited, for deps)",
       default: 0,
     },
   }),
@@ -132,18 +129,9 @@ export default defineCommand({
     }
 
     // --- Otherwise, run the original check logic ---
-    relinka(
-      "info",
-      "this command checks your codebase for extension and dependency issues.",
-    );
-    relinka(
-      "info",
-      "📁 file rules: .ts files allowed in src/jsr dirs, .js files in npm dirs",
-    );
-    relinka(
-      "info",
-      "📦 import rules: use .js imports in src/npm dirs, .ts imports in jsr dirs",
-    );
+    relinka("info", "this command checks your codebase for extension and dependency issues.");
+    relinka("info", "📁 file rules: .ts files allowed in src/jsr dirs, .js files in npm dirs");
+    relinka("info", "📦 import rules: use .js imports in src/npm dirs, .ts imports in jsr dirs");
     relinka(
       "info",
       "🔄 self-include rules: no importing from main package or self-imports in libs",

@@ -40,15 +40,7 @@ export const DEFAULT_CONFIG: DlerConfig = {
 
   // Dependency filtering
   filterDepsPatterns: {
-    global: [
-      "@types",
-      "biome",
-      "eslint",
-      "knip",
-      "prettier",
-      "typescript",
-      "@reliverse/dler",
-    ],
+    global: ["@types", "biome", "eslint", "knip", "prettier", "typescript", "@reliverse/dler"],
     "dist-npm": [],
     "dist-jsr": [],
     "dist-libs": {

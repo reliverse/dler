@@ -19,8 +19,7 @@ export default defineCommand({
       required: true,
     },
     named: {
-      description:
-        "Parse each file for named exports (function/class/const/let)",
+      description: "Parse each file for named exports (function/class/const/let)",
       type: "boolean",
       default: true,
     },
@@ -61,8 +60,7 @@ export default defineCommand({
       default: "#",
     },
     override: {
-      description:
-        "Override entire file instead of updating only the aggregator block",
+      description: "Override entire file instead of updating only the aggregator block",
       type: "boolean",
     },
     extensions: {
@@ -76,8 +74,7 @@ export default defineCommand({
       type: "boolean",
     },
     typesOut: {
-      description:
-        "Output file path for types (used when separateTypesFile is true)",
+      description: "Output file path for types (used when separateTypesFile is true)",
       type: "string",
     },
   }),

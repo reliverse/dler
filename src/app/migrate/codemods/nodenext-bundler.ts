@@ -40,11 +40,7 @@ async function getAllTsFiles(dir: string): Promise<string[]> {
       const fullPath = join(dir, entry);
       const stats = await stat(fullPath);
 
-      if (
-        stats.isDirectory() &&
-        !entry.startsWith(".") &&
-        entry !== "node_modules"
-      ) {
+      if (stats.isDirectory() && !entry.startsWith(".") && entry !== "node_modules") {
         const subFiles = await getAllTsFiles(fullPath);
         files.push(...subFiles);
       } else if (stats.isFile()) {
@@ -119,11 +115,7 @@ async function updateTsConfig(
 
     if (changes.length > 0) {
       if (!dryRun) {
-        await writeFile(
-          tsConfigPath,
-          JSON.stringify(tsConfig, null, 2) + "\n",
-          "utf-8",
-        );
+        await writeFile(tsConfigPath, JSON.stringify(tsConfig, null, 2) + "\n", "utf-8");
       }
 
       results.push({
@@ -176,11 +168,7 @@ async function updatePackageJson(dryRun = false): Promise<MigrationResult[]> {
 
     if (changes.length > 0) {
       if (!dryRun) {
-        await writeFile(
-          packageJsonPath,
-          JSON.stringify(packageJson, null, 2) + "\n",
-          "utf-8",
-        );
+        await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n", "utf-8");
       }
 
       results.push({
@@ -232,9 +220,7 @@ async function updateImportExtensions(
         if (!imp.source) continue;
 
         const isRelativeOrAbsolute =
-          imp.pathType === "relative" ||
-          imp.pathType === "absolute" ||
-          imp.pathType === "alias";
+          imp.pathType === "relative" || imp.pathType === "absolute" || imp.pathType === "alias";
 
         if (!isRelativeOrAbsolute) continue;
 
@@ -293,9 +279,7 @@ async function updateImportExtensions(
   return results;
 }
 
-export async function migrateToNodeNext(
-  dryRun = false,
-): Promise<MigrationResult[]> {
+export async function migrateToNodeNext(dryRun = false): Promise<MigrationResult[]> {
   const results: MigrationResult[] = [];
 
   // update tsconfig.json
@@ -313,9 +297,7 @@ export async function migrateToNodeNext(
   return results;
 }
 
-export async function migrateToBundler(
-  dryRun = false,
-): Promise<MigrationResult[]> {
+export async function migrateToBundler(dryRun = false): Promise<MigrationResult[]> {
   const results: MigrationResult[] = [];
 
   // update tsconfig.json

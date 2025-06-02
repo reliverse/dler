@@ -38,20 +38,13 @@ export async function checkPackageJsonHealth(): Promise<CheckResult> {
     ) {
       issues.push({
         type: "dler-config-health",
-        message:
-          "package.json must have 'keywords' array with at least one keyword",
+        message: "package.json must have 'keywords' array with at least one keyword",
         file: "package.json",
       });
     }
 
     // Forbidden fields
-    const forbiddenFields = [
-      "bin",
-      "exports",
-      "files",
-      "main",
-      "module",
-    ] as const;
+    const forbiddenFields = ["bin", "exports", "files", "main", "module"] as const;
     for (const field of forbiddenFields) {
       if (field in packageJson) {
         issues.push({

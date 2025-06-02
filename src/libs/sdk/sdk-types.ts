@@ -1,10 +1,20 @@
+import type { BumpMode } from "@reliverse/bleump";
+import type { RollupAliasOptions } from "@rollup/plugin-alias";
+import type { RollupCommonJSOptions } from "@rollup/plugin-commonjs";
+import type { RollupJsonOptions } from "@rollup/plugin-json";
+import type { RollupNodeResolveOptions } from "@rollup/plugin-node-resolve";
+import type { RollupReplaceOptions } from "@rollup/plugin-replace";
 import type { FilterPattern } from "@rollup/pluginutils";
 import type { CommonOptions, Loader } from "esbuild";
 import type { Hookable } from "hookable";
 import type { Jiti, JitiOptions } from "jiti";
 import type { PackageJson } from "pkg-types";
 import type { WatcherOptions } from "rollup";
+import type { RollupOptions as _RollupOptions, OutputOptions, Plugin, RollupBuild } from "rollup";
+import type { Options as RollupDtsOptions } from "rollup-plugin-dts";
 import type { Schema } from "untyped";
+
+import type { MkdistOptions } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/make";
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -523,13 +533,7 @@ export type DlerConfig = {
  * - rollup: A traditional bundler with an extensive plugin ecosystem
  * - untyped: Types and markdown generation from a config object
  */
-export type BundlerName =
-  | "bun"
-  | "copy"
-  | "jsr"
-  | "mkdist"
-  | "rollup"
-  | "untyped";
+export type BundlerName = "bun" | "copy" | "jsr" | "mkdist" | "rollup" | "untyped";
 
 export type Esbuild = "es2019" | "es2020" | "es2021" | "es2022" | "es2023";
 
@@ -659,23 +663,15 @@ export type CopyBuildEntry = BaseBuildEntry & {
 
 export type CopyHooks = {
   "copy:done": (ctx: BuildContext) => Promise<void> | void;
-  "copy:entries": (
-    ctx: BuildContext,
-    entries: CopyBuildEntry[],
-  ) => Promise<void> | void;
+  "copy:entries": (ctx: BuildContext, entries: CopyBuildEntry[]) => Promise<void> | void;
 };
-
-import type { MkdistOptions } from "mkdist";
 
 export type MkdistBuildEntry = _BaseAndMkdist & {
   builder: "mkdist";
 };
 export type MkdistHooks = {
   "mkdist:done": (ctx: BuildContext) => Promise<void> | void;
-  "mkdist:entries": (
-    ctx: BuildContext,
-    entries: MkdistBuildEntry[],
-  ) => Promise<void> | void;
+  "mkdist:entries": (ctx: BuildContext, entries: MkdistBuildEntry[]) => Promise<void> | void;
   "mkdist:entry:build": (
     ctx: BuildContext,
     entry: MkdistBuildEntry,
@@ -689,20 +685,6 @@ export type MkdistHooks = {
 };
 
 type _BaseAndMkdist = BaseBuildEntry & MkdistOptions;
-
-import type { BumpMode } from "@reliverse/bleump";
-import type { RollupAliasOptions } from "@rollup/plugin-alias";
-import type { RollupCommonJSOptions } from "@rollup/plugin-commonjs";
-import type { RollupJsonOptions } from "@rollup/plugin-json";
-import type { RollupNodeResolveOptions } from "@rollup/plugin-node-resolve";
-import type { RollupReplaceOptions } from "@rollup/plugin-replace";
-import type {
-  RollupOptions as _RollupOptions,
-  OutputOptions,
-  Plugin,
-  RollupBuild,
-} from "rollup";
-import type { Options as RollupDtsOptions } from "rollup-plugin-dts";
 
 export type RollupBuildEntry = BaseBuildEntry & {
   builder: "rollup";
@@ -806,23 +788,11 @@ export type RollupBuildOptions = {
 };
 
 export type RollupHooks = {
-  "rollup:build": (
-    ctx: BuildContext,
-    build: RollupBuild,
-  ) => Promise<void> | void;
+  "rollup:build": (ctx: BuildContext, build: RollupBuild) => Promise<void> | void;
   "rollup:done": (ctx: BuildContext) => Promise<void> | void;
-  "rollup:dts:build": (
-    ctx: BuildContext,
-    build: RollupBuild,
-  ) => Promise<void> | void;
-  "rollup:dts:options": (
-    ctx: BuildContext,
-    options: RollupOptions,
-  ) => Promise<void> | void;
-  "rollup:options": (
-    ctx: BuildContext,
-    options: RollupOptions,
-  ) => Promise<void> | void;
+  "rollup:dts:build": (ctx: BuildContext, build: RollupBuild) => Promise<void> | void;
+  "rollup:dts:options": (ctx: BuildContext, options: RollupOptions) => Promise<void> | void;
+  "rollup:options": (ctx: BuildContext, options: RollupOptions) => Promise<void> | void;
 };
 
 export type RollupOptions = _RollupOptions & {
@@ -836,10 +806,7 @@ export type UntypedBuildEntry = BaseBuildEntry & {
 
 export type UntypedHooks = {
   "untyped:done": (ctx: BuildContext) => Promise<void> | void;
-  "untyped:entries": (
-    ctx: BuildContext,
-    entries: UntypedBuildEntry[],
-  ) => Promise<void> | void;
+  "untyped:entries": (ctx: BuildContext, entries: UntypedBuildEntry[]) => Promise<void> | void;
   "untyped:entry:options": (
     ctx: BuildContext,
     entry: UntypedBuildEntry,
@@ -1028,6 +995,12 @@ export type BuildOptions = {
    * Watch mode options.
    */
   transpileWatchOptions: undefined | WatcherOptions;
+
+  /**
+   * Array of glob patterns specifying files/folders that should be copied directly instead of being built.
+   * These patterns are matched against the source directory and copied to the output directory.
+   */
+  dontBuildCopyInstead?: string[];
 };
 
 export type BuildPreset = (() => UnifiedBuildConfig) | UnifiedBuildConfig;
@@ -1060,6 +1033,24 @@ export type UnifiedBuildConfig = DeepPartial<Omit<BuildOptions, "entries">> & {
    * @see https://turing.com/kb/stub-vs-mock#what-exactly-is-a-stub?
    */
   stub?: boolean;
+
+  /**
+   * TypeScript compiler options for the build process.
+   */
+  typescript?: {
+    compilerOptions?: {
+      emitDeclarationOnly?: boolean;
+      declaration?: boolean;
+      noEmit?: boolean;
+      [key: string]: any;
+    };
+  };
+
+  /**
+   * Array of glob patterns specifying files/folders that should be copied directly instead of being built.
+   * These patterns are matched against the source directory and copied to the output directory.
+   */
+  dontBuildCopyInstead?: string[];
 };
 
 type DeepPartial<T> = { [P in keyof T]?: DeepPartial<T[P]> };
@@ -1104,12 +1095,7 @@ export type PerfTimer = {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-type DirectoryType =
-  | "src"
-  | "dist-npm"
-  | "dist-jsr"
-  | "dist-libs/npm"
-  | "dist-libs/jsr";
+type DirectoryType = "src" | "dist-npm" | "dist-jsr" | "dist-libs/npm" | "dist-libs/jsr";
 
 export type RulesCheckOptions = {
   directory: DirectoryType;

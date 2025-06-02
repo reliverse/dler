@@ -25,11 +25,7 @@ function isCommonJSFile(content: string): boolean {
   return content.includes("module.exports") || content.includes("require(");
 }
 
-async function getAllFilesAsync(
-  dir: string,
-  baseDir = dir,
-  recursive = true,
-): Promise<string[]> {
+async function getAllFilesAsync(dir: string, baseDir = dir, recursive = true): Promise<string[]> {
   let fileList: string[] = [];
   const entries = await readdir(dir, {
     encoding: "utf-8",
@@ -49,11 +45,7 @@ async function getAllFilesAsync(
   return fileList;
 }
 
-async function prepareCLIFiles(
-  revert = false,
-  recursive = true,
-  useDtsTxtForPrepareMyCLI = false,
-) {
+async function prepareCLIFiles(revert = false, recursive = true, useDtsTxtForPrepareMyCLI = false) {
   relinka("log", "Starting CLI file preparation...");
 
   const configPath = ".config/dler.ts";
@@ -61,9 +53,7 @@ async function prepareCLIFiles(
 
   if (existsSync(configPath)) {
     const configContent = readFileSync(configPath, "utf-8");
-    const configMatch = configContent.match(
-      /coreEntrySrcDir:\s*["']([^"']+)["']/,
-    );
+    const configMatch = configContent.match(/coreEntrySrcDir:\s*["']([^"']+)["']/);
     srcDir = configMatch?.[1] ?? srcDir;
   }
 
@@ -112,10 +102,7 @@ async function prepareCLIFiles(
         relinka("log", `Renaming ${fullPath} to ${newName}`);
         await safeRename(fullPath, newName);
         renamedCount++;
-      } else if (
-        fileName === "package.json" &&
-        !fileName.endsWith(".json.json")
-      ) {
+      } else if (fileName === "package.json" && !fileName.endsWith(".json.json")) {
         const newName = join(dir, "package.json.json");
         relinka("log", `Renaming ${fullPath} to ${newName}`);
         await safeRename(fullPath, newName);
@@ -142,10 +129,7 @@ async function prepareCLIFiles(
     }
   }
 
-  relinka(
-    "log",
-    `CLI file preparation completed. Renamed ${renamedCount} files.`,
-  );
+  relinka("log", `CLI file preparation completed. Renamed ${renamedCount} files.`);
 }
 
 export default defineCommand({
@@ -177,14 +161,12 @@ export default defineCommand({
     },
     recursive: {
       type: "boolean",
-      description:
-        "Recursively process all files in subdirectories (default: true)",
+      description: "Recursively process all files in subdirectories (default: true)",
       default: true,
     },
     useDtsTxtForPrepareMyCLI: {
       type: "boolean",
-      description:
-        "Use .d.ts.txt extension for .d.ts files in prepareMyCLI mode (default: false)",
+      description: "Use .d.ts.txt extension for .d.ts files in prepareMyCLI mode (default: false)",
     },
   },
   async run({ args }) {
@@ -199,15 +181,10 @@ export default defineCommand({
 
     if (prepareMyCLI === true) {
       try {
-        await prepareCLIFiles(
-          revert === true,
-          recursive,
-          useDtsTxtForPrepareMyCLI,
-        );
+        await prepareCLIFiles(revert === true, recursive, useDtsTxtForPrepareMyCLI);
         relinka("log", "Successfully prepared CLI files");
       } catch (error: unknown) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
         relinka("error", `Error preparing CLI: ${errorMessage}`);
         process.exit(1);
       }
@@ -223,8 +200,7 @@ export default defineCommand({
       await safeRename(source, destination);
       relinka("log", `Successfully renamed '${source}' to '${destination}'`);
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
       relinka("error", `Error renaming: ${errorMessage}`);
       process.exit(1);
     }

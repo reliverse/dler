@@ -85,9 +85,7 @@ function getDefaultValueText(node: Node | undefined): string | undefined {
     return node.getText();
   }
 
-  console.warn(
-    `Unhandled default value type: ${node.getKindName()}, text: ${node.getText()}`,
-  );
+  console.warn(`Unhandled default value type: ${node.getKindName()}, text: ${node.getText()}`);
   return node.getText(); // Best effort
 }
 
@@ -122,9 +120,7 @@ async function transformCommand(
         }
       }
     } else {
-      console.warn(
-        `Unhandled action function type: ${info.actionFunction.getKindName()}`,
-      );
+      console.warn(`Unhandled action function type: ${info.actionFunction.getKindName()}`);
     }
   }
 
@@ -192,10 +188,7 @@ await runMain(${varDecl.getName()});
 /**
  * Extracts command information from a Commander command chain
  */
-function extractCommandInfo(
-  node: Node,
-  sourceFile: SourceFile,
-): CommandInfo | undefined {
+function extractCommandInfo(node: Node, sourceFile: SourceFile): CommandInfo | undefined {
   const info: CommandInfo = {
     options: [],
   };
@@ -245,11 +238,7 @@ function extractCommandInfo(
   return undefined;
 }
 
-function handleActionMethod(
-  node: CallExpression,
-  info: CommandInfo,
-  sourceFile: SourceFile,
-) {
+function handleActionMethod(node: CallExpression, info: CommandInfo, sourceFile: SourceFile) {
   const [actionArg] = node.getArguments();
   if (actionArg && Node.isIdentifier(actionArg)) {
     const funcDef =
@@ -274,9 +263,7 @@ function handleActionMethod(
 function handleOptionMethod(node: CallExpression, info: CommandInfo) {
   const [flagsArg, descArg, defaultValueArg] = node.getArguments();
   if (flagsArg && Node.isStringLiteral(flagsArg)) {
-    const { longName, shortName, takesValue } = parseCommanderFlags(
-      flagsArg.getLiteralText(),
-    );
+    const { longName, shortName, takesValue } = parseCommanderFlags(flagsArg.getLiteralText());
     info.options.push({
       name: longName,
       shortFlag: shortName,
@@ -284,9 +271,7 @@ function handleOptionMethod(node: CallExpression, info: CommandInfo) {
       description: Node.isStringLiteral(descArg)
         ? descArg.getLiteralText()
         : "TODO: Add description",
-      defaultValue: defaultValueArg
-        ? getDefaultValueText(defaultValueArg)
-        : undefined,
+      defaultValue: defaultValueArg ? getDefaultValueText(defaultValueArg) : undefined,
     });
   }
 }
@@ -360,9 +345,7 @@ async function transformFile(filePath: string, project: Project) {
   const remptsImport = sourceFile.getImportDeclaration("@reliverse/rempts");
   const neededRemptsImports = ["defineCommand", "runMain"];
   if (remptsImport) {
-    const existingNamedImports = remptsImport
-      .getNamedImports()
-      .map((ni) => ni.getName());
+    const existingNamedImports = remptsImport.getNamedImports().map((ni) => ni.getName());
     for (const neededImport of neededRemptsImports) {
       if (!existingNamedImports.includes(neededImport)) {
         remptsImport.addNamedImport(neededImport);
@@ -376,9 +359,7 @@ async function transformFile(filePath: string, project: Project) {
   }
 
   // Process Variable Declarations
-  const variableDeclarations = sourceFile.getDescendantsOfKind(
-    SyntaxKind.VariableDeclaration,
-  );
+  const variableDeclarations = sourceFile.getDescendantsOfKind(SyntaxKind.VariableDeclaration);
 
   for (const varDecl of variableDeclarations) {
     const initializer = varDecl.getInitializer();

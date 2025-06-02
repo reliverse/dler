@@ -1,9 +1,4 @@
-import type {
-  Spell,
-  SpellExecutionOptions,
-  SpellResult,
-  SpellType,
-} from "./spell-types";
+import type { Spell, SpellExecutionOptions, SpellResult, SpellType } from "./spell-types";
 
 import * as executors from "./spell-executors";
 import * as fs from "./spell-filesystem";
@@ -78,10 +73,7 @@ export const processFile = async (
       results.push(result);
 
       // Stop processing this file if it's been removed or renamed
-      if (
-        result.success &&
-        (spell.type === "remove-file" || spell.type === "rename-file")
-      ) {
+      if (result.success && (spell.type === "remove-file" || spell.type === "rename-file")) {
         break;
       }
     }
@@ -99,9 +91,7 @@ export const processFile = async (
   }
 };
 
-export const spells = async (
-  options: SpellExecutionOptions = {},
-): Promise<SpellResult[]> => {
+export const spells = async (options: SpellExecutionOptions = {}): Promise<SpellResult[]> => {
   const results: SpellResult[] = [];
 
   try {

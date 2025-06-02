@@ -3,19 +3,10 @@ import { relinka } from "@reliverse/relinka";
 import { createJiti, type JitiOptions } from "jiti";
 import { mkdir, writeFile } from "node:fs/promises";
 import { pascalCase } from "scule";
-import {
-  generateMarkdown,
-  generateTypes,
-  type InputObject,
-  resolveSchema,
-} from "untyped";
+import { generateMarkdown, generateTypes, type InputObject, resolveSchema } from "untyped";
 import untypedPlugin from "untyped/babel-plugin";
 
-import type {
-  BuildContext,
-  UntypedBuildEntry,
-  UntypedOutputs,
-} from "~/libs/sdk/sdk-types";
+import type { BuildContext, UntypedBuildEntry, UntypedOutputs } from "~/libs/sdk/sdk-types";
 
 export async function typesBuild(ctx: BuildContext): Promise<void> {
   const entries = ctx.options.entries.filter(
@@ -48,12 +39,7 @@ export async function typesBuild(ctx: BuildContext): Promise<void> {
       };
 
       // Allow hooks to modify the jitiOptions object
-      await ctx.hooks.callHook(
-        "untyped:entry:options",
-        ctx,
-        entry,
-        jitiOptions,
-      );
+      await ctx.hooks.callHook("untyped:entry:options", ctx, entry, jitiOptions);
 
       // Passing the modified jitiOptions object to createJiti
       const untypedJiti = createJiti(ctx.options.rootDir, jitiOptions);
@@ -81,10 +67,7 @@ export async function typesBuild(ctx: BuildContext): Promise<void> {
         rawSchemaModule.default !== null
       ) {
         rawSchema = rawSchemaModule.default as InputObject;
-      } else if (
-        typeof rawSchemaModule === "object" &&
-        rawSchemaModule !== null
-      ) {
+      } else if (typeof rawSchemaModule === "object" && rawSchemaModule !== null) {
         rawSchema = rawSchemaModule as InputObject;
       } else {
         console.warn(
@@ -138,24 +121,19 @@ export async function typesBuild(ctx: BuildContext): Promise<void> {
         const fullOutputPath = resolve(distDir, output.fileName);
         // Use push to add the promise to the array
         writePromises.push(
-          writeFile(fullOutputPath, output.contents, "utf8").catch(
-            (writeError: any) => {
-              // Log write error but allow other writes to proceed
-              console.error(
-                `[untyped] Failed to write output file ${fullOutputPath} for entry '${entry.name}': ${writeError.message}`,
-              );
-            },
-          ),
+          writeFile(fullOutputPath, output.contents, "utf8").catch((writeError: any) => {
+            // Log write error but allow other writes to proceed
+            console.error(
+              `[untyped] Failed to write output file ${fullOutputPath} for entry '${entry.name}': ${writeError.message}`,
+            );
+          }),
         );
       }
 
       // Wait for all files for this entry to finish writing (or fail)
       await Promise.all(writePromises);
 
-      relinka(
-        "verbose",
-        `[untyped] Generated outputs for '${entry.name}' in ${distDir}`,
-      );
+      relinka("verbose", `[untyped] Generated outputs for '${entry.name}' in ${distDir}`);
     } catch (error: any) {
       // Catch errors specific to processing this entry
       console.error(

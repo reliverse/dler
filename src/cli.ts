@@ -1,3 +1,4 @@
+import { re } from "@reliverse/relico";
 import { relinka } from "@reliverse/relinka";
 import {
   runMain,
@@ -12,6 +13,7 @@ import {
 import { promptAggCommand } from "./app/agg/run";
 import { getBuildCmd, getPubCmd, getInitCmd, getRenameCmd } from "./app/cmds";
 import { showEndPrompt, showStartPrompt } from "./libs/sdk/sdk-impl/cfg/info";
+import { ensureDlerConfig } from "./libs/sdk/sdk-impl/cfg/init";
 
 const INTERACTIVE_CMDS = ["agg", "build", "pub"];
 
@@ -47,6 +49,8 @@ const main = defineCommand({
     const isDev = args.dev;
     relinka("verbose", `Running in ${isDev ? "dev" : "prod"} mode`);
 
+    await ensureDlerConfig(args.dev);
+
     const isCI = process.env.CI === "true";
     const isNonInteractive = !process.stdout.isTTY;
     if (isCI || isNonInteractive) {
@@ -62,22 +66,21 @@ const main = defineCommand({
     const cmdToRun = await selectPrompt({
       title: "Select a command to run",
       options: [
-        { value: "agg", label: "agg" },
-        { value: "build", label: "build" },
-        { value: "pub", label: "pub" },
-        { value: "copy", label: "copy" },
-        {
-          value: "init",
-          label: "Initialize files",
-        },
+        { value: "build", label: "build project" },
+        { value: "pub", label: "publish project" },
+        { value: "agg", label: "aggregate files" },
+        { separator: true },
+        { value: "utils", label: re.bold("UTILS"), disabled: true },
+        { separator: true },
+        { value: "copy", label: "copy files" },
+        { value: "init", label: "init files" },
         {
           value: "rename-prepare",
-          label:
-            "My project is a bootstrapper CLI (apply rename optimizations)",
+          label: "[experimental] my project is a bootstrapper cli (apply rename optimizations)",
         },
         {
           value: "rename-prepare-revert",
-          label: "Revert rename CLI files optimizations",
+          label: "[experimental] revert rename cli files optimizations",
         },
       ],
     });

@@ -1,11 +1,7 @@
 import { extname } from "@reliverse/pathkit";
 
 import type { AllowedFileExtensionsType } from "~/libs/sdk/sdk-impl/rules/rules-consts";
-import type {
-  CheckIssue,
-  CheckResult,
-  RulesCheckOptions,
-} from "~/libs/sdk/sdk-types";
+import type { CheckIssue, CheckResult, RulesCheckOptions } from "~/libs/sdk/sdk-types";
 
 import {
   ALLOWED_FILE_EXTENSIONS,
@@ -32,18 +28,12 @@ function getAllowedFileExtensions(
 }
 
 // check file extensions (actual files on disk)
-export async function checkFileExtensions(
-  options: RulesCheckOptions,
-): Promise<CheckResult> {
+export async function checkFileExtensions(options: RulesCheckOptions): Promise<CheckResult> {
   const startTime = Date.now();
   const issues: CheckIssue[] = [];
   const { directory, strict, moduleResolution, onProgress } = options;
 
-  const allowedExts = getAllowedFileExtensions(
-    directory,
-    strict,
-    moduleResolution,
-  );
+  const allowedExts = getAllowedFileExtensions(directory, strict, moduleResolution);
 
   try {
     const files = await getAllFiles(directory, onProgress);
@@ -66,16 +56,11 @@ export async function checkFileExtensions(
           // special messages for common issues
           let message = `file has disallowed extension "${ext}" (allowed: ${allowedExts.join(", ")})`;
 
-          if (
-            ext === ".ts" &&
-            (directory === "dist-npm" || directory === "dist-libs/npm")
-          ) {
+          if (ext === ".ts" && (directory === "dist-npm" || directory === "dist-libs/npm")) {
             message = `typescript file found in javascript environment: ${file} (should be compiled to .js)`;
           } else if (
             ext === ".js" &&
-            (directory === "src" ||
-              directory === "dist-jsr" ||
-              directory === "dist-libs/jsr")
+            (directory === "src" || directory === "dist-jsr" || directory === "dist-libs/jsr")
           ) {
             message = `javascript file found in typescript environment: ${file} (should be .ts)`;
           }

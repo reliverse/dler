@@ -1,9 +1,4 @@
-import {
-  selectPrompt,
-  runCmd,
-  confirmPrompt,
-  inputPrompt,
-} from "@reliverse/rempts";
+import { selectPrompt, runCmd, confirmPrompt, inputPrompt } from "@reliverse/rempts";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 

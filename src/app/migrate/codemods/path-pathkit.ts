@@ -24,11 +24,7 @@ async function getAllTsFiles(dir: string): Promise<string[]> {
       const fullPath = join(dir, entry);
       const stats = await stat(fullPath);
 
-      if (
-        stats.isDirectory() &&
-        !entry.startsWith(".") &&
-        entry !== "node_modules"
-      ) {
+      if (stats.isDirectory() && !entry.startsWith(".") && entry !== "node_modules") {
         const subFiles = await getAllTsFiles(fullPath);
         files.push(...subFiles);
       } else if (stats.isFile()) {
@@ -45,9 +41,7 @@ async function getAllTsFiles(dir: string): Promise<string[]> {
   return files;
 }
 
-export async function migratePathToPathkit(
-  dryRun = false,
-): Promise<MigrationResult[]> {
+export async function migratePathToPathkit(dryRun = false): Promise<MigrationResult[]> {
   const results: MigrationResult[] = [];
   const files = await getAllTsFiles(".");
 
@@ -60,65 +54,45 @@ export async function migratePathToPathkit(
       // replace pathe imports with pathkit
       const patheImportRegex = /from\s+["']pathe["']/g;
       if (patheImportRegex.test(content)) {
-        modified = modified.replace(
-          patheImportRegex,
-          'from "@reliverse/pathkit"',
-        );
+        modified = modified.replace(patheImportRegex, 'from "@reliverse/pathkit"');
         changes.push("Updated pathe imports to @reliverse/pathkit");
       }
 
       // replace pathe/utils imports with pathkit (utils are in main package)
       const patheUtilsRegex = /from\s+["']pathe\/utils["']/g;
       if (patheUtilsRegex.test(content)) {
-        modified = modified.replace(
-          patheUtilsRegex,
-          'from "@reliverse/pathkit"',
-        );
+        modified = modified.replace(patheUtilsRegex, 'from "@reliverse/pathkit"');
         changes.push("Updated pathe/utils imports to @reliverse/pathkit");
       }
 
       // replace node:path imports with pathkit (handles both default and named exports)
-      const nodePathImportRegex =
-        /import\s+(?:(\{[^}]*\})|(\w+))\s+from\s+["']node:path["']/g;
+      const nodePathImportRegex = /import\s+(?:(\{[^}]*\})|(\w+))\s+from\s+["']node:path["']/g;
       if (nodePathImportRegex.test(content)) {
-        modified = modified.replace(
-          nodePathImportRegex,
-          (match, namedExports, defaultExport) => {
-            if (namedExports) {
-              return `import ${namedExports} from "@reliverse/pathkit"`;
-            }
-            return `import ${defaultExport} from "@reliverse/pathkit"`;
-          },
-        );
+        modified = modified.replace(nodePathImportRegex, (_match, namedExports, defaultExport) => {
+          if (namedExports) {
+            return `import ${namedExports} from "@reliverse/pathkit"`;
+          }
+          return `import ${defaultExport} from "@reliverse/pathkit"`;
+        });
         changes.push("Updated node:path imports to @reliverse/pathkit");
       }
 
       // replace require statements
       const patheRequireRegex = /require\s*\(\s*["']pathe["']\s*\)/g;
       if (patheRequireRegex.test(content)) {
-        modified = modified.replace(
-          patheRequireRegex,
-          'require("@reliverse/pathkit")',
-        );
+        modified = modified.replace(patheRequireRegex, 'require("@reliverse/pathkit")');
         changes.push("Updated pathe require to @reliverse/pathkit");
       }
 
-      const patheUtilsRequireRegex =
-        /require\s*\(\s*["']pathe\/utils["']\s*\)/g;
+      const patheUtilsRequireRegex = /require\s*\(\s*["']pathe\/utils["']\s*\)/g;
       if (patheUtilsRequireRegex.test(content)) {
-        modified = modified.replace(
-          patheUtilsRequireRegex,
-          'require("@reliverse/pathkit")',
-        );
+        modified = modified.replace(patheUtilsRequireRegex, 'require("@reliverse/pathkit")');
         changes.push("Updated pathe/utils require to @reliverse/pathkit");
       }
 
       const nodePathRequireRegex = /require\s*\(\s*["']node:path["']\s*\)/g;
       if (nodePathRequireRegex.test(content)) {
-        modified = modified.replace(
-          nodePathRequireRegex,
-          'require("@reliverse/pathkit")',
-        );
+        modified = modified.replace(nodePathRequireRegex, 'require("@reliverse/pathkit")');
         changes.push("Updated node:path require to @reliverse/pathkit");
       }
 
@@ -169,9 +143,7 @@ async function updatePackageJson(
       for (const pkg of config.remove) {
         if (packageJson.dependencies?.[pkg]) {
           packageJson.dependencies = Object.fromEntries(
-            Object.entries(packageJson.dependencies).filter(
-              ([key]) => key !== pkg,
-            ),
+            Object.entries(packageJson.dependencies).filter(([key]) => key !== pkg),
           );
           packageChanged = true;
           packageChanges.push(`Removed ${pkg} from dependencies`);
@@ -179,9 +151,7 @@ async function updatePackageJson(
 
         if (packageJson.devDependencies?.[pkg]) {
           packageJson.devDependencies = Object.fromEntries(
-            Object.entries(packageJson.devDependencies).filter(
-              ([key]) => key !== pkg,
-            ),
+            Object.entries(packageJson.devDependencies).filter(([key]) => key !== pkg),
           );
           packageChanged = true;
           packageChanges.push(`Removed ${pkg} from devDependencies`);
@@ -199,11 +169,7 @@ async function updatePackageJson(
 
       if (packageChanged) {
         if (!dryRun) {
-          await writeFile(
-            packageJsonPath,
-            JSON.stringify(packageJson, null, 2) + "\n",
-            "utf-8",
-          );
+          await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n", "utf-8");
         }
 
         results.push({

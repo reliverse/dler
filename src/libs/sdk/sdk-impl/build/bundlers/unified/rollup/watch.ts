@@ -20,10 +20,7 @@ export function rollupWatch(rollupOptions: RollupOptions): void {
     `[dler] [rollup] Starting watchers for entries: ${inputs.map((input) => `./${relative(process.cwd(), input)}`).join(", ")}`,
   );
 
-  relinka(
-    "warn",
-    "[dler] [rollup] Watch mode is experimental and may be unstable",
-  );
+  relinka("warn", "[dler] [rollup] Watch mode is experimental and may be unstable");
 
   transpileWatcher.on("change", (id, { event }) => {
     relinka("log", `${relative(".", id)} was ${event}d`);

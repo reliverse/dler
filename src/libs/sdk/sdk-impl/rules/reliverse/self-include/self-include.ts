@@ -2,22 +2,13 @@ import { getFileImportsExports, extname } from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 
-import type {
-  CheckIssue,
-  CheckResult,
-  RulesCheckOptions,
-} from "~/libs/sdk/sdk-types";
+import type { CheckIssue, CheckResult, RulesCheckOptions } from "~/libs/sdk/sdk-types";
 
 import { loadConfig } from "~/libs/sdk/sdk-impl/cfg/load";
-import {
-  getAllFiles,
-  getLineNumber,
-} from "~/libs/sdk/sdk-impl/rules/rules-utils";
+import { getAllFiles, getLineNumber } from "~/libs/sdk/sdk-impl/rules/rules-utils";
 
 // check for self-includes in imports/exports
-export async function checkSelfInclude(
-  options: RulesCheckOptions,
-): Promise<CheckResult> {
+export async function checkSelfInclude(options: RulesCheckOptions): Promise<CheckResult> {
   const startTime = Date.now();
   const issues: CheckIssue[] = [];
   const { directory, onProgress } = options;
@@ -25,9 +16,7 @@ export async function checkSelfInclude(
 
   try {
     // Get package name from package.json
-    const packageJson = JSON.parse(
-      await fs.readFile("package.json", "utf-8"),
-    ) as {
+    const packageJson = JSON.parse(await fs.readFile("package.json", "utf-8")) as {
       name: string;
     };
     const packageName = packageJson.name;

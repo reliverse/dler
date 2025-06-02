@@ -6,8 +6,8 @@ export {
 } from "./sdk-impl/build/build-regular";
 export { autoPreset } from "./sdk-impl/build/bundlers/unified/auto";
 export { unifiedBuild } from "./sdk-impl/build/bundlers/unified/build";
-export { copyBuild } from "./sdk-impl/build/bundlers/unified/copy/copy";
-export { mkdistBuild } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist";
+export { copyBuild } from "./sdk-impl/build/bundlers/unified/copy/copy-mod";
+export { mkdistBuild } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-mod";
 export { rollupBuild } from "./sdk-impl/build/bundlers/unified/rollup/build";
 export { getRollupOptions } from "./sdk-impl/build/bundlers/unified/rollup/config";
 export {
@@ -30,7 +30,7 @@ export {
   resolveAliases,
 } from "./sdk-impl/build/bundlers/unified/rollup/utils";
 export { rollupWatch } from "./sdk-impl/build/bundlers/unified/rollup/watch";
-export { typesBuild } from "./sdk-impl/build/bundlers/unified/untyped/index";
+export { typesBuild } from "./sdk-impl/build/bundlers/unified/untyped/untyped-mod";
 export {
   arrayIncludes,
   dumpObject,

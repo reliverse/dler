@@ -26,14 +26,8 @@ export async function processLibraryFlow(
   isDev: boolean,
   config: DlerConfig,
 ): Promise<void> {
-  if (
-    config.libsActMode !== "libs-only" &&
-    config.libsActMode !== "main-and-libs"
-  ) {
-    relinka(
-      "verbose",
-      "Skipping libs build/publish as libsActMode is set to 'main-project-only'",
-    );
+  if (config.libsActMode !== "libs-only" && config.libsActMode !== "main-and-libs") {
+    relinka("verbose", "Skipping libs build/publish as libsActMode is set to 'main-project-only'");
     return;
   }
 
@@ -145,9 +139,7 @@ export async function libraries_buildPublish(
     return async () => {
       try {
         if (!libConfig.libMainFile) {
-          throw new Error(
-            `Library ${libName} is missing "libMainFile" property.`,
-          );
+          throw new Error(`Library ${libName} is missing "libMainFile" property.`);
         }
 
         // Determine top-level folder name for dist output
@@ -178,8 +170,7 @@ export async function libraries_buildPublish(
           `Processing library ${libName}: libMainDir=${libMainDir}, libMainFile=${libMainFile}`,
         );
 
-        const libTranspileMinify =
-          (libConfig as any)?.libTranspileMinify === true;
+        const libTranspileMinify = (libConfig as any)?.libTranspileMinify === true;
 
         // 1. Build library
         await library_buildLibrary({
@@ -217,8 +208,7 @@ export async function libraries_buildPublish(
         // 2. Publish if not paused
         if (!commonPubPause && !libConfig.libPubPause) {
           const effectivePubRegistry =
-            libConfig.libPubRegistry ||
-            (commonPubRegistry as "jsr" | "npm" | "npm-jsr");
+            libConfig.libPubRegistry || (commonPubRegistry as "jsr" | "npm" | "npm-jsr");
           await library_publishLibrary(
             effectivePubRegistry,
             libName,
@@ -232,10 +222,7 @@ export async function libraries_buildPublish(
             timer,
           );
         } else if (libConfig.libPubPause && !commonPubPause) {
-          relinka(
-            "log",
-            `Publishing is paused for lib ${libName} (libPubPause: true)`,
-          );
+          relinka("log", `Publishing is paused for lib ${libName} (libPubPause: true)`);
         }
       } catch (error) {
         relinka(
@@ -264,9 +251,7 @@ export async function libraries_buildPublish(
         relinka(
           "error",
           `AggregateError: ${
-            individualError instanceof Error
-              ? individualError.message
-              : String(individualError)
+            individualError instanceof Error ? individualError.message : String(individualError)
           }`,
         );
       }

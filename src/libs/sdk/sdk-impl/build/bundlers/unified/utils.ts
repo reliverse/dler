@@ -5,26 +5,16 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { createJiti } from "jiti";
 import { readdirSync, statSync } from "node:fs";
-import fsp from "node:fs/promises";
 
-import type {
-  BuildContext,
-  BuildPreset,
-  UnifiedBuildConfig,
-} from "~/libs/sdk/sdk-types";
+import type { BuildContext, BuildPreset, UnifiedBuildConfig } from "~/libs/sdk/sdk-types";
 
 import { autoPreset } from "./auto";
 
 type OutputDescriptor = { file: string; type?: "cjs" | "esm" };
 
-export function arrayIncludes(
-  arr: (RegExp | string)[],
-  searchElement: string,
-): boolean {
+export function arrayIncludes(arr: (RegExp | string)[], searchElement: string): boolean {
   return arr.some((entry) =>
-    entry instanceof RegExp
-      ? entry.test(searchElement)
-      : entry === searchElement,
+    entry instanceof RegExp ? entry.test(searchElement) : entry === searchElement,
   );
 }
 
@@ -68,9 +58,7 @@ export function inferPkgExternals(pkg: PackageJson): (RegExp | string)[] {
   const externals: (RegExp | string)[] = [
     ...Object.keys(pkg.dependencies || {}),
     ...Object.keys(pkg.peerDependencies || {}),
-    ...Object.keys(pkg.devDependencies || {}).filter((dep) =>
-      dep.startsWith("@types/"),
-    ),
+    ...Object.keys(pkg.devDependencies || {}).filter((dep) => dep.startsWith("@types/")),
     ...Object.keys(pkg.optionalDependencies || {}),
   ];
 
@@ -138,26 +126,22 @@ export async function resolvePreset(
 }
 
 export async function rmdir(dir: string): Promise<void> {
-  await fsp.unlink(dir).catch(() => {
+  await fs.unlink(dir).catch(() => {
     /* Ignore error if file doesn't exist */
   });
-  await fsp.rm(dir, { force: true, recursive: true }).catch(() => {
+  await fs.rm(dir, { force: true, recursive: true }).catch(() => {
     /* Ignore error if directory doesn't exist or can't be removed */
   });
 }
 
-export async function symlink(
-  from: string,
-  to: string,
-  force = true,
-): Promise<void> {
+export async function symlink(from: string, to: string, force = true): Promise<void> {
   await fs.ensureDir(to);
   if (force) {
-    await fsp.unlink(to).catch(() => {
+    await fs.unlink(to).catch(() => {
       /* Ignore error if file doesn't exist */
     });
   }
-  await fsp.symlink(from, to, "junction");
+  await fs.symlink(from, to, "junction");
 }
 
 export function warn(ctx: BuildContext, message: string): void {
@@ -200,19 +184,13 @@ function inferExportType(
         return "esm";
       }
       const [newCondition] = previousConditions;
-      return inferExportType(
-        newCondition || "import",
-        previousConditions.slice(1),
-        filename,
-      );
+      return inferExportType(newCondition || "import", previousConditions.slice(1), filename);
     }
   }
 }
 
 function pathToRegex(path: string): RegExp | string {
   return path.includes("*")
-    ? new RegExp(
-        `^${path.replace(/\./g, String.raw`\.`).replace(/\*/g, ".*")}$`,
-      )
+    ? new RegExp(`^${path.replace(/\./g, String.raw`\.`).replace(/\*/g, ".*")}$`)
     : path;
 }

@@ -30,10 +30,7 @@ export function getAllSourceFiles(dir: string): string[] {
  * it will generate multiple chunks (e.g., 300 lines, 300 lines, 300 lines, 100 lines).
  * Returns the new file paths after splitting.
  */
-export function splitLargeFileByLines(
-  filePath: string,
-  threshold: number,
-): string[] {
+export function splitLargeFileByLines(filePath: string, threshold: number): string[] {
   const originalContent = fs.readFileSync(filePath, "utf8");
   const lines = originalContent.split("\n");
   if (lines.length <= threshold) {
@@ -76,17 +73,9 @@ export function splitLargeFileByLines(
  * - If a function is over a threshold, attempt to break it into two smaller functions.
  * - Currently this is naive. It basically splits the function body roughly in the middle.
  */
-export function splitLargeFunctions(
-  filePath: string,
-  funcLineThreshold: number,
-): void {
+export function splitLargeFunctions(filePath: string, funcLineThreshold: number): void {
   const sourceCode = fs.readFileSync(filePath, "utf8");
-  const sourceFile = ts.createSourceFile(
-    filePath,
-    sourceCode,
-    ts.ScriptTarget.ESNext,
-    true,
-  );
+  const sourceFile = ts.createSourceFile(filePath, sourceCode, ts.ScriptTarget.ESNext, true);
 
   // We'll build a new source string that includes rewritten large functions.
   let newSource = sourceCode; // naive approach modifies code textually
@@ -157,10 +146,7 @@ function ${helperFunctionName}() {
 `;
 
       // Replace the old function body with the new text
-      newSource =
-        newSource.slice(0, fn.startPos) +
-        replacementText +
-        newSource.slice(fn.endPos);
+      newSource = newSource.slice(0, fn.startPos) + replacementText + newSource.slice(fn.endPos);
     });
 
   // Overwrite the file with our naive splits

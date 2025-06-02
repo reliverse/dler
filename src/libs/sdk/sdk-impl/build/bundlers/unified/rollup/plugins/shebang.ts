@@ -1,7 +1,7 @@
 import type { Plugin } from "rollup";
 
 import { resolve } from "@reliverse/pathkit";
-import { promises as fsp } from "node:fs";
+import fs from "@reliverse/relifso";
 
 const SHEBANG_RE = /^#![^\n]*/;
 
@@ -11,7 +11,7 @@ export function getShebang(code: string, append = "\n"): string {
 }
 
 export async function makeExecutable(filePath: string): Promise<void> {
-  await fsp.chmod(filePath, 0o755 /* rwx r-x r-x */).catch(() => {
+  await fs.chmod(filePath, 0o755 /* rwx r-x r-x */).catch(() => {
     /* it is okay if chmod fails */
   });
 }

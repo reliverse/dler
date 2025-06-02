@@ -101,10 +101,7 @@ import { third } from "@/components/third.ts";
           rmSync(testDir, { recursive: true, force: true });
         }
       } catch (error) {
-        console.error(
-          `Failed to clean up test directory ${testDir} after retry:`,
-          error,
-        );
+        console.error(`Failed to clean up test directory ${testDir} after retry:`, error);
       }
     }
   });
@@ -114,16 +111,12 @@ import { third } from "@/components/third.ts";
     await runCmd(cmd, ["--lib", "nodenext-bundler", "--target", "nodenext"]);
 
     // Check tsconfig.json
-    const tsConfig = JSON.parse(
-      await readFile(tsConfigPath, "utf-8"),
-    ) as TsConfig;
+    const tsConfig = JSON.parse(await readFile(tsConfigPath, "utf-8")) as TsConfig;
     expect(tsConfig.compilerOptions.moduleResolution).toBe("nodenext");
     expect(tsConfig.compilerOptions.module).toBe("nodenext");
 
     // Check package.json
-    const packageJson = JSON.parse(
-      await readFile(packageJsonPath, "utf-8"),
-    ) as PackageJson;
+    const packageJson = JSON.parse(await readFile(packageJsonPath, "utf-8")) as PackageJson;
     expect(packageJson.type).toBe("module");
 
     // Check test file
@@ -138,17 +131,13 @@ import { third } from "@/components/third.ts";
     await runCmd(cmd, ["--lib", "nodenext-bundler", "--target", "bundler"]);
 
     // Check tsconfig.json
-    const tsConfig = JSON.parse(
-      await readFile(tsConfigPath, "utf-8"),
-    ) as TsConfig;
+    const tsConfig = JSON.parse(await readFile(tsConfigPath, "utf-8")) as TsConfig;
     expect(tsConfig.compilerOptions.moduleResolution).toBe("bundler");
     expect(tsConfig.compilerOptions.module).toBe("preserve");
     expect(tsConfig.compilerOptions.noEmit).toBe(true);
 
     // Check package.json
-    const packageJson = JSON.parse(
-      await readFile(packageJsonPath, "utf-8"),
-    ) as PackageJson;
+    const packageJson = JSON.parse(await readFile(packageJsonPath, "utf-8")) as PackageJson;
     expect(packageJson.type).toBe("module");
 
     // Check test file
@@ -160,24 +149,14 @@ import { third } from "@/components/third.ts";
 
   test("should handle dry run correctly ()", async () => {
     const cmd = await getMigrateCmd();
-    await runCmd(cmd, [
-      "--lib",
-      "nodenext-bundler",
-      "--target",
-      "nodenext",
-      "--dryRun",
-    ]);
+    await runCmd(cmd, ["--lib", "nodenext-bundler", "--target", "nodenext", "--dryRun"]);
 
     // Check that files were not modified
-    const tsConfig = JSON.parse(
-      await readFile(tsConfigPath, "utf-8"),
-    ) as TsConfig;
+    const tsConfig = JSON.parse(await readFile(tsConfigPath, "utf-8")) as TsConfig;
     expect(tsConfig.compilerOptions.moduleResolution).toBe("node");
     expect(tsConfig.compilerOptions.module).toBe("commonjs");
 
-    const packageJson = JSON.parse(
-      await readFile(packageJsonPath, "utf-8"),
-    ) as PackageJson;
+    const packageJson = JSON.parse(await readFile(packageJsonPath, "utf-8")) as PackageJson;
     expect(packageJson.type).toBe("commonjs");
 
     const testContent = await readFile(testFile, "utf-8");

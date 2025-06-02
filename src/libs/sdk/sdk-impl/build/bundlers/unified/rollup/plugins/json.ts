@@ -12,12 +12,7 @@ export function JSONPlugin(options: RollupJsonOptions): Plugin {
     name: "dler-json",
     transform(code, id): TransformResult {
       const res = (plugin.transform as TransformHook).call(this, code, id);
-      if (
-        res &&
-        typeof res !== "string" &&
-        "code" in res &&
-        res.code?.startsWith(EXPORT_DEFAULT)
-      ) {
+      if (res && typeof res !== "string" && "code" in res && res.code?.startsWith(EXPORT_DEFAULT)) {
         res.code = res.code.replace(EXPORT_DEFAULT, "module.exports = ");
       }
       return res;
