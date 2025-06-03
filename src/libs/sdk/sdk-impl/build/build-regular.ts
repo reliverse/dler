@@ -26,7 +26,11 @@ import {
   PROJECT_ROOT,
   validExtensions,
 } from "~/libs/sdk/sdk-impl/utils/utils-consts";
-import { copyRootFile, deleteSpecificFiles } from "~/libs/sdk/sdk-impl/utils/utils-fs";
+import {
+  copyInsteadOfBuild,
+  copyRootFile,
+  deleteSpecificFiles,
+} from "~/libs/sdk/sdk-impl/utils/utils-fs";
 import { createJsrJSON, renameTsxFiles } from "~/libs/sdk/sdk-impl/utils/utils-jsr-json";
 import { regular_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-package-json-regular";
 import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
@@ -60,7 +64,6 @@ export async function regular_buildJsrDist(
   distJsrGenTsconfig: boolean,
   coreDeclarations: boolean,
 ): Promise<void> {
-  const isCLI = coreIsCLI.enabled;
   const outDirRoot = path.join(process.cwd(), distJsrDirName);
   const outDirBin = path.join(outDirRoot, config.coreBuildOutDir || "bin");
   const singleFile = path.join(process.cwd(), coreEntrySrcDir, coreEntryFile);
@@ -74,7 +77,7 @@ export async function regular_buildJsrDist(
 
     // Bundle the project
     await regular_bundleWithBuilder(distJsrBuilder, {
-      isCLI,
+      coreIsCLI: { enabled: coreIsCLI.enabled, scripts: coreIsCLI.scripts },
       coreDeclarations,
       outDir: outDirBin,
       singleFile,
@@ -163,7 +166,6 @@ export async function regular_buildNpmDist(
   timer: PerfTimer,
   coreDeclarations: boolean,
 ): Promise<void> {
-  const isCLI = coreIsCLI.enabled;
   const outDirRoot = path.join(process.cwd(), distNpmDirName);
   const outDirBin = path.join(outDirRoot, config.coreBuildOutDir || "bin");
   const singleFile = path.join(process.cwd(), coreEntrySrcDir, coreEntryFile);
@@ -177,7 +179,7 @@ export async function regular_buildNpmDist(
 
     // Bundle the project
     await regular_bundleWithBuilder(distNpmBuilder, {
-      isCLI,
+      coreIsCLI: { enabled: coreIsCLI.enabled, scripts: coreIsCLI.scripts },
       coreDeclarations,
       outDir: outDirBin,
       singleFile,
@@ -349,7 +351,7 @@ async function regular_bundleUsingJsr(src: string, dest: string): Promise<void> 
  * Bundles a regular project using a unified builder (rollup, mkdist, etc.).
  */
 async function regular_bundleUsingUnified(
-  isCLI: boolean,
+  coreIsCLI: { enabled: boolean; scripts: Record<string, string> },
   coreEntryFile: string,
   outDirBin: string,
   builder: BundlerName,
@@ -414,10 +416,14 @@ async function regular_bundleUsingUnified(
       showOutLog: true,
       transpileStub,
       transpileWatch: transpileWatch ?? false,
-      dontBuildCopyInstead: ["**/templates"],
     } satisfies UnifiedBuildConfig & { concurrency?: number };
 
-    await unifiedBuild(coreEntrySrcDir, isCLI, false, rootDir, unifiedBuildConfig, outDirBin);
+    await unifiedBuild(coreEntrySrcDir, coreIsCLI, false, rootDir, unifiedBuildConfig, outDirBin);
+
+    if (coreIsCLI.enabled) {
+      // Copy files that without building (if listed folder exists in outDirBin, it will be deleted)
+      await copyInsteadOfBuild(rootDir, outDirBin, ["**/templates"]);
+    }
 
     // Calculate and log build duration
     const duration = getElapsedPerfTime(timer);
@@ -446,7 +452,7 @@ async function regular_bundleUsingUnified(
 async function regular_bundleWithBuilder(
   builder: BundlerName,
   params: {
-    isCLI: boolean;
+    coreIsCLI: { enabled: boolean; scripts: Record<string, string> };
     coreDeclarations: boolean;
     outDir: string;
     singleFile: string; // single entry file (used if bun/unified)
@@ -464,7 +470,7 @@ async function regular_bundleWithBuilder(
   },
 ): Promise<void> {
   const {
-    isCLI,
+    coreIsCLI,
     coreDeclarations,
     outDir,
     singleFile,
@@ -505,7 +511,7 @@ async function regular_bundleWithBuilder(
 
   // Everything else is a "unified" type builder (rollup, mkdist, etc.)
   await regular_bundleUsingUnified(
-    isCLI,
+    coreIsCLI,
     singleFile,
     outDir,
     builder,

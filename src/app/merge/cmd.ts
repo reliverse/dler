@@ -1,5 +1,8 @@
+// merge command is used to merge multiple files into a single file.
+// patterns with both glob stars and without glob stars are supported.
 // simple example: `bun dler merge --s "src/**/*.ts" --d "dist/merged.ts"`
 // advanced example: `bun dler merge --s ".temp1/packages/*/lib/**/*" --d ".temp2/merged.ts" --sort "mtime" --header "// Header" --footer "// Footer" --dedupe`
+// generate mock template: `bun dler merge --s "src/templates" --d "templates/my-template.ts" --as-template`
 
 import path from "@reliverse/pathkit";
 import { glob } from "@reliverse/reglob";
@@ -9,46 +12,14 @@ import { defineCommand, inputPrompt, confirmPrompt, multiselectPrompt } from "@r
 import pMap from "p-map";
 import prettyMilliseconds from "pretty-ms";
 
+import type { FileContent, FileType, Template } from "~/libs/sdk/sdk-types";
+
+import { isBinaryExt } from "~/libs/sdk/sdk-impl/utils/binary";
 import { createPerfTimer, getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 // ---------- constants ----------
 
 const DEFAULT_IGNORES = ["**/.git/**", "**/node_modules/**"] as const;
-
-const BINARY_EXTS = [
-  "png",
-  "jpg",
-  "jpeg",
-  "gif",
-  "bmp",
-  "webp",
-  "svg",
-  "ico",
-  "mp4",
-  "mov",
-  "avi",
-  "mkv",
-  "mp3",
-  "wav",
-  "flac",
-  "ogg",
-  "pdf",
-  "zip",
-  "gz",
-  "tar",
-  "rar",
-  "7z",
-  "exe",
-  "dll",
-  "bin",
-  "woff",
-  "woff2",
-  "ttf",
-  "eot",
-  "class",
-  "jar",
-] as const;
-const BINARY_SET = new Set<string>(BINARY_EXTS);
 
 const COMMENT_MAP: Record<string, string> = {
   js: "// ",
@@ -90,9 +61,13 @@ const DEFAULT_SEPARATOR_RAW = "\\n\\n";
 
 // ---------- helpers ----------
 
-const isBinaryExt = (file: string) => {
-  const ext = path.extname(file).slice(1).toLowerCase();
-  return BINARY_SET.has(ext);
+const normalizeGlobPattern = (pattern: string): string => {
+  // If pattern doesn't contain any glob characters and doesn't end with a slash,
+  // treat it as a directory and add /**/* to match all files recursively
+  if (!pattern.includes("*") && !pattern.includes("?") && !pattern.endsWith("/")) {
+    return `${pattern}/**/*`;
+  }
+  return pattern;
 };
 
 const ensureTrailingNL = (s: string) => (s.endsWith("\n") ? s : `${s}\n`);
@@ -107,11 +82,11 @@ const parseCSV = (s: string) =>
 const unescape = (s: string) => s.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
 
 const maybePrompt = async <T>(
-  batch: boolean,
+  interactive: boolean,
   value: T | undefined,
   promptFn: () => Promise<T>,
 ): Promise<T | undefined> => {
-  if (batch || value !== undefined) return value;
+  if (!interactive || value !== undefined) return value;
   return promptFn();
 };
 
@@ -121,13 +96,17 @@ const collectFiles = async (
   recursive: boolean,
   sortBy: "name" | "path" | "mtime" | "none",
 ) => {
-  const files = await glob(include, {
+  // Normalize glob patterns to handle directory paths without glob characters
+  const normalizedInclude = include.map(normalizeGlobPattern);
+
+  const files = await glob(normalizedInclude, {
     ignore: [...DEFAULT_IGNORES, ...extraIgnore],
     absolute: true,
     onlyFiles: true,
     deep: recursive ? undefined : 1,
   });
-  let filtered = [...new Set(files)].filter((f) => !isBinaryExt(f));
+  // Remove the binary file filter since we want to include them in templates
+  let filtered = [...new Set(files)];
   if (sortBy === "name") {
     filtered.sort((a, b) => path.basename(a).localeCompare(path.basename(b)));
   } else if (sortBy === "path") {
@@ -218,6 +197,152 @@ const writeFilesPreserveStructure = async (
   );
 };
 
+const generateTemplateFile = async (
+  isDev: boolean,
+  files: string[],
+  outFile: string,
+  dryRun: boolean,
+  backup: boolean,
+  customTemplateName?: string,
+  whitelabel = "DLER",
+): Promise<void> => {
+  const cwd = process.cwd();
+  const templateName = customTemplateName || path.basename(outFile, ".ts");
+  // Convert template name to uppercase with underscores, handling hyphens and special characters
+  const templateConstName =
+    templateName
+      .replace(/[^a-zA-Z0-9]/g, "_") // Replace any non-alphanumeric with underscore
+      .replace(/_+/g, "_") // Replace multiple underscores with single underscore
+      .replace(/^_|_$/g, "") // Remove leading/trailing underscores
+      .replace(/[A-Z]/g, (letter) => `_${letter}`) // Add underscore before capital letters
+      .replace(/^_/, "") // Remove leading underscore
+      .toUpperCase() + `_${whitelabel}_TEMPLATE`; // Add suffix with whitelabel
+
+  // Create a valid object key from the template name
+  const templateKey = templateName
+    .replace(/[^a-zA-Z0-9]/g, "_") // Replace any non-alphanumeric with underscore
+    .replace(/_+/g, "_") // Replace multiple underscores with single underscore
+    .replace(/^_|_$/g, "") // Remove leading/trailing underscores
+    .toLowerCase(); // Convert to lowercase for the object key
+
+  // Create template structure
+  const template: Template = {
+    name: templateName.charAt(0).toUpperCase() + templateName.slice(1),
+    description: `Template generated from ${files.length} files`,
+    config: {
+      files: {},
+    },
+  };
+
+  // Process files
+  for (const file of files) {
+    const relPath = path.relative(cwd, file);
+    const ext = path.extname(file).slice(1).toLowerCase();
+    const isBinary = await isBinaryExt(file);
+    const fileName = path.basename(file).toLowerCase();
+
+    let content: FileContent = "";
+    let type: FileType = "binary";
+
+    if (!isBinary) {
+      try {
+        const fileContent = await fs.readFile(file, "utf8");
+        if (ext === "json") {
+          const jsonContent = JSON.parse(fileContent) as Record<string, unknown>;
+
+          // Add type casting for package.json and tsconfig.json
+          if (fileName === "package.json") {
+            content = {
+              ...jsonContent,
+              __type: "PackageJson",
+            } as unknown as FileContent;
+          } else if (fileName === "tsconfig.json") {
+            content = {
+              ...jsonContent,
+              __type: "TSConfig",
+            } as unknown as FileContent;
+          } else {
+            content = jsonContent;
+          }
+          type = "json";
+        } else {
+          content = fileContent;
+          type = "text";
+        }
+      } catch {
+        // If we can't read the file as text, treat it as binary
+        type = "binary";
+      }
+    }
+
+    template.config.files[relPath] = {
+      content,
+      type: type as "text" | "json", // Type assertion since we know binary files will have empty content
+    };
+  }
+
+  // Generate TypeScript content
+  const tsContent = `import type { Template } from "${isDev ? "~/libs/sdk/sdk-types" : "@reliverse/dler-sdk"}";
+${(() => {
+  const files = template.config.files;
+  if (!files) return "";
+
+  const hasPackageJson = Object.values(files).some(
+    (f) => f.type === "json" && (f.content as any)?.__type === "PackageJson",
+  );
+  const hasTSConfig = Object.values(files).some(
+    (f) => f.type === "json" && (f.content as any)?.__type === "TSConfig",
+  );
+
+  if (!hasPackageJson && !hasTSConfig) return "";
+
+  const imports = [];
+  if (hasPackageJson) imports.push("PackageJson");
+  if (hasTSConfig) imports.push("TSConfig");
+
+  return `import type { ${imports.join(", ")} } from "pkg-types";\n`;
+})()}
+
+export const ${templateConstName}: Template = ${JSON.stringify(template, null, 2)
+    .replace(/"([^"]+)":/g, (_, key) => {
+      // Only quote keys that contain special characters or spaces
+      return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key) ? `${key}:` : `"${key}":`;
+    })
+    .replace(/"([^"]+)":/g, (_, key) => {
+      // Only quote keys that contain special characters or spaces
+      return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key) ? `${key}:` : `"${key}":`;
+    })
+    .replace(/"([^"]+)":/g, (_, key) => {
+      // Only quote keys that contain special characters or spaces
+      return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key) ? `${key}:` : `"${key}":`;
+    })};
+
+export const ${whitelabel}_TEMPLATES = {
+  ${templateKey}: ${templateConstName},
+} as const;
+
+export type ${whitelabel}_TEMPLATE_NAMES = keyof typeof ${whitelabel}_TEMPLATES;
+
+export const ${whitelabel.toLowerCase()}TemplatesMap: Record<string, ${whitelabel}_TEMPLATE_NAMES> = {
+  ${templateConstName}: "${templateKey}",
+};
+`;
+
+  if (dryRun) {
+    relinka("verbose", `[DRY RUN] Would write template file: ${outFile}`);
+    return;
+  }
+
+  const dir = path.dirname(outFile);
+  if (dir && dir !== ".") await fs.ensureDir(dir);
+  if (backup && (await fs.pathExists(outFile))) {
+    const backupPath = `${outFile}.${Date.now()}.bak`;
+    await fs.copyFile(outFile, backupPath);
+  }
+
+  await fs.writeFile(outFile, tsContent, "utf8");
+};
+
 // ---------- command ----------
 
 export default defineCommand({
@@ -228,6 +353,7 @@ export default defineCommand({
       "Merge text files with optional commented path header/footer, skips binaries/media, built for CI & interactive use. Supports copy-like patterns and advanced options.",
   },
   args: {
+    dev: { type: "boolean", description: "Generate template for development" },
     s: { type: "array", description: "Input glob patterns" },
     d: { type: "string", description: "Output file path or directory" },
     ignore: { type: "array", description: "Extra ignore patterns" },
@@ -310,19 +436,39 @@ export default defineCommand({
       type: "string",
       description: "Footer text to add at the end of merged output",
     },
-    interactive: {
+    "select-files": {
       type: "boolean",
       description: "Prompt for file selection before merging",
       default: false,
     },
+    interactive: {
+      type: "boolean",
+      description: "Enable interactive mode with prompts (default: false)",
+      default: false,
+    },
+    "as-template": {
+      type: "boolean",
+      description: "Generate a TypeScript file with MOCK_TEMPLATES structure",
+      default: false,
+    },
+    ctn: {
+      type: "string",
+      description: "Custom template name when using --as-template",
+    },
+    whitelabel: {
+      type: "string",
+      description: "Custom prefix to use instead of 'DLER' in template generation",
+      default: "DLER",
+    },
   },
   async run({ args }) {
     const timer = createPerfTimer();
-    const batch = Boolean(args.batch);
-
+    const interactive = args.interactive ?? false;
+    const isDev = args.dev ?? false;
+    const whitelabel = args.whitelabel ?? "DLER";
     let include = args.s ?? [];
     if (include.length === 0) {
-      const raw = await maybePrompt(batch, undefined, () =>
+      const raw = await maybePrompt(interactive, undefined, () =>
         inputPrompt({
           title: "Input glob patterns (comma separated)",
           placeholder: "src/**/*.ts, !**/*.test.ts",
@@ -334,7 +480,7 @@ export default defineCommand({
 
     let ignore = args.ignore ?? [];
     if (ignore.length === 0) {
-      const raw = await maybePrompt(batch, undefined, () =>
+      const raw = await maybePrompt(interactive, undefined, () =>
         inputPrompt({
           title: "Ignore patterns (comma separated, blank for none)",
           placeholder: "**/*.d.ts",
@@ -345,7 +491,7 @@ export default defineCommand({
 
     let customComment = args.comment;
     if (customComment === undefined) {
-      const want = await maybePrompt(batch, undefined, () =>
+      const want = await maybePrompt(interactive, undefined, () =>
         confirmPrompt({
           title: "Provide custom comment prefix?",
           defaultValue: false,
@@ -364,7 +510,7 @@ export default defineCommand({
 
     const sepRaw =
       args.separator ??
-      ((await maybePrompt(batch, undefined, () =>
+      ((await maybePrompt(interactive, undefined, () =>
         inputPrompt({
           title: "Separator between files (\\n for newline, blank → blank line)",
           placeholder: DEFAULT_SEPARATOR_RAW,
@@ -376,7 +522,7 @@ export default defineCommand({
     let stdoutFlag = args.stdout ?? false;
     let outFile = args.d;
 
-    if (!stdoutFlag && !outFile && !batch) {
+    if (!stdoutFlag && !outFile && interactive) {
       stdoutFlag = await confirmPrompt({
         title: "Print result to stdout?",
         defaultValue: false,
@@ -406,7 +552,9 @@ export default defineCommand({
     const dedupe = args.dedupe ?? false;
     const header = args.header;
     const footer = args.footer;
-    const interactive = args.interactive ?? false;
+    const selectFiles = args["select-files"] ?? false;
+    const asTemplate = args["as-template"] ?? false;
+    const customTemplateName = args.ctn;
 
     let files = await collectFiles(include, ignore, recursive, sortBy);
 
@@ -414,7 +562,7 @@ export default defineCommand({
       throw new Error("No text files matched given patterns (binary/media files are skipped)");
     }
 
-    if (interactive && !batch) {
+    if (selectFiles && interactive) {
       const selected = await multiselectPrompt({
         title: "Select files to merge",
         options: files.map((f) => ({
@@ -426,6 +574,29 @@ export default defineCommand({
       if (files.length === 0) {
         throw new Error("No files selected for merging");
       }
+    }
+
+    if (asTemplate) {
+      if (!outFile) {
+        outFile = "template.ts";
+      } else if (!outFile.endsWith(".ts")) {
+        outFile = `${outFile}.ts`;
+      }
+      await generateTemplateFile(
+        isDev,
+        files,
+        outFile,
+        dryRun,
+        backup,
+        customTemplateName,
+        whitelabel,
+      );
+      const elapsed = getElapsedPerfTime(timer);
+      relinka(
+        "success",
+        `Successfully ${dryRun ? "would generate" : "generated"} template file "${outFile}" (in ${prettyMilliseconds(elapsed)})`,
+      );
+      return;
     }
 
     const getPrefix = (filePath: string): string => {

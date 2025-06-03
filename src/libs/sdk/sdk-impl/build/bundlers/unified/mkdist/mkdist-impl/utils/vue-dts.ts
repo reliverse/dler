@@ -1,7 +1,7 @@
 import type { CreateProgramOptions } from "typescript";
 
+import { normalize } from "@reliverse/pathkit";
 import { createRequire } from "node:module";
-import { normalize } from "pathe";
 // import { readPackageJSON } from "pkg-types"; // TODO: use normal import in next major
 import { satisfies } from "semver";
 

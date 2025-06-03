@@ -13,7 +13,6 @@ import { glob } from "tinyglobby";
 
 import type { BuildContext, BuildOptions, UnifiedBuildConfig } from "~/libs/sdk/sdk-types";
 
-import { copyInsteadOfBuild } from "~/libs/sdk/sdk-impl/utils/utils-fs";
 import { createPerfTimer, getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 import { copyBuild } from "./copy/copy-mod";
@@ -48,7 +47,7 @@ function shouldStopAtStep(stepNumber: number): void {
 // Step 1: Main build function that orchestrates the entire build process
 export async function unifiedBuild(
   inputSourceDir: string,
-  isCLI: boolean,
+  coreIsCLI: { enabled: boolean; scripts: Record<string, string> },
   isLib: boolean,
   rootDir: string,
   inputConfig: UnifiedBuildConfig & {
@@ -62,7 +61,10 @@ export async function unifiedBuild(
   // relinka("info", "Step 1: Starting unified build process");
   relinka("info", "Starting unified build process...");
   relinka("verbose", `Processing build for source directory: ${inputSourceDir}`);
-  relinka("verbose", `Output directory: ${outDir}, Is CLI: ${isCLI}, Is Library: ${isLib}`);
+  relinka(
+    "verbose",
+    `Output directory: ${outDir}, Is CLI: ${coreIsCLI.enabled}, Is Library: ${isLib}`,
+  );
 
   // Determine rootDir
   const resolvedRootDir = resolve(process.cwd(), rootDir || ".");
@@ -111,11 +113,6 @@ export async function unifiedBuild(
       inputConfig.showOutLog || true,
       isLib,
     );
-  }
-
-  // Copy patterns AFTER the build
-  if (isCLI && inputConfig.dontBuildCopyInstead?.length) {
-    await copyInsteadOfBuild(inputSourceDir, outDir, inputConfig.dontBuildCopyInstead);
   }
 }
 

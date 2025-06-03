@@ -68,7 +68,7 @@ export async function copyRootFile(outDirRoot: string, fileNames: string[]): Pro
                   await fs.remove(targetPath);
                 }
 
-                await fs.copy(file, targetPath);
+                await fs.copy(file, targetPath, { errorOnExist: true });
                 relinka("verbose", `Copied ${file} to ${outDirRoot}/${variant}`);
               }
             }
@@ -83,7 +83,7 @@ export async function copyRootFile(outDirRoot: string, fileNames: string[]): Pro
                 await fs.remove(targetPath);
               }
 
-              await fs.copy(file, targetPath);
+              await fs.copy(file, targetPath, { errorOnExist: true });
               relinka("verbose", `Copied ${file} to ${outDirRoot}/${fileName}`);
             }
           }
@@ -138,19 +138,11 @@ export async function outDirBinFilesCount(outDirBin: string): Promise<number> {
     relinka("error", `[outDirBinFilesCount] Directory does not exist: ${outDirBin}`);
     return fileCount;
   }
-  async function traverse(dir: string) {
-    const entries = await fs.readdir(dir);
-    for (const entry of entries) {
-      const fullPath = path.join(dir, entry);
-      const stats = await fs.stat(fullPath);
-      if (stats.isDirectory()) {
-        await traverse(fullPath);
-      } else if (stats.isFile()) {
-        fileCount++;
-      }
-    }
-  }
-  await traverse(outDirBin);
+
+  await fs.dive(outDirBin, () => {
+    fileCount++;
+  });
+
   relinka("verbose", `Total file count in ${outDirBin}: ${fileCount}`);
   return fileCount;
 }
@@ -340,20 +332,11 @@ export async function copyInsteadOfBuild(
       }
 
       // Create parent directory if it doesn't exist
-      const destDir = path.dirname(normalizedDest);
-      try {
-        await fs.mkdir(destDir, { recursive: true });
-      } catch (error: any) {
-        if (error.code !== "EEXIST") {
-          throw new Error(`Failed to create directory ${destDir}: ${error.message}`);
-        }
-      }
+      await fs.ensureDir(path.dirname(normalizedDest));
 
       // Check if source exists and is accessible
-      try {
-        await fs.access(normalizedSource);
-      } catch (error: any) {
-        relinka("warn", `Source not accessible: ${relativePath} (${error.message})`);
+      if (!(await fs.pathExists(normalizedSource))) {
+        relinka("warn", `Source not accessible: ${relativePath}`);
         return;
       }
 
@@ -376,11 +359,11 @@ export async function copyInsteadOfBuild(
 
       // Copy with optimized options
       try {
-        await fs.cp(normalizedSource, normalizedDest, {
+        await fs.copy(normalizedSource, normalizedDest, {
           recursive: true,
           dereference: true,
-          force: true,
-          errorOnExist: false,
+          overwrite: true,
+          errorOnExist: true,
         });
         relinka("verbose", `Copied instead of building: ${relativePath}`);
       } catch (error: any) {

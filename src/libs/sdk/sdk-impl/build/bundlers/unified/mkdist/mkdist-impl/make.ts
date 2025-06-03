@@ -1,8 +1,8 @@
 import type { TSConfig } from "pkg-types";
 
+import { resolve, extname, join, basename, dirname } from "@reliverse/pathkit";
 import defu from "defu";
 import fsp from "node:fs/promises";
-import { resolve, extname, join, basename, dirname } from "pathe";
 import { glob } from "tinyglobby";
 
 import type { InputFile, MkdistOptions, OutputFile } from "~/libs/sdk/sdk-types";

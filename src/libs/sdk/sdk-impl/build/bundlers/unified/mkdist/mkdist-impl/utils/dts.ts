@@ -1,9 +1,9 @@
 import type { TSConfig } from "pkg-types";
 import type { CompilerHost, EmitResult } from "typescript";
 
+import { resolve } from "@reliverse/pathkit";
 import { findStaticImports, findDynamicImports, findExports, findTypeExports } from "mlly";
 import { statSync } from "node:fs";
-import { resolve } from "pathe";
 
 import type { MkdistOptions } from "~/libs/sdk/sdk-types";
 

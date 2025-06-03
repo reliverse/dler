@@ -1,5 +1,5 @@
+import { basename } from "@reliverse/pathkit";
 import { pathToFileURL } from "node:url";
-import { basename } from "pathe";
 
 import type { Loader, LoaderResult } from "~/libs/sdk/sdk-types";
 

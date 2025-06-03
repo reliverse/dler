@@ -1,10 +1,10 @@
-import type { Spell, SpellParams, SpellType } from "./spell-types";
+import type { Spell, SpellParams, SpellType } from "./spell-types.js";
 
-const SPELL_REGEX = /<dler-([a-z-]+)-(?:"([^"]+)")?-?(?:{([^}]+)})?>/;
+const SPELL_REGEX = /dler-([a-z-]+)-(?:"([^"]+)")?-?(?:{([^}]+)})?/;
 
 export const parseParams = (paramsStr: string | undefined): SpellParams => {
   const defaultParams: SpellParams = {
-    hooked: false,
+    hooked: true,
   };
 
   if (!paramsStr) return defaultParams;

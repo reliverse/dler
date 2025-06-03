@@ -1033,11 +1033,6 @@ export type UnifiedBuildConfig = DeepPartial<Omit<BuildOptions, "entries">> & {
    * @see https://turing.com/kb/stub-vs-mock#what-exactly-is-a-stub?
    */
   stub?: boolean;
-
-  /**
-   * What to copy instead of build
-   */
-  dontBuildCopyInstead?: string[];
 };
 
 type DeepPartial<T> = { [P in keyof T]?: DeepPartial<T[P]> };
@@ -1197,3 +1192,25 @@ export type MkdistOptions = {
     compilerOptions?: TSConfig["compilerOptions"];
   };
 } & LoaderOptions;
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+export type FileContent = string | Record<string, unknown>;
+export type FileType = "text" | "json" | "binary";
+
+export type TemplateFileContent = {
+  content: FileContent;
+  type: FileType;
+};
+
+export type TemplateConfig = {
+  files: Record<string, TemplateFileContent>;
+};
+
+export type Template = {
+  name: string;
+  description: string;
+  config: TemplateConfig;
+};
+
+export type Templates = Record<string, Template>;

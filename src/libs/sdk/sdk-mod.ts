@@ -1,3 +1,4 @@
+export * from "./sdk-types";
 export type { LibraryBuildOptions } from "./sdk-impl/build/build-library";
 export { library_buildLibrary } from "./sdk-impl/build/build-library";
 export {
@@ -97,8 +98,8 @@ export type {
   FileOperation,
   SpellResult,
 } from "./sdk-impl/spell/spell-types";
-export { useAggregator } from "./sdk-impl/utils/tools/tools-agg";
-export { printUsage } from "./sdk-impl/utils/tools/tools-impl";
+export { useAggregator } from "./sdk-impl/utils/tools-agg";
+export { printUsage } from "./sdk-impl/utils/tools-impl";
 export {
   getBunSourcemapOption,
   getUnifiedSourcemapOption,
@@ -143,14 +144,3 @@ export {
 export { library_createPackageJSON } from "./sdk-impl/utils/utils-package-json-libraries";
 export { regular_createPackageJSON } from "./sdk-impl/utils/utils-package-json-regular";
 export { createTSConfig } from "./sdk-impl/utils/utils-tsconfig";
-export type {
-  CopyHooks,
-  MkdistHooks,
-  RollupBuildEntry,
-  RollupBuildOptions,
-  RollupHooks,
-  UntypedHooks,
-  UntypedOutput,
-  BaseBuildEntry,
-  BuildHooks,
-} from "./sdk-types";

@@ -7,7 +7,8 @@
     "*.{config,cfg}.{ts,js}",
     "src/mod.ts",
     "src/**/*-mod.ts",
-    "example/**/*.ts"
+    "example/**/*.ts",
+    "src/templates/**/*.ts"
   ],
   "ignore": [
     ".config/rse.ts",
@@ -15,8 +16,7 @@
     "dist-jsr",
     "dist-npm",
     "dist-libs",
-    "src/libs/sdk/sdk-impl/**/*.ts",
-    "src/types.ts"
+    "src/libs/sdk/sdk-impl/**/*.ts"
   ],
   "ignoreDependencies": ["bun"]
 }

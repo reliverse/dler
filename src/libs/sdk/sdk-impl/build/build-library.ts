@@ -799,7 +799,14 @@ async function library_bundleUsingUnified(
   };
 
   try {
-    await unifiedBuild(entryPoint, false, true, rootDir, unifiedBuildConfig, outDirBin);
+    await unifiedBuild(
+      entryPoint,
+      { enabled: false, scripts: {} },
+      true,
+      rootDir,
+      unifiedBuildConfig,
+      outDirBin,
+    );
 
     const duration = getElapsedPerfTime(timer);
     relinka(

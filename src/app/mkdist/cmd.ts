@@ -93,11 +93,6 @@ export default defineCommand({
       type: "string",
       description: "Target environment (esbuild)",
     },
-    dontBuildCopyInstead: {
-      type: "string",
-      description:
-        "Don't build copy instead of (glob patterns, e.g. '**/*.json') (default: ['**/templates'])",
-    },
   }),
   async run({ args }) {
     if (args.mkdistOnly) {
