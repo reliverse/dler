@@ -9,8 +9,18 @@ import type { TemplateFileContent, Template } from "~/libs/sdk/sdk-types";
 
 import { isBinaryExt } from "~/libs/sdk/sdk-impl/utils/binary";
 import { createPerfTimer, getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
+import {
+  validatePath,
+  validateFileType,
+  validateContent,
+  checkPermissions,
+  handleError,
+  validateTemplate,
+  checkRateLimit,
+  sanitizeInput,
+} from "~/libs/sdk/sdk-impl/utils/utils-security";
 
-import { DLER_TEMPLATES, dlerTemplatesMap } from "./mock-template";
+import { DLER_TEMPLATES, dlerTemplatesMap } from "./mock";
 
 const jiti = createJiti(import.meta.url);
 
@@ -19,33 +29,56 @@ async function writeFile(
   file: TemplateFileContent,
   dryRun: boolean,
 ): Promise<void> {
-  const { content, type } = file;
-  if (dryRun) {
-    relinka("log", `[DRY RUN] Would write file: ${filePath}`);
-    return;
-  }
+  try {
+    const { content, type } = file;
 
-  // Check if file is binary before writing
-  const isBinary = await isBinaryExt(filePath);
-  if (isBinary && type !== "binary") {
-    relinka(
-      "warn",
-      `Warning: File ${filePath} appears to be binary but is not marked as such in template`,
-    );
-  }
+    // Validate file type
+    validateFileType(type);
 
-  if (type === "json") {
-    await fs.writeJson(filePath, content, { spaces: 2 });
-  } else {
-    await fs.writeFile(filePath, content as string, "utf8");
+    // Validate content
+    validateContent(content, type);
+
+    // Sanitize file path
+    const sanitizedPath = sanitizeInput(filePath);
+
+    // Check rate limit
+    checkRateLimit(`write_${sanitizedPath}`);
+
+    if (dryRun) {
+      relinka("log", `[DRY RUN] Would write file: ${sanitizedPath}`);
+      return;
+    }
+
+    // Check if file is binary before writing
+    const isBinary = await isBinaryExt(sanitizedPath);
+    if (isBinary && type !== "binary") {
+      relinka(
+        "warn",
+        `Warning: File ${sanitizedPath} appears to be binary but is not marked as such in template`,
+      );
+    }
+
+    // Check permissions
+    await checkPermissions(sanitizedPath, "write");
+
+    if (type === "json") {
+      await fs.writeJson(sanitizedPath, content, { spaces: 2 });
+    } else {
+      await fs.writeFile(sanitizedPath, content as string, "utf8");
+    }
+  } catch (error) {
+    handleError(error, `writeFile(${filePath})`);
   }
 }
 
 async function createMockStructure(template: Template, dryRun: boolean): Promise<void> {
   try {
-    // Helper function to normalize paths
+    // Validate template
+    validateTemplate(template);
+
+    // Helper function to normalize and validate paths
     const normalizePath = (filePath: string) => {
-      return filePath;
+      return validatePath(filePath, process.cwd());
     };
 
     // Create files and their parent directories
@@ -57,120 +90,132 @@ async function createMockStructure(template: Template, dryRun: boolean): Promise
           await fs.ensureDir(path.dirname(normalizedPath));
         }
         await writeFile(normalizedPath, file, dryRun);
-        relinka("log", `Created mock file: ${normalizedPath}`);
+        // relinka("verbose", `Created mock file: ${normalizedPath}`);
       }),
     );
 
     if (!dryRun) {
       relinka(
         "success",
-        "Mock structure created successfully (used templates: " + template.name + ")",
+        "Mock structure created successfully (used template: " + template.name + ")",
       );
     } else {
       relinka("success", "[DRY RUN] Mock structure would be created successfully");
     }
   } catch (error) {
-    relinka("error", "Failed to create mock structure", error);
-    throw error;
+    handleError(error, "createMockStructure");
   }
 }
 
 async function cleanupMockStructure(template: Template, dryRun: boolean): Promise<void> {
   try {
+    // Validate template
+    validateTemplate(template);
+
     const paths = Object.keys(template.config.files);
-    const dirsToCheck = new Set<string>();
+    let filesRemoved = 0;
 
-    // First delete all files and collect their parent directories
+    // Delete files and their parent directories
     for (const filePath of paths) {
-      if (await fs.pathExists(filePath)) {
-        if (dryRun) {
-          relinka("log", `[DRY RUN] Would remove: ${filePath}`);
-        } else {
-          await fs.remove(filePath);
-          relinka("log", `Removed: ${filePath}`);
-        }
-        // Add all parent directories to check
-        let dir = path.dirname(filePath);
-        while (dir && dir !== ".") {
-          dirsToCheck.add(dir);
-          dir = path.dirname(dir);
-        }
+      const normalizedPath = validatePath(filePath, process.cwd());
+
+      if (dryRun) {
+        relinka("log", `[DRY RUN] Would remove: ${normalizedPath}`);
+        continue;
       }
-    }
 
-    // Then check and remove empty directories
-    if (!dryRun) {
-      // Sort directories by depth (deepest first) to ensure we remove from bottom up
-      const sortedDirs = Array.from(dirsToCheck).sort((a, b) => b.length - a.length);
+      try {
+        if (await fs.pathExists(normalizedPath)) {
+          await fs.remove(normalizedPath);
+          // relinka("verbose", `Removed: ${normalizedPath}`);
+          filesRemoved++;
 
-      for (const dir of sortedDirs) {
-        if (await fs.pathExists(dir)) {
-          const files = await fs.readdir(dir);
-          if (files.length === 0) {
-            await fs.remove(dir);
-            relinka("log", `Removed empty directory: ${dir}`);
+          // Try to remove parent directory if empty
+          const parentDir = path.dirname(normalizedPath);
+          if (await fs.pathExists(parentDir)) {
+            const files = await fs.readdir(parentDir);
+            if (files.length === 0) {
+              await fs.remove(parentDir);
+              relinka("log", `Removed empty directory: ${parentDir}`);
+            }
           }
         }
-      }
-    } else {
-      // In dry run mode, just log what would be checked
-      for (const dir of dirsToCheck) {
-        relinka("log", `[DRY RUN] Would check directory: ${dir}`);
+      } catch (error) {
+        relinka(
+          "warn",
+          `Failed to remove ${normalizedPath}: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
 
-    if (!dryRun) {
-      relinka("success", "Mock structure cleaned up successfully");
+    if (dryRun) {
+      relinka("success", "[DRY RUN] Mock structure would be cleaned up successfully");
+    } else {
+      relinka("success", `Mock structure cleaned up successfully (removed ${filesRemoved} files)`);
     }
   } catch (error) {
-    relinka("error", "Failed to cleanup mock structure", error);
-    throw error;
+    handleError(error, "cleanupMockStructure");
   }
 }
 
 async function handleExistingPaths(template: Template, force: boolean): Promise<boolean> {
-  const paths = Object.keys(template.config.files);
+  try {
+    // Validate template
+    validateTemplate(template);
 
-  const existingPaths = await Promise.all(
-    paths.map(async (filePath) => {
-      return { path: filePath, exists: await fs.pathExists(filePath) };
-    }),
-  );
+    const paths = Object.keys(template.config.files);
 
-  const conflicts = existingPaths.filter((p) => p.exists);
+    const existingPaths = await Promise.all(
+      paths.map(async (filePath) => {
+        const normalizedPath = validatePath(filePath, process.cwd());
+        return { path: normalizedPath, exists: await fs.pathExists(normalizedPath) };
+      }),
+    );
 
-  if (conflicts.length > 0) {
-    if (!force) {
-      throw new Error(
-        `Path conflicts detected. Cannot proceed with the following existing paths:\n${conflicts.map((c) => c.path).join("\n")}`,
-      );
+    const conflicts = existingPaths.filter((p) => p.exists);
+
+    if (conflicts.length > 0) {
+      if (!force) {
+        throw new Error(
+          `Path conflicts detected. Cannot proceed with the following existing paths:\n${conflicts.map((c) => c.path).join("\n")}`,
+        );
+      }
+
+      // Clean up existing paths
+      for (const conflict of conflicts) {
+        await checkPermissions(conflict.path, "write");
+        await fs.remove(conflict.path);
+        // relinka("verbose", `Cleaned up existing path: ${conflict.path}`);
+      }
     }
 
-    // Clean up existing paths
-    for (const conflict of conflicts) {
-      await fs.remove(conflict.path);
-      relinka("info", `Cleaned up existing path: ${conflict.path}`);
-    }
+    return true;
+  } catch (error) {
+    handleError(error, "handleExistingPaths");
+    return false;
   }
-
-  return true;
 }
 
 export default defineCommand({
   meta: {
     name: "mock",
     version: "1.0.0",
-    description: "Create mock project structure for testing",
+    description:
+      "Bootstraps file structure based on the specified mock template. Pro tip: Run e.g. 'dler merge --s src/templates --d templates/my-template.ts --as-template' (glob supported) to create mock template based on your own file structure.",
   },
   args: {
     template: {
       type: "string",
-      description: `Template to use. Run e.g. 'dler merge --s src/templates --d templates/my-template.ts --as-template' (glob supported) to create your own template. Default templates: ${Object.keys(DLER_TEMPLATES).join(", ")}.`,
+      description:
+        "Mock template to use (default: react) (available: " +
+        Object.keys(DLER_TEMPLATES).join(", ") +
+        ")",
       default: "react",
     },
     "template-file": {
       type: "string",
-      description: "Custom template file to use instead of default dler's mock-template.ts",
+      description:
+        "Custom template file to use instead of default dler's src/app/template/mock-template.ts",
     },
     "template-consts": {
       type: "string",
@@ -204,86 +249,92 @@ export default defineCommand({
     },
   },
   async run({ args }) {
-    const {
-      template,
-      "template-file": templateFile,
-      "template-consts": templateConsts,
-      cleanup,
-      "dry-run": dryRun,
-      verbose,
-      whitelabel = "DLER",
-      force,
-    } = args;
+    try {
+      const {
+        template,
+        "template-file": templateFile,
+        "template-consts": templateConsts,
+        cleanup,
+        "dry-run": dryRun,
+        verbose,
+        whitelabel = "DLER",
+        force,
+      } = args;
 
-    // Set log level based on verbose flag
-    if (verbose) {
-      relinka("log", "Verbose logging enabled");
-    }
-
-    let templates: Record<string, Template>;
-
-    if (templateFile) {
-      // Load custom template file using jiti
-      const module = await jiti.import(templateFile);
-      const templatesKey = `${whitelabel}_TEMPLATES`;
-      const loadedTemplates = (module as unknown as Record<string, Record<string, Template>>)[
-        templatesKey
-      ];
-
-      if (!loadedTemplates) {
-        relinka("error", `No templates found with prefix: ${whitelabel}`);
-        process.exit(1);
+      // Set log level based on verbose flag
+      if (verbose) {
+        relinka("log", "Verbose logging enabled");
       }
-      templates = loadedTemplates;
-    } else {
-      // Use built-in DLER_TEMPLATES
-      templates = DLER_TEMPLATES;
-    }
 
-    // If specific template constants are requested, filter the templates
-    if (templateConsts) {
-      const requestedConsts = templateConsts.split(" ").map((c) => c.trim());
-      const filteredTemplates: Record<string, Template> = {};
+      let templates: Record<string, Template>;
 
-      for (const constName of requestedConsts) {
-        let templateConst: Template | undefined;
-
-        if (templateFile) {
+      if (templateFile) {
+        try {
+          // Load custom template file using jiti
           const module = await jiti.import(templateFile);
-          templateConst = (module as unknown as Record<string, Template>)[constName];
-        } else {
-          const templateKey = dlerTemplatesMap[constName];
-          if (!templateKey) {
-            relinka(
-              "error",
-              `Invalid template constant: ${constName}. Available constants: ${Object.keys(dlerTemplatesMap).join(", ")}`,
-            );
-            process.exit(1);
-          }
-          templateConst = DLER_TEMPLATES[templateKey];
-        }
+          const templatesKey = `${whitelabel}_TEMPLATES`;
+          const loadedTemplates = (module as unknown as Record<string, Record<string, Template>>)[
+            templatesKey
+          ];
 
-        if (!templateConst) {
-          relinka("error", `Template constant not found: ${constName}`);
+          if (!loadedTemplates) {
+            throw new Error(`No templates found with prefix: ${whitelabel}`);
+          }
+          templates = loadedTemplates;
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          relinka("error", `Failed to load template file: ${errorMessage}`);
           process.exit(1);
         }
-        // Use the template name in lowercase as the key
-        filteredTemplates[templateConst.name.toLowerCase()] = templateConst;
+      } else {
+        // Use built-in DLER_TEMPLATES
+        templates = DLER_TEMPLATES;
       }
 
-      templates = filteredTemplates;
-    }
+      // If specific template constants are requested, filter the templates
+      if (templateConsts) {
+        const requestedConsts = templateConsts.split(" ").map((c) => c.trim());
+        const filteredTemplates: Record<string, Template> = {};
 
-    // Validate template
-    if (!templates[template]) {
-      relinka(
-        "error",
-        `Invalid template: ${template}. Available templates: ${Object.keys(templates).join(", ")}`,
-      );
-      process.exit(1);
-    }
+        for (const constName of requestedConsts) {
+          let templateConst: Template | undefined;
 
-    try {
+          try {
+            if (templateFile) {
+              const module = await jiti.import(templateFile);
+              templateConst = (module as unknown as Record<string, Template>)[constName];
+            } else {
+              const templateKey = dlerTemplatesMap[constName];
+              if (!templateKey) {
+                throw new Error(
+                  `Invalid template constant: ${constName}. Available constants: ${Object.keys(dlerTemplatesMap).join(", ")}`,
+                );
+              }
+              templateConst = DLER_TEMPLATES[templateKey];
+            }
+
+            if (!templateConst) {
+              throw new Error(`Template constant not found: ${constName}`);
+            }
+            // Use the template name in lowercase as the key
+            filteredTemplates[templateConst.name.toLowerCase()] = templateConst;
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            relinka("error", errorMessage);
+            process.exit(1);
+          }
+        }
+
+        templates = filteredTemplates;
+      }
+
+      // Validate template
+      if (!templates[template]) {
+        throw new Error(
+          `Invalid template: ${template}. Available templates: ${Object.keys(templates).join(", ")}`,
+        );
+      }
+
       const timer = createPerfTimer();
 
       if (cleanup) {

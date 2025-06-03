@@ -16,6 +16,14 @@ import type { FileContent, FileType, Template } from "~/libs/sdk/sdk-types";
 
 import { isBinaryExt } from "~/libs/sdk/sdk-impl/utils/binary";
 import { createPerfTimer, getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
+import {
+  checkPermissions,
+  checkFileSize,
+  handleError,
+  validateFileExists,
+  sanitizeInput,
+  validateMergeOperation,
+} from "~/libs/sdk/sdk-impl/utils/utils-security";
 
 // ---------- constants ----------
 
@@ -62,12 +70,17 @@ const DEFAULT_SEPARATOR_RAW = "\\n\\n";
 // ---------- helpers ----------
 
 const normalizeGlobPattern = (pattern: string): string => {
+  const sanitizedPattern = sanitizeInput(pattern);
   // If pattern doesn't contain any glob characters and doesn't end with a slash,
   // treat it as a directory and add /**/* to match all files recursively
-  if (!pattern.includes("*") && !pattern.includes("?") && !pattern.endsWith("/")) {
-    return `${pattern}/**/*`;
+  if (
+    !sanitizedPattern.includes("*") &&
+    !sanitizedPattern.includes("?") &&
+    !sanitizedPattern.endsWith("/")
+  ) {
+    return `${sanitizedPattern}/**/*`;
   }
-  return pattern;
+  return sanitizedPattern;
 };
 
 const ensureTrailingNL = (s: string) => (s.endsWith("\n") ? s : `${s}\n`);
@@ -75,7 +88,7 @@ const ensureTrailingNL = (s: string) => (s.endsWith("\n") ? s : `${s}\n`);
 const parseCSV = (s: string) =>
   s
     .split(",")
-    .map((t) => t.trim())
+    .map((t) => sanitizeInput(t.trim()))
     .filter(Boolean);
 
 // biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
@@ -95,28 +108,41 @@ const collectFiles = async (
   extraIgnore: string[],
   recursive: boolean,
   sortBy: "name" | "path" | "mtime" | "none",
-) => {
-  // Normalize glob patterns to handle directory paths without glob characters
-  const normalizedInclude = include.map(normalizeGlobPattern);
+): Promise<string[]> => {
+  try {
+    // Normalize glob patterns to handle directory paths without glob characters
+    const normalizedInclude = include.map(normalizeGlobPattern);
 
-  const files = await glob(normalizedInclude, {
-    ignore: [...DEFAULT_IGNORES, ...extraIgnore],
-    absolute: true,
-    onlyFiles: true,
-    deep: recursive ? undefined : 1,
-  });
-  // Remove the binary file filter since we want to include them in templates
-  let filtered = [...new Set(files)];
-  if (sortBy === "name") {
-    filtered.sort((a, b) => path.basename(a).localeCompare(path.basename(b)));
-  } else if (sortBy === "path") {
-    filtered.sort();
-  } else if (sortBy === "mtime") {
-    filtered = await pMap(filtered, async (f) => ({ f, mtime: (await fs.stat(f)).mtimeMs }), {
-      concurrency: 8,
-    }).then((arr) => arr.sort((a, b) => a.mtime - b.mtime).map((x) => x.f));
+    const files = await glob(normalizedInclude, {
+      ignore: [...DEFAULT_IGNORES, ...extraIgnore.map(sanitizeInput)],
+      absolute: true,
+      onlyFiles: true,
+      deep: recursive ? undefined : 1,
+    });
+
+    // Validate each file
+    for (const file of files) {
+      await validateFileExists(file, "merge");
+      await checkFileSize(file);
+      await checkPermissions(file, "read");
+    }
+
+    // Remove the binary file filter since we want to include them in templates
+    let filtered = [...new Set(files)];
+    if (sortBy === "name") {
+      filtered.sort((a, b) => path.basename(a).localeCompare(path.basename(b)));
+    } else if (sortBy === "path") {
+      filtered.sort();
+    } else if (sortBy === "mtime") {
+      filtered = await pMap(filtered, async (f) => ({ f, mtime: (await fs.stat(f)).mtimeMs }), {
+        concurrency: 8,
+      }).then((arr) => arr.sort((a, b) => a.mtime - b.mtime).map((x) => x.f));
+    }
+    return filtered;
+  } catch (error) {
+    handleError(error, "collectFiles");
+    return []; // Return empty array on error
   }
-  return filtered;
 };
 
 const writeResult = async (
@@ -127,19 +153,32 @@ const writeResult = async (
   dryRun: boolean,
   backup: boolean,
 ) => {
-  const content = `${sections.join(separator)}\n`;
-  if (toStdout || !toFile) {
-    process.stdout.write(content);
-    return;
-  }
-  const dir = path.dirname(toFile);
-  if (dir && dir !== ".") await fs.ensureDir(dir);
-  if (backup && (await fs.pathExists(toFile))) {
-    const backupPath = `${toFile}.${Date.now()}.bak`;
-    await fs.copyFile(toFile, backupPath);
-  }
-  if (!dryRun) {
-    await fs.writeFile(toFile, content, "utf8");
+  try {
+    const content = `${sections.join(separator)}\n`;
+    if (toStdout || !toFile) {
+      process.stdout.write(content);
+      return;
+    }
+
+    const sanitizedPath = sanitizeInput(toFile);
+    const dir = path.dirname(sanitizedPath);
+    if (dir && dir !== ".") {
+      await fs.ensureDir(dir);
+      await checkPermissions(dir, "write");
+    }
+
+    if (backup && (await fs.pathExists(sanitizedPath))) {
+      const backupPath = `${sanitizedPath}.${Date.now()}.bak`;
+      await checkPermissions(sanitizedPath, "read");
+      await fs.copyFile(sanitizedPath, backupPath);
+    }
+
+    if (!dryRun) {
+      await checkPermissions(sanitizedPath, "write");
+      await fs.writeFile(sanitizedPath, content, "utf8");
+    }
+  } catch (error) {
+    handleError(error, "writeResult");
   }
 };
 
@@ -151,50 +190,66 @@ const writeFilesPreserveStructure = async (
   concurrency: number,
   dryRun: boolean,
   backup: boolean,
-) => {
-  const cwd = process.cwd();
-  const fileNameCounts = new Map<string, Map<string, number>>();
+): Promise<void> => {
+  try {
+    if (!files?.length) {
+      throw new Error("No files provided for merge operation");
+    }
 
-  await pMap(
-    files,
-    async (file) => {
-      const relPath = preserveStructure ? path.relative(cwd, file) : path.basename(file);
+    const cwd = process.cwd();
+    const fileNameCounts = new Map<string, Map<string, number>>();
 
-      let destPath = path.join(outDir, relPath);
+    // Validate merge operation
+    await validateMergeOperation(files);
 
-      if (increment) {
-        const dir = path.dirname(destPath);
-        const base = path.basename(destPath);
-        let dirMap = fileNameCounts.get(dir);
-        if (!dirMap) {
-          dirMap = new Map();
-          fileNameCounts.set(dir, dirMap);
-        }
-        const count = dirMap.get(base) || 0;
-        if (count > 0) {
-          const extMatch = base.match(/(.*)(\.[^./\\]+)$/);
-          let newBase: string;
-          if (extMatch) {
-            newBase = `${extMatch[1]}-${count + 1}${extMatch[2]}`;
-          } else {
-            newBase = `${base}-${count + 1}`;
+    await pMap(
+      files,
+      async (file) => {
+        const sanitizedFile = sanitizeInput(file);
+        const relPath = preserveStructure
+          ? path.relative(cwd, sanitizedFile)
+          : path.basename(sanitizedFile);
+
+        let destPath = path.join(outDir, relPath);
+
+        if (increment) {
+          const dir = path.dirname(destPath);
+          const base = path.basename(destPath);
+          let dirMap = fileNameCounts.get(dir);
+          if (!dirMap) {
+            dirMap = new Map();
+            fileNameCounts.set(dir, dirMap);
           }
-          destPath = path.join(dir, newBase);
+          const count = dirMap.get(base) || 0;
+          if (count > 0) {
+            const extMatch = base.match(/(.*)(\.[^./\\]+)$/);
+            let newBase: string;
+            if (extMatch) {
+              newBase = `${extMatch[1]}-${count + 1}${extMatch[2]}`;
+            } else {
+              newBase = `${base}-${count + 1}`;
+            }
+            destPath = path.join(dir, newBase);
+          }
+          dirMap.set(base, count + 1);
         }
-        dirMap.set(base, count + 1);
-      }
 
-      await fs.ensureDir(path.dirname(destPath));
-      if (backup && (await fs.pathExists(destPath))) {
-        const backupPath = `${destPath}.${Date.now()}.bak`;
-        await fs.copyFile(destPath, backupPath);
-      }
-      if (!dryRun) {
-        await fs.copyFile(file, destPath);
-      }
-    },
-    { concurrency },
-  );
+        await fs.ensureDir(path.dirname(destPath));
+        if (backup && (await fs.pathExists(destPath))) {
+          const backupPath = `${destPath}.${Date.now()}.bak`;
+          await checkPermissions(destPath, "read");
+          await fs.copyFile(destPath, backupPath);
+        }
+        if (!dryRun) {
+          await checkPermissions(destPath, "write");
+          await fs.copyFile(sanitizedFile, destPath);
+        }
+      },
+      { concurrency },
+    );
+  } catch (error) {
+    handleError(error, "writeFilesPreserveStructure");
+  }
 };
 
 const generateTemplateFile = async (
@@ -462,192 +517,200 @@ export default defineCommand({
     },
   },
   async run({ args }) {
-    const timer = createPerfTimer();
-    const interactive = args.interactive ?? false;
-    const isDev = args.dev ?? false;
-    const whitelabel = args.whitelabel ?? "DLER";
-    let include = args.s ?? [];
-    if (include.length === 0) {
-      const raw = await maybePrompt(interactive, undefined, () =>
-        inputPrompt({
-          title: "Input glob patterns (comma separated)",
-          placeholder: "src/**/*.ts, !**/*.test.ts",
-        }),
-      );
-      if (raw) include = parseCSV(raw as string);
-    }
-    if (include.length === 0) throw new Error("No input patterns supplied and prompts disabled");
-
-    let ignore = args.ignore ?? [];
-    if (ignore.length === 0) {
-      const raw = await maybePrompt(interactive, undefined, () =>
-        inputPrompt({
-          title: "Ignore patterns (comma separated, blank for none)",
-          placeholder: "**/*.d.ts",
-        }),
-      );
-      if (raw) ignore = parseCSV(raw as string);
-    }
-
-    let customComment = args.comment;
-    if (customComment === undefined) {
-      const want = await maybePrompt(interactive, undefined, () =>
-        confirmPrompt({
-          title: "Provide custom comment prefix?",
-          defaultValue: false,
-        }),
-      );
-      if (want) {
-        customComment = (await inputPrompt({
-          title: "Custom comment prefix (include trailing space if needed)",
-          placeholder: "# ",
-        })) as string;
+    try {
+      const timer = createPerfTimer();
+      const interactive = args.interactive ?? false;
+      const isDev = args.dev ?? false;
+      const whitelabel = args.whitelabel ?? "DLER";
+      let include = args.s ?? [];
+      if (include.length === 0) {
+        const raw = await maybePrompt(interactive, undefined, () =>
+          inputPrompt({
+            title: "Input glob patterns (comma separated)",
+            placeholder: "src/**/*.ts, !**/*.test.ts",
+          }),
+        );
+        if (raw) include = parseCSV(raw as string);
       }
-    }
-    const forceComment = args.forceComment ?? false;
-    const injectPath = !args.noPath;
-    const pathAbove = args.pathAbove ?? true;
+      if (include.length === 0) {
+        throw new Error("No input patterns supplied and prompts disabled");
+      }
 
-    const sepRaw =
-      args.separator ??
-      ((await maybePrompt(interactive, undefined, () =>
-        inputPrompt({
-          title: "Separator between files (\\n for newline, blank → blank line)",
-          placeholder: DEFAULT_SEPARATOR_RAW,
-        }),
-      )) as string | undefined) ??
-      DEFAULT_SEPARATOR_RAW;
-    const separator = unescape(sepRaw);
+      let ignore = args.ignore ?? [];
+      if (ignore.length === 0) {
+        const raw = await maybePrompt(interactive, undefined, () =>
+          inputPrompt({
+            title: "Ignore patterns (comma separated, blank for none)",
+            placeholder: "**/*.d.ts",
+          }),
+        );
+        if (raw) ignore = parseCSV(raw as string);
+      }
 
-    let stdoutFlag = args.stdout ?? false;
-    let outFile = args.d;
-
-    if (!stdoutFlag && !outFile && interactive) {
-      stdoutFlag = await confirmPrompt({
-        title: "Print result to stdout?",
-        defaultValue: false,
-      });
-      if (!stdoutFlag) {
-        outFile = (await inputPrompt({
-          title: "Output file path (blank → merged.<ext>)",
-          placeholder: "",
-        })) as string;
-        if (!outFile) {
-          const ext = (await inputPrompt({
-            title: "File extension",
-            placeholder: args.format,
+      let customComment = args.comment;
+      if (customComment === undefined) {
+        const want = await maybePrompt(interactive, undefined, () =>
+          confirmPrompt({
+            title: "Provide custom comment prefix?",
+            defaultValue: false,
+          }),
+        );
+        if (want) {
+          customComment = (await inputPrompt({
+            title: "Custom comment prefix (include trailing space if needed)",
+            placeholder: "# ",
           })) as string;
-          outFile = `merged.${(ext || args.format).replace(/^\./, "")}`;
         }
       }
-    }
+      const forceComment = args.forceComment ?? false;
+      const injectPath = !args.noPath;
+      const pathAbove = args.pathAbove ?? true;
 
-    const recursive = args.recursive ?? true;
-    const preserveStructure = args.preserveStructure ?? true;
-    const increment = args.increment ?? false;
-    const concurrency = args.concurrency ?? 8;
-    const sortBy = args.sort as "name" | "path" | "mtime" | "none";
-    const dryRun = args.dryRun ?? false;
-    const backup = args.backup ?? false;
-    const dedupe = args.dedupe ?? false;
-    const header = args.header;
-    const footer = args.footer;
-    const selectFiles = args["select-files"] ?? false;
-    const asTemplate = args["as-template"] ?? false;
-    const customTemplateName = args.ctn;
+      const sepRaw =
+        args.separator ??
+        ((await maybePrompt(interactive, undefined, () =>
+          inputPrompt({
+            title: "Separator between files (\\n for newline, blank → blank line)",
+            placeholder: DEFAULT_SEPARATOR_RAW,
+          }),
+        )) as string | undefined) ??
+        DEFAULT_SEPARATOR_RAW;
+      const separator = unescape(sepRaw);
 
-    let files = await collectFiles(include, ignore, recursive, sortBy);
+      let stdoutFlag = args.stdout ?? false;
+      let outFile = args.d;
 
-    if (files.length === 0) {
-      throw new Error("No text files matched given patterns (binary/media files are skipped)");
-    }
+      if (!stdoutFlag && !outFile && interactive) {
+        stdoutFlag = await confirmPrompt({
+          title: "Print result to stdout?",
+          defaultValue: false,
+        });
+        if (!stdoutFlag) {
+          outFile = (await inputPrompt({
+            title: "Output file path (blank → merged.<ext>)",
+            placeholder: "",
+          })) as string;
+          if (!outFile) {
+            const ext = (await inputPrompt({
+              title: "File extension",
+              placeholder: args.format,
+            })) as string;
+            outFile = `merged.${(ext || args.format).replace(/^\./, "")}`;
+          }
+        }
+      }
 
-    if (selectFiles && interactive) {
-      const selected = await multiselectPrompt({
-        title: "Select files to merge",
-        options: files.map((f) => ({
-          label: path.relative(process.cwd(), f),
-          value: f,
-        })),
-      });
-      files = Array.isArray(selected) ? selected : [selected];
+      const recursive = args.recursive ?? true;
+      const preserveStructure = args.preserveStructure ?? true;
+      const increment = args.increment ?? false;
+      const concurrency = args.concurrency ?? 8;
+      const sortBy = args.sort as "name" | "path" | "mtime" | "none";
+      const dryRun = args.dryRun ?? false;
+      const backup = args.backup ?? false;
+      const dedupe = args.dedupe ?? false;
+      const header = args.header;
+      const footer = args.footer;
+      const selectFiles = args["select-files"] ?? false;
+      const asTemplate = args["as-template"] ?? false;
+      const customTemplateName = args.ctn;
+
+      let files = await collectFiles(include, ignore, recursive, sortBy);
+
       if (files.length === 0) {
-        throw new Error("No files selected for merging");
+        throw new Error("No text files matched given patterns (binary/media files are skipped)");
       }
-    }
 
-    if (asTemplate) {
-      if (!outFile) {
-        outFile = "template.ts";
-      } else if (!outFile.endsWith(".ts")) {
-        outFile = `${outFile}.ts`;
+      if (selectFiles && interactive) {
+        const selected = await multiselectPrompt({
+          title: "Select files to merge",
+          options: files.map((f) => ({
+            label: path.relative(process.cwd(), f),
+            value: f,
+          })),
+        });
+        files = Array.isArray(selected) ? selected : [selected];
+        if (files.length === 0) {
+          throw new Error("No files selected for merging");
+        }
       }
-      await generateTemplateFile(
-        isDev,
+
+      if (asTemplate) {
+        if (!outFile) {
+          outFile = "template.ts";
+        } else if (!outFile.endsWith(".ts")) {
+          outFile = `${outFile}.ts`;
+        }
+        await generateTemplateFile(
+          isDev,
+          files,
+          outFile,
+          dryRun,
+          backup,
+          customTemplateName,
+          whitelabel,
+        );
+        const elapsed = getElapsedPerfTime(timer);
+        relinka(
+          "success",
+          `Successfully ${dryRun ? "would generate" : "generated"} template file "${outFile}" (in ${prettyMilliseconds(elapsed)})`,
+        );
+        return;
+      }
+
+      const getPrefix = (filePath: string): string => {
+        if (forceComment && customComment) return customComment;
+        const ext = path.extname(filePath).slice(1).toLowerCase();
+        return COMMENT_MAP[ext] ?? customComment ?? DEFAULT_COMMENT;
+      };
+
+      if (outFile && (await fs.pathExists(outFile)) && (await fs.stat(outFile)).isDirectory()) {
+        await writeFilesPreserveStructure(
+          files,
+          outFile,
+          preserveStructure,
+          increment,
+          concurrency,
+          dryRun,
+          backup,
+        );
+        return;
+      }
+
+      const cwd = process.cwd();
+      const seen = new Set<string>();
+      const sections = await pMap(
         files,
-        outFile,
-        dryRun,
-        backup,
-        customTemplateName,
-        whitelabel,
+        async (f) => {
+          const raw = (await fs.readFile(f, "utf8")) as string;
+          if (dedupe) {
+            const hash = raw.trim();
+            if (seen.has(hash)) return null;
+            seen.add(hash);
+          }
+          const rel = path.relative(cwd, f);
+          const prefix = getPrefix(f);
+          let section = raw;
+          if (pathAbove) {
+            section = `${prefix}${rel}\n${section}`;
+          }
+          if (injectPath) {
+            section = `${ensureTrailingNL(section)}${prefix}${rel}`;
+          }
+          return section;
+        },
+        { concurrency },
       );
+      const filteredSections = sections.filter(Boolean) as string[];
+      if (header) filteredSections.unshift(header);
+      if (footer) filteredSections.push(footer);
+
+      await writeResult(filteredSections, separator, outFile, stdoutFlag, dryRun, backup);
       const elapsed = getElapsedPerfTime(timer);
-      relinka(
-        "success",
-        `Successfully ${dryRun ? "would generate" : "generated"} template file "${outFile}" (in ${prettyMilliseconds(elapsed)})`,
-      );
-      return;
+      relinka("success", `Merge completed in ${prettyMilliseconds(elapsed)}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      relinka("error", `Error during merge operation: ${errorMessage}`);
+      process.exit(1);
     }
-
-    const getPrefix = (filePath: string): string => {
-      if (forceComment && customComment) return customComment;
-      const ext = path.extname(filePath).slice(1).toLowerCase();
-      return COMMENT_MAP[ext] ?? customComment ?? DEFAULT_COMMENT;
-    };
-
-    if (outFile && (await fs.pathExists(outFile)) && (await fs.stat(outFile)).isDirectory()) {
-      await writeFilesPreserveStructure(
-        files,
-        outFile,
-        preserveStructure,
-        increment,
-        concurrency,
-        dryRun,
-        backup,
-      );
-      return;
-    }
-
-    const cwd = process.cwd();
-    const seen = new Set<string>();
-    const sections = await pMap(
-      files,
-      async (f) => {
-        const raw = (await fs.readFile(f, "utf8")) as string;
-        if (dedupe) {
-          const hash = raw.trim();
-          if (seen.has(hash)) return null;
-          seen.add(hash);
-        }
-        const rel = path.relative(cwd, f);
-        const prefix = getPrefix(f);
-        let section = raw;
-        if (pathAbove) {
-          section = `${prefix}${rel}\n${section}`;
-        }
-        if (injectPath) {
-          section = `${ensureTrailingNL(section)}${prefix}${rel}`;
-        }
-        return section;
-      },
-      { concurrency },
-    );
-    const filteredSections = sections.filter(Boolean) as string[];
-    if (header) filteredSections.unshift(header);
-    if (footer) filteredSections.push(footer);
-
-    await writeResult(filteredSections, separator, outFile, stdoutFlag, dryRun, backup);
-    const elapsed = getElapsedPerfTime(timer);
-    relinka("success", `Merge completed in ${prettyMilliseconds(elapsed)}`);
   },
 });
