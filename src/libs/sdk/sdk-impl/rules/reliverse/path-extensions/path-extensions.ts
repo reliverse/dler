@@ -54,7 +54,7 @@ export async function checkPathExtensions(options: RulesCheckOptions): Promise<C
         onProgress?.(globalIndex + 1, importableFiles.length, file);
 
         try {
-          const content = await fs.readFile(file, "utf-8");
+          const content = await fs.readFile(file, "utf8");
           const imports = getFileImportsExports(content, {
             kind: "import",
             pathTypes: ["relative", "alias"],

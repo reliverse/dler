@@ -247,10 +247,39 @@ export async function writeFileSafe(
 }
 
 /**
- * Copies files/folders that match patterns in dontBuildCopyInstead to the output directory.
+ * Copies files and directories that should not be built to the output directory.
+ * This function is called after all build steps have completed to ensure copied assets
+ * are not accidentally wiped by the clean step inside `_build`.
  *
- * We call this **after** all build steps have completed so that the clean step
- * inside `_build` cannot accidentally wipe the copied assets.
+ * Features:
+ * - Directory copying with all contents (recursive)
+ * - Windows path compatibility
+ * - Retries on busy files
+ * - Batch processing to manage memory
+ * - Security checks for sensitive patterns
+ *
+ * @param rootDir - The root directory to copy from
+ * @param outDir - The output directory to copy to
+ * @param patterns - Array of glob patterns to match files/directories to copy
+ *
+ * @example
+ * ```ts
+ * **🔥 IMPORTANT**: IGNORE SPACES BETWEEN SLASHES IN THIS EXAMPLE;
+ * WE USE SPACES BECAUSE VSCODE JSDOC INCORRECTLY PARSES TWO STARS AND A SLASH
+ *
+ * // Copy a directory and its contents:
+ * await copyInsteadOfBuild(rootDir, outDir, ["** / templates"]);
+ * // Copy multiple directories:
+ * await copyInsteadOfBuild(rootDir, outDir, ["** / templates", "** / assets"]);
+ * // Copy file types:
+ * await copyInsteadOfBuild(rootDir, outDir, ["** / *.json", "** / *.md"]);
+ * ```
+ *
+ * Notes:
+ * - Use `** /` prefix to match directories at any depth
+ * - Patterns are processed in batches to manage memory
+ * - Sensitive patterns (node_modules, .git, etc.) are automatically filtered
+ * - The function will retry on busy files up to 3 times
  */
 export async function copyInsteadOfBuild(
   rootDir: string,
@@ -260,6 +289,10 @@ export async function copyInsteadOfBuild(
   if (!patterns.length) return;
 
   relinka("info", "Copying files/folders that should not be built...");
+
+  // Normalize paths for Windows compatibility
+  const normalizedRootDir = path.normalize(rootDir);
+  const normalizedOutDir = path.normalize(outDir);
 
   // Validate patterns for security and correctness
   const SENSITIVE_PATTERNS = [
@@ -297,36 +330,79 @@ export async function copyInsteadOfBuild(
     retryCount = 0,
   ): Promise<void> {
     try {
+      // Normalize paths
+      const normalizedSource = path.normalize(source);
+      const normalizedDest = path.normalize(dest);
+
+      // Validate paths
+      if (!normalizedSource || !normalizedDest) {
+        throw new Error(`Invalid paths: source=${normalizedSource}, dest=${normalizedDest}`);
+      }
+
       // Create parent directory if it doesn't exist
-      await fs.mkdir(path.dirname(dest), { recursive: true });
+      const destDir = path.dirname(normalizedDest);
+      try {
+        await fs.mkdir(destDir, { recursive: true });
+      } catch (error: any) {
+        if (error.code !== "EEXIST") {
+          throw new Error(`Failed to create directory ${destDir}: ${error.message}`);
+        }
+      }
 
       // Check if source exists and is accessible
       try {
-        await fs.access(source);
-      } catch {
-        relinka("warn", `Source not accessible: ${relativePath}`);
+        await fs.access(normalizedSource);
+      } catch (error: any) {
+        relinka("warn", `Source not accessible: ${relativePath} (${error.message})`);
         return;
       }
 
-      // Copy with optimized options
-      await fs.cp(source, dest, {
-        recursive: true,
-        dereference: true,
-        force: true,
-        errorOnExist: false,
-      });
+      // Remove destination if it exists before copying
+      if (await fs.pathExists(normalizedDest)) {
+        try {
+          relinka("verbose", `Removing existing destination: ${normalizedDest}`);
+          await fs.remove(normalizedDest);
+        } catch (error: any) {
+          if (error.code === "EBUSY" && retryCount < MAX_RETRIES) {
+            relinka("warn", `Destination ${normalizedDest} is busy, retrying in ${RETRY_DELAY}ms`);
+            await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
+            return copyWithRetry(normalizedSource, normalizedDest, relativePath, retryCount + 1);
+          }
+          throw new Error(
+            `Failed to remove existing destination ${normalizedDest}: ${error.message}`,
+          );
+        }
+      }
 
-      relinka("verbose", `Copied instead of building: ${relativePath}`);
+      // Copy with optimized options
+      try {
+        await fs.cp(normalizedSource, normalizedDest, {
+          recursive: true,
+          dereference: true,
+          force: true,
+          errorOnExist: false,
+        });
+        relinka("verbose", `Copied instead of building: ${relativePath}`);
+      } catch (error: any) {
+        if (error.code === "EBUSY" && retryCount < MAX_RETRIES) {
+          relinka(
+            "warn",
+            `File ${relativePath} is busy, retrying in ${RETRY_DELAY}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
+          return copyWithRetry(normalizedSource, normalizedDest, relativePath, retryCount + 1);
+        }
+        throw new Error(`Failed to copy ${relativePath}: ${error.message}`);
+      }
     } catch (error: any) {
-      if (error.code === "EBUSY" && retryCount < MAX_RETRIES) {
+      if (retryCount < MAX_RETRIES) {
         relinka(
           "warn",
-          `File ${relativePath} is busy, retrying in ${RETRY_DELAY}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`,
+          `Error copying ${relativePath}, retrying in ${RETRY_DELAY}ms (attempt ${retryCount + 1}/${MAX_RETRIES}): ${error.message}`,
         );
         await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
         return copyWithRetry(source, dest, relativePath, retryCount + 1);
       }
-      // Throw error after max retries or for non-EBUSY errors
       throw new Error(
         `Failed to copy ${relativePath} after ${retryCount} retries: ${error.message}`,
       );
@@ -339,24 +415,32 @@ export async function copyInsteadOfBuild(
 
     // Process each pattern in the current batch
     for (const pattern of batchPatterns) {
-      const matches = await glob(pattern, {
-        cwd: rootDir,
-        dot: true,
-        absolute: true,
-        onlyFiles: false,
-        followSymbolicLinks: false,
-      });
+      try {
+        const matches = await glob(pattern, {
+          cwd: normalizedRootDir,
+          dot: true,
+          absolute: true,
+          onlyFiles: false,
+          followSymbolicLinks: false,
+        });
 
-      for (const match of matches) {
-        const relativePath = path.relative(rootDir, match);
-        const destPath = path.resolve(outDir, relativePath);
-        batchCopyTasks.push(copyWithRetry(match, destPath, relativePath));
+        for (const match of matches) {
+          const relativePath = path.relative(normalizedRootDir, match);
+          const destPath = path.resolve(normalizedOutDir, relativePath);
+          batchCopyTasks.push(copyWithRetry(match, destPath, relativePath));
+        }
+      } catch (error: any) {
+        relinka("error", `Failed to process pattern ${pattern}: ${error.message}`);
       }
     }
 
     // Process current batch
     if (batchCopyTasks.length > 0) {
-      await Promise.all(batchCopyTasks);
+      try {
+        await Promise.all(batchCopyTasks);
+      } catch (error: any) {
+        relinka("error", `Batch processing failed: ${error.message}`);
+      }
 
       // Add delay between batches if not the last batch
       if (i + BATCH_SIZE < filteredPatterns.length) {

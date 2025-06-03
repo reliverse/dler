@@ -1,13 +1,13 @@
 import { relative, resolve } from "@reliverse/pathkit";
-import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
+import { promises as fsp } from "node:fs";
 import { glob } from "tinyglobby";
 
 import type { BuildContext, CopyBuildEntry } from "~/libs/sdk/sdk-types";
 
 import { rmdir, symlink, warn } from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils";
 
-const copy = fs.cp || fs.copyFile;
+const copy = fsp.cp || fsp.copyFile;
 
 export async function copyBuild(ctx: BuildContext): Promise<void> {
   const entries = ctx.options.entries.filter((e) => e.builder === "copy") as CopyBuildEntry[];

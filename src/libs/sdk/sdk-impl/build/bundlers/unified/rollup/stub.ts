@@ -1,6 +1,6 @@
 import { basename, dirname, extname, relative, resolve } from "@reliverse/pathkit";
-import fs from "@reliverse/relifso";
 import { fileURLToPath, resolveModuleExportNames, resolvePath } from "mlly";
+import { promises as fsp } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 
 import type { BuildContext } from "~/libs/sdk/sdk-types";
@@ -66,7 +66,7 @@ export async function rollupStub(ctx: BuildContext): Promise<void> {
     const resolvedEntryForTypeImport = isESM
       ? resolvedEntry.replace(/(\.m?)(ts)$/, "$1js")
       : resolvedEntryWithoutExt;
-    const code = await fs.readFile(resolvedEntry, "utf8");
+    const code = await fsp.readFile(resolvedEntry, "utf8");
     const shebang = getShebang(code);
 
     await mkdir(dirname(output), { recursive: true });

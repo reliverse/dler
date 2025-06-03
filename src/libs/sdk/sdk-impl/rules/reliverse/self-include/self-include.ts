@@ -16,7 +16,7 @@ export async function checkSelfInclude(options: RulesCheckOptions): Promise<Chec
 
   try {
     // Get package name from package.json
-    const packageJson = JSON.parse(await fs.readFile("package.json", "utf-8")) as {
+    const packageJson = JSON.parse(await fs.readFile("package.json", "utf8")) as {
       name: string;
     };
     const packageName = packageJson.name;
@@ -74,7 +74,7 @@ export async function checkSelfInclude(options: RulesCheckOptions): Promise<Chec
         onProgress?.(globalIndex + 1, importableFiles.length, file);
 
         try {
-          const content = await fs.readFile(file, "utf-8");
+          const content = await fs.readFile(file, "utf8");
           const imports = getFileImportsExports(content, {
             kind: "import",
             pathTypes: ["bare"],

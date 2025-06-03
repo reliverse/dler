@@ -59,7 +59,7 @@ export async function consoleToRelinka(input?: string, from?: LogFormat, to?: Lo
   }
 
   // Read file content
-  let content = await fs.readFile(finalInput, "utf-8");
+  let content = await fs.readFile(finalInput, "utf8");
   let changes = false;
 
   const levels = [
@@ -175,7 +175,7 @@ export async function consoleToRelinka(input?: string, from?: LogFormat, to?: Lo
     relinka("warn", "⚠️ No matching calls found to convert");
   } else {
     // Write the modified content back to the file
-    await fs.writeFile(finalInput, content, "utf-8");
+    await fs.writeFile(finalInput, content, "utf8");
     relinka("success", "✨ Successfully converted all logging calls to the target format");
   }
 }

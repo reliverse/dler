@@ -145,14 +145,13 @@ export async function regular_buildJsrDist(
  */
 export async function regular_buildNpmDist(
   isDev: boolean,
-  isCLI: boolean,
+  coreIsCLI: { enabled: boolean; scripts: Record<string, string> },
   coreEntrySrcDir: string,
   distNpmDirName: string,
   distNpmBuilder: BundlerName,
   coreEntryFile: string,
   unifiedBundlerOutExt: NpmOutExt,
   config: DlerConfig,
-  coreIsCLI: { enabled: boolean; scripts: Record<string, string> },
   transpileTarget: transpileTarget,
   transpileFormat: transpileFormat,
   transpileSplitting: boolean,
@@ -164,6 +163,7 @@ export async function regular_buildNpmDist(
   timer: PerfTimer,
   coreDeclarations: boolean,
 ): Promise<void> {
+  const isCLI = coreIsCLI.enabled;
   const outDirRoot = path.join(process.cwd(), distNpmDirName);
   const outDirBin = path.join(outDirRoot, config.coreBuildOutDir || "bin");
   const singleFile = path.join(process.cwd(), coreEntrySrcDir, coreEntryFile);
@@ -414,7 +414,7 @@ async function regular_bundleUsingUnified(
       showOutLog: true,
       transpileStub,
       transpileWatch: transpileWatch ?? false,
-      dontBuildCopyInstead: ["**/templates/**"],
+      dontBuildCopyInstead: ["**/templates"],
     } satisfies UnifiedBuildConfig & { concurrency?: number };
 
     await unifiedBuild(coreEntrySrcDir, isCLI, false, rootDir, unifiedBuildConfig, outDirBin);

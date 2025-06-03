@@ -5,16 +5,22 @@ import type { RollupJsonOptions } from "@rollup/plugin-json";
 import type { RollupNodeResolveOptions } from "@rollup/plugin-node-resolve";
 import type { RollupReplaceOptions } from "@rollup/plugin-replace";
 import type { FilterPattern } from "@rollup/pluginutils";
-import type { CommonOptions, Loader } from "esbuild";
+import type { Options as AutoprefixerOptions } from "autoprefixer";
+import type { Options as CssnanoOptions } from "cssnano";
+import type { CommonOptions, Loader as EsbuildLoader } from "esbuild";
 import type { Hookable } from "hookable";
 import type { Jiti, JitiOptions } from "jiti";
-import type { PackageJson } from "pkg-types";
+import type { PackageJson, TSConfig } from "pkg-types";
+import type {
+  AcceptedPlugin as PostcssPlugin,
+  ProcessOptions as PostcssProcessOptions,
+} from "postcss";
+import type { Options as PostcssNestedOptions } from "postcss-nested";
 import type { WatcherOptions } from "rollup";
 import type { RollupOptions as _RollupOptions, OutputOptions, Plugin, RollupBuild } from "rollup";
 import type { Options as RollupDtsOptions } from "rollup-plugin-dts";
+import type { GlobOptions } from "tinyglobby";
 import type { Schema } from "untyped";
-
-import type { MkdistOptions } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/make";
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -698,7 +704,7 @@ export type EsbuildOptions = CommonOptions & {
    * Map extension to transpileEsbuild loader
    * Note that each entry (the extension) needs to start with a dot
    */
-  loaders?: Record<string, false | Loader>;
+  loaders?: Record<string, false | EsbuildLoader>;
 };
 
 export type RollupBuildOptions = {
@@ -995,12 +1001,6 @@ export type BuildOptions = {
    * Watch mode options.
    */
   transpileWatchOptions: undefined | WatcherOptions;
-
-  /**
-   * Array of glob patterns specifying files/folders that should be copied directly instead of being built.
-   * These patterns are matched against the source directory and copied to the output directory.
-   */
-  dontBuildCopyInstead?: string[];
 };
 
 export type BuildPreset = (() => UnifiedBuildConfig) | UnifiedBuildConfig;
@@ -1035,20 +1035,7 @@ export type UnifiedBuildConfig = DeepPartial<Omit<BuildOptions, "entries">> & {
   stub?: boolean;
 
   /**
-   * TypeScript compiler options for the build process.
-   */
-  typescript?: {
-    compilerOptions?: {
-      emitDeclarationOnly?: boolean;
-      declaration?: boolean;
-      noEmit?: boolean;
-      [key: string]: any;
-    };
-  };
-
-  /**
-   * Array of glob patterns specifying files/folders that should be copied directly instead of being built.
-   * These patterns are matched against the source directory and copied to the output directory.
+   * What to copy instead of build
    */
   dontBuildCopyInstead?: string[];
 };
@@ -1136,3 +1123,77 @@ export type CheckResult = {
     timeElapsed: number;
   };
 };
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+export type InputFile = {
+  path: string;
+  extension: string;
+  srcPath?: string;
+  getContents: () => Promise<string> | string;
+};
+
+export type OutputFile = {
+  /**
+   * relative to distDir
+   */
+  path: string;
+  srcPath?: string;
+  extension?: string;
+  contents?: string;
+  declaration?: boolean;
+  errors?: Error[];
+  raw?: boolean;
+  skip?: boolean;
+};
+
+export type LoaderResult = OutputFile[] | undefined;
+
+export type LoadFile = (input: InputFile) => LoaderResult | Promise<LoaderResult>;
+
+type LoaderOptions = {
+  ext?: "js" | "mjs" | "cjs" | "ts" | "mts" | "cts";
+  format?: "cjs" | "esm";
+  declaration?: boolean;
+  esbuild?: CommonOptions;
+  postcss?:
+    | false
+    | {
+        nested?: false | PostcssNestedOptions;
+        autoprefixer?: false | AutoprefixerOptions;
+        cssnano?: false | CssnanoOptions;
+        plugins?: PostcssPlugin[];
+        processOptions?: Omit<PostcssProcessOptions, "from">;
+      };
+};
+
+export type LoaderContext = {
+  loadFile: LoadFile;
+  options: LoaderOptions;
+};
+
+export type Loader = (
+  input: InputFile,
+  context: LoaderContext,
+) => LoaderResult | Promise<LoaderResult>;
+
+// should be the same as the loaders in loaders-mod.ts
+type LoaderName = "js" | "vue" | "sass" | "postcss";
+
+export type CreateLoaderOptions = {
+  loaders?: (Loader | LoaderName)[];
+} & LoaderOptions;
+
+export type MkdistOptions = {
+  rootDir?: string;
+  srcDir?: string;
+  pattern?: string | string[];
+  globOptions?: GlobOptions;
+  distDir?: string;
+  cleanDist?: boolean;
+  loaders?: (LoaderName | Loader)[];
+  addRelativeDeclarationExtensions?: boolean;
+  typescript?: {
+    compilerOptions?: TSConfig["compilerOptions"];
+  };
+} & LoaderOptions;

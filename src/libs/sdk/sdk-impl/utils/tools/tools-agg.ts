@@ -195,7 +195,7 @@ async function getNamedExports(filePath: string): Promise<{
   typeNames: string[];
   valueNames: string[];
 }> {
-  const code = await fs.readFile(filePath, "utf-8");
+  const code = await fs.readFile(filePath, "utf8");
 
   // Regex captures lines like:
   //

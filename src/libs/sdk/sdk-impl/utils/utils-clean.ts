@@ -71,7 +71,7 @@ export async function removeLogInternalCalls(targetDir: string): Promise<boolean
     tsJsFiles,
     async (file) => {
       const filePath = path.join(targetDir, file);
-      const content = await fs.readFile(filePath, "utf-8");
+      const content = await fs.readFile(filePath, "utf8");
 
       // Remove logInternal calls
       let newContent = content.replace(

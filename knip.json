@@ -18,5 +18,5 @@
     "src/libs/sdk/sdk-impl/**/*.ts",
     "src/types.ts"
   ],
-  "ignoreDependencies": ["bun", "vue-tsc2.0", "vue-tsc1"]
+  "ignoreDependencies": ["bun"]
 }

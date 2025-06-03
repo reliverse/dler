@@ -1,10 +1,11 @@
 import type { CreateProgramOptions } from "typescript";
 
-import { relinka } from "@reliverse/relinka";
 import { createRequire } from "node:module";
+import { normalize } from "pathe";
+// import { readPackageJSON } from "pkg-types"; // TODO: use normal import in next major
 import { satisfies } from "semver";
 
-import type { MkdistOptions } from "~/libs/sdk/sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/make";
+import type { MkdistOptions } from "~/libs/sdk/sdk-types";
 
 import type { DeclarationOutput } from "./dts";
 
@@ -16,54 +17,40 @@ export async function getVueDeclarations(
   vfs: Map<string, string>,
   opts?: MkdistOptions,
 ): Promise<DeclarationOutput> {
-  relinka("verbose", "Starting Vue declarations generation");
-
   const fileMapping = getFileMapping(vfs);
   const srcFiles = Object.keys(fileMapping);
   const originFiles = Object.values(fileMapping);
   if (originFiles.length === 0) {
-    relinka("verbose", "No Vue files found to process");
-    return {};
+    // @ts-expect-error TODO: fix ts
+    return;
   }
-
-  relinka("verbose", `Found ${originFiles.length} Vue files to process`);
 
   const { readPackageJSON } = await import("pkg-types"); // TODO
   const pkgInfo = await readPackageJSON("vue-tsc").catch(() => {});
   if (!pkgInfo) {
-    relinka("verbose", "vue-tsc not found, skipping Vue SFC declarations");
     console.warn("[mkdist] Please install `vue-tsc` to generate Vue SFC declarations.");
-    return {};
+    // @ts-expect-error TODO: fix ts
+    return;
   }
 
   const { version } = pkgInfo;
-  if (!version) {
-    relinka("verbose", "Could not determine vue-tsc version");
-    console.warn("[mkdist] Could not determine vue-tsc version.");
-    return {};
-  }
-
-  relinka("verbose", `Using vue-tsc version: ${version}`);
-
   let output: DeclarationOutput;
   switch (true) {
+    // @ts-expect-error TODO: fix ts
     case satisfies(version, "^1.8.27"): {
-      relinka("verbose", "Using vue-tsc v1.x emitter");
       output = await emitVueTscV1(vfs, srcFiles, originFiles, opts);
       break;
     }
+    // @ts-expect-error TODO: fix ts
     case satisfies(version, "~v2.0.0"): {
-      relinka("verbose", "Using vue-tsc v2.x emitter");
       output = await emitVueTscV2(vfs, srcFiles, originFiles, opts);
       break;
     }
     default: {
-      relinka("verbose", "Using latest vue-tsc emitter");
       output = await emitVueTscLatest(vfs, srcFiles, originFiles, opts);
     }
   }
 
-  relinka("verbose", "Completed Vue declarations generation");
   return output;
 }
 
@@ -85,19 +72,17 @@ async function emitVueTscV1(
   originFiles: string[],
   opts?: MkdistOptions,
 ) {
-  const vueTsc = await import("vue-tsc").then((r) => r.default || r).catch(() => undefined);
+  // @ts-expect-error TODO: fix ts
+  const vueTsc: typeof import("vue-tsc1") = await import("vue-tsc")
+    .then((r) => r.default || r)
+    .catch(() => undefined);
 
-  if (!vueTsc) {
-    throw new Error("Failed to import vue-tsc");
-  }
-
+  // Inside vue-tsc, `require` is used instead of `import`. In order to override `ts.sys`, it is necessary to import it in the same way as vue-tsc for them to refer to the same file.
   const ts = require("typescript") as typeof import("typescript/lib/tsserverlibrary");
 
-  if (!opts?.typescript?.compilerOptions) {
-    throw new Error("Missing TypeScript compiler options");
-  }
-
+  // @ts-expect-error TODO: fix ts
   const tsHost = ts.createCompilerHost(opts.typescript.compilerOptions);
+
   const _tsSysWriteFile = ts.sys.writeFile;
   ts.sys.writeFile = (filename, content) => {
     vfs.set(filename, content);
@@ -111,8 +96,10 @@ async function emitVueTscV1(
   };
 
   try {
-    const program = ts.createProgram({
+    // @ts-expect-error TODO: fix ts
+    const program = vueTsc.createProgram({
       rootNames: inputFiles,
+      // @ts-expect-error TODO: fix ts
       options: opts.typescript.compilerOptions,
       host: tsHost,
     });
@@ -137,18 +124,17 @@ async function emitVueTscV2(
 ) {
   const { resolve: resolveModule } = await import("mlly");
   const ts: typeof import("typescript") = await import("typescript").then((r) => r.default || r);
+  const vueTsc = (await import("vue-tsc")) as unknown as typeof import("vue-tsc2.0");
   const requireFromVueTsc = createRequire(await resolveModule("vue-tsc"));
   const vueLanguageCore: typeof import("@vue/language-core2.0") =
     requireFromVueTsc("@vue/language-core");
   const volarTs: typeof import("@volar/typescript") = requireFromVueTsc("@volar/typescript");
 
-  if (!opts?.typescript?.compilerOptions) {
-    throw new Error("Missing TypeScript compiler options");
-  }
-
+  // @ts-expect-error TODO: fix ts
   const tsHost = ts.createCompilerHost(opts.typescript.compilerOptions);
   tsHost.writeFile = (filename, content) => {
-    vfs.set(filename, content);
+    // @ts-expect-error TODO: fix ts
+    vfs.set(filename, vueTsc.removeEmitGlobalTypes(content));
   };
   const _tsReadFile = tsHost.readFile.bind(tsHost);
   tsHost.readFile = (filename) => {
@@ -161,25 +147,34 @@ async function emitVueTscV2(
   tsHost.fileExists = (filename) => {
     return vfs.has(filename) || _tsFileExist(filename);
   };
-
   const programOptions: CreateProgramOptions = {
     rootNames: inputFiles,
+    // @ts-expect-error TODO: fix ts
     options: opts.typescript.compilerOptions,
     host: tsHost,
   };
-
   const createProgram = volarTs.proxyCreateProgram(ts, ts.createProgram, (ts, options) => {
     const vueLanguagePlugin = vueLanguageCore.createVueLanguagePlugin<string>(
       ts,
+      // @ts-expect-error TODO: fix ts
+      (id) => id,
+      () => "",
+      (fileName) => {
+        const fileMap = new Set();
+        for (const vueFileName of options.rootNames.map((rootName) => normalize(rootName))) {
+          fileMap.add(vueFileName);
+        }
+        return fileMap.has(fileName);
+      },
+      // @ts-expect-error TODO: fix ts
       options.options,
-      vueLanguageCore.createParsedCommandLineByJson(ts, ts.sys, ".", {}, undefined, true)
-        .vueOptions,
-      (id: string) => id,
+      vueLanguageCore.resolveVueCompilerOptions({}),
     );
     return [vueLanguagePlugin];
   });
 
   const program = createProgram(programOptions);
+
   const result = program.emit();
   const output = extractDeclarations(vfs, originFiles, opts);
 
@@ -201,10 +196,7 @@ async function emitVueTscLatest(
     requireFromVueTsc("@vue/language-core");
   const volarTs: typeof import("@volar/typescript") = requireFromVueTsc("@volar/typescript");
 
-  if (!opts?.typescript?.compilerOptions) {
-    throw new Error("Missing TypeScript compiler options");
-  }
-
+  // @ts-expect-error TODO: fix ts
   const tsHost = ts.createCompilerHost(opts.typescript.compilerOptions);
   tsHost.writeFile = (filename, content) => {
     vfs.set(filename, content);
@@ -223,27 +215,25 @@ async function emitVueTscLatest(
 
   const programOptions: CreateProgramOptions = {
     rootNames: inputFiles,
+    // @ts-expect-error TODO: fix ts
     options: opts.typescript.compilerOptions,
     host: tsHost,
   };
 
-  if (!opts?.rootDir) {
-    throw new Error("Missing rootDir in options");
-  }
-
-  const rootDir = opts.rootDir;
   const createProgram = volarTs.proxyCreateProgram(ts, ts.createProgram, (ts, options) => {
     const vueLanguagePlugin = vueLanguageCore.createVueLanguagePlugin<string>(
       ts,
       options.options,
-      vueLanguageCore.createParsedCommandLineByJson(ts, ts.sys, rootDir, {}, undefined, true)
+      // @ts-expect-error TODO: fix ts
+      vueLanguageCore.createParsedCommandLineByJson(ts, ts.sys, opts.rootDir, {}, undefined, true)
         .vueOptions,
-      (id: string) => id,
+      (id) => id,
     );
     return [vueLanguagePlugin];
   });
 
   const program = createProgram(programOptions);
+
   const result = program.emit();
   const output = extractDeclarations(vfs, originFiles, opts);
 

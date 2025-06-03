@@ -74,7 +74,7 @@ async function updateTsConfig(
   }
 
   try {
-    const content = await readFile(tsConfigPath, "utf-8");
+    const content = await readFile(tsConfigPath, "utf8");
     const tsConfig = JSON.parse(content) as TsConfig;
     const changes: string[] = [];
 
@@ -115,7 +115,7 @@ async function updateTsConfig(
 
     if (changes.length > 0) {
       if (!dryRun) {
-        await writeFile(tsConfigPath, JSON.stringify(tsConfig, null, 2) + "\n", "utf-8");
+        await writeFile(tsConfigPath, JSON.stringify(tsConfig, null, 2) + "\n", "utf8");
       }
 
       results.push({
@@ -156,7 +156,7 @@ async function updatePackageJson(dryRun = false): Promise<MigrationResult[]> {
   }
 
   try {
-    const content = await readFile(packageJsonPath, "utf-8");
+    const content = await readFile(packageJsonPath, "utf8");
     const packageJson = JSON.parse(content) as PackageJson;
     const changes: string[] = [];
 
@@ -168,7 +168,7 @@ async function updatePackageJson(dryRun = false): Promise<MigrationResult[]> {
 
     if (changes.length > 0) {
       if (!dryRun) {
-        await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n", "utf-8");
+        await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n", "utf8");
       }
 
       results.push({
@@ -204,7 +204,7 @@ async function updateImportExtensions(
 
   for (const file of files) {
     try {
-      const content = await readFile(file, "utf-8");
+      const content = await readFile(file, "utf8");
       const analysis = getFileImportsExports(content, {
         kind: "import",
         pathTypes: ["relative", "absolute", "alias"],
@@ -257,7 +257,7 @@ async function updateImportExtensions(
 
       if (hasChanges) {
         if (!dryRun) {
-          await writeFile(file, modified, "utf-8");
+          await writeFile(file, modified, "utf8");
         }
 
         results.push({

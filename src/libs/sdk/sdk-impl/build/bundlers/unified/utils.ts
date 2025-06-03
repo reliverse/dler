@@ -5,6 +5,7 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { createJiti } from "jiti";
 import { readdirSync, statSync } from "node:fs";
+import fsp from "node:fs/promises";
 
 import type { BuildContext, BuildPreset, UnifiedBuildConfig } from "~/libs/sdk/sdk-types";
 
@@ -126,10 +127,10 @@ export async function resolvePreset(
 }
 
 export async function rmdir(dir: string): Promise<void> {
-  await fs.unlink(dir).catch(() => {
+  await fsp.unlink(dir).catch(() => {
     /* Ignore error if file doesn't exist */
   });
-  await fs.rm(dir, { force: true, recursive: true }).catch(() => {
+  await fsp.rm(dir, { force: true, recursive: true }).catch(() => {
     /* Ignore error if directory doesn't exist or can't be removed */
   });
 }
@@ -137,11 +138,11 @@ export async function rmdir(dir: string): Promise<void> {
 export async function symlink(from: string, to: string, force = true): Promise<void> {
   await fs.ensureDir(to);
   if (force) {
-    await fs.unlink(to).catch(() => {
+    await fsp.unlink(to).catch(() => {
       /* Ignore error if file doesn't exist */
     });
   }
-  await fs.symlink(from, to, "junction");
+  await fsp.symlink(from, to, "junction");
 }
 
 export function warn(ctx: BuildContext, message: string): void {

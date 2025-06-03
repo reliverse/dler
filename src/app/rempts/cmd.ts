@@ -98,7 +98,7 @@ export default defineCommand({
         }
         await fs.ensureDir(dirPath);
         const content = generateCommandTemplate(cmdName);
-        await fs.writeFile(filePath, content, "utf-8");
+        await fs.writeFile(filePath, content, "utf8");
         relinka("log", `✅ Created new command: ${filePath}`);
       }
 
@@ -136,7 +136,7 @@ export default defineCommand({
 
       const exports = generateExports(cmdDirs);
       await fs.ensureDir(path.dirname(outPath));
-      await fs.writeFile(outPath, exports, "utf-8");
+      await fs.writeFile(outPath, exports, "utf8");
       relinka("success", `✅ Generated command exports at: ${outPath}`);
       relinka("log", `Found ${cmdDirs.length} command(s): ${cmdDirs.join(", ")}`);
       return;
@@ -161,7 +161,7 @@ export default defineCommand({
 
     const exports = generateExports(cmdDirs);
     await fs.ensureDir(path.dirname(outPath));
-    await fs.writeFile(outPath, exports, "utf-8");
+    await fs.writeFile(outPath, exports, "utf8");
     relinka("success", `✅ Generated command exports at: ${outPath}`);
     relinka("log", `Found ${cmdDirs.length} command(s): ${cmdDirs.join(", ")}`);
 
@@ -214,7 +214,7 @@ async function handleDlerConfig() {
       const firstScript = Object.values(coreIsCLI.scripts)[0] as string;
       const scriptPath = path.resolve(firstScript);
       if (await fs.pathExists(scriptPath)) {
-        const content = await fs.readFile(scriptPath, "utf-8");
+        const content = await fs.readFile(scriptPath, "utf8");
         if (content.includes("@reliverse/rempts")) {
           if (content.includes("runMain")) {
             const cmdsRootMatch = content.match(/cmdsRootPath:\s*["']([^"']+)["']/);
@@ -243,7 +243,7 @@ async function ensureCliFile(filePath: string): Promise<string> {
   const resolvedPath = path.resolve(filePath);
   if (!(await fs.pathExists(resolvedPath))) {
     await fs.ensureDir(path.dirname(resolvedPath));
-    await fs.writeFile(resolvedPath, cliTemplate, "utf-8");
+    await fs.writeFile(resolvedPath, cliTemplate, "utf8");
     relinka("log", `✅ Created CLI entry file: ${resolvedPath}`);
     return resolvedPath;
   }

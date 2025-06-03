@@ -1,4 +1,3 @@
-import { relinka } from "@reliverse/relinka";
 import type { SFCBlock } from "vue/compiler-sfc";
 
 import type {
@@ -7,7 +6,7 @@ import type {
   LoaderContext,
   LoaderResult,
   OutputFile,
-} from "~/libs/sdk/sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/loader";
+} from "~/libs/sdk/sdk-types";
 
 export type DefineVueLoaderOptions = {
   blockLoaders?: Record<string, VueBlockLoader | undefined>;
@@ -30,24 +29,16 @@ export type DefaultBlockLoaderOptions = {
 };
 
 let warnedTypescript = false;
-
-// Step 1: Define Vue loader factory
 function defineVueLoader(options?: DefineVueLoaderOptions): Loader {
-  relinka("info", "Step 1: Creating Vue loader");
   const blockLoaders = options?.blockLoaders || {};
 
   return async (input, context) => {
-    relinka("verbose", `Processing Vue file: ${input.path}`);
-
-    // Step 2: Check if file should be processed
     if (input.extension !== ".vue") {
-      relinka("verbose", "Skipping file - not a Vue file");
       return;
     }
 
-    // Step 3: Parse Vue SFC
-    relinka("verbose", "Parsing Vue Single File Component");
     const { parse } = await import("vue/compiler-sfc");
+
     let modified = false;
 
     const raw = await input.getContents();
@@ -55,30 +46,23 @@ function defineVueLoader(options?: DefineVueLoaderOptions): Loader {
       filename: input.srcPath,
       ignoreEmpty: true,
     });
-
-    // Step 4: Handle parsing errors
     if (sfc.errors.length > 0) {
-      relinka("warn", `Found ${sfc.errors.length} errors in Vue SFC`);
       for (const error of sfc.errors) {
         console.error(error);
       }
       return;
     }
 
-    // Step 5: Check TypeScript support
     const isTs = [sfc.descriptor.script?.lang, sfc.descriptor.scriptSetup?.lang].some((lang) =>
       lang?.startsWith("ts"),
     );
     if (isTs && !warnedTypescript) {
-      relinka(
-        "warn",
-        "vue-sfc-transformer is not installed. TypeScript syntax in Vue SFCs will not be transformed.",
+      console.warn(
+        "[mkdist] vue-sfc-transformer is not installed. mkdist will not transform typescript syntax in Vue SFCs.",
       );
       warnedTypescript = true;
     }
 
-    // Step 6: Process SFC blocks
-    relinka("verbose", "Processing SFC blocks");
     const output: LoaderResult = [];
     const addOutput = (...files: OutputFile[]) => output.push(...files);
 
@@ -86,8 +70,7 @@ function defineVueLoader(options?: DefineVueLoaderOptions): Loader {
       (item) => !!item,
     );
 
-    // Step 7: Generate default JS file
-    relinka("verbose", "Generating default JS file");
+    // generate dts
     await context.loadFile({
       path: `${input.path}.js`,
       srcPath: `${input.srcPath}.js`,
@@ -95,8 +78,6 @@ function defineVueLoader(options?: DefineVueLoaderOptions): Loader {
       getContents: () => "export default {}",
     });
 
-    // Step 8: Process each block
-    relinka("verbose", `Processing ${blocks.length} SFC blocks`);
     const results = await Promise.all(
       blocks.map(async (data) => {
         const blockLoader = blockLoaders[data.type];
@@ -113,12 +94,10 @@ function defineVueLoader(options?: DefineVueLoaderOptions): Loader {
     );
 
     if (!modified) {
-      relinka("verbose", "No modifications made to SFC");
       return;
     }
 
-    // Step 9: Add template and script blocks
-    relinka("verbose", "Adding template and script blocks");
+    // skiped blocks
     if (sfc.descriptor.template) {
       results.unshift({
         block: sfc.descriptor.template,
@@ -138,8 +117,6 @@ function defineVueLoader(options?: DefineVueLoaderOptions): Loader {
       });
     }
 
-    // Step 10: Generate final SFC content
-    relinka("verbose", "Generating final SFC content");
     const contents = results
       .sort((a, b) => a.offset - b.offset)
       .map(({ block }) => {
@@ -148,6 +125,7 @@ function defineVueLoader(options?: DefineVueLoaderOptions): Loader {
             if (!value) {
               return undefined;
             }
+
             return value === true ? key : `${key}="${value}"`;
           })
           .filter((item) => !!item)
@@ -159,7 +137,6 @@ function defineVueLoader(options?: DefineVueLoaderOptions): Loader {
         return `${header}\n${block.content.trim()}\n${footer}\n`;
       })
       .join("\n");
-
     addOutput({
       path: input.path,
       srcPath: input.srcPath,
@@ -168,16 +145,13 @@ function defineVueLoader(options?: DefineVueLoaderOptions): Loader {
       declaration: false,
     });
 
-    relinka("info", "Step 10: Vue SFC processing completed");
     return output;
   };
 }
 
-// Step 11: Define default block loader
 function defineDefaultBlockLoader(options: DefaultBlockLoaderOptions): VueBlockLoader {
+  // @ts-expect-error TODO: fix ts
   return async (block, { loadFile, rawInput, addOutput }) => {
-    relinka("verbose", `Processing ${options.type} block`);
-
     if (options.type !== block.type) {
       return;
     }
@@ -198,7 +172,7 @@ function defineDefaultBlockLoader(options: DefaultBlockLoaderOptions): VueBlockL
         f.extension === `.${options.outputLang}` ||
         options.validExtensions?.includes(f.extension as string),
     );
-    if (!blockOutputFile || !blockOutputFile.contents) {
+    if (!blockOutputFile) {
       return;
     }
     addOutput(...files.filter((f) => f !== blockOutputFile));
@@ -211,39 +185,27 @@ function defineDefaultBlockLoader(options: DefaultBlockLoaderOptions): VueBlockL
   };
 }
 
-// Step 12: Define style loader
 const styleLoader = defineDefaultBlockLoader({
   outputLang: "css",
   type: "style",
 });
 
-// Step 13: Define fallback Vue loader
 export const fallbackVueLoader = defineVueLoader({
   blockLoaders: {
     style: styleLoader,
   },
 });
 
-// Step 14: Define main Vue loader
 let cachedVueLoader: Loader | undefined;
 export const vueLoader: Loader = async (file: InputFile, ctx: LoaderContext) => {
-  relinka("info", "Step 14: Loading Vue transformer");
   if (!cachedVueLoader) {
-    relinka("verbose", "Attempting to load vue-sfc-transformer");
-    cachedVueLoader = (await import("vue-sfc-transformer/mkdist")
+    cachedVueLoader = await import("vue-sfc-transformer/mkdist")
       .then((r) => r.vueLoader)
-      .catch(() => {
-        relinka("verbose", "Falling back to default Vue loader");
-        return fallbackVueLoader;
-      })) as Loader;
-  }
-  if (!cachedVueLoader) {
-    throw new Error("Failed to load Vue loader");
+      .catch(() => fallbackVueLoader);
   }
   return cachedVueLoader(file, ctx);
 };
 
-// Step 15: Utility function to omit properties
 function toOmit<R extends Record<keyof object, unknown>, K extends keyof R>(
   record: R,
   toRemove: K,

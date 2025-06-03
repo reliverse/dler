@@ -118,7 +118,7 @@ export default defineCommand({
   export * from "./${libDirName}";
   `;
         await fs.ensureDir(path.dirname(mainFilePath));
-        await fs.writeFile(mainFilePath, mainFileContent, "utf-8");
+        await fs.writeFile(mainFilePath, mainFileContent, "utf8");
         relinka("log", `✅ Created/Updated main file: ${mainFilePath}`);
       } else {
         relinka("warn", `⚠️ Main file already exists: ${mainFilePath}. Use --overwrite to update.`);

@@ -225,7 +225,7 @@ export default defineCommand({
 
     try {
       // Read file content
-      const content = await fs.readFile(input, "utf-8");
+      const content = await fs.readFile(input, "utf8");
 
       // Execute the spell
       const result = await executeSpell(spell, input, content);

@@ -47,7 +47,7 @@ export async function migrateReaddirToGlob(dryRun = false): Promise<MigrationRes
 
   for (const file of files) {
     try {
-      const content = await readFile(file, "utf-8");
+      const content = await readFile(file, "utf8");
       let modified = content;
       const changes: string[] = [];
 
@@ -81,7 +81,7 @@ export async function migrateReaddirToGlob(dryRun = false): Promise<MigrationRes
 
       if (changes.length > 0) {
         if (!dryRun) {
-          await writeFile(file, modified, "utf-8");
+          await writeFile(file, modified, "utf8");
         }
 
         results.push({
@@ -116,7 +116,7 @@ async function updatePackageJson(
   try {
     const packageJsonPath = "./package.json";
     if (existsSync(packageJsonPath)) {
-      const packageContent = await readFile(packageJsonPath, "utf-8");
+      const packageContent = await readFile(packageJsonPath, "utf8");
       const packageJson = JSON.parse(packageContent) as PackageJson;
       let packageChanged = false;
       const packageChanges: string[] = [];
@@ -155,7 +155,7 @@ async function updatePackageJson(
       }
 
       if (packageChanged && !dryRun) {
-        await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2), "utf-8");
+        await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2), "utf8");
       }
 
       if (packageChanges.length > 0) {

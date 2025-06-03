@@ -60,14 +60,13 @@ export async function processRegularFlow(
       relinka("log", "Initializing build process for main project to NPM only...");
       await regular_buildNpmDist(
         isDev,
-        config.coreIsCLI.enabled,
+        config.coreIsCLI,
         config.coreEntrySrcDir,
         config.distNpmDirName,
         config.distNpmBuilder,
         config.coreEntryFile,
         config.distNpmOutFilesExt,
         config,
-        config.coreIsCLI,
         config.transpileTarget,
         config.transpileFormat,
         config.transpileSplitting,
@@ -117,14 +116,13 @@ export async function processRegularFlow(
         () =>
           regular_buildNpmDist(
             isDev,
-            config.coreIsCLI.enabled,
+            config.coreIsCLI,
             config.coreEntrySrcDir,
             config.distNpmDirName,
             config.distNpmBuilder,
             config.coreEntryFile,
             config.distNpmOutFilesExt,
             config,
-            config.coreIsCLI,
             config.transpileTarget,
             config.transpileFormat,
             config.transpileSplitting,

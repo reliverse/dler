@@ -11,7 +11,7 @@ export const fileExists = async (filePath: string): Promise<boolean> => {
 };
 
 export const readFile = async (filePath: string): Promise<string> => {
-  return await fs.readFile(filePath, "utf-8");
+  return await fs.readFile(filePath, "utf8");
 };
 
 export const writeFile = async (filePath: string, content: string): Promise<void> => {
@@ -19,7 +19,7 @@ export const writeFile = async (filePath: string, content: string): Promise<void
 
   try {
     await fs.mkdir(dir, { recursive: true });
-    await fs.writeFile(filePath, content, "utf-8");
+    await fs.writeFile(filePath, content, "utf8");
   } catch (error) {
     throw new Error(`Failed to write file ${filePath}: ${error}`);
   }

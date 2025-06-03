@@ -48,7 +48,7 @@ export async function getAllFiles(
           const stat = await fs.stat(fullPath);
 
           if (stat.isDirectory()) {
-            // skip templates directory as per requirements
+            // skip templates directory
             if (file === "templates") continue;
             await searchDirectory(fullPath);
           } else {

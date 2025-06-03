@@ -30,6 +30,7 @@ const config = tseslint.config(
     rules: {
       "max-lines": ["error", 1600],
       "perfectionist/sort-imports": "warn",
+      "@typescript-eslint/no-empty-object-type": "off",
       "@typescript-eslint/no-empty-function": "off",
       "@typescript-eslint/no-explicit-any": "off",
       "no-relative-import-paths/no-relative-import-paths": [

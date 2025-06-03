@@ -634,7 +634,7 @@ const migrateProject = async (config: MigrationConfig): Promise<MigrationReport>
       // Increased limit
       try {
         const fullPath = join(projectRoot, sourceFile);
-        const content = await readFile(fullPath, "utf-8");
+        const content = await readFile(fullPath, "utf8");
         const result = transformSourceFile(sourceFile, content);
 
         if (result.changes.length > 0) {
@@ -653,7 +653,7 @@ const migrateProject = async (config: MigrationConfig): Promise<MigrationReport>
         // Increased limit
         try {
           const fullPath = join(projectRoot, testFile);
-          const content = await readFile(fullPath, "utf-8");
+          const content = await readFile(fullPath, "utf8");
           const result = transformTestFile(testFile, content);
 
           if (result.changes.length > 0) {

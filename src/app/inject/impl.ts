@@ -29,7 +29,7 @@ function parseCommand(command: string): { cmd: string; args: string[] } {
 // Parse lines from a lines file
 //-------------------------------------
 async function parseLinesFile(linesFile: string) {
-  const fileContents = await fs.readFile(linesFile, "utf-8");
+  const fileContents = await fs.readFile(linesFile, "utf8");
   const splitted = fileContents.split(/\r?\n/);
   const results: { filePath: string; lineNumber: number }[] = [];
 
@@ -141,7 +141,7 @@ async function injectCommentIntoFiles(
     relinka("log", `Injecting into ${absPath} at lines: ${lineNums.join(", ")}`);
 
     try {
-      const original = await fs.readFile(absPath, "utf-8");
+      const original = await fs.readFile(absPath, "utf8");
       const splitted = original.split(/\r?\n/);
       for (const ln of lineNums) {
         if (ln <= splitted.length) {
@@ -151,7 +151,7 @@ async function injectCommentIntoFiles(
         }
       }
       const newContent = splitted.join("\n");
-      await fs.writeFile(absPath, newContent, "utf-8");
+      await fs.writeFile(absPath, newContent, "utf8");
     } catch (error) {
       relinka("error", `Failed editing ${filePath}: ${error}`);
     }

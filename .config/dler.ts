@@ -12,8 +12,8 @@ export default defineConfig({
   bumpMode: "patch",
 
   // Common configuration
-  commonPubPause: true,
-  commonPubRegistry: "npm",
+  commonPubPause: false,
+  commonPubRegistry: "npm-jsr",
   commonVerbose: true,
 
   // Core configuration
@@ -44,7 +44,7 @@ export default defineConfig({
   // Publish specific dirs as separate packages
   // This feature is experimental at the moment
   // Please commit your changes before using it
-  libsActMode: "libs-only",
+  libsActMode: "main-and-libs",
   libsDirDist: "dist-libs",
   libsDirSrc: "src/libs",
   libsList: {
@@ -56,7 +56,7 @@ export default defineConfig({
       libPkgKeepDeps: true,
       libTranspileMinify: true,
       libPubPause: false,
-      libPubRegistry: "npm",
+      libPubRegistry: "npm-jsr",
     },
   },
 

@@ -28,7 +28,7 @@ function isCommonJSFile(content: string): boolean {
 async function getAllFilesAsync(dir: string, baseDir = dir, recursive = true): Promise<string[]> {
   let fileList: string[] = [];
   const entries = await readdir(dir, {
-    encoding: "utf-8",
+    encoding: "utf8",
     withFileTypes: true,
   });
   for (const entry of entries) {
@@ -52,7 +52,7 @@ async function prepareCLIFiles(revert = false, recursive = true, useDtsTxtForPre
   let srcDir = "src";
 
   if (existsSync(configPath)) {
-    const configContent = readFileSync(configPath, "utf-8");
+    const configContent = readFileSync(configPath, "utf8");
     const configMatch = configContent.match(/coreEntrySrcDir:\s*["']([^"']+)["']/);
     srcDir = configMatch?.[1] ?? srcDir;
   }
@@ -118,7 +118,7 @@ async function prepareCLIFiles(revert = false, recursive = true, useDtsTxtForPre
         await safeRename(fullPath, newName);
         renamedCount++;
       } else if (fileName.endsWith(".js") && !fileName.endsWith(".cjs")) {
-        const content = readFileSync(fullPath, "utf-8");
+        const content = readFileSync(fullPath, "utf8");
         if (isCommonJSFile(content)) {
           const newName = join(dir, `${baseName}.cjs`);
           relinka("log", `Renaming ${fullPath} to ${newName}`);

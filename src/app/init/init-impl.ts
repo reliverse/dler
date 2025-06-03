@@ -14,9 +14,7 @@ import type {
 } from "./init-types";
 
 import { FILE_TYPES } from "./init-const";
-import { gitignoreTemplate } from "./init-tmpl";
-import { readmeTemplate } from "./init-tmpl";
-import { licenseTemplate } from "./init-tmpl";
+import { gitignoreTemplate, licenseTemplate, readmeTemplate } from "./init-tmpl";
 
 // Default configuration
 const DEFAULT_CONFIG: ReinitUserConfig = {
@@ -65,7 +63,7 @@ export async function createFileFromScratch(
       relinka("verbose", `Using custom content for file ${destPath}`);
     }
 
-    await fs.outputFile(destPath, content, { encoding: "utf-8" });
+    await fs.outputFile(destPath, content, { encoding: "utf8" });
   } catch (error) {
     relinka("error", `Failed to create file ${destPath}: ${error}`);
     throw error;

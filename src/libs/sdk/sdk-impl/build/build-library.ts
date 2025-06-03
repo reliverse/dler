@@ -141,7 +141,6 @@ type BundleExecutorParams = {
   transpileStub: boolean; // For unified
   transpileWatch: boolean; // For unified (or potentially others)
   unifiedBundlerOutExt: NpmOutExt; // For bun/unified
-  coreEntrySrcDir: string; // For unified
 };
 
 /** Parameters for the central bundler dispatcher function `library_bundleWithBuilder` */
@@ -499,7 +498,6 @@ async function library_buildDistributionTarget(
     transpileStub,
     transpileWatch,
     unifiedBundlerOutExt,
-    coreEntrySrcDir: params.libSourceDir,
   };
   await library_bundleWithBuilder(bundleRequest);
 
@@ -579,7 +577,6 @@ async function library_bundleWithBuilder(params: BundleRequestParams): Promise<v
           transpileEsbuild: executorParams.transpileEsbuild,
           transpileStub: executorParams.transpileStub,
           unifiedBundlerOutExt: executorParams.unifiedBundlerOutExt,
-          coreEntrySrcDir: executorParams.coreEntrySrcDir,
         },
       );
       break;
@@ -746,7 +743,6 @@ async function library_bundleUsingUnified(
     | "transpileEsbuild"
     | "transpileStub"
     | "unifiedBundlerOutExt"
-    | "coreEntrySrcDir"
   >,
 ): Promise<void> {
   const {
@@ -757,7 +753,6 @@ async function library_bundleUsingUnified(
     transpileEsbuild,
     transpileStub,
     unifiedBundlerOutExt,
-    coreEntrySrcDir,
   } = options;
 
   relinka("verbose", `[Unified:${builder}] Starting ${builder} build...`);
@@ -801,17 +796,10 @@ async function library_bundleUsingUnified(
     },
     hooks: {},
     stub: transpileStub,
-    typescript: {
-      compilerOptions: {
-        emitDeclarationOnly: false,
-        declaration: true,
-        noEmit: false,
-      },
-    },
   };
 
   try {
-    await unifiedBuild(coreEntrySrcDir, false, true, rootDir, unifiedBuildConfig, outDirBin);
+    await unifiedBuild(entryPoint, false, true, rootDir, unifiedBuildConfig, outDirBin);
 
     const duration = getElapsedPerfTime(timer);
     relinka(
@@ -1102,7 +1090,7 @@ async function preBuildReplacements(config: SourceReplacementConfig): Promise<Re
   }
 
   relinka("verbose", `Reading replacement content from: ${replacementFilePath}`);
-  const replacementContent = await fs.readFile(replacementFilePath, "utf-8");
+  const replacementContent = await fs.readFile(replacementFilePath, "utf8");
 
   const allFiles: string[] = [];
   relinka("verbose", `Scanning for .ts/.tsx files in: ${librarySrcDir}`);
@@ -1124,7 +1112,7 @@ async function preBuildReplacements(config: SourceReplacementConfig): Promise<Re
 
   for (const filePath of allFiles) {
     try {
-      const originalCode = await fs.readFile(filePath, "utf-8");
+      const originalCode = await fs.readFile(filePath, "utf8");
       if (!originalCode.includes(replacementMarker)) {
         continue;
       }
@@ -1182,7 +1170,7 @@ async function preBuildReplacements(config: SourceReplacementConfig): Promise<Re
             newContent: updatedCode,
             originalContent: originalCode,
           });
-          await fs.writeFile(filePath, updatedCode, "utf-8");
+          await fs.writeFile(filePath, updatedCode, "utf8");
           relinka(
             "info",
             `Applied pre-build replacement in ${path.relative(PROJECT_ROOT, filePath)}`,
@@ -1217,7 +1205,7 @@ async function postBuildReplacements(replacedFiles: ReplacementRecord[]): Promis
 
   const revertTasks = replacedFiles.map((record) => async () => {
     try {
-      await fs.writeFile(record.filePath, record.originalContent, "utf-8");
+      await fs.writeFile(record.filePath, record.originalContent, "utf8");
       relinka("verbose", `Reverted changes in ${path.relative(PROJECT_ROOT, record.filePath)}`);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
