@@ -286,161 +286,143 @@ export async function copyInsteadOfBuild(
   const normalizedRootDir = path.normalize(rootDir);
   const normalizedOutDir = path.normalize(outDir);
 
-  // Validate patterns for security and correctness
-  const SENSITIVE_PATTERNS = [
-    "node_modules",
-    ".git",
-    ".env",
-    "package-lock.json",
-    "yarn.lock",
-    "pnpm-lock.yaml",
-  ];
+  // First, delete any existing files/folders that match the patterns
+  relinka("verbose", "Cleaning up existing files/folders before copying...");
+  for (const pattern of patterns) {
+    // Convert the source pattern to a destination pattern
+    // Remove any dist-* and bin prefixes from the pattern since we're already in the dist directory
+    const destPattern = pattern
+      .replace(/^\*\*\/|\/\*\*\/|\/\*\*$/g, "**/")
+      .replace(/^(dist-npm|dist-jsr)\/\*\*\/?/, "**/")
+      .replace(/^(dist-npm|dist-jsr)\//, "")
+      .replace(/^bin\//, "");
 
-  const invalidPatterns = patterns.filter((pattern) =>
-    SENSITIVE_PATTERNS.some((sensitive) => pattern.includes(sensitive)),
-  );
+    // relinka("verbose", `Looking for files to delete with pattern: ${destPattern}`);
 
-  if (invalidPatterns.length > 0) {
-    relinka("warn", `Potentially sensitive patterns detected: ${invalidPatterns.join(", ")}`);
+    // First try to delete the exact directory/file if it exists
+    const exactPath = path.join(normalizedOutDir, destPattern.replace(/\*\*/g, ""));
+    if (await fs.pathExists(exactPath)) {
+      try {
+        relinka("verbose", `Deleting exact path: ${exactPath}`);
+        await fs.remove(exactPath);
+      } catch (error) {
+        relinka("error", `Failed to delete exact path: ${exactPath}`, error);
+        throw error;
+      }
+    }
+
+    // Then try to find and delete any matching files/directories
+    const matches = await glob(destPattern, {
+      cwd: normalizedOutDir,
+      dot: true,
+      absolute: true,
+      onlyFiles: false,
+      followSymbolicLinks: false,
+      ignore: ["**/node_modules/**", "**/.git/**", "node_modules/**", ".git/**"],
+    });
+
+    for (const match of matches) {
+      try {
+        const relativePath = path.relative(normalizedOutDir, match);
+        relinka("verbose", `Deleting existing: ${relativePath}`);
+        await fs.remove(match);
+      } catch (error) {
+        relinka("error", `Failed to delete existing file/folder: ${match}`, error);
+        throw error;
+      }
+    }
   }
-
-  // Create filtered patterns array
-  const filteredPatterns = patterns.filter(
-    (pattern) => !SENSITIVE_PATTERNS.some((sensitive) => pattern.includes(sensitive)),
-  );
 
   // Process patterns in batches to manage memory
   const BATCH_SIZE = 50;
   const BATCH_DELAY = 100; // ms delay between batches to prevent memory spikes
-  const MAX_RETRIES = 3;
-  const RETRY_DELAY = 1000; // 1 second delay between retries
 
-  async function copyWithRetry(
-    source: string,
-    dest: string,
-    relativePath: string,
-    retryCount = 0,
-  ): Promise<void> {
-    try {
-      // Normalize paths
-      const normalizedSource = path.normalize(source);
-      const normalizedDest = path.normalize(dest);
-
-      // Validate paths
-      if (!normalizedSource || !normalizedDest) {
-        throw new Error(`Invalid paths: source=${normalizedSource}, dest=${normalizedDest}`);
-      }
-
-      // Create parent directory if it doesn't exist
-      await fs.ensureDir(path.dirname(normalizedDest));
-
-      // Check if source exists and is accessible
-      if (!(await fs.pathExists(normalizedSource))) {
-        relinka("warn", `Source not accessible: ${relativePath}`);
-        return;
-      }
-
-      // Remove destination if it exists before copying
-      if (await fs.pathExists(normalizedDest)) {
-        try {
-          relinka("verbose", `Removing existing destination: ${normalizedDest}`);
-          await fs.remove(normalizedDest);
-        } catch (error: any) {
-          if (error.code === "EBUSY" && retryCount < MAX_RETRIES) {
-            relinka("warn", `Destination ${normalizedDest} is busy, retrying in ${RETRY_DELAY}ms`);
-            await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
-            return copyWithRetry(normalizedSource, normalizedDest, relativePath, retryCount + 1);
-          }
-          throw new Error(
-            `Failed to remove existing destination ${normalizedDest}: ${error.message}`,
-          );
-        }
-      }
-
-      // Copy with optimized options
-      try {
-        await fs.copy(normalizedSource, normalizedDest, {
-          recursive: true,
-          dereference: true,
-          overwrite: true,
-          errorOnExist: true,
-        });
-        relinka("verbose", `Copied instead of building: ${relativePath}`);
-      } catch (error: any) {
-        if (error.code === "EBUSY" && retryCount < MAX_RETRIES) {
-          relinka(
-            "warn",
-            `File ${relativePath} is busy, retrying in ${RETRY_DELAY}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`,
-          );
-          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
-          return copyWithRetry(normalizedSource, normalizedDest, relativePath, retryCount + 1);
-        }
-        throw new Error(`Failed to copy ${relativePath}: ${error.message}`);
-      }
-    } catch (error: any) {
-      if (retryCount < MAX_RETRIES) {
-        relinka(
-          "warn",
-          `Error copying ${relativePath}, retrying in ${RETRY_DELAY}ms (attempt ${retryCount + 1}/${MAX_RETRIES}): ${error.message}`,
-        );
-        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
-        return copyWithRetry(source, dest, relativePath, retryCount + 1);
-      }
-      throw new Error(
-        `Failed to copy ${relativePath} after ${retryCount} retries: ${error.message}`,
-      );
-    }
-  }
-
-  for (let i = 0; i < filteredPatterns.length; i += BATCH_SIZE) {
-    const batchPatterns = filteredPatterns.slice(i, i + BATCH_SIZE);
+  for (let i = 0; i < patterns.length; i += BATCH_SIZE) {
+    const batchPatterns = patterns.slice(i, i + BATCH_SIZE);
     const batchCopyTasks: Promise<unknown>[] = [];
 
     // Process each pattern in the current batch
     for (const pattern of batchPatterns) {
-      try {
-        const matches = await glob(pattern, {
-          cwd: normalizedRootDir,
-          dot: true,
-          absolute: true,
-          onlyFiles: false,
-          followSymbolicLinks: false,
-        });
+      // Clean the pattern for source directory
+      const sourcePattern = pattern
+        .replace(/^(dist-npm|dist-jsr)\/\*\*\/?/, "")
+        .replace(/^(dist-npm|dist-jsr)\//, "")
+        .replace(/^bin\//, "");
 
-        for (const match of matches) {
-          const relativePath = path.relative(normalizedRootDir, match);
-          const destPath = path.resolve(normalizedOutDir, relativePath);
-          batchCopyTasks.push(copyWithRetry(match, destPath, relativePath));
+      // relinka("verbose", `Looking for source files with pattern: ${sourcePattern}`);
+
+      const matches = await glob(sourcePattern, {
+        cwd: normalizedRootDir,
+        dot: true,
+        absolute: true,
+        onlyFiles: false,
+        followSymbolicLinks: false,
+        ignore: ["**/node_modules/**", "**/.git/**", "node_modules/**", ".git/**"],
+      });
+
+      for (const match of matches) {
+        const relativePath = path.relative(normalizedRootDir, match);
+        // Remove any dist-* and bin prefixes from the relative path
+        const cleanRelativePath = relativePath
+          .replace(/^(dist-npm|dist-jsr)\/\*\*\/?/, "")
+          .replace(/^(dist-npm|dist-jsr)\//, "")
+          .replace(/^bin\//, "");
+        const destPath = path.resolve(normalizedOutDir, cleanRelativePath);
+
+        // Create parent directory if it doesn't exist
+        await fs.ensureDir(path.dirname(destPath));
+
+        // Check if source exists and is accessible
+        if (!(await fs.pathExists(match))) {
+          throw new Error(`Source not accessible: ${relativePath}`);
         }
-      } catch (error: any) {
-        relinka("error", `Failed to process pattern ${pattern}: ${error.message}`);
+
+        // Double check if destination exists and remove it
+        if (await fs.pathExists(destPath)) {
+          // relinka("verbose", `Removing existing destination before copy: ${cleanRelativePath}`);
+          await fs.remove(destPath);
+        }
+
+        const stats = await fs.stat(match);
+        if (stats.isDirectory()) {
+          // For directories, use regular copy
+          await fs.copy(match, destPath, {
+            recursive: true,
+            dereference: true,
+            overwrite: true,
+            errorOnExist: true,
+          });
+        } else {
+          // For files, use copy to preserve exact formatting
+          await fs.copy(match, destPath, {
+            overwrite: true,
+            errorOnExist: true,
+          });
+        }
+        // relinka("verbose", `Copied instead of building: ${cleanRelativePath}`);
       }
     }
 
     // Process current batch
     if (batchCopyTasks.length > 0) {
-      try {
-        await Promise.all(batchCopyTasks);
-      } catch (error: any) {
-        relinka("error", `Batch processing failed: ${error.message}`);
-      }
+      await Promise.all(batchCopyTasks);
+    }
 
-      // Add delay between batches if not the last batch
-      if (i + BATCH_SIZE < filteredPatterns.length) {
-        await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY));
-      }
+    // Add delay between batches if not the last batch
+    if (i + BATCH_SIZE < patterns.length) {
+      await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY));
     }
 
     // Log progress
     const progress = Math.min(
       100,
-      Math.round(((i + batchPatterns.length) / filteredPatterns.length) * 100),
+      Math.round(((i + batchPatterns.length) / patterns.length) * 100),
     );
     relinka(
       "verbose",
-      `Copy progress: ${progress}% (${i + batchPatterns.length}/${filteredPatterns.length} patterns)`,
+      `Copy progress: ${progress}% (${i + batchPatterns.length}/${patterns.length} patterns)`,
     );
   }
 
-  relinka("success", "Completed copying files/folders that should not be built");
+  relinka("info", "[isCLI] Completed copying files/folders that should not be built:", patterns);
 }

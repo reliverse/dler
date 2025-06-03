@@ -113,7 +113,6 @@ export async function regular_buildJsrDist(
 
     // JSR-specific post-build steps
     relinka("verbose", `Performing JSR-specific transformations in ${outDirBin}`);
-    await renameTsxFiles(outDirBin);
     await createJsrJSON(
       outDirRoot,
       false, // isLib
@@ -122,6 +121,15 @@ export async function regular_buildJsrDist(
       undefined, // libName (not needed for regular builds)
       config.coreDescription,
     );
+
+    // If it's a CLI, copy files that without building (if listed folder exists in outDirBin, it will be deleted)
+    if (coreIsCLI.enabled) {
+      await copyInsteadOfBuild(path.join(PROJECT_ROOT, coreEntrySrcDir), outDirBin, [
+        `${config.distNpmDirName}/**/templates`,
+        `${config.distJsrDirName}/**/templates`,
+      ]);
+    }
+    await renameTsxFiles(outDirBin);
 
     // Calculate and log build duration
     const duration = getElapsedPerfTime(timer);
@@ -207,6 +215,14 @@ export async function regular_buildNpmDist(
       coreDescription: config.coreDescription,
       coreBuildOutDir: config.coreBuildOutDir,
     });
+
+    // If it's a CLI, copy files that without building (if listed folder exists in outDirBin, it will be deleted)
+    if (coreIsCLI.enabled) {
+      await copyInsteadOfBuild(path.join(PROJECT_ROOT, coreEntrySrcDir), outDirBin, [
+        `${config.distNpmDirName}/**/templates`,
+        `${config.distJsrDirName}/**/templates`,
+      ]);
+    }
 
     // Calculate and log build duration
     const duration = getElapsedPerfTime(timer);
@@ -419,11 +435,6 @@ async function regular_bundleUsingUnified(
     } satisfies UnifiedBuildConfig & { concurrency?: number };
 
     await unifiedBuild(coreEntrySrcDir, coreIsCLI, false, rootDir, unifiedBuildConfig, outDirBin);
-
-    if (coreIsCLI.enabled) {
-      // Copy files that without building (if listed folder exists in outDirBin, it will be deleted)
-      await copyInsteadOfBuild(rootDir, outDirBin, ["**/templates"]);
-    }
 
     // Calculate and log build duration
     const duration = getElapsedPerfTime(timer);

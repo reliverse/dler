@@ -93,7 +93,7 @@ export async function removeLogInternalCalls(targetDir: string): Promise<boolean
 
       if (newContent !== content) {
         await fs.writeFile(filePath, newContent);
-        relinka("verbose", `Processed: ${filePath}`);
+        // relinka("verbose", `Processed: ${filePath}`);
       }
     },
     { concurrency: CONCURRENCY_DEFAULT },

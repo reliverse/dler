@@ -1,7 +1,7 @@
 {
   "name": "@reliverse/dler",
   "author": "reliverse",
-  "version": "1.7.10",
+  "version": "1.7.11",
   "type": "module",
   "license": "MIT",
   "description": "@reliverse/dler is a flexible, unified, and fully automated bundler for typescript and javascript projects, as well as an npm and jsr publishing tool. dler is not only a bundler, it also tries to serve as the most powerful codemod toolkit for js/ts.",
@@ -12,7 +12,7 @@
     "cmd": "bun src/cli.ts rempts --init",
     "mock:bootstrap": "bun src/cli.ts mock",
     "mock:cleanup": "bun src/cli.ts mock --cleanup",
-    "mock:merge": "bun src/cli.ts merge --dev --s src/templates --d src/app/mock/mock.ts --as-template",
+    "mock:update": "bun src/cli.ts merge --dev --s src/templates --d src/app/mock/mock.ts --as-template --update-template REACT_DLER_TEMPLATE",
     "check": "tsc --noEmit && eslint --cache --fix . && biome check --fix --unsafe . && knip",
     "latest": "bun update --latest && bun check",
     "pub": "bun src/cli.ts pub --dev",
@@ -62,7 +62,7 @@
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@eslint/js": "^9.28.0",
-    "@reliverse/rse": "^1.7.3",
+    "@reliverse/rse": "^1.7.4",
     "@stylistic/eslint-plugin": "^4.4.0",
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/bun": "^1.2.15",

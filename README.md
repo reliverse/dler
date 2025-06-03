@@ -15,7 +15,7 @@
 - 🎯 optimized for speed and modern workflows
 - ✨ packed with powerful features under the hood
 - 🛠️ converts typescript aliases to relative paths
-- 🔌 15 built-in helper [dler commands](#-commands) included
+- 🔌 16 built-in helper [dler commands](#-commands) included
 - 📝 highly configurable flow via a configuration file
 - 🔜 `libraries` plugin —> dler monorepo implementation
 - 🧼 cleans up your internal logs from the build dist
@@ -119,7 +119,7 @@ bun dev # bun src/cli.ts --dev
 
 ## 🔌 commands
 
-dler ships with a flexible command system (prev. plugins) and **15 built-in commands** (from [reliverse addons](https://reliverse.org/addons) collection).
+dler ships with a flexible command system (prev. plugins) and **16 built-in commands** (from [reliverse addons](https://reliverse.org/addons) collection).
 
 feel free to create your own commands. commands can be implemented as built-in directly in `src/app/<command>/impl/*` and then imported from `src/app/<command>/cmd.ts`; or implemented in your own library and then imported from `src/app/<command>/cmd.ts`.
 
@@ -127,7 +127,7 @@ if you run just `dler` — it will display a list of commands which you can laun
 
 ## **available commands**
 
-[agg](#1-agg) [build](#2-build) [check](#3-check) [conv](#4-conv) [copy](#5-copy) [init](#6-init) [inject](#7-inject) [libs](#8-libs) [merge](#9-merge) [migrate](#10-migrate) [pub](#11-pub) [rempts](#13-rempts) [rename](#13-rename) [spell](#14-spell) [split](#15-split)
+[agg](#1-agg) [build](#2-build) [check](#3-check) [conv](#4-conv) [copy](#5-copy) [init](#6-init) [inject](#7-inject) [libs](#8-libs) [merge](#9-merge) [mock](#10-mock) [migrate](#11-migrate) [pub](#12-pub) [rempts](#13-rempts) [rename](#14-rename) [spell](#15-spell) [split](#16-split)
 
 ### 1. `agg`
 
@@ -340,7 +340,24 @@ libslist: {
 
 ### 9. `merge`
 
-merges multiple files into a single file.
+merges multiple files into a single file. The command is built for both CI and interactive use, with support for glob patterns and advanced options.
+
+**key features:**
+
+- merges text files with optional commented path headers/footers
+- skips binary/media files by default
+- supports both glob patterns and simple paths
+- preserves directory structure when merging to a directory
+- generates source maps for merged output
+- creates and updates templates for mock project structures
+- handles file deduplication
+- supports custom separators and comment styles
+- provides interactive mode with prompts
+- includes backup functionality
+- validates file permissions and sizes
+- enforces output path conflict detection
+
+**usage examples:**
 
 ```bash
 # simple example:
@@ -348,9 +365,198 @@ bun dler merge --s "src/**/*.ts" --d "dist/merged.ts"
 
 # advanced example:
 bun dler merge --s ".temp1/packages/*/lib/**/*" --d ".temp2/merged.ts" --sort "mtime" --header "// Header" --footer "// Footer" --dedupe
+
+# generate mock template:
+bun dler merge --s "src/templates" --d "templates/my-template.ts" --as-template
+
+# update mock template:
+bun dler merge --s "src/templates" --d "templates/my-template.ts" --as-template --update-template REACT_DLER_TEMPLATE
 ```
 
-### 10. `migrate`
+**implementation details:**
+
+- uses `magic-string` for efficient string manipulation and source map generation
+- leverages `@reliverse/reglob` for glob pattern matching
+- implements concurrent file operations with `p-map`
+- provides file type detection and appropriate comment styles
+- includes safety checks for file sizes and permissions
+- supports template generation with TypeScript type definitions
+- handles both single file and directory output modes
+- implements interactive prompts via `@reliverse/rempts`
+- provides reporting with logging via `@reliverse/relinka`
+
+### 10. `mock`
+
+bootstraps file structure based on the specified mock template. The command is designed to create project structures from predefined or custom templates, with built-in safety checks and cleanup capabilities.
+
+**key features:**
+
+- creates project structures from predefined templates (basic, api, react)
+- supports custom template files
+- handles path conflicts with force option
+- provides cleanup functionality
+- includes dry run mode for previewing changes
+- validates file types and content
+- enforces rate limiting for file operations
+- supports custom whitelabel prefixes
+- preserves directory structure
+- handles both text and binary files
+
+**usage examples:**
+
+```bash
+# use default react template:
+bun dler mock --template react
+
+# use custom template file:
+bun dler mock --template-file templates/my-template.ts
+
+# preview changes without applying:
+bun dler mock --template react --dry-run
+
+# clean up existing mock structure:
+bun dler mock --template react --cleanup
+```
+
+**integration with merge command:**
+The mock command works seamlessly with the merge command to create and update templates:
+
+1. **create template from existing files:**
+
+   ```bash
+   # create a template from your project structure
+   bun dler merge --s "src/templates" --d "templates/my-template.ts" --as-template
+   ```
+
+2. **use the template with mock:**
+
+   ```bash
+   # use the generated template
+   bun dler mock --template-file templates/my-template.ts
+   ```
+
+3. **update existing template:**
+
+   ```bash
+   # update a specific template in the file
+   bun dler merge --s "src/templates" --d "templates/my-template.ts" --update-template REACT_DLER_TEMPLATE
+   ```
+
+**implementation details:**
+
+- uses `jiti` for dynamic template file loading
+- implements template validation and type checking
+- provides detailed error handling and reporting
+- supports multiple template constants in a single file
+- handles file system operations safely with permissions checks
+- includes cleanup of empty directories
+- provides verbose logging option
+- enforces output path conflict detection
+
+**programmatic usage:**
+Both merge and mock commands can be used programmatically through the `@reliverse/dler-sdk` package:
+
+```typescript
+import { merge, mock } from "@reliverse/dler-sdk";
+
+// Merge files programmatically
+await merge({
+  source: ["src/**/*.ts"],
+  destination: "dist/merged.ts",
+  options: {
+    sort: "mtime",
+    header: "// Header",
+    footer: "// Footer",
+    dedupe: true,
+    sourcemap: true
+  }
+});
+
+// Create mock structure programmatically
+await mock({
+  template: "react",
+  options: {
+    templateFile: "templates/my-template.ts",
+    cleanup: false,
+    dryRun: false,
+    verbose: true,
+    whitelabel: "MYAPP",
+    force: true
+  }
+});
+
+// Create and use custom template
+const template = await merge({
+  source: ["src/templates"],
+  destination: "templates/my-template.ts",
+  options: {
+    asTemplate: true,
+    whitelabel: "MYAPP"
+  }
+});
+
+await mock({
+  template: "custom",
+  options: {
+    templateFile: "templates/my-template.ts"
+  }
+});
+```
+
+**sdk types:**
+
+```typescript
+// Merge command options
+interface MergeOptions {
+  source: string[];
+  destination?: string;
+  options?: {
+    ignore?: string[];
+    format?: string;
+    stdout?: boolean;
+    noPath?: boolean;
+    pathAbove?: boolean;
+    separator?: string;
+    comment?: string;
+    forceComment?: boolean;
+    batch?: boolean;
+    recursive?: boolean;
+    preserveStructure?: boolean;
+    increment?: boolean;
+    concurrency?: number;
+    sort?: "name" | "path" | "mtime" | "none";
+    dryRun?: boolean;
+    backup?: boolean;
+    dedupe?: boolean;
+    header?: string;
+    footer?: string;
+    selectFiles?: boolean;
+    interactive?: boolean;
+    asTemplate?: boolean;
+    ctn?: string;
+    whitelabel?: string;
+    sourcemap?: boolean;
+    updateTemplate?: string;
+    dev?: boolean;
+  };
+}
+
+// Mock command options
+interface MockOptions {
+  template: string;
+  options?: {
+    templateFile?: string;
+    templateConsts?: string;
+    cleanup?: boolean;
+    dryRun?: boolean;
+    verbose?: boolean;
+    whitelabel?: string;
+    force?: boolean;
+  };
+}
+```
+
+### 11. `migrate`
 
 helps migrate between different libraries and module resolution strategies. currently supports:
 
@@ -518,7 +724,7 @@ dler relinka --input src/app.ts --from relinkaFunction --to consolaObject
   3. review any file system operations that might need manual updates
   4. consider using globby's advanced features like pattern matching and recursive searching
 
-### 11. `pub`
+### 12. `pub`
 
 pub command is separated for its own build-in plugin as well.
 
@@ -537,13 +743,13 @@ bun dler rempts
 bun dler rempts --init cmd1 cmd2
 ```
 
-### 13. `rename`
+### 14. `rename`
 
 ```bash
 bun dler rename ...
 ```
 
-### 14. `spell`
+### 15. `spell`
 
 **available spell types:**
 
@@ -612,7 +818,7 @@ files: [] // means all files
 
 p.s. [see how rse cli uses hooked=true](https://github.com/reliverse/rse/blob/main/src/postbuild.ts)
 
-### 15. `split`
+### 16. `split`
 
 splits your code/text file into multiple files.
 

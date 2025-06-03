@@ -2,6 +2,8 @@ import { bumpHandler, isBumpDisabled, setBumpDisabledValueTo } from "@reliverse/
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 
+import type { DlerConfig } from "~/libs/sdk/sdk-types";
+
 import { loadConfig } from "~/libs/sdk/sdk-impl/cfg/load";
 import { processLibraryFlow } from "~/libs/sdk/sdk-impl/library-flow";
 import { processRegularFlow } from "~/libs/sdk/sdk-impl/regular-flow";
@@ -19,33 +21,42 @@ import { createPerfTimer } from "~/libs/sdk/sdk-impl/utils/utils-perf";
  * Main entry point for the dler build and publish process.
  * Handles building and publishing for both main project and libraries.
  */
-export async function dlerBuild(isDev: boolean) {
-  // TODO: remove config.commonPubPause once pub will call dlerBuild instead of replicating its code
+export async function dlerBuild(isDev: boolean, config?: DlerConfig) {
+  // TODO: remove effectiveConfig.commonPubPause once pub will call dlerBuild instead of replicating its code
 
   // Create a performance timer
   const timer = createPerfTimer();
 
+  let effectiveConfig = config;
+
   try {
-    // Load config with defaults and user overrides
-    // This config load is a single source of truth
-    const config = await loadConfig();
+    if (!effectiveConfig) {
+      // Load config with defaults and user overrides
+      // This config load is a single source of truth
+      effectiveConfig = await loadConfig();
+    }
 
     // Clean up previous run artifacts
-    if (config.logsFreshFile) {
-      await fs.remove(path.join(PROJECT_ROOT, config.logsFileName));
+    if (effectiveConfig.logsFreshFile) {
+      await fs.remove(path.join(PROJECT_ROOT, effectiveConfig.logsFileName));
     }
     await removeDistFolders(
-      config.distNpmDirName,
-      config.distJsrDirName,
-      config.libsDirDist,
-      config.libsList,
+      effectiveConfig.distNpmDirName,
+      effectiveConfig.distJsrDirName,
+      effectiveConfig.libsDirDist,
+      effectiveConfig.libsList,
     );
 
     // Handle version bumping if enabled
     try {
       const bumpIsDisabled = await isBumpDisabled();
-      if (!bumpIsDisabled && !config.commonPubPause) {
-        await bumpHandler(config.bumpMode, false, config.bumpFilter, config.bumpSet);
+      if (!bumpIsDisabled && !effectiveConfig.commonPubPause) {
+        await bumpHandler(
+          effectiveConfig.bumpMode,
+          false,
+          effectiveConfig.bumpFilter,
+          effectiveConfig.bumpSet,
+        );
         await setBumpDisabledValueTo(true);
       }
     } catch {
@@ -53,19 +64,19 @@ export async function dlerBuild(isDev: boolean) {
     }
 
     // Process main project
-    await processRegularFlow(timer, isDev, config);
+    await processRegularFlow(timer, isDev, effectiveConfig);
 
     // Process libraries
-    await processLibraryFlow(timer, isDev, config);
+    await processLibraryFlow(timer, isDev, effectiveConfig);
 
     // Finalize dler
     await finalizeBuildPub(
       timer,
-      config.commonPubPause,
-      config.libsList,
-      config.distNpmDirName,
-      config.distJsrDirName,
-      config.libsDirDist,
+      effectiveConfig.commonPubPause,
+      effectiveConfig.libsList,
+      effectiveConfig.distNpmDirName,
+      effectiveConfig.distJsrDirName,
+      effectiveConfig.libsDirDist,
     );
   } catch (error) {
     handleDlerError(error, timer);
@@ -76,32 +87,41 @@ export async function dlerBuild(isDev: boolean) {
  * Main entry point for the dler build and publish process.
  * Handles building and publishing for both main project and libraries.
  */
-export async function dlerPub(isDev: boolean) {
+export async function dlerPub(isDev: boolean, config?: DlerConfig) {
   // Create a performance timer
   const timer = createPerfTimer();
 
+  let effectiveConfig = config;
+
   try {
-    // Load config with defaults and user overrides
-    // This config load is a single source of truth
-    const config = await loadConfig();
+    if (!effectiveConfig) {
+      // Load config with defaults and user overrides
+      // This config load is a single source of truth
+      effectiveConfig = await loadConfig();
+    }
 
     // Clean up previous run artifacts
-    if (config.logsFreshFile) {
-      await fs.remove(path.join(PROJECT_ROOT, config.logsFileName));
+    if (effectiveConfig.logsFreshFile) {
+      await fs.remove(path.join(PROJECT_ROOT, effectiveConfig.logsFileName));
     }
     await removeDistFolders(
-      config.distNpmDirName,
-      config.distJsrDirName,
-      config.libsDirDist,
-      config.libsList,
+      effectiveConfig.distNpmDirName,
+      effectiveConfig.distJsrDirName,
+      effectiveConfig.libsDirDist,
+      effectiveConfig.libsList,
     );
 
     // TODO: remove this once pub will call dlerBuild instead of replicating its code
     // Handle version bumping if enabled
     const bumpIsDisabled = await isBumpDisabled();
-    if (!bumpIsDisabled && !config.commonPubPause) {
+    if (!bumpIsDisabled && !effectiveConfig.commonPubPause) {
       try {
-        await bumpHandler(config.bumpMode, false, config.bumpFilter, config.bumpSet);
+        await bumpHandler(
+          effectiveConfig.bumpMode,
+          false,
+          effectiveConfig.bumpFilter,
+          effectiveConfig.bumpSet,
+        );
         await setBumpDisabledValueTo(true);
       } catch {
         throw new Error("[.config/dler.ts] Failed to set bumpDisable to true");
@@ -109,19 +129,19 @@ export async function dlerPub(isDev: boolean) {
     }
 
     // Process main project
-    await processRegularFlow(timer, isDev, config);
+    await processRegularFlow(timer, isDev, effectiveConfig);
 
     // Process libraries
-    await processLibraryFlow(timer, isDev, config);
+    await processLibraryFlow(timer, isDev, effectiveConfig);
 
     // Finalize dler
     await finalizeBuildPub(
       timer,
-      config.commonPubPause,
-      config.libsList,
-      config.distNpmDirName,
-      config.distJsrDirName,
-      config.libsDirDist,
+      effectiveConfig.commonPubPause,
+      effectiveConfig.libsList,
+      effectiveConfig.distNpmDirName,
+      effectiveConfig.distJsrDirName,
+      effectiveConfig.libsDirDist,
     );
   } catch (error) {
     handleDlerError(error, timer);

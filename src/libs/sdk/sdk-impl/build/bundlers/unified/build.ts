@@ -216,7 +216,7 @@ async function _build(
     isLib,
   } satisfies BuildOptions) as BuildOptions;
   shouldStopAtStep(5);
-  relinka("info", "Configuration merged with defaults"); // Step 5
+  relinka("log", "Build-specific configuration merged with defaults"); // Step 5
   relinka("verbose", `Build options: clean=${options.clean}, parallel=${options.parallel}`);
   relinka("verbose", `Declaration files: ${options.declaration ? "enabled" : "disabled"}`);
 

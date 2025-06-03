@@ -9,6 +9,8 @@ import { glob } from "@reliverse/reglob";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { defineCommand, inputPrompt, confirmPrompt, multiselectPrompt } from "@reliverse/rempts";
+import MagicString from "magic-string";
+import { Bundle } from "magic-string";
 import pMap from "p-map";
 import prettyMilliseconds from "pretty-ms";
 
@@ -24,6 +26,12 @@ import {
   sanitizeInput,
   validateMergeOperation,
 } from "~/libs/sdk/sdk-impl/utils/utils-security";
+
+type PerfTimer = {
+  startTime: number;
+  pausedAt: number | null;
+  pausedDuration: number;
+};
 
 // ---------- constants ----------
 
@@ -82,8 +90,6 @@ const normalizeGlobPattern = (pattern: string): string => {
   }
   return sanitizedPattern;
 };
-
-const ensureTrailingNL = (s: string) => (s.endsWith("\n") ? s : `${s}\n`);
 
 const parseCSV = (s: string) =>
   s
@@ -147,16 +153,29 @@ const collectFiles = async (
 
 const writeResult = async (
   sections: string[],
-  separator: string,
+  _separator: string,
   toFile: string | undefined,
   toStdout: boolean,
   dryRun: boolean,
   backup: boolean,
+  generateSourceMap = false,
 ) => {
   try {
-    const content = `${sections.join(separator)}\n`;
+    const bundle = new Bundle();
+
+    // Add each section as a source
+    for (const section of sections) {
+      bundle.addSource({
+        content: new MagicString(section),
+      });
+    }
+
+    // Join sections with separator
+    const content = bundle.toString();
+    const finalContent = `${content}\n`;
+
     if (toStdout || !toFile) {
-      process.stdout.write(content);
+      process.stdout.write(finalContent);
       return;
     }
 
@@ -175,7 +194,22 @@ const writeResult = async (
 
     if (!dryRun) {
       await checkPermissions(sanitizedPath, "write");
-      await fs.writeFile(sanitizedPath, content, "utf8");
+      await fs.writeFile(sanitizedPath, finalContent, "utf8");
+
+      // Generate source map if requested
+      if (generateSourceMap) {
+        const map = bundle.generateMap({
+          file: path.basename(sanitizedPath),
+          source: sanitizedPath,
+          includeContent: true,
+          hires: true,
+        });
+        const mapPath = `${sanitizedPath}.map`;
+        await fs.writeFile(mapPath, map.toString(), "utf8");
+        // Add source map reference to the output file
+        const sourceMapRef = `\n//# sourceMappingURL=${path.basename(mapPath)}`;
+        await fs.appendFile(sanitizedPath, sourceMapRef, "utf8");
+      }
     }
   } catch (error) {
     handleError(error, "writeResult");
@@ -252,150 +286,94 @@ const writeFilesPreserveStructure = async (
   }
 };
 
-const generateTemplateFile = async (
-  isDev: boolean,
-  files: string[],
-  outFile: string,
+const processSection = (
+  raw: string,
+  rel: string,
+  prefix: string,
+  pathAbove: boolean,
+  injectPath: boolean,
+): string => {
+  const magic = new MagicString(raw);
+
+  if (pathAbove) {
+    magic.prepend(`${prefix}${rel}\n`);
+  }
+
+  if (injectPath) {
+    magic.append(`\n${prefix}${rel}`);
+  }
+
+  return magic.toString();
+};
+
+const updateTemplateInFile = async (
+  templateName: string,
+  templateContent: string,
+  targetFile: string,
   dryRun: boolean,
   backup: boolean,
-  customTemplateName?: string,
-  whitelabel = "DLER",
+  generateSourceMap = false,
 ): Promise<void> => {
-  const cwd = process.cwd();
-  const templateName = customTemplateName || path.basename(outFile, ".ts");
-  // Convert template name to uppercase with underscores, handling hyphens and special characters
-  const templateConstName =
-    templateName
-      .replace(/[^a-zA-Z0-9]/g, "_") // Replace any non-alphanumeric with underscore
-      .replace(/_+/g, "_") // Replace multiple underscores with single underscore
-      .replace(/^_|_$/g, "") // Remove leading/trailing underscores
-      .replace(/[A-Z]/g, (letter) => `_${letter}`) // Add underscore before capital letters
-      .replace(/^_/, "") // Remove leading underscore
-      .toUpperCase() + `_${whitelabel}_TEMPLATE`; // Add suffix with whitelabel
+  try {
+    const fileContent = await fs.readFile(targetFile, "utf8");
+    const magic = new MagicString(fileContent);
 
-  // Create a valid object key from the template name
-  const templateKey = templateName
-    .replace(/[^a-zA-Z0-9]/g, "_") // Replace any non-alphanumeric with underscore
-    .replace(/_+/g, "_") // Replace multiple underscores with single underscore
-    .replace(/^_|_$/g, "") // Remove leading/trailing underscores
-    .toLowerCase(); // Convert to lowercase for the object key
+    // Find the template declaration
+    const templateStart = fileContent.indexOf(`export const ${templateName}: Template = {`);
+    if (templateStart === -1) {
+      throw new Error(`Template ${templateName} not found in file ${targetFile}`);
+    }
 
-  // Create template structure
-  const template: Template = {
-    name: templateName.charAt(0).toUpperCase() + templateName.slice(1),
-    description: `Template generated from ${files.length} files`,
-    config: {
-      files: {},
-    },
-  };
+    // Find the end of the template declaration by counting brackets
+    let currentBracketCount = 0;
+    let endIndex = templateStart;
 
-  // Process files
-  for (const file of files) {
-    const relPath = path.relative(cwd, file);
-    const ext = path.extname(file).slice(1).toLowerCase();
-    const isBinary = await isBinaryExt(file);
-    const fileName = path.basename(file).toLowerCase();
-
-    let content: FileContent = "";
-    let type: FileType = "binary";
-
-    if (!isBinary) {
-      try {
-        const fileContent = await fs.readFile(file, "utf8");
-        if (ext === "json") {
-          const jsonContent = JSON.parse(fileContent) as Record<string, unknown>;
-
-          // Add type casting for package.json and tsconfig.json
-          if (fileName === "package.json") {
-            content = {
-              ...jsonContent,
-              __type: "PackageJson",
-            } as unknown as FileContent;
-          } else if (fileName === "tsconfig.json") {
-            content = {
-              ...jsonContent,
-              __type: "TSConfig",
-            } as unknown as FileContent;
-          } else {
-            content = jsonContent;
-          }
-          type = "json";
-        } else {
-          content = fileContent;
-          type = "text";
+    for (let i = templateStart; i < fileContent.length; i++) {
+      const char = fileContent[i];
+      if (char === "{") {
+        currentBracketCount++;
+      } else if (char === "}") {
+        currentBracketCount--;
+        if (currentBracketCount === 0) {
+          endIndex = i + 1; // Include the closing brace
+          break;
         }
-      } catch {
-        // If we can't read the file as text, treat it as binary
-        type = "binary";
       }
     }
 
-    template.config.files[relPath] = {
-      content,
-      type: type as "text" | "json", // Type assertion since we know binary files will have empty content
-    };
+    // Update the template content
+    magic.overwrite(templateStart, endIndex, templateContent);
+
+    if (dryRun) {
+      relinka("verbose", `[DRY RUN] Would update template ${templateName} in ${targetFile}`);
+      return;
+    }
+
+    if (backup) {
+      const backupPath = `${targetFile}.${Date.now()}.bak`;
+      await fs.copyFile(targetFile, backupPath);
+    }
+
+    await fs.writeFile(targetFile, magic.toString(), "utf8");
+
+    // Generate source map if requested
+    if (generateSourceMap) {
+      const map = magic.generateMap({
+        file: path.basename(targetFile),
+        source: targetFile,
+        includeContent: true,
+        hires: true,
+      });
+      const mapPath = `${targetFile}.map`;
+      await fs.writeFile(mapPath, map.toString(), "utf8");
+
+      // Add source map reference
+      const sourceMapRef = `\n//# sourceMappingURL=${path.basename(mapPath)}`;
+      await fs.appendFile(targetFile, sourceMapRef, "utf8");
+    }
+  } catch (error) {
+    handleError(error, "updateTemplateInFile");
   }
-
-  // Generate TypeScript content
-  const tsContent = `import type { Template } from "${isDev ? "~/libs/sdk/sdk-types" : "@reliverse/dler-sdk"}";
-${(() => {
-  const files = template.config.files;
-  if (!files) return "";
-
-  const hasPackageJson = Object.values(files).some(
-    (f) => f.type === "json" && (f.content as any)?.__type === "PackageJson",
-  );
-  const hasTSConfig = Object.values(files).some(
-    (f) => f.type === "json" && (f.content as any)?.__type === "TSConfig",
-  );
-
-  if (!hasPackageJson && !hasTSConfig) return "";
-
-  const imports = [];
-  if (hasPackageJson) imports.push("PackageJson");
-  if (hasTSConfig) imports.push("TSConfig");
-
-  return `import type { ${imports.join(", ")} } from "pkg-types";\n`;
-})()}
-
-export const ${templateConstName}: Template = ${JSON.stringify(template, null, 2)
-    .replace(/"([^"]+)":/g, (_, key) => {
-      // Only quote keys that contain special characters or spaces
-      return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key) ? `${key}:` : `"${key}":`;
-    })
-    .replace(/"([^"]+)":/g, (_, key) => {
-      // Only quote keys that contain special characters or spaces
-      return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key) ? `${key}:` : `"${key}":`;
-    })
-    .replace(/"([^"]+)":/g, (_, key) => {
-      // Only quote keys that contain special characters or spaces
-      return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key) ? `${key}:` : `"${key}":`;
-    })};
-
-export const ${whitelabel}_TEMPLATES = {
-  ${templateKey}: ${templateConstName},
-} as const;
-
-export type ${whitelabel}_TEMPLATE_NAMES = keyof typeof ${whitelabel}_TEMPLATES;
-
-export const ${whitelabel.toLowerCase()}TemplatesMap: Record<string, ${whitelabel}_TEMPLATE_NAMES> = {
-  ${templateConstName}: "${templateKey}",
-};
-`;
-
-  if (dryRun) {
-    relinka("verbose", `[DRY RUN] Would write template file: ${outFile}`);
-    return;
-  }
-
-  const dir = path.dirname(outFile);
-  if (dir && dir !== ".") await fs.ensureDir(dir);
-  if (backup && (await fs.pathExists(outFile))) {
-    const backupPath = `${outFile}.${Date.now()}.bak`;
-    await fs.copyFile(outFile, backupPath);
-  }
-
-  await fs.writeFile(outFile, tsContent, "utf8");
 };
 
 // ---------- command ----------
@@ -514,6 +492,15 @@ export default defineCommand({
       type: "string",
       description: "Custom prefix to use instead of 'DLER' in template generation",
       default: "DLER",
+    },
+    sourcemap: {
+      type: "boolean",
+      description: "Generate source map for the merged output",
+      default: false,
+    },
+    "update-template": {
+      type: "string",
+      description: "Update specific template in existing mock template file",
     },
   },
   async run({ args }) {
@@ -634,21 +621,233 @@ export default defineCommand({
         }
       }
 
+      if (args["update-template"]) {
+        if (!outFile) {
+          throw new Error("Output file path required for template update");
+        }
+
+        const templateName = args["update-template"];
+        const templateData: Template = {
+          name: templateName
+            .replace(/_DLER_TEMPLATE$/, "")
+            .replace(/_/g, " ")
+            .toLowerCase(), // Convert REACT_DLER_TEMPLATE to "react"
+          description: `Template generated from ${files.length} files`,
+          config: {
+            files: {},
+          },
+        };
+
+        // Process files
+        for (const file of files) {
+          const relPath = path.relative(process.cwd(), file);
+          const ext = path.extname(file).slice(1).toLowerCase();
+          const isBinary = await isBinaryExt(file);
+          const fileName = path.basename(file).toLowerCase();
+
+          let content: FileContent = "";
+          let type: FileType = "binary";
+
+          if (!isBinary) {
+            try {
+              const fileContent = await fs.readFile(file, "utf8");
+              if (ext === "json") {
+                const jsonContent = JSON.parse(fileContent) as Record<string, unknown>;
+                if (fileName === "package.json") {
+                  content = {
+                    ...jsonContent,
+                    __type: "PackageJson",
+                  } as unknown as FileContent;
+                } else if (fileName === "tsconfig.json") {
+                  content = {
+                    ...jsonContent,
+                    __type: "TSConfig",
+                  } as unknown as FileContent;
+                } else {
+                  content = jsonContent;
+                }
+                type = "json";
+              } else {
+                content = fileContent;
+                type = "text";
+              }
+            } catch {
+              type = "binary";
+            }
+          }
+
+          templateData.config.files[relPath] = {
+            content,
+            type: type as "text" | "json",
+          };
+        }
+
+        const templateContent = `export const ${templateName}: Template = ${JSON.stringify(
+          templateData,
+          null,
+          2,
+        ).replace(/"([^"]+)":/g, (_, key) => {
+          return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key) ? `${key}:` : `"${key}":`;
+        })};`;
+
+        await updateTemplateInFile(
+          templateName,
+          templateContent,
+          outFile,
+          dryRun,
+          backup,
+          args.sourcemap,
+        );
+        const elapsed = getElapsedPerfTime(timer);
+        relinka(
+          "success",
+          `Successfully ${dryRun ? "would update" : "updated"} template "${templateName}" in "${outFile}" (in ${prettyMilliseconds(elapsed)})`,
+        );
+        return;
+      }
+
       if (asTemplate) {
+        const timer: PerfTimer = {
+          startTime: performance.now(),
+          pausedAt: null,
+          pausedDuration: 0,
+        };
         if (!outFile) {
           outFile = "template.ts";
         } else if (!outFile.endsWith(".ts")) {
           outFile = `${outFile}.ts`;
         }
-        await generateTemplateFile(
-          isDev,
-          files,
-          outFile,
-          dryRun,
-          backup,
-          customTemplateName,
-          whitelabel,
-        );
+
+        const templateName = customTemplateName || path.basename(outFile, ".ts");
+        const templateConstName =
+          templateName
+            .replace(/[^a-zA-Z0-9]/g, "_") // Replace any non-alphanumeric with underscore
+            .replace(/_+/g, "_") // Replace multiple underscores with single underscore
+            .replace(/^_|_$/g, "") // Remove leading/trailing underscores
+            .replace(/[A-Z]/g, (letter) => `_${letter}`) // Add underscore before capital letters
+            .replace(/^_/, "") // Remove leading underscore
+            .toUpperCase() + `_${whitelabel}_TEMPLATE`; // Add suffix with whitelabel
+
+        // Create a valid object key from the template name
+        const templateKey = templateName
+          .replace(/[^a-zA-Z0-9]/g, "_") // Replace any non-alphanumeric with underscore
+          .replace(/_+/g, "_") // Replace multiple underscores with single underscore
+          .replace(/^_|_$/g, "") // Remove leading/trailing underscores
+          .toLowerCase(); // Convert to lowercase for the object key
+
+        // Create template structure
+        const template: Template = {
+          name: templateName.toLowerCase(), // Ensure name is lowercase
+          description: `Template generated from ${files.length} files`,
+          config: {
+            files: {},
+          },
+        };
+
+        // Process files
+        for (const file of files) {
+          const relPath = path.relative(process.cwd(), file);
+          const ext = path.extname(file).slice(1).toLowerCase();
+          const isBinary = await isBinaryExt(file);
+          const fileName = path.basename(file).toLowerCase();
+
+          let content: FileContent = "";
+          let type: FileType = "binary";
+
+          if (!isBinary) {
+            try {
+              const fileContent = await fs.readFile(file, "utf8");
+              if (ext === "json") {
+                const jsonContent = JSON.parse(fileContent) as Record<string, unknown>;
+                if (fileName === "package.json") {
+                  content = {
+                    ...jsonContent,
+                    __type: "PackageJson",
+                  } as unknown as FileContent;
+                } else if (fileName === "tsconfig.json") {
+                  content = {
+                    ...jsonContent,
+                    __type: "TSConfig",
+                  } as unknown as FileContent;
+                } else {
+                  content = jsonContent;
+                }
+                type = "json";
+              } else {
+                content = fileContent;
+                type = "text";
+              }
+            } catch {
+              type = "binary";
+            }
+          }
+
+          template.config.files[relPath] = {
+            content,
+            type: type as "text" | "json",
+          };
+        }
+
+        // Generate TypeScript content
+        const tsContent = `import type { Template } from "${isDev ? "~/libs/sdk/sdk-types" : "@reliverse/dler-sdk"}";
+${(() => {
+  const files = template.config.files;
+  if (!files) return "";
+
+  const hasPackageJson = Object.values(files).some(
+    (f) => f.type === "json" && (f.content as any)?.__type === "PackageJson",
+  );
+  const hasTSConfig = Object.values(files).some(
+    (f) => f.type === "json" && (f.content as any)?.__type === "TSConfig",
+  );
+
+  if (!hasPackageJson && !hasTSConfig) return "";
+
+  const imports = [];
+  if (hasPackageJson) imports.push("PackageJson");
+  if (hasTSConfig) imports.push("TSConfig");
+
+  return `import type { ${imports.join(", ")} } from "pkg-types";\n`;
+})()}
+
+export const ${templateConstName}: Template = ${JSON.stringify(template, null, 2)
+          .replace(/"([^"]+)":/g, (_, key) => {
+            // Only quote keys that contain special characters or spaces
+            return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key) ? `${key}:` : `"${key}":`;
+          })
+          .replace(/"([^"]+)":/g, (_, key) => {
+            // Only quote keys that contain special characters or spaces
+            return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key) ? `${key}:` : `"${key}":`;
+          })
+          .replace(/"([^"]+)":/g, (_, key) => {
+            // Only quote keys that contain special characters or spaces
+            return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key) ? `${key}:` : `"${key}":`;
+          })};
+
+export const ${whitelabel}_TEMPLATES = {
+  ${templateKey}: ${templateConstName},
+} as const;
+
+export type ${whitelabel}_TEMPLATE_NAMES = keyof typeof ${whitelabel}_TEMPLATES;
+
+export const ${whitelabel.toLowerCase()}TemplatesMap: Record<string, ${whitelabel}_TEMPLATE_NAMES> = {
+  ${templateConstName}: "${templateKey}",
+};
+`;
+
+        if (dryRun) {
+          relinka("verbose", `[DRY RUN] Would write template file: ${outFile}`);
+          return;
+        }
+
+        const dir = path.dirname(outFile);
+        if (dir && dir !== ".") await fs.ensureDir(dir);
+        if (backup && (await fs.pathExists(outFile))) {
+          const backupPath = `${outFile}.${Date.now()}.bak`;
+          await fs.copyFile(outFile, backupPath);
+        }
+
+        await fs.writeFile(outFile, tsContent, "utf8");
         const elapsed = getElapsedPerfTime(timer);
         relinka(
           "success",
@@ -689,14 +888,7 @@ export default defineCommand({
           }
           const rel = path.relative(cwd, f);
           const prefix = getPrefix(f);
-          let section = raw;
-          if (pathAbove) {
-            section = `${prefix}${rel}\n${section}`;
-          }
-          if (injectPath) {
-            section = `${ensureTrailingNL(section)}${prefix}${rel}`;
-          }
-          return section;
+          return processSection(raw, rel, prefix, pathAbove, injectPath);
         },
         { concurrency },
       );
@@ -704,7 +896,15 @@ export default defineCommand({
       if (header) filteredSections.unshift(header);
       if (footer) filteredSections.push(footer);
 
-      await writeResult(filteredSections, separator, outFile, stdoutFlag, dryRun, backup);
+      await writeResult(
+        filteredSections,
+        separator,
+        outFile,
+        stdoutFlag,
+        dryRun,
+        backup,
+        args.sourcemap,
+      );
       const elapsed = getElapsedPerfTime(timer);
       relinka("success", `Merge completed in ${prettyMilliseconds(elapsed)}`);
     } catch (error: unknown) {

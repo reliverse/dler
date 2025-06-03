@@ -78,12 +78,40 @@ export async function renameTsxFiles(dir: string): Promise<void> {
     absolute: true,
     cwd: dir,
   });
+
+  // Track processed files to detect conflicts
+  const processedPaths = new Set<string>();
+
   await pMap(
     files,
     async (filePath) => {
       const newPath = filePath.replace(/\.tsx$/, "-tsx.txt");
-      await fs.rename(filePath, newPath);
-      relinka("verbose", `Renamed: ${filePath} -> ${newPath}`);
+
+      // Check for path conflicts
+      if (processedPaths.has(newPath)) {
+        throw new Error(`Path conflict detected: ${newPath} would be created multiple times`);
+      }
+
+      // Check if target file already exists
+      if (await fs.pathExists(newPath)) {
+        throw new Error(`Target file already exists: ${newPath}`);
+      }
+
+      try {
+        await fs.rename(filePath, newPath);
+        processedPaths.add(newPath);
+        relinka("verbose", `Renamed: ${filePath} -> ${newPath}`);
+
+        // Verify the rename was successful
+        if (await fs.pathExists(filePath)) {
+          throw new Error(`Source file still exists after rename: ${filePath}`);
+        }
+        if (!(await fs.pathExists(newPath))) {
+          throw new Error(`Target file not found after rename: ${newPath}`);
+        }
+      } catch (error) {
+        throw new Error(`Failed to rename ${filePath} to ${newPath}: ${error}`);
+      }
     },
     { concurrency: CONCURRENCY_DEFAULT },
   );

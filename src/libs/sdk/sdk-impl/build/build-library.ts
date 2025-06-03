@@ -325,7 +325,6 @@ async function library_buildJsrDist(options: LibraryBuildOptions): Promise<void>
 
   // --- JSR Specific Post-Build Steps ---
   relinka("verbose", `[JSR] Performing JSR-specific transformations in ${outputDirBinResolved}`);
-  await renameTsxFiles(outputDirBinResolved);
   await createJsrJSON(
     outputDirRootResolved,
     true,
@@ -334,6 +333,7 @@ async function library_buildJsrDist(options: LibraryBuildOptions): Promise<void>
     libName,
     libConfig?.libDescription ?? "",
   );
+  await renameTsxFiles(outputDirBinResolved);
 
   // Final logging
   const dirSize = await getDirectorySize(outputDirRootResolved, options.isDev);

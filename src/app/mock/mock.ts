@@ -1,7 +1,7 @@
 import type { Template } from "~/libs/sdk/sdk-types";
 
 export const BASIC_DLER_TEMPLATE: Template = {
-  name: "Basic",
+  name: "basic",
   description: "Template generated from 4 files",
   config: {
     files: {
@@ -33,7 +33,7 @@ export const BASIC_DLER_TEMPLATE: Template = {
 };
 
 export const API_DLER_TEMPLATE: Template = {
-  name: "Api",
+  name: "api",
   description: "Template generated from 3 files",
   config: {
     files: {
@@ -56,8 +56,8 @@ export const API_DLER_TEMPLATE: Template = {
 };
 
 export const REACT_DLER_TEMPLATE: Template = {
-  name: "React",
-  description: "Template generated from 6 files",
+  name: "react",
+  description: "Template generated from 7 files",
   config: {
     files: {
       "src/templates/App.css": {
@@ -67,17 +67,21 @@ export const REACT_DLER_TEMPLATE: Template = {
       },
       "src/templates/App.tsx": {
         content:
-          "import { useState } from 'react';\nimport './App.css';\n\nfunction App() {\n  const [count, setCount] = useState(0);\n\n  return (\n    <div className=\"App\">\n      <h1>React TSX App</h1>\n      <div className=\"card\">\n        <button onClick={() => setCount((count) => count + 1)}>\n          count is {count}\n        </button>\n      </div>\n    </div>\n  );\n}\n\nexport default App;",
+          'import { useState } from "react";\nimport "./App.css";\n\nfunction App() {\n  const [count, setCount] = useState(0);\n\n  return (\n    // @ts-expect-error mock\n    <div className="App">\n      {/* @ts-expect-error mock */}\n      <h1>React TSX App</h1>\n      {/* @ts-expect-error mock */}\n      <div className="card">\n        {/* @ts-expect-error mock */}\n        <button onClick={() => setCount((count) => count + 1)}>count is {count}</button>\n      </div>\n    </div>\n  );\n}\n\nexport default App;\n',
         type: "text",
       },
-      "src/templates/README.md": {
+      "src/templates/DOCS.md": {
         content:
-          "# React TSX Project\n\nA modern React project with TypeScript and Vite.\n\n## Features\n\n- React 18 with TypeScript\n- Vite for fast development and building\n- Modern CSS with CSS modules support\n- Hot Module Replacement (HMR)\n- ESLint and Prettier configuration\n\n## Getting Started\n\n1. Install dependencies:\n   ```bash\n   npm install\n   ```\n\n2. Start development server:\n   ```bash\n   npm run dev\n   ```\n\n3. Build for production:\n   ```bash\n   npm run build\n   ```",
+          "# React TSX Project\n\nA modern React project with TypeScript and Vite.\n\n## Features\n\n- React 19 with TypeScript\n- Vite for fast development and building\n- Modern CSS with CSS modules support\n- Hot Module Replacement (HMR)\n- ESLint and Prettier configuration\n\n## Getting Started\n\n1. Install dependencies:\n\n   ```bash\n   npm install\n   ```\n\n2. Start development server:\n\n   ```bash\n   npm run dev\n   ```\n\n3. Build for production:\n\n   ```bash\n   npm run build\n   ```\n",
         type: "text",
       },
-      "src/templates/index.css": {
+      "src/templates/globals.css": {
         content:
           ":root {\n  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;\n  line-height: 1.5;\n  font-weight: 400;\n\n  color-scheme: light dark;\n  color: rgba(255, 255, 255, 0.87);\n  background-color: #242424;\n\n  font-synthesis: none;\n  text-rendering: optimizeLegibility;\n  -webkit-font-smoothing: antialiased;\n  -moz-osx-font-smoothing: grayscale;\n}\n\nbody {\n  margin: 0;\n  display: flex;\n  place-items: center;\n  min-width: 320px;\n  min-height: 100vh;\n}\n\nh1 {\n  font-size: 3.2em;\n  line-height: 1.1;\n}",
+        type: "text",
+      },
+      "src/templates/hello/world.ts": {
+        content: 'console.log("Hello, world!");\r\n',
         type: "text",
       },
       "src/templates/index.html": {
@@ -87,7 +91,7 @@ export const REACT_DLER_TEMPLATE: Template = {
       },
       "src/templates/main.tsx": {
         content:
-          "import React from 'react';\nimport ReactDOM from 'react-dom/client';\nimport App from './App';\nimport './index.css';\n\nReactDOM.createRoot(document.getElementById('root')!).render(\n  <React.StrictMode>\n    <App />\n  </React.StrictMode>,\n);",
+          'import React from "react";\n// @ts-expect-error mock\nimport ReactDOM from "react-dom/client";\nimport App from "./App";\nimport "./index.css";\n\nReactDOM.createRoot(document.getElementById("root")!).render(\n  <React.StrictMode>\n    <App />\n  </React.StrictMode>,\n);\n',
         type: "text",
       },
     },
