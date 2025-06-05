@@ -46,7 +46,7 @@ export async function removeDistFolders(
       },
       { concurrency: CONCURRENCY_DEFAULT },
     );
-    relinka("success", "Distribution folders removed successfully");
+    relinka("log", "Distribution folders removed successfully");
   }
 
   return true;

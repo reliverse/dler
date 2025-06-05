@@ -197,8 +197,7 @@ export async function library_buildLibrary(options: LibraryBuildOptions): Promis
   } catch (err) {
     // --- Error Handling ---
     const error = err instanceof Error ? err : new Error(String(err));
-    relinka("error", `Build process for ${libName} failed: ${error.message}`, error.stack);
-    // Re-throw to halt the overall process if this is part of a larger sequence
+    relinka("error", `Build process for ${libName} failed: ${error.message}`);
     throw error;
   } finally {
     // --- Post-build Step: Revert source file modifications ---
@@ -212,9 +211,7 @@ export async function library_buildLibrary(options: LibraryBuildOptions): Promis
         relinka(
           "error",
           `CRITICAL: Failed to revert pre-build changes for ${libName}: ${error.message}. Source files may be left modified!`,
-          error.stack,
         );
-        // throw new Error(`Revert failed for ${libName}: ${error.message}`);
       }
     } else {
       relinka("verbose", `No pre-build changes to revert for ${libName}.`);
@@ -620,13 +617,11 @@ async function library_bundleUsingJsrCopy(
       `[JSR Copy:${libName}] Completed copying library source from ${srcDir} to ${destDir}`,
     );
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
     relinka(
       "error",
-      `[JSR Copy:${libName}] Failed to copy library source from ${srcDir} to ${destDir}: ${errorMessage}`,
-      error instanceof Error ? error.stack : undefined,
+      `Failed to copy library source from ${srcDir} to ${destDir}: ${error instanceof Error ? error.message : String(error)}`,
     );
-    throw new Error(`[JSR Copy:${libName}] Failed: ${errorMessage}`);
+    throw error;
   }
 }
 
@@ -717,13 +712,11 @@ async function library_bundleUsingBun(
       throw new Error(`[Bun:${libName}] Build process reported failure. Check logs.`);
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
     relinka(
       "error",
-      `[Bun:${libName}] Library build threw an error: ${errorMessage}`,
-      error instanceof Error ? error.stack : undefined,
+      `Library build threw an error: ${error instanceof Error ? error.message : String(error)}`,
     );
-    throw new Error(`[Bun:${libName}] Bundle failed: ${errorMessage}`);
+    throw error;
   }
 }
 
@@ -814,13 +807,11 @@ async function library_bundleUsingUnified(
       `[Unified:${builder}] Library build completed in ${prettyMilliseconds(duration)}.`,
     );
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
     relinka(
       "error",
-      `[Unified:${builder}] Library build failed: ${errorMessage}`,
-      error instanceof Error ? error.stack : undefined,
+      `Library build failed: ${error instanceof Error ? error.message : String(error)}`,
     );
-    throw new Error(`[Unified:${builder}] Bundle failed: ${errorMessage}`);
+    throw error;
   }
 }
 
@@ -1215,9 +1206,11 @@ async function postBuildReplacements(replacedFiles: ReplacementRecord[]): Promis
       await fs.writeFile(record.filePath, record.originalContent, "utf8");
       relinka("verbose", `Reverted changes in ${path.relative(PROJECT_ROOT, record.filePath)}`);
     } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      relinka("error", `Failed to revert file ${record.filePath}: ${error.message}`, error.stack);
-      throw new Error(`Failed to revert ${record.filePath}`);
+      relinka(
+        "error",
+        `Failed to revert file ${record.filePath}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      throw err;
     }
   });
 

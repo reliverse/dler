@@ -131,21 +131,20 @@ export async function regular_buildJsrDist(
     }
     await renameTsxFiles(outDirBin);
 
-    // Calculate and log build duration
-    const duration = getElapsedPerfTime(timer);
-    const transpileFormattedDuration = prettyMilliseconds(duration, {
-      verbose: true,
-    });
-    relinka("success", `JSR distribution built in ${transpileFormattedDuration}`);
+    // Calculate and log build duration only if publishing is paused
+    if (config.commonPubPause) {
+      const duration = getElapsedPerfTime(timer);
+      const transpileFormattedDuration = prettyMilliseconds(duration, {
+        verbose: true,
+      });
+      relinka("success", `JSR distribution built in ${transpileFormattedDuration}`);
+    } else {
+      relinka("success", "JSR distribution built successfully");
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     relinka("error", `Failed to build JSR distribution: ${errorMessage}`);
-
-    const enhancedError = new Error(`JSR distribution build failed: ${errorMessage}`);
-    if (error instanceof Error && error.stack) {
-      enhancedError.stack = error.stack;
-    }
-    throw enhancedError;
+    throw new Error(`JSR distribution build failed: ${errorMessage}`);
   }
 }
 
@@ -224,21 +223,20 @@ export async function regular_buildNpmDist(
       ]);
     }
 
-    // Calculate and log build duration
-    const duration = getElapsedPerfTime(timer);
-    const transpileFormattedDuration = prettyMilliseconds(duration, {
-      verbose: true,
-    });
-    relinka("success", `NPM distribution built in ${transpileFormattedDuration}`);
+    // Calculate and log build duration only if publishing is paused
+    if (config.commonPubPause) {
+      const duration = getElapsedPerfTime(timer);
+      const transpileFormattedDuration = prettyMilliseconds(duration, {
+        verbose: true,
+      });
+      relinka("success", `NPM distribution built in ${transpileFormattedDuration}`);
+    } else {
+      relinka("success", "NPM distribution built successfully");
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     relinka("error", `Failed to build NPM distribution: ${errorMessage}`);
-
-    const enhancedError = new Error(`NPM distribution build failed: ${errorMessage}`);
-    if (error instanceof Error && error.stack) {
-      enhancedError.stack = error.stack;
-    }
-    throw enhancedError;
+    throw new Error(`NPM distribution build failed: ${errorMessage}`);
   }
 }
 
@@ -308,12 +306,7 @@ async function regular_bundleUsingBun(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     relinka("error", `Regular build failed while using bun bundler: ${errorMessage}`);
-
-    const enhancedError = new Error(`Regular bundle failed for ${outDirBin}: ${errorMessage}`);
-    if (error instanceof Error && error.stack) {
-      enhancedError.stack = error.stack;
-    }
-    throw enhancedError;
+    throw new Error(`Regular bundle failed for ${outDirBin}: ${errorMessage}`);
   }
 }
 
@@ -448,12 +441,7 @@ async function regular_bundleUsingUnified(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     relinka("error", `Failed to bundle regular project using ${builder}: ${errorMessage}`);
-
-    const enhancedError = new Error(`Regular bundle failed for ${outDirBin}: ${errorMessage}`);
-    if (error instanceof Error && error.stack) {
-      enhancedError.stack = error.stack;
-    }
-    throw enhancedError;
+    throw new Error(`Regular bundle failed for ${outDirBin}: ${errorMessage}`);
   }
 }
 

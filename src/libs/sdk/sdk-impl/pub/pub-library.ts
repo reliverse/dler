@@ -5,7 +5,7 @@ import pAll from "p-all";
 import type { PerfTimer } from "~/libs/sdk/sdk-types";
 
 import { CONCURRENCY_DEFAULT } from "~/libs/sdk/sdk-impl/utils/utils-consts";
-import { withWorkingDirectory } from "~/libs/sdk/sdk-impl/utils/utils-cwd";
+import { withWorkingDirectory } from "~/libs/sdk/sdk-impl/utils/utils-error-cwd";
 import { pausePerfTimer, resumePerfTimer } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 /**
@@ -95,24 +95,16 @@ async function library_pubToJsr(
       ]
         .filter(Boolean)
         .join(" ");
-      try {
-        await execaCommand(command, { stdio: "inherit" });
-      } catch (error) {
-        relinka("error", `Failed to publish lib ${libName} to JSR`, error);
-        throw error;
-      }
+      await execaCommand(command, { stdio: "inherit" });
       relinka(
-        "success",
+        "log",
         `Successfully ${distJsrDryRun ? "validated" : "published"} lib ${libName} to JSR registry`,
       );
     });
     if (timer) resumePerfTimer(timer);
   } catch (error) {
     if (timer) resumePerfTimer(timer);
-    relinka("error", `Failed to publish lib ${libName} to JSR`, error);
     throw error;
-  } finally {
-    relinka("verbose", `Exiting library_pubToJsr for lib: ${libName}`);
   }
 }
 
@@ -135,16 +127,13 @@ async function library_pubToNpm(
       const command = ["bun publish", distJsrDryRun ? "--dry-run" : ""].filter(Boolean).join(" ");
       await execaCommand(command, { stdio: "inherit" });
       relinka(
-        "success",
+        "log",
         `Successfully ${distJsrDryRun ? "validated" : "published"} lib ${libName} to NPM registry`,
       );
     });
     if (timer) resumePerfTimer(timer);
   } catch (error) {
     if (timer) resumePerfTimer(timer);
-    relinka("error", `Failed to publish lib ${libName} to NPM`, error);
     throw error;
-  } finally {
-    relinka("verbose", `Exiting library_pubToNpm for lib: ${libName}`);
   }
 }

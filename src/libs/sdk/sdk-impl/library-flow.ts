@@ -14,6 +14,8 @@ import type {
   PerfTimer,
 } from "~/libs/sdk/sdk-types";
 
+import { resumePerfTimer } from "~/libs/sdk/sdk-mod";
+
 import { library_buildLibrary } from "./build/build-library";
 import { library_publishLibrary } from "./pub/pub-library";
 import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "./utils/utils-consts";
@@ -231,9 +233,6 @@ export async function libraries_buildPublish(
             error instanceof Error ? error.message : String(error)
           }`,
         );
-        if (isDev && error instanceof Error) {
-          relinka("verbose", `Error details: ${error.stack}`);
-        }
         throw error;
       }
     };
@@ -245,24 +244,7 @@ export async function libraries_buildPublish(
     });
     relinka("verbose", "Completed libraries_buildPublish");
   } catch (error) {
-    if (error instanceof AggregateError) {
-      // For concurrency errors, each error is an entry in the AggregateError
-      for (const individualError of error.errors) {
-        relinka(
-          "error",
-          `AggregateError: ${
-            individualError instanceof Error ? individualError.message : String(individualError)
-          }`,
-        );
-      }
-    } else {
-      relinka(
-        "error",
-        `Unhandled error in libraries_buildPublish: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-    }
+    if (timer) resumePerfTimer(timer);
     throw error;
   }
 }

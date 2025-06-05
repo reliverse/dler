@@ -67,7 +67,7 @@ export const REACT_DLER_TEMPLATE: Template = {
       },
       "src/templates/App.tsx": {
         content:
-          'import { useState } from "react";\nimport "./App.css";\n\nfunction App() {\n  const [count, setCount] = useState(0);\n\n  return (\n    // @ts-expect-error mock\n    <div className="App">\n      {/* @ts-expect-error mock */}\n      <h1>React TSX App</h1>\n      {/* @ts-expect-error mock */}\n      <div className="card">\n        {/* @ts-expect-error mock */}\n        <button onClick={() => setCount((count) => count + 1)}>count is {count}</button>\n      </div>\n    </div>\n  );\n}\n\nexport default App;\n',
+          'import { useState } from "react";\nimport "./App.css";\n\nfunction App() {\n  const [count, setCount] = useState(0);\n\n  return (\n    // @ts-expect-error mock\n    <div className="App">\n      {/* @ts-expect-error mock */}\n      <h1>React TSX App</h1>\n      {/* @ts-expect-error mock */}\n      <div className="card">\n        {/* @ts-expect-error mock */}\n        <button onClick={() => setCount((count: number) => count + 1)}>count is {count}</button>\n      </div>\n    </div>\n  );\n}\n\nexport default App;\n',
         type: "text",
       },
       "src/templates/DOCS.md": {

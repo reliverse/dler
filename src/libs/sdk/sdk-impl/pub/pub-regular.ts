@@ -9,7 +9,7 @@ import { execaCommand } from "execa";
 import type { PerfTimer } from "~/libs/sdk/sdk-types";
 
 import { PROJECT_ROOT } from "~/libs/sdk/sdk-impl/utils/utils-consts";
-import { withWorkingDirectory } from "~/libs/sdk/sdk-impl/utils/utils-cwd";
+import { withWorkingDirectory } from "~/libs/sdk/sdk-impl/utils/utils-error-cwd";
 import { pausePerfTimer, resumePerfTimer } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 /**
@@ -44,14 +44,9 @@ export async function regular_pubToJsr(
           .filter(Boolean)
           .join(" ");
         relinka("verbose", `Running publish command: ${command}`);
-        try {
-          await execaCommand(command, { stdio: "inherit" });
-        } catch (error) {
-          relinka("error", `Failed to publish main project to JSR: ${error}`);
-          throw error;
-        }
+        await execaCommand(command, { stdio: "inherit" });
         relinka(
-          "success",
+          "log",
           `Successfully ${distJsrDryRun ? "validated" : "published"} to JSR registry`,
         );
       });
@@ -62,7 +57,6 @@ export async function regular_pubToJsr(
   } catch (error) {
     // Resume timer even on error
     if (timer) resumePerfTimer(timer);
-    relinka("error", "Failed to publish to JSR:", error);
     throw error;
   }
 }
@@ -88,14 +82,9 @@ export async function regular_pubToNpm(
       await withWorkingDirectory(distNpmDirNameResolved, async () => {
         const command = ["bun publish", distJsrDryRun ? "--dry-run" : ""].filter(Boolean).join(" ");
         relinka("verbose", `Running publish command: ${command}`);
-        try {
-          await execaCommand(command, { stdio: "inherit" });
-        } catch (error) {
-          relinka("error", `Failed to publish main project to NPM: ${error}`);
-          throw error;
-        }
+        await execaCommand(command, { stdio: "inherit" });
         relinka(
-          "success",
+          "log",
           `Successfully ${distJsrDryRun ? "validated" : "published"} to NPM registry`,
         );
       });
@@ -106,7 +95,6 @@ export async function regular_pubToNpm(
   } catch (error) {
     // Resume timer even on error
     if (timer) resumePerfTimer(timer);
-    relinka("error", "Failed to publish to NPM:", error);
     throw error;
   }
 }

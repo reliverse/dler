@@ -27,17 +27,16 @@ export async function finalizeBuildPub(
       throw new Error("[.config/dler.ts] Failed to set bumpDisable to false");
     }
   }
+
   const elapsedTime = getElapsedPerfTime(timer);
   const transpileFormattedTime = prettyMilliseconds(elapsedTime, {
     verbose: true,
   });
+
   if (!commonPubPause) {
-    relinka(
-      "success",
-      `🎉 Build and publishing completed successfully (in ${transpileFormattedTime})`,
-    );
+    relinka("success", `🎉 Publish completed successfully (build time: ${transpileFormattedTime})`);
   } else {
-    relinka("success", `🎉 Test build completed successfully (in ${transpileFormattedTime})`);
+    relinka("success", `🎉 Build completed successfully (done in: ${transpileFormattedTime})`);
     relinka("info", "📝 Publish process is currently paused in your config file");
   }
 }

@@ -4,11 +4,19 @@
 // advanced example: `bun dler merge --s ".temp1/packages/*/lib/**/*" --d ".temp2/merged.ts" --sort "mtime" --header "// Header" --footer "// Footer" --dedupe`
 // generate mock template: `bun dler merge --s "src/templates" --d "templates/my-template.ts" --as-template`
 
+import type { PackageJson, TSConfig } from "pkg-types";
+
 import path from "@reliverse/pathkit";
 import { glob } from "@reliverse/reglob";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { defineCommand, inputPrompt, confirmPrompt, multiselectPrompt } from "@reliverse/rempts";
+import {
+  defineCommand,
+  inputPrompt,
+  confirmPrompt,
+  multiselectPrompt,
+  defineArgs,
+} from "@reliverse/rempts";
 import MagicString from "magic-string";
 import { Bundle } from "magic-string";
 import pMap from "p-map";
@@ -385,7 +393,7 @@ export default defineCommand({
     description:
       "Merge text files with optional commented path header/footer, skips binaries/media, built for CI & interactive use. Supports copy-like patterns and advanced options.",
   },
-  args: {
+  args: defineArgs({
     dev: { type: "boolean", description: "Generate template for development" },
     s: { type: "array", description: "Input glob patterns" },
     d: { type: "string", description: "Output file path or directory" },
@@ -434,7 +442,6 @@ export default defineCommand({
     increment: {
       type: "boolean",
       description: "Attach an incrementing index to each output filename if set (default: false)",
-      default: false,
     },
     concurrency: {
       type: "number",
@@ -449,17 +456,14 @@ export default defineCommand({
     dryRun: {
       type: "boolean",
       description: "Show what would be done, but don't write files",
-      default: false,
     },
     backup: {
       type: "boolean",
       description: "Backup output files before overwriting",
-      default: false,
     },
     dedupe: {
       type: "boolean",
       description: "Remove duplicate file contents in merge",
-      default: false,
     },
     header: {
       type: "string",
@@ -472,19 +476,16 @@ export default defineCommand({
     "select-files": {
       type: "boolean",
       description: "Prompt for file selection before merging",
-      default: false,
     },
     interactive: {
       type: "boolean",
       description: "Enable interactive mode with prompts (default: false)",
-      default: false,
     },
     "as-template": {
       type: "boolean",
       description: "Generate a TypeScript file with MOCK_TEMPLATES structure",
-      default: false,
     },
-    ctn: {
+    "custom-template-name": {
       type: "string",
       description: "Custom template name when using --as-template",
     },
@@ -496,14 +497,15 @@ export default defineCommand({
     sourcemap: {
       type: "boolean",
       description: "Generate source map for the merged output",
-      default: false,
     },
     "update-template": {
       type: "string",
       description: "Update specific template in existing mock template file",
+      dependencies: ["as-template"],
     },
-  },
+  }),
   async run({ args }) {
+    const customTemplateName = args["custom-template-name"];
     try {
       const timer = createPerfTimer();
       const interactive = args.interactive ?? false;
@@ -599,7 +601,6 @@ export default defineCommand({
       const footer = args.footer;
       const selectFiles = args["select-files"] ?? false;
       const asTemplate = args["as-template"] ?? false;
-      const customTemplateName = args.ctn;
 
       let files = await collectFiles(include, ignore, recursive, sortBy);
 
@@ -656,13 +657,11 @@ export default defineCommand({
                 if (fileName === "package.json") {
                   content = {
                     ...jsonContent,
-                    __type: "PackageJson",
-                  } as unknown as FileContent;
+                  } satisfies PackageJson;
                 } else if (fileName === "tsconfig.json") {
                   content = {
                     ...jsonContent,
-                    __type: "TSConfig",
-                  } as unknown as FileContent;
+                  } satisfies TSConfig;
                 } else {
                   content = jsonContent;
                 }
@@ -671,9 +670,17 @@ export default defineCommand({
                 content = fileContent;
                 type = "text";
               }
-            } catch {
+            } catch (error) {
               type = "binary";
+              if (asTemplate || args["update-template"]) {
+                relinka(
+                  "warn",
+                  `Skipped file "${relPath}" due to error: ${error instanceof Error ? error.message : "unknown error"}`,
+                );
+              }
             }
+          } else if (asTemplate || args["update-template"]) {
+            relinka("warn", `Skipped binary file "${relPath}"`);
           }
 
           templateData.config.files[relPath] = {
@@ -762,13 +769,11 @@ export default defineCommand({
                 if (fileName === "package.json") {
                   content = {
                     ...jsonContent,
-                    __type: "PackageJson",
-                  } as unknown as FileContent;
+                  } satisfies PackageJson;
                 } else if (fileName === "tsconfig.json") {
                   content = {
                     ...jsonContent,
-                    __type: "TSConfig",
-                  } as unknown as FileContent;
+                  } satisfies TSConfig;
                 } else {
                   content = jsonContent;
                 }
@@ -777,9 +782,17 @@ export default defineCommand({
                 content = fileContent;
                 type = "text";
               }
-            } catch {
+            } catch (error) {
               type = "binary";
+              if (asTemplate || args["update-template"]) {
+                relinka(
+                  "warn",
+                  `Skipped file "${relPath}" due to error: ${error instanceof Error ? error.message : "unknown error"}`,
+                );
+              }
             }
+          } else if (asTemplate || args["update-template"]) {
+            relinka("warn", `Skipped binary file "${relPath}"`);
           }
 
           template.config.files[relPath] = {
@@ -795,10 +808,10 @@ ${(() => {
   if (!files) return "";
 
   const hasPackageJson = Object.values(files).some(
-    (f) => f.type === "json" && (f.content as any)?.__type === "PackageJson",
+    (f) => f.type === "json" && (f.content as any satisfies PackageJson),
   );
   const hasTSConfig = Object.values(files).some(
-    (f) => f.type === "json" && (f.content as any)?.__type === "TSConfig",
+    (f) => f.type === "json" && (f.content as any satisfies TSConfig),
   );
 
   if (!hasPackageJson && !hasTSConfig) return "";

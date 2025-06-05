@@ -117,10 +117,10 @@ export {
 export {
   validateDevCwd,
   withWorkingDirectory,
-} from "./sdk-impl/utils/utils-cwd";
+} from "./sdk-impl/utils/utils-error-cwd";
 export { filterDeps } from "./sdk-impl/utils/utils-deps";
 export { determineDistName } from "./sdk-impl/utils/utils-determine";
-export { handleDlerError } from "./sdk-impl/utils/utils-error";
+export { handleDlerError } from "./sdk-impl/utils/utils-error-cwd";
 export {
   copyRootFile,
   getDirectorySize,

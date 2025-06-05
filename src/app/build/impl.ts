@@ -10,7 +10,7 @@ import { processRegularFlow } from "~/libs/sdk/sdk-impl/regular-flow";
 import { finalizeBuildPub } from "~/libs/sdk/sdk-impl/utils/finalize";
 import { removeDistFolders } from "~/libs/sdk/sdk-impl/utils/utils-clean";
 import { PROJECT_ROOT } from "~/libs/sdk/sdk-impl/utils/utils-consts";
-import { handleDlerError } from "~/libs/sdk/sdk-impl/utils/utils-error";
+import { handleDlerError } from "~/libs/sdk/sdk-impl/utils/utils-error-cwd";
 import { createPerfTimer } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 // ==========================
@@ -79,7 +79,7 @@ export async function dlerBuild(isDev: boolean, config?: DlerConfig) {
       effectiveConfig.libsDirDist,
     );
   } catch (error) {
-    handleDlerError(error, timer);
+    handleDlerError(error);
   }
 }
 
@@ -144,6 +144,6 @@ export async function dlerPub(isDev: boolean, config?: DlerConfig) {
       effectiveConfig.libsDirDist,
     );
   } catch (error) {
-    handleDlerError(error, timer);
+    handleDlerError(error);
   }
 }
