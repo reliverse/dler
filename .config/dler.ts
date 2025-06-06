@@ -8,11 +8,11 @@ import { defineConfig } from "~/mod";
 export default defineConfig({
   // Bump configuration
   bumpDisable: false,
-  bumpFilter: ["package.json", ".config/rse.ts", "src/libs/sdk/sdk-impl/cfg/info.ts"],
+  bumpFilter: ["package.json", ".config/rse.ts", "src/libs/sdk/sdk-impl/config/info.ts"],
   bumpMode: "patch",
 
   // Common configuration
-  commonPubPause: false,
+  commonPubPause: true,
   commonPubRegistry: "npm-jsr",
   commonVerbose: true,
 
@@ -58,6 +58,16 @@ export default defineConfig({
       libPubPause: false,
       libPubRegistry: "npm-jsr",
     },
+    "@reliverse/cfg": {
+      libDeclarations: true,
+      libDescription: "shared config for @reliverse/dler and @reliverse/rse",
+      libDirName: "cfg",
+      libMainFile: "cfg/cfg-mod.ts",
+      libPkgKeepDeps: false,
+      libTranspileMinify: true,
+      libPubPause: false,
+      libPubRegistry: "npm-jsr",
+    },
   },
 
   // @reliverse/relinka logger setup
@@ -75,6 +85,10 @@ export default defineConfig({
     "dist-npm": [],
     "dist-libs": {
       "@reliverse/dler-sdk": {
+        jsr: [],
+        npm: [],
+      },
+      "@reliverse/cfg": {
         jsr: [],
         npm: [],
       },
@@ -102,6 +116,10 @@ export default defineConfig({
     "dist-libs": {
       "@reliverse/dler-sdk": {
         jsr: ["!bun"],
+        npm: [],
+      },
+      "@reliverse/cfg": {
+        jsr: [],
         npm: [],
       },
     },

@@ -1,6 +1,7 @@
 import type { Spell, SpellParams, SpellType } from "./spell-types.js";
 
-const SPELL_REGEX = /dler-([a-z-]+)-(?:"([^"]+)")?-?(?:{([^}]+)})?/;
+// must be a comment and must start with dler-
+const SPELL_REGEX = /\/\/\s*dler-([a-z-]+)-(?:"([^"]+)")?-?(?:{([^}]+)})?/;
 
 export const parseParams = (paramsStr: string | undefined): SpellParams => {
   const defaultParams: SpellParams = {
@@ -31,6 +32,9 @@ export const parseSpellFromComment = (
   lineNumber: number,
   fileName: string,
 ): Spell | null => {
+  // Skip if line doesn't contain a comment
+  if (!line.includes("//")) return null;
+
   const match = line.match(SPELL_REGEX);
 
   if (!match) return null;

@@ -1,6 +1,6 @@
 import type { CheckIssue, CheckResult } from "~/libs/sdk/sdk-types";
 
-import { loadConfig } from "~/libs/sdk/sdk-impl/cfg/load";
+import { loadConfig } from "~/libs/sdk/sdk-impl/config/load";
 
 // check "dler-config-health" rule
 export async function checkDlerConfigHealth(): Promise<CheckResult> {

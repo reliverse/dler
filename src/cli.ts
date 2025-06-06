@@ -12,8 +12,8 @@ import {
 
 import { promptAggCommand } from "./app/agg/run";
 import { getBuildCmd, getPubCmd, getInitCmd, getRenameCmd } from "./app/cmds";
-import { showEndPrompt, showStartPrompt } from "./libs/sdk/sdk-impl/cfg/info";
-import { ensureDlerConfig } from "./libs/sdk/sdk-impl/cfg/init";
+import { showEndPrompt, showStartPrompt } from "./libs/sdk/sdk-impl/config/info";
+import { ensureDlerConfig } from "./libs/sdk/sdk-impl/config/init";
 
 const INTERACTIVE_CMDS = ["agg", "build", "pub"];
 

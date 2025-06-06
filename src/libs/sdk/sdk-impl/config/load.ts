@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 
 import type { DlerConfig } from "~/libs/sdk/sdk-types";
 
-import { defineConfig } from "~/libs/sdk/sdk-impl/cfg/define";
+import { defineConfig } from "~/libs/sdk/sdk-impl/config/define";
 
 const CONFIG_FILENAME = ".config/dler.ts";
 

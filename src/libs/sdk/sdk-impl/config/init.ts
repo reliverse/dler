@@ -3,7 +3,7 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { readPackageJSON } from "pkg-types";
 
-import { DEFAULT_CONFIG } from "~/libs/sdk/sdk-impl/cfg/default";
+import { DEFAULT_CONFIG } from "~/libs/sdk/sdk-impl/config/default";
 
 // Supported configuration filename
 const CONFIG_FILENAME = ".config/dler.ts";
@@ -68,7 +68,7 @@ function getBumpFilter(isDev: boolean): string {
     ? `[
     "package.json",
     ".config/rse.ts",
-    "src/libs/sdk/sdk-impl/cfg/info.ts",
+    "src/libs/sdk/sdk-impl/config/info.ts",
   ]`
     : `["package.json", ".config/rse.ts"]`;
 }

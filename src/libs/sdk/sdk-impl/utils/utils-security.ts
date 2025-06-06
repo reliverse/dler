@@ -3,20 +3,22 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 
 // Constants
-export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-export const MAX_MERGE_SIZE = MAX_FILE_SIZE * 10; // 100MB
-export const ALLOWED_FILE_TYPES = new Set(["text", "json", "binary"]);
+const DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const DEFAULT_MAX_MERGE_SIZE = DEFAULT_MAX_FILE_SIZE * 10; // 100MB
 
-// Rate limiting
-const rateLimiter = new Map<string, number>();
-export const checkRateLimit = (operation: string, limit = 1000): void => {
-  const now = Date.now();
-  const lastOperation = rateLimiter.get(operation) || 0;
-  if (now - lastOperation < limit) {
-    throw new Error(`Rate limit exceeded for operation: ${operation}`);
+let MAX_FILE_SIZE = DEFAULT_MAX_FILE_SIZE;
+let MAX_MERGE_SIZE = DEFAULT_MAX_MERGE_SIZE;
+
+export const setFileSizeLimits = (maxFileSize?: number, maxMergeSize?: number): void => {
+  if (maxFileSize !== undefined) {
+    MAX_FILE_SIZE = maxFileSize;
   }
-  rateLimiter.set(operation, now);
+  if (maxMergeSize !== undefined) {
+    MAX_MERGE_SIZE = maxMergeSize;
+  }
 };
+
+export const ALLOWED_FILE_TYPES = new Set(["text", "json", "binary"]);
 
 // Path validation
 export const validatePath = (filePath: string, baseDir: string): string => {

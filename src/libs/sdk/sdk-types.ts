@@ -1192,25 +1192,3 @@ export type MkdistOptions = {
     compilerOptions?: TSConfig["compilerOptions"];
   };
 } & LoaderOptions;
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-export type FileContent = string | Record<string, unknown>;
-export type FileType = "text" | "json" | "binary";
-
-export type TemplateFileContent = {
-  content: FileContent;
-  type: FileType;
-};
-
-export type TemplateConfig = {
-  files: Record<string, TemplateFileContent>;
-};
-
-export type Template = {
-  name: string;
-  description: string;
-  config: TemplateConfig;
-};
-
-export type Templates = Record<string, Template>;

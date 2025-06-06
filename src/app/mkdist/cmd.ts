@@ -5,7 +5,7 @@ import type { MkdistOptions } from "~/libs/sdk/sdk-types";
 
 import { dlerBuild } from "~/app/build/impl";
 import { mkdist } from "~/libs/sdk/sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/make";
-import { ensureDlerConfig } from "~/libs/sdk/sdk-impl/cfg/init";
+import { ensureDlerConfig } from "~/libs/sdk/sdk-impl/config/init";
 
 // TODO: merge this command with 'build' command in the future
 

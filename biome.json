@@ -6,21 +6,15 @@
     "useIgnoreFile": false
   },
   "files": {
-    "ignore": [
-      "node_modules/",
-      "dist-jsr/",
-      "dist-npm/",
-      "dist-libs/",
-      "bun.lock",
-      "src/templates/"
-    ],
-    "ignoreUnknown": true
+    "ignore": ["node_modules/", "bun.lock"],
+    "ignoreUnknown": false
   },
   "organizeImports": {
     "enabled": false
   },
   "linter": {
     "enabled": true,
+    "ignore": ["dist-jsr/", "dist-npm/", "dist-libs/", "src/templates/"],
     "rules": {
       "recommended": true,
       "suspicious": {
@@ -31,7 +25,8 @@
         "useDefaultParameterLast": "off"
       },
       "complexity": {
-        "noBannedTypes": "off"
+        "noBannedTypes": "off",
+        "noUselessLoneBlockStatements": "off"
       }
     }
   },

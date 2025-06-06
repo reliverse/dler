@@ -45,10 +45,8 @@ export async function regular_pubToJsr(
           .join(" ");
         relinka("verbose", `Running publish command: ${command}`);
         await execaCommand(command, { stdio: "inherit" });
-        relinka(
-          "log",
-          `Successfully ${distJsrDryRun ? "validated" : "published"} to JSR registry`,
-        );
+        relinka("null", "");
+        relinka("log", `Successfully ${distJsrDryRun ? "validated" : "published"} to JSR registry`);
       });
 
       // Resume the timer after publishing is complete
@@ -83,10 +81,8 @@ export async function regular_pubToNpm(
         const command = ["bun publish", distJsrDryRun ? "--dry-run" : ""].filter(Boolean).join(" ");
         relinka("verbose", `Running publish command: ${command}`);
         await execaCommand(command, { stdio: "inherit" });
-        relinka(
-          "log",
-          `Successfully ${distJsrDryRun ? "validated" : "published"} to NPM registry`,
-        );
+        relinka("null", "");
+        relinka("log", `Successfully ${distJsrDryRun ? "validated" : "published"} to NPM registry`);
       });
 
       // Resume the timer after publishing is complete

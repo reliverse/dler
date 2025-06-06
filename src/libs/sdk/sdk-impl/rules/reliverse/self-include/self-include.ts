@@ -4,7 +4,7 @@ import { relinka } from "@reliverse/relinka";
 
 import type { CheckIssue, CheckResult, RulesCheckOptions } from "~/libs/sdk/sdk-types";
 
-import { loadConfig } from "~/libs/sdk/sdk-impl/cfg/load";
+import { loadConfig } from "~/libs/sdk/sdk-impl/config/load";
 import { getAllFiles, getLineNumber } from "~/libs/sdk/sdk-impl/rules/rules-utils";
 
 // check for self-includes in imports/exports

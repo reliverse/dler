@@ -15,7 +15,7 @@
 - 🎯 optimized for speed and modern workflows
 - ✨ packed with powerful features under the hood
 - 🛠️ converts typescript aliases to relative paths
-- 🔌 16 built-in helper [dler commands](#-commands) included
+- 🔌 19 built-in helper [dler commands](#-commands) included
 - 📝 highly configurable flow via a configuration file
 - 🔜 `libraries` plugin —> dler monorepo implementation
 - 🧼 cleans up your internal logs from the build dist
@@ -119,7 +119,7 @@ bun dev # bun src/cli.ts --dev
 
 ## 🔌 commands
 
-dler ships with a flexible command system (prev. plugins) and **16 built-in commands** (from [reliverse addons](https://reliverse.org/addons) collection).
+dler ships with a flexible command system (prev. plugins) and **19 built-in commands** (from [reliverse addons](https://reliverse.org/addons) collection).
 
 feel free to create your own commands. commands can be implemented as built-in directly in `src/app/<command>/impl/*` and then imported from `src/app/<command>/cmd.ts`; or implemented in your own library and then imported from `src/app/<command>/cmd.ts`.
 
@@ -127,7 +127,7 @@ if you run just `dler` — it will display a list of commands which you can laun
 
 ## **available commands**
 
-[agg](#1-agg) [build](#2-build) [check](#3-check) [conv](#4-conv) [copy](#5-copy) [init](#6-init) [inject](#7-inject) [libs](#8-libs) [merge](#9-merge) [mock](#10-mock) [migrate](#11-migrate) [pub](#12-pub) [rempts](#13-rempts) [rename](#14-rename) [spell](#15-spell) [split](#16-split)
+[agg](#1-agg) [build](#2-build) [check](#3-check) [conv](#4-conv) [copy](#6-copy) [init](#7-init) [inject](#8-inject) [libs](#9-libs) [merge](#10-merge) [mock](#11-mock) [migrate](#12-migrate) [pub](#13-pub) [rempts](#14-rempts) [rename](#15-rename) [spell](#16-spell) [split](#17-split) [pack](#18-pack) [unpack](#19-unpack)
 
 ### 1. `agg`
 
@@ -284,7 +284,7 @@ deep imports like `dep/some/file` or `@org/dep/some/thing` are always resolved t
 - **Dev-only Dependencies**: Packages that are only in `devDependencies` but imported in production code
 - **Duplicate Dependencies**: Packages listed in both `dependencies` and `devDependencies`
 
-### 5. `copy`
+### 6. `copy`
 
 ```bash
 # simple example:
@@ -294,15 +294,15 @@ bun dler copy --s "src/**/*.ts" --d "dist"
 bun dler copy --s ".temp/packages/*/lib/**/*" --d "src/libs/sdk/sdk-impl/rules/external"
 ```
 
-### 6. `init`
+### 7. `init`
 
 not yet documented.
 
-### 7. `inject`
+### 8. `inject`
 
 not yet documented.
 
-### 8. `libs`
+### 9. `libs`
 
 builds and publishes specific subdirectories of your main project as standalone packages.
 
@@ -338,7 +338,7 @@ libslist: {
 
 - more magic commands coming soon...
 
-### 9. `merge`
+### 10. `merge`
 
 merges multiple files into a single file. The command is built for both CI and interactive use, with support for glob patterns and advanced options.
 
@@ -356,6 +356,10 @@ merges multiple files into a single file. The command is built for both CI and i
 - includes backup functionality
 - validates file permissions and sizes
 - enforces output path conflict detection
+- supports template generation with TypeScript type definitions
+- handles both single file and directory output modes
+- implements interactive prompts via `@reliverse/rempts`
+- provides reporting with logging via `@reliverse/relinka`
 
 **usage examples:**
 
@@ -367,11 +371,52 @@ bun dler merge --s "src/**/*.ts" --d "dist/merged.ts"
 bun dler merge --s ".temp1/packages/*/lib/**/*" --d ".temp2/merged.ts" --sort "mtime" --header "// Header" --footer "// Footer" --dedupe
 
 # generate mock template:
-bun dler merge --s "src/templates" --d "templates/my-template.ts" --as-template
+bun dler merge --s "src/templates" --d "templates/my-template.ts" --as-templates
 
 # update mock template:
-bun dler merge --s "src/templates" --d "templates/my-template.ts" --as-template --update-template REACT_DLER_TEMPLATE
+bun dler merge --s "src/templates" --d "templates/my-template.ts" --as-templates --templates-update REACT_DLER_TEMPLATE
+
+# generate multiple templates based on directory structure:
+bun dler merge --s "src/templates" --d "templates" --as-templates --template-multi --depth 2
+
+# create separate files for each template with an aggregator:
+bun dler merge --s "src/templates" --d "templates/index.ts" --as-templates --templates-per-file
 ```
+
+**arguments:**
+
+- `--s`: Input glob patterns (array)
+- `--d`: Output file path or directory
+- `--ignore`: Extra ignore patterns (array)
+- `--format`: Fallback extension when output path is omitted (default: "txt")
+- `--stdout`: Print to stdout
+- `--noPath`: Don't inject relative path below each file
+- `--pathAbove`: Print file path above each file's content (default: true)
+- `--separator`: Custom separator (default: "\n\n")
+- `--comment`: Custom comment prefix (e.g. '# ')
+- `--forceComment`: Force custom comment prefix for all file types
+- `--batch`: Disable interactive prompts (CI/non-interactive mode)
+- `--recursive`: Recursively process all files in subdirectories (default: true)
+- `--preserveStructure`: Preserve source directory structure in output (default: true)
+- `--increment`: Attach an incrementing index to each output filename
+- `--concurrency`: Number of concurrent file operations (default: 8)
+- `--sort`: Sort files by: name, path, mtime, none (default: path)
+- `--dryRun`: Show what would be done, but don't write files
+- `--backup`: Backup output files before overwriting
+- `--dedupe`: Remove duplicate file contents in merge
+- `--header`: Header text to add at the start of merged output
+- `--footer`: Footer text to add at the end of merged output
+- `--select-files`: Prompt for file selection before merging
+- `--interactive`: Enable interactive mode with prompts
+- `--as-templates`: Generate a TypeScript file with template structure
+- `--custom-template-name`: Custom template name when using --as-templates
+- `--template-multi`: Create multiple templates based on directory structure (default: true)
+- `--depth`: Depth level to start processing from (default: 0)
+- `--templates-per-file`: Create separate files for each template with an aggregator (default: false)
+- `--whitelabel`: Custom prefix to use instead of 'DLER' in template generation (default: "DLER")
+- `--sourcemap`: Generate source map for the merged output
+- `--templates-update`: Update specific template in existing mock template file
+- `--dev`: Generate template for development
 
 **implementation details:**
 
@@ -385,7 +430,7 @@ bun dler merge --s "src/templates" --d "templates/my-template.ts" --as-template 
 - implements interactive prompts via `@reliverse/rempts`
 - provides reporting with logging via `@reliverse/relinka`
 
-### 10. `mock`
+### 11. `mock`
 
 bootstraps file structure based on the specified mock template. The command is designed to create project structures from predefined or custom templates, with built-in safety checks and cleanup capabilities.
 
@@ -425,7 +470,7 @@ The mock command works seamlessly with the merge command to create and update te
 
    ```bash
    # create a template from your project structure
-   bun dler merge --s "src/templates" --d "templates/my-template.ts" --as-template
+   bun dler merge --s "src/templates" --d "templates/my-template.ts" --as-templates
    ```
 
 2. **use the template with mock:**
@@ -439,7 +484,7 @@ The mock command works seamlessly with the merge command to create and update te
 
    ```bash
    # update a specific template in the file
-   bun dler merge --s "src/templates" --d "templates/my-template.ts" --update-template REACT_DLER_TEMPLATE
+   bun dler merge --s "src/templates" --d "templates/my-template.ts" --templates-update REACT_DLER_TEMPLATE
    ```
 
 **implementation details:**
@@ -556,7 +601,7 @@ interface MockOptions {
 }
 ```
 
-### 11. `migrate`
+### 12. `migrate`
 
 helps migrate between different libraries and module resolution strategies. currently supports:
 
@@ -655,7 +700,7 @@ dler migrate --lib nodenext-bundler --target nodenext --dryRun
 - handles both relative and alias imports
 - supports both .ts and .tsx files
 
-#### `console-relinka`
+**`console-relinka`**:
 
 [@reliverse/relinka](https://github.com/reliverse/relinka)'s best friend. Converts between different logging formats (console, consola method/object, and relinka's function/method/object styles).
 
@@ -677,7 +722,7 @@ dler relinka --input src/app.ts --from relinkaMethod --to relinkaObject
 dler relinka --input src/app.ts --from relinkaFunction --to consolaObject
 ```
 
-**Supported formats:**
+**Supported formats**:
 
 - `console`: Standard console logging (`console.log(message, ...args)`)
 - `consolaMethod`: Consola method style (`consola.log(message, ...args)`)
@@ -686,7 +731,7 @@ dler relinka --input src/app.ts --from relinkaFunction --to consolaObject
 - `relinkaMethod`: Relinka method style (`relinka.level(message, ...args)`)
 - `relinkaObject`: Relinka object style (`relinka({ level, message, title?, args? })`)
 
-**Special features:**
+**Special features**:
 
 - Preserves additional arguments in all formats
 - Handles special box format with title and message
@@ -694,7 +739,7 @@ dler relinka --input src/app.ts --from relinkaFunction --to consolaObject
 - Supports conversion between any combination of formats
 - Supports both consola method and object styles
 
-#### next steps after migration
+**next steps after migration**:
 
 - for path-pathkit:
   1. run 'bun install' to install @reliverse/pathkit
@@ -724,7 +769,7 @@ dler relinka --input src/app.ts --from relinkaFunction --to consolaObject
   3. review any file system operations that might need manual updates
   4. consider using globby's advanced features like pattern matching and recursive searching
 
-### 12. `pub`
+### 13. `pub`
 
 pub command is separated for its own build-in plugin as well.
 
@@ -734,7 +779,7 @@ it already calls build command by itself, so you don't need to run `dler build` 
 bun dler pub ...
 ```
 
-### 13. `rempts`
+### 14. `rempts`
 
 @reliverse/rempts's best friend. learn more in its [docs](https://github.com/reliverse/rempts).
 
@@ -743,13 +788,13 @@ bun dler rempts
 bun dler rempts --init cmd1 cmd2
 ```
 
-### 14. `rename`
+### 15. `rename`
 
 ```bash
 bun dler rename ...
 ```
 
-### 15. `spell`
+### 16. `spell`
 
 **available spell types:**
 
@@ -818,7 +863,7 @@ files: [] // means all files
 
 p.s. [see how rse cli uses hooked=true](https://github.com/reliverse/rse/blob/main/src/postbuild.ts)
 
-### 16. `split`
+### 17. `split`
 
 splits your code/text file into multiple files.
 
@@ -826,7 +871,94 @@ splits your code/text file into multiple files.
 bun dler split ...
 ```
 
-## api (for advanced users)
+### 18. `pack`
+
+packs a directory of templates into TypeScript modules. This command is useful for creating reusable template packages that can be distributed and used by other projects.
+
+**key features:**
+
+- Converts directory structure into TypeScript modules
+- Handles binary files with automatic hashing
+- Preserves JSON comments and formatting
+- Supports custom whitelabeling
+- Generates type-safe template definitions
+- Creates an aggregator module for easy imports
+
+**usage examples:**
+
+```bash
+# Basic usage
+dler pack --dir ./templates --output ./dist-templates
+
+# With custom whitelabel
+dler pack --dir ./templates --output ./dist-templates --whitelabel MYAPP
+
+# Preview changes without applying
+dler pack --dir ./templates --output ./dist-templates --dry-run
+```
+
+**arguments:**
+
+- `--dir`: Directory containing templates to process (required)
+- `--output`: Output directory for generated modules (default: "my-templates")
+- `--whitelabel`: Custom prefix to use instead of 'DLER' (default: "DLER")
+- `--cdn`: Remote CDN for binary assets upload (not yet implemented)
+
+**output structure:**
+
+```bash
+output/
+├── impl/
+│   ├── binaries/ # dler reads/writes this dir when --cdn is not used
+│   │   └── [hashed-files]
+│   ├── template1.ts
+│   └── template2.ts
+├── types.ts
+└── mod.ts
+```
+
+### 19. `unpack`
+
+creates file structure from packed templates. This command is the counterpart to `pack` and is used to extract and restore template files from a packed template package.
+
+**key features:**
+
+- Restores complete directory structure from packed templates
+- Handles binary files with automatic lookup
+- Preserves JSON comments and formatting
+- Supports custom output locations
+- Maintains file permissions and structure
+- Validates template integrity
+
+**usage examples:**
+
+```bash
+# Basic usage
+dler unpack ./dist-templates --output ./my-project
+
+# With custom output directory
+dler unpack ./dist-templates --output ./custom-location
+
+# Preview changes without applying
+dler unpack ./dist-templates --output ./my-project --dry-run
+```
+
+**arguments:**
+
+- `templatesDir`: Directory containing mod.ts (required)
+- `--output`: Where to write files (default: "unpacked")
+- `--cdn`: Remote CDN base for binary assets download (not yet implemented)
+
+**implementation details:**
+
+- Uses `jiti` for dynamic template file loading
+- Implements template validation and type checking
+- Provides detailed error handling and reporting
+- Handles file system operations safely
+- Preserves JSON comments and formatting
+- Supports binary file restoration
+
+## api (for advanced usage)
 
 the sdk lets you build custom dler cli plugins or even extend your own cli tools.
 
@@ -852,6 +984,23 @@ bun add @reliverse/dler-sdk
 special thanks to the project that inspired `@reliverse/dler`:
 
 - [unjs/unbuild](https://github.com/unjs/unbuild#readme)
+
+## contributors
+
+### scripts
+
+#### create, bootstrap, cleanup
+
+- `create:*` - For generating template files using **merge** command
+- `bootstrap:*` - For creating project structure using **mock** command
+- `cleanup:*` - For cleaning up generated files using **mock** command
+
+- `mock:create`: Updates the React template in the mock file with the latest changes from src/templates
+- `mock:bootstrap`: Creates a new project structure using the React template from built-in templates
+- `mock:cleanup`: Cleans up files generated by the built-in templates
+- `libs:create`: Creates a single template from dist-libs directory
+- `libs:bootstrap`: Creates a project structure using all templates from the resolveCrossLibs mock file
+- `libs:cleanup`: Cleans up files generated by the resolveCrossLibs mock file
 
 ## support
 

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "project": ["**/*.{ts,js}"],
+  /**
+   * supported comment
+   * something
+   */
+  /*
+   * supported comment
+   * something
+   */
+  "entry": [
+    // supported comment
+    "src/app/**/*.ts",
+    ".{config,tests}/**/*.ts", // unsupported comment
+    "*.{config,cfg}.{ts,js}",
+    "src/mod.ts",
+    // supported comment
+    "src/**/*-mod.ts" /* also unsupported comment */,
+    "example/**/*.ts" /**
+    another
+    one unsupported comment (without *)
+    */
+  ] /* another
+   * one
+   * unsupported
+   * comment */,
+  "ignore": [
+    ".config/rse.ts",
+    "node_modules",
+    "dist-jsr",
+    "dist-npm",
+    "dist-libs",
+    "src/libs/sdk/sdk-impl/**/*.ts"
+  ],
+  "ignoreDependencies": ["bun"]
+}

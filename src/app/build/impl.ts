@@ -4,7 +4,7 @@ import fs from "@reliverse/relifso";
 
 import type { DlerConfig } from "~/libs/sdk/sdk-types";
 
-import { loadConfig } from "~/libs/sdk/sdk-impl/cfg/load";
+import { loadConfig } from "~/libs/sdk/sdk-impl/config/load";
 import { processLibraryFlow } from "~/libs/sdk/sdk-impl/library-flow";
 import { processRegularFlow } from "~/libs/sdk/sdk-impl/regular-flow";
 import { finalizeBuildPub } from "~/libs/sdk/sdk-impl/utils/finalize";
@@ -133,6 +133,9 @@ export async function dlerPub(isDev: boolean, config?: DlerConfig) {
 
     // Process libraries
     await processLibraryFlow(timer, isDev, effectiveConfig);
+
+    // Cross replacements
+    // await crossReplacements(effectiveConfig);
 
     // Finalize dler
     await finalizeBuildPub(

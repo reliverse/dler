@@ -24,6 +24,8 @@ import type {
 } from "~/libs/sdk/sdk-types";
 
 import { unifiedBuild } from "~/libs/sdk/sdk-impl/build/bundlers/unified/build";
+import { findFiles } from "~/libs/sdk/sdk-impl/spell/spell-filesystem";
+import { spells } from "~/libs/sdk/sdk-impl/spell/spell-mod";
 import {
   getBunSourcemapOption,
   getUnifiedSourcemapOption,
@@ -50,7 +52,7 @@ import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 // ============================================================================
 
 const BIN_DIR_NAME = "bin"; // Directory name for bundled output within dist
-const REPLACEMENT_MARKER = "// dler-replace-me"; // Marker for source replacement
+const REPLACEMENT_MARKER = "// dler-replace-line-{hooked=false}"; // Marker for source replacement
 const TYPES_REPLACEMENT_PATH = "src/types.ts"; // Relative path to types file used for replacement
 const ALIAS_PREFIX_TO_CONVERT = "~"; // Alias prefix used in internal imports
 
@@ -187,6 +189,30 @@ export async function library_buildLibrary(options: LibraryBuildOptions): Promis
   };
 
   try {
+    // --- Pre-build Step: Execute spells ---
+    relinka("log", `Running spells for ${libName}...`);
+    const spellResults = await spells({
+      // Use specific patterns for the library source directory
+      files: await findFiles(
+        ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json"],
+        path.resolve(PROJECT_ROOT, mainDir),
+      ).then((files) => files.map((f) => path.resolve(PROJECT_ROOT, f))),
+      showChanges: true,
+      dryRun: false,
+      spells: ["replace-line"],
+      validate: true,
+    });
+
+    if (spellResults.length > 0) {
+      relinka("log", `Spell execution results for ${libName}:`);
+      for (const result of spellResults) {
+        relinka("log", `  - ${result.file}: ${result.success ? "success" : "failed"}`);
+        if (!result.success) {
+          relinka("error", `    Error: ${result.message}`);
+        }
+      }
+    }
+
     // --- Pre-build Step: Modify source files ---
     relinka("log", `Running pre-build replacements for ${libName}...`);
     replacedFiles = await preBuildReplacements(replacementConfig);
@@ -1063,8 +1089,8 @@ async function determineNpmSourceDirectory(
  * Scans source files for a specific marker comment and replaces matching lines
  * with the content of a designated file.
  *
- * @example `export * from "../../types"; // dler-replace-me`
- * @example `export type { SpecificTypeName1, SpecificTypeName2 } from "../../types"; // dler-replace-me`
+ * @example `export * from "../../types"; // dler-replace-line-{hooked=false}`
+ * @example `export type { SpecificTypeName1, SpecificTypeName2 } from "../../types"; // dler-replace-line-{hooked=true}`
  *
  * @param config - Configuration for the replacement process.
  * @returns An array of records describing the replacements made.
@@ -1103,10 +1129,10 @@ async function preBuildReplacements(config: SourceReplacementConfig): Promise<Re
    * The `.*` prefix allows for any content before the marker.
    * The `^` anchor ensures that the match is at the start of a line.
    *
-   * @example `export * from "../../types"; // dler-replace-me`
-   * @example `export type { SpecificTypeName1, SpecificTypeName2 } from "../../types"; // dler-replace-me`
+   * @example `export * from "../../types"; // dler-replace-line-{hooked=false}`
+   * @example `export type { SpecificTypeName1, SpecificTypeName2 } from "../../types"; // dler-replace-line-{hooked=true}`
    */
-  const regex = new RegExp(`^.*${escapedMarker}\\s*$`, "gm");
+  const regex = new RegExp(`^.*${escapedMarker}(?:-{([^}]+)})?\\s*$`, "gm");
 
   for (const filePath of allFiles) {
     try {
@@ -1122,6 +1148,27 @@ async function preBuildReplacements(config: SourceReplacementConfig): Promise<Re
       while (true) {
         match = regex.exec(originalCode);
         if (match === null) break;
+
+        // Check if the spell is hooked
+        const paramsStr = match[1];
+        if (paramsStr) {
+          const params = paramsStr.split(",").reduce(
+            (acc, param) => {
+              const [key, value] = param.trim().split("=");
+              if (key && value !== undefined) {
+                acc[key] = value === "true" ? true : value === "false" ? false : value;
+              }
+              return acc;
+            },
+            {} as Record<string, any>,
+          );
+
+          // Skip if hooked=true
+          if (params.hooked === true) {
+            relinka("verbose", `Skipping hooked spell in ${path.relative(PROJECT_ROOT, filePath)}`);
+            continue;
+          }
+        }
 
         replacementOccurred = true;
         const lineContent = match[0];

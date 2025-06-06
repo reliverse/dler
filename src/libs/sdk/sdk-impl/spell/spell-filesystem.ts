@@ -1,5 +1,6 @@
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
+import { minimatch } from "minimatch";
 
 export const fileExists = async (filePath: string): Promise<boolean> => {
   try {
@@ -68,20 +69,38 @@ export const findFiles = async (
   patterns: string[],
   cwd: string = process.cwd(),
 ): Promise<string[]> => {
-  // TODO: use glob or similar for pattern matching instead
   const results: string[] = [];
+  const defaultPatterns = ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json"];
+  const effectivePatterns = patterns.length > 0 ? patterns : defaultPatterns;
 
   const scanDir = async (dir: string) => {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
+    try {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
 
-    for (const entry of entries) {
-      const fullPath = path.join(dir, entry.name);
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
 
-      if (entry.isDirectory()) {
-        await scanDir(fullPath);
-      } else if (matchesAnyPattern(fullPath, patterns)) {
-        results.push(fullPath);
+        if (entry.isDirectory()) {
+          // Skip common directories that shouldn't be scanned
+          if (
+            entry.name === "node_modules" ||
+            entry.name === "dist" ||
+            entry.name === ".git" ||
+            entry.name === ".svn" ||
+            entry.name === ".hg" ||
+            entry.name === ".turbo" ||
+            entry.name === ".next" ||
+            entry.name === ".nuxt"
+          ) {
+            continue;
+          }
+          await scanDir(fullPath);
+        } else if (matchesAnyPattern(fullPath, effectivePatterns)) {
+          results.push(fullPath);
+        }
       }
+    } catch (error) {
+      console.warn(`Failed to scan directory ${dir}: ${error}`);
     }
   };
 
@@ -90,11 +109,8 @@ export const findFiles = async (
 };
 
 const matchesAnyPattern = (filePath: string, patterns: string[]): boolean => {
-  // TODO: use minimatch or similar instead
   if (patterns.length === 0) return true;
 
-  return patterns.some((pattern) => {
-    if (pattern === "*") return true;
-    return filePath.includes(pattern);
-  });
+  const relativePath = path.relative(process.cwd(), filePath);
+  return patterns.some((pattern) => minimatch(relativePath, pattern));
 };

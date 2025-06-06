@@ -26,6 +26,7 @@ export async function library_publishLibrary(
   switch (effectivePubRegistry) {
     case "jsr":
       relinka("log", `Publishing lib ${libName} to JSR only...`);
+      relinka("null", "");
       await library_pubToJsr(
         jsrOutDir,
         distJsrDryRun,
@@ -39,10 +40,12 @@ export async function library_publishLibrary(
       break;
     case "npm":
       relinka("log", `Publishing lib ${libName} to NPM only...`);
+      relinka("null", "");
       await library_pubToNpm(npmOutDir, distJsrDryRun, distJsrFailOnWarn, libName, isDev, timer);
       break;
     case "npm-jsr": {
       relinka("log", `Publishing lib ${libName} to both NPM and JSR...`);
+      relinka("null", "");
       const publishTasks = [
         () => library_pubToNpm(npmOutDir, distJsrDryRun, distJsrFailOnWarn, libName, isDev, timer),
         () =>
@@ -86,6 +89,7 @@ async function library_pubToJsr(
     if (timer) pausePerfTimer(timer);
     await withWorkingDirectory(libOutDir, async () => {
       relinka("log", `Publishing lib ${libName} to JSR from ${libOutDir}`);
+      relinka("null", "");
       const command = [
         "bun x jsr publish",
         distJsrDryRun ? "--dry-run" : "",
@@ -96,6 +100,7 @@ async function library_pubToJsr(
         .filter(Boolean)
         .join(" ");
       await execaCommand(command, { stdio: "inherit" });
+      relinka("null", "");
       relinka(
         "log",
         `Successfully ${distJsrDryRun ? "validated" : "published"} lib ${libName} to JSR registry`,
@@ -124,8 +129,10 @@ async function library_pubToNpm(
     if (timer) pausePerfTimer(timer);
     await withWorkingDirectory(libOutDir, async () => {
       relinka("log", `Publishing lib ${libName} to NPM from ${libOutDir}`);
+      relinka("null", "");
       const command = ["bun publish", distJsrDryRun ? "--dry-run" : ""].filter(Boolean).join(" ");
       await execaCommand(command, { stdio: "inherit" });
+      relinka("null", "");
       relinka(
         "log",
         `Successfully ${distJsrDryRun ? "validated" : "published"} lib ${libName} to NPM registry`,

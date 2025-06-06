@@ -35,7 +35,7 @@ You can automate the process by adding a script to your `package.json`:
 "scripts": {
   // remege | bunx @reliverse/remege
   "merge": "remege --s src/**/*.ts --d dist/combined.ts",
-  "template": "remege --s src/templates --d templates/my-template.ts --as-template"
+  "template": "remege --s src/templates --d templates/my-template.ts --as-templates"
 }
 ```
 
@@ -62,36 +62,36 @@ remege \
 remege \
   --s "src/templates" \
   --d "templates/my-template.ts" \
-  --as-template \
+  --as-templates \
   --whitelabel "MYAPP"
 
 # Update existing template
 remege \
   --s "src/templates" \
   --d "templates/my-template.ts" \
-  --update-template "REACT_DLER_TEMPLATE"
+  --templates-update "REACT_DLER_TEMPLATE"
 ```
 
 ## Integration with Mock Command
 
 The merge command integrates with the mock command to create and update templates that can be used to generate mock project structures. Here's how they work together:
 
-1. Create a template from existing files:
+1 Create a template from existing files:
 
 ```bash
-remege --s src/templates --d templates/my-template.ts --as-template
+remege --s src/templates --d templates/my-template.ts --as-templates
 ```
 
-2. Use the template to generate a mock structure:
+2 Use the template to generate a mock structure:
 
 ```bash
 dler mock --template-file templates/my-template.ts
 ```
 
-3. Update an existing template:
+3 Update an existing template:
 
 ```bash
-remege --s src/templates --d templates/my-template.ts --update-template REACT_DLER_TEMPLATE
+remege --s src/templates --d templates/my-template.ts --templates-update REACT_DLER_TEMPLATE
 ```
 
 ## Options
@@ -121,11 +121,11 @@ remege --s src/templates --d templates/my-template.ts --update-template REACT_DL
 | `--footer`       | `string`   | Footer text to add at the end of merged output |
 | `--select-files` | `boolean`  | Prompt for file selection before merging |
 | `--interactive`  | `boolean`  | Enable interactive mode with prompts |
-| `--as-template`  | `boolean`  | Generate a TypeScript file with template structure |
-| `--ctn`          | `string`   | Custom template name when using --as-template |
+| `--as-templates`  | `boolean`  | Generate a TypeScript file with template structure |
+| `--ctn`          | `string`   | Custom template name when using --as-templates |
 | `--whitelabel`   | `string`   | Custom prefix to use instead of 'DLER' in template generation |
 | `--sourcemap`    | `boolean`  | Generate source map for the merged output |
-| `--update-template` | `string` | Update specific template in existing mock template file |
+| `--templates-update` | `string` | Update specific template in existing mock template file |
 | `--dev`          | `boolean`  | Generate template for development |
 
 ## How It Works
@@ -157,10 +157,10 @@ remege --s src/templates --d templates/my-template.ts --update-template REACT_DL
 bunx @reliverse/remege --s "src/**/*.js" --stdout --noPath
 
 # Generate template from existing files
-bunx @reliverse/remege --s "src/templates" --d "templates/my-template.ts" --as-template
+bunx @reliverse/remege --s "src/templates" --d "templates/my-template.ts" --as-templates
 
 # Update existing template
-bunx @reliverse/remege --s "src/templates" --d "templates/my-template.ts" --update-template REACT_DLER_TEMPLATE
+bunx @reliverse/remege --s "src/templates" --d "templates/my-template.ts" --templates-update REACT_DLER_TEMPLATE
 ```
 
 ## Custom Separator Examples
