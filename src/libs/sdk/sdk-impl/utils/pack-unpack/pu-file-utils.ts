@@ -1,5 +1,5 @@
+import path from "@reliverse/pathkit";
 import { promises as fs } from "node:fs";
-import path from "node:path";
 
 import { isBinaryExt } from "~/libs/sdk/sdk-impl/utils/binary";
 

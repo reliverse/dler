@@ -14,12 +14,8 @@
     "cmd": "bun src/cli.ts rempts --init",
     "latest": "bun update --latest && bun check",
     "check": "tsc --noEmit && eslint --cache --fix . && biome check --fix --unsafe . && knip",
-    "mock:create": "bun src/cli.ts merge --dev --s src/templates --d src/app/mock/mock-template --as-templates --templates-multi",
-    "mock:bootstrap": "bun src/cli.ts mock --config dler --templates all",
-    "mock:cleanup": "bun src/cli.ts mock --config dler --cleanup",
-    "libs:create": "bun src/cli.ts merge --dev --s dist-libs --d example/mock/resolve-cross-libs-mock.ts --as-templates --templates-multi false",
-    "libs:bootstrap": "bun src/cli.ts mock --config example/mock/resolve-cross-libs-mock.ts --templates all",
-    "libs:cleanup": "bun src/cli.ts mock --config example/mock/resolve-cross-libs-mock.ts --cleanup"
+    "libs:pack": "bun src/cli.ts pack dist-libs --output example/app/libs/mock",
+    "libs:unpack": "bun src/cli.ts unpack example/app/libs/mock --output ."
   },
   "dependencies": {
     "@reliverse/bleump": "^1.1.4",
@@ -55,7 +51,7 @@
     "postcss-nested": "^7.0.2",
     "pretty-bytes": "^7.0.0",
     "pretty-ms": "^9.2.0",
-    "rollup": "^4.41.1",
+    "rollup": "^4.41.2",
     "rollup-plugin-dts": "^6.2.1",
     "scule": "^1.3.0",
     "semver": "^7.7.2",

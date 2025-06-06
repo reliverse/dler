@@ -1,14 +1,103 @@
+import path from "@reliverse/pathkit";
 import { defineCommand } from "@reliverse/rempts";
+import { createJiti } from "jiti";
 import { promises as fs } from "node:fs";
-import path from "node:path";
 
 import type { TemplatesFileContent } from "~/libs/sdk/sdk-impl/utils/pack-unpack/pu-types";
 
-import {
-  IMPL_DIR,
-  BINARIES_DIR,
-  AGGREGATOR_FILE,
-} from "~/libs/sdk/sdk-impl/utils/pack-unpack/pu-constants";
+import { TPLS_DIR, BINARIES_DIR } from "~/libs/sdk/sdk-impl/utils/pack-unpack/pu-constants";
+
+const jiti = createJiti(import.meta.url);
+
+async function removeEmptyDirs(dirPath: string): Promise<void> {
+  if (
+    !(await fs
+      .access(dirPath)
+      .then(() => true)
+      .catch(() => false))
+  )
+    return;
+
+  const entries = await fs.readdir(dirPath);
+  if (entries.length === 0) {
+    await fs.rmdir(dirPath);
+    // Process parent directory
+    const parentDir = path.dirname(dirPath);
+    if (parentDir !== dirPath) {
+      // Prevent infinite recursion at root
+      await removeEmptyDirs(parentDir);
+    }
+  }
+}
+
+async function cleanupTemplateFiles(
+  templatesDir: string,
+  templatesDirName: string,
+  dryRun: boolean,
+): Promise<void> {
+  const modFile = `${templatesDirName}-mod.ts`;
+  const typesFile = `${templatesDirName}-types.ts`;
+  const implDir = path.join(templatesDir, TPLS_DIR);
+  const binariesDir = path.join(implDir, BINARIES_DIR);
+
+  const filesToRemove = [path.join(templatesDir, modFile), path.join(templatesDir, typesFile)];
+
+  // Get all template files
+  try {
+    const templateFiles = await fs.readdir(implDir);
+    for (const file of templateFiles) {
+      if (file.endsWith(".ts")) {
+        filesToRemove.push(path.join(implDir, file));
+      }
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw error;
+    }
+  }
+
+  // Remove files
+  for (const file of filesToRemove) {
+    if (dryRun) {
+      console.log(`[DRY RUN] Would remove: ${file}`);
+      continue;
+    }
+
+    try {
+      await fs.unlink(file);
+      console.log(`Removed: ${file}`);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        console.warn(`Failed to remove ${file}: ${(error as Error).message}`);
+      }
+    }
+  }
+
+  // Remove binaries directory if it exists
+  try {
+    if (
+      await fs
+        .access(binariesDir)
+        .then(() => true)
+        .catch(() => false)
+    ) {
+      if (dryRun) {
+        console.log(`[DRY RUN] Would remove directory: ${binariesDir}`);
+      } else {
+        await fs.rm(binariesDir, { recursive: true });
+        console.log(`Removed directory: ${binariesDir}`);
+      }
+    }
+  } catch (error) {
+    console.warn(`Failed to remove binaries directory: ${(error as Error).message}`);
+  }
+
+  // Remove implementation directory if empty
+  await removeEmptyDirs(implDir);
+
+  // Remove templates directory if empty
+  await removeEmptyDirs(templatesDir);
+}
 
 export default defineCommand({
   meta: {
@@ -23,26 +112,54 @@ export default defineCommand({
       type: "string",
       description: "Remote CDN base for binary assets download (not yet implemented)",
     },
+    cleanup: {
+      type: "boolean",
+      description: "Clean up template files before unpacking",
+      default: false,
+    },
+    "dry-run": {
+      type: "boolean",
+      description: "Preview changes without applying them",
+      default: false,
+    },
   },
   async run({ args }) {
     if (args.cdn) throw new Error("Remote CDN support is not implemented yet.");
 
     const templatesDir = path.resolve(args.templatesDir);
-    const modPath = path.join(templatesDir, AGGREGATOR_FILE);
-    const mod = await import(`file://${modPath}`);
+    const templatesDirName = path.basename(templatesDir);
+    const modFile = `${templatesDirName}-mod.ts`;
+    const modPath = path.join(templatesDir, modFile);
+
+    // Cleanup if requested
+    if (args.cleanup) {
+      await cleanupTemplateFiles(templatesDir, templatesDirName, args["dry-run"]);
+      if (args["dry-run"]) {
+        console.log("[DRY RUN] Cleanup completed");
+        return;
+      }
+    }
+
+    const mod = await jiti.import<{
+      DLER_TEMPLATES?: Record<string, any>;
+      default?: Record<string, any>;
+    }>(modPath);
 
     const templatesObj =
       mod?.DLER_TEMPLATES ||
       mod?.default ||
       (() => {
-        throw new Error("Invalid mod.ts");
+        throw new Error(`Invalid ${modFile}`);
       })();
 
     for (const tpl of Object.values(templatesObj) as any) {
       await restoreTemplate(tpl, templatesDir, args.output);
     }
 
-    console.log(`Unpacked ${Object.keys(templatesObj).length} templates into ${args.output}`);
+    const relativeOutput = path.relative(process.cwd(), args.output);
+    console.log(
+      `Unpacked ${Object.keys(templatesObj).length} templates from ${modFile} into ${relativeOutput}`,
+    );
   },
 });
 
@@ -67,7 +184,7 @@ const restoreTemplate = async (
         const ext = path.extname(rel);
         const binPath = path.join(
           templatesRoot,
-          IMPL_DIR,
+          TPLS_DIR,
           BINARIES_DIR,
           `${meta.binaryHash}${ext}`,
         );

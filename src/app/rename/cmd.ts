@@ -1,9 +1,9 @@
+import { join, dirname, basename, extname } from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
 import { defineCommand } from "@reliverse/rempts";
 import { existsSync } from "node:fs";
 import { readFileSync } from "node:fs";
 import { rename, access, readdir } from "node:fs/promises";
-import { join, dirname, basename, extname } from "node:path";
 
 async function fileExists(path: string): Promise<boolean> {
   try {

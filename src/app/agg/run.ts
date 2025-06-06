@@ -1,6 +1,6 @@
+import { resolve } from "@reliverse/pathkit";
 import { selectPrompt, runCmd, confirmPrompt, inputPrompt } from "@reliverse/rempts";
 import { existsSync } from "node:fs";
-import { resolve } from "node:path";
 
 import type { DlerConfig } from "~/libs/sdk/sdk-types";
 

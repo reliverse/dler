@@ -1,4 +1,4 @@
-import path from "node:path";
+import path from "@reliverse/pathkit";
 import { glob } from "tinyglobby";
 
 import type { CheckResult, RulesCheckOptions } from "~/libs/sdk/sdk-types";

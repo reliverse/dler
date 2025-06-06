@@ -1,23 +1,24 @@
+import path from "@reliverse/pathkit";
 import { defineCommand } from "@reliverse/rempts";
+import { createJiti } from "jiti";
 import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
-import path from "node:path";
 
 import type { TemplatesFileContent } from "~/libs/sdk/sdk-impl/utils/pack-unpack/pu-types";
 
 import {
   WHITELABEL_DEFAULT,
   TEMPLATE_VAR,
-  IMPL_DIR,
+  TPLS_DIR,
   BINARIES_DIR,
-  TYPES_FILE,
-  AGGREGATOR_FILE,
 } from "~/libs/sdk/sdk-impl/utils/pack-unpack/pu-constants";
 import {
   escapeTemplateString,
   readFileForTemplate,
   walkDir,
 } from "~/libs/sdk/sdk-impl/utils/pack-unpack/pu-file-utils";
+
+const jiti = createJiti(import.meta.url);
 
 const hashFile = async (file: string): Promise<string> => {
   const buff = await fs.readFile(file);
@@ -38,20 +39,94 @@ export default defineCommand({
       type: "string",
       description: "Remote CDN for binary assets upload (not yet implemented)",
     },
+    force: { type: "boolean", default: false, description: "Force overwrite existing files" },
+    update: {
+      type: "boolean",
+      default: true,
+      description: "Update existing templates and add new ones if needed (default: true)",
+    },
   },
   async run({ args }) {
     if (args.cdn) throw new Error("Remote CDN support is not implemented yet.");
 
     const dirToProcess = path.resolve(args.dir);
     const outDir = path.resolve(args.output);
-    await fs.mkdir(path.join(outDir, IMPL_DIR, BINARIES_DIR), { recursive: true });
+    const outDirName = path.basename(outDir);
+    const typesFile = `${outDirName}-types.ts`;
+    const modFile = `${outDirName}-mod.ts`;
+
+    // Check if output directory exists and handle accordingly
+    let existingTemplates: Record<string, any> = {};
+    try {
+      const files = await fs.readdir(outDir);
+      if (files.length > 0) {
+        if (!args.force && !args.update) {
+          console.error(`Error: Output directory '${outDir}' already exists and is not empty.`);
+          console.error(
+            "Use --force to overwrite all files or --update to update existing templates.",
+          );
+          process.exit(1);
+        }
+
+        if (args.update) {
+          // Load existing templates for update mode
+          try {
+            const modPath = path.join(outDir, modFile);
+            const mod = await jiti.import<{
+              DLER_TEMPLATES?: Record<string, any>;
+              default?: Record<string, any>;
+            }>(modPath);
+            existingTemplates = mod?.DLER_TEMPLATES || mod?.default || {};
+          } catch (loadError) {
+            console.warn(
+              `Warning: Could not load existing templates from ${modFile}. Will create new ones.`,
+            );
+            console.debug(`Error details: ${(loadError as Error).message}`);
+          }
+        }
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw error;
+      }
+      // Directory doesn't exist, which is fine
+    }
+
+    await fs.mkdir(path.join(outDir, TPLS_DIR), { recursive: true });
 
     const templateDirs = (await fs.readdir(dirToProcess, { withFileTypes: true }))
       .filter((d) => d.isDirectory())
       .map((d) => d.name);
 
-    // copy shared types.ts once
-    await fs.copyFile(path.join(__dirname, "../utils/types.ts"), path.join(outDir, TYPES_FILE));
+    // Create types.ts file if it doesn't exist
+    try {
+      await fs.access(path.join(outDir, typesFile));
+    } catch {
+      const typesContent = `export type FileContent = string | Record<string, unknown>;
+export type FileType = "text" | "json" | "binary";
+
+export type TemplatesFileContent = {
+  content: FileContent;
+  type: FileType;
+  hasError?: boolean;
+  jsonComments?: Record<number, string>;
+  binaryHash?: string;
+};
+
+export type TemplateConfig = {
+  files: Record<string, TemplatesFileContent>;
+};
+
+export type Template = {
+  name: string;
+  description: string;
+  config: TemplateConfig;
+};
+
+export type Templates = Record<string, Template>;
+`;
+      await fs.writeFile(path.join(outDir, typesFile), typesContent);
+    }
 
     const aggregatedImports: string[] = [];
     const aggregatedEntries: string[] = [];
@@ -71,7 +146,11 @@ export default defineCommand({
         if (meta.type === "binary") {
           const hash = await hashFile(absFile);
           const ext = path.extname(absFile);
-          const target = path.join(outDir, IMPL_DIR, BINARIES_DIR, `${hash}${ext}`);
+          const binariesDir = path.join(outDir, TPLS_DIR, BINARIES_DIR);
+          const target = path.join(binariesDir, `${hash}${ext}`);
+
+          await fs.mkdir(binariesDir, { recursive: true });
+
           try {
             await fs.access(target);
           } catch {
@@ -106,8 +185,11 @@ export default defineCommand({
         if (pkgTypeImported) t.push("PackageJson");
         if (tsConfigImported) t.push("TSConfig");
         code.push(`import type { ${t.join(", ")} } from "pkg-types";`);
+        code.push("", `import type { Template } from "../${typesFile}";`);
+      } else {
+        code.push(`import type { Template } from "../${typesFile}";`);
       }
-      code.push('import type { Template } from "../types";', "");
+      code.push(""); // blank line after imports
       code.push(`export const ${varName}: Template = {`);
       code.push(`  name: "${tplName}",`);
       code.push(`  description: "Template generated from ${allFiles.length} files",`);
@@ -133,7 +215,25 @@ export default defineCommand({
             // biome-ignore lint/performance/noDelete: <explanation>
             delete (clone as any).__satisfies;
           }
-          code.push(`        content: ${JSON.stringify(clone, null, 2)}${sat},`);
+          const jsonStr = JSON.stringify(
+            clone,
+            (key, value) => {
+              // If key is a single word without special characters, return it without quotes
+              if (typeof key === "string" && /^[a-zA-Z0-9_]+$/.test(key)) {
+                return value;
+              }
+              return value;
+            },
+            2,
+          )
+            .split("\n")
+            .map((line, i) => {
+              if (i === 0) return line;
+              // Remove quotes from single-word property names and reduce indentation by 2 spaces
+              return "        " + line.replace(/"([a-zA-Z0-9_]+)":/g, "$1:");
+            })
+            .join("\n");
+          code.push(`        content: ${jsonStr}${sat},`);
           code.push('        type: "json",');
         }
         if (meta.hasError) code.push("        hasError: true,");
@@ -143,11 +243,33 @@ export default defineCommand({
       code.push("    },");
       code.push("  },");
       code.push("};");
+      code.push(""); // Add blank line at the end
 
-      await fs.writeFile(path.join(outDir, IMPL_DIR, `${tplName}.ts`), code.join("\n"));
+      const templatePath = path.join(outDir, TPLS_DIR, `${tplName}.ts`);
+
+      // In update mode, check if template exists and has conflicts
+      if (args.update && existingTemplates[tplName]) {
+        try {
+          const existingContent = await fs.readFile(templatePath, "utf8");
+          const newContent = code.join("\n");
+
+          if (existingContent !== newContent) {
+            console.log(`Updating template: ${tplName}`);
+          }
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+            throw error;
+          }
+          console.log(`Creating new template: ${tplName}`);
+        }
+      } else if (!args.update) {
+        console.log(`Creating template: ${tplName}`);
+      }
+
+      await fs.writeFile(templatePath, code.join("\n"));
 
       /** aggregate */
-      aggregatedImports.push(`import { ${varName} } from "./${IMPL_DIR}/${tplName}";`);
+      aggregatedImports.push(`import { ${varName} } from "./${TPLS_DIR}/${tplName}";`);
       aggregatedEntries.push(`  ${tplName}: ${varName},`);
       mapEntries.push(`  ${varName}: "${tplName}",`);
     }
@@ -167,8 +289,14 @@ export default defineCommand({
       ...mapEntries,
       "};",
     ];
-    await fs.writeFile(path.join(outDir, AGGREGATOR_FILE), mod.join("\n"));
+    await fs.writeFile(path.join(outDir, modFile), mod.join("\n") + "\n");
 
-    console.log(`Packed ${templateDirs.length} templates into ${outDir}`);
+    const templatePaths = templateDirs.map((tpl) =>
+      path.relative(process.cwd(), path.join(outDir, TPLS_DIR, `${tpl}.ts`)),
+    );
+    console.log(`Packed ${templateDirs.length} templates into ${modFile}:`);
+    for (const p of templatePaths) {
+      console.log(`- ${p}`);
+    }
   },
 });

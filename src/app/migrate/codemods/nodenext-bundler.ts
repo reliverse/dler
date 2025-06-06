@@ -1,7 +1,7 @@
 import { getFileImportsExports } from "@reliverse/pathkit";
+import { join, extname } from "@reliverse/pathkit";
 import { existsSync } from "node:fs";
 import { readFile, writeFile, readdir, stat } from "node:fs/promises";
-import { join, extname } from "node:path";
 
 type MigrationResult = {
   file: string;

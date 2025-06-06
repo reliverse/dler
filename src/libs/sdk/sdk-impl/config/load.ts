@@ -1,7 +1,7 @@
+import { resolve } from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { createJiti } from "jiti";
-import { resolve } from "node:path";
 
 import type { DlerConfig } from "~/libs/sdk/sdk-types";
 

@@ -1,6 +1,6 @@
+import * as path from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
 import { promises as fs } from "node:fs";
-import * as path from "node:path";
 
 type TSConfig = {
   compilerOptions?: {

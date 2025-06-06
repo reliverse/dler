@@ -1,4 +1,4 @@
-import path from "node:path";
+import path from "@reliverse/pathkit";
 
 import { BINARY_SET } from "./b-exts";
 import { isBinary } from "./file-type";

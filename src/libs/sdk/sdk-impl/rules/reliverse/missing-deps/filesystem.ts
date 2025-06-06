@@ -1,5 +1,5 @@
+import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
-import path from "node:path";
 import { glob } from "tinyglobby";
 
 import type { PackageJson } from "./deps-types";

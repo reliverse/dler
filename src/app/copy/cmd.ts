@@ -1,10 +1,10 @@
 // simple example: `bun dler copy --s "src/**/*.ts" --d "dist"`
 // advanced example: `bun dler copy --s ".temp/packages/*/lib/**/*" --d "src/libs/sdk/sdk-impl/rules/external"`
 
+import { join, dirname, basename } from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
 import { defineCommand, selectPrompt, inputPrompt } from "@reliverse/rempts";
 import { copyFile, access, mkdir } from "node:fs/promises";
-import { join, dirname, basename } from "node:path";
 import pMap from "p-map";
 import prettyMilliseconds from "pretty-ms";
 import { glob } from "tinyglobby";

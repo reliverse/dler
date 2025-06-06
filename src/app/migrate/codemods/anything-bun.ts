@@ -1,9 +1,9 @@
 import type { PackageJson } from "pkg-types";
 
+import { join, resolve } from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
 import { existsSync } from "node:fs";
 import { mkdir, writeFile, readFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
 import { readPackageJSON } from "pkg-types";
 import { glob } from "tinyglobby";
 
