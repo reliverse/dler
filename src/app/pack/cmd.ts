@@ -1,10 +1,13 @@
 import path from "@reliverse/pathkit";
-import { defineCommand } from "@reliverse/rempts";
+import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { createJiti } from "jiti";
 import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 
-import type { TemplatesFileContent } from "~/libs/sdk/sdk-impl/utils/pack-unpack/pu-types";
+import type {
+  TemplatesFileContent,
+  FileMetadata,
+} from "~/libs/sdk/sdk-impl/utils/pack-unpack/pu-types";
 
 import {
   WHITELABEL_DEFAULT,
@@ -25,13 +28,22 @@ const hashFile = async (file: string): Promise<string> => {
   return createHash("sha1").update(buff).digest("hex").slice(0, 10);
 };
 
+const getFileMetadata = async (file: string): Promise<FileMetadata> => {
+  const stats = await fs.stat(file);
+  const hash = await hashFile(file);
+  return {
+    updatedAt: stats.mtime.toISOString(),
+    updatedHash: hash,
+  };
+};
+
 export default defineCommand({
   meta: {
     name: "pack",
     version: "1.1.0",
     description: "Packs a directory of templates into TS modules",
   },
-  args: {
+  args: defineArgs({
     dir: { type: "positional", required: true, description: "Directory to process" },
     output: { type: "string", default: "my-templates", description: "Output dir" },
     whitelabel: { type: "string", default: WHITELABEL_DEFAULT, description: "Rename DLER" },
@@ -45,7 +57,19 @@ export default defineCommand({
       default: true,
       description: "Update existing templates and add new ones if needed (default: true)",
     },
-  },
+    /**
+     * - Without --files: All files are checked and updated if they're newer or have different content
+     * - With --files: Only specified files are checked and updated if they're newer or have different content
+     */
+    files: {
+      type: "string",
+      description: "Comma-separated list of specific files to update (relative to template dir)",
+    },
+    lastUpdate: {
+      type: "string",
+      description: "Override lastUpdate timestamp (format: 2025-06-06T14:33:09.240Z)",
+    },
+  }),
   async run({ args }) {
     if (args.cdn) throw new Error("Remote CDN support is not implemented yet.");
 
@@ -54,6 +78,9 @@ export default defineCommand({
     const outDirName = path.basename(outDir);
     const typesFile = `${outDirName}-types.ts`;
     const modFile = `${outDirName}-mod.ts`;
+
+    // Parse files to update if specified
+    const filesToUpdate = args.files ? new Set(args.files.split(",").map((f) => f.trim())) : null;
 
     // Check if output directory exists and handle accordingly
     let existingTemplates: Record<string, any> = {};
@@ -105,12 +132,18 @@ export default defineCommand({
       const typesContent = `export type FileContent = string | Record<string, unknown>;
 export type FileType = "text" | "json" | "binary";
 
+export type FileMetadata = {
+  updatedAt?: string; // DD.MM.YYYY_HH:SS format
+  updatedHash?: string;
+};
+
 export type TemplatesFileContent = {
   content: FileContent;
   type: FileType;
   hasError?: boolean;
   jsonComments?: Record<number, string>;
   binaryHash?: string;
+  metadata?: FileMetadata;
 };
 
 export type TemplateConfig = {
@@ -121,6 +154,7 @@ export type Template = {
   name: string;
   description: string;
   config: TemplateConfig;
+  updatedAt?: string; // DD.MM.YYYY_HH:SS format
 };
 
 export type Templates = Record<string, Template>;
@@ -139,8 +173,35 @@ export type Templates = Record<string, Template>;
       let pkgTypeImported = false;
       let tsConfigImported = false;
 
+      // Get existing template if in update mode
+      const existingTemplate = args.update ? existingTemplates[tplName] : null;
+      const existingFiles = existingTemplate?.config?.files || {};
+
       for (const absFile of allFiles) {
         const rel = path.relative(dirToProcess, absFile).replace(/\\/g, "/");
+
+        // Skip if we're only updating specific files and this isn't one of them
+        if (filesToUpdate && !filesToUpdate.has(rel)) {
+          if (existingFiles[rel]) {
+            filesRecord[rel] = existingFiles[rel];
+          }
+          continue;
+        }
+
+        const fileMetadata = await getFileMetadata(absFile);
+        const existingFile = existingFiles[rel];
+        const existingMetadata = existingFile?.metadata;
+
+        // Skip if file hasn't changed (same hash) or if source file is older
+        if (
+          existingMetadata &&
+          (existingMetadata.updatedHash === fileMetadata.updatedHash ||
+            fileMetadata.updatedAt <= existingMetadata.updatedAt)
+        ) {
+          filesRecord[rel] = existingFile;
+          continue;
+        }
+
         const meta = await readFileForTemplate(absFile);
 
         if (meta.type === "binary") {
@@ -157,7 +218,12 @@ export type Templates = Record<string, Template>;
             await fs.copyFile(absFile, target);
           }
 
-          filesRecord[rel] = { type: "binary", content: "", binaryHash: hash };
+          filesRecord[rel] = {
+            type: "binary",
+            content: "",
+            binaryHash: hash,
+            metadata: fileMetadata,
+          };
           continue;
         }
 
@@ -173,7 +239,10 @@ export type Templates = Record<string, Template>;
           }
         }
 
-        filesRecord[rel] = meta;
+        filesRecord[rel] = {
+          ...meta,
+          metadata: fileMetadata,
+        };
       }
 
       /** ---------- emit template module ---------- */
@@ -193,13 +262,25 @@ export type Templates = Record<string, Template>;
       code.push(`export const ${varName}: Template = {`);
       code.push(`  name: "${tplName}",`);
       code.push(`  description: "Template generated from ${allFiles.length} files",`);
+      code.push(`  updatedAt: "${new Date().toISOString()}",`);
       code.push("  config: {");
       code.push("    files: {");
 
-      for (const [rel, meta] of Object.entries(filesRecord)) {
+      const fileEntries = Object.entries(filesRecord);
+      fileEntries.forEach(([rel, meta], index) => {
+        const isLast = index === fileEntries.length - 1;
         code.push(`      "${rel}": {`);
         if (meta.jsonComments)
           code.push(`        jsonComments: ${JSON.stringify(meta.jsonComments, null, 2)},`);
+        if (meta.metadata) {
+          const metadataStr = JSON.stringify(meta.metadata, null, 2)
+            .replace(/^/gm, "        ")
+            .replace(/^ {7} {/m, " {")
+            .replace(/^ {8}}/m, "        }")
+            .replace(/"([a-zA-Z0-9_]+)":/g, "$1:")
+            .replace(/}$/m, "},");
+          code.push(`        metadata:${metadataStr}`);
+        }
         if (meta.type === "binary") {
           code.push(`        content: "",`);
           code.push(`        type: "binary",`);
@@ -232,13 +313,14 @@ export type Templates = Record<string, Template>;
               // Remove quotes from single-word property names and reduce indentation by 2 spaces
               return "        " + line.replace(/"([a-zA-Z0-9_]+)":/g, "$1:");
             })
-            .join("\n");
+            .join("\n")
+            .replace(/}$/m, "},");
           code.push(`        content: ${jsonStr}${sat},`);
           code.push('        type: "json",');
         }
         if (meta.hasError) code.push("        hasError: true,");
-        code.push("      },");
-      }
+        code.push(`      }${isLast ? "," : ","}`);
+      });
 
       code.push("    },");
       code.push("  },");
@@ -254,7 +336,11 @@ export type Templates = Record<string, Template>;
           const newContent = code.join("\n");
 
           if (existingContent !== newContent) {
-            console.log(`Updating template: ${tplName}`);
+            if (filesToUpdate) {
+              console.log(`Updating specific files in template: ${tplName}`);
+            } else {
+              console.log(`Updating template: ${tplName}`);
+            }
           }
         } catch (error) {
           if ((error as NodeJS.ErrnoException).code !== "ENOENT") {

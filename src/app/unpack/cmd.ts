@@ -1,5 +1,5 @@
 import path from "@reliverse/pathkit";
-import { defineCommand } from "@reliverse/rempts";
+import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { createJiti } from "jiti";
 import { promises as fs } from "node:fs";
 
@@ -105,7 +105,7 @@ export default defineCommand({
     version: "1.1.0",
     description: "Creates file structure from packed templates",
   },
-  args: {
+  args: defineArgs({
     templatesDir: { type: "positional", required: true, description: "Dir containing mod.ts" },
     output: { type: "string", default: "unpacked", description: "Where to write files" },
     cdn: {
@@ -122,7 +122,7 @@ export default defineCommand({
       description: "Preview changes without applying them",
       default: false,
     },
-  },
+  }),
   async run({ args }) {
     if (args.cdn) throw new Error("Remote CDN support is not implemented yet.");
 

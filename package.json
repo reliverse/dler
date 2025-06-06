@@ -15,7 +15,7 @@
     "latest": "bun update --latest && bun check",
     "check": "tsc --noEmit && eslint --cache --fix . && biome check --fix --unsafe . && knip",
     "libs:pack": "bun src/cli.ts pack dist-libs --output example/app/libs/mock",
-    "libs:unpack": "bun src/cli.ts unpack example/app/libs/mock --output ."
+    "libs:unpack": "bun src/cli.ts unpack example/app/libs/mock --output dist-libs"
   },
   "dependencies": {
     "@reliverse/bleump": "^1.1.4",
