@@ -5,7 +5,7 @@ import pMap from "p-map";
 import { readPackageJSON } from "pkg-types";
 import { glob } from "tinyglobby";
 
-import type { DlerConfig, LibConfig } from "~/libs/sdk/sdk-types";
+import type { DlerConfig, LibConfig } from "~/libs/sdk/sdk-impl/config/types";
 
 import { cliDomainDocs, CONCURRENCY_DEFAULT } from "./utils-consts";
 

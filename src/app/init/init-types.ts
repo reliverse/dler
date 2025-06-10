@@ -5,7 +5,7 @@ export type InitBehaviour = (typeof INIT_BEHAVIOURS)[number];
 export type DestFileExistsBehaviour = (typeof DEST_FILE_EXISTS_BEHAVIOURS)[number];
 
 /** Library-level interface for hooking into the file init process. */
-export type ReinitUserConfig = {
+export interface ReinitUserConfig {
   /** The default approach for copying vs. creating. */
   defaultInitBehaviour?: InitBehaviour;
   /** Default approach if a file already exists. */
@@ -18,29 +18,29 @@ export type ReinitUserConfig = {
   onFileStart?: (req: InitFileRequest) => void;
   /** Called after each file operation. */
   onFileComplete?: (res: InitFileResult) => void;
-};
+}
 
 /** Data describing a single request to initFile. */
-export type InitFileRequest = {
+export interface InitFileRequest {
   fileType: FileType;
   destDir: string;
   initBehaviour?: InitBehaviour;
   destFileExistsBehaviour?: DestFileExistsBehaviour;
   options?: InitFileOptions;
-};
+}
 
 /** Extended per-file options. */
-export type InitFileOptions = {
+export interface InitFileOptions {
   destFileName?: string;
   srcCopyMode?: string;
   contentCreateMode?: string;
   fallbackSource?: string;
-};
+}
 
 /** The result of a single initFile operation. */
-export type InitFileResult = {
+export interface InitFileResult {
   requested: InitFileRequest;
   finalPath?: string;
   status: "created" | "copied" | "skipped" | "error";
   error?: any;
-};
+}

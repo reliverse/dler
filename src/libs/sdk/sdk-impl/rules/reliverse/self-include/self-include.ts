@@ -4,7 +4,7 @@ import { relinka } from "@reliverse/relinka";
 
 import type { CheckIssue, CheckResult, RulesCheckOptions } from "~/libs/sdk/sdk-types";
 
-import { loadConfig } from "~/libs/sdk/sdk-impl/config/load";
+import { getConfigDler } from "~/libs/sdk/sdk-impl/config/load";
 import { getAllFiles, getLineNumber } from "~/libs/sdk/sdk-impl/rules/rules-utils";
 
 // check for self-includes in imports/exports
@@ -22,7 +22,7 @@ export async function checkSelfInclude(options: RulesCheckOptions): Promise<Chec
     const packageName = packageJson.name;
 
     // Get libs list from dler config
-    const config = await loadConfig();
+    const config = await getConfigDler();
     const libsList = config.libsList || {};
 
     // Define forbidden imports based on directory

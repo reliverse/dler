@@ -3,9 +3,9 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { createJiti } from "jiti";
 
-import type { DlerConfig } from "~/libs/sdk/sdk-types";
+import type { DlerConfig } from "~/libs/sdk/sdk-impl/config/types";
 
-import { defineConfig } from "~/libs/sdk/sdk-impl/config/define";
+import { defineConfigDler } from "~/libs/sdk/sdk-impl/config/default";
 
 const CONFIG_FILENAME = ".config/dler.ts";
 
@@ -14,7 +14,7 @@ const CONFIG_FILENAME = ".config/dler.ts";
  * Falls back to default configuration if the file is not found.
  * Uses jiti for seamless TypeScript and ESM support.
  */
-export async function loadConfig(): Promise<DlerConfig> {
+export async function getConfigDler(): Promise<DlerConfig> {
   const cwd = process.cwd();
   const configPath = resolve(cwd, CONFIG_FILENAME);
 
@@ -34,11 +34,11 @@ export async function loadConfig(): Promise<DlerConfig> {
         // Handle case where user exports a function
         const result = config();
         if (result && typeof result === "object") {
-          return defineConfig(result as Partial<DlerConfig>);
+          return defineConfigDler(result as Partial<DlerConfig>);
         }
       } else if (config && typeof config === "object") {
         // Handle case where user exports an object
-        return defineConfig(config as Partial<DlerConfig>);
+        return defineConfigDler(config as Partial<DlerConfig>);
       }
 
       throw new Error("Invalid config format");
@@ -50,5 +50,5 @@ export async function loadConfig(): Promise<DlerConfig> {
 
   // Config file not found or error loading it, return default config
   relinka("log", `Config file not found at ${configPath}. Using default configuration.`);
-  return defineConfig();
+  return defineConfigDler();
 }

@@ -2,17 +2,17 @@ import { join, extname } from "@reliverse/pathkit";
 import { existsSync } from "node:fs";
 import { readFile, writeFile, readdir, stat } from "node:fs/promises";
 
-type MigrationResult = {
+interface MigrationResult {
   file: string;
   success: boolean;
   message: string;
   changes?: string[];
-};
+}
 
-type PackageJson = {
+interface PackageJson {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
-};
+}
 
 async function getAllTsFiles(dir: string): Promise<string[]> {
   const files: string[] = [];

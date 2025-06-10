@@ -11,9 +11,8 @@ import type {
   transpileFormat,
   transpileTarget,
   DlerConfig,
-  UnifiedBuildConfig,
-  PerfTimer,
-} from "~/libs/sdk/sdk-types";
+} from "~/libs/sdk/sdk-impl/config/types";
+import type { PerfTimer, UnifiedBuildConfig } from "~/libs/sdk/sdk-types";
 
 import { unifiedBuild } from "~/libs/sdk/sdk-impl/build/bundlers/unified/build";
 import {

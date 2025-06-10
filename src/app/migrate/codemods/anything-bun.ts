@@ -8,16 +8,16 @@ import { readPackageJSON } from "pkg-types";
 import { glob } from "tinyglobby";
 
 // Types
-type MigrationConfig = {
+interface MigrationConfig {
   projectRoot: string;
   dryRun: boolean;
   backup: boolean;
   selective: string[];
   skipFrameworks: string[];
   outputDir?: string;
-};
+}
 
-type ProjectAnalysis = {
+interface ProjectAnalysis {
   packageJson: PackageJson;
   hasTypeScript: boolean;
   hasTests: boolean;
@@ -28,22 +28,22 @@ type ProjectAnalysis = {
   configFiles: string[];
   sourceFiles: string[];
   testFiles: string[];
-};
+}
 
-type TransformResult = {
+interface TransformResult {
   filePath: string;
   originalContent: string;
   transformedContent: string;
   changes: string[];
-};
+}
 
-type MigrationReport = {
+interface MigrationReport {
   filesTransformed: number;
   transformResults: TransformResult[];
   manualSteps: string[];
   errors: string[];
   warnings: string[];
-};
+}
 
 // Node.js modules that should use node: prefix
 const NODE_MODULES = [

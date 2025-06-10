@@ -1,3 +1,8 @@
+/**
+ * this file demonstrates what comments
+ * `dler pack` and `dler unpack`
+ * commands supports
+ */
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "project": ["**/*.{ts,js}"],
@@ -31,7 +36,8 @@
     "dist-jsr",
     "dist-npm",
     "dist-libs",
-    "src/libs/sdk/sdk-impl/**/*.ts"
+    "src/libs/sdk/sdk-impl/**/*.ts",
+    "src/libs/cfg/types.ts"
   ],
   "ignoreDependencies": ["bun"]
 }

@@ -3,7 +3,7 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import pMap from "p-map";
 
-import type { LibConfig } from "~/libs/sdk/sdk-types";
+import type { LibConfig } from "~/libs/sdk/sdk-impl/config/types";
 
 import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "./utils-consts";
 

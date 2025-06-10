@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+the current project is a source of `dler`, a tool which allows users to build their libraries which the tool can then publish built `dist-npm`, `dist-jsr`, or `dist-libs/libName/<npm|jsr>` to the npm or jsr on thir choice

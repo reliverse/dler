@@ -1,248 +1,311 @@
-import fs from "@reliverse/relifso";
+import * as path from "@reliverse/pathkit";
+import { convertImportsAliasToRelative } from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
-import { defineArgs, defineCommand } from "@reliverse/rempts";
+import { promises as fs } from "node:fs";
 
-import type { Spell } from "~/libs/sdk/sdk-impl/spell/spell-types";
+interface TSConfig {
+  compilerOptions?: {
+    paths?: Record<string, string[]>;
+  };
+}
 
-import { executeSpell } from "~/libs/sdk/sdk-mod";
+/**
+ * Validates that the alias is properly configured in tsconfig.json
+ * @throws Error if alias is not configured in tsconfig.json
+ */
+async function validateAliasConfig(alias: string): Promise<void> {
+  try {
+    const tsconfigPath = path.resolve("tsconfig.json");
+    const tsconfig = JSON.parse(await fs.readFile(tsconfigPath, "utf8")) as TSConfig;
 
-/*
-This command is planned to be a converter for different tasks.
-Currently it is only a `dler spell` wrapper.
+    const paths = tsconfig?.compilerOptions?.paths;
+    if (!paths) {
+      throw new Error("tsconfig.json is missing compilerOptions.paths configuration");
+    }
 
-At the moment the command:
-1. Validates input paths and required arguments
-2. Creates appropriate spells based on the operation type
-3. Reads file content
-4. Executes the spell using the SDK's `executeSpell` function
-5. Shows the results, including any changes made to the file
+    const aliasPattern = `${alias}/*`;
+    if (!paths[aliasPattern]) {
+      throw new Error(
+        `Alias "${alias}" is not configured in tsconfig.json. ` +
+          `Add "${aliasPattern}": ["./src/*"] to compilerOptions.paths`,
+      );
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Failed to validate alias configuration: ${error.message}`);
+    }
+    throw new Error("Failed to validate alias configuration: Unknown error");
+  }
+}
 
-1. Replace text in files:
-```bash
-dler conv --type replace --input file.txt --pattern "old text" --replacement "new text"
-```
+/**
+ * Recursively inlines (or rewrites) aliased import / re-export statements for all libraries.
+ *
+ * @param alias     Prefix used in module specifiers (default: "~")
+ * @param subFolders Ordered sub-folder candidates to look for when chasing other libs
+ * @returns Absolute paths of files that were modified
+ */
+export async function resolveCrossLibs(
+  alias = "~",
+  subFolders: ("npm" | "jsr")[] = ["npm", "jsr"],
+): Promise<string[]> {
+  // Validate alias configuration first
+  await validateAliasConfig(alias);
 
-2. Rename files:
-```bash
-dler conv --type rename --input old.txt --output new.txt
-```
+  const distLibsPath = path.resolve("dist-libs");
+  const allModified: string[] = [];
 
-3. Remove comments:
-```bash
-dler conv --type remove-comment --input file.ts --pattern "//.*"
-```
+  try {
+    const libs = await fs.readdir(distLibsPath);
 
-4. Remove lines:
-```bash
-dler conv --type remove-line --input file.txt --pattern ".*TODO.*"
-```
+    for (const lib of libs) {
+      for (const subFolder of subFolders) {
+        const libBinDir = path.join("dist-libs", lib, subFolder, "bin");
 
-5. Remove files:
-```bash
-dler conv --type remove-file --input file.txt
-```
+        try {
+          // Check if the directory exists
+          await fs.access(libBinDir);
 
-6. Copy files:
-```bash
-dler conv --type copy --input source.txt --output dest.txt
-```
+          // Process the library
+          const modified = await resolveCrossLibsInternal(libBinDir, alias, subFolders);
+          allModified.push(...modified);
+        } catch {
+          // Skip if directory doesn't exist
+          relinka("internal", `[inline] skipping non-existent path: ${libBinDir}`);
+        }
+      }
+    }
+  } catch (error) {
+    throw new Error(`Failed to process dist-libs directory: ${error}`);
+  }
 
-7. Move files:
-```bash
-dler conv --type move --input source.txt --output dest.txt
-```
+  return allModified;
+}
 
-8. Transform content:
-```bash
-dler conv --type transform --input file.txt --transform "myTransformFunction"
-```
+/**
+ * Recursively inlines (or rewrites) aliased import / re-export statements.
+ *
+ * @param libBinDir Folder that must start with "dist-libs/<lib>/<subFolder>/bin"
+ * @param alias     Prefix used in module specifiers (default: "~")
+ * @param subFolders Ordered sub-folder candidates to look for when chasing other libs
+ * @returns Absolute paths of files that were modified
+ */
+async function resolveCrossLibsInternal(
+  libBinDir: string,
+  alias = "~",
+  subFolders: ("npm" | "jsr")[] = ["npm", "jsr"],
+): Promise<string[]> {
+  relinka(
+    "verbose",
+    `[resolveCrossLibs] dir=${libBinDir}, alias=${alias}, subs=${subFolders.join("/")}`,
+  );
 
-9. Insert text at a specific line:
-```bash
-dler conv --type insert --input file.txt --line 10 --replacement "new line"
-```
-*/
-export default defineCommand({
-  meta: {
-    name: "conv",
-    version: "1.0.0",
-    description: "Convert files using various SDK converters.",
-  },
-  args: defineArgs({
-    type: {
-      type: "string",
-      required: true,
-      description:
-        "Type of conversion to perform (replace, rename, remove-comment, remove-line, remove-file, copy, move, transform, insert)",
-    },
-    input: {
-      type: "string",
-      required: true,
-      description: "Input file or directory path",
-    },
-    output: {
-      type: "string",
-      description: "Output file or directory path (required for copy/move/rename operations)",
-    },
-    pattern: {
-      type: "string",
-      description: "Pattern to match (for replace/remove operations)",
-    },
-    replacement: {
-      type: "string",
-      description: "Replacement text (for replace/insert operations)",
-    },
-    line: {
-      type: "number",
-      description: "Line number (for insert/remove-line operations)",
-    },
-    transform: {
-      type: "string",
-      description: "Transform function name (for transform operation)",
-    },
-  }),
-  async run({ args }) {
-    const { type, input, output, pattern, replacement, line, transform } = args;
+  if (!libBinDir.startsWith("dist-libs")) {
+    throw new Error(`libBinDir must start with "dist-libs": ${libBinDir}`);
+  }
 
-    // Validate input path exists
-    if (!(await fs.pathExists(input))) {
-      relinka("error", `❌ Input path does not exist: ${input}`);
+  const absBinDir = path.resolve(libBinDir);
+  const [currentLib] = path.relative("dist-libs", libBinDir).split(path.sep);
+  relinka("internal", `[inline] processing library: ${currentLib}`);
+
+  // Convert self-imports to relative paths using pathkit
+  await convertImportsAliasToRelative({
+    targetDir: absBinDir,
+    aliasToReplace: alias,
+    pathExtFilter: "js-ts-none",
+  });
+
+  /** Recursively gather .ts / .js (skip .d.ts) */
+  async function collect(dir: string): Promise<string[]> {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    const files = await Promise.all(
+      entries.map((e) =>
+        e.isDirectory()
+          ? collect(path.join(dir, e.name))
+          : e.name.endsWith(".d.ts") || !(e.name.endsWith(".ts") || e.name.endsWith(".js"))
+            ? []
+            : [path.join(dir, e.name)],
+      ),
+    );
+    return files.flat();
+  }
+
+  const allFiles = await collect(absBinDir);
+  const modified: string[] = [];
+
+  await Promise.all(
+    allFiles.map(async (filePath) => {
+      const original = await fs.readFile(filePath, "utf8");
+      if (!original) {
+        throw new Error(`Failed to read file: ${filePath}`);
+      }
+      if (!currentLib) throw new Error("Current library is undefined");
+      const updated = await transformFile(original, filePath, currentLib, alias, subFolders);
+
+      if (updated !== original) {
+        await fs.writeFile(filePath, updated, "utf8");
+        modified.push(filePath);
+        relinka("verbose", `[inline]   ↳ modified ${path.relative(process.cwd(), filePath)}`);
+      }
+    }),
+  );
+
+  relinka("internal", `[inline] done – ${modified.length} file(s) changed`);
+  return modified;
+}
+
+/** Per-file transformation – now multi-line aware & idempotent */
+async function transformFile(
+  source: string | undefined,
+  _filePath: string,
+  currentLib: string,
+  alias: string,
+  subFolders: ("npm" | "jsr")[],
+): Promise<string> {
+  if (!source) {
+    throw new Error("Source content is undefined");
+  }
+  const ALIAS_RE = alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  /* dotAll ("s") lets `.` span newlines – crucial for pretty-formatted imports */
+  const importRe = new RegExp(
+    String.raw`^\s*` + // leading space
+      String.raw`(` +
+      String.raw`export\s+\{[\s\S]*?\}\s+from\s+` + // export {...} from
+      "|" +
+      String.raw`import\s+[\s\S]*?\s+from\s+` + // import ... from
+      String.raw`)` +
+      String.raw`(['"])` + //   opening quote (group 2)
+      ALIAS_RE +
+      String.raw`/libs/` +
+      String.raw`([^/]+)` + //   libName   (group 3)
+      String.raw`/` +
+      String.raw`([^'"]+)` + //   rest path (group 4)
+      String.raw`\2` + //   same quote
+      String.raw`\s*;?` + //   optional semicolon
+      String.raw`(?:\s*(?://.*|/\*[\s\S]*?\*/))?` + //   optional trailing comment
+      String.raw`\s*$`,
+    "s", // dotAll
+  );
+
+  /* We scan line-by-line, but if we see a "~ /libs/" token we keep appending
+     lines until we bump into ";" – that's our full statement candidate. */
+  const output: string[] = [];
+  const lines = source.split(/\r?\n/);
+
+  let inInlineBlock = false;
+  let buffer: string[] = []; // collecting a multi-line statement
+
+  const flushBuffer = async () => {
+    if (buffer.length === 0) return;
+
+    const stmt = buffer.join("\n");
+    relinka("verbose", `  [scan] candidate:\n--------\n${stmt}\n--------`);
+
+    if (!importRe.test(stmt) || inInlineBlock) {
+      output.push(...buffer);
+      buffer = [];
       return;
     }
 
-    // Create appropriate spell based on type
-    let spell: Spell;
-    switch (type) {
-      case "replace":
-        if (!pattern || !replacement) {
-          relinka("error", "❌ Pattern and replacement are required for replace operation");
-          return;
-        }
-        spell = {
-          type: "replace-line",
-          params: { hooked: false },
-          value: replacement,
-          fullMatch: pattern,
-        };
-        break;
+    const match = importRe.exec(stmt);
+    if (!match) {
+      output.push(...buffer);
+      buffer = [];
+      return;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [, _prefix, _quote, libName, restRaw] = match;
+    if (!restRaw || !libName) {
+      throw new Error(`Invalid import statement: ${stmt}`);
+    }
+    const indentMatch = stmt.match(/^\s*/);
+    if (!indentMatch) {
+      throw new Error(`Invalid statement format: ${stmt}`);
+    }
+    const indent = indentMatch[0];
+    const rest = restRaw.replace(/^\/+/, ""); // trim leading "/"
 
-      case "rename":
-        if (!output) {
-          relinka("error", "❌ Output path is required for rename operation");
-          return;
-        }
-        spell = {
-          type: "rename-file",
-          params: { hooked: false },
-          fileName: output,
-        };
-        break;
-
-      case "remove-comment":
-        if (!pattern) {
-          relinka("error", "❌ Pattern is required for remove-comment operation");
-          return;
-        }
-        spell = {
-          type: "remove-comment",
-          params: { hooked: false },
-          fullMatch: pattern,
-        };
-        break;
-
-      case "remove-line":
-        if (!pattern) {
-          relinka("error", "❌ Pattern is required for remove-line operation");
-          return;
-        }
-        spell = {
-          type: "remove-line",
-          params: { hooked: false },
-          fullMatch: pattern,
-        };
-        break;
-
-      case "remove-file":
-        spell = {
-          type: "remove-file",
-          params: { hooked: false },
-        };
-        break;
-
-      case "copy":
-        if (!output) {
-          relinka("error", "❌ Output path is required for copy operation");
-          return;
-        }
-        spell = {
-          type: "copy-file",
-          params: { hooked: false },
-          fileName: output,
-        };
-        break;
-
-      case "move":
-        if (!output) {
-          relinka("error", "❌ Output path is required for move operation");
-          return;
-        }
-        spell = {
-          type: "move-file",
-          params: { hooked: false },
-          fileName: output,
-        };
-        break;
-
-      case "transform":
-        if (!transform) {
-          relinka("error", "❌ Transform function name is required for transform operation");
-          return;
-        }
-        spell = {
-          type: "transform-content",
-          params: { hooked: false },
-          value: transform,
-        };
-        break;
-
-      case "insert":
-        if (!line || !replacement) {
-          relinka("error", "❌ Line number and replacement are required for insert operation");
-          return;
-        }
-        spell = {
-          type: "insert-at",
-          params: { hooked: false },
-          value: replacement,
-          lineNumber: line,
-        };
-        break;
-
-      default:
-        relinka("error", `❌ Unknown conversion type: ${type}`);
-        return;
+    /* ─── self-import → already handled by convertImportsAliasToRelative ─── */
+    if (libName === currentLib) {
+      // Self-imports are now handled by convertImportsAliasToRelative
+      // so we just output the original statement
+      output.push(stmt);
+      relinka("verbose", `  [skip]      ${libName} (self-import handled by pathkit)`);
+      buffer = [];
+      return;
     }
 
+    /* ─── external library → inline file contents ─────────────────────── */
+    const targetFile = await resolveTargetFile(libName, rest, subFolders);
+    const embedded = await fs.readFile(targetFile, "utf8");
+    relinka("verbose", `  [inline]    ${libName} ↦ ${targetFile}`);
+
+    const inlinedBlock =
+      `${indent}/* inlined-start ${alias}/libs/${libName}/${rest} */\n` +
+      embedded
+        .split(/\r?\n/)
+        .map((l) => indent + l)
+        .join("\n") +
+      `\n${indent}/* inlined-end */`;
+
+    output.push(inlinedBlock);
+    buffer = [];
+  };
+
+  for (const line of lines) {
+    /* Track existing inlined blocks for idempotency */
+    if (line.includes("/* inlined-start")) inInlineBlock = true;
+    if (line.includes("/* inlined-end")) inInlineBlock = false;
+
+    /* If we're already collecting a statement, keep adding lines
+       until we hit ";". */
+    if (buffer.length) {
+      buffer.push(line);
+      if (line.trimEnd().endsWith(";")) await flushBuffer();
+      continue;
+    }
+
+    /* New statement begins if the line contains the alias marker */
+    if (line.includes(`${alias}/libs/`) && /(export|import)\s/.test(line)) {
+      buffer.push(line);
+      if (line.trimEnd().endsWith(";")) await flushBuffer();
+      continue;
+    }
+
+    /* Ordinary line */
+    output.push(line);
+  }
+
+  /* Left-over buffer without trailing ";" (rare but handle it) */
+  await flushBuffer();
+
+  return output.join("\n");
+}
+
+/** Resolve: dist-libs/<lib>/<sub>/bin/<rest>.ts  (pref)  or .js */
+async function resolveTargetFile(
+  lib: string,
+  rest: string,
+  subFolders: ("npm" | "jsr")[],
+): Promise<string> {
+  const cleaned = rest.replace(/^\/+/, "");
+  for (const sub of subFolders) {
+    const base = path.join("dist-libs", lib, sub, "bin", cleaned);
+    const tsPath = `${base}.ts`;
     try {
-      // Read file content
-      const content = await fs.readFile(input, "utf8");
-
-      // Execute the spell
-      const result = await executeSpell(spell, input, content);
-
-      if (result.success) {
-        relinka("log", `✅ Successfully performed ${type} operation on ${input}`);
-        if (result.changes) {
-          relinka(
-            "log",
-            `📝 Changes:\nBefore: ${result.changes.before}\nAfter: ${result.changes.after}`,
-          );
-        }
-      } else {
-        relinka("error", `❌ Failed to perform ${type} operation: ${result.message}`);
-      }
-    } catch (error) {
-      relinka("error", `❌ Error during conversion: ${error}`);
+      await fs.access(tsPath);
+      return tsPath;
+    } catch {
+      /* empty */
     }
-  },
-});
+    const jsPath = `${base}.js`;
+    try {
+      await fs.access(jsPath);
+      return jsPath;
+    } catch {
+      /* empty */
+    }
+  }
+  throw new Error(`Cannot inline ~/libs/${lib}/${rest}: tried [${subFolders.join(", ")}]`);
+}

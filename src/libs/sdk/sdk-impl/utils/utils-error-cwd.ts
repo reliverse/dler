@@ -76,3 +76,9 @@ export async function validateDevCwd(
     );
   }
 }
+
+/**
+ * Converts unknown errors to readable strings.
+ */
+export const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);

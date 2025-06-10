@@ -1,37 +1,65 @@
-export * from "./sdk-types";
-export type { LibraryBuildOptions } from "./sdk-impl/build/build-library";
-export { library_buildLibrary } from "./sdk-impl/build/build-library";
+// AUTO-GENERATED AGGREGATOR START (via `dler agg`)
+export type { LibraryBuildOptions } from "./sdk-impl/build/build-library.js";
+export { library_buildLibrary } from "./sdk-impl/build/build-library.js";
+export { regular_buildJsrDist, regular_buildNpmDist } from "./sdk-impl/build/build-regular.js";
+export { definePreset, autoPreset } from "./sdk-impl/build/bundlers/unified/auto.js";
+export { unifiedBuild } from "./sdk-impl/build/bundlers/unified/build.js";
+export { copyBuild } from "./sdk-impl/build/bundlers/unified/copy/copy-mod.js";
+export { createLoader } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/loader.js";
+export { jsLoader } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/loaders/js.js";
 export {
-  regular_buildJsrDist,
-  regular_buildNpmDist,
-} from "./sdk-impl/build/build-regular";
-export { autoPreset } from "./sdk-impl/build/bundlers/unified/auto";
-export { unifiedBuild } from "./sdk-impl/build/bundlers/unified/build";
-export { copyBuild } from "./sdk-impl/build/bundlers/unified/copy/copy-mod";
-export { mkdistBuild } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-mod";
-export { rollupBuild } from "./sdk-impl/build/bundlers/unified/rollup/build";
-export { getRollupOptions } from "./sdk-impl/build/bundlers/unified/rollup/config";
+  defaultLoaders,
+  resolveLoader,
+  resolveLoaders,
+} from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/loaders/loaders-mod.js";
+export type { PostcssLoaderOptions } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/loaders/postcss.js";
+export { postcssLoader } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/loaders/postcss.js";
+export { sassLoader } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/loaders/sass.js";
+export type {
+  DefineVueLoaderOptions,
+  VueBlock,
+  VueBlockLoader,
+  DefaultBlockLoaderOptions,
+} from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/loaders/vue.js";
+export {
+  fallbackVueLoader,
+  vueLoader,
+} from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/loaders/vue.js";
+export { mkdist } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/make.js";
+export type { DeclarationOutput } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/utils/dts.js";
+export {
+  normalizeCompilerOptions,
+  getDeclarations,
+  extractDeclarations,
+  augmentWithDiagnostics,
+} from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/utils/dts.js";
+export { copyFileWithStream } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/utils/fs.js";
+export { useSpinner } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/utils/spinner.js";
+export { getVueDeclarations } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/utils/vue-dts.js";
+export { mkdistBuild } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-mod.js";
+export { rollupBuild } from "./sdk-impl/build/bundlers/unified/rollup/build.js";
+export { getRollupOptions } from "./sdk-impl/build/bundlers/unified/rollup/config.js";
 export {
   cjsPlugin,
   fixCJSExportTypePlugin,
-} from "./sdk-impl/build/bundlers/unified/rollup/plugins/cjs";
-export { esbuild } from "./sdk-impl/build/bundlers/unified/rollup/plugins/esbuild";
-export { JSONPlugin } from "./sdk-impl/build/bundlers/unified/rollup/plugins/json";
-export { rawPlugin } from "./sdk-impl/build/bundlers/unified/rollup/plugins/raw";
+} from "./sdk-impl/build/bundlers/unified/rollup/plugins/cjs.js";
+export { esbuild } from "./sdk-impl/build/bundlers/unified/rollup/plugins/esbuild.js";
+export { JSONPlugin } from "./sdk-impl/build/bundlers/unified/rollup/plugins/json.js";
+export { rawPlugin } from "./sdk-impl/build/bundlers/unified/rollup/plugins/raw.js";
 export {
   getShebang,
   makeExecutable,
   removeShebangPlugin,
   shebangPlugin,
-} from "./sdk-impl/build/bundlers/unified/rollup/plugins/shebang";
-export { rollupStub } from "./sdk-impl/build/bundlers/unified/rollup/stub";
+} from "./sdk-impl/build/bundlers/unified/rollup/plugins/shebang.js";
+export { rollupStub } from "./sdk-impl/build/bundlers/unified/rollup/stub.js";
 export {
   DEFAULT_EXTENSIONS,
   getChunkFilename,
   resolveAliases,
-} from "./sdk-impl/build/bundlers/unified/rollup/utils";
-export { rollupWatch } from "./sdk-impl/build/bundlers/unified/rollup/watch";
-export { typesBuild } from "./sdk-impl/build/bundlers/unified/untyped/untyped-mod";
+} from "./sdk-impl/build/bundlers/unified/rollup/utils.js";
+export { rollupWatch } from "./sdk-impl/build/bundlers/unified/rollup/watch.js";
+export { typesBuild } from "./sdk-impl/build/bundlers/unified/untyped/untyped-mod.js";
 export {
   arrayIncludes,
   dumpObject,
@@ -45,67 +73,122 @@ export {
   symlink,
   warn,
   withTrailingSlash,
-} from "./sdk-impl/build/bundlers/unified/utils";
+} from "./sdk-impl/build/bundlers/unified/utils.js";
 export {
   validateDependencies,
   validatePackage,
-} from "./sdk-impl/build/bundlers/unified/validate";
-export {
-  processLibraryFlow,
-  libraries_buildPublish,
-} from "./sdk-impl/library-flow";
-export { library_publishLibrary } from "./sdk-impl/pub/pub-library";
-export {
-  regular_pubToJsr,
-  regular_pubToNpm,
-} from "./sdk-impl/pub/pub-regular";
-export { processRegularFlow } from "./sdk-impl/regular-flow";
-export {
-  replaceLineExecutor,
-  renameFileExecutor,
-  removeCommentExecutor,
-  removeLineExecutor,
-  removeFileExecutor,
-  copyFileExecutor,
-  moveFileExecutor,
-  transformContentExecutor,
-  insertAtExecutor,
-} from "./sdk-impl/spell/spell-executors";
-export {
-  fileExists,
-  readFile,
-  writeFile,
-  removeFile,
-  renameFile,
-  copyFile,
-  findFiles,
-} from "./sdk-impl/spell/spell-filesystem";
-export {
-  executeSpell,
-  processFile,
-  spells,
-} from "./sdk-impl/spell/spell-mod";
-export {
-  parseParams,
-  parseSpellFromComment,
-  extractSpellsFromFile,
-} from "./sdk-impl/spell/spell-parser";
+} from "./sdk-impl/build/bundlers/unified/validate.js";
+export { DEFAULT_CONFIG_DLER, defineConfigDler } from "./sdk-impl/config/default.js";
+export { showStartPrompt, showEndPrompt } from "./sdk-impl/config/info.js";
+export { ensureDlerConfig } from "./sdk-impl/config/init.js";
+export { getConfigDler } from "./sdk-impl/config/load.js";
 export type {
-  SpellType,
-  SpellParams,
-  Spell,
-  SpellExecutionOptions,
-  FileOperation,
-  SpellResult,
-} from "./sdk-impl/spell/spell-types";
-export { useAggregator } from "./sdk-impl/utils/tools-agg";
-export { printUsage } from "./sdk-impl/utils/tools-impl";
+  DlerConfig,
+  BumpMode,
+  BundlerName,
+  NpmOutExt,
+  LibConfig,
+  Esbuild,
+  transpileFormat,
+  Sourcemap,
+  transpileTarget,
+} from "./sdk-impl/config/types.js";
+export { IGNORE_PATTERNS } from "./sdk-impl/constants.js";
+export { processLibraryFlow, libraries_buildPublish } from "./sdk-impl/library-flow.js";
+export { library_publishLibrary } from "./sdk-impl/pub/pub-library.js";
+export { regular_pubToJsr, regular_pubToNpm } from "./sdk-impl/pub/pub-regular.js";
+export { processRegularFlow } from "./sdk-impl/regular-flow.js";
+export { checkDlerConfigHealth } from "./sdk-impl/rules/reliverse/dler-config-health/dler-config-health.js";
+export { checkFileExtensions } from "./sdk-impl/rules/reliverse/file-extensions/file-extensions.js";
+export { analyzeDependencies } from "./sdk-impl/rules/reliverse/missing-deps/analyzer.js";
+export { checkMissingDependencies } from "./sdk-impl/rules/reliverse/missing-deps/deps-mod.js";
+export type {
+  MissingDepsFileType,
+  PackageJson,
+  FinderOptions,
+  DependencyResult,
+} from "./sdk-impl/rules/reliverse/missing-deps/deps-types.js";
+export {
+  findSourceFiles,
+  readFile,
+  readPackageJson,
+} from "./sdk-impl/rules/reliverse/missing-deps/filesystem.js";
+export { formatOutput } from "./sdk-impl/rules/reliverse/missing-deps/formatter.js";
+export {
+  extractPackageNames,
+  normalizePackageName,
+  getListedDependencies,
+  getBuiltinModules,
+} from "./sdk-impl/rules/reliverse/missing-deps/parser.js";
+export { checkNoIndexFiles } from "./sdk-impl/rules/reliverse/no-index-files/no-index-files.js";
+export { checkPackageJsonHealth } from "./sdk-impl/rules/reliverse/package-json-health/package-json-health.js";
+export { checkPathExtensions } from "./sdk-impl/rules/reliverse/path-extensions/path-extensions.js";
+export { checkSelfInclude } from "./sdk-impl/rules/reliverse/self-include/self-include.js";
+export { checkTsConfigHealth } from "./sdk-impl/rules/reliverse/tsconfig-health/tsconfig-health.js";
+export type { AllowedFileExtensionsType } from "./sdk-impl/rules/rules-consts.js";
+export {
+  ALLOWED_FILE_EXTENSIONS,
+  STRICT_FILE_EXTENSIONS,
+  ALLOWED_IMPORT_EXTENSIONS,
+  STRICT_IMPORT_EXTENSIONS,
+} from "./sdk-impl/rules/rules-consts.js";
+export { displayCheckResults } from "./sdk-impl/rules/rules-mod.js";
+export { shouldIgnoreFile, getAllFiles, getLineNumber } from "./sdk-impl/rules/rules-utils.js";
+export type {
+  ApplyMagicSpellsOptions,
+  ApplyMagicSpellsResult,
+} from "./sdk-impl/spell/applyMagicSpells.js";
+export { applyMagicSpells, getAllAvailableRegistries } from "./sdk-impl/spell/applyMagicSpells.js";
+export type {
+  SpellEvaluationContext,
+  SpellOutcome,
+  SpellDirective,
+} from "./sdk-impl/spell/spells.js";
+export { evaluateMagicDirective } from "./sdk-impl/spell/spells.js";
+export { BINARY_EXTS, BINARY_SET } from "./sdk-impl/utils/b-exts.js";
+export { isBinaryExt } from "./sdk-impl/utils/binary.js";
+export type { CommentStyle, FileExtension, CommentMapping } from "./sdk-impl/utils/comments.js";
+export { DEFAULT_COMMENT, COMMENT_MAP, getCommentPrefix } from "./sdk-impl/utils/comments.js";
+export {
+  detectFileType,
+  detectBufferType,
+  detectStreamType,
+  isBinary,
+  getMimeType,
+} from "./sdk-impl/utils/file-type.js";
+export { finalizeBuildPub } from "./sdk-impl/utils/finalize.js";
+export {
+  WHITELABEL_DEFAULT,
+  JSON_EXTS,
+  TEMPLATE_VAR,
+  TPLS_DIR,
+  BINARIES_DIR,
+  isJsonExt,
+} from "./sdk-impl/utils/pack-unpack/pu-constants.js";
+export {
+  walkDir,
+  readFileForTemplate,
+  escapeTemplateString,
+} from "./sdk-impl/utils/pack-unpack/pu-file-utils.js";
+export type {
+  FileContent,
+  FileType,
+  FileMetadata,
+  TemplatesFileContent,
+  TemplateConfig,
+  Template,
+  Templates,
+} from "./sdk-impl/utils/pack-unpack/pu-types.js";
+export { extractJsonComments, stripComments } from "./sdk-impl/utils/pack-unpack/pub-json-utils.js";
+export { resolveCrossLibs, resolveAllCrossLibs } from "./sdk-impl/utils/resolve-cross-libs.js";
+export { useAggregator } from "./sdk-impl/utils/tools-agg.js";
+export { printUsage } from "./sdk-impl/utils/tools-impl.js";
 export {
   getBunSourcemapOption,
   getUnifiedSourcemapOption,
   renameEntryFile,
-} from "./sdk-impl/utils/utils-build";
-export { removeDistFolders } from "./sdk-impl/utils/utils-clean";
+} from "./sdk-impl/utils/utils-build.js";
+export { removeDistFolders, removeLogInternalCalls } from "./sdk-impl/utils/utils-clean.js";
 export {
   PROJECT_ROOT,
   CONCURRENCY_DEFAULT,
@@ -113,14 +196,15 @@ export {
   cliDomainDocs,
   validExtensions,
   SHOW_VERBOSE,
-} from "./sdk-impl/utils/utils-consts";
+} from "./sdk-impl/utils/utils-consts.js";
+export { filterDeps } from "./sdk-impl/utils/utils-deps.js";
+export { determineDistName } from "./sdk-impl/utils/utils-determine.js";
 export {
-  validateDevCwd,
+  handleDlerError,
   withWorkingDirectory,
-} from "./sdk-impl/utils/utils-error-cwd";
-export { filterDeps } from "./sdk-impl/utils/utils-deps";
-export { determineDistName } from "./sdk-impl/utils/utils-determine";
-export { handleDlerError } from "./sdk-impl/utils/utils-error-cwd";
+  validateDevCwd,
+  formatError,
+} from "./sdk-impl/utils/utils-error-cwd.js";
 export {
   copyRootFile,
   getDirectorySize,
@@ -128,19 +212,71 @@ export {
   deleteSpecificFiles,
   readFileSafe,
   writeFileSafe,
-} from "./sdk-impl/utils/utils-fs";
-export { finalizeBuildPub } from "./sdk-impl/utils/finalize";
+  copyInsteadOfBuild,
+} from "./sdk-impl/utils/utils-fs.js";
+export { createJsrJSON, renameTsxFiles } from "./sdk-impl/utils/utils-jsr-json.js";
+export { extractPackageName } from "./sdk-impl/utils/utils-misc.js";
 export {
-  createJsrJSON,
-  renameTsxFiles,
-} from "./sdk-impl/utils/utils-jsr-json";
-export { extractPackageName } from "./sdk-impl/utils/utils-misc";
+  library_createPackageJSON,
+  library_createJsrConfig,
+} from "./sdk-impl/utils/utils-package-json-libraries.js";
+export { regular_createPackageJSON } from "./sdk-impl/utils/utils-package-json-regular.js";
 export {
   createPerfTimer,
   getElapsedPerfTime,
   pausePerfTimer,
   resumePerfTimer,
-} from "./sdk-impl/utils/utils-perf";
-export { library_createPackageJSON } from "./sdk-impl/utils/utils-package-json-libraries";
-export { regular_createPackageJSON } from "./sdk-impl/utils/utils-package-json-regular";
-export { createTSConfig } from "./sdk-impl/utils/utils-tsconfig";
+} from "./sdk-impl/utils/utils-perf.js";
+export {
+  setFileSizeLimits,
+  ALLOWED_FILE_TYPES,
+  validatePath,
+  validateFileType,
+  validateContent,
+  sanitizeInput,
+  checkPermissions,
+  checkFileSize,
+  handleError,
+  validateTemplate,
+  validateMergeOperation,
+  validateDirectory,
+  validateFileExists,
+} from "./sdk-impl/utils/utils-security.js";
+export { createTSConfig } from "./sdk-impl/utils/utils-tsconfig.js";
+export type {
+  DistDirs,
+  DistDirsAll,
+  CopyBuildEntry,
+  CopyHooks,
+  MkdistBuildEntry,
+  MkdistHooks,
+  RollupBuildEntry,
+  EsbuildOptions,
+  RollupBuildOptions,
+  RollupHooks,
+  RollupOptions,
+  UntypedBuildEntry,
+  UntypedHooks,
+  UntypedOutput,
+  UntypedOutputs,
+  BaseBuildEntry,
+  BuildContext,
+  BuildEntry,
+  BuildHooks,
+  BuildOptions,
+  BuildPreset,
+  UnifiedBuildConfig,
+  PerfTimer,
+  RulesCheckOptions,
+  CheckIssue,
+  CheckResult,
+  InputFile,
+  OutputFile,
+  LoaderResult,
+  LoadFile,
+  LoaderContext,
+  Loader,
+  CreateLoaderOptions,
+  MkdistOptions,
+} from "./sdk-types.js";
+// AUTO-GENERATED AGGREGATOR END

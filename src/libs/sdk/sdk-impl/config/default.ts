@@ -1,9 +1,9 @@
-import type { DlerConfig } from "~/libs/sdk/sdk-types";
+import type { DlerConfig } from "~/libs/sdk/sdk-impl/config/types";
 
 /**
  * Default configuration for the build and publish logic.
  */
-export const DEFAULT_CONFIG: DlerConfig = {
+export const DEFAULT_CONFIG_DLER: DlerConfig = {
   bumpDisable: false,
   bumpFilter: ["package.json", ".config/rse.ts"],
   bumpMode: "patch",
@@ -16,10 +16,7 @@ export const DEFAULT_CONFIG: DlerConfig = {
   coreEntryFile: "mod.ts",
   coreEntrySrcDir: "src",
   coreBuildOutDir: "bin",
-  coreIsCLI: {
-    enabled: false,
-    scripts: {},
-  },
+  coreIsCLI: { enabled: false, scripts: {} },
   distJsrAllowDirty: true,
   distJsrBuilder: "jsr",
   distJsrDirName: "dist-jsr",
@@ -43,12 +40,7 @@ export const DEFAULT_CONFIG: DlerConfig = {
     global: ["@types", "biome", "eslint", "knip", "prettier", "typescript", "@reliverse/dler"],
     "dist-npm": [],
     "dist-jsr": [],
-    "dist-libs": {
-      "@reliverse/dler-sdk": {
-        npm: [],
-        jsr: [],
-      },
-    },
+    "dist-libs": {},
   },
 
   // Build setup
@@ -66,13 +58,19 @@ export const DEFAULT_CONFIG: DlerConfig = {
   // Publish artifacts configuration
   publishArtifacts: {
     global: ["package.json", "README.md", "LICENSE"],
-    "dist-jsr": ["jsr.json"],
+    "dist-jsr": [],
     "dist-npm": [],
-    "dist-libs": {
-      "@reliverse/dler-sdk": {
-        jsr: ["jsr.json"],
-        npm: [],
-      },
-    },
+    "dist-libs": {},
   },
+};
+
+// TODO: implement migrator from build.config.ts to .config/dler.ts
+// export function defineBuildConfig(
+//   config: UnifiedBuildConfig | UnifiedBuildConfig[],
+// ): UnifiedBuildConfig[] {
+//   return (Array.isArray(config) ? config : [config]).filter(Boolean);
+// }
+
+export const defineConfigDler = (userConfig: Partial<DlerConfig> = {}) => {
+  return { ...DEFAULT_CONFIG_DLER, ...userConfig };
 };

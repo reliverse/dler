@@ -1,6 +1,8 @@
+// some constants here are deprecated and will be removed in the future
+
 import path from "@reliverse/pathkit";
 
-import type { NpmOutExt } from "~/libs/sdk/sdk-types";
+import type { NpmOutExt } from "~/libs/sdk/sdk-impl/config/types";
 
 // ============================
 // Constants & Global Setup

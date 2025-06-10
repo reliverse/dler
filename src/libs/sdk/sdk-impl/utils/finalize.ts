@@ -2,7 +2,8 @@ import { setBumpDisabledValueTo } from "@reliverse/bleump";
 import { relinka } from "@reliverse/relinka";
 import prettyMilliseconds from "pretty-ms";
 
-import type { LibConfig, PerfTimer } from "~/libs/sdk/sdk-types";
+import type { LibConfig } from "~/libs/sdk/sdk-impl/config/types";
+import type { PerfTimer } from "~/libs/sdk/sdk-types";
 
 import { removeDistFolders } from "~/libs/sdk/sdk-impl/utils/utils-clean";
 import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
@@ -36,6 +37,7 @@ export async function finalizeBuildPub(
   if (!commonPubPause) {
     relinka("success", `🎉 Publish completed successfully (build time: ${transpileFormattedTime})`);
   } else {
+    console.log("-".repeat(50));
     relinka("success", `🎉 Build completed successfully (done in: ${transpileFormattedTime})`);
     relinka("info", "📝 Publish process is currently paused in your config file");
   }

@@ -5,26 +5,26 @@ import type { Template } from "../mock-types.ts";
 export const CFG_DLER_TEMPLATE: Template = {
   name: "cfg",
   description: "Template generated from 3 files",
-  updatedAt: "2025-06-06T14:33:09.240Z",
+  updatedAt: "2025-06-06T14:43:33.630Z",
   config: {
     files: {
       "cfg/jsr/bin/placeholder.ts": {
         metadata: {
-          updatedAt: "2025-06-06T12:25:41.963Z",
-          updatedHash: "80c30cc8ad",
+          updatedAt: "2025-06-06T14:37:51.322Z",
+          updatedHash: "19b36eae5e",
         },
-        content: `// this is a mock file
+        content: `// this is a test mock file
 `,
         type: "text",
       },
       "cfg/npm/bin/cfg-mod.ts": {
         metadata: {
-          updatedAt: "2025-06-06T11:37:37.159Z",
-          updatedHash: "0457ea69dc",
+          updatedAt: "2025-06-06T14:37:29.493Z",
+          updatedHash: "1641293ff0",
         },
         content: `// Should be **inlined** because it points to a *different* library (cfg→sdk):
-// @ts-expect-error this is a mock file
-export { defineConfig } from "~/libs/sdk/sdk-impl/config/define";
+// @ts-expect-error this is a test mock file (💡 "Unused '@ts-expect-error' directive" is an expected error here after "bun libs:example")
+export { defineConfig } from "~/libs/sdk/sdk-impl/config/default";
 `,
         type: "text",
       },

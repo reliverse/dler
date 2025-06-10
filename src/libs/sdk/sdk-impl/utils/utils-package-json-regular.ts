@@ -3,7 +3,7 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { definePackageJSON, type PackageJson, readPackageJSON } from "pkg-types";
 
-import type { NpmOutExt, DlerConfig } from "~/libs/sdk/sdk-types";
+import type { DlerConfig, NpmOutExt } from "~/libs/sdk/sdk-impl/config/types";
 
 import { cliDomainDocs } from "~/libs/sdk/sdk-impl/utils/utils-consts";
 

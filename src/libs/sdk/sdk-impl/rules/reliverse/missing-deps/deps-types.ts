@@ -1,14 +1,14 @@
-export type FileType = ".js" | ".jsx" | ".ts" | ".tsx";
+export type MissingDepsFileType = ".js" | ".jsx" | ".ts" | ".tsx";
 
-export type PackageJson = {
+export interface PackageJson {
   name?: string;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
-};
+}
 
-export type FinderOptions = {
+export interface FinderOptions {
   directory: string;
   showAll: boolean;
   ignorePatterns: string[];
@@ -19,13 +19,13 @@ export type FinderOptions = {
   optional: boolean;
   fix: boolean;
   depth: number;
-};
+}
 
-export type DependencyResult = {
+export interface DependencyResult {
   missingDependencies: string[];
   allDependencies: string[];
   listedDependencies: string[];
   builtinModules: string[];
   devOnlyDependencies: string[];
   duplicateDependencies: string[];
-};
+}

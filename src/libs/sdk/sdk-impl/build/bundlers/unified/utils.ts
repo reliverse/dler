@@ -11,7 +11,10 @@ import type { BuildContext, BuildPreset, UnifiedBuildConfig } from "~/libs/sdk/s
 
 import { autoPreset } from "./auto";
 
-type OutputDescriptor = { file: string; type?: "cjs" | "esm" };
+interface OutputDescriptor {
+  file: string;
+  type?: "cjs" | "esm";
+}
 
 export function arrayIncludes(arr: (RegExp | string)[], searchElement: string): boolean {
   return arr.some((entry) =>

@@ -6,7 +6,7 @@
     "useIgnoreFile": false
   },
   "files": {
-    "ignore": ["node_modules/", "bun.lock"],
+    "ignore": ["node_modules/", "bun.lock", "dist-jsr/", "dist-npm/", "dist-libs/"],
     "ignoreUnknown": false
   },
   "organizeImports": {
@@ -14,7 +14,7 @@
   },
   "linter": {
     "enabled": true,
-    "ignore": ["dist-jsr/", "dist-npm/", "dist-libs/", "src/templates/"],
+    "ignore": ["src/templates/"],
     "rules": {
       "recommended": true,
       "suspicious": {

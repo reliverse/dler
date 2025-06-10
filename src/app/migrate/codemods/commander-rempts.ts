@@ -3,23 +3,23 @@ import type { VariableDeclaration, CallExpression, SourceFile } from "ts-morph";
 import { glob } from "tinyglobby";
 import { Project, Node, ScriptTarget, ModuleKind, SyntaxKind } from "ts-morph";
 
-type CommanderOption = {
+interface CommanderOption {
   name: string;
   type: "string" | "boolean" | "number";
   description: string;
   defaultValue?: unknown;
   shortFlag?: string;
   required?: boolean;
-};
+}
 
-type CommandInfo = {
+interface CommandInfo {
   commandName?: string;
   actionFunction?: Node;
   actionFunctionParam?: string;
   options: CommanderOption[];
   description?: string;
   version?: string;
-};
+}
 
 /**
  * Parses Commander-style flags into a structured format

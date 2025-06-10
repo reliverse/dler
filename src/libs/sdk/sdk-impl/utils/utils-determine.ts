@@ -1,4 +1,4 @@
-import type { LibConfig } from "~/libs/sdk/sdk-types";
+import type { LibConfig } from "~/libs/sdk/sdk-impl/config/types";
 
 /**
  * Determines the distribution name based on the file path and build type.

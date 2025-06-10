@@ -96,7 +96,9 @@ export default defineCommand({
   }),
   async run({ args }) {
     if (args.mkdistOnly) {
-      const { writtenFiles } = await mkdist({
+      const {
+        result: { writtenFiles },
+      } = await mkdist({
         rootDir: resolve(args.cwd || process.cwd(), args.dir),
         srcDir: args.src,
         distDir: args.dist,

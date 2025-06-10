@@ -3,23 +3,23 @@ import { join, extname } from "@reliverse/pathkit";
 import { existsSync } from "node:fs";
 import { readFile, writeFile, readdir, stat } from "node:fs/promises";
 
-type MigrationResult = {
+interface MigrationResult {
   file: string;
   success: boolean;
   message: string;
   changes?: string[];
-};
+}
 
-type PackageJson = {
+interface PackageJson {
   type?: "module" | "commonjs";
   compilerOptions?: {
     moduleResolution?: string;
     module?: string;
     target?: string;
   };
-};
+}
 
-type TsConfig = {
+interface TsConfig {
   compilerOptions?: {
     moduleResolution?: "node" | "nodenext" | "bundler";
     module?: "commonjs" | "esnext" | "nodenext" | "preserve";
@@ -28,7 +28,7 @@ type TsConfig = {
     verbatimModuleSyntax?: boolean;
   };
   extends?: string;
-};
+}
 
 async function getAllTsFiles(dir: string): Promise<string[]> {
   const files: string[] = [];

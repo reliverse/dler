@@ -2,7 +2,7 @@ import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 
-const AGGREGATOR_START = "// AUTO-GENERATED AGGREGATOR START";
+const AGGREGATOR_START = "// AUTO-GENERATED AGGREGATOR START (via `dler agg`)";
 const AGGREGATOR_END = "// AUTO-GENERATED AGGREGATOR END";
 
 /**

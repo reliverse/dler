@@ -3,10 +3,10 @@ import type { Plugin } from "rollup";
 
 import { createFilter } from "@rollup/pluginutils";
 
-type RawLoaderOptions = {
+interface RawLoaderOptions {
   exclude?: FilterPattern;
   include?: FilterPattern;
-};
+}
 
 const defaults: RawLoaderOptions = {
   exclude: [],

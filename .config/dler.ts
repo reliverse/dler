@@ -1,18 +1,18 @@
-import { defineConfig } from "~/mod";
+import { defineConfigDler } from "~/libs/cfg/cfg-mod";
 
 /**
  * Reliverse Bundler Configuration
  * Hover over a field to see more details
  * @see https://github.com/reliverse/dler
  */
-export default defineConfig({
+export default defineConfigDler({
   // Bump configuration
   bumpDisable: false,
   bumpFilter: ["package.json", ".config/rse.ts", "src/libs/sdk/sdk-impl/config/info.ts"],
   bumpMode: "patch",
 
   // Common configuration
-  commonPubPause: true,
+  commonPubPause: false,
   commonPubRegistry: "npm-jsr",
   commonVerbose: true,
 
@@ -53,6 +53,8 @@ export default defineConfig({
       libDescription: "@reliverse/dler without cli",
       libDirName: "sdk",
       libMainFile: "sdk/sdk-mod.ts",
+      // TODO: [dler] eliminate libPkgKeepDeps
+      // in favor of filterDepsPatterns param
       libPkgKeepDeps: true,
       libTranspileMinify: true,
       libPubPause: false,
@@ -63,7 +65,26 @@ export default defineConfig({
       libDescription: "shared config for @reliverse/dler and @reliverse/rse",
       libDirName: "cfg",
       libMainFile: "cfg/cfg-mod.ts",
-      libPkgKeepDeps: false,
+      libPkgKeepDeps: true, // TODO: temp
+      /* libPkgKeepDeps: [
+        // most of the deps here are temporary at the moment
+        // TODO: move prompts and logs to dler's or rse's impl to reduce deps number
+        "@reliverse/relinka",
+        "@reliverse/runtime",
+        "@reliverse/relifso",
+        "@reliverse/pathkit",
+        "@sinclair/typebox",
+        "c12", // TODO: replace with @reliverse/reconf
+        "confbox",
+        "@reliverse/rempts",
+        "execa",
+        "nypm",
+        "destr",
+        "magic-string",
+        "jiti",
+        "jsonrepair", // TODO: migrate to @reliverse/relifso (jsonrepair is already built-in there)
+        "pkg-types",
+      ], */
       libTranspileMinify: true,
       libPubPause: false,
       libPubRegistry: "npm-jsr",

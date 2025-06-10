@@ -1,89 +1,54 @@
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 
-import type { SpellType } from "~/libs/sdk/sdk-impl/spell/spell-types";
-
-import { spells } from "~/libs/sdk/sdk-impl/spell/spell-mod";
+import { applyMagicSpells } from "~/libs/sdk/sdk-impl/spell/applyMagicSpells";
+import { formatError } from "~/libs/sdk/sdk-impl/utils/utils-error-cwd";
 
 export default defineCommand({
-  meta: {
-    name: "spells",
-    version: "1.0.0",
-    description: "Execute magic spells in your codebase",
-  },
   args: defineArgs({
-    spells: {
-      type: "string",
-      description: "Comma-separated list of spells to execute (or 'all')",
-      default: "all",
+    targets: {
+      type: "array",
+      description: "Distribution types to process",
+      required: true,
     },
-    files: {
+    lib: {
       type: "string",
-      description: "Comma-separated list of files to process (or all if not specified)",
+      description: "Library to process (e.g. cfg, sdk, etc) (for usage with `dist-libs`)",
     },
-    dryRun: {
+    concurrency: {
+      type: "number",
+      description: "Number of files to process in parallel",
+    },
+    batchSize: {
+      type: "number",
+      description: "Number of files to process in each batch",
+    },
+    stopOnError: {
       type: "boolean",
-      description: "Preview changes without applying them",
+      description: "Stop processing on first error",
+      default: true,
     },
   }),
+
   async run({ args }) {
-    const requestedSpells = args.spells
-      ? (args.spells.split(",") as (SpellType | "all")[])
-      : ["all"];
+    const { targets, lib, concurrency, batchSize, stopOnError } = args;
 
-    const files = args.files ? args.files.split(",") : [];
-
-    console.log(`Triggering spells: ${requestedSpells.join(", ")}`);
-    if (files.length) {
-      console.log(`On files: ${files.join(", ")}`);
-    } else {
-      console.log("On all files");
+    if (lib && !targets?.includes("dist-libs")) {
+      throw new Error("The 'lib' parameter can only be used with 'dist-libs' target");
     }
 
-    if (args.dryRun) {
-      console.log("DRY RUN - No changes will be applied");
-    }
-    const results = await spells({
-      spells: requestedSpells as (SpellType | "all")[],
-      files,
-      dryRun: args.dryRun,
-    });
+    try {
+      const finalTargets =
+        targets?.map((target: string) =>
+          target === "dist-libs" && lib ? `${target}/${lib}` : target,
+        ) ?? [];
 
-    console.log("\nResults:");
-    for (const result of results) {
-      const status = result.success ? "✓" : "✗";
-      console.log(`${status} ${result.file}: ${result.spell.type} - ${result.message}`);
+      await applyMagicSpells(finalTargets, {
+        concurrency,
+        batchSize,
+        stopOnError,
+      });
+    } catch (error) {
+      throw new Error(`❌ Processing failed: ${formatError(error)}`);
     }
   },
 });
-
-/*
-**usage examples:**
-
-- `export * from "../../types"; // dler-replace-line` — injects file contents at this line (hooked=true by default)
-- `// @ts-expect-error dler-remove-comment` — removes just this comment (hooked=true by default)
-- `// dler-remove-line` — removes this line (hooked=true by default)
-- `// dler-remove-file` — deletes this file (hooked=true by default)
-- `// dler-rename-file-"tsconfig.json"-{hooked=false}` — renames this file (runs at postbuild because `hooked=false`)
-
-**using `hooked=false`:**
-
-- `// dler-rename-file-"tsconfig.json"-{hooked=false}` — renames the file immediately at postbuild (not hooked)
-
-**triggering spells:**
-
-from dler's cli:  
-
-- `dler spells --trigger rename-file,... --files tsconfig.json,...`
-- `dler spells --trigger all`
-- `dler spells`
-
-from your own code:
-
-```ts
-await dler.spells({ spells: ["rename-file"], files: [] });
-await dler.spells({}) // all spells, all files
-spells: ["all"] // means all spells
-spells: [] // also means all spells
-files: [] // means all files
-```
-*/

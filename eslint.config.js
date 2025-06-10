@@ -37,7 +37,7 @@ const config = tseslint.config(
         "warn",
         { allowSameFolder: true, prefix: "~", rootDir: "src" },
       ],
-      "@typescript-eslint/consistent-type-definitions": ["warn", "type"],
+      "@typescript-eslint/consistent-type-definitions": ["warn", "interface"],
       "@typescript-eslint/consistent-type-imports": [
         "warn",
         {

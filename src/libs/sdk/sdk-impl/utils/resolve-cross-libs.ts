@@ -1,304 +1,321 @@
-import * as path from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
 import { promises as fs } from "node:fs";
+import path from "node:path";
 
-type TSConfig = {
-  compilerOptions?: {
-    paths?: Record<string, string[]>;
-  };
-};
+const PROCESS_DTS_FILES = true;
 
-/**
- * Validates that the alias is properly configured in tsconfig.json
- * @throws Error if alias is not configured in tsconfig.json
- */
-async function validateAliasConfig(alias: string): Promise<void> {
-  try {
-    const tsconfigPath = path.resolve("tsconfig.json");
-    const tsconfig = JSON.parse(await fs.readFile(tsconfigPath, "utf8")) as TSConfig;
-
-    const paths = tsconfig?.compilerOptions?.paths;
-    if (!paths) {
-      throw new Error("tsconfig.json is missing compilerOptions.paths configuration");
-    }
-
-    const aliasPattern = `${alias}/*`;
-    if (!paths[aliasPattern]) {
-      throw new Error(
-        `Alias "${alias}" is not configured in tsconfig.json. ` +
-          `Add "${aliasPattern}": ["./src/*"] to compilerOptions.paths`,
-      );
-    }
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to validate alias configuration: ${error.message}`);
-    }
-    throw new Error("Failed to validate alias configuration: Unknown error");
-  }
-}
-
-/**
- * Recursively inlines (or rewrites) aliased import / re-export statements for all libraries.
- *
- * @param alias     Prefix used in module specifiers (default: "~")
- * @param subFolders Ordered sub-folder candidates to look for when chasing other libs
- * @returns Absolute paths of files that were modified
- */
-export async function resolveCrossLibs(
-  alias = "~",
-  subFolders: ("npm" | "jsr")[] = ["npm", "jsr"],
-): Promise<string[]> {
-  // Validate alias configuration first
-  await validateAliasConfig(alias);
-
-  const distLibsPath = path.resolve("dist-libs");
-  const allModified: string[] = [];
-
-  try {
-    const libs = await fs.readdir(distLibsPath);
-
-    for (const lib of libs) {
-      for (const subFolder of subFolders) {
-        const libBinDir = path.join("dist-libs", lib, subFolder, "bin");
-
-        try {
-          // Check if the directory exists
-          await fs.access(libBinDir);
-
-          // Process the library
-          const modified = await resolveCrossLibsInternal(libBinDir, alias, subFolders);
-          allModified.push(...modified);
-        } catch {
-          // Skip if directory doesn't exist
-          relinka("verbose", `[inline] skipping non-existent path: ${libBinDir}`);
-        }
-      }
-    }
-  } catch (error) {
-    throw new Error(`Failed to process dist-libs directory: ${error}`);
-  }
-
-  return allModified;
-}
-
-/**
- * Recursively inlines (or rewrites) aliased import / re-export statements.
- *
- * @param libBinDir Folder that must start with "dist-libs/<lib>/<subFolder>/bin"
- * @param alias     Prefix used in module specifiers (default: "~")
- * @param subFolders Ordered sub-folder candidates to look for when chasing other libs
- * @returns Absolute paths of files that were modified
- */
-async function resolveCrossLibsInternal(
+async function resolveCrossLibs(
   libBinDir: string,
   alias = "~",
   subFolders: ("npm" | "jsr")[] = ["npm", "jsr"],
 ): Promise<string[]> {
-  relinka("verbose", `[inline] dir=${libBinDir}, alias=${alias}, subs=${subFolders.join("/")}`);
+  // relinka("internal", `Starting resolveCrossLibs for ${libBinDir} with alias ${alias}`);
 
-  if (!libBinDir.startsWith("dist-libs/")) {
-    throw new Error(`libBinDir must start with "dist-libs/": ${libBinDir}`);
-  }
+  // Normalize path separators for cross-platform compatibility
+  const normalizedPath = libBinDir.replace(/\\/g, "/");
+  // relinka("internal", "DEBUG: normalizedPath = " + normalizedPath);
+  // relinka("internal", "DEBUG: startsWith dist-jsr: " + normalizedPath.startsWith("dist-jsr"));
+  // relinka("internal", "DEBUG: startsWith dist-npm: " + normalizedPath.startsWith("dist-npm"));
+  // relinka("internal", "DEBUG: startsWith dist-libs: " + normalizedPath.startsWith("dist-libs"));
 
-  const absBinDir = path.resolve(libBinDir);
-  const [currentLib] = path.relative("dist-libs", libBinDir).split(path.sep);
-  relinka("verbose", `[inline] processing library: ${currentLib}`);
-
-  /** Recursively gather .ts / .js (skip .d.ts) */
-  async function collect(dir: string): Promise<string[]> {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    const files = await Promise.all(
-      entries.map((e) =>
-        e.isDirectory()
-          ? collect(path.join(dir, e.name))
-          : e.name.endsWith(".d.ts") || !(e.name.endsWith(".ts") || e.name.endsWith(".js"))
-            ? []
-            : [path.join(dir, e.name)],
-      ),
+  // Check if path starts with any of the allowed prefixes
+  if (
+    !normalizedPath.startsWith("dist-libs") &&
+    !normalizedPath.startsWith("dist-jsr") &&
+    !normalizedPath.startsWith("dist-npm")
+  ) {
+    throw new Error(
+      `[resolve-cross-libs] libBinDir must start with "dist-libs", "dist-jsr", or "dist-npm", got: ${libBinDir}`,
     );
-    return files.flat();
   }
 
-  const allFiles = await collect(absBinDir);
-  const modified: string[] = [];
+  // For dist-libs, apply the full cross-libs resolution logic
+  if (normalizedPath.startsWith("dist-libs")) {
+    // Extract current library name from path: dist-libs/sdk/npm/bin -> sdk
+    const pathParts = normalizedPath.replace(/\/$/, "").split("/");
+    if (pathParts.length < 4) {
+      throw new Error(
+        `[resolve-cross-libs] Invalid libBinDir structure: ${libBinDir}, expected dist-libs/<lib>/<subfolder>/bin`,
+      );
+    }
+    const currentLib = pathParts[1];
+    // relinka("internal", `Processing library: ${currentLib}`);
+
+    const files = await findSourceFiles(libBinDir);
+    const modifiedFiles: string[] = [];
+
+    await Promise.all(
+      files.map(async (filePath) => {
+        const content = await fs.readFile(filePath, "utf-8");
+        // @ts-expect-error @total-typescript/ts-reset <undefined is possible here>
+        const processed = await processFile(content, currentLib, alias, subFolders, filePath);
+
+        if (processed !== content) {
+          relinka("log", `[resolve-cross-libs] File modified: ${filePath}`);
+          await fs.writeFile(filePath, processed, "utf-8");
+          modifiedFiles.push(path.resolve(filePath));
+        }
+      }),
+    );
+
+    // relinka("internal", `Completed processing ${modifiedFiles.length} modified files`);
+    return modifiedFiles;
+  }
+
+  return [];
+}
+
+async function findSourceFiles(dir: string): Promise<string[]> {
+  // relinka("internal", `Searching for source files in: ${dir}`);
+  const files: string[] = [];
+
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  // relinka("internal", `Found ${entries.length} entries in directory`);
 
   await Promise.all(
-    allFiles.map(async (filePath) => {
-      const original = await fs.readFile(filePath, "utf8");
-      if (!original) {
-        throw new Error(`Failed to read file: ${filePath}`);
-      }
-      if (!currentLib) throw new Error("Current library is undefined");
-      const updated = await transformFile(original, filePath, currentLib, alias, subFolders);
+    entries.map(async (entry) => {
+      const fullPath = path.join(dir, entry.name);
 
-      if (updated !== original) {
-        await fs.writeFile(filePath, updated, "utf8");
-        modified.push(filePath);
-        relinka("verbose", `[inline]   ↳ modified ${path.relative(process.cwd(), filePath)}`);
+      if (entry.isDirectory()) {
+        // relinka("internal", `Recursing into directory: ${fullPath}`);
+        const subFiles = await findSourceFiles(fullPath);
+        files.push(...subFiles);
+      } else if (entry.isFile()) {
+        const ext = path.extname(entry.name);
+        const isDts = entry.name.endsWith(".d.ts");
+
+        if (ext === ".js" || (ext === ".ts" && !isDts) || (PROCESS_DTS_FILES && isDts)) {
+          // relinka("internal", `Found source file: ${fullPath}`);
+          files.push(fullPath);
+        }
       }
     }),
   );
 
-  relinka("verbose", `[inline] done – ${modified.length} file(s) changed`);
-  return modified;
+  return files;
 }
 
-/** Per-file transformation – now multi-line aware & idempotent */
-async function transformFile(
-  source: string | undefined,
-  _filePath: string,
+function escapeRegex(str: string | undefined | null): string {
+  if (!str || typeof str !== "string") {
+    return "";
+  }
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+async function processFile(
+  content: string,
   currentLib: string,
   alias: string,
   subFolders: ("npm" | "jsr")[],
+  currentFilePath: string,
 ): Promise<string> {
-  if (!source) {
-    throw new Error("Source content is undefined");
-  }
-  const ALIAS_RE = alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // relinka("internal", `Processing file for library ${currentLib} with ${content.split("\n").length} lines`);
+  const lines = content.split("\n");
+  const result: string[] = [];
 
-  /* dotAll (“s”) lets `.` span newlines – crucial for pretty-formatted imports */
-  const importRe = new RegExp(
-    String.raw`^\s*` + // leading space
-      String.raw`(` +
-      String.raw`export\s+\{[\s\S]*?\}\s+from\s+` + // export {...} from
-      "|" +
-      String.raw`import\s+[\s\S]*?\s+from\s+` + // import ... from
-      String.raw`)` +
-      String.raw`(['"])` + //   opening quote (group 2)
-      ALIAS_RE +
-      String.raw`/libs/` +
-      String.raw`([^/]+)` + //   libName   (group 3)
-      String.raw`/` +
-      String.raw`([^'"]+)` + //   rest path (group 4)
-      String.raw`\2` + //   same quote
-      String.raw`\s*;?` + //   optional semicolon
-      String.raw`(?:\s*(?://.*|/\*[\s\S]*?\*/))?` + //   optional trailing comment
-      String.raw`\s*$`,
-    "s", // dotAll
-  );
-
-  /* We scan line-by-line, but if we see a “~ /libs/” token we keep appending
-     lines until we bump into “;” – that's our full statement candidate. */
-  const output: string[] = [];
-  const lines = source.split(/\r?\n/);
-
-  let inInlineBlock = false;
-  let buffer: string[] = []; // collecting a multi-line statement
-
-  const flushBuffer = async () => {
-    if (buffer.length === 0) return;
-
-    const stmt = buffer.join("\n");
-    relinka("verbose", `  [scan] candidate:\n--------\n${stmt}\n--------`);
-
-    if (!importRe.test(stmt) || inInlineBlock) {
-      output.push(...buffer);
-      buffer = [];
-      return;
-    }
-
-    const match = importRe.exec(stmt);
-    if (!match) {
-      output.push(...buffer);
-      buffer = [];
-      return;
-    }
-    const [, prefix, quote, libName, restRaw] = match;
-    if (!restRaw || !libName) {
-      throw new Error(`Invalid import statement: ${stmt}`);
-    }
-    const indentMatch = stmt.match(/^\s*/);
-    if (!indentMatch) {
-      throw new Error(`Invalid statement format: ${stmt}`);
-    }
-    const indent = indentMatch[0];
-    const rest = restRaw.replace(/^\/+/, ""); // trim leading "/"
-
-    /* ─── self-import → rewrite to ./relative ─────────────────────────── */
-    if (libName === currentLib) {
-      const newSpec = `./${rest}`;
-      const alreadyRewritten = new RegExp(String.raw`${quote}\./${rest}${quote}`).test(stmt);
-
-      output.push(
-        alreadyRewritten
-          ? stmt // idempotent
-          : `${indent}${prefix}${quote}${newSpec}${quote};`,
-      );
-      relinka("verbose", `  [rewrite]   ${libName} ↦ local ("${newSpec}")`);
-      buffer = [];
-      return;
-    }
-
-    /* ─── external library → inline file contents ─────────────────────── */
-    const targetFile = await resolveTargetFile(libName, rest, subFolders);
-    const embedded = await fs.readFile(targetFile, "utf8");
-    relinka("verbose", `  [inline]    ${libName} ↦ ${targetFile}`);
-
-    const inlinedBlock =
-      `${indent}/* inlined-start ${alias}/libs/${libName}/${rest} */\n` +
-      embedded
-        .split(/\r?\n/)
-        .map((l) => indent + l)
-        .join("\n") +
-      `\n${indent}/* inlined-end */`;
-
-    output.push(inlinedBlock);
-    buffer = [];
-  };
+  let insideInlined = false;
+  // const processedImports = 0;
 
   for (const line of lines) {
-    /* Track existing inlined blocks for idempotency */
-    if (line.includes("/* inlined-start")) inInlineBlock = true;
-    if (line.includes("/* inlined-end")) inInlineBlock = false;
-
-    /* If we're already collecting a statement, keep adding lines
-       until we hit ";". */
-    if (buffer.length) {
-      buffer.push(line);
-      if (line.trimEnd().endsWith(";")) await flushBuffer();
+    // Track inlined block boundaries
+    if (line.includes("/* inlined-start ")) {
+      insideInlined = true;
+      relinka("log", `[resolve-cross-libs] Entering inlined block: ${line.trim()}`);
+      result.push(line);
       continue;
     }
 
-    /* New statement begins if the line contains the alias marker */
-    if (line.includes(`${alias}/libs/`) && /(export|import)\s/.test(line)) {
-      buffer.push(line);
-      if (line.trimEnd().endsWith(";")) await flushBuffer();
+    if (line.includes("/* inlined-end */")) {
+      insideInlined = false;
+      // relinka("internal", "Exiting inlined block");
+      result.push(line);
       continue;
     }
 
-    /* Ordinary line */
-    output.push(line);
+    // Skip processing if inside inlined block
+    if (insideInlined) {
+      result.push(line);
+      continue;
+    }
+
+    // Match import/export lines with alias pattern
+    const pattern = new RegExp(
+      `^(\\s*)((?:export\\s+.*?\\s+from|import\\s+.*?\\s+from)\\s+(['"])${escapeRegex(alias)}/libs/([^/]+)/([^'"]*?)\\3[^;]*;?)(\\s*//.*)?\\s*$`,
+    );
+
+    const match = line.match(pattern);
+
+    if (match) {
+      // processedImports++;
+      const [, indentation, fullStatement, quote, libName, rest, comment] = match;
+      relinka("log", `[resolve-cross-libs] Processing import/export: ${libName}/${rest}`);
+
+      // Skip if already converted to relative path (idempotent)
+      if (fullStatement?.includes(`${quote}./`)) {
+        // relinka(
+        //   "internal",
+        //   `[resolve-cross-libs] Skipping already converted import: ${libName}/${rest}`,
+        // );
+        result.push(line);
+        continue;
+      }
+
+      if (libName === currentLib) {
+        // Same library - rewrite to relative path
+        // relinka("internal", `[resolve-cross-libs] Converting to relative path: ${libName}/${rest}`);
+        const newStatement =
+          fullStatement?.replace(`${quote}${alias}/libs/${libName}/`, `${quote}./`) ?? "";
+        result.push(`${indentation}${newStatement}${comment || ""}`);
+      } else {
+        // Different library - inline contents
+        try {
+          if (!libName || !rest) {
+            throw new Error("Library name or path is undefined");
+          }
+          relinka("log", `[resolve-cross-libs] Attempting to inline: ${libName}/${rest}`);
+          const targetPath = await resolveTargetFile(libName, rest, subFolders, currentFilePath);
+          // relinka("internal", `Found target file: ${targetPath}`);
+          const targetContent = await fs.readFile(targetPath, "utf-8");
+
+          result.push(`${indentation}/* inlined-start ${alias}/libs/${libName}/${rest} */`);
+
+          // Add target content with preserved indentation
+          const targetLines = targetContent.split("\n");
+          relinka(
+            "log",
+            `[resolve-cross-libs] Inlining ${targetLines.length} lines from ${targetPath}`,
+          );
+          for (const targetLine of targetLines) {
+            result.push(`${indentation}${targetLine}`);
+          }
+
+          result.push(`${indentation}/* inlined-end */`);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          relinka(
+            "error",
+            `[resolve-cross-libs] Failed to inline ${alias}/libs/${libName}/${rest}: ${errorMessage}`,
+          );
+          throw error;
+        }
+      }
+    } else {
+      result.push(line);
+    }
   }
 
-  /* Left-over buffer without trailing ";" (rare but handle it) */
-  await flushBuffer();
-
-  return output.join("\n");
+  // relinka("internal", `Processed ${processedImports} imports/exports in file`);
+  return result.join("\n");
 }
 
-/** Resolve: dist-libs/<lib>/<sub>/bin/<rest>.ts  (pref)  or .js */
 async function resolveTargetFile(
-  lib: string,
+  libName: string,
   rest: string,
   subFolders: ("npm" | "jsr")[],
+  currentFilePath: string,
 ): Promise<string> {
-  const cleaned = rest.replace(/^\/+/, "");
-  for (const sub of subFolders) {
-    const base = path.join("dist-libs", lib, sub, "bin", cleaned);
-    const tsPath = `${base}.ts`;
-    try {
-      await fs.access(tsPath);
-      return tsPath;
-    } catch {
-      /* empty */
-    }
-    const jsPath = `${base}.js`;
-    try {
-      await fs.access(jsPath);
-      return jsPath;
-    } catch {
-      /* empty */
+  relinka("log", `[resolve-cross-libs] Resolving target file for ${libName}/${rest}`);
+
+  // Determine extension priority based on current file type
+  const isCurrentFileDts = currentFilePath.endsWith(".d.ts");
+  const extensions = isCurrentFileDts ? [".d.ts", ".ts", ".js"] : [".ts", ".js", ".d.ts"];
+  // relinka(
+  //   "internal",
+  //   `[resolve-cross-libs] Current file is .d.ts: ${isCurrentFileDts}, using extension priority: ${extensions.join(", ")}`,
+  // );
+
+  for (const subFolder of subFolders) {
+    const basePath = path.join("dist-libs", libName, subFolder, "bin", rest);
+    // relinka("internal", `[resolve-cross-libs] Trying subfolder: ${subFolder}`);
+
+    // Try extensions in priority order
+    for (const ext of extensions) {
+      const fullPath = `${basePath}${ext}`;
+      try {
+        await fs.access(fullPath);
+        relinka("internal", `[resolve-cross-libs] Found target file: ${fullPath}`);
+        return fullPath;
+      } catch {
+        relinka("internal", `[resolve-cross-libs] File not found: ${fullPath}`);
+        // File doesn't exist, continue trying
+      }
     }
   }
-  throw new Error(`Cannot inline ~/libs/${lib}/${rest}: tried [${subFolders.join(", ")}]`);
+
+  throw new Error(
+    `Could not resolve target file for libs/${libName}/${rest} in any subfolder: ${subFolders.join(", ")}`,
+  );
 }
+
+async function directoryExists(dirPath: string): Promise<boolean> {
+  try {
+    const stat = await fs.stat(dirPath);
+    return stat.isDirectory();
+  } catch (error) {
+    if (error instanceof Error && (error as NodeJS.ErrnoException).code === "ENOENT") {
+      return false;
+    }
+    throw error;
+  }
+}
+
+// Wrapper function to process all libraries in dist-libs
+async function resolveAllCrossLibs(
+  alias = "~",
+  subFolders: ("npm" | "jsr")[] = ["npm", "jsr"],
+): Promise<string[]> {
+  // relinka("internal", `Starting resolveAllCrossLibs with alias ${alias}`);
+  const distLibsDir = "dist-libs";
+
+  const allModifiedFiles: string[] = [];
+
+  // Process dist-libs first
+  const distLibsExists = await directoryExists(distLibsDir);
+  if (distLibsExists) {
+    const entries = await fs.readdir(distLibsDir, { withFileTypes: true });
+    const libDirs = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+    // relinka("internal", `Found ${libDirs.length} libraries to process: ${libDirs.join(", ")}`);
+
+    await Promise.all(
+      libDirs.map(async (libName) => {
+        // relinka("internal", `Processing library: ${libName}`);
+        for (const subFolder of subFolders) {
+          const binDir = path.join(distLibsDir, libName, subFolder, "bin");
+          // relinka("internal", `Checking bin directory: ${binDir}`);
+
+          const binDirExists = await directoryExists(binDir);
+          if (binDirExists) {
+            // relinka("internal", `Processing bin directory: ${binDir}`);
+            try {
+              const modifiedFiles = await resolveCrossLibs(binDir, alias, subFolders);
+              allModifiedFiles.push(...modifiedFiles);
+              // relinka(
+              //   "internal",
+              //   `Successfully processed ${modifiedFiles.length} files in ${binDir}`,
+              // );
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              relinka("error", `[resolveAllCrossLibs] Error processing ${binDir}: ${errorMessage}`);
+              throw error;
+            }
+          } else {
+            relinka("error", `[resolveAllCrossLibs] Bin directory does not exist: ${binDir}`);
+          }
+        }
+      }),
+    );
+  }
+
+  if (allModifiedFiles.length > 0) {
+    relinka("info", "[resolveAllCrossLibs] Cross libraries replacements done in:");
+    relinka("log", "[resolveAllCrossLibs] " + allModifiedFiles.join(", "));
+  }
+
+  // relinka(
+  //   "internal",
+  //   `Completed processing all libraries. Total modified files: ${allModifiedFiles.length}`,
+  // );
+  return allModifiedFiles;
+}
+
+export { resolveCrossLibs, resolveAllCrossLibs };

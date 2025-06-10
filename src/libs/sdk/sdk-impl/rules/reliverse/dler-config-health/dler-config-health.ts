@@ -1,6 +1,6 @@
 import type { CheckIssue, CheckResult } from "~/libs/sdk/sdk-types";
 
-import { loadConfig } from "~/libs/sdk/sdk-impl/config/load";
+import { getConfigDler } from "~/libs/sdk/sdk-impl/config/load";
 
 // check "dler-config-health" rule
 export async function checkDlerConfigHealth(): Promise<CheckResult> {
@@ -8,7 +8,7 @@ export async function checkDlerConfigHealth(): Promise<CheckResult> {
   const issues: CheckIssue[] = [];
 
   try {
-    const config = await loadConfig();
+    const config = await getConfigDler();
     const libsList = config.libsList || {};
 
     for (const [, libConfig] of Object.entries(libsList)) {

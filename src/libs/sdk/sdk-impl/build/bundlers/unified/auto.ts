@@ -8,12 +8,12 @@ import type { BuildEntry, BuildPreset, MkdistBuildEntry } from "~/libs/sdk/sdk-t
 
 import { extractExportFilenames, listRecursively, warn } from "./utils";
 
-type InferEntriesResult = {
+interface InferEntriesResult {
   cjs?: boolean;
   dts?: boolean;
   entries: BuildEntry[];
   warnings: string[];
-};
+}
 
 export function definePreset(preset: BuildPreset): BuildPreset {
   return preset;

@@ -17,7 +17,7 @@ import { FILE_TYPES } from "./init-const";
 import { gitignoreTemplate, licenseTemplate, readmeTemplate } from "./init-tmpl";
 
 // Default configuration
-const DEFAULT_CONFIG: ReinitUserConfig = {
+const DEFAULT_CONFIG_INIT: ReinitUserConfig = {
   defaultInitBehaviour: "create",
   defaultDestFileExistsBehaviour: "prompt",
   parallelByDefault: false,
@@ -77,7 +77,7 @@ export async function initFile(
   req: InitFileRequest,
   userCfg?: Partial<ReinitUserConfig>,
 ): Promise<InitFileResult> {
-  const config = { ...DEFAULT_CONFIG, ...userCfg };
+  const config = { ...DEFAULT_CONFIG_INIT, ...userCfg };
   const initBehaviour = req.initBehaviour ?? config.defaultInitBehaviour;
   const existsBehaviour = req.destFileExistsBehaviour ?? config.defaultDestFileExistsBehaviour;
 
@@ -110,7 +110,7 @@ export async function initFiles(
   options?: { parallel?: boolean; concurrency?: number },
   userCfg?: Partial<ReinitUserConfig>,
 ): Promise<InitFileResult[]> {
-  const config = { ...DEFAULT_CONFIG, ...userCfg };
+  const config = { ...DEFAULT_CONFIG_INIT, ...userCfg };
   const parallel = options?.parallel ?? config.parallelByDefault;
   const concurrency = options?.concurrency ?? config.parallelConcurrency;
 

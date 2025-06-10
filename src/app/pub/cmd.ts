@@ -1,8 +1,8 @@
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 
-import { dlerPub } from "~/app/build/impl";
+import { dlerPub } from "~/app/pub/impl";
 import { ensureDlerConfig } from "~/libs/sdk/sdk-impl/config/init";
-import { loadConfig } from "~/libs/sdk/sdk-impl/config/load";
+import { getConfigDler } from "~/libs/sdk/sdk-impl/config/load";
 import { removeDistFolders } from "~/libs/sdk/sdk-mod";
 
 export default defineCommand({
@@ -19,7 +19,7 @@ export default defineCommand({
   async run({ args }) {
     await ensureDlerConfig(args.dev);
 
-    const config = await loadConfig();
+    const config = await getConfigDler();
 
     await removeDistFolders(
       config.distNpmDirName,

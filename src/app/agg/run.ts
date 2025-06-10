@@ -1,21 +1,11 @@
-import { resolve } from "@reliverse/pathkit";
 import { selectPrompt, runCmd, confirmPrompt, inputPrompt } from "@reliverse/rempts";
-import { existsSync } from "node:fs";
-
-import type { DlerConfig } from "~/libs/sdk/sdk-types";
 
 import { getAggCmd } from "~/app/cmds";
-
-// Helper to load config if exists
-async function loadConfig(): Promise<DlerConfig | null> {
-  const configPath = resolve(".config/dler.ts");
-  if (!existsSync(configPath)) return null;
-  return (await import(configPath)).default;
-}
+import { getConfigDler } from "~/libs/sdk/sdk-impl/config/load";
 
 export async function promptAggCommand() {
   // Try to load config and check for libs
-  const config = await loadConfig();
+  const config = await getConfigDler();
   let selectedLibName: string | null = null;
 
   if (config?.libsList && Object.keys(config.libsList).length > 0) {

@@ -11,10 +11,9 @@ import type {
   transpileFormat,
   transpileTarget,
   DlerConfig,
-  PerfTimer,
-} from "~/libs/sdk/sdk-types";
+} from "~/libs/sdk/sdk-impl/config/types";
 
-import { resumePerfTimer } from "~/libs/sdk/sdk-mod";
+import { resumePerfTimer, type PerfTimer } from "~/libs/sdk/sdk-mod";
 
 import { library_buildLibrary } from "./build/build-library";
 import { library_publishLibrary } from "./pub/pub-library";

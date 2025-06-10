@@ -8,9 +8,9 @@ import type {
   OutputFile,
 } from "~/libs/sdk/sdk-types";
 
-export type DefineVueLoaderOptions = {
+export interface DefineVueLoaderOptions {
   blockLoaders?: Record<string, VueBlockLoader | undefined>;
-};
+}
 
 export type VueBlock = Pick<SFCBlock, "type" | "content" | "attrs">;
 
@@ -22,11 +22,11 @@ export type VueBlockLoader = (
   },
 ) => Promise<VueBlock | undefined>;
 
-export type DefaultBlockLoaderOptions = {
+export interface DefaultBlockLoaderOptions {
   type: "script" | "style" | "template";
   outputLang: string;
   validExtensions?: string[];
-};
+}
 
 let warnedTypescript = false;
 function defineVueLoader(options?: DefineVueLoaderOptions): Loader {

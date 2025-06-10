@@ -2,7 +2,7 @@ import { relinka } from "@reliverse/relinka";
 import { readPackageJSON } from "pkg-types";
 import { glob } from "tinyglobby";
 
-import type { DlerConfig } from "~/libs/sdk/sdk-types";
+import type { DlerConfig } from "~/libs/sdk/sdk-impl/config/types";
 
 import { readFileSafe } from "./utils-fs";
 import { extractPackageName } from "./utils-misc";

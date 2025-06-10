@@ -4,7 +4,7 @@ import { relinka } from "@reliverse/relinka";
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { createJiti } from "jiti";
 
-import type { DlerConfig } from "~/libs/sdk/sdk-types";
+import type { DlerConfig } from "~/libs/sdk/sdk-impl/config/types";
 
 // `dler libs --init my-lib-1 @org/my-lib-2`
 

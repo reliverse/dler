@@ -6,12 +6,10 @@ import path, {
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { build as bunBuild, type BuildConfig } from "bun";
-import MagicString from "magic-string";
 import pAll from "p-all";
 import prettyBytes from "pretty-bytes";
 import prettyMilliseconds from "pretty-ms";
 
-import type { PerfTimer, UnifiedBuildConfig } from "~/libs/sdk/sdk-types";
 import type {
   BundlerName,
   DlerConfig,
@@ -21,11 +19,10 @@ import type {
   Sourcemap,
   transpileFormat,
   transpileTarget,
-} from "~/libs/sdk/sdk-types";
+} from "~/libs/sdk/sdk-impl/config/types";
+import type { PerfTimer, UnifiedBuildConfig } from "~/libs/sdk/sdk-types";
 
 import { unifiedBuild } from "~/libs/sdk/sdk-impl/build/bundlers/unified/build";
-import { findFiles } from "~/libs/sdk/sdk-impl/spell/spell-filesystem";
-import { spells } from "~/libs/sdk/sdk-impl/spell/spell-mod";
 import {
   getBunSourcemapOption,
   getUnifiedSourcemapOption,
@@ -52,41 +49,25 @@ import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 // ============================================================================
 
 const BIN_DIR_NAME = "bin"; // Directory name for bundled output within dist
-const REPLACEMENT_MARKER = "// dler-replace-line-{hooked=false}"; // Marker for source replacement
-const TYPES_REPLACEMENT_PATH = "src/types.ts"; // Relative path to types file used for replacement
 const ALIAS_PREFIX_TO_CONVERT = "~"; // Alias prefix used in internal imports
 
 // ============================================================================
 // Type Definitions
 // ============================================================================
 
-/** Describes a file whose content was temporarily replaced during pre-build */
-type ReplacementRecord = {
-  filePath: string;
-  newContent: string; // Stored for debugging/verification
-  originalContent: string;
-};
-
-/** Configuration for the source file replacement process */
-type SourceReplacementConfig = {
-  librarySrcDir: string; // Directory to scan for replacements
-  replacementFilePath: string; // Path to the file providing replacement content
-  replacementMarker: string; // Comment marker indicating replacement line
-};
-
 /** Options specific to the NPM build target */
-type NpmBuildOptions = {
+interface NpmBuildOptions {
   npmOutDir: string; // Output directory for NPM build (relative to project root)
   distNpmBuilder: BundlerName;
   coreEntrySrcDir: string; // Base source directory containing libs (e.g., "src")
-};
+}
 
 /** Options specific to the JSR build target */
-type JsrBuildOptions = {
+interface JsrBuildOptions {
   jsrOutDir: string; // Output directory for JSR build (relative to project root)
   distJsrBuilder: BundlerName;
   distJsrOutFilesExt: NpmOutExt; // Specific output extension for JSR files
-};
+}
 
 /** Consolidated options for the main library build function */
 export type LibraryBuildOptions = DlerConfig & {
@@ -112,7 +93,7 @@ export type LibraryBuildOptions = DlerConfig & {
 };
 
 /** Parameters for the unified `library_buildDistributionTarget` function */
-type BuildTargetParams = {
+interface BuildTargetParams {
   targetType: "npm" | "jsr";
   builder: BundlerName;
   libSourceDir: string; // The specific source directory for this library
@@ -123,10 +104,10 @@ type BuildTargetParams = {
   distJsrOutFilesExt: NpmOutExt; // Needed for common steps & JSR specifics
   options: LibraryBuildOptions;
   libDirName?: string; // Optional specific directory name of the lib (e.g., my-lib)
-};
+}
 
 /** Parameters required by the individual bundler executor functions (Bun, Unified, JSR Copy) */
-type BundleExecutorParams = {
+interface BundleExecutorParams {
   entryPoint: string; // Absolute path to entry file OR directory (for 'jsr' copy)
   outDir: string; // Absolute path to output directory (usually the 'bin' subdir)
   libName: string; // For logging context
@@ -143,7 +124,7 @@ type BundleExecutorParams = {
   transpileStub: boolean; // For unified
   transpileWatch: boolean; // For unified (or potentially others)
   unifiedBundlerOutExt: NpmOutExt; // For bun/unified
-};
+}
 
 /** Parameters for the central bundler dispatcher function `library_bundleWithBuilder` */
 type BundleRequestParams = {
@@ -151,7 +132,7 @@ type BundleRequestParams = {
 } & BundleExecutorParams;
 
 /** Parameters for common post-bundling steps */
-type CommonStepsParams = {
+interface CommonStepsParams {
   coreEntryFileName: string;
   outputDirRoot: string;
   npmOutputDirRoot?: string;
@@ -166,7 +147,7 @@ type CommonStepsParams = {
   distJsrOutFilesExt: NpmOutExt;
   deleteFiles?: boolean;
   libDirName?: string;
-};
+}
 
 // ============================================================================
 // Main Orchestration
@@ -178,46 +159,9 @@ type CommonStepsParams = {
  * @param options - The consolidated build configuration.
  */
 export async function library_buildLibrary(options: LibraryBuildOptions): Promise<void> {
-  const { libName, mainDir } = options;
-  let replacedFiles: ReplacementRecord[] = [];
-
-  // Configure source replacement
-  const replacementConfig: SourceReplacementConfig = {
-    librarySrcDir: path.resolve(PROJECT_ROOT, mainDir),
-    replacementFilePath: path.resolve(PROJECT_ROOT, TYPES_REPLACEMENT_PATH),
-    replacementMarker: REPLACEMENT_MARKER,
-  };
+  const { libName } = options;
 
   try {
-    // --- Pre-build Step: Execute spells ---
-    relinka("log", `Running spells for ${libName}...`);
-    const spellResults = await spells({
-      // Use specific patterns for the library source directory
-      files: await findFiles(
-        ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json"],
-        path.resolve(PROJECT_ROOT, mainDir),
-      ).then((files) => files.map((f) => path.resolve(PROJECT_ROOT, f))),
-      showChanges: true,
-      dryRun: false,
-      spells: ["replace-line"],
-      validate: true,
-    });
-
-    if (spellResults.length > 0) {
-      relinka("log", `Spell execution results for ${libName}:`);
-      for (const result of spellResults) {
-        relinka("log", `  - ${result.file}: ${result.success ? "success" : "failed"}`);
-        if (!result.success) {
-          relinka("error", `    Error: ${result.message}`);
-        }
-      }
-    }
-
-    // --- Pre-build Step: Modify source files ---
-    relinka("log", `Running pre-build replacements for ${libName}...`);
-    replacedFiles = await preBuildReplacements(replacementConfig);
-    relinka("verbose", `Pre-build: ${replacedFiles.length} files modified.`);
-
     // --- Core Build Step: Execute NPM/JSR builds ---
     await executeBuildTasks(options);
   } catch (err) {
@@ -225,23 +169,6 @@ export async function library_buildLibrary(options: LibraryBuildOptions): Promis
     const error = err instanceof Error ? err : new Error(String(err));
     relinka("error", `Build process for ${libName} failed: ${error.message}`);
     throw error;
-  } finally {
-    // --- Post-build Step: Revert source file modifications ---
-    if (replacedFiles.length > 0) {
-      relinka("verbose", `Reverting ${replacedFiles.length} pre-build changes for ${libName}...`);
-      try {
-        await postBuildReplacements(replacedFiles);
-        relinka("verbose", `Done reverting changes for ${libName}.`);
-      } catch (revertError) {
-        const error = revertError instanceof Error ? revertError : new Error(String(revertError));
-        relinka(
-          "error",
-          `CRITICAL: Failed to revert pre-build changes for ${libName}: ${error.message}. Source files may be left modified!`,
-        );
-      }
-    } else {
-      relinka("verbose", `No pre-build changes to revert for ${libName}.`);
-    }
   }
 }
 
@@ -1079,243 +1006,4 @@ async function determineNpmSourceDirectory(
   );
 
   return { libSpecificSrcDir, libDirName };
-}
-
-// ============================================================================
-// Source File Modification Utilities (Pre/Post Build)
-// ============================================================================
-
-/**
- * Scans source files for a specific marker comment and replaces matching lines
- * with the content of a designated file.
- *
- * @example `export * from "../../types"; // dler-replace-line-{hooked=false}`
- * @example `export type { SpecificTypeName1, SpecificTypeName2 } from "../../types"; // dler-replace-line-{hooked=true}`
- *
- * @param config - Configuration for the replacement process.
- * @returns An array of records describing the replacements made.
- */
-async function preBuildReplacements(config: SourceReplacementConfig): Promise<ReplacementRecord[]> {
-  const { librarySrcDir, replacementFilePath, replacementMarker } = config;
-  const replacedFiles: ReplacementRecord[] = [];
-
-  // Validate inputs
-  if (!(await fs.pathExists(replacementFilePath))) {
-    // Replacement content file not found,
-    // skipping pre-build replacements...
-    return [];
-  }
-  if (!(await fs.pathExists(librarySrcDir))) {
-    relinka(
-      "warn",
-      `Library source directory for replacement scan not found: ${librarySrcDir}. Skipping pre-build replacements.`,
-    );
-    return [];
-  }
-
-  relinka("verbose", `Reading replacement content from: ${replacementFilePath}`);
-  const replacementContent = await fs.readFile(replacementFilePath, "utf8");
-
-  const allFiles: string[] = [];
-  relinka("verbose", `Scanning for .ts/.tsx files in: ${librarySrcDir}`);
-  await collectTsFilesRecursively(librarySrcDir, allFiles);
-  relinka("verbose", `Found ${allFiles.length} potential files for replacement scan.`);
-
-  const escapedMarker = replacementMarker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  /**
-   * Regular expression to match lines ending with the replacement marker.
-   * The marker is expected to be at the end of the line, with optional trailing whitespace.
-   * The `gm` flags ensure that the regex matches across multiple lines.
-   * The `.*` prefix allows for any content before the marker.
-   * The `^` anchor ensures that the match is at the start of a line.
-   *
-   * @example `export * from "../../types"; // dler-replace-line-{hooked=false}`
-   * @example `export type { SpecificTypeName1, SpecificTypeName2 } from "../../types"; // dler-replace-line-{hooked=true}`
-   */
-  const regex = new RegExp(`^.*${escapedMarker}(?:-{([^}]+)})?\\s*$`, "gm");
-
-  for (const filePath of allFiles) {
-    try {
-      const originalCode = await fs.readFile(filePath, "utf8");
-      if (!originalCode.includes(replacementMarker)) {
-        continue;
-      }
-
-      const magic = new MagicString(originalCode);
-      let replacementOccurred = false;
-      let match: RegExpExecArray | null;
-
-      while (true) {
-        match = regex.exec(originalCode);
-        if (match === null) break;
-
-        // Check if the spell is hooked
-        const paramsStr = match[1];
-        if (paramsStr) {
-          const params = paramsStr.split(",").reduce(
-            (acc, param) => {
-              const [key, value] = param.trim().split("=");
-              if (key && value !== undefined) {
-                acc[key] = value === "true" ? true : value === "false" ? false : value;
-              }
-              return acc;
-            },
-            {} as Record<string, any>,
-          );
-
-          // Skip if hooked=true
-          if (params.hooked === true) {
-            relinka("verbose", `Skipping hooked spell in ${path.relative(PROJECT_ROOT, filePath)}`);
-            continue;
-          }
-        }
-
-        replacementOccurred = true;
-        const lineContent = match[0];
-        const matchStartIndex = match.index;
-        const matchEndIndex = matchStartIndex + lineContent.length;
-
-        let lineStartIndex = matchStartIndex;
-        while (lineStartIndex > 0 && originalCode[lineStartIndex - 1] !== "\n") {
-          lineStartIndex--;
-        }
-
-        let lineEndIndex = matchEndIndex;
-        while (
-          lineEndIndex > lineStartIndex &&
-          lineEndIndex - 1 < originalCode.length &&
-          originalCode[lineEndIndex - 1] !== undefined &&
-          originalCode[lineEndIndex - 1] !== null &&
-          typeof originalCode[lineEndIndex - 1] === "string" &&
-          /\s/.test(originalCode[lineEndIndex - 1] as string)
-        ) {
-          lineEndIndex--;
-        }
-        if (lineEndIndex < originalCode.length && originalCode[lineEndIndex] === "\r")
-          lineEndIndex++;
-        if (lineEndIndex < originalCode.length && originalCode[lineEndIndex] === "\n")
-          lineEndIndex++;
-
-        relinka(
-          "verbose",
-          `Replacing line in ${path.relative(PROJECT_ROOT, filePath)} (range ${lineStartIndex}-${lineEndIndex})`,
-        );
-
-        const contentToInsert = replacementContent.endsWith("\n")
-          ? replacementContent
-          : `${replacementContent}\n`;
-        magic.overwrite(lineStartIndex, lineEndIndex, contentToInsert);
-      }
-
-      if (replacementOccurred) {
-        const updatedCode = magic.toString();
-        if (updatedCode !== originalCode) {
-          replacedFiles.push({
-            filePath,
-            newContent: updatedCode,
-            originalContent: originalCode,
-          });
-          await fs.writeFile(filePath, updatedCode, "utf8");
-          relinka(
-            "info",
-            `Applied pre-build replacement in ${path.relative(PROJECT_ROOT, filePath)}`,
-          );
-        } else {
-          relinka(
-            "verbose",
-            `Replacement marker found but content identical after processing ${filePath}. Skipping write.`,
-          );
-        }
-      }
-    } catch (fileError) {
-      relinka(
-        "error",
-        `Failed processing file for replacement ${filePath}: ${fileError instanceof Error ? fileError.message : String(fileError)}`,
-      );
-    }
-  }
-
-  return replacedFiles;
-}
-
-/**
- * Reverts changes made by `preBuildReplacements` by writing the original content back.
- * @param replacedFiles - The records of files that were modified.
- */
-async function postBuildReplacements(replacedFiles: ReplacementRecord[]): Promise<void> {
-  if (replacedFiles.length === 0) {
-    return;
-  }
-  relinka("verbose", `Reverting modifications in ${replacedFiles.length} files...`);
-
-  const revertTasks = replacedFiles.map((record) => async () => {
-    try {
-      await fs.writeFile(record.filePath, record.originalContent, "utf8");
-      relinka("verbose", `Reverted changes in ${path.relative(PROJECT_ROOT, record.filePath)}`);
-    } catch (err) {
-      relinka(
-        "error",
-        `Failed to revert file ${record.filePath}: ${err instanceof Error ? err.message : String(err)}`,
-      );
-      throw err;
-    }
-  });
-
-  try {
-    await pAll(revertTasks, { concurrency: 1, stopOnError: false });
-    relinka("verbose", "Attempted revert for all modified files.");
-  } catch (aggregateError) {
-    relinka(
-      "error",
-      "One or more files failed to revert during post-build cleanup. Check preceding error logs.",
-      aggregateError instanceof Error ? aggregateError : undefined,
-    );
-    throw aggregateError;
-  }
-}
-
-/**
- * Recursively finds all TypeScript (.ts, .tsx) files in a directory, avoiding common exclusion directories.
- * @param dir - The absolute directory path to scan.
- * @param fileList - An array accumulator for the found file paths.
- */
-async function collectTsFilesRecursively(dir: string, fileList: string[]): Promise<void> {
-  try {
-    if (!(await fs.pathExists(dir))) {
-      relinka("warn", `Directory not found for scanning: ${dir}`);
-      return;
-    }
-    if (!(await fs.stat(dir)).isDirectory()) {
-      relinka("warn", `Path is not a directory, cannot scan: ${dir}`);
-      return;
-    }
-
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      const fullPath = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (
-          entry.name !== "node_modules" &&
-          !entry.name.startsWith("dist") &&
-          entry.name !== ".git" &&
-          entry.name !== ".svn" &&
-          entry.name !== ".hg" &&
-          entry.name !== ".turbo" &&
-          entry.name !== ".next" &&
-          entry.name !== ".nuxt"
-        ) {
-          await collectTsFilesRecursively(fullPath, fileList);
-        }
-      } else if (entry.isFile() && /\.(ts|tsx)$/i.test(entry.name)) {
-        fileList.push(fullPath);
-      }
-    }
-  } catch (error) {
-    relinka(
-      "error",
-      `Failed to read directory during file collection: ${dir}`,
-      error instanceof Error ? error : undefined,
-    );
-    throw error;
-  }
 }

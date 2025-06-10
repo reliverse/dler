@@ -6,19 +6,19 @@ import { readFile, mkdir } from "node:fs/promises";
 
 import { getMigrateCmd } from "~/app/cmds";
 
-type TsConfig = {
+interface TsConfig {
   compilerOptions: {
     moduleResolution?: string;
     module?: string;
     target?: string;
     noEmit?: boolean;
   };
-};
+}
 
-type PackageJson = {
+interface PackageJson {
   type?: "module" | "commonjs";
   dependencies?: Record<string, string>;
-};
+}
 
 describe("Module Resolution Migration", () => {
   const originalCwd = process.cwd();
