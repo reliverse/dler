@@ -280,10 +280,36 @@ export async function copyInsteadOfBuild(
 ): Promise<void> {
   if (!patterns.length) return;
 
+  // Check if any of the patterns exist in the source directory
+  const normalizedRootDir = path.normalize(rootDir);
+  const sourcePatterns = patterns.map((pattern) =>
+    pattern
+      .replace(/^(dist-npm|dist-jsr)\/\*\*\/?/, "")
+      .replace(/^(dist-npm|dist-jsr)\//, "")
+      .replace(/^bin\//, ""),
+  );
+
+  const allMatches = await Promise.all(
+    sourcePatterns.map((pattern) =>
+      glob(pattern, {
+        cwd: normalizedRootDir,
+        dot: true,
+        absolute: true,
+        onlyFiles: false,
+        followSymbolicLinks: false,
+        ignore: ["**/node_modules/**", "**/.git/**", "node_modules/**", ".git/**"],
+      }),
+    ),
+  );
+
+  if (!allMatches.some((matches) => matches.length > 0)) {
+    relinka("verbose", "No matching files found for any of the provided patterns");
+    return;
+  }
+
   relinka("info", "Copying files/folders that should not be built...");
 
   // Normalize paths for Windows compatibility
-  const normalizedRootDir = path.normalize(rootDir);
   const normalizedOutDir = path.normalize(outDir);
 
   // First, delete any existing files/folders that match the patterns

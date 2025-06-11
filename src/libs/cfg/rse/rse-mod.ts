@@ -12,7 +12,7 @@ export * from "./rse-impl/rse-default";
 export * from "./rse-impl/rse-define";
 export * from "./rse-impl/rse-detect";
 export * from "./rse-impl/rse-gen-cfg";
-export * from "./rse-impl/rse-inject";
+export * from "./rse-impl/rse-comments";
 export * from "./rse-impl/rse-migrate";
 export * from "./rse-impl/rse-path";
 export * from "./rse-impl/rse-prompts";

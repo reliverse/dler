@@ -30,6 +30,6 @@ export const getRemptsCmd = async (): Promise<Command> => loadCommand("rempts");
 
 export const getRenameCmd = async (): Promise<Command> => loadCommand("rename");
 
-export const getSpellCmd = async (): Promise<Command> => loadCommand("spell");
+export const getMagicCmd = async (): Promise<Command> => loadCommand("magic");
 
 export const getSplitCmd = async (): Promise<Command> => loadCommand("split");

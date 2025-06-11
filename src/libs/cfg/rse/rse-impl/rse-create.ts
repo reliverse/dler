@@ -14,12 +14,12 @@ import { addDevDependency } from "nypm";
 import type { DeploymentService } from "./rse-types";
 import type { RseConfig } from "./rse-types";
 
+import { injectSectionComments } from "./rse-comments";
 import { cliDomainDocs } from "./rse-consts";
 import { UNKNOWN_VALUE, rseName, DEFAULT_DOMAIN, RSE_SCHEMA_DEV } from "./rse-consts";
 import { generateDefaultRulesForProject, getDefaultRseConfig } from "./rse-def-utils";
 import { DEFAULT_CONFIG_RSE } from "./rse-default";
 import { getPackageJson, detectFeatures } from "./rse-detect";
-import { injectSectionComments } from "./rse-inject";
 import { getRseConfigPath } from "./rse-path";
 import { readRseConfig } from "./rse-read";
 import { rseSchema } from "./rse-schema";

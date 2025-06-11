@@ -51,7 +51,7 @@ export {
   detectFeatures,
 } from "./rse/rse-impl/rse-detect.js";
 export { generateConfigFiles, generateProjectConfigs } from "./rse/rse-impl/rse-gen-cfg.js";
-export { injectSectionComments } from "./rse/rse-impl/rse-inject.js";
+export { injectSectionComments } from "./rse/rse-impl/rse-comments.js";
 export { migrateRseConfig } from "./rse/rse-impl/rse-migrate.js";
 export { getRseConfigPath } from "./rse/rse-impl/rse-path.js";
 export { askRseConfigType } from "./rse/rse-impl/rse-prompts.js";

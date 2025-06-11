@@ -6,6 +6,7 @@
  *   await applyMagicSpells(["dist-jsr"]);
  *   await applyMagicSpells(["dist-libs/sdk"]);
  *   await applyMagicSpells(["dist-npm", "dist-jsr", "dist-libs"]);
+ *   await applyMagicSpells(["custom-output/my-lib"]); // For custom targets, magic directives are processed directly in the target files
  */
 
 import path, { join } from "@reliverse/pathkit";
@@ -13,12 +14,14 @@ import fs, { readdir } from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import pMap from "p-map";
 
-import type { DistDirs } from "~/libs/sdk/sdk-types";
-
 import { isBinaryExt } from "~/libs/sdk/sdk-impl/utils/binary";
 import { formatError } from "~/libs/sdk/sdk-impl/utils/utils-error-cwd";
 
-import { evaluateMagicDirective, type SpellEvaluationContext, type SpellOutcome } from "./spells";
+import {
+  evaluateMagicDirective,
+  type SpellEvaluationContext,
+  type SpellOutcome,
+} from "./ms-spells";
 
 const DEBUG_MODE = true;
 const PROCESS_DTS_FILES = true;
@@ -34,16 +37,19 @@ export interface ApplyMagicSpellsOptions {
   stopOnError?: boolean;
   /** Whether to copy files from src before processing */
   copyFileWithDirectivesFromSrcBeforeProcessing?: boolean;
+  /** Custom output paths mapping for non-standard directories */
+  customOutputPaths?: Record<string, string>;
 }
 
-const DEFAULT_OPTIONS: Required<Omit<ApplyMagicSpellsOptions, "dir">> = {
+const DEFAULT_OPTIONS: Required<Omit<ApplyMagicSpellsOptions, "dir" | "customOutputPaths">> = {
   concurrency: 4,
   batchSize: 100,
   stopOnError: false,
   copyFileWithDirectivesFromSrcBeforeProcessing: true,
 };
 
-const DIST_PATHS: Record<DistDirs, string> = {
+// Default output paths for backward compatibility
+const DEFAULT_OUTPUT_PATHS: Record<string, string> = {
   "dist-jsr": "dist-jsr/bin",
   "dist-npm": "dist-npm/bin",
   "dist-libs": "dist-libs",
@@ -58,18 +64,40 @@ export interface ApplyMagicSpellsResult {
  * Validates targets for conflicts and duplicates
  * @throws Error if targets contain conflicts or duplicates
  */
-function validateTargets(targets: string[]): void {
-  const distLibs = new Set<string>();
+function validateTargets(targets: string[], customOutputPaths?: Record<string, string>): void {
+  const outputDirs = new Set<string>();
   const specificLibs = new Set<string>();
+  const customTargets = new Set<string>();
+
+  // Merge default and custom output paths
+  const allOutputPaths = { ...DEFAULT_OUTPUT_PATHS, ...customOutputPaths };
 
   for (const target of targets) {
-    const [dist, lib] = target.split("/");
+    const [outputDir, lib] = target.split("/");
 
-    if (!dist || !Object.keys(DIST_PATHS).includes(dist)) {
-      throw new Error(`Invalid distribution target: ${dist}`);
+    if (!outputDir) {
+      throw new Error(`Invalid output target: ${target}`);
     }
 
-    if (dist === "dist-libs") {
+    // Check if the output directory exists in the filesystem
+    const outputPath = allOutputPaths[outputDir] || outputDir;
+    const fullPath = path.join(process.cwd(), outputPath);
+    if (!fs.existsSync(fullPath)) {
+      throw new Error(`Output directory does not exist: ${outputPath}`);
+    }
+
+    // Check if this is a custom target (not dist-npm, dist-jsr, or dist-libs)
+    const isCustomTarget = !["dist-npm", "dist-jsr", "dist-libs"].includes(outputDir);
+
+    if (isCustomTarget) {
+      if (customTargets.has(outputDir)) {
+        throw new Error(`Duplicate custom target: ${outputDir}`);
+      }
+      customTargets.add(outputDir);
+      continue;
+    }
+
+    if (outputDir === "dist-libs") {
       if (lib) {
         // Check if we already have a specific lib
         if (specificLibs.has(lib)) {
@@ -78,25 +106,26 @@ function validateTargets(targets: string[]): void {
         specificLibs.add(lib);
       } else {
         // Check if we already have dist-libs or any specific libs
-        if (distLibs.has("dist-libs") || specificLibs.size > 0) {
+        if (outputDirs.has("dist-libs") || specificLibs.size > 0) {
           throw new Error("Cannot mix 'dist-libs' with specific library targets");
         }
-        distLibs.add("dist-libs");
+        outputDirs.add("dist-libs");
       }
     } else {
-      // Check if we already have this dist target
-      if (distLibs.has(dist)) {
-        throw new Error(`Duplicate distribution target: ${dist}`);
+      // Check if we already have this output target
+      if (outputDirs.has(outputDir)) {
+        throw new Error(`Duplicate output target: ${outputDir}`);
       }
-      distLibs.add(dist);
+      outputDirs.add(outputDir);
     }
   }
 }
 
 /**
- * Processes files in specified distribution directories by applying magic directives
- * First scans src directory for files with magic directives, then processes corresponding dist files
- * @param targets Array of distribution targets in format "dist-npm", "dist-jsr", "dist-libs" or "dist-libs/lib-name"
+ * Processes files in specified output directories by applying magic directives
+ * For dist targets, first scans src directory for files with magic directives, then processes corresponding output files
+ * For custom targets, processes magic directives directly in the target files
+ * @param targets Array of output targets in format "dist-npm", "dist-jsr", "dist-libs" or "dist-libs/lib-name" or any custom path
  * @param options Configuration options for processing
  * @returns Object containing arrays of processed files and processed .d.ts files
  */
@@ -109,43 +138,53 @@ export async function applyMagicSpells(
   };
 
   try {
-    validateTargets(targets);
+    validateTargets(targets, options.customOutputPaths);
 
-    // Step 1: Scan src directory for files with magic directives
-    const srcRoot = path.resolve(process.cwd(), "src");
-    const sourceFilesWithDirectives = await scanSourceForMagicDirectives(srcRoot, options);
-
-    if (sourceFilesWithDirectives.length === 0) {
-      if (DEBUG_MODE) relinka("log", "[spells] No source files with magic directives found");
-      return result;
-    }
-
-    if (DEBUG_MODE) {
-      relinka(
-        "log",
-        `[spells] Found ${sourceFilesWithDirectives.length} source files with magic directives`,
-      );
-    }
-
-    // Step 2: Process each target distribution
+    // Step 2: Process each target output directory
     await pMap(
       targets,
       async (target) => {
-        const [dist, lib] = target.split("/");
+        const [outputDir, lib] = target.split("/");
 
-        if (dist === "dist-libs") {
+        // Handle custom targets differently
+        if (outputDir && !["dist-npm", "dist-jsr", "dist-libs"].includes(outputDir)) {
+          const targetResult = await processCustomTarget(outputDir, options);
+          result.processedFiles.push(...targetResult.processedFiles);
+          return;
+        }
+
+        // For dist targets, first scan src directory for files with magic directives
+        const srcRoot = path.resolve(process.cwd(), "src");
+        const sourceFilesWithDirectives = await scanSourceForMagicDirectives(srcRoot, options);
+
+        if (sourceFilesWithDirectives.length === 0) {
+          if (DEBUG_MODE) relinka("log", "[spells] No source files with magic directives found");
+          return;
+        }
+
+        if (DEBUG_MODE) {
+          relinka(
+            "log",
+            `[spells] Found ${sourceFilesWithDirectives.length} source files with magic directives`,
+          );
+        }
+
+        if (outputDir === "dist-libs") {
           if (!lib) {
-            const libDirs = await readdir(DIST_PATHS["dist-libs"]);
+            const distLibsPath = DEFAULT_OUTPUT_PATHS["dist-libs"] ?? "dist-libs";
+            const libDirs = await readdir(distLibsPath, { withFileTypes: true });
             await pMap(
               libDirs,
               async (libDir) => {
-                const targetResult = await processDistributionTarget(
-                  sourceFilesWithDirectives,
-                  "dist-libs",
-                  libDir,
-                  options,
-                );
-                result.processedFiles.push(...targetResult.processedFiles);
+                if (libDir.isDirectory()) {
+                  const targetResult = await processOutputTarget(
+                    sourceFilesWithDirectives,
+                    "dist-libs",
+                    libDir.name,
+                    options,
+                  );
+                  result.processedFiles.push(...targetResult.processedFiles);
+                }
               },
               {
                 concurrency: options.concurrency ?? 4,
@@ -153,7 +192,7 @@ export async function applyMagicSpells(
               },
             );
           } else {
-            const targetResult = await processDistributionTarget(
+            const targetResult = await processOutputTarget(
               sourceFilesWithDirectives,
               "dist-libs",
               lib,
@@ -161,10 +200,10 @@ export async function applyMagicSpells(
             );
             result.processedFiles.push(...targetResult.processedFiles);
           }
-        } else {
-          const targetResult = await processDistributionTarget(
+        } else if (outputDir) {
+          const targetResult = await processOutputTarget(
             sourceFilesWithDirectives,
-            dist as DistDirs,
+            outputDir,
             undefined,
             options,
           );
@@ -179,8 +218,95 @@ export async function applyMagicSpells(
 
     return result;
   } catch (error) {
-    throw new Error(`Failed to process distribution files: ${formatError(error)}`);
+    throw new Error(`Failed to process output files: ${formatError(error)}`);
   }
+}
+
+/**
+ * Processes a custom target by finding and processing files with magic directives directly in the target directory
+ * @param outputDir Custom output directory
+ * @param options Processing options
+ */
+async function processCustomTarget(
+  outputDir: string,
+  options: Partial<ApplyMagicSpellsOptions> = {},
+): Promise<ApplyMagicSpellsResult> {
+  const { concurrency = DEFAULT_OPTIONS.concurrency, batchSize = DEFAULT_OPTIONS.batchSize } =
+    options;
+
+  const result: ApplyMagicSpellsResult = {
+    processedFiles: [],
+  };
+
+  if (DEBUG_MODE) {
+    relinka("log", `[spells] ⇒ processing custom target: ${outputDir}`);
+  }
+
+  const outputFilesToProcess: string[] = [];
+
+  // Get the output path from custom paths or use the outputDir directly
+  const outputPath = options.customOutputPaths?.[outputDir] || outputDir;
+  const fullOutputPath = path.join(process.cwd(), outputPath);
+
+  // Walk through the target directory to find files with magic directives
+  for await (const filePath of walkDirectoryTree(fullOutputPath)) {
+    if (await isBinaryExt(filePath)) {
+      continue;
+    }
+
+    try {
+      const content = await fs.readFile(filePath, "utf8");
+      if (containsMagicDirectives(content)) {
+        outputFilesToProcess.push(filePath);
+        if (DEBUG_MODE) {
+          relinka(
+            "log",
+            `[spells] ⇒ found directives in ${path.relative(process.cwd(), filePath)}`,
+          );
+        }
+      }
+    } catch (error) {
+      if (options.stopOnError) {
+        throw new Error(`Failed to read file ${filePath}: ${formatError(error)}`);
+      }
+      relinka("error", `Failed to read file ${filePath}: ${formatError(error)}`);
+    }
+  }
+
+  if (outputFilesToProcess.length === 0) {
+    if (DEBUG_MODE) {
+      relinka(
+        "log",
+        `[spells] No files with magic directives found in custom target: ${outputDir}`,
+      );
+    }
+    return result;
+  }
+
+  // Process output files in batches
+  for (let i = 0; i < outputFilesToProcess.length; i += batchSize) {
+    const batch = outputFilesToProcess.slice(i, i + batchSize);
+    await pMap(
+      batch,
+      async (outputFilePath) => {
+        try {
+          const wasProcessed = await processSingleOutputFile(outputFilePath, options);
+          if (wasProcessed) {
+            result.processedFiles.push(outputFilePath);
+          }
+        } catch (error) {
+          const errorMessage = `Error processing ${outputFilePath}: ${formatError(error)}`;
+          if (options.stopOnError) {
+            throw new Error(errorMessage);
+          }
+          relinka("error", errorMessage);
+        }
+      },
+      { concurrency },
+    );
+  }
+
+  return result;
 }
 
 /**
@@ -240,15 +366,15 @@ async function scanSourceForMagicDirectives(
 }
 
 /**
- * Processes a specific distribution target by finding corresponding dist files for source files with directives
+ * Processes a specific output target by finding corresponding output files for source files with directives
  * @param sourceFilesWithDirectives Array of source file paths containing magic directives
- * @param dist Distribution type (dist-jsr, dist-npm, dist-libs)
+ * @param outputDir Output directory type
  * @param libName Optional library name for dist-libs
  * @param options Processing options
  */
-async function processDistributionTarget(
+async function processOutputTarget(
   sourceFilesWithDirectives: string[],
-  dist: DistDirs,
+  outputDir: string,
   libName: string | undefined,
   options: Partial<ApplyMagicSpellsOptions> = {},
 ): Promise<ApplyMagicSpellsResult> {
@@ -260,39 +386,45 @@ async function processDistributionTarget(
   };
 
   if (DEBUG_MODE) {
-    const targetName = dist === "dist-libs" && libName ? `${dist}/${libName}` : dist;
+    const targetName = outputDir === "dist-libs" && libName ? `${outputDir}/${libName}` : outputDir;
     relinka("log", `[spells] ⇒ processing target: ${targetName}`);
   }
 
-  const distFilesToProcess: string[] = [];
+  const outputFilesToProcess: string[] = [];
 
-  // Find corresponding dist files for each source file with directives
+  // Find corresponding output files for each source file with directives
   for (const sourceFile of sourceFilesWithDirectives) {
-    const distFiles = await findDistributionFiles(sourceFile, dist, libName);
-    distFilesToProcess.push(...distFiles);
+    const outputFiles = await findOutputFiles(
+      sourceFile,
+      outputDir,
+      libName,
+      options.customOutputPaths,
+    );
+    outputFilesToProcess.push(...outputFiles);
   }
 
-  if (distFilesToProcess.length === 0) {
+  if (outputFilesToProcess.length === 0) {
     if (DEBUG_MODE) {
-      const targetName = dist === "dist-libs" && libName ? `${dist}/${libName}` : dist;
-      relinka("log", `[spells] No corresponding dist files found for target: ${targetName}`);
+      const targetName =
+        outputDir === "dist-libs" && libName ? `${outputDir}/${libName}` : outputDir;
+      relinka("log", `[spells] No corresponding output files found for target: ${targetName}`);
     }
     return result;
   }
 
-  // Process dist files in batches
-  for (let i = 0; i < distFilesToProcess.length; i += batchSize) {
-    const batch = distFilesToProcess.slice(i, i + batchSize);
+  // Process output files in batches
+  for (let i = 0; i < outputFilesToProcess.length; i += batchSize) {
+    const batch = outputFilesToProcess.slice(i, i + batchSize);
     await pMap(
       batch,
-      async (distFilePath) => {
+      async (outputFilePath) => {
         try {
-          const wasProcessed = await processSingleDistFile(distFilePath, options);
+          const wasProcessed = await processSingleOutputFile(outputFilePath, options);
           if (wasProcessed) {
-            result.processedFiles.push(distFilePath);
+            result.processedFiles.push(outputFilePath);
           }
         } catch (error) {
-          const errorMessage = `Error processing ${distFilePath}: ${formatError(error)}`;
+          const errorMessage = `Error processing ${outputFilePath}: ${formatError(error)}`;
           if (options.stopOnError) {
             throw new Error(errorMessage);
           }
@@ -376,7 +508,7 @@ async function findSourceFile(distFilePath: string): Promise<string | null> {
   return null;
 }
 
-async function processSingleDistFile(
+async function processSingleOutputFile(
   filePath: string,
   options: Partial<ApplyMagicSpellsOptions> = {},
 ): Promise<boolean> {
@@ -396,7 +528,7 @@ async function processSingleDistFile(
     const sourceFile = await findSourceFile(filePath);
     if (sourceFile) {
       try {
-        // Copy the source file to dist
+        // Copy the source file to output
         await fs.copyFile(sourceFile, filePath);
         copiedFromSource = true;
         if (DEBUG_MODE)
@@ -449,16 +581,18 @@ async function processSingleDistFile(
 }
 
 /**
- * Finds corresponding distribution files for a source file
+ * Finds corresponding output files for a source file
  * @param sourceFilePath Path to the source file
- * @param dist Distribution type
+ * @param outputDir Output directory type
  * @param libName Optional library name for dist-libs
- * @returns Array of corresponding distribution file paths
+ * @param customOutputPaths Optional custom output paths mapping
+ * @returns Array of corresponding output file paths
  */
-async function findDistributionFiles(
+async function findOutputFiles(
   sourceFilePath: string,
-  dist: DistDirs,
+  outputDir: string,
   libName?: string,
+  customOutputPaths?: Record<string, string>,
 ): Promise<string[]> {
   const projectRel = path.relative(process.cwd(), sourceFilePath).replaceAll(path.sep, "/");
 
@@ -470,13 +604,16 @@ async function findDistributionFiles(
   const dirPath = path.dirname(srcRelativePath);
   const isDts = sourceFilePath.endsWith(".d.ts");
 
-  const distFiles: string[] = [];
+  const outputFiles: string[] = [];
 
-  if (dist === "dist-libs" && libName) {
+  // Merge default and custom output paths
+  const allOutputPaths = { ...DEFAULT_OUTPUT_PATHS, ...customOutputPaths };
+
+  if (outputDir === "dist-libs" && libName) {
     // For dist-libs with specific library - dynamically read available registries
     const targets = await getAvailableRegistries(libName);
     for (const target of targets) {
-      const distPath = join("dist-libs", libName, target, "bin", dirPath === "." ? "" : dirPath);
+      const outputPath = join("dist-libs", libName, target, "bin", dirPath === "." ? "" : dirPath);
 
       // Try different extensions based on file type
       let extensions: string[];
@@ -488,17 +625,17 @@ async function findDistributionFiles(
         extensions = [ext];
       }
 
-      for (const distExt of extensions) {
-        const distFile = path.join(process.cwd(), distPath, `${baseName}${distExt}`);
-        if (await fs.pathExists(distFile)) {
-          distFiles.push(distFile);
+      for (const outputExt of extensions) {
+        const outputFile = path.join(process.cwd(), outputPath, `${baseName}${outputExt}`);
+        if (await fs.pathExists(outputFile)) {
+          outputFiles.push(outputFile);
         }
       }
     }
   } else {
-    // For dist-jsr or dist-npm
-    const basePath = DIST_PATHS[dist];
-    const distPath = path.join(basePath, dirPath === "." ? "" : dirPath);
+    // For any output directory
+    const basePath = allOutputPaths[outputDir] || outputDir;
+    const outputPath = path.join(basePath, dirPath === "." ? "" : dirPath);
 
     // Try different extensions based on file type
     let extensions: string[];
@@ -510,15 +647,15 @@ async function findDistributionFiles(
       extensions = [ext];
     }
 
-    for (const distExt of extensions) {
-      const distFile = path.join(process.cwd(), distPath, `${baseName}${distExt}`);
-      if (await fs.pathExists(distFile)) {
-        distFiles.push(distFile);
+    for (const outputExt of extensions) {
+      const outputFile = path.join(process.cwd(), outputPath, `${baseName}${outputExt}`);
+      if (await fs.pathExists(outputFile)) {
+        outputFiles.push(outputFile);
       }
     }
   }
 
-  return distFiles;
+  return outputFiles;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -600,6 +737,19 @@ async function getSpellImplementationPaths(): Promise<string[]> {
  * @returns true if the file should be skipped
  */
 async function isSpellImplementationFile(projectRelPath: string): Promise<boolean> {
+  // Check for specific file names
+  const fileName = path.basename(projectRelPath);
+  if (
+    fileName === "ms-apply.ts" ||
+    fileName === "ms-apply.js" ||
+    fileName === "ms-apply.d.ts" ||
+    fileName === "ms-spells.ts" ||
+    fileName === "ms-spells.js" ||
+    fileName === "ms-spells.d.ts"
+  ) {
+    return true;
+  }
+
   const spellPaths = await getSpellImplementationPaths();
   return spellPaths.some((spellPath) => projectRelPath.includes(spellPath));
 }
@@ -716,5 +866,110 @@ async function* walkDirectoryTree(dir: string): AsyncGenerator<string> {
     const errorMessage = `Error walking directory ${dir}: ${formatError(error)}`;
     relinka("error", errorMessage);
     throw new Error(errorMessage);
+  }
+}
+
+/**
+ * Information about a file containing magic spells
+ */
+export interface FileWithSpells {
+  /** Absolute path to the file */
+  path: string;
+  /** Line numbers where spells were found (1-based) */
+  spellLines: number[];
+}
+
+/**
+ * Scans directories for files containing magic spells
+ * @param dirs Array of directories to scan (absolute or cwd-relative paths)
+ * @param options Configuration options for scanning
+ * @returns Array of files containing magic spells with their line numbers
+ */
+export async function getFilesWithMagicSpells(
+  dirs: string[],
+  options: {
+    /** Whether to stop on first error */
+    stopOnError?: boolean;
+    /** Whether to exclude spell implementation files */
+    excludeSpellImplementation?: boolean;
+  } = {},
+): Promise<FileWithSpells[]> {
+  const { stopOnError = false, excludeSpellImplementation = true } = options;
+  const filesWithSpells: FileWithSpells[] = [];
+
+  try {
+    await pMap(
+      dirs,
+      async (dir) => {
+        const fullPath = path.join(process.cwd(), dir);
+        if (!(await fs.pathExists(fullPath))) {
+          const error = `Directory does not exist: ${dir}`;
+          if (stopOnError) {
+            throw new Error(error);
+          }
+          relinka("warn", error);
+          return;
+        }
+
+        for await (const filePath of walkDirectoryTree(fullPath)) {
+          if (await isBinaryExt(filePath)) {
+            continue;
+          }
+
+          const projectRel = path.relative(process.cwd(), filePath).replaceAll(path.sep, "/");
+
+          // Skip spell implementation files if requested
+          if (excludeSpellImplementation && (await isSpellImplementationFile(projectRel))) {
+            continue;
+          }
+
+          try {
+            const content = await fs.readFile(filePath, "utf8");
+            const lines = content.split(/\r?\n/);
+            const spellLines: number[] = [];
+
+            // Find lines with spells
+            for (let i = 0; i < lines.length; i++) {
+              const line = lines[i];
+              if (
+                line &&
+                /\/\/\s*(?:@ts-expect-error\s+.*?)?<\s*(dler-[^>\s]+)(.*?)>/i.test(line)
+              ) {
+                spellLines.push(i + 1); // Convert to 1-based line numbers
+              }
+            }
+
+            if (spellLines.length > 0) {
+              filesWithSpells.push({
+                path: filePath,
+                spellLines,
+              });
+              // if (DEBUG_MODE) {
+              //   relinka(
+              //     "log",
+              //     `[spells] ⇒ found ${spellLines.length} directive(s) in ${projectRel} at lines: ${spellLines.join(
+              //       ", ",
+              //     )}`,
+              //   );
+              // }
+            }
+          } catch (error) {
+            const errorMessage = `Failed to read file ${filePath}: ${formatError(error)}`;
+            if (stopOnError) {
+              throw new Error(errorMessage);
+            }
+            relinka("error", errorMessage);
+          }
+        }
+      },
+      {
+        concurrency: 4,
+        stopOnError,
+      },
+    );
+
+    return filesWithSpells;
+  } catch (error) {
+    throw new Error(`Failed to scan directories: ${formatError(error)}`);
   }
 }

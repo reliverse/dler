@@ -137,14 +137,14 @@ export { shouldIgnoreFile, getAllFiles, getLineNumber } from "./sdk-impl/rules/r
 export type {
   ApplyMagicSpellsOptions,
   ApplyMagicSpellsResult,
-} from "./sdk-impl/spell/applyMagicSpells.js";
-export { applyMagicSpells, getAllAvailableRegistries } from "./sdk-impl/spell/applyMagicSpells.js";
+} from "./sdk-impl/magic/ms-apply.js";
+export { applyMagicSpells, getAllAvailableRegistries } from "./sdk-impl/magic/ms-apply.js";
 export type {
   SpellEvaluationContext,
   SpellOutcome,
   SpellDirective,
-} from "./sdk-impl/spell/spells.js";
-export { evaluateMagicDirective } from "./sdk-impl/spell/spells.js";
+} from "./sdk-impl/magic/ms-spells.js";
+export { evaluateMagicDirective } from "./sdk-impl/magic/ms-spells.js";
 export { BINARY_EXTS, BINARY_SET } from "./sdk-impl/utils/b-exts.js";
 export { isBinaryExt } from "./sdk-impl/utils/binary.js";
 export type { CommentStyle, FileExtension, CommentMapping } from "./sdk-impl/utils/comments.js";

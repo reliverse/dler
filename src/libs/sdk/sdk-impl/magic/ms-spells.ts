@@ -6,6 +6,7 @@
  *   // <dler-replace-line-to `NEW CONTENT` [if 'cond'] [else 'alt']>
  *   // <dler-remove-line>
  *   // <dler-remove-file>
+ *   // <dler-remove-comment>
  *
  * A directive is recognised whether written as:
  *   // <dler-…>                or
@@ -28,7 +29,22 @@ export interface SpellOutcome {
   removeFile: boolean;
 }
 
-export type SpellDirective = "dler-replace-line-to" | "dler-remove-line" | "dler-remove-file";
+export type SpellDirective =
+  | "dler-replace-line-to"
+  | "dler-remove-line"
+  | "dler-remove-file"
+  | "dler-remove-comment";
+
+export interface SpellInfo {
+  /** The name of the spell directive */
+  name: SpellDirective;
+  /** A short description of what the spell does */
+  description: string;
+  /** Example usage of the spell */
+  example: string;
+  /** Additional notes about the spell's behavior */
+  notes?: string;
+}
 
 // Pre-compiled regex patterns for better performance
 const SPELL_REGEX = /\/\/\s*(?:@ts-expect-error\s+.*?)?<\s*(dler-[^>\s]+)(.*?)>/i;
@@ -36,6 +52,42 @@ const REPLACEMENT_REGEX = /`([^`]+)`/;
 const IF_CONDITION_REGEX = /\bif\s+['"`]([^'"`]+)['"`]/i;
 const ELSE_CONTENT_REGEX = /\belse\s+['"`]([^'"`]+)['"`]/i;
 const STARTS_WITH_REGEX = /current file path starts with\s+(.+)$/i;
+
+/**
+ * Returns information about all available magic directives
+ */
+export function getAvailableSpells(): SpellInfo[] {
+  return [
+    {
+      name: "dler-replace-line-to",
+      description: "Replaces the current line with new content, optionally based on a condition",
+      example:
+        "// <dler-replace-line-to `export const version = \"1.0.0\";` if 'current file path starts with dist-npm'>",
+      notes:
+        "If condition is not met and else content is provided, uses else content. Otherwise keeps original line. Also supports @ts-expect-error prefix.",
+    },
+    {
+      name: "dler-remove-line",
+      description: "Removes the current line from the output",
+      example: "// <dler-remove-line>",
+      notes: "Also supports @ts-expect-error prefix.",
+    },
+    {
+      name: "dler-remove-file",
+      description: "Removes the entire file from the output",
+      example: "// <dler-remove-file>",
+      notes:
+        "This directive should be placed at the top of the file for clarity. Also supports @ts-expect-error prefix.",
+    },
+    {
+      name: "dler-remove-comment",
+      description: "Removes the current line if it's a comment",
+      example: "// <dler-remove-comment>",
+      notes:
+        "Only removes the line if it starts with //. Useful for cleaning up comments in output files. Also supports @ts-expect-error prefix.",
+    },
+  ];
+}
 
 /**
  * Evaluates a single line for magic directives and returns the effect.
@@ -64,6 +116,15 @@ export function evaluateMagicDirective(line: string, ctx: SpellEvaluationContext
     /* -------------------------------------------------------------- */
     case "dler-remove-line": {
       return { removeLine: true, removeFile: false };
+    }
+
+    /* -------------------------------------------------------------- */
+    /* dler-remove-comment                                            */
+    /* -------------------------------------------------------------- */
+    case "dler-remove-comment": {
+      // Only remove if the line is a comment
+      const isComment = line.trim().startsWith("//");
+      return { removeLine: isComment, removeFile: false };
     }
 
     /* -------------------------------------------------------------- */
@@ -109,7 +170,12 @@ interface ReplaceParts {
 
 /** Type guard to validate magic directives */
 function isValidMagicDirective(directive: string): directive is SpellDirective {
-  return ["dler-replace-line-to", "dler-remove-line", "dler-remove-file"].includes(directive);
+  return [
+    "dler-replace-line-to",
+    "dler-remove-line",
+    "dler-remove-file",
+    "dler-remove-comment",
+  ].includes(directive);
 }
 
 /** Extracts components from a replacement directive like `replacement`, `if …`, `else …` */

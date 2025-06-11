@@ -8,8 +8,8 @@ import type { DlerConfig } from "~/libs/sdk/sdk-impl/config/types";
 
 import { getConfigDler } from "~/libs/sdk/sdk-impl/config/load";
 import { processLibraryFlow } from "~/libs/sdk/sdk-impl/library-flow";
+import { applyMagicSpells } from "~/libs/sdk/sdk-impl/magic/ms-apply";
 import { processRegularFlow } from "~/libs/sdk/sdk-impl/regular-flow";
-import { applyMagicSpells } from "~/libs/sdk/sdk-impl/spell/applyMagicSpells";
 import { finalizeBuildPub } from "~/libs/sdk/sdk-impl/utils/finalize";
 import { resolveAllCrossLibs } from "~/libs/sdk/sdk-impl/utils/resolve-cross-libs";
 import { removeDistFolders } from "~/libs/sdk/sdk-impl/utils/utils-clean";
@@ -80,8 +80,10 @@ export async function dlerPub(isDev: boolean, config?: DlerConfig) {
     // Cross replacements
     await resolveAllCrossLibs();
 
-    // Apply magic spells
-    await applyMagicSpells(["dist-jsr", "dist-npm", "dist-libs"]);
+    // Apply magic spells (this feature is for end-users only, so we call it when isDev=true)
+    if (isDev) {
+      await applyMagicSpells(["dist-jsr", "dist-npm", "dist-libs"]);
+    }
 
     // Convert alias to relative paths
     relinka("log", "[processDistDirectory] dist-npm");
