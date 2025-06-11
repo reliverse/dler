@@ -187,6 +187,7 @@ export async function injectMultiple(
 
       // Apply all injections to the same MagicString instance
       let allSuccessful = true;
+      let currentContent = originalContent;
       for (const { config, originalIndex } of sortedConfigs) {
         const { line, column, content, createNewLine, commentsMode } = config;
 
@@ -200,12 +201,16 @@ export async function injectMultiple(
 
         const success = injectWithMagicString(
           magicString,
-          originalContent,
+          currentContent,
           line,
           column,
           preparedContent,
           createNewLine ?? false,
         );
+
+        if (success) {
+          currentContent = magicString.toString();
+        }
 
         results[originalIndex] = success
           ? { filePath, success }
