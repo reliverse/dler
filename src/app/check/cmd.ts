@@ -17,6 +17,7 @@ import { checkFileExtensions } from "~/libs/sdk/sdk-impl/rules/reliverse/file-ex
 import { analyzeDependencies } from "~/libs/sdk/sdk-impl/rules/reliverse/missing-deps/analyzer";
 import { checkMissingDependencies } from "~/libs/sdk/sdk-impl/rules/reliverse/missing-deps/deps-mod";
 import { formatOutput } from "~/libs/sdk/sdk-impl/rules/reliverse/missing-deps/formatter";
+import { checkNoDynamicImports } from "~/libs/sdk/sdk-impl/rules/reliverse/no-dynamic-imports/no-dynamic-imports";
 import { checkNoIndexFiles } from "~/libs/sdk/sdk-impl/rules/reliverse/no-index-files/no-index-files";
 import { checkPackageJsonHealth } from "~/libs/sdk/sdk-impl/rules/reliverse/package-json-health/package-json-health";
 import { checkPathExtensions } from "~/libs/sdk/sdk-impl/rules/reliverse/path-extensions/path-extensions";
@@ -198,6 +199,10 @@ export default defineCommand({
             label: "no index files",
             value: "no-index-files",
           },
+          {
+            label: "no dynamic imports",
+            value: "no-dynamic-imports",
+          },
         ],
       });
     }
@@ -321,6 +326,13 @@ export default defineCommand({
           });
           process.stdout.write("\r");
           displayCheckResults("no index files", directory, result);
+        }
+
+        if (checks.includes("no-dynamic-imports")) {
+          process.stdout.write("  checking for dynamic imports...\n");
+          const result = await checkNoDynamicImports(directory);
+          process.stdout.write("\r");
+          displayCheckResults("no dynamic imports", directory, result);
         }
       } catch (error) {
         relinka(

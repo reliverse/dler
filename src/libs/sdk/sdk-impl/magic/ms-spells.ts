@@ -33,7 +33,8 @@ export type SpellDirective =
   | "dler-replace-line-to"
   | "dler-remove-line"
   | "dler-remove-file"
-  | "dler-remove-comment";
+  | "dler-remove-comment"
+  | "dler-ignore-this-line";
 
 export interface SpellInfo {
   /** The name of the spell directive */
@@ -64,7 +65,7 @@ export function getAvailableSpells(): SpellInfo[] {
       example:
         "// <dler-replace-line-to `export const version = \"1.0.0\";` if 'current file path starts with dist-npm'>",
       notes:
-        "If condition is not met and else content is provided, uses else content. Otherwise keeps original line. Also supports @ts-expect-error prefix.",
+        "If no condition is specified, replacement always applies. If condition is not met and else content is provided, uses else content. Otherwise keeps original line. Also supports @ts-expect-error prefix.",
     },
     {
       name: "dler-remove-line",
@@ -81,10 +82,17 @@ export function getAvailableSpells(): SpellInfo[] {
     },
     {
       name: "dler-remove-comment",
-      description: "Removes the current line if it's a comment",
-      example: "// <dler-remove-comment>",
+      description: "Removes only the comment portion containing this directive from the line",
+      example: "console.log('debug info'); // <dler-remove-comment>",
       notes:
-        "Only removes the line if it starts with //. Useful for cleaning up comments in output files. Also supports @ts-expect-error prefix.",
+        "Removes everything from '//' to the end of the line when the comment contains this directive. The code portion before the comment is preserved. Also supports @ts-expect-error prefix.",
+    },
+    {
+      name: "dler-ignore-this-line",
+      description: "Prevents any magic directives on this line from being processed",
+      example: "// <dler-remove-line> // <dler-ignore-this-line>",
+      notes:
+        "When present on a line, all magic directives on that line are ignored and the line is kept as-is. Useful for code that contains magic directive strings that shouldn't be executed.",
     },
   ];
 }
@@ -94,6 +102,12 @@ export function getAvailableSpells(): SpellInfo[] {
  * If no directive is present, returns neutral outcome.
  */
 export function evaluateMagicDirective(line: string, ctx: SpellEvaluationContext): SpellOutcome {
+  // First check if the line contains dler-ignore-this-line
+  // If it does, ignore all magic directives on this line
+  if (line.includes("<dler-ignore-this-line>")) {
+    return NO_OP;
+  }
+
   const match = line.match(SPELL_REGEX);
   if (!match) return NO_OP;
 
@@ -122,9 +136,16 @@ export function evaluateMagicDirective(line: string, ctx: SpellEvaluationContext
     /* dler-remove-comment                                            */
     /* -------------------------------------------------------------- */
     case "dler-remove-comment": {
-      // Only remove if the line is a comment
-      const isComment = line.trim().startsWith("//");
-      return { removeLine: isComment, removeFile: false };
+      // Remove only the comment portion containing the directive
+      // Find the position of '//' in the line and remove everything from there
+      const commentIndex = line.indexOf("//");
+      if (commentIndex !== -1) {
+        // Keep everything before the comment, trimming any trailing whitespace
+        const codeBeforeComment = line.substring(0, commentIndex).trimEnd();
+        return { replacement: codeBeforeComment, removeLine: false, removeFile: false };
+      }
+      // If no '//' found (shouldn't happen since we matched the regex), keep the line as-is
+      return NO_OP;
     }
 
     /* -------------------------------------------------------------- */
@@ -147,6 +168,15 @@ export function evaluateMagicDirective(line: string, ctx: SpellEvaluationContext
         return { replacement: elseContent, removeLine: false, removeFile: false };
       }
       // else "do nothing" – keep original line
+      return NO_OP;
+    }
+
+    /* -------------------------------------------------------------- */
+    /* dler-ignore-this-line                                          */
+    /* -------------------------------------------------------------- */
+    case "dler-ignore-this-line": {
+      // This case should never be reached due to the early check above,
+      // but included for completeness
       return NO_OP;
     }
 
@@ -175,6 +205,7 @@ function isValidMagicDirective(directive: string): directive is SpellDirective {
     "dler-remove-line",
     "dler-remove-file",
     "dler-remove-comment",
+    "dler-ignore-this-line",
   ].includes(directive);
 }
 
@@ -190,10 +221,8 @@ function parseReplacementDirective(body: string): ReplaceParts {
   const ifMatch = body.match(IF_CONDITION_REGEX);
   if (ifMatch?.[1]) {
     parts.condition = ifMatch[1].trim();
-  } else {
-    // Default condition if none provided
-    parts.condition = "current file path starts with dist-jsr or dist-npm";
   }
+  // No default condition - if no condition is specified, the replacement should always apply
 
   const elseMatch = body.match(ELSE_CONTENT_REGEX);
   if (elseMatch?.[1]) parts.elseContent = elseMatch[1].trim();

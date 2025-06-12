@@ -214,7 +214,7 @@ async function transformFile(
       buffer = [];
       return;
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     const [, _prefix, _quote, libName, restRaw] = match;
     if (!restRaw || !libName) {
       throw new Error(`Invalid import statement: ${stmt}`);

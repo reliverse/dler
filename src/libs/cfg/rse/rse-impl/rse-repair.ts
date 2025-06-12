@@ -24,7 +24,6 @@ export function repairAndParseJSON(raw: string): any {
   try {
     const repaired = jsonrepair(raw);
     return JSON.parse(repaired);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return null;
   }

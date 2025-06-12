@@ -81,7 +81,9 @@ function validateTargets(targets: string[], customOutputPaths?: Record<string, s
 
     // Check if the output directory exists in the filesystem
     const outputPath = allOutputPaths[outputDir] || outputDir;
-    const fullPath = path.join(process.cwd(), outputPath);
+    const fullPath = path.isAbsolute(outputPath)
+      ? outputPath
+      : path.join(process.cwd(), outputPath);
     if (!fs.existsSync(fullPath)) {
       throw new Error(`Output directory does not exist: ${outputPath}`);
     }
@@ -246,7 +248,9 @@ async function processCustomTarget(
 
   // Get the output path from custom paths or use the outputDir directly
   const outputPath = options.customOutputPaths?.[outputDir] || outputDir;
-  const fullOutputPath = path.join(process.cwd(), outputPath);
+  const fullOutputPath = path.isAbsolute(outputPath)
+    ? outputPath
+    : path.join(process.cwd(), outputPath);
 
   // Walk through the target directory to find files with magic directives
   for await (const filePath of walkDirectoryTree(fullOutputPath)) {
@@ -508,7 +512,7 @@ async function findSourceFile(distFilePath: string): Promise<string | null> {
   return null;
 }
 
-async function processSingleOutputFile(
+export async function processSingleOutputFile(
   filePath: string,
   options: Partial<ApplyMagicSpellsOptions> = {},
 ): Promise<boolean> {
@@ -526,7 +530,7 @@ async function processSingleOutputFile(
     DEFAULT_OPTIONS.copyFileWithDirectivesFromSrcBeforeProcessing
   ) {
     const sourceFile = await findSourceFile(filePath);
-    if (sourceFile) {
+    if (sourceFile && sourceFile !== filePath) {
       try {
         // Copy the source file to output
         await fs.copyFile(sourceFile, filePath);
@@ -547,9 +551,14 @@ async function processSingleOutputFile(
     const ctx: SpellEvaluationContext = { filePath: projectRel };
 
     let removeFile = false;
+    const allLines = source.split(/\r?\n/);
     const processedLines: string[] = [];
 
-    for (const line of source.split(/\r?\n/)) {
+    // Process lines from the end backwards for better performance and consistency
+    // This allows early termination if a remove-file directive is found
+    // and maintains better line number consistency for future enhancements
+    for (let i = allLines.length - 1; i >= 0; i--) {
+      const line = allLines[i]!;
       const outcome: SpellOutcome = evaluateMagicDirective(line, ctx);
 
       if (outcome.removeFile) {
@@ -558,7 +567,8 @@ async function processSingleOutputFile(
       }
 
       if (!outcome.removeLine) {
-        processedLines.push(outcome.replacement ?? line);
+        // Since we're processing backwards, prepend instead of append
+        processedLines.unshift(outcome.replacement ?? line);
       }
     }
 
@@ -626,7 +636,9 @@ async function findOutputFiles(
       }
 
       for (const outputExt of extensions) {
-        const outputFile = path.join(process.cwd(), outputPath, `${baseName}${outputExt}`);
+        const outputFile = path.isAbsolute(outputPath)
+          ? path.join(outputPath, `${baseName}${outputExt}`)
+          : path.join(process.cwd(), outputPath, `${baseName}${outputExt}`);
         if (await fs.pathExists(outputFile)) {
           outputFiles.push(outputFile);
         }
@@ -648,7 +660,9 @@ async function findOutputFiles(
     }
 
     for (const outputExt of extensions) {
-      const outputFile = path.join(process.cwd(), outputPath, `${baseName}${outputExt}`);
+      const outputFile = path.isAbsolute(basePath)
+        ? path.join(basePath, dirPath === "." ? "" : dirPath, `${baseName}${outputExt}`)
+        : path.join(process.cwd(), outputPath, `${baseName}${outputExt}`);
       if (await fs.pathExists(outputFile)) {
         outputFiles.push(outputFile);
       }
@@ -901,7 +915,7 @@ export async function getFilesWithMagicSpells(
     await pMap(
       dirs,
       async (dir) => {
-        const fullPath = path.join(process.cwd(), dir);
+        const fullPath = path.isAbsolute(dir) ? dir : path.join(process.cwd(), dir);
         if (!(await fs.pathExists(fullPath))) {
           const error = `Directory does not exist: ${dir}`;
           if (stopOnError) {

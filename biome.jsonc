@@ -22,7 +22,9 @@
       },
       "style": {
         "useTemplate": "off",
-        "useDefaultParameterLast": "off"
+        "useDefaultParameterLast": "off",
+        "noUselessElse": "off",
+        "noNonNullAssertion": "off"
       },
       "complexity": {
         "noBannedTypes": "off",

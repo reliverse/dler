@@ -93,7 +93,6 @@ function findObjectDifferences(
  * Filters out memory-related fields that should not be in the rse config
  */
 function filterMemoryFields<T extends Record<string, unknown>>(config: T): T {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { code, key, ...rest } = config;
   return rest as T;
 }

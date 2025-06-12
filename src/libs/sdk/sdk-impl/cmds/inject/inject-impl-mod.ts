@@ -1,459 +1,1097 @@
-/**
- * inject-impl-mod.ts
- * -----------
- * Utility for injecting content into files at specific line/column positions.
- *
- * Fully async -– works with Node, Bun, and other
- * runtimes that support the `fs/promises` API.
- *
- * @author blefnk
- */
+// inject-impl-mod.ts (transform-impl-mod.ts → inject-impl-mod.ts → e-ms-inject.ts)
 
-import MagicString from "magic-string";
+import path from "@reliverse/pathkit";
 import { promises as fs } from "node:fs";
-import * as path from "node:path";
 
+import {
+  createTransformer,
+  readAndTransform,
+  insertAt,
+  remove,
+  type StringTransformer,
+} from "~/libs/sdk/sdk-impl/cmds/transform/transform-impl-mod";
 import { isBinaryExt } from "~/libs/sdk/sdk-impl/utils/binary";
 
 /* -------------------------------------------------------------------------- */
-/* Types                                                                      */
+/*  Types                                                                     */
 /* -------------------------------------------------------------------------- */
 
-export interface InjectionConfig {
-  /** Absolute or relative path to target file. */
-  filePath: string;
-  /** 1-based line number (1 == first visible line in editors) */
+export interface InjectionLocation {
   line: number;
-  /** 1-based column number (1 == first visible column in editors) */
   column?: number;
-  /** String or array of strings to inject. */
+}
+
+export interface SingleInjection {
+  filePath: string;
+  location?: InjectionLocation;
   content: string | string[];
-  /** If `true`, inserts string (or first element of array) content on a new line AFTER the target line. */
-  createNewLine?: boolean;
-  /** Configuration for comment wrapping. */
-  commentsMode?: {
-    /** Whether to wrap content in comments. */
-    activate: boolean;
-    /** Whether to use JSDoc style for multiline comments. */
-    useJsdocForMultiline?: boolean;
-  };
+  injectBefore?: string | string[];
+  injectAfter?: string | string[];
 }
 
 export interface InjectionResult {
-  /** Absolute or relative path to target file. */
-  filePath: string;
-  /** Whether the injection was successful. */
   success: boolean;
-  /** Error message if injection failed. */
+  filePath: string;
+  location?: InjectionLocation;
+  injectBefore?: string | string[];
+  injectAfter?: string | string[];
   error?: string;
-  /** Generated source map if available. */
-  sourcemap?: string;
+  code?: string;
+  hasChanged?: boolean;
+
+  /**
+   * TODO: format results as {"path/to/file1": {}, "path/to/file2": {}} instead of [{filePath: "path/to/file1", ...}, {filePath: "path/to/file2", ...}]
+   *
+   * TODO: matchesFound will be more useful in this case (because currently we always have 1 matchFound for each injection)
+   */
+  matchesFound?: number;
+}
+
+export interface InjectionOptions {
+  generateSourceMap?: boolean;
+  sourceMapPath?: string;
+  preserveOriginal?: boolean;
+  writeToFile?: boolean;
+  revert?: boolean;
+  based?: "0-based" | "1-based";
+  logCode?: boolean;
+  strict?: boolean;
+  arrayBeforeAfter?: "array-means-multiline" | "append-to-each-element";
 }
 
 /* -------------------------------------------------------------------------- */
-/* Public API                                                                 */
+/*  Helpers                                                                   */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Injects content into the given file at the requested location.
- *
- * @param filePath       Absolute or relative path to target file.
- * @param line           1-based line number (1 == first visible line in editors, internally == 0).
- * @param column         1-based column number (optional, 1 == first visible column in editors, internally == 0).
- * @param content        String or array of strings to inject.
- * @param createNewLine  If `true`, inserts string (or first element of array) content on a new line AFTER the target line.
- * @param commentsMode   If `true`, wraps injected content in file-type comments.
- * @param generateSourceMap If `true`, generates a source map for the transformation.
- *
- * @returns `true` on success, `false` on failure (errors are logged).
+ * Counts newline characters in a string.
  */
-export async function injectAtLocation(
-  filePath: string,
+const countNewlines = (str: string): number => (str.match(/\n/g) || []).length;
+
+/**
+ * Validates line and column numbers based on indexing mode
+ */
+const validateLineColumn = (
   line: number,
   column: number | undefined,
-  content: string | string[],
-  createNewLine = false,
-  commentsMode = { activate: false },
-  generateSourceMap = false,
-): Promise<boolean> {
-  try {
-    /* --------------------------- validations -------------------------------- */
+  based: "0-based" | "1-based" = "1-based",
+): string | null => {
+  const minValue = based === "0-based" ? 0 : 1;
 
-    await validateInput(filePath, line, column);
-
-    /* ------------------------- read & preprocess ---------------------------- */
-
-    const originalContent = await fs.readFile(filePath, "utf8");
-    const magicString = new MagicString(originalContent, {
-      filename: path.basename(filePath),
-    });
-
-    /* -------------------- prepare content for injection --------------------- */
-
-    const pieces = Array.isArray(content) ? content : [content];
-    const preparedContent = prepareContentForInjection(
-      pieces,
-      commentsMode,
-      path.extname(filePath),
-      createNewLine,
-    );
-
-    /* ---------------------------- injection --------------------------------- */
-
-    const success = injectWithMagicString(
-      magicString,
-      originalContent,
-      line,
-      column,
-      preparedContent,
-      createNewLine,
-    );
-
-    if (!success) return false;
-
-    /* ------------------------ write back to disk ---------------------------- */
-
-    const result = magicString.toString();
-    await fs.writeFile(filePath, result, "utf8");
-
-    // Optionally generate source map
-    if (generateSourceMap) {
-      const map = magicString.generateMap({
-        source: filePath,
-        file: `${filePath}.map`,
-        includeContent: true,
-        hires: true,
-      });
-      await fs.writeFile(`${filePath}.map`, map.toString(), "utf8");
-    }
-
-    return true;
-  } catch (err) {
-    console.error(`[injector] ${filePath}: ${(err as Error).message}`);
-    return false;
+  if (!Number.isInteger(line) || line < minValue) {
+    return `Line number must be a ${
+      based === "0-based" ? "non-negative" : "positive"
+    } integer (${based})`;
   }
-}
+
+  if (column !== undefined && (!Number.isInteger(column) || column < minValue)) {
+    return `Column number must be a ${
+      based === "0-based" ? "non-negative" : "positive"
+    } integer when provided (${based})`;
+  }
+
+  return null;
+};
 
 /**
- * Processes multiple injections efficiently by grouping by file and applying in reverse order.
- *
- * @param configs Array of {@link InjectionConfig}.
- * @param generateSourceMaps If `true`, generates source maps for transformations.
- * @returns Array of {@link InjectionResult} in the same order as `configs`.
+ * Validates injection positioning - ensures only one method is used
  */
-export async function injectMultiple(
-  configs: InjectionConfig[],
-  generateSourceMaps = false,
-): Promise<InjectionResult[]> {
-  // Group configs by file path
-  const configsByFile = new Map<string, { config: InjectionConfig; originalIndex: number }[]>();
+const validateInjectionPositioning = (injection: SingleInjection): string | null => {
+  const positioningMethods = [
+    injection.location ? "location" : null,
+    injection.injectBefore ? "injectBefore" : null,
+    injection.injectAfter ? "injectAfter" : null,
+  ].filter(Boolean);
 
-  configs.forEach((config, index) => {
-    if (!configsByFile.has(config.filePath)) {
-      configsByFile.set(config.filePath, []);
+  if (positioningMethods.length === 0) {
+    return "Must specify exactly one of: location, injectBefore, or injectAfter";
+  }
+
+  if (positioningMethods.length > 1) {
+    return `Cannot use multiple positioning methods. Found: ${positioningMethods.join(", ")}`;
+  }
+
+  return null;
+};
+
+/**
+ * Converts line/column position to character index in string
+ * Handles both CRLF and LF line endings and both indexing modes
+ */
+const getLineColumnPosition = (
+  content: string,
+  line: number,
+  column: number | undefined,
+  based: "0-based" | "1-based" = "1-based",
+): number => {
+  const lines = content.split(/\r?\n/);
+
+  // Convert to 0-based indexing for internal calculations
+  const zeroBasedLine = based === "0-based" ? line : line - 1;
+  const zeroBasedColumn =
+    column !== undefined ? (based === "0-based" ? column : column - 1) : undefined;
+
+  if (zeroBasedLine >= lines.length || zeroBasedLine < 0) {
+    const displayLine = based === "0-based" ? line : line;
+    throw new Error(
+      `Line ${displayLine} does not exist (file has ${lines.length} lines, ${based})`,
+    );
+  }
+
+  let position = 0;
+  const hasCarriageReturn = content.includes("\r\n");
+
+  // Calculate position up to target line
+  for (let i = 0; i < zeroBasedLine; i++) {
+    const currentLine = lines[i];
+    if (currentLine === undefined) continue;
+    position += currentLine.length + (hasCarriageReturn ? 2 : 1);
+  }
+
+  // Handle column positioning
+  if (zeroBasedColumn !== undefined) {
+    const targetLine = lines[zeroBasedLine];
+    if (targetLine === undefined) {
+      const displayLine = based === "0-based" ? line : line;
+      throw new Error(`Line ${displayLine} does not exist (${based})`);
     }
-    configsByFile.get(config.filePath)?.push({ config, originalIndex: index });
-  });
+    if (zeroBasedColumn > targetLine.length) {
+      const displayLine = based === "0-based" ? line : line;
+      const displayColumn = based === "0-based" ? column : column;
+      throw new Error(
+        `Column ${displayColumn} does not exist in line ${displayLine} (line has ${targetLine.length} characters, ${based})`,
+      );
+    }
+    position += zeroBasedColumn;
+  } else {
+    // Append to end of line if no column specified
+    const lastLine = lines[zeroBasedLine];
+    if (lastLine === undefined) {
+      const displayLine = based === "0-based" ? line : line;
+      throw new Error(`Line ${displayLine} does not exist (${based})`);
+    }
+    position += lastLine.length;
+  }
 
-  // Results array to maintain original order
-  const results: InjectionResult[] = new Array(configs.length);
+  return position;
+};
 
-  // Process each file
-  for (const [filePath, fileConfigs] of configsByFile) {
+/**
+ * Normalizes content from string or string[] to a single string
+ * Preserves newlines within individual strings
+ */
+const normalizeContent = (content: string | string[]): string => {
+  if (Array.isArray(content)) {
+    return content.join("\n");
+  }
+  return content;
+};
+
+/**
+ * Normalizes target strings for before/after injection based on arrayBeforeAfter option
+ */
+const normalizeTargetStrings = (
+  target: string | string[],
+  arrayBeforeAfter: "array-means-multiline" | "append-to-each-element" = "array-means-multiline",
+): string[] => {
+  if (typeof target === "string") {
+    return [target];
+  }
+
+  if (arrayBeforeAfter === "array-means-multiline") {
+    return [target.join("\n")];
+  }
+  return target;
+};
+
+/**
+ * Finds all positions of target strings in content and returns injection positions
+ */
+const findInjectionPositions = (
+  content: string,
+  targets: string[],
+  mode: "before" | "after",
+): { position: number; target: string }[] => {
+  const positions: { position: number; target: string }[] = [];
+
+  for (const target of targets) {
+    let searchStart = 0;
+    let foundIndex = content.indexOf(target, searchStart);
+
+    while (foundIndex !== -1) {
+      const position = mode === "before" ? foundIndex : foundIndex + target.length;
+      positions.push({ position, target });
+
+      searchStart = foundIndex + target.length;
+      foundIndex = content.indexOf(target, searchStart);
+    }
+  }
+
+  // Sort positions in reverse order for consistent injection without position shifts
+  return positions.sort((a, b) => b.position - a.position);
+};
+
+/**
+ * Finds content at specific location and returns removal range
+ * In non-strict mode, returns null if content doesn't match (graceful handling)
+ */
+const getRemovalRange = (
+  fileContent: string,
+  line: number,
+  column: number | undefined,
+  contentToRemove: string,
+  based: "0-based" | "1-based" = "1-based",
+  strict = false,
+): { start: number; end: number } | null => {
+  const startPosition = getLineColumnPosition(fileContent, line, column, based);
+
+  // Check if the content at the position matches what we want to remove
+  const actualContent = fileContent.slice(startPosition, startPosition + contentToRemove.length);
+
+  if (actualContent !== contentToRemove) {
+    if (!strict) {
+      // In non-strict mode, return null to indicate graceful handling
+      return null;
+    }
+
+    const displayLine = based === "0-based" ? line : line;
+    const displayColumn =
+      column !== undefined ? (based === "0-based" ? column : column) : undefined;
+    throw new Error(
+      `Content mismatch at line ${displayLine}${
+        displayColumn !== undefined ? `, column ${displayColumn}` : ""
+      } (${based}). Expected: "${contentToRemove}", Found: "${actualContent}"`,
+    );
+  }
+
+  return {
+    start: startPosition,
+    end: startPosition + contentToRemove.length,
+  };
+};
+
+/**
+ * Finds and removes injected content for revert operations with before/after targeting
+ */
+const getBeforeAfterRemovalPositions = (
+  content: string,
+  targets: string[],
+  injectedContent: string,
+  mode: "before" | "after",
+  strict = false,
+): { start: number; end: number }[] | null => {
+  const positions: { start: number; end: number }[] = [];
+
+  for (const target of targets) {
+    let searchStart = 0;
+    let foundIndex = content.indexOf(target, searchStart);
+
+    while (foundIndex !== -1) {
+      let contentStart: number;
+      let contentEnd: number;
+
+      if (mode === "before") {
+        contentEnd = foundIndex;
+        contentStart = contentEnd - injectedContent.length;
+      } else {
+        contentStart = foundIndex + target.length;
+        contentEnd = contentStart + injectedContent.length;
+      }
+
+      // Validate that the content at this position matches what we want to remove
+      if (contentStart >= 0 && contentEnd <= content.length) {
+        const actualContent = content.slice(contentStart, contentEnd);
+        if (actualContent === injectedContent) {
+          positions.push({ start: contentStart, end: contentEnd });
+        } else if (strict) {
+          throw new Error(
+            `Content mismatch near target "${target}". Expected: "${injectedContent}", Found: "${actualContent}"`,
+          );
+        }
+      } else if (strict) {
+        throw new Error(`Injected content not found ${mode} target "${target}"`);
+      }
+
+      searchStart = foundIndex + target.length;
+      foundIndex = content.indexOf(target, searchStart);
+    }
+  }
+
+  if (positions.length === 0 && strict) {
+    throw new Error("No injected content found to remove");
+  }
+
+  if (positions.length === 0) {
+    return null; // Graceful handling in non-strict mode
+  }
+
+  // Sort positions in reverse order for consistent removal
+  return positions.sort((a, b) => b.start - a.start);
+};
+
+/**
+ * Validates file accessibility and type
+ */
+const validateFile = async (filePath: string): Promise<string | null> => {
+  try {
+    await fs.access(filePath);
+  } catch {
+    return `File does not exist: ${filePath}`;
+  }
+
+  if (await isBinaryExt(filePath)) {
+    return `Cannot inject into binary file: ${filePath}`;
+  }
+
+  return null;
+};
+
+/**
+ * Creates a result object with conditional code inclusion
+ */
+const createResult = (
+  success: boolean,
+  filePath: string,
+  injection: SingleInjection,
+  transformer?: StringTransformer,
+  error?: string,
+  logCode?: boolean,
+  matchesFound?: number,
+): InjectionResult => {
+  const result: InjectionResult = {
+    success,
+    filePath,
+  };
+
+  // Include positioning information based on what was used
+  if (injection.location) {
+    result.location = injection.location;
+  }
+  if (injection.injectBefore) {
+    result.injectBefore = injection.injectBefore;
+  }
+  if (injection.injectAfter) {
+    result.injectAfter = injection.injectAfter;
+  }
+
+  if (error) {
+    result.error = error;
+  }
+
+  if (transformer) {
+    if (logCode) {
+      result.code = transformer.current();
+    }
+    result.hasChanged = transformer.hasChanged();
+  }
+
+  if (matchesFound !== undefined) {
+    result.matchesFound = matchesFound;
+  }
+
+  return result;
+};
+
+/* -------------------------------------------------------------------------- */
+/*  Public API                                                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Injects or reverts content at a specific location in a single file
+ */
+export const injectAtLocation = async (
+  injection: SingleInjection,
+  options: InjectionOptions = {},
+): Promise<InjectionResult> => {
+  const { filePath, location, content, injectBefore, injectAfter } = injection;
+  const {
+    revert = false,
+    based = "1-based",
+    logCode = false,
+    strict = false,
+    arrayBeforeAfter = "array-means-multiline",
+  } = options;
+
+  try {
+    // Validate positioning
+    const positioningError = validateInjectionPositioning(injection);
+    if (positioningError) {
+      return createResult(false, filePath, injection, undefined, positioningError, logCode);
+    }
+
+    // Validate line/column if using location-based injection
+    if (location) {
+      const validationError = validateLineColumn(location.line, location.column, based);
+      if (validationError) {
+        return createResult(false, filePath, injection, undefined, validationError, logCode);
+      }
+    }
+
+    // Validate file
+    const fileError = await validateFile(filePath);
+    if (fileError) {
+      return createResult(false, filePath, injection, undefined, fileError, logCode);
+    }
+
+    // Read and transform file
+    let matchesFound = 0;
+    const result = await readAndTransform(filePath, (transformer) => {
+      try {
+        const currentContent = transformer.current();
+        const normalizedContent = normalizeContent(content);
+
+        if (location) {
+          // Location-based injection/revert
+          if (revert) {
+            const removalRange = getRemovalRange(
+              currentContent,
+              location.line,
+              location.column,
+              normalizedContent,
+              based,
+              strict,
+            );
+
+            if (removalRange === null) {
+              return transformer; // No changes in non-strict mode
+            }
+
+            const { start, end } = removalRange;
+            return remove(transformer, start, end);
+          }
+
+          const position = getLineColumnPosition(
+            currentContent,
+            location.line,
+            location.column,
+            based,
+          );
+
+          return insertAt(transformer, position, normalizedContent);
+        }
+        if (injectBefore || injectAfter) {
+          // Before/after injection/revert
+          const target = injectBefore || injectAfter;
+          if (!target) {
+            throw new Error("Invalid injection configuration");
+          }
+          const mode = injectBefore ? "before" : "after";
+          const targets = normalizeTargetStrings(target, arrayBeforeAfter);
+
+          if (revert) {
+            const removalPositions = getBeforeAfterRemovalPositions(
+              currentContent,
+              targets,
+              normalizedContent,
+              mode,
+              strict,
+            );
+
+            if (removalPositions === null) {
+              return transformer; // No changes in non-strict mode
+            }
+
+            let modifiedTransformer = transformer;
+            for (const { start, end } of removalPositions) {
+              modifiedTransformer = remove(modifiedTransformer, start, end);
+              matchesFound++;
+            }
+            return modifiedTransformer;
+          }
+          const positions = findInjectionPositions(currentContent, targets, mode);
+          matchesFound = positions.length;
+
+          let modifiedTransformer = transformer;
+          for (const { position } of positions) {
+            modifiedTransformer = insertAt(modifiedTransformer, position, normalizedContent);
+          }
+          return modifiedTransformer;
+        }
+
+        throw new Error("Invalid injection configuration");
+      } catch (error) {
+        const operation = revert ? "Revert" : "Injection";
+        throw new Error(
+          `${operation} failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    });
+
+    // Write to file if requested (default: true)
+    if (options.writeToFile !== false) {
+      await fs.writeFile(filePath, result.code);
+    }
+
+    // Generate source map if requested
+    if (options.generateSourceMap && options.sourceMapPath) {
+      const originalContent = await fs.readFile(filePath, "utf-8");
+      const transformer = createTransformer(originalContent);
+      const normalizedContent = normalizeContent(content);
+
+      let transformedContent: StringTransformer;
+
+      if (location) {
+        if (revert) {
+          const removalRange = getRemovalRange(
+            originalContent,
+            location.line,
+            location.column,
+            normalizedContent,
+            based,
+            strict,
+          );
+
+          if (removalRange === null) {
+            transformedContent = transformer;
+          } else {
+            const { start, end } = removalRange;
+            transformedContent = remove(transformer, start, end);
+          }
+        } else {
+          const position = getLineColumnPosition(
+            originalContent,
+            location.line,
+            location.column,
+            based,
+          );
+
+          transformedContent = insertAt(transformer, position, normalizedContent);
+        }
+      } else if (injectBefore || injectAfter) {
+        const target = injectBefore || injectAfter;
+        if (!target) {
+          throw new Error("Invalid injection configuration");
+        }
+        const mode = injectBefore ? "before" : "after";
+        const targets = normalizeTargetStrings(target, arrayBeforeAfter);
+
+        if (revert) {
+          const removalPositions = getBeforeAfterRemovalPositions(
+            originalContent,
+            targets,
+            normalizedContent,
+            mode,
+            strict,
+          );
+
+          transformedContent = transformer;
+          if (removalPositions) {
+            for (const { start, end } of removalPositions) {
+              transformedContent = remove(transformedContent, start, end);
+            }
+          }
+        } else {
+          const positions = findInjectionPositions(originalContent, targets, mode);
+          transformedContent = transformer;
+          for (const { position } of positions) {
+            transformedContent = insertAt(transformedContent, position, normalizedContent);
+          }
+        }
+      } else {
+        transformedContent = transformer;
+      }
+
+      const map = transformedContent.generateMap({
+        source: filePath,
+        file: options.sourceMapPath,
+        includeContent: true,
+      });
+      await fs.writeFile(options.sourceMapPath, map.toString());
+    }
+
+    const transformer = createTransformer(result.code);
+    return createResult(true, filePath, injection, transformer, undefined, logCode, matchesFound);
+  } catch (error) {
+    return createResult(
+      false,
+      filePath,
+      injection,
+      undefined,
+      error instanceof Error ? error.message : String(error),
+      logCode,
+    );
+  }
+};
+
+/**
+ * Injects or reverts content at multiple locations across multiple files
+ * Processes injections efficiently by grouping by file
+ *
+ * Supports automatic line-offset handling:
+ * Whenever an earlier injection adds newline characters, subsequent
+ * location-based injections will transparently subtract the cumulative
+ * newline count so users can keep writing “line: N” without manual fixes.
+ */
+export const injectMultiple = async (
+  injections: SingleInjection[],
+  options: InjectionOptions = {},
+): Promise<InjectionResult[]> => {
+  const results: InjectionResult[] = [];
+  const {
+    revert = false,
+    based = "1-based",
+    logCode = false,
+    strict = false,
+    arrayBeforeAfter = "array-means-multiline",
+  } = options;
+
+  // Group injections by file path for efficient processing
+  const injectionsByFile = new Map<string, SingleInjection[]>();
+
+  for (const injection of injections) {
+    const fileInjections = injectionsByFile.get(injection.filePath) || [];
+    fileInjections.push(injection);
+    injectionsByFile.set(injection.filePath, fileInjections);
+  }
+
+  // Process each file atomically
+  for (const [filePath, fileInjections] of injectionsByFile) {
     try {
-      // Validate and read file
-      const firstConfig = fileConfigs[0]?.config;
-      if (!firstConfig) {
-        throw new Error(`No valid configs found for file: ${filePath}`);
+      // Validate file once per file
+      const fileError = await validateFile(filePath);
+      if (fileError) {
+        for (const injection of fileInjections) {
+          results.push(createResult(false, filePath, injection, undefined, fileError, logCode));
+        }
+        continue;
       }
-      await validateInput(firstConfig.filePath, firstConfig.line, firstConfig.column);
 
-      const originalContent = await fs.readFile(filePath, "utf8");
-      const magicString = new MagicString(originalContent, {
-        filename: path.basename(filePath),
-      });
+      // Validate all injections for this file
+      const validationErrors: { injection: SingleInjection; error: string }[] = [];
 
-      // Sort configs by line and column in reverse order (last to first)
-      // This ensures that earlier positions don't get affected by later injections
-      const sortedConfigs = [...fileConfigs].sort((a, b) => {
-        const aLine = a.config.line;
-        const bLine = b.config.line;
-        if (aLine !== bLine) return bLine - aLine; // Reverse line order
-
-        const aCol = a.config.column ?? Number.MAX_SAFE_INTEGER;
-        const bCol = b.config.column ?? Number.MAX_SAFE_INTEGER;
-        return bCol - aCol; // Reverse column order
-      });
-
-      // Apply all injections to the same MagicString instance
-      let allSuccessful = true;
-      let currentContent = originalContent;
-      for (const { config, originalIndex } of sortedConfigs) {
-        const { line, column, content, createNewLine, commentsMode } = config;
-
-        const pieces = Array.isArray(content) ? content : [content];
-        const preparedContent = prepareContentForInjection(
-          pieces,
-          commentsMode,
-          path.extname(filePath),
-          createNewLine ?? false,
-        );
-
-        const success = injectWithMagicString(
-          magicString,
-          currentContent,
-          line,
-          column,
-          preparedContent,
-          createNewLine ?? false,
-        );
-
-        if (success) {
-          currentContent = magicString.toString();
+      for (const injection of fileInjections) {
+        const positioningError = validateInjectionPositioning(injection);
+        if (positioningError) {
+          validationErrors.push({ injection, error: positioningError });
+          continue;
         }
 
-        results[originalIndex] = success
-          ? { filePath, success }
-          : {
+        if (injection.location) {
+          const validationError = validateLineColumn(
+            injection.location.line,
+            injection.location.column,
+            based,
+          );
+          if (validationError) {
+            validationErrors.push({ injection, error: validationError });
+          }
+        }
+      }
+
+      // Add validation errors to results
+      for (const { injection, error } of validationErrors) {
+        results.push(createResult(false, filePath, injection, undefined, error, logCode));
+      }
+
+      // Filter out invalid injections
+      const validInjections = fileInjections.filter(
+        (inj) => !validationErrors.some((ve) => ve.injection === inj),
+      );
+
+      if (validInjections.length === 0) {
+        continue;
+      }
+
+      // Separate location-based and before/after injections
+      const locationInjections = validInjections.filter((inj) => inj.location);
+      const beforeAfterInjections = validInjections.filter(
+        (inj) => inj.injectBefore || inj.injectAfter,
+      );
+
+      let transformer = createTransformer(await fs.readFile(filePath, "utf-8"));
+      let hasAnyChanges = false;
+
+      // Calculate positions for all location-based injections using the original content
+      const originalContent = transformer.current();
+      const allInjectionsWithPositions: {
+        injection: SingleInjection;
+        originalPosition: number;
+        normalizedContent: string;
+        lineNumber: number;
+      }[] = [];
+
+      /* -------- automatic line-offset handling for “location” injections ---- */
+      let cumulativeNewlineOffset = 0;
+
+      for (const injection of locationInjections) {
+        try {
+          const normalizedContent = normalizeContent(injection.content);
+
+          // Every newline added by *earlier* injections shifts lines below.
+          // We therefore subtract the running offset so the user can keep
+          // writing intuitive line numbers.
+          const effectiveLine = Math.max(
+            based === "0-based" ? 0 : 1,
+            injection.location!.line - cumulativeNewlineOffset,
+          );
+
+          if (revert) {
+            const removalRange = getRemovalRange(
+              originalContent,
+              effectiveLine,
+              injection.location!.column,
+              normalizedContent,
+              based,
+              strict,
+            );
+
+            if (removalRange !== null) {
+              allInjectionsWithPositions.push({
+                injection,
+                originalPosition: removalRange.start,
+                normalizedContent: `__REMOVE_${removalRange.start}_${removalRange.end}__`,
+                lineNumber: effectiveLine,
+              });
+            }
+          } else {
+            const position = getLineColumnPosition(
+              originalContent,
+              effectiveLine,
+              injection.location!.column,
+              based,
+            );
+
+            allInjectionsWithPositions.push({
+              injection,
+              originalPosition: position,
+              normalizedContent,
+              lineNumber: effectiveLine,
+            });
+          }
+
+          // Update the running offset only AFTER processing this injection.
+          cumulativeNewlineOffset += countNewlines(normalizedContent);
+        } catch (error) {
+          results.push(
+            createResult(
+              false,
               filePath,
-              success: false,
-              error: `Injection failed for ${filePath} at line ${line}`,
-            };
-
-        if (!success) {
-          allSuccessful = false;
+              injection,
+              undefined,
+              error instanceof Error ? error.message : String(error),
+              logCode,
+            ),
+          );
         }
       }
 
-      // Write the file only if all injections succeeded
-      if (allSuccessful) {
-        const result = magicString.toString();
-        await fs.writeFile(filePath, result, "utf8");
+      // Sort all injections by position (right to left for inject, left to right for revert)
+      allInjectionsWithPositions.sort((a, b) => {
+        if (revert) {
+          return a.originalPosition - b.originalPosition; // Left to right for revert
+        }
+        return b.originalPosition - a.originalPosition; // Right to left for inject
+      });
 
-        // Optionally generate source map
-        if (generateSourceMaps) {
-          const map = magicString.generateMap({
-            source: filePath,
-            file: `${filePath}.map`,
-            includeContent: true,
-            hires: true,
-          });
-          await fs.writeFile(`${filePath}.map`, map.toString(), "utf8");
+      // Apply all location-based injections
+      for (const { injection, originalPosition, normalizedContent } of allInjectionsWithPositions) {
+        try {
+          let matchesFound = 0;
+
+          if (revert && normalizedContent.startsWith("__REMOVE_")) {
+            // Extract removal range from the encoded string
+            const match = normalizedContent.match(/^__REMOVE_(\d+)_(\d+)__$/);
+            if (match?.[1] && match?.[2]) {
+              const start = Number.parseInt(match[1], 10);
+              const end = Number.parseInt(match[2], 10);
+              transformer = remove(transformer, start, end);
+              matchesFound = 1;
+            }
+          } else if (!revert) {
+            transformer = insertAt(transformer, originalPosition, normalizedContent);
+            matchesFound = 1;
+          }
+
+          hasAnyChanges = true;
+          results.push(
+            createResult(true, filePath, injection, transformer, undefined, logCode, matchesFound),
+          );
+        } catch (error) {
+          results.push(
+            createResult(
+              false,
+              filePath,
+              injection,
+              undefined,
+              error instanceof Error ? error.message : String(error),
+              logCode,
+            ),
+          );
         }
       }
-    } catch (err) {
-      // Mark all configs for this file as failed
-      for (const { originalIndex } of fileConfigs) {
-        results[originalIndex] = {
-          filePath,
-          success: false,
-          error: `File processing failed: ${(err as Error).message}`,
-        };
+
+      /* ----------------------- before / after injections ------------------- */
+      for (const injection of beforeAfterInjections) {
+        try {
+          const currentContent = transformer.current();
+          const normalizedContent = normalizeContent(injection.content);
+          let matchesFound = 0;
+
+          const target = injection.injectBefore || injection.injectAfter;
+          if (!target) {
+            throw new Error("Invalid injection configuration");
+          }
+          const mode = injection.injectBefore ? "before" : "after";
+          const targets = normalizeTargetStrings(target, arrayBeforeAfter);
+
+          if (revert) {
+            const removalPositions = getBeforeAfterRemovalPositions(
+              currentContent,
+              targets,
+              normalizedContent,
+              mode,
+              strict,
+            );
+
+            if (removalPositions === null) {
+              results.push(
+                createResult(true, filePath, injection, transformer, undefined, logCode, 0),
+              );
+              continue;
+            }
+
+            for (const { start, end } of removalPositions) {
+              transformer = remove(transformer, start, end);
+              matchesFound++;
+            }
+          } else {
+            const positions = findInjectionPositions(currentContent, targets, mode);
+            matchesFound = positions.length;
+
+            for (const { position } of positions) {
+              transformer = insertAt(transformer, position, normalizedContent);
+            }
+          }
+
+          hasAnyChanges = true;
+          results.push(
+            createResult(true, filePath, injection, transformer, undefined, logCode, matchesFound),
+          );
+        } catch (error) {
+          results.push(
+            createResult(
+              false,
+              filePath,
+              injection,
+              undefined,
+              error instanceof Error ? error.message : String(error),
+              logCode,
+            ),
+          );
+        }
+      }
+
+      // Write to file if there were changes
+      if (hasAnyChanges && options.writeToFile !== false) {
+        await fs.writeFile(filePath, transformer.current());
+      }
+
+      // Generate source map if requested
+      if (hasAnyChanges && options.generateSourceMap && options.sourceMapPath) {
+        const map = transformer.generateMap({
+          source: filePath,
+          file: options.sourceMapPath,
+          includeContent: true,
+        });
+        const sourceMapFilename = `${path.parse(filePath).name}.map`;
+        const sourceMapPath = path.join(path.dirname(options.sourceMapPath), sourceMapFilename);
+        await fs.writeFile(sourceMapPath, map.toString());
+      }
+    } catch (error) {
+      // Handle file-level errors
+      for (const injection of fileInjections) {
+        results.push(
+          createResult(
+            false,
+            filePath,
+            injection,
+            undefined,
+            error instanceof Error ? error.message : String(error),
+            logCode,
+          ),
+        );
       }
     }
   }
 
   return results;
-}
-
-/* -------------------------------------------------------------------------- */
-/* Implementation details (private helpers)                                   */
-/* -------------------------------------------------------------------------- */
+};
 
 /**
- * Validates basic preconditions and throws if any check fails.
+ * Creates a single injection object with validation
  */
-async function validateInput(filePath: string, line: number, column?: number): Promise<void> {
-  await fs.access(filePath).catch(() => {
-    throw new Error("File does not exist.");
-  });
+export const createInjection = (
+  filePath: string,
+  content: string | string[],
+  positioning:
+    | { line: number; column?: number }
+    | { injectBefore: string | string[] }
+    | { injectAfter: string | string[] },
+): SingleInjection => {
+  const injection: SingleInjection = {
+    filePath,
+    content,
+  };
 
-  if (await isBinaryExt(filePath)) {
-    throw new Error("Cannot inject into binary files.");
+  if ("line" in positioning) {
+    injection.location = {
+      line: positioning.line,
+      column: positioning.column,
+    };
+  } else if ("injectBefore" in positioning) {
+    injection.injectBefore = positioning.injectBefore;
+  } else if ("injectAfter" in positioning) {
+    injection.injectAfter = positioning.injectAfter;
   }
 
-  if (!Number.isInteger(line) || line < 1)
-    throw new Error("`line` must be a positive 1-based integer.");
-
-  if (column !== undefined && (!Number.isInteger(column) || column < 1))
-    throw new Error("`column` must be a positive 1-based integer when provided.");
-}
+  return injection;
+};
 
 /**
- * Converts 1-based line/column coordinates to 0-based character index.
+ * Validates a single injection configuration
  */
-function getCharacterIndex(
-  content: string,
-  line1Based: number,
-  column1Based?: number,
-): { index: number; lineEnd: number; lineStart: number } {
-  const lines = content.split(/\r?\n/);
-  const eolLength = content.includes("\r\n") ? 2 : 1;
-
-  // Extend content if target line is beyond EOF
-  while (lines.length < line1Based) {
-    lines.push("");
+export const validateInjection = (
+  injection: SingleInjection,
+  based: "0-based" | "1-based" = "1-based",
+): string | null => {
+  if (!injection.filePath) {
+    return "File path is required";
   }
 
-  let index = 0;
-
-  // Add characters from previous lines (including newlines)
-  for (let i = 0; i < line1Based - 1; i++) {
-    index += lines[i]?.length ?? 0;
-    if (i < lines.length - 1) index += eolLength;
+  if (!injection.content || (Array.isArray(injection.content) && injection.content.length === 0)) {
+    return "Content is required";
   }
 
-  const targetLine = lines[line1Based - 1] || "";
-  const lineStart = index;
-  const lineEnd = lineStart + targetLine.length;
-
-  // Add column offset if specified
-  if (column1Based !== undefined) {
-    const colIndex = Math.min(column1Based - 1, targetLine.length);
-    index += colIndex;
-  } else {
-    // Default to end of line
-    index = lineEnd;
-  }
-
-  return { index, lineEnd, lineStart };
-}
-
-/**
- * Prepares content for injection, handling comments and newlines.
- */
-function prepareContentForInjection(
-  pieces: string[],
-  commentsMode: InjectionConfig["commentsMode"],
-  ext: string,
-  createNewLine: boolean,
-): string {
-  let preparedPieces = pieces.slice();
-
-  // Apply comment wrapping if requested
-  if (commentsMode?.activate) {
-    preparedPieces = applyCommentWrapping(preparedPieces, commentsMode, ext);
-  }
-
-  // Join pieces with newlines if multiple pieces
-  let result = preparedPieces.join("\n");
-
-  // Add leading newline if createNewLine is true
-  if (createNewLine && result) {
-    result = "\n" + result;
-  }
-
-  return result;
-}
-
-/**
- * Wraps content pieces in comments based on file extension.
- */
-function applyCommentWrapping(
-  pieces: string[],
-  commentsMode: NonNullable<InjectionConfig["commentsMode"]>,
-  ext: string,
-): string[] {
-  const { lineComment, blockStart, blockEnd } = getCommentSymbols(ext);
-
-  // Single string case - use line comments
-  if (pieces.length === 1) {
-    return pieces.map((p) => ` ${lineComment} ${p}`);
-  }
-
-  // Array case - use block comments
-  const isJsdoc = commentsMode.useJsdocForMultiline;
-  const processedPieces = pieces.map((p) => (p === "" ? " " : p));
-
-  return [
-    ` ${blockStart}${isJsdoc ? "*" : ""} ${processedPieces[0]}`,
-    ...processedPieces.slice(1, -1).map((p) => ` ${isJsdoc ? "*" : ""} ${p}`),
-    ` ${isJsdoc ? "*" : ""} ${processedPieces[processedPieces.length - 1]} ${blockEnd}`,
-  ];
-}
-
-/**
- * Performs the actual injection using MagicString.
- */
-function injectWithMagicString(
-  magicString: MagicString,
-  originalContent: string,
-  line1Based: number,
-  column1Based: number | undefined,
-  preparedContent: string,
-  createNewLine: boolean,
-): boolean {
-  try {
-    const { index, lineEnd, lineStart } = getCharacterIndex(
-      originalContent,
-      line1Based,
-      column1Based,
-    );
-
-    // Ensure the content exists by extending if needed
-    const currentLength = originalContent.length;
-    if (index > currentLength) {
-      // Calculate how many newlines we need to add
-      const linesNeeded = Math.ceil((index - currentLength) / 50); // Rough estimate
-      const extension = "\n".repeat(linesNeeded);
-      magicString.append(extension);
-    }
-
-    if (createNewLine) {
-      // Insert on new line after the target position
-      if (column1Based !== undefined) {
-        // When column is specified with createNewLine, we split the line at that column
-        // and insert our content on a new line, then continue with the rest of the original line
-        const currentLineContent = originalContent.split(/\r?\n/)[line1Based - 1] || "";
-        const beforeColumn = currentLineContent.slice(0, column1Based - 1);
-        const afterColumn = currentLineContent.slice(column1Based - 1);
-
-        // Replace the entire line with: beforeColumn + newline + preparedContent + newline + afterColumn
-        const replacement =
-          beforeColumn + "\n" + preparedContent + (afterColumn ? "\n" + afterColumn : "");
-        magicString.overwrite(lineStart, lineEnd, replacement);
-      } else {
-        // Insert after the entire line
-        magicString.appendRight(lineEnd, preparedContent);
+  if (Array.isArray(injection.content)) {
+    for (const item of injection.content) {
+      if (typeof item !== "string") {
+        return "All content array items must be strings";
       }
-    } else {
-      // Insert at the exact position without creating new line
-      magicString.appendRight(index, preparedContent);
     }
-
-    return true;
-  } catch (err) {
-    console.error(`[injector] MagicString injection failed: ${(err as Error).message}`);
-    return false;
   }
-}
 
-/** Returns comment symbols for the given file extension. */
-function getCommentSymbols(ext: string): {
-  lineComment: string;
-  blockStart: string;
-  blockEnd: string;
-} {
-  const map: Record<string, { line?: string; blockStart: string; blockEnd: string }> = {
-    ".js": { line: "//", blockStart: "/*", blockEnd: "*/" },
-    ".ts": { line: "//", blockStart: "/*", blockEnd: "*/" },
-    ".jsx": { line: "//", blockStart: "/*", blockEnd: "*/" },
-    ".tsx": { line: "//", blockStart: "/*", blockEnd: "*/" },
-    ".css": { line: "//", blockStart: "/*", blockEnd: "*/" },
-    ".scss": { line: "//", blockStart: "/*", blockEnd: "*/" },
-    ".html": { line: "//", blockStart: "<!--", blockEnd: "-->" },
-    ".py": { line: "#", blockStart: '"""', blockEnd: '"""' },
-    ".sh": { line: "#", blockStart: ": <<'BLOCK'", blockEnd: "BLOCK" },
-    ".yaml": { line: "#", blockStart: "# ---", blockEnd: "# ---" },
-    ".yml": { line: "#", blockStart: "# ---", blockEnd: "# ---" },
-    ".json": { line: "//", blockStart: "/*", blockEnd: "*/" },
-    ".jsonc": { line: "//", blockStart: "/*", blockEnd: "*/" },
-  };
+  const positioningError = validateInjectionPositioning(injection);
+  if (positioningError) {
+    return positioningError;
+  }
 
-  const symbols = map[ext.toLowerCase()] ?? { line: "//", blockStart: "/*", blockEnd: "*/" };
-  return {
-    lineComment: symbols.line ?? "//",
-    blockStart: symbols.blockStart,
-    blockEnd: symbols.blockEnd,
-  };
-}
+  if (injection.location) {
+    return validateLineColumn(injection.location.line, injection.location.column, based);
+  }
+
+  // Validate before/after targets
+  if (injection.injectBefore) {
+    if (typeof injection.injectBefore !== "string" && !Array.isArray(injection.injectBefore)) {
+      return "injectBefore must be a string or string array";
+    }
+    if (Array.isArray(injection.injectBefore)) {
+      for (const item of injection.injectBefore) {
+        if (typeof item !== "string") {
+          return "All injectBefore array items must be strings";
+        }
+      }
+      if (injection.injectBefore.length === 0) {
+        return "injectBefore array cannot be empty";
+      }
+    }
+  }
+
+  if (injection.injectAfter) {
+    if (typeof injection.injectAfter !== "string" && !Array.isArray(injection.injectAfter)) {
+      return "injectAfter must be a string or string array";
+    }
+    if (Array.isArray(injection.injectAfter)) {
+      for (const item of injection.injectAfter) {
+        if (typeof item !== "string") {
+          return "All injectAfter array items must be strings";
+        }
+      }
+      if (injection.injectAfter.length === 0) {
+        return "injectAfter array cannot be empty";
+      }
+    }
+  }
+
+  return null;
+};
+
+/**
+ * Batch validates multiple injections
+ */
+export const validateMultipleInjections = (
+  injections: SingleInjection[],
+  based: "0-based" | "1-based" = "1-based",
+): { index: number; error: string }[] => {
+  const errors: { index: number; error: string }[] = [];
+
+  for (let i = 0; i < injections.length; i++) {
+    const injection = injections[i];
+    if (!injection) continue;
+    const error = validateInjection(injection, based);
+    if (error) {
+      errors.push({ index: i, error });
+    }
+  }
+
+  return errors;
+};
+
+/**
+ * Preview injection without writing to file
+ */
+export const previewInjection = async (
+  injection: SingleInjection,
+  options: Omit<InjectionOptions, "writeToFile"> = {},
+): Promise<InjectionResult> => {
+  return injectAtLocation(injection, { ...options, writeToFile: false });
+};
+
+/**
+ * Preview multiple injections without writing to files
+ */
+export const previewMultipleInjections = async (
+  injections: SingleInjection[],
+  options: Omit<InjectionOptions, "writeToFile"> = {},
+): Promise<InjectionResult[]> => {
+  return injectMultiple(injections, { ...options, writeToFile: false });
+};
+
+/**
+ * Preview revert operation without writing to file
+ */
+export const previewRevert = async (
+  injection: SingleInjection,
+  options: Omit<InjectionOptions, "writeToFile" | "revert"> = {},
+): Promise<InjectionResult> => {
+  return injectAtLocation(injection, {
+    ...options,
+    writeToFile: false,
+    revert: true,
+  });
+};
+
+/**
+ * Preview multiple revert operations without writing to files
+ */
+export const previewMultipleReverts = async (
+  injections: SingleInjection[],
+  options: Omit<InjectionOptions, "writeToFile" | "revert"> = {},
+): Promise<InjectionResult[]> => {
+  return injectMultiple(injections, {
+    ...options,
+    writeToFile: false,
+    revert: true,
+  });
+};
+
+export default {
+  injectAtLocation,
+  injectMultiple,
+  createInjection,
+  validateInjection,
+  validateMultipleInjections,
+  previewInjection,
+  previewMultipleInjections,
+  previewRevert,
+  previewMultipleReverts,
+};
