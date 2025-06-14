@@ -9,19 +9,41 @@ import { removeDistFolders } from "~/libs/sdk/sdk-impl/utils/utils-clean";
 import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 /**
+ * Provides guidance about publishing based on the current mode and pause state.
+ */
+function providePublishGuidance(usedMode: "build" | "pub", commonPubPause: boolean): void {
+  if (commonPubPause) {
+    relinka("info", "📝 Publishing is paused in your config (commonPubPause=true)");
+    relinka(
+      "info",
+      usedMode === "pub"
+        ? "💡 To enable publishing: set commonPubPause=false in your config"
+        : "💡 To publish: set commonPubPause=false, then run 'dler pub'",
+    );
+  } else {
+    relinka("info", "💡 To publish: run 'dler pub'");
+  }
+}
+
+/**
  * Finalizes the build process and reports completion.
  */
-export async function finalizeBuild(timer: PerfTimer, commonPubPause: boolean): Promise<void> {
+export async function finalizeBuild(
+  timer: PerfTimer,
+  commonPubPause: boolean,
+  usedMode: "build" | "pub",
+): Promise<void> {
   const elapsedTime = getElapsedPerfTime(timer);
-  const transpileFormattedTime = prettyMilliseconds(elapsedTime, {
-    verbose: true,
-  });
+  const formattedPerfTime = prettyMilliseconds(elapsedTime, { verbose: true });
 
-  console.log("-".repeat(50));
-  relinka("success", `🎉 Build completed successfully (done in: ${transpileFormattedTime})`);
-  if (commonPubPause) {
-    relinka("info", "📝 Publish process is currently paused in your config file");
-  }
+  // Print separator for better visual separation
+  console.log("\n" + "=".repeat(60));
+
+  // Report build completion with timing
+  relinka("success", `🎉 Build completed successfully in ${formattedPerfTime}`);
+
+  // Provide publish guidance
+  providePublishGuidance(usedMode, commonPubPause);
 }
 
 /**
@@ -35,18 +57,18 @@ export async function finalizePub(
   libsDirDist: string,
 ): Promise<void> {
   const elapsedTime = getElapsedPerfTime(timer);
-  const transpileFormattedTime = prettyMilliseconds(elapsedTime, {
-    verbose: true,
-  });
+  const formattedPerfTime = prettyMilliseconds(elapsedTime, { verbose: true });
 
-  // Clean up and reset bump
+  // Delete dist folders
   await removeDistFolders(distNpmDirName, distJsrDirName, libsDirDist, libsList);
 
+  // Reset bump if it was disabled
   try {
     await setBumpDisabledValueTo(false);
   } catch {
     throw new Error("[.config/dler.ts] Failed to set bumpDisable to false");
   }
 
-  relinka("success", `🎉 Publish completed successfully (build time: ${transpileFormattedTime})`);
+  // Report success
+  relinka("success", `🎉 Build and publish completed successfully in ${formattedPerfTime}`);
 }

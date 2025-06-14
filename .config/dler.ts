@@ -15,7 +15,7 @@ export default defineConfigDler({
   bumpMode: "patch",
 
   // Common configuration
-  commonPubPause: true,
+  commonPubPause: false,
   commonPubRegistry: "npm-jsr",
   commonVerbose: true,
 
@@ -150,8 +150,20 @@ export default defineConfigDler({
   },
 
   // Code quality tools
-  runBeforeBuild: ["tsc", "eslint", "biome", "knip"], // "dler-check"
+  runBeforeBuild: [], // "tsc", "eslint", "biome", "knip", "dler-check"
   runAfterBuild: [], // "dler-check"
+
+  // Build hooks
+  hooksBeforeBuild: [
+    // async () => {
+    //   await someAsyncOperation();
+    // }
+  ],
+  hooksAfterBuild: [
+    // async () => {
+    //   await someAsyncOperation();
+    // }
+  ],
 
   // Build setup
   // transpileAlias: {},

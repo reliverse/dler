@@ -14,16 +14,12 @@ export default defineCommand({
       type: "boolean",
       description: "Runs the CLI in dev mode",
     },
-    preventPub: {
-      type: "boolean",
-      description: "Do not publish the project (command will act the same as `dler build` command)",
-    },
   }),
   async run({ args }) {
     await ensureDlerConfig(args.dev);
 
     const config = await getConfigDler();
 
-    await dlerPub(args.dev, config, args.preventPub);
+    await dlerPub(args.dev, config);
   },
 });

@@ -47,6 +47,18 @@ export const DEFAULT_CONFIG_DLER: DlerConfig = {
   runBeforeBuild: [], // tsc, eslint, biome, knip, dler-check
   runAfterBuild: [], // dler-check
 
+  // Build hooks
+  hooksBeforeBuild: [
+    // async () => {
+    //   await someAsyncOperation();
+    // }
+  ],
+  hooksAfterBuild: [
+    // async () => {
+    //   await someAsyncOperation();
+    // }
+  ],
+
   // Build setup
   transpileFailOnWarn: false,
   transpileEsbuild: "es2023",

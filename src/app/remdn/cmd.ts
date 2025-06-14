@@ -57,14 +57,16 @@ interface FileTree {
 const DEFAULT_CONFIG: ConfigFile = {
   output: "table.md",
   dirs: {
-    src: { includeExt: [".ts", ".js"] },
-    "dist-npm/bin": { includeExt: [".ts", ".js"] },
-    "dist-jsr/bin": { includeExt: [".ts", ".js"] },
+    src: {}, // No extension filters by default
+    "dist-npm/bin": {}, // No extension filters by default
+    "dist-jsr/bin": {}, // No extension filters by default
   },
   "ext-map": {
     ts: ["ts", "js-d.ts", "ts"], // [<main>, <dist-npm/bin | dist-libs's * npm/bin>, <dist-jsr | dist-libs's * jsr/bin>]
   },
 };
+
+const DEFAULT_CONFIG_PATH = ".config/remdn.ts";
 
 const getLibDirs = async (basePath: string, mainPath: string): Promise<DirConfig> => {
   const libDirs: DirConfig = {};
@@ -98,7 +100,7 @@ const getLibDirs = async (basePath: string, mainPath: string): Promise<DirConfig
         for (const libEntry of libEntries) {
           if (libEntry.isDirectory() && (libEntry.name === "npm" || libEntry.name === "jsr")) {
             const binPath = join(libPath, libEntry.name, "bin");
-            libDirs[binPath] = { includeExt: [".ts", ".js"] };
+            libDirs[binPath] = {}; // No extension filters by default
           }
         }
       }
@@ -175,6 +177,19 @@ const evaluateTsConfig = async (filePath: string): Promise<ConfigFile> => {
 
 const readConfig = async (path?: string): Promise<ConfigFile> => {
   if (!path) {
+    // Try to read from default config path first
+    try {
+      if (await Bun.file(DEFAULT_CONFIG_PATH).exists()) {
+        return await evaluateTsConfig(DEFAULT_CONFIG_PATH);
+      }
+    } catch (error) {
+      console.warn(
+        `Warning: Could not read default config at ${DEFAULT_CONFIG_PATH}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+
     const mainPath = DEFAULT_CONFIG.dirs.src ? "src" : Object.keys(DEFAULT_CONFIG.dirs)[0];
     if (!mainPath) {
       throw new Error("No main directory found in default configuration");
@@ -268,7 +283,11 @@ const validateFilters = ({ includeExt, excludeExt }: DirOptions) => {
 
 const shouldInclude = (file: string, opts: DirOptions): boolean => {
   const ext = `.${file.split(".").pop()}`;
+  // If no filters are specified, include all files
+  if (!opts.includeExt && !opts.excludeExt) return true;
+  // Apply include filter if specified
   if (opts.includeExt && !opts.includeExt.includes(ext)) return false;
+  // Apply exclude filter if specified
   if (opts.excludeExt?.includes(ext)) return false;
   return true;
 };
@@ -553,8 +572,8 @@ const createDefaultConfig = async (path: string): Promise<void> => {
   const config = {
     title: "Directory Comparison",
     dirs: {
-      src: { includeExt: [".ts", ".js"] },
-      dist: { includeExt: [".js", ".d.ts"] },
+      src: {}, // No extension filters by default
+      dist: {}, // No extension filters by default
     },
   };
 
@@ -568,6 +587,12 @@ export default config;
 `;
   } else {
     content = JSON.stringify(config, null, 2);
+  }
+
+  // Ensure the directory exists
+  const dir = path.substring(0, path.lastIndexOf("/"));
+  if (dir && !(await Bun.file(dir).exists())) {
+    await Bun.write(dir, ""); // Create directory
   }
 
   await writeFile(path, content);
@@ -660,7 +685,7 @@ export default defineCommand({
         "Path to the configuration file. Can be:\n" +
         "- Just filename with .json or .ts extension (e.g. 'config.json', 'config.ts') - will look in current directory\n" +
         "- Full path with .json or .ts extension (e.g. '/path/to/config.json', '/path/to/config.ts') - must exist\n" +
-        "If not provided, will use default configuration",
+        `If not provided, will use default configuration at ${DEFAULT_CONFIG_PATH}`,
     },
     outputFilePath: {
       type: "string",
@@ -676,7 +701,7 @@ export default defineCommand({
         "Initialize a new configuration file. Can be:\n" +
         "- Just filename with .json or .ts extension (e.g. 'config.json', 'config.ts') - will be created in current directory\n" +
         "- Full path with .json or .ts extension (e.g. '/path/to/config.json', '/path/to/config.ts') - directory must exist\n" +
-        "If provided, will create a new configuration file and exit",
+        `If not provided, will create at ${DEFAULT_CONFIG_PATH}`,
     },
     processLibsOnly: {
       type: "boolean",
@@ -688,7 +713,6 @@ export default defineCommand({
     },
   }),
   async run({ args }) {
-    // console.log(args.mode); // <- type is Mode
     const { processLibsOnly, preventLibsProcessing } = args;
     let { configPath, outputFilePath, mode, initConfig } = args;
 

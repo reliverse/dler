@@ -3,11 +3,12 @@ import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { dlerBuild } from "~/app/build/impl";
 import { ensureDlerConfig } from "~/libs/sdk/sdk-impl/config/init";
 import { getConfigDler } from "~/libs/sdk/sdk-impl/config/load";
+import { finalizeBuild } from "~/libs/sdk/sdk-mod";
 
 export default defineCommand({
   meta: {
     name: "build",
-    description: "Build the project",
+    description: "Build the project (without publishing)",
   },
   args: defineArgs({
     dev: {
@@ -20,6 +21,8 @@ export default defineCommand({
 
     const config = await getConfigDler();
 
-    await dlerBuild(args.dev, config);
+    const { timer } = await dlerBuild(args.dev, config);
+
+    await finalizeBuild(timer, false, "build");
   },
 });

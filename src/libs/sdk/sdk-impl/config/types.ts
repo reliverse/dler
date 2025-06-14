@@ -385,12 +385,60 @@ export interface DlerConfig {
 
   /**
    * List of tools to run after the build process completes.
-   * Currently only supports "dler-check".
+   * Available options: "dler-check"
    * Each tool will only run if it's installed in the system.
    *
    * @default []
    */
   runAfterBuild: "dler-check"[];
+
+  // ==========================================================================
+  // Build hooks
+  // ==========================================================================
+
+  /**
+   * Array of functions to be executed before the build process starts.
+   * These hooks will be called in sequence before any build steps.
+   *
+   * If you are a dler plugin developer, tell your users to
+   * call your plugin's `beforeBuild`-related function here.
+   *
+   * @example
+   * hooksBeforeBuild: [
+   *   async () => {
+   *     // Custom pre-build logic
+   *     await someAsyncOperation();
+   *
+   *     // dler-plugin-my-plugin-name
+   *     await myPluginName_beforeBuild();
+   *   }
+   * ]
+   *
+   * @default []
+   */
+  hooksBeforeBuild: (() => Promise<void>)[];
+
+  /**
+   * Array of functions to be executed after the build process completes.
+   * These hooks will be called in sequence after all build steps.
+   *
+   * If you are a dler plugin developer, tell your users to
+   * call your plugin's `afterBuild`-related function here.
+   *
+   * @example
+   * hooksAfterBuild: [
+   *   async () => {
+   *     // Custom post-build logic
+   *     await someAsyncOperation();
+   *
+   *     // dler-plugin-my-plugin-name
+   *     await myPluginName_afterBuild();
+   *   }
+   * ]
+   *
+   * @default []
+   */
+  hooksAfterBuild: (() => Promise<void>)[];
 
   // ==========================================================================
   // Build setup

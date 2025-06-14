@@ -6,7 +6,7 @@ import { dlerBuild } from "~/app/build/impl";
 import { getConfigDler } from "~/libs/sdk/sdk-impl/config/load";
 import { library_pubFlow } from "~/libs/sdk/sdk-impl/library-flow";
 import { regular_pubFlow } from "~/libs/sdk/sdk-impl/regular-flow";
-import { finalizePub } from "~/libs/sdk/sdk-impl/utils/finalize";
+import { finalizeBuild, finalizePub } from "~/libs/sdk/sdk-impl/utils/finalize";
 import { handleDlerError } from "~/libs/sdk/sdk-impl/utils/utils-error-cwd";
 
 // ==========================
@@ -18,7 +18,7 @@ import { handleDlerError } from "~/libs/sdk/sdk-impl/utils/utils-error-cwd";
  * Handles building and publishing for both main project and libraries.
  * @see `src/app/build/impl.ts` for build main function implementation.
  */
-export async function dlerPub(isDev: boolean, config?: DlerConfig, preventPub = false) {
+export async function dlerPub(isDev: boolean, config?: DlerConfig) {
   let effectiveConfig = config;
 
   try {
@@ -47,8 +47,11 @@ export async function dlerPub(isDev: boolean, config?: DlerConfig, preventPub = 
     // Build step
     const { timer, effectiveConfig: buildConfig } = await dlerBuild(isDev, effectiveConfig);
 
-    // Publish step
-    if (!preventPub) {
+    if (effectiveConfig.commonPubPause) {
+      // Finalize build
+      await finalizeBuild(timer, effectiveConfig.commonPubPause, "pub");
+    } else {
+      // Publish step
       await regular_pubFlow(timer, isDev, buildConfig);
       await library_pubFlow(timer, isDev, buildConfig);
 
