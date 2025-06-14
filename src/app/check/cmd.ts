@@ -1,16 +1,11 @@
 import path from "@reliverse/pathkit";
 import { re } from "@reliverse/relico";
 import { relinka } from "@reliverse/relinka";
-import {
-  defineCommand,
-  selectPrompt,
-  multiselectPrompt,
-  confirmPrompt,
-  defineArgs,
-} from "@reliverse/rempts";
+import { defineCommand, selectPrompt, multiselectPrompt, defineArgs } from "@reliverse/rempts";
 
 import type { FinderOptions } from "~/libs/sdk/sdk-impl/rules/reliverse/missing-deps/deps-types";
 import type { AllowedFileExtensionsType } from "~/libs/sdk/sdk-impl/rules/rules-consts";
+import type { DirectoryType } from "~/libs/sdk/sdk-types";
 
 import { checkDlerConfigHealth } from "~/libs/sdk/sdk-impl/rules/reliverse/dler-config-health/dler-config-health";
 import { checkFileExtensions } from "~/libs/sdk/sdk-impl/rules/reliverse/file-extensions/file-extensions";
@@ -51,6 +46,14 @@ export default defineCommand({
     json: {
       type: "boolean",
       description: "output results in JSON format",
+    },
+    "no-exit": {
+      type: "boolean",
+      description: "don't exit with error code on issues (useful for pre-build checks)",
+    },
+    "no-progress": {
+      type: "boolean",
+      description: "don't show progress information (useful for pre-build checks)",
     },
 
     // --- deps args ---
@@ -144,7 +147,6 @@ export default defineCommand({
 
     let dir: string;
     let checks: string[];
-    let strict: boolean;
 
     // Handle directory selection
     if (args.directory) {
@@ -207,17 +209,6 @@ export default defineCommand({
       });
     }
 
-    // Handle strict mode
-    if (args.strict !== undefined) {
-      strict = args.strict;
-    } else {
-      strict = await confirmPrompt({
-        title: "activate strict mode?",
-        content:
-          "strict mode requires explicit extensions (no empty extensions). files: .ts in src/jsr dirs, .js in npm dirs. imports: .js in src/npm dirs, .ts in jsr dirs. templates folder is always exempt.",
-      });
-    }
-
     if (checks.length === 0) {
       relinka("warn", "no checks selected, exiting...");
       return;
@@ -240,99 +231,120 @@ export default defineCommand({
       relinka("info", `\nchecking directory: ${directory}`);
 
       // progress callback for user feedback
-      const onProgress = (current: number, total: number) => {
-        if (current % 10 === 0 || current === total) {
-          process.stdout.write(`\r  progress: ${current}/${total} files...`);
-        }
-      };
+      const onProgress = args["no-progress"]
+        ? undefined
+        : (current: number, total: number) => {
+            if (current % 10 === 0 || current === total) {
+              process.stdout.write(`\r  progress: ${current}/${total} files...`);
+            }
+          };
 
       try {
         if (checks.includes("package-json-health")) {
-          process.stdout.write("  checking package.json health...\n");
           const result = await checkPackageJsonHealth();
-          process.stdout.write("\r");
           displayCheckResults("package.json health", directory, result);
+          if (!result.success && !args["no-exit"]) {
+            process.exit(1);
+          }
         }
 
         if (checks.includes("tsconfig-health")) {
-          process.stdout.write("  checking tsconfig.json health...\n");
           const result = await checkTsConfigHealth();
-          process.stdout.write("\r");
           displayCheckResults("tsconfig.json health", directory, result);
+          if (!result.success && !args["no-exit"]) {
+            process.exit(1);
+          }
         }
 
         if (checks.includes("dler-config-health")) {
-          process.stdout.write("  checking libs main file format...\n");
           const result = await checkDlerConfigHealth();
-          process.stdout.write("\r");
-          displayCheckResults("libs main file format", directory, result);
-        }
-
-        if (checks.includes("missing-deps")) {
-          process.stdout.write("  checking missing dependencies...\n");
-          const result = await checkMissingDependencies({
-            directory,
-            strict: false, // not used for deps check
-            moduleResolution: "bundler", // not used for deps check
-            onProgress,
-          });
-          process.stdout.write("\r");
-          displayCheckResults("missing dependencies", directory, result);
+          displayCheckResults("dler configuration health", directory, result);
+          if (!result.success && !args["no-exit"]) {
+            process.exit(1);
+          }
         }
 
         if (checks.includes("file-extensions")) {
-          process.stdout.write("  checking file extensions...\n");
           const result = await checkFileExtensions({
-            directory,
-            strict,
+            directory: directory as DirectoryType,
+            strict: args.strict,
             moduleResolution: "bundler",
             onProgress,
           });
-          process.stdout.write("\r");
           displayCheckResults("file extensions", directory, result);
+          if (!result.success && !args["no-exit"]) {
+            process.exit(1);
+          }
         }
 
         if (checks.includes("path-extensions")) {
-          process.stdout.write("  checking import path extensions...\n");
           const result = await checkPathExtensions({
-            directory,
-            strict,
+            directory: directory as DirectoryType,
+            strict: args.strict,
             moduleResolution: "bundler",
             onProgress,
           });
-          process.stdout.write("\r");
           displayCheckResults("path extensions", directory, result);
+          if (!result.success && !args["no-exit"]) {
+            process.exit(1);
+          }
         }
 
         if (checks.includes("self-include")) {
-          process.stdout.write("  checking self-includes...\n");
           const result = await checkSelfInclude({
-            directory,
-            strict,
+            directory: directory as DirectoryType,
+            strict: args.strict,
             moduleResolution: "bundler",
             onProgress,
           });
-          process.stdout.write("\r");
-          displayCheckResults("self-includes", directory, result);
+          displayCheckResults("self-include", directory, result);
+          if (!result.success && !args["no-exit"]) {
+            process.exit(1);
+          }
         }
 
         if (checks.includes("no-index-files")) {
-          process.stdout.write("  checking for index files...\n");
           const result = await checkNoIndexFiles({
-            directory,
-            strict,
+            directory: directory as DirectoryType,
+            strict: args.strict,
             moduleResolution: "bundler",
             onProgress,
           });
-          process.stdout.write("\r");
           displayCheckResults("no index files", directory, result);
+          if (!result.success && !args["no-exit"]) {
+            process.exit(1);
+          }
         }
 
         if (checks.includes("no-dynamic-imports")) {
-          process.stdout.write("  checking for dynamic imports...\n");
-          const result = await checkNoDynamicImports(directory);
-          process.stdout.write("\r");
+          const result = await checkNoDynamicImports({
+            directory: directory as DirectoryType,
+            onProgress,
+          });
           displayCheckResults("no dynamic imports", directory, result);
+          if (!result.success && !args["no-exit"]) {
+            process.exit(1);
+          }
+        }
+
+        if (checks.includes("missing-deps")) {
+          const result = await checkMissingDependencies({
+            directory: directory as DirectoryType,
+            strict: args.strict,
+            moduleResolution: "bundler",
+            onProgress,
+            json: args.json,
+            builtins: args.builtins,
+            dev: args.dev,
+            peer: args.peer,
+            optional: args.optional,
+            fix: args.fix,
+            depth: args.depth,
+          });
+          displayCheckResults("missing dependencies", directory, result);
+          if (!result.success && !args["no-exit"]) {
+            process.exit(1);
+          }
         }
       } catch (error) {
         relinka(

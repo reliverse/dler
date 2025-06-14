@@ -1,10 +1,8 @@
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 
-// TODO: change to build/impl in the future
-import { dlerPub } from "~/app/pub/impl";
+import { dlerBuild } from "~/app/build/impl";
 import { ensureDlerConfig } from "~/libs/sdk/sdk-impl/config/init";
 import { getConfigDler } from "~/libs/sdk/sdk-impl/config/load";
-import { removeDistFolders } from "~/libs/sdk/sdk-mod";
 
 export default defineCommand({
   meta: {
@@ -22,14 +20,6 @@ export default defineCommand({
 
     const config = await getConfigDler();
 
-    await removeDistFolders(
-      config.distNpmDirName,
-      config.distJsrDirName,
-      config.libsDirDist,
-      config.libsList,
-    );
-
-    await dlerPub(args.dev, config); // temp
-    // await dlerBuild(args.dev);
+    await dlerBuild(args.dev, config);
   },
 });

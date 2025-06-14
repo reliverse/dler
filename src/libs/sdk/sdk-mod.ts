@@ -1,4 +1,3 @@
-// AUTO-GENERATED AGGREGATOR START (via `dler agg`)
 export type { LibraryBuildOptions } from "./sdk-impl/build/build-library.js";
 export { library_buildLibrary } from "./sdk-impl/build/build-library.js";
 export { regular_buildJsrDist, regular_buildNpmDist } from "./sdk-impl/build/build-regular.js";
@@ -94,10 +93,15 @@ export type {
   transpileTarget,
 } from "./sdk-impl/config/types.js";
 export { IGNORE_PATTERNS } from "./sdk-impl/constants.js";
-export { processLibraryFlow, libraries_buildPublish } from "./sdk-impl/library-flow.js";
+export {
+  library_buildFlow,
+  libraries_build,
+  libraries_publish,
+  library_pubFlow,
+} from "./sdk-impl/library-flow.js";
 export { library_publishLibrary } from "./sdk-impl/pub/pub-library.js";
 export { regular_pubToJsr, regular_pubToNpm } from "./sdk-impl/pub/pub-regular.js";
-export { processRegularFlow } from "./sdk-impl/regular-flow.js";
+export { regular_buildFlow, regular_pubFlow } from "./sdk-impl/regular-flow.js";
 export { checkDlerConfigHealth } from "./sdk-impl/rules/reliverse/dler-config-health/dler-config-health.js";
 export { checkFileExtensions } from "./sdk-impl/rules/reliverse/file-extensions/file-extensions.js";
 export { analyzeDependencies } from "./sdk-impl/rules/reliverse/missing-deps/analyzer.js";
@@ -156,7 +160,7 @@ export {
   isBinary,
   getMimeType,
 } from "./sdk-impl/utils/file-type.js";
-export { finalizeBuildPub } from "./sdk-impl/utils/finalize.js";
+export { finalizeBuild, finalizePub } from "./sdk-impl/utils/finalize.js";
 export {
   WHITELABEL_DEFAULT,
   JSON_EXTS,
@@ -279,4 +283,3 @@ export type {
   CreateLoaderOptions,
   MkdistOptions,
 } from "./sdk-types.js";
-// AUTO-GENERATED AGGREGATOR END

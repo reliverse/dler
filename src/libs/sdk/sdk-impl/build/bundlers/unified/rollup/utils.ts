@@ -4,7 +4,7 @@ import type { BuildContext } from "~/libs/sdk/sdk-types";
 
 export const DEFAULT_EXTENSIONS: string[] = [
   ".ts",
-  ".tsx",
+  // ".tsx", // todo: introduce new option in dler config which allows to enable/disable transpiling other extensions that .ts and .js (disabling is especially useful for bootstrapping projects clis like @reliverse/rse)
   ".mts",
   ".cts",
   ".mjs",

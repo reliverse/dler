@@ -6,33 +6,43 @@ import {
   defineArgs,
   selectPrompt,
   showUsage,
-  runCmd as remptsRunCmd,
-  type Command,
+  runCmd,
 } from "@reliverse/rempts";
 
 import { promptAggCommand } from "./app/agg/run";
 import { getBuildCmd, getPubCmd, getInitCmd, getRenameCmd } from "./app/cmds";
 import { showEndPrompt, showStartPrompt } from "./libs/sdk/sdk-impl/config/info";
 import { ensureDlerConfig } from "./libs/sdk/sdk-impl/config/init";
+import { getConfigDler } from "./libs/sdk/sdk-impl/config/load";
 
 const INTERACTIVE_CMDS = ["agg", "build", "pub"];
 
-/**
- * Wrapper around rempts' runCmd to handle jiti-loaded modules
- */
-async function runCmd(cmdPromise: Promise<Command>, args: string[]) {
-  const cmd = await cmdPromise;
-  // Ensure we have a valid command object with required properties
-  if (!cmd || typeof cmd !== "object" || !cmd.meta || !cmd.run) {
-    throw new Error("Invalid command module: missing required properties");
-  }
-  return remptsRunCmd(cmd, args);
+interface SelectOption {
+  value: string;
+  label: string;
+  disabled?: boolean;
+  hint?: string;
 }
+
+interface SeparatorOption {
+  separator: true;
+}
+
+type PromptOption = SelectOption | SeparatorOption;
 
 const main = defineCommand({
   meta: {
     name: "dler",
     description: `Interactively runs selected dler's command.\nHowever, NI (non-interactive) mode is more powerful, to see NI mode available commands and arguments: 'dler --help' (or 'dler <command> --help')\nAvailable interactive commands: ${INTERACTIVE_CMDS.join(", ")}`,
+  },
+  onLauncherInit() {
+    const isBun = process.versions.bun;
+    if (!isBun) {
+      relinka(
+        "warn",
+        "🔥 At the moment Dler is optimized only for Bun! We can't guarantee any success for other environments like Node.js, Deno, etc.",
+      );
+    }
   },
   args: defineArgs({
     dev: {
@@ -63,17 +73,26 @@ const main = defineCommand({
     }
     await showStartPrompt(args.dev);
 
-    const cmdToRun = await selectPrompt({
-      title: "Select a command to run",
-      options: [
-        { value: "build", label: "build project" },
-        { value: "pub", label: "publish project" },
-        { value: "agg", label: "aggregate files" },
-        { separator: true },
-        { value: "utils", label: re.bold("UTILS"), disabled: true },
-        { separator: true },
-        { value: "copy", label: "copy files" },
-        { value: "init", label: "init files" },
+    const config = await getConfigDler();
+    const hasValidCLIConfig =
+      config.coreIsCLI?.enabled &&
+      config.coreIsCLI?.scripts &&
+      Object.keys(config.coreIsCLI.scripts).length > 0;
+
+    const options: PromptOption[] = [
+      { value: "build", label: "build project" },
+      { value: "pub", label: "publish project" },
+      { value: "agg", label: "aggregate files" },
+      { separator: true },
+      { value: "utils", label: re.bold("UTILS"), disabled: true },
+      { separator: true },
+      { value: "copy", label: "copy files" },
+      { value: "init", label: "init files" },
+      { value: "remdn", label: "run remdn", hint: "undocs alternative" },
+    ];
+
+    if (hasValidCLIConfig) {
+      options.push(
         {
           value: "rename-prepare",
           label: "[experimental] my project is a bootstrapper cli (apply rename optimizations)",
@@ -82,21 +101,26 @@ const main = defineCommand({
           value: "rename-prepare-revert",
           label: "[experimental] revert rename cli files optimizations",
         },
-      ],
+      );
+    }
+
+    const cmdToRun = await selectPrompt({
+      title: "Select a command to run",
+      options,
     });
 
     if (cmdToRun === "agg") {
       await promptAggCommand();
     } else if (cmdToRun === "build") {
-      await runCmd(getBuildCmd(), [`--dev=${args.dev}`]);
+      await runCmd(await getBuildCmd(), [`--dev=${args.dev} --no-pub`]);
     } else if (cmdToRun === "pub") {
-      await runCmd(getPubCmd(), [`--dev=${args.dev}`]);
+      await runCmd(await getPubCmd(), [`--dev=${args.dev}`]);
     } else if (cmdToRun === "init") {
-      await runCmd(getInitCmd(), []);
+      await runCmd(await getInitCmd(), []);
     } else if (cmdToRun === "rename-prepare") {
-      await runCmd(getRenameCmd(), ["--prepareMyCLI"]);
+      await runCmd(await getRenameCmd(), ["--prepareMyCLI"]);
     } else if (cmdToRun === "rename-prepare-revert") {
-      await runCmd(getRenameCmd(), ["--prepareMyCLI", "--revert"]);
+      await runCmd(await getRenameCmd(), ["--prepareMyCLI", "--revert"]);
     }
 
     relinka("log", " ");

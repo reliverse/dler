@@ -1,5 +1,5 @@
 import path from "@reliverse/pathkit";
-import { defineArgs, defineCommand } from "@reliverse/rempts";
+import { defineArgs, defineCommand, inputPrompt } from "@reliverse/rempts";
 
 import { useAggregator } from "./impl";
 
@@ -16,7 +16,6 @@ export default defineCommand({
     input: {
       description: "Directory containing .ts/.js files (--input <directory>)",
       type: "string",
-      required: true,
     },
     named: {
       description: "Parse each file for named exports (function/class/const/let)",
@@ -26,7 +25,6 @@ export default defineCommand({
     out: {
       description: "Output aggregator file path (--out <fileName>)",
       type: "string",
-      required: true,
     },
     recursive: {
       description:
@@ -77,24 +75,68 @@ export default defineCommand({
       description: "Output file path for types (used when separateTypesFile is true)",
       type: "string",
     },
+    nonInteractive: {
+      description: "Disable interactive prompts and require all arguments to be provided via flags",
+      type: "boolean",
+      default: false,
+    },
   }),
   async run({ args }) {
+    const resolvedArgs = { ...args };
+
+    // Handle required arguments with prompts when nonInteractive is false
+    if (!args.nonInteractive) {
+      if (!args.input) {
+        resolvedArgs.input = await inputPrompt({
+          title: "Enter input directory containing .ts/.js files:",
+          defaultValue: "",
+        });
+      }
+
+      if (!args.out) {
+        resolvedArgs.out = await inputPrompt({
+          title: "Enter output aggregator file path:",
+          defaultValue: "",
+        });
+      }
+
+      if (args.separateTypesFile && !args.typesOut) {
+        resolvedArgs.typesOut = await inputPrompt({
+          title: "Enter output file path for types:",
+          defaultValue: resolvedArgs.out.replace(/\.(ts|js)$/, ".types.$1"),
+        });
+      }
+    } else {
+      // Validate required arguments in non-interactive mode
+      if (!args.input) {
+        throw new Error("Missing required argument: --input");
+      }
+      if (!args.out) {
+        throw new Error("Missing required argument: --out");
+      }
+      if (args.separateTypesFile && !args.typesOut) {
+        throw new Error(
+          "Missing required argument: --typesOut (required when --separateTypesFile is true)",
+        );
+      }
+    }
+
     await useAggregator({
-      inputDir: path.resolve(args.input),
-      isRecursive: !!args.recursive,
-      outFile: path.resolve(args.out),
-      stripPrefix: args.strip ? path.resolve(args.strip) : "",
-      useImport: !!args.imports,
-      useNamed: !!args.named,
-      sortLines: !!args.sort,
-      headerComment: args.header || "",
-      verbose: !!args.verbose,
-      includeInternal: !!args.includeInternal,
-      internalMarker: args.internalMarker,
-      overrideFile: !!args.override,
-      fileExtensions: args.extensions.split(",").map((ext) => ext.trim()),
-      separateTypesFile: !!args.separateTypesFile,
-      typesOutFile: args.typesOut ? path.resolve(args.typesOut) : undefined,
+      inputDir: path.resolve(resolvedArgs.input),
+      isRecursive: !!resolvedArgs.recursive,
+      outFile: path.resolve(resolvedArgs.out),
+      stripPrefix: resolvedArgs.strip ? path.resolve(resolvedArgs.strip) : "",
+      useImport: !!resolvedArgs.imports,
+      useNamed: !!resolvedArgs.named,
+      sortLines: !!resolvedArgs.sort,
+      headerComment: resolvedArgs.header || "",
+      verbose: !!resolvedArgs.verbose,
+      includeInternal: !!resolvedArgs.includeInternal,
+      internalMarker: resolvedArgs.internalMarker,
+      overrideFile: !!resolvedArgs.override,
+      fileExtensions: resolvedArgs.extensions.split(",").map((ext) => ext.trim()),
+      separateTypesFile: !!resolvedArgs.separateTypesFile,
+      typesOutFile: resolvedArgs.typesOut ? path.resolve(resolvedArgs.typesOut) : undefined,
     });
   },
 });

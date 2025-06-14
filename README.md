@@ -127,7 +127,7 @@ if you run just `dler` — it will display a list of commands which you can laun
 
 ## **available commands**
 
-[agg](#1-agg) [build](#2-build) [check](#3-check) [conv](#4-conv) [copy](#6-copy) [init](#7-init) [inject](#8-inject) [libs](#9-libs) [merge](#10-merge) [migrate](#11-migrate) [pub](#12-pub) [rempts](#13-rempts) [rename](#14-rename) [spell](#15-spell) [split](#16-split) [pack](#17-pack) [unpack](#18-unpack)
+[agg](#1-agg) [build](#2-build) [check](#3-check) [conv](#4-conv) [copy](#6-copy) [init](#7-init) [inject](#8-inject) [libs](#9-libs) [merge](#10-merge) [migrate](#11-migrate) [pub](#12-pub) [rempts](#13-rempts) [rename](#14-rename) [spell](#15-magic) [split](#16-split) [pack](#17-pack) [unpack](#18-unpack)
 
 ### 1. `agg`
 
@@ -601,7 +601,7 @@ bun dler rempts --init cmd1 cmd2
 bun dler rename ...
 ```
 
-### 15. `spell`
+### 15. `magic`
 
 > Contributors: Please check the [docs/cmds/SPELLS.md](./docs/cmds/SPELLS.md) file for more technical details.
 

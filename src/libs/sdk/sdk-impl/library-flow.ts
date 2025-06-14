@@ -20,27 +20,24 @@ import { library_publishLibrary } from "./pub/pub-library";
 import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "./utils/utils-consts";
 
 /**
- * Processes libraries based on build mode.
+ * Builds libraries based on build mode.
  */
-export async function processLibraryFlow(
+export async function library_buildFlow(
   timer: PerfTimer,
   isDev: boolean,
   config: DlerConfig,
 ): Promise<void> {
   if (config.libsActMode !== "libs-only" && config.libsActMode !== "main-and-libs") {
-    relinka("verbose", "Skipping libs build/publish as libsActMode is set to 'main-project-only'");
+    relinka("verbose", "Skipping libs build as libsActMode is set to 'main-project-only'");
     return;
   }
 
-  await libraries_buildPublish(
+  await libraries_build(
     isDev,
     timer,
     config.libsList,
-    config.distJsrDryRun,
-    config.distJsrFailOnWarn,
     config.libsDirDist,
     config.libsDirSrc,
-    config.commonPubPause,
     config.commonPubRegistry,
     config.distNpmOutFilesExt,
     config.distNpmBuilder,
@@ -56,9 +53,34 @@ export async function processLibraryFlow(
     config.transpileStub,
     config.transpileWatch,
     config.distJsrOutFilesExt,
+    config,
+  );
+}
+
+/**
+ * Publishes libraries based on build mode.
+ */
+export async function library_pubFlow(
+  timer: PerfTimer,
+  isDev: boolean,
+  config: DlerConfig,
+): Promise<void> {
+  if (config.libsActMode !== "libs-only" && config.libsActMode !== "main-and-libs") {
+    relinka("verbose", "Skipping libs publish as libsActMode is set to 'main-project-only'");
+    return;
+  }
+
+  await libraries_publish(
+    isDev,
+    timer,
+    config.libsList,
+    config.distJsrDryRun,
+    config.distJsrFailOnWarn,
+    config.libsDirDist,
+    config.commonPubPause,
+    config.commonPubRegistry,
     config.distJsrAllowDirty,
     config.distJsrSlowTypes,
-    config,
   );
 }
 
@@ -90,18 +112,14 @@ function extractFolderName(libName: string, libConfig?: LibConfig): string {
 }
 
 /**
- * Processes all libs defined in config.libsList.
- * Builds and optionally publishes each library based on configuration.
+ * Builds all libs defined in config.libsList.
  */
-export async function libraries_buildPublish(
+export async function libraries_build(
   isDev: boolean,
   timer: PerfTimer,
   libsList: Record<string, LibConfig>,
-  distJsrDryRun: boolean,
-  distJsrFailOnWarn: boolean,
   libsDirDist: string,
   libsDirSrc: string,
-  commonPubPause: boolean,
   commonPubRegistry: "jsr" | "npm" | "npm-jsr",
   unifiedBundlerOutExt: NpmOutExt,
   distNpmBuilder: BundlerName,
@@ -122,11 +140,9 @@ export async function libraries_buildPublish(
   transpileStub: boolean,
   transpileWatch: boolean,
   distJsrOutFilesExt: NpmOutExt,
-  distJsrAllowDirty: boolean,
-  distJsrSlowTypes: boolean,
   config: DlerConfig,
 ): Promise<void> {
-  relinka("verbose", "Starting libraries_buildPublish");
+  relinka("verbose", "Starting libraries_build");
 
   if (!libsList || Object.keys(libsList).length === 0) {
     relinka("log", "No lib configs found in config, skipping libs build.");
@@ -135,7 +151,7 @@ export async function libraries_buildPublish(
 
   const libsEntries = Object.entries(libsList);
 
-  // Create a set of build/publish tasks and run them in parallel (concurrency limited)
+  // Create a set of build tasks and run them in parallel (concurrency limited)
   const tasks = libsEntries.map(([libName, libConfig]) => {
     return async () => {
       try {
@@ -173,7 +189,7 @@ export async function libraries_buildPublish(
 
         const libTranspileMinify = (libConfig as any)?.libTranspileMinify === true;
 
-        // 1. Build library
+        // Build library
         await library_buildLibrary({
           ...config,
           effectivePubRegistry: libConfig.libPubRegistry || commonPubRegistry,
@@ -205,8 +221,64 @@ export async function libraries_buildPublish(
           transpileStub,
           transpileWatch,
         });
+      } catch (error) {
+        relinka(
+          "error",
+          `Failed to build library ${libName}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+        throw error;
+      }
+    };
+  });
 
-        // 2. Publish if not paused
+  try {
+    await pAll(tasks, {
+      concurrency: CONCURRENCY_DEFAULT,
+    });
+    relinka("verbose", "Completed libraries_build");
+  } catch (error) {
+    if (timer) resumePerfTimer(timer);
+    throw error;
+  }
+}
+
+/**
+ * Publishes all libs defined in config.libsList.
+ */
+export async function libraries_publish(
+  isDev: boolean,
+  timer: PerfTimer,
+  libsList: Record<string, LibConfig>,
+  distJsrDryRun: boolean,
+  distJsrFailOnWarn: boolean,
+  libsDirDist: string,
+  commonPubPause: boolean,
+  commonPubRegistry: "jsr" | "npm" | "npm-jsr",
+  distJsrAllowDirty: boolean,
+  distJsrSlowTypes: boolean,
+): Promise<void> {
+  relinka("verbose", "Starting libraries_publish");
+
+  if (!libsList || Object.keys(libsList).length === 0) {
+    relinka("log", "No lib configs found in config, skipping libs publish.");
+    return;
+  }
+
+  const libsEntries = Object.entries(libsList);
+
+  // Create a set of publish tasks and run them in parallel (concurrency limited)
+  const tasks = libsEntries.map(([libName, libConfig]) => {
+    return async () => {
+      try {
+        // Determine top-level folder name for dist output
+        const folderName = extractFolderName(libName, libConfig);
+        const libBaseDir = path.resolve(PROJECT_ROOT, libsDirDist, folderName);
+        const npmOutDir = path.join(libBaseDir, "npm");
+        const jsrOutDir = path.join(libBaseDir, "jsr");
+
+        // Publish if not paused
         if (!commonPubPause && !libConfig.libPubPause) {
           const effectivePubRegistry =
             libConfig.libPubRegistry || (commonPubRegistry as "jsr" | "npm" | "npm-jsr");
@@ -228,7 +300,7 @@ export async function libraries_buildPublish(
       } catch (error) {
         relinka(
           "error",
-          `Failed to process library ${libName}: ${
+          `Failed to publish library ${libName}: ${
             error instanceof Error ? error.message : String(error)
           }`,
         );
@@ -241,7 +313,7 @@ export async function libraries_buildPublish(
     await pAll(tasks, {
       concurrency: CONCURRENCY_DEFAULT,
     });
-    relinka("verbose", "Completed libraries_buildPublish");
+    relinka("verbose", "Completed libraries_publish");
   } catch (error) {
     if (timer) resumePerfTimer(timer);
     throw error;

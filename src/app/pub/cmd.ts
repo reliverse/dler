@@ -3,17 +3,20 @@ import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { dlerPub } from "~/app/pub/impl";
 import { ensureDlerConfig } from "~/libs/sdk/sdk-impl/config/init";
 import { getConfigDler } from "~/libs/sdk/sdk-impl/config/load";
-import { removeDistFolders } from "~/libs/sdk/sdk-mod";
 
 export default defineCommand({
   meta: {
-    name: "build",
-    description: "Build the project",
+    name: "pub",
+    description: "Build and publish the project",
   },
   args: defineArgs({
     dev: {
       type: "boolean",
       description: "Runs the CLI in dev mode",
+    },
+    preventPub: {
+      type: "boolean",
+      description: "Do not publish the project (command will act the same as `dler build` command)",
     },
   }),
   async run({ args }) {
@@ -21,13 +24,6 @@ export default defineCommand({
 
     const config = await getConfigDler();
 
-    await removeDistFolders(
-      config.distNpmDirName,
-      config.distJsrDirName,
-      config.libsDirDist,
-      config.libsList,
-    );
-
-    await dlerPub(args.dev, config);
+    await dlerPub(args.dev, config, args.preventPub);
   },
 });

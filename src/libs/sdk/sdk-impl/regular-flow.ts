@@ -9,15 +9,15 @@ import { regular_pubToJsr, regular_pubToNpm } from "./pub/pub-regular";
 import { CONCURRENCY_DEFAULT } from "./utils/utils-consts";
 
 /**
- * Processes the main project based on build mode and commonPubRegistry.
+ * Builds the main project based on build mode and commonPubRegistry.
  */
-export async function processRegularFlow(
+export async function regular_buildFlow(
   timer: PerfTimer,
   isDev: boolean,
   config: DlerConfig,
 ): Promise<void> {
   if (config.libsActMode === "libs-only") {
-    relinka("log", "Skipping main project build/publish as libsActMode is set to 'libs-only'");
+    relinka("log", "Skipping main project build as libsActMode is set to 'libs-only'");
     return;
   }
 
@@ -46,16 +46,6 @@ export async function processRegularFlow(
         config.distJsrGenTsconfig,
         config.coreDeclarations,
       );
-      await regular_pubToJsr(
-        config.distJsrDryRun,
-        config.distJsrFailOnWarn,
-        isDev,
-        config.commonPubPause,
-        config.distJsrDirName,
-        config.distJsrAllowDirty,
-        config.distJsrSlowTypes,
-        timer,
-      );
       break;
     case "npm":
       relinka("log", "Initializing build process for main project to NPM only...");
@@ -78,13 +68,6 @@ export async function processRegularFlow(
         config.transpileWatch,
         timer,
         config.coreDeclarations,
-      );
-      await regular_pubToNpm(
-        config.distJsrDryRun,
-        isDev,
-        config.commonPubPause,
-        config.distNpmDirName,
-        timer,
       );
       break;
     case "npm-jsr": {
@@ -137,6 +120,53 @@ export async function processRegularFlow(
           ),
       ];
       await pAll(buildTasks, { concurrency: CONCURRENCY_DEFAULT });
+      break;
+    }
+    default:
+      relinka("error", `Invalid commonPubRegistry: ${config.commonPubRegistry}`);
+      throw new Error(`Invalid commonPubRegistry: ${config.commonPubRegistry}`);
+  }
+}
+
+/**
+ * Publishes the main project based on commonPubRegistry.
+ */
+export async function regular_pubFlow(
+  timer: PerfTimer,
+  isDev: boolean,
+  config: DlerConfig,
+): Promise<void> {
+  if (config.libsActMode === "libs-only") {
+    relinka("log", "Skipping main project publish as libsActMode is set to 'libs-only'");
+    return;
+  }
+
+  switch (config.commonPubRegistry) {
+    case "jsr":
+      relinka("log", "Publishing main project to JSR...");
+      await regular_pubToJsr(
+        config.distJsrDryRun,
+        config.distJsrFailOnWarn,
+        isDev,
+        config.commonPubPause,
+        config.distJsrDirName,
+        config.distJsrAllowDirty,
+        config.distJsrSlowTypes,
+        timer,
+      );
+      break;
+    case "npm":
+      relinka("log", "Publishing main project to NPM...");
+      await regular_pubToNpm(
+        config.distJsrDryRun,
+        isDev,
+        config.commonPubPause,
+        config.distNpmDirName,
+        timer,
+      );
+      break;
+    case "npm-jsr": {
+      relinka("log", "Publishing main project to both NPM and JSR...");
       const publishTasks = [
         () =>
           regular_pubToJsr(

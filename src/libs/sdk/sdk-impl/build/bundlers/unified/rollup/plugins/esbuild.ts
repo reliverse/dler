@@ -11,13 +11,11 @@ const DefaultLoaders: Record<string, Loader> = {
   ".cjs": "js",
   ".cts": "ts",
   ".js": "js",
-
   ".jsx": "jsx",
   ".mjs": "js",
   ".mts": "ts",
-
   ".ts": "ts",
-  ".tsx": "tsx",
+  // ".tsx": "tsx", // todo: introduce new option in dler config which allows to enable/disable transpiling other extensions that .ts and .js (disabling is especially useful for bootstrapping projects clis like @reliverse/rse)
 };
 
 export function esbuild(options: EsbuildOptions): Plugin {

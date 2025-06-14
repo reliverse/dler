@@ -43,6 +43,9 @@ export const DEFAULT_CONFIG_DLER: DlerConfig = {
     "dist-libs": {},
   },
 
+  // Code quality tools
+  runBeforeBuild: [],
+
   // Build setup
   transpileFailOnWarn: false,
   transpileEsbuild: "es2023",

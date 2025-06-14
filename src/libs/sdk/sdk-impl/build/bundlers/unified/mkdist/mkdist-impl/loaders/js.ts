@@ -38,9 +38,12 @@ export const jsLoader: Loader = async (input, { options }) => {
       ...options.esbuild,
       loader: "ts",
     }).then((r) => r.code);
-  } else if ([".tsx", ".jsx"].includes(input.extension)) {
+    // todo: introduce new option in dler config which allows to enable/disable transpiling other extensions that .ts and .js (disabling is especially useful for bootstrapping projects clis like @reliverse/rse)
+    // } else if ([".tsx", ".jsx"].includes(input.extension)) {
+  } else if (input.extension === ".jsx") {
     contents = await transform(contents, {
-      loader: input.extension === ".tsx" ? "tsx" : "jsx",
+      // loader: input.extension === ".tsx" ? "tsx" : "jsx",
+      loader: "jsx",
       ...options.esbuild,
     }).then((r) => r.code);
   }

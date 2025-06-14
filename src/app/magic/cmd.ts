@@ -7,7 +7,47 @@ export default defineCommand({
   meta: {
     name: "magic",
     version: "1.0.0",
-    description: `Apply magic directives to files.
+    description: "Apply magic directives to files",
+  },
+  args: defineArgs({
+    targets: {
+      type: "array",
+      description:
+        "Targets to process. Can be: 1) Distribution targets: dist-npm, dist-jsr, dist-libs, dist-libs/<lib>; 2) Custom targets: any directory name that is not dist-*",
+      required: true,
+    },
+    lib: {
+      type: "string",
+      description: "Library name to process (e.g., sdk, cfg). Only valid with dist-libs target.",
+    },
+    concurrency: {
+      type: "number",
+      description: "Number of files to process in parallel (default: 4)",
+      default: 4,
+    },
+    batchSize: {
+      type: "number",
+      description: "Number of files to process in each batch (default: 100)",
+      default: 100,
+    },
+    stopOnError: {
+      type: "boolean",
+      description: "Stop processing on first error (default: true)",
+      default: true,
+    },
+    about: {
+      type: "boolean",
+      description: "Show about message",
+    },
+  }),
+
+  async run({ args }) {
+    const { targets, lib, concurrency, batchSize, stopOnError, about } = args;
+
+    if (about) {
+      console.log(
+        `Apply magic directives to files.
+--------------------------------
 
 Target Types:
 1. Distribution Targets (dist-*):
@@ -36,39 +76,13 @@ Examples:
   dler magic my-custom-output
 
   # Mix distribution and custom targets
-  dler magic dist-npm my-custom-output`,
-  },
-  args: defineArgs({
-    targets: {
-      type: "array",
-      description: `Targets to process. Can be:
-- Distribution targets: dist-npm, dist-jsr, dist-libs, dist-libs/<lib>
-- Custom targets: any directory name that is not dist-*`,
-      required: true,
-    },
-    lib: {
-      type: "string",
-      description: "Library name to process (e.g., sdk, cfg). Only valid with dist-libs target.",
-    },
-    concurrency: {
-      type: "number",
-      description: "Number of files to process in parallel (default: 4)",
-      default: 4,
-    },
-    batchSize: {
-      type: "number",
-      description: "Number of files to process in each batch (default: 100)",
-      default: 100,
-    },
-    stopOnError: {
-      type: "boolean",
-      description: "Stop processing on first error (default: true)",
-      default: true,
-    },
-  }),
-
-  async run({ args }) {
-    const { targets, lib, concurrency, batchSize, stopOnError } = args;
+  dler magic dist-npm my-custom-output
+  
+  --------------------------------------------
+  For more information, see README.md#15-magic`,
+      );
+      return;
+    }
 
     // Validate lib parameter
     if (lib) {

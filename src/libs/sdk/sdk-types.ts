@@ -446,7 +446,7 @@ export interface PerfTimer {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-type DirectoryType = "src" | "dist-npm" | "dist-jsr" | "dist-libs/npm" | "dist-libs/jsr";
+export type DirectoryType = "src" | "dist-npm" | "dist-jsr" | "dist-libs/npm" | "dist-libs/jsr";
 
 export interface RulesCheckOptions {
   directory: DirectoryType;

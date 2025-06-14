@@ -371,6 +371,19 @@ export interface DlerConfig {
   };
 
   // ==========================================================================
+  // Code quality tools
+  // ==========================================================================
+
+  /**
+   * List of tools to run before the build process starts.
+   * Available options: "tsc", "eslint", "biome", "knip", "dler-check"
+   * Each tool will only run if it's installed in the system.
+   *
+   * @default []
+   */
+  runBeforeBuild: ("tsc" | "eslint" | "biome" | "knip" | "dler-check")[];
+
+  // ==========================================================================
   // Build setup
   // ==========================================================================
 
