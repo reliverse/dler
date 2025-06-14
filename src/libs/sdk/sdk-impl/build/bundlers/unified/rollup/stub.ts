@@ -3,7 +3,7 @@ import { fileURLToPath, resolveModuleExportNames, resolvePath } from "mlly";
 import { promises as fsp } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 
-import type { BuildContext } from "~/libs/sdk/sdk-types";
+import type { BuildContext } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { warn } from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils";
 

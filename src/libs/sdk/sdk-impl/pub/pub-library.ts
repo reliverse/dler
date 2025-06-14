@@ -2,7 +2,7 @@ import { relinka } from "@reliverse/relinka";
 import { execaCommand } from "execa";
 import pAll from "p-all";
 
-import type { PerfTimer } from "~/libs/sdk/sdk-types";
+import type { PerfTimer } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { CONCURRENCY_DEFAULT } from "~/libs/sdk/sdk-impl/utils/utils-consts";
 import { withWorkingDirectory } from "~/libs/sdk/sdk-impl/utils/utils-error-cwd";

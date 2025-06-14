@@ -3,7 +3,7 @@ import cssnano from "cssnano";
 import postcss from "postcss";
 import postcssNested from "postcss-nested";
 
-import type { Loader, LoaderResult } from "~/libs/sdk/sdk-types";
+import type { Loader, LoaderResult } from "~/libs/sdk/sdk-impl/sdk-types";
 
 export type PostcssLoaderOptions = {};
 

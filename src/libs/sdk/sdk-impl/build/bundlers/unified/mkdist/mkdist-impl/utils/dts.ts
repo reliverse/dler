@@ -5,7 +5,7 @@ import { resolve } from "@reliverse/pathkit";
 import { findStaticImports, findDynamicImports, findExports, findTypeExports } from "mlly";
 import { statSync } from "node:fs";
 
-import type { MkdistOptions } from "~/libs/sdk/sdk-types";
+import type { MkdistOptions } from "~/libs/sdk/sdk-impl/sdk-types";
 
 export async function normalizeCompilerOptions(_options: TSConfig["compilerOptions"]) {
   const ts = await import("typescript").then((r) => r.default || r);

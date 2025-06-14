@@ -1,6 +1,6 @@
 import { relinka } from "@reliverse/relinka";
 
-import type { CheckResult } from "~/libs/sdk/sdk-types";
+import type { CheckResult } from "~/libs/sdk/sdk-impl/sdk-types";
 
 // format check results
 export function displayCheckResults(

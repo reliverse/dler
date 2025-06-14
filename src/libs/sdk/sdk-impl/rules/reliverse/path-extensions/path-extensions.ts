@@ -3,7 +3,7 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 
 import type { AllowedFileExtensionsType } from "~/libs/sdk/sdk-impl/rules/rules-consts";
-import type { CheckIssue, CheckResult, RulesCheckOptions } from "~/libs/sdk/sdk-types";
+import type { CheckIssue, CheckResult, RulesCheckOptions } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import {
   ALLOWED_IMPORT_EXTENSIONS,

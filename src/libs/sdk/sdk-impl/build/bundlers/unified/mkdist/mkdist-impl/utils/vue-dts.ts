@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 // import { readPackageJSON } from "pkg-types"; // TODO: use normal import in next major
 import { satisfies } from "semver";
 
-import type { MkdistOptions } from "~/libs/sdk/sdk-types";
+import type { MkdistOptions } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import type { DeclarationOutput } from "./dts";
 

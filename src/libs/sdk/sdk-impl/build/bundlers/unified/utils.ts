@@ -7,7 +7,7 @@ import { createJiti } from "jiti";
 import { readdirSync, statSync } from "node:fs";
 import fsp from "node:fs/promises";
 
-import type { BuildContext, BuildPreset, UnifiedBuildConfig } from "~/libs/sdk/sdk-types";
+import type { BuildContext, BuildPreset, UnifiedBuildConfig } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { autoPreset } from "./auto";
 

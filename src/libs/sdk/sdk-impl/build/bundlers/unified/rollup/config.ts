@@ -4,7 +4,7 @@ import { isAbsolute, resolve } from "@reliverse/pathkit";
 import { resolveAlias } from "@reliverse/pathkit";
 import { parseNodeModulePath } from "mlly";
 
-import type { BuildContext, RollupOptions } from "~/libs/sdk/sdk-types";
+import type { BuildContext, RollupOptions } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { arrayIncludes, getpkg, warn } from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils";
 

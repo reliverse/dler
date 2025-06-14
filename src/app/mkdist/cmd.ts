@@ -1,7 +1,7 @@
 import { resolve } from "@reliverse/pathkit";
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 
-import type { MkdistOptions } from "~/libs/sdk/sdk-types";
+import type { MkdistOptions } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { dlerBuild } from "~/app/build/impl";
 import { mkdist } from "~/libs/sdk/sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/make";

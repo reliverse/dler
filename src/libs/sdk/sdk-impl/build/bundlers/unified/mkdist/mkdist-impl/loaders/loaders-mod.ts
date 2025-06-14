@@ -1,4 +1,4 @@
-import type { Loader } from "~/libs/sdk/sdk-types";
+import type { Loader } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { jsLoader } from "./js";
 import { postcssLoader } from "./postcss";

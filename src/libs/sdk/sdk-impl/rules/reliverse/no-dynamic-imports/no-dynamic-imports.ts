@@ -3,21 +3,14 @@ import { relinka } from "@reliverse/relinka";
 import { promises as fs } from "node:fs";
 import { glob } from "tinyglobby";
 
-import type { CheckResult } from "~/libs/sdk/sdk-types";
-import type { DirectoryType } from "~/libs/sdk/sdk-types";
+import type { CheckResult } from "~/libs/sdk/sdk-impl/sdk-types";
+import type { DirectoryType } from "~/libs/sdk/sdk-impl/sdk-types";
+
+import { validateDirectory } from "~/libs/sdk/sdk-impl/utils/utils-fs";
 
 interface CheckNoDynamicImportsOptions {
   directory: DirectoryType;
   onProgress?: (current: number, total: number) => void;
-}
-
-async function validateDirectory(dir: string): Promise<boolean> {
-  try {
-    const stat = await fs.stat(dir);
-    return stat.isDirectory();
-  } catch {
-    return false;
-  }
 }
 
 function isDirectoryType(value: unknown): value is DirectoryType {

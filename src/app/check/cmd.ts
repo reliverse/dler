@@ -5,7 +5,7 @@ import { defineCommand, selectPrompt, multiselectPrompt, defineArgs } from "@rel
 
 import type { FinderOptions } from "~/libs/sdk/sdk-impl/rules/reliverse/missing-deps/deps-types";
 import type { AllowedFileExtensionsType } from "~/libs/sdk/sdk-impl/rules/rules-consts";
-import type { DirectoryType } from "~/libs/sdk/sdk-types";
+import type { DirectoryType } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { checkDlerConfigHealth } from "~/libs/sdk/sdk-impl/rules/reliverse/dler-config-health/dler-config-health";
 import { checkFileExtensions } from "~/libs/sdk/sdk-impl/rules/reliverse/file-extensions/file-extensions";

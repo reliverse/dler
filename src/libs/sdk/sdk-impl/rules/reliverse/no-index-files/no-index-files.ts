@@ -1,7 +1,7 @@
 import path from "@reliverse/pathkit";
 import { glob } from "tinyglobby";
 
-import type { CheckResult, RulesCheckOptions } from "~/libs/sdk/sdk-types";
+import type { CheckResult, RulesCheckOptions } from "~/libs/sdk/sdk-impl/sdk-types";
 
 export async function checkNoIndexFiles(options: RulesCheckOptions): Promise<CheckResult> {
   const { directory } = options;

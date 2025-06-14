@@ -1,4 +1,9 @@
-import type { CreateLoaderOptions, InputFile, LoaderContext, LoadFile } from "~/libs/sdk/sdk-types";
+import type {
+  CreateLoaderOptions,
+  InputFile,
+  LoaderContext,
+  LoadFile,
+} from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { resolveLoaders } from "./loaders/loaders-mod";
 

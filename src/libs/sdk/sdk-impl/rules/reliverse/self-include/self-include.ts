@@ -2,7 +2,7 @@ import { getFileImportsExports, extname } from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 
-import type { CheckIssue, CheckResult, RulesCheckOptions } from "~/libs/sdk/sdk-types";
+import type { CheckIssue, CheckResult, RulesCheckOptions } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { getConfigDler } from "~/libs/sdk/sdk-impl/config/load";
 import { getAllFiles, getLineNumber } from "~/libs/sdk/sdk-impl/rules/rules-utils";

@@ -1,4 +1,4 @@
-import type { DlerConfig } from "./types";
+import type { DlerConfig } from "./cfg-types";
 
 /**
  * Default configuration for the build and publish logic.
@@ -45,6 +45,7 @@ export const DEFAULT_CONFIG_DLER: DlerConfig = {
 
   // Code quality tools
   runBeforeBuild: [], // tsc, eslint, biome, knip, dler-check
+  runAfterBuild: [], // dler-check
 
   // Build setup
   transpileFailOnWarn: false,

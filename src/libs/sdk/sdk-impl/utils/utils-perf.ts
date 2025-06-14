@@ -2,7 +2,7 @@
 // Timer (TODO: Move to a separate repo)
 // ========================================
 
-import type { PerfTimer } from "~/libs/sdk/sdk-types";
+import type { PerfTimer } from "~/libs/sdk/sdk-impl/sdk-types";
 
 export function createPerfTimer(): PerfTimer {
   return {

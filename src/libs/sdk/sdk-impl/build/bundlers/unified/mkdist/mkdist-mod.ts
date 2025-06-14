@@ -1,7 +1,7 @@
 import { relative, dirname as pathDirname } from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
 
-import type { BuildContext, MkdistBuildEntry, MkdistOptions } from "~/libs/sdk/sdk-types";
+import type { BuildContext, MkdistBuildEntry, MkdistOptions } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { rmdir, symlink, warn } from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils";
 

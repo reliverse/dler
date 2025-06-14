@@ -6,7 +6,11 @@ import { pascalCase } from "scule";
 import { generateMarkdown, generateTypes, type InputObject, resolveSchema } from "untyped";
 import untypedPlugin from "untyped/babel-plugin";
 
-import type { BuildContext, UntypedBuildEntry, UntypedOutputs } from "~/libs/sdk/sdk-types";
+import type {
+  BuildContext,
+  UntypedBuildEntry,
+  UntypedOutputs,
+} from "~/libs/sdk/sdk-impl/sdk-types";
 
 export async function typesBuild(ctx: BuildContext): Promise<void> {
   const entries = ctx.options.entries.filter(

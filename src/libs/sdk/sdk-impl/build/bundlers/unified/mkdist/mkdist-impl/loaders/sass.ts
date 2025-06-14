@@ -1,7 +1,7 @@
 import { basename } from "@reliverse/pathkit";
 import { pathToFileURL } from "node:url";
 
-import type { Loader, LoaderResult } from "~/libs/sdk/sdk-types";
+import type { Loader, LoaderResult } from "~/libs/sdk/sdk-impl/sdk-types";
 
 export const sassLoader: Loader = async (input) => {
   if (![".sass", ".scss"].includes(input.extension)) {

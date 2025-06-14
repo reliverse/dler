@@ -1,4 +1,4 @@
-import type { CheckIssue, CheckResult, RulesCheckOptions } from "~/libs/sdk/sdk-types";
+import type { CheckIssue, CheckResult, RulesCheckOptions } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { IGNORE_PATTERNS } from "~/libs/sdk/sdk-impl/constants";
 import { analyzeDependencies } from "~/libs/sdk/sdk-impl/rules/reliverse/missing-deps/analyzer";

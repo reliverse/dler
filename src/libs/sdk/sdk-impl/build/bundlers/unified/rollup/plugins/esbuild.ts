@@ -5,7 +5,7 @@ import { extname, relative } from "@reliverse/pathkit";
 import { createFilter } from "@rollup/pluginutils";
 import { transform } from "esbuild";
 
-import type { EsbuildOptions } from "~/libs/sdk/sdk-types";
+import type { EsbuildOptions } from "~/libs/sdk/sdk-impl/sdk-types";
 
 const DefaultLoaders: Record<string, Loader> = {
   ".cjs": "js",

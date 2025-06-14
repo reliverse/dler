@@ -1,7 +1,7 @@
 import { transform } from "esbuild";
 import jiti from "jiti";
 
-import type { Loader, LoaderResult } from "~/libs/sdk/sdk-types";
+import type { Loader, LoaderResult } from "~/libs/sdk/sdk-impl/sdk-types";
 
 const DECLARATION_RE = /\.d\.[cm]?ts$/;
 const CM_LETTER_RE = /(?<=\.)(c|m)(?=[jt]s$)/;

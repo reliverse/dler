@@ -21,14 +21,14 @@ export const walkDir = async (dir: string): Promise<string[]> => {
   return entries;
 };
 
-export const detectFileType = async (file: string): Promise<FileType> => {
+export const detectFileTypePU = async (file: string): Promise<FileType> => {
   if (await isBinaryExt(file)) return "binary";
   if (isJsonExt(file)) return "json";
   return "text";
 };
 
 export const readFileForTemplate = async (absPath: string): Promise<TemplatesFileContent> => {
-  const type = await detectFileType(absPath);
+  const type = await detectFileTypePU(absPath);
 
   try {
     if (type === "binary") {

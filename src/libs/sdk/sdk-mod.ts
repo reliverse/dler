@@ -1,3 +1,4 @@
+// AUTO-GENERATED AGGREGATOR START (via `dler agg`)
 export type { LibraryBuildOptions } from "./sdk-impl/build/build-library.js";
 export { library_buildLibrary } from "./sdk-impl/build/build-library.js";
 export { regular_buildJsrDist, regular_buildNpmDist } from "./sdk-impl/build/build-regular.js";
@@ -77,6 +78,55 @@ export {
   validateDependencies,
   validatePackage,
 } from "./sdk-impl/build/bundlers/unified/validate.js";
+export type {
+  InjectionLocation,
+  SingleInjection,
+  InjectionResult,
+  InjectionOptions,
+} from "./sdk-impl/cmds/inject/inject-impl-mod.js";
+export {
+  injectAtLocation,
+  injectMultiple,
+  createInjection,
+  validateInjection,
+  validateMultipleInjections,
+  previewInjection,
+  previewMultipleInjections,
+  previewRevert,
+  previewMultipleReverts,
+} from "./sdk-impl/cmds/inject/inject-impl-mod.js";
+export type {
+  MagicStringOptions,
+  UpdateOptions,
+  OverwriteOptions,
+  IndentOptions,
+  StringTransformer,
+  TransformResult,
+  BundleSource,
+} from "./sdk-impl/cmds/transform/transform-impl-mod.js";
+export {
+  createTransformerFromMagicString,
+  createTransformer,
+  update,
+  overwrite,
+  append,
+  prepend,
+  remove,
+  replace,
+  replaceAll,
+  indent,
+  trim,
+  pipe,
+  wrapWith,
+  insertAt,
+  slice,
+  template,
+  readAndTransform,
+  transformAndWrite,
+  transformMultiple,
+  createBundle,
+  compose,
+} from "./sdk-impl/cmds/transform/transform-impl-mod.js";
 export { DEFAULT_CONFIG_DLER, defineConfigDler } from "./sdk-impl/config/default.js";
 export { showStartPrompt, showEndPrompt } from "./sdk-impl/config/info.js";
 export { ensureDlerConfig } from "./sdk-impl/config/init.js";
@@ -95,10 +145,28 @@ export type {
 export { IGNORE_PATTERNS } from "./sdk-impl/constants.js";
 export {
   library_buildFlow,
+  library_pubFlow,
   libraries_build,
   libraries_publish,
-  library_pubFlow,
 } from "./sdk-impl/library-flow.js";
+export type {
+  ApplyMagicSpellsOptions,
+  ApplyMagicSpellsResult,
+  FileWithSpells,
+} from "./sdk-impl/magic/ms-apply.js";
+export {
+  applyMagicSpells,
+  processSingleOutputFile,
+  getAllAvailableRegistries,
+  getFilesWithMagicSpells,
+} from "./sdk-impl/magic/ms-apply.js";
+export type {
+  SpellEvaluationContext,
+  SpellOutcome,
+  SpellDirective,
+  SpellInfo,
+} from "./sdk-impl/magic/ms-spells.js";
+export { getAvailableSpells, evaluateMagicDirective } from "./sdk-impl/magic/ms-spells.js";
 export { library_publishLibrary } from "./sdk-impl/pub/pub-library.js";
 export { regular_pubToJsr, regular_pubToNpm } from "./sdk-impl/pub/pub-regular.js";
 export { regular_buildFlow, regular_pubFlow } from "./sdk-impl/regular-flow.js";
@@ -124,6 +192,7 @@ export {
   getListedDependencies,
   getBuiltinModules,
 } from "./sdk-impl/rules/reliverse/missing-deps/parser.js";
+export { checkNoDynamicImports } from "./sdk-impl/rules/reliverse/no-dynamic-imports/no-dynamic-imports.js";
 export { checkNoIndexFiles } from "./sdk-impl/rules/reliverse/no-index-files/no-index-files.js";
 export { checkPackageJsonHealth } from "./sdk-impl/rules/reliverse/package-json-health/package-json-health.js";
 export { checkPathExtensions } from "./sdk-impl/rules/reliverse/path-extensions/path-extensions.js";
@@ -139,16 +208,42 @@ export {
 export { displayCheckResults } from "./sdk-impl/rules/rules-mod.js";
 export { shouldIgnoreFile, getAllFiles, getLineNumber } from "./sdk-impl/rules/rules-utils.js";
 export type {
-  ApplyMagicSpellsOptions,
-  ApplyMagicSpellsResult,
-} from "./sdk-impl/magic/ms-apply.js";
-export { applyMagicSpells, getAllAvailableRegistries } from "./sdk-impl/magic/ms-apply.js";
-export type {
-  SpellEvaluationContext,
-  SpellOutcome,
-  SpellDirective,
-} from "./sdk-impl/magic/ms-spells.js";
-export { evaluateMagicDirective } from "./sdk-impl/magic/ms-spells.js";
+  DistDirs,
+  DistDirsAll,
+  CopyBuildEntry,
+  CopyHooks,
+  MkdistBuildEntry,
+  MkdistHooks,
+  RollupBuildEntry,
+  EsbuildOptions,
+  RollupBuildOptions,
+  RollupHooks,
+  RollupOptions,
+  UntypedBuildEntry,
+  UntypedHooks,
+  UntypedOutput,
+  UntypedOutputs,
+  BaseBuildEntry,
+  BuildContext,
+  BuildEntry,
+  BuildHooks,
+  BuildOptions,
+  BuildPreset,
+  UnifiedBuildConfig,
+  PerfTimer,
+  DirectoryType,
+  RulesCheckOptions,
+  CheckIssue,
+  CheckResult,
+  InputFile,
+  OutputFile,
+  LoaderResult,
+  LoadFile,
+  LoaderContext,
+  Loader,
+  CreateLoaderOptions,
+  MkdistOptions,
+} from "./sdk-impl/sdk-types.js";
 export { BINARY_EXTS, BINARY_SET } from "./sdk-impl/utils/b-exts.js";
 export { isBinaryExt } from "./sdk-impl/utils/binary.js";
 export type { CommentStyle, FileExtension, CommentMapping } from "./sdk-impl/utils/comments.js";
@@ -171,6 +266,7 @@ export {
 } from "./sdk-impl/utils/pack-unpack/pu-constants.js";
 export {
   walkDir,
+  detectFileTypePU,
   readFileForTemplate,
   escapeTemplateString,
 } from "./sdk-impl/utils/pack-unpack/pu-file-utils.js";
@@ -217,6 +313,7 @@ export {
   readFileSafe,
   writeFileSafe,
   copyInsteadOfBuild,
+  validateDirectory,
 } from "./sdk-impl/utils/utils-fs.js";
 export { createJsrJSON, renameTsxFiles } from "./sdk-impl/utils/utils-jsr-json.js";
 export { extractPackageName } from "./sdk-impl/utils/utils-misc.js";
@@ -243,43 +340,7 @@ export {
   handleError,
   validateTemplate,
   validateMergeOperation,
-  validateDirectory,
   validateFileExists,
 } from "./sdk-impl/utils/utils-security.js";
 export { createTSConfig } from "./sdk-impl/utils/utils-tsconfig.js";
-export type {
-  DistDirs,
-  DistDirsAll,
-  CopyBuildEntry,
-  CopyHooks,
-  MkdistBuildEntry,
-  MkdistHooks,
-  RollupBuildEntry,
-  EsbuildOptions,
-  RollupBuildOptions,
-  RollupHooks,
-  RollupOptions,
-  UntypedBuildEntry,
-  UntypedHooks,
-  UntypedOutput,
-  UntypedOutputs,
-  BaseBuildEntry,
-  BuildContext,
-  BuildEntry,
-  BuildHooks,
-  BuildOptions,
-  BuildPreset,
-  UnifiedBuildConfig,
-  PerfTimer,
-  RulesCheckOptions,
-  CheckIssue,
-  CheckResult,
-  InputFile,
-  OutputFile,
-  LoaderResult,
-  LoadFile,
-  LoaderContext,
-  Loader,
-  CreateLoaderOptions,
-  MkdistOptions,
-} from "./sdk-types.js";
+// AUTO-GENERATED AGGREGATOR END

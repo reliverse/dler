@@ -19,6 +19,7 @@ import { handleDlerError } from "~/libs/sdk/sdk-impl/utils/utils-error-cwd";
 import { createPerfTimer } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 type ToolName = "tsc" | "eslint" | "biome" | "knip" | "dler-check";
+type AfterBuildToolName = "dler-check";
 
 interface ToolConfig {
   name: string;
@@ -28,6 +29,11 @@ interface ToolConfig {
 
 type ToolInfo = ToolConfig & {
   tool: ToolName;
+  available: boolean;
+};
+
+type AfterBuildToolInfo = ToolConfig & {
+  tool: AfterBuildToolName;
   available: boolean;
 };
 
@@ -129,6 +135,42 @@ export async function dlerBuild(isDev: boolean, config?: DlerConfig) {
     // Build step
     await regular_buildFlow(timer, isDev, effectiveConfig);
     await library_buildFlow(timer, isDev, effectiveConfig);
+
+    // Run post-build tools if configured
+    if (effectiveConfig?.runAfterBuild?.length > 0) {
+      const tools: Record<AfterBuildToolName, ToolConfig> = {
+        "dler-check": {
+          name: "Dler Check",
+          async run() {
+            const checkCmd = await getCheckCmd();
+            await runCmd(checkCmd, ["--no-exit", "--no-progress"]);
+          },
+        },
+      };
+
+      const availableTools = await Promise.all(
+        effectiveConfig.runAfterBuild.map(async (tool) => {
+          const toolConfig = tools[tool];
+          if (!toolConfig) return null;
+          return {
+            tool,
+            ...toolConfig,
+            available: true, // dler-check is always available
+          };
+        }),
+      );
+
+      const commandsToRun = availableTools.filter(
+        (tool): tool is AfterBuildToolInfo => tool?.available ?? false,
+      );
+
+      for (const { name, run } of commandsToRun) {
+        relinka("log", `Running ${name}...`);
+        if (run) {
+          await run();
+        }
+      }
+    }
 
     // Finalize build
     await finalizeBuild(timer, effectiveConfig.commonPubPause);

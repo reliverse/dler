@@ -2,7 +2,7 @@ import { relinka } from "@reliverse/relinka";
 import pAll from "p-all";
 
 import type { DlerConfig } from "~/libs/sdk/sdk-impl/config/types";
-import type { PerfTimer } from "~/libs/sdk/sdk-types";
+import type { PerfTimer } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { regular_buildJsrDist, regular_buildNpmDist } from "./build/build-regular";
 import { regular_pubToJsr, regular_pubToNpm } from "./pub/pub-regular";

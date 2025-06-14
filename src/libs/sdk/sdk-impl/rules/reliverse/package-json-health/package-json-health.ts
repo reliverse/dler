@@ -1,6 +1,6 @@
 import { readPackageJSON } from "pkg-types";
 
-import type { CheckIssue, CheckResult } from "~/libs/sdk/sdk-types";
+import type { CheckIssue, CheckResult } from "~/libs/sdk/sdk-impl/sdk-types";
 
 export async function checkPackageJsonHealth(): Promise<CheckResult> {
   const startTime = Date.now();

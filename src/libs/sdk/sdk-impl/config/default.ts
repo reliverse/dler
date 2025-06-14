@@ -45,6 +45,7 @@ export const DEFAULT_CONFIG_DLER: DlerConfig = {
 
   // Code quality tools
   runBeforeBuild: [],
+  runAfterBuild: [],
 
   // Build setup
   transpileFailOnWarn: false,

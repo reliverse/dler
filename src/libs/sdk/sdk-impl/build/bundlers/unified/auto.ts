@@ -4,7 +4,7 @@ import { join, normalize, resolve } from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
 import { existsSync } from "node:fs";
 
-import type { BuildEntry, BuildPreset, MkdistBuildEntry } from "~/libs/sdk/sdk-types";
+import type { BuildEntry, BuildPreset, MkdistBuildEntry } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { extractExportFilenames, listRecursively, warn } from "./utils";
 

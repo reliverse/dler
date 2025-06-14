@@ -232,10 +232,13 @@ function buildPathRelative(filePath: string, inputDir: string, stripPrefix: stri
     resolved = `${resolved.slice(0, -3)}.js`;
   }
 
-  // Ensure the path starts with "./" or "../"
+  // Ensure the path starts with "./" or "../" only if it doesn't already
   if (!resolved.startsWith("./") && !resolved.startsWith("../")) {
     resolved = `./${resolved}`;
   }
+
+  // Fix any double slashes in the path
+  resolved = resolved.replace(/\/+/g, "/");
 
   return resolved;
 }

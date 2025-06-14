@@ -5,7 +5,7 @@ import defu from "defu";
 import fsp from "node:fs/promises";
 import { glob } from "tinyglobby";
 
-import type { InputFile, MkdistOptions, OutputFile } from "~/libs/sdk/sdk-types";
+import type { InputFile, MkdistOptions, OutputFile } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import type { DeclarationOutput } from "./utils/dts";
 

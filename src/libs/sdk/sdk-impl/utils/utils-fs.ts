@@ -452,3 +452,13 @@ export async function copyInsteadOfBuild(
 
   relinka("info", "[isCLI] Completed copying files/folders that should not be built:", patterns);
 }
+
+// check if directory exists and is accessible
+export async function validateDirectory(dir: string): Promise<boolean> {
+  try {
+    const stat = await fs.stat(dir);
+    return stat.isDirectory();
+  } catch {
+    return false;
+  }
+}

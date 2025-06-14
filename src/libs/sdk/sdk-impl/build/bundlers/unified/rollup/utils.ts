@@ -1,6 +1,6 @@
 import type { PreRenderedChunk } from "rollup";
 
-import type { BuildContext } from "~/libs/sdk/sdk-types";
+import type { BuildContext } from "~/libs/sdk/sdk-impl/sdk-types";
 
 export const DEFAULT_EXTENSIONS: string[] = [
   ".ts",

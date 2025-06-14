@@ -1,7 +1,7 @@
 import { extname } from "@reliverse/pathkit";
 
 import type { AllowedFileExtensionsType } from "~/libs/sdk/sdk-impl/rules/rules-consts";
-import type { CheckIssue, CheckResult, RulesCheckOptions } from "~/libs/sdk/sdk-types";
+import type { CheckIssue, CheckResult, RulesCheckOptions } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import {
   ALLOWED_FILE_EXTENSIONS,

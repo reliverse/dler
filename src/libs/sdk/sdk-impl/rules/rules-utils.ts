@@ -3,18 +3,9 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 
 import { IGNORE_PATTERNS } from "~/libs/sdk/sdk-impl/constants";
+import { validateDirectory } from "~/libs/sdk/sdk-impl/utils/utils-fs";
 
 import type { AllowedFileExtensionsType } from "./rules-consts";
-
-// check if directory exists and is accessible
-export async function validateDirectory(dir: string): Promise<boolean> {
-  try {
-    const stat = await fs.stat(dir);
-    return stat.isDirectory();
-  } catch {
-    return false;
-  }
-}
 
 // check if file should be ignored based on patterns
 export function shouldIgnoreFile(filePath: string): boolean {

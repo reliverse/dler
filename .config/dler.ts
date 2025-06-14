@@ -1,4 +1,4 @@
-import { defineConfigDler } from "~/libs/cfg/cfg-mod";
+import { defineConfigDler } from "~/libs/cfg/cfg-impl/cfg-consts";
 
 // TODO: cache src's files in `.reliverse/dler/<project-name>/<src-file-path>` dir (this will allow to implement new option e.g. buildPubOnlyAtLeastOneFileChanged, esp. useful for cases like `@reliverse/cfg` library) (we can use hash of the file name and/or date of the last file modification)
 // TODO: introduce new option which allows to enable/disable transpiling other extensions that .ts and .js (disabling from build process of e.g. .tsx extension is especially useful for bootstrapping clis tools like @reliverse/rse, where cli's developers usually expect to have their original .tsx files in the dist)
@@ -150,7 +150,8 @@ export default defineConfigDler({
   },
 
   // Code quality tools
-  runBeforeBuild: ["tsc", "eslint", "biome", "knip"],
+  runBeforeBuild: ["tsc", "eslint", "biome", "knip"], // "dler-check"
+  runAfterBuild: [], // "dler-check"
 
   // Build setup
   // transpileAlias: {},

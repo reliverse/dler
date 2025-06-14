@@ -1,6 +1,6 @@
 import { readTSConfig } from "pkg-types";
 
-import type { CheckIssue, CheckResult } from "~/libs/sdk/sdk-types";
+import type { CheckIssue, CheckResult } from "~/libs/sdk/sdk-impl/sdk-types";
 
 // check tsconfig.json health
 // - validates module resolution from tsconfig

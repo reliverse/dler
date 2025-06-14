@@ -1,4 +1,4 @@
-import type { CheckIssue, CheckResult } from "~/libs/sdk/sdk-types";
+import type { CheckIssue, CheckResult } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { getConfigDler } from "~/libs/sdk/sdk-impl/config/load";
 

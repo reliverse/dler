@@ -1,4 +1,4 @@
-import { defineConfigRse } from "~/libs/cfg/cfg-mod";
+import { defineConfigRse } from "~/libs/cfg/cfg-impl/rse-config/rse-mod";
 
 export default defineConfigRse({
   // RELIVERSE CONFIG (https://docs.reliverse.org/cli)

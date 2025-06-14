@@ -3,7 +3,7 @@ import type { PackageJson } from "pkg-types";
 import { resolve } from "@reliverse/pathkit";
 import { existsSync } from "node:fs";
 
-import type { BuildContext } from "~/libs/sdk/sdk-types";
+import type { BuildContext } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { arrayIncludes, extractExportFilenames, getpkg, warn } from "./utils";
 

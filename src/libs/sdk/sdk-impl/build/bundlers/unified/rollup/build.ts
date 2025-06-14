@@ -5,7 +5,7 @@ import { relinka } from "@reliverse/relinka";
 import { rollup } from "rollup";
 import dts from "rollup-plugin-dts";
 
-import type { BuildContext } from "~/libs/sdk/sdk-types";
+import type { BuildContext } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { getRollupOptions } from "./config";
 import { fixCJSExportTypePlugin } from "./plugins/cjs";

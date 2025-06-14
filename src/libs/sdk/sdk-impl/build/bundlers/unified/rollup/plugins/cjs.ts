@@ -4,7 +4,7 @@ import { FixDtsDefaultCjsExportsPlugin } from "fix-dts-default-cjs-exports/rollu
 import MagicString from "magic-string";
 import { findStaticImports } from "mlly";
 
-import type { BuildContext } from "~/libs/sdk/sdk-types";
+import type { BuildContext } from "~/libs/sdk/sdk-impl/sdk-types";
 
 export function cjsPlugin(): Plugin {
   return {

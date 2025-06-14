@@ -12,12 +12,12 @@ import type {
   transpileTarget,
   DlerConfig,
 } from "~/libs/sdk/sdk-impl/config/types";
-
-import { resumePerfTimer, type PerfTimer } from "~/libs/sdk/sdk-mod";
+import type { PerfTimer } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { library_buildLibrary } from "./build/build-library";
 import { library_publishLibrary } from "./pub/pub-library";
 import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "./utils/utils-consts";
+import { resumePerfTimer } from "./utils/utils-perf";
 
 /**
  * Builds libraries based on build mode.

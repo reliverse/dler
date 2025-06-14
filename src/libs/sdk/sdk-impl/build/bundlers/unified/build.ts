@@ -11,7 +11,7 @@ import prettyBytes from "pretty-bytes";
 import prettyMilliseconds from "pretty-ms";
 import { glob } from "tinyglobby";
 
-import type { BuildContext, BuildOptions, UnifiedBuildConfig } from "~/libs/sdk/sdk-types";
+import type { BuildContext, BuildOptions, UnifiedBuildConfig } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { createPerfTimer, getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 

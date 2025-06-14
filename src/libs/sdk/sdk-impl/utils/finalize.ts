@@ -3,7 +3,7 @@ import { relinka } from "@reliverse/relinka";
 import prettyMilliseconds from "pretty-ms";
 
 import type { LibConfig } from "~/libs/sdk/sdk-impl/config/types";
-import type { PerfTimer } from "~/libs/sdk/sdk-types";
+import type { PerfTimer } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { removeDistFolders } from "~/libs/sdk/sdk-impl/utils/utils-clean";
 import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";

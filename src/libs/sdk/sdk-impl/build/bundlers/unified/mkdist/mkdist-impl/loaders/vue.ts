@@ -6,7 +6,7 @@ import type {
   LoaderContext,
   LoaderResult,
   OutputFile,
-} from "~/libs/sdk/sdk-types";
+} from "~/libs/sdk/sdk-impl/sdk-types";
 
 export interface DefineVueLoaderOptions {
   blockLoaders?: Record<string, VueBlockLoader | undefined>;

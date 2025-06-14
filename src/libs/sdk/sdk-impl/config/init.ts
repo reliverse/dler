@@ -260,6 +260,7 @@ function generateConfig(isDev: boolean, pkgDescription?: string): string {
     "",
     "  // Code quality tools",
     '  runBeforeBuild: ["tsc", "eslint", "biome", "knip"],',
+    '  runAfterBuild: ["dler-check"],',
     "",
     "  // Build setup",
     "  // transpileAlias: {},",

@@ -383,6 +383,15 @@ export interface DlerConfig {
    */
   runBeforeBuild: ("tsc" | "eslint" | "biome" | "knip" | "dler-check")[];
 
+  /**
+   * List of tools to run after the build process completes.
+   * Currently only supports "dler-check".
+   * Each tool will only run if it's installed in the system.
+   *
+   * @default []
+   */
+  runAfterBuild: "dler-check"[];
+
   // ==========================================================================
   // Build setup
   // ==========================================================================

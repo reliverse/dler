@@ -130,16 +130,6 @@ export const validateMergeOperation = async (files: string[]): Promise<void> => 
   }
 };
 
-// Directory validation
-export const validateDirectory = async (dir: string): Promise<boolean> => {
-  try {
-    const stat = await fs.stat(dir);
-    return stat.isDirectory();
-  } catch {
-    return false;
-  }
-};
-
 // File existence check with validation
 export const validateFileExists = async (filePath: string, operation: string): Promise<void> => {
   if (!(await fs.pathExists(filePath))) {
