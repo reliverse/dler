@@ -3,6 +3,7 @@
     "quickfix.biome": "explicit",
     "source.addMissingImports": "never",
     "source.fixAll.eslint": "explicit",
+    "source.fixAll.markdownlint": "explicit",
     "source.organizeImports": "never",
     "source.removeUnused": "never"
   },

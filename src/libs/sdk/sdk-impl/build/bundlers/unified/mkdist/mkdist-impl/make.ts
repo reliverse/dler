@@ -278,7 +278,7 @@ export async function mkdist(options: MkdistOptions /* istanbul ignore next */ =
       };
     },
     {
-      text: "Starting mkdist build...",
+      text: "Building using mkdist...",
       color: "cyan",
       successText: "Build completed successfully!",
       failText: "Build failed!",

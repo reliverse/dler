@@ -1,5 +1,7 @@
+import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { runCmd } from "@reliverse/rempts";
+import path from "node:path";
 
 import type { DlerConfig } from "~/libs/sdk/sdk-impl/config/types";
 
@@ -36,8 +38,44 @@ const createToolRunner = () =>
     },
   }) as const;
 
+async function copySourceFilesToTemp(srcDir: string, config: DlerConfig): Promise<void> {
+  const tempDirs = ["dist-tmp/tmp-npm", "dist-tmp/tmp-jsr", "dist-tmp/tmp-libs"];
+
+  // Create temp directories
+  for (const dir of tempDirs) {
+    await fs.ensureDir(dir);
+  }
+
+  // Get all files recursively
+  const files = await fs.readdir(srcDir, { withFileTypes: true, recursive: true });
+
+  for (const file of files) {
+    if (!file.isFile()) continue;
+
+    const filePath = path.join(srcDir, file.name);
+    const relativePath = path.relative(srcDir, filePath);
+    const ext = path.extname(filePath).slice(1);
+
+    // Skip files in templates directory
+    if (relativePath.startsWith(config.buildTemplatesDir)) continue;
+
+    // Skip files that are not in pre-build extensions
+    if (!config.buildPreExtensions.includes(ext)) continue;
+
+    // Copy to each temp directory
+    for (const tempDir of tempDirs) {
+      const destPath = path.join(tempDir, relativePath);
+      await fs.ensureDir(path.dirname(destPath));
+      await fs.copy(filePath, destPath);
+    }
+  }
+}
+
 export async function dlerPreBuild(config: DlerConfig): Promise<void> {
   await executeDlerHooks(config?.hooksBeforeBuild ?? [], "pre-build");
+
+  // Copy source files to temp directories
+  await copySourceFilesToTemp(config.coreEntrySrcDir, config);
 
   if (!config?.runBeforeBuild?.length) return;
 

@@ -324,6 +324,30 @@ export interface DlerConfig {
    */
   logsFreshFile: boolean;
 
+  /**
+   * File extensions that should be processed during pre-build phase.
+   * These files will be copied to temporary directories for building.
+   *
+   * @default ["ts", "js"]
+   */
+  buildPreExtensions: string[];
+
+  /**
+   * File extensions that should be copied during post-build phase.
+   * These files will be copied directly to the final dist directories.
+   *
+   * @default ["json", "md", "txt", "yml", "yaml", "html", "css", "scss", "sass", "less", "svg", "png", "jpg", "jpeg", "gif", "ico"]
+   */
+  buildPostExtensions: string[];
+
+  /**
+   * Directory name for template files that should be skipped during pre-build
+   * and copied only during post-build phase.
+   *
+   * @default "templates"
+   */
+  buildTemplatesDir: string;
+
   // ==========================================================================
   // Dependency filtering
   // ==========================================================================

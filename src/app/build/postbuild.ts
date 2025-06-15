@@ -1,6 +1,9 @@
 import path, { convertImportsAliasToRelative } from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { runCmd } from "@reliverse/rempts";
+
+import type { DlerConfig } from "~/libs/sdk/sdk-mod";
 
 import { getCheckCmd } from "~/app/cmds";
 import { getConfigDler } from "~/libs/sdk/sdk-impl/config/load";
@@ -54,6 +57,38 @@ async function processDistDirectories(): Promise<void> {
   }
 }
 
+async function copyNonSourceFiles(srcDir: string, config: DlerConfig): Promise<void> {
+  const distDirs = ["dist-npm", "dist-jsr", "dist-libs"];
+
+  // Get all files recursively
+  const files = await fs.readdir(srcDir, { withFileTypes: true, recursive: true });
+
+  for (const file of files) {
+    if (!file.isFile()) continue;
+
+    const filePath = path.join(srcDir, file.name);
+    const relativePath = path.relative(srcDir, filePath);
+    const ext = path.extname(filePath).slice(1);
+
+    // Skip files that are in pre-build extensions (unless they are in templates directory)
+    if (
+      config.buildPreExtensions.includes(ext) &&
+      !relativePath.startsWith(config.buildTemplatesDir)
+    )
+      continue;
+
+    // Skip files that are not in post-build extensions
+    if (!config.buildPostExtensions.includes(ext)) continue;
+
+    // Copy to each dist directory
+    for (const distDir of distDirs) {
+      const destPath = path.join(distDir, relativePath);
+      await fs.ensureDir(path.dirname(destPath));
+      await fs.copy(filePath, destPath);
+    }
+  }
+}
+
 export async function dlerPostBuild(isDev: boolean): Promise<void> {
   // Cross replacements
   await resolveAllCrossLibs();
@@ -66,8 +101,11 @@ export async function dlerPostBuild(isDev: boolean): Promise<void> {
   // Convert alias to relative paths
   await processDistDirectories();
 
-  // Execute custom post-build hooks
+  // Copy non-source files to dist directories
   const config = await getConfigDler();
+  await copyNonSourceFiles(config.coreEntrySrcDir, config);
+
+  // Execute custom post-build hooks
   await executeDlerHooks(config?.hooksAfterBuild ?? [], "post-build");
 
   // Run post-build tools

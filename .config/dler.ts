@@ -15,7 +15,7 @@ export default defineConfigDler({
   bumpMode: "patch",
 
   // Common configuration
-  commonPubPause: false,
+  commonPubPause: true,
   commonPubRegistry: "npm-jsr",
   commonVerbose: true,
 

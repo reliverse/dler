@@ -9,7 +9,7 @@
     "rse:cli": "bun rse cli",
     "dev": "bun src/cli.ts --dev",
     "pub": "bun src/cli.ts pub --dev",
-    "remdn": "bun src/cli.ts remdn",
+    "remdn": "bun src/cli.ts remdn --mode dirs-scan-compare",
     "agg:cfg": "bun src/cli.ts agg --dev --input src/libs/cfg --out src/libs/cfg/cfg-mod.ts",
     "agg:sdk": "bun src/cli.ts agg --dev --input src/libs/sdk --out src/libs/sdk/sdk-mod.ts",
     "magic:example": "bun example/magic/e-ms-inject.ts",

@@ -820,11 +820,15 @@ special thanks to the project that inspired `@reliverse/dler`:
 
 ## contributors
 
-### scripts
+### helper scripts
 
 - `libs:pack`: Creates two templates, `cfg` and `sdk`, based on dist-libs directory structure (using **dler pack** command).
 - `libs:unpack`: Creates a project structure using all templates from the `cfg` and `sdk` templates (using **dler unpack** command).
 - `libs:example`: Since `libs:unpack`'s serves as a dist-libs mock, then `libs:example` helps easily test dler's features like `resolveAllCrossLibs()`.
+
+### notes
+
+`<src | dist-npm | dist-jsr>/libs/<lib-name>/<files live here>` === `dist-libs/<lib-name>/<jsr | npm>/bin/<files live here>`
 
 ## support
 
