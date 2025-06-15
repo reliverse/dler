@@ -27,6 +27,8 @@ export async function library_buildFlow(
   isDev: boolean,
   config: DlerConfig,
 ): Promise<void> {
+  relinka("info", "— — — library_buildFlow — — —");
+
   if (config.libsActMode !== "libs-only" && config.libsActMode !== "main-and-libs") {
     relinka("verbose", "Skipping libs build as libsActMode is set to 'main-project-only'");
     return;
@@ -65,6 +67,8 @@ export async function library_pubFlow(
   isDev: boolean,
   config: DlerConfig,
 ): Promise<void> {
+  relinka("info", "— — — library_pubFlow — — —");
+
   if (config.libsActMode !== "libs-only" && config.libsActMode !== "main-and-libs") {
     relinka("verbose", "Skipping libs publish as libsActMode is set to 'main-project-only'");
     return;

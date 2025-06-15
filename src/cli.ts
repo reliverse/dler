@@ -82,7 +82,7 @@ const main = defineCommand({
     const options: PromptOption[] = [
       { value: "build", label: "build project" },
       { value: "pub", label: "publish project" },
-      { value: "agg", label: "aggregate files" },
+      { value: "agg", label: "aggregate libs" },
       { separator: true },
       { value: "utils", label: re.bold("UTILS"), disabled: true },
       { separator: true },

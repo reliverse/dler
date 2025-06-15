@@ -78,6 +78,10 @@ export const DEFAULT_CONFIG_DLER: DlerConfig = {
     "dist-npm": [],
     "dist-libs": {},
   },
+
+  // Build file handling configuration
+  buildPreExtensions: ["ts", "js"],
+  buildTemplatesDir: "templates",
 };
 
 // TODO: implement migrator from build.config.ts to .config/dler.ts

@@ -47,15 +47,32 @@ export async function dlerBuild(isDev: boolean, config?: DlerConfig) {
       effectiveConfig.libsList,
     );
 
-    // Run pre checks/tools/hooks
+    // Run pre checks/tools/hooks and copy files to temp directories
     await dlerPreBuild(effectiveConfig);
 
     // Build main project and, if configured, libraries
-    await regular_buildFlow(timer, isDev, effectiveConfig);
-    await library_buildFlow(timer, isDev, effectiveConfig);
+    // Use temporary directories as source for bundlers
+    const tempDirs = {
+      npm: "dist-tmp/tmp-npm",
+      jsr: "dist-tmp/tmp-jsr",
+      libs: "dist-tmp/tmp-libs",
+    };
 
-    // Run post checks/tools/hooks
+    // Create a modified config that points to temp directories
+    const tempConfig = {
+      ...effectiveConfig,
+      coreEntrySrcDir: tempDirs.npm,
+      libsDirSrc: tempDirs.libs,
+    };
+
+    await regular_buildFlow(timer, isDev, tempConfig);
+    await library_buildFlow(timer, isDev, tempConfig);
+
+    // Run post checks/tools/hooks and copy non-build files
     await dlerPostBuild(isDev);
+
+    // Clean up temp directories
+    await fs.remove(path.join(PROJECT_ROOT, "dist-tmp"));
 
     return { timer, effectiveConfig };
   } catch (error) {

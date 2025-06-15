@@ -259,7 +259,7 @@ function generateConfig(isDev: boolean, pkgDescription?: string): string {
     "  filterDepsPatterns: " + getFilterDepsPatterns(isDev) + ",",
     "",
     "  // Code quality tools",
-    '  runBeforeBuild: [],',
+    "  runBeforeBuild: [],",
     "  runAfterBuild: [],",
     "",
     "  // Build hooks",

@@ -25,11 +25,7 @@ import {
   PROJECT_ROOT,
   validExtensions,
 } from "~/libs/sdk/sdk-impl/utils/utils-consts";
-import {
-  copyInsteadOfBuild,
-  copyRootFile,
-  deleteSpecificFiles,
-} from "~/libs/sdk/sdk-impl/utils/utils-fs";
+import { copyRootFile, deleteSpecificFiles } from "~/libs/sdk/sdk-impl/utils/utils-fs";
 import { createJsrJSON, renameTsxFiles } from "~/libs/sdk/sdk-impl/utils/utils-jsr-json";
 import { regular_createPackageJSON } from "~/libs/sdk/sdk-impl/utils/utils-package-json-regular";
 import { getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
@@ -120,14 +116,6 @@ export async function regular_buildJsrDist(
       undefined, // libName (not needed for regular builds)
       config.coreDescription,
     );
-
-    // If it's a CLI, copy files that without building (if listed folder exists in outDirBin, it will be deleted)
-    if (coreIsCLI.enabled) {
-      await copyInsteadOfBuild(path.join(PROJECT_ROOT, coreEntrySrcDir), outDirBin, [
-        `${config.distNpmDirName}/**/templates`,
-        `${config.distJsrDirName}/**/templates`,
-      ]);
-    }
     await renameTsxFiles(outDirBin);
 
     // Calculate and log build duration only if publishing is paused
@@ -213,14 +201,6 @@ export async function regular_buildNpmDist(
       coreDescription: config.coreDescription,
       coreBuildOutDir: config.coreBuildOutDir,
     });
-
-    // If it's a CLI, copy files that without building (if listed folder exists in outDirBin, it will be deleted)
-    if (coreIsCLI.enabled) {
-      await copyInsteadOfBuild(path.join(PROJECT_ROOT, coreEntrySrcDir), outDirBin, [
-        `${config.distNpmDirName}/**/templates`,
-        `${config.distJsrDirName}/**/templates`,
-      ]);
-    }
 
     // Calculate and log build duration only if publishing is paused
     if (config.commonPubPause) {

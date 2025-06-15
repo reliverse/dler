@@ -10,7 +10,7 @@ export default defineConfigRse({
   projectAuthor: "reliverse",
   projectDescription:
     "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
-  version: "1.7.27",
+  version: "1.7.28",
   projectLicense: "MIT",
   projectState: "creating",
   projectRepository: "https://github.com/reliverse/dler",

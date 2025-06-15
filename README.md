@@ -1,25 +1,46 @@
-# dler (prev. relidler) • framework for ts/js libs/cli/apps
+# 🛋️ dler (prev. relidler) • build/publish/improve ts/js libs/cli/apps
 
-> @reliverse/dler (`/ˈdiː.lər/`, dealer) is a flexible, unified, and fully automated bundler for ts/js projects, as well as an npm/jsr publishing tool. dler is not only a bundler, it also tries to serve as the most powerful codemod toolkit for ts/js.
+[sponsor](https://github.com/sponsors/blefnk) — [discord](https://discord.gg/pb8ukbwpsj) — [github](https://github.com/reliverse/dler) — [npm](https://npmjs.com/@reliverse/dler)
 
-[sponsor](https://github.com/sponsors/blefnk) — [discord](https://discord.gg/pb8ukbwpsj) — [github](https://github.com/reliverse/dler) — [npm](https://npmjs.com/@reliverse/dler) — [docs](https://docs.reliverse.org/reliverse/dler)
+> @reliverse/dler (`/ˈdiː.lər/`, dealer) is a flexible, unified, and fully automated bundler for typescript/javascript projects that doubles as an npm/jsr publishing tool. beyond bundling, dler serves as a comprehensive codemod toolkit for modern typescript/javascript development.
 
 ## features
 
-- 😘 replacement for `unjs/unbuild`
-- ⚡ `dler` works via cli and sdk
-- 📦 automated npm/jsr publishing
-- ✅ ensures reliable ts/js builds
-- 🔄 handles automatic version bumps
-- 🔧 eliminates `package.json` headaches
-- 🎯 optimized for speed and modern workflows
-- ✨ packed with powerful features under the hood
-- 🛠️ converts typescript aliases to relative paths
-- 🔌 18 built-in helper [dler commands](#-commands) included
-- 📝 highly configurable flow via a configuration file
-- 🔜 `libraries` plugin —> dler monorepo implementation
-- 🧼 cleans up your internal logs from the build dist
-- 🪄 magic spells (built-in plugin)
+### 🚀 core power
+
+- **drop-in replacement** for `unjs/unbuild` — seamless migration with enhanced capabilities
+- **automated publishing** to npm/jsr registries with intelligent workflow management
+- **reliable builds** with comprehensive typescript/javascript support and error handling
+- **smart versioning** with automatic version bumps and semantic release integration
+- **zero configuration** eliminates `package.json` maintenance headaches forever
+
+### ⚡ developer experience
+
+- **performance optimized** for speed with modern build pipelines and caching
+- **18 built-in commands** — comprehensive [dler commands](#dler-commands) for every workflow
+- **path resolution magic** converts typescript aliases to relative imports automatically
+- **highly configurable** via dedicated configuration files with sensible defaults
+- **dual interface** — cli for everyday use, sdk for advanced programmatic control
+
+### 🔧 advanced capabilities
+
+- **clean distribution builds** automatically removes internal logs and debug code
+- **monorepo ready** with experimental `libs` feature for multi-library projects
+- **magic spells** — extensible plugin system for custom build transformations
+- **codemod toolkit** — powerful code transformation utilities built-in
+
+### 🎯 perfect for
+
+dler excels at managing both build and publish workflows, making it ideal for:
+
+- cli tool creators and maintainers
+- project bootstrappers (like [rse](https://github.com/reliverse/rse))
+- library authors seeking streamlined workflows
+- teams wanting consistent build processes
+
+### 🔜 coming soon
+
+**full monorepo system** with advanced dependency management and cross-package optimization.
 
 ### supported bundlers
 
@@ -40,7 +61,7 @@
 
 ## getting started
 
-ensure git, node.js, and bun/pnpm/yarn/npm are installed. then:
+ensure git, node.js, and bun/pnpm/yarn/npm (**[bun](https://bun.sh/get) is highly recommended**) are installed. then:
 
 ### playground
 
@@ -74,6 +95,9 @@ bun dev # bun src/cli.ts --dev
     # or update as needed:
     bun i -g update --latest
     ```
+
+    - **when installed globally**: use `dler` anywhere.
+    - **when installed as dev dep**: use with package manager name prefix, e.g. `bun dler`, inside your project directory.
 
 2. **prepare your project**:
 
@@ -117,7 +141,7 @@ bun dev # bun src/cli.ts --dev
     dler [build|pub] # if installed globally
     ```
 
-## 🔌 commands
+## dler commands
 
 dler ships with a flexible command system (prev. plugins) and **18 built-in commands** (from [reliverse addons](https://reliverse.org/addons) collection).
 
@@ -828,7 +852,7 @@ special thanks to the project that inspired `@reliverse/dler`:
 
 ### notes
 
-`<src | dist-npm | dist-jsr>/libs/<lib-name>/<files live here>` === `dist-libs/<lib-name>/<jsr | npm>/bin/<files live here>`
+- `<src | dist-npm | dist-jsr>/libs/<lib-name>/<files live here>` === `dist-libs/<lib-name>/<jsr | npm>/bin/<files live here>`
 
 ## support
 

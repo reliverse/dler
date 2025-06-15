@@ -312,7 +312,6 @@ export {
   deleteSpecificFiles,
   readFileSafe,
   writeFileSafe,
-  copyInsteadOfBuild,
   validateDirectory,
 } from "./sdk-impl/utils/utils-fs.js";
 export { createJsrJSON, renameTsxFiles } from "./sdk-impl/utils/utils-jsr-json.js";

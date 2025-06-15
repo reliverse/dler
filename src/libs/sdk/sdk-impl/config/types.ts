@@ -570,6 +570,22 @@ export interface DlerConfig {
       }
     >;
   };
+
+  // Build file handling configuration
+  /**
+   * File extensions that should be copied to temporary build directories during pre-build.
+   * These files will be processed by the bundlers.
+   * All other files will be copied as-is to final dist directories during post-build.
+   * @default ["ts", "js"]
+   */
+  buildPreExtensions: string[];
+
+  /**
+   * Directory name for templates that should be excluded from pre-build processing.
+   * Files in this directory will be copied as-is during post-build.
+   * @default "templates"
+   */
+  buildTemplatesDir: string;
 }
 
 export type BumpMode = "patch" | "minor" | "major" | "auto" | "manual";
