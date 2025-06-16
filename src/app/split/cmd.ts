@@ -44,7 +44,6 @@ export default defineCommand({
         // This returns an array of newly created file paths
         const newSplits = splitLargeFileByLines(filePath, fileLineThreshold);
         // Run "splitLargeFunctions" on each chunk
-        // biome-ignore lint/complexity/noForEach: <explanation>
         newSplits.forEach((splitFilePath) => {
           splitLargeFunctions(splitFilePath, funcLineThreshold);
         });

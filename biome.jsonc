@@ -21,12 +21,14 @@
         "noExplicitAny": "off"
       },
       "style": {
+        "noUnusedTemplateLiteral": "off",
         "useTemplate": "off",
         "useDefaultParameterLast": "off",
         "noUselessElse": "off",
         "noNonNullAssertion": "off"
       },
       "complexity": {
+        "noForEach": "off",
         "noBannedTypes": "off",
         "noUselessLoneBlockStatements": "off",
         "useOptionalChain": "off"

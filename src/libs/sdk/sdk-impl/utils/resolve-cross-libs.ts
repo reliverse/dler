@@ -330,7 +330,7 @@ async function resolveAllCrossLibs(
               throw error;
             }
           } else {
-            relinka("error", `[resolveAllCrossLibs] Bin directory does not exist: ${binDir}`);
+            // bin directory does not exist, skip
           }
         }
       }),

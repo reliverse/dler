@@ -7,9 +7,9 @@ import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { createJiti } from "jiti";
 import { promises as fs } from "node:fs";
 
-import type { TemplatesFileContent } from "~/libs/sdk/sdk-impl/utils/pack-unpack/pu-types";
+import type { TemplatesFileContent } from "~/libs/sdk/sdk-impl/utils/pack-unpack-old/pu-types";
 
-import { TPLS_DIR, BINARIES_DIR } from "~/libs/sdk/sdk-impl/utils/pack-unpack/pu-constants";
+import { TPLS_DIR, BINARIES_DIR } from "~/libs/sdk/sdk-impl/utils/pack-unpack-old/pu-constants";
 
 const jiti = createJiti(import.meta.url);
 

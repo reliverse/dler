@@ -47,7 +47,7 @@ export default defineConfigDler({
   // Publish specific dirs as separate packages
   // This feature is experimental at the moment
   // Please commit your changes before using it
-  libsActMode: "main-project-only",
+  libsActMode: "main-and-libs",
   libsDirDist: "dist-libs",
   libsDirSrc: "src/libs",
   libsList: {
@@ -61,7 +61,7 @@ export default defineConfigDler({
       libPkgKeepDeps: true,
       libTranspileMinify: true,
       libPubPause: false,
-      libPubRegistry: "npm-jsr",
+      libPubRegistry: "npm",
     },
     "@reliverse/cfg": {
       libDeclarations: true,
@@ -90,7 +90,7 @@ export default defineConfigDler({
       ], */
       libTranspileMinify: true,
       libPubPause: false,
-      libPubRegistry: "npm-jsr",
+      libPubRegistry: "npm",
     },
   },
 

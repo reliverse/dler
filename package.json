@@ -1,7 +1,7 @@
 {
   "name": "@reliverse/dler",
   "author": "reliverse",
-  "version": "1.7.46",
+  "version": "1.7.50",
   "type": "module",
   "license": "MIT",
   "description": "@reliverse/dler is a flexible, unified, and fully automated bundler for typescript and javascript projects, as well as an npm and jsr publishing tool. dler is not only a bundler, it also tries to serve as the most powerful codemod toolkit for js/ts.",
@@ -21,7 +21,9 @@
     "check": "tsc --noEmit && eslint --cache --fix . && biome check --fix --unsafe . && knip",
     "libs:pack": "bun src/cli.ts pack dist-libs --output example/app/libs/mock",
     "libs:unpack": "bun src/cli.ts unpack example/app/libs/mock --output dist-libs",
-    "libs:example": "bun example/mod.ts libs"
+    "libs:example": "bun example/mod.ts libs",
+    "templates:pack": "bun src/cli.ts pack pack-input --output pack-output/better-t-stack",
+    "templates:unpack": "bun src/cli.ts unpack pack-output/better-t-stack --output pack-input/better-t-stack"
   },
   "dependencies": {
     "@reliverse/bleump": "^1.1.4",
@@ -69,6 +71,7 @@
     "rollup-plugin-dts": "^6.2.1",
     "scule": "^1.3.0",
     "semver": "^7.7.2",
+    "strip-json-comments": "^5.0.2",
     "tinyglobby": "^0.2.14",
     "ts-morph": "^26.0.0",
     "untyped": "^2.0.0"

@@ -124,7 +124,6 @@ export function splitLargeFunctions(filePath: string, funcLineThreshold: number)
   );
 
   // We'll apply splits from the bottom of the file upward, so we don't mess up earlier indices.
-  // biome-ignore lint/complexity/noForEach: <explanation>
   largeFunctions
     .sort((a, b) => b.startPos - a.startPos)
     .forEach((fn) => {

@@ -1,209 +1,42 @@
 import path from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
-import { defineCommand, defineArgs } from "@reliverse/rempts";
+import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { createJiti } from "jiti";
 import { createHash } from "node:crypto";
-import fs from "node:fs/promises";
-import stripJsonComments from "strip-json-comments";
+import { promises as fs } from "node:fs";
 
-import { isBinaryExt } from "~/libs/sdk/sdk-impl/utils/binary";
+import type {
+  TemplatesFileContent,
+  FileMetadata,
+} from "~/libs/sdk/sdk-impl/utils/pack-unpack-old/pu-types";
 
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
+import {
+  WHITELABEL_DEFAULT,
+  TEMPLATE_VAR,
+  TPLS_DIR,
+  BINARIES_DIR,
+} from "~/libs/sdk/sdk-impl/utils/pack-unpack-old/pu-constants";
+import {
+  escapeTemplateString,
+  readFileForTemplate,
+  walkDir,
+} from "~/libs/sdk/sdk-impl/utils/pack-unpack-old/pu-file-utils";
 
-interface FileMetadata {
-  updatedAt?: string;
-  updatedHash?: string;
-}
+const jiti = createJiti(import.meta.url);
 
-interface TemplatesFileContent {
-  content: FileContent;
-  type: "text" | "json" | "binary";
-  hasError?: boolean;
-  error?: string;
-  jsonComments?: Record<number, string>;
-  binaryHash?: string;
-  metadata?: FileMetadata;
-}
-
-type FileContent = string | Record<string, unknown>;
-
-interface Template {
-  name: string;
-  description: string;
-  config: { files: Record<string, TemplatesFileContent> };
-  updatedAt?: string;
-}
-
-type ExistingTemplates = Record<string, Template>;
-
-/* -------------------------------------------------------------------------- */
-/*                                  Constants                                  */
-/* -------------------------------------------------------------------------- */
-
-const WHITELABEL_DEFAULT = "DLER";
-const TEMPLATE_VAR = (name: string, whitelabel: string) =>
-  `${whitelabel}_TPL_${name.toUpperCase()}`;
-const TPLS_DIR = "templates";
-const BINARIES_DIR = "binaries";
-
-/* -------------------------------------------------------------------------- */
-/*                               Helper functions                              */
-/* -------------------------------------------------------------------------- */
-
-/** Escape back‑`s, ${ and newlines for safe template literal embedding */
-export const escapeTemplateString = (str: string): string =>
-  str
-    .replace(/`/g, "\\`")
-    .replace(/\\\${/g, "\\u0024{") // already escaped
-    .replace(/\r?\n/g, "\\n");
-
-export const hashFile = async (file: string): Promise<string> => {
-  const buf = await fs.readFile(file);
-  return createHash("sha1").update(buf).digest("hex").slice(0, 10);
+const hashFile = async (file: string): Promise<string> => {
+  const buff = await fs.readFile(file);
+  return createHash("sha1").update(buff).digest("hex").slice(0, 10);
 };
 
-export const getFileMetadata = async (file: string): Promise<FileMetadata> => {
-  try {
-    const [stats, hash] = await Promise.all([fs.stat(file), hashFile(file)]);
-    return {
-      updatedAt: stats.mtime.toISOString(),
-      updatedHash: hash,
-    };
-  } catch (err) {
-    relinka("warn", `Failed to get metadata for ${file}: ${(err as Error).message}`);
-    return {
-      updatedAt: new Date().toISOString(),
-      updatedHash: "",
-    };
-  }
+const getFileMetadata = async (file: string): Promise<FileMetadata> => {
+  const stats = await fs.stat(file);
+  const hash = await hashFile(file);
+  return {
+    updatedAt: stats.mtime.toISOString(),
+    updatedHash: hash,
+  };
 };
-
-/** Recursively walk a directory */
-export const walkDir = async (dir: string): Promise<string[]> => {
-  let res: string[] = [];
-  const entries = await fs.readdir(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      res = res.concat(await walkDir(full));
-    } else {
-      res.push(full);
-    }
-  }
-  return res;
-};
-
-/** Process a file and return the TemplatesFileContent structure */
-export const readFileForTemplate = async (
-  absPath: string,
-  relPath: string,
-  binariesOutDir: string,
-): Promise<TemplatesFileContent> => {
-  const metadata = await getFileMetadata(absPath);
-
-  try {
-    // Try binary first
-    if (await isBinaryExt(absPath)) {
-      const hash = metadata.updatedHash;
-      const ext = path.extname(absPath);
-      const target = path.join(binariesOutDir, `${hash}${ext}`);
-
-      try {
-        await fs.mkdir(binariesOutDir, { recursive: true });
-        // Copy only if not exists
-        await fs.copyFile(absPath, target).catch(async (err) => {
-          if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
-        });
-      } catch (err) {
-        relinka("error", `Failed copying binary ${relPath}: ${(err as Error).message}`);
-        return {
-          content: "",
-          type: "binary",
-          hasError: true,
-          error: (err as Error).message,
-          binaryHash: hash,
-          metadata,
-        };
-      }
-
-      return {
-        content: "",
-        type: "binary",
-        binaryHash: hash,
-        metadata,
-      };
-    }
-
-    // Non‑binary files are read as text
-    const raw = await fs.readFile(absPath, "utf8");
-    const ext = path.extname(absPath).toLowerCase();
-    if (ext === ".json") {
-      const comments: Record<number, string> = {};
-      const lines = raw.split(/\r?\n/);
-
-      lines.forEach((line, idx) => {
-        const trimmed = line.trim();
-        if (trimmed.startsWith("//") || trimmed.startsWith("/*")) comments[idx + 1] = line;
-      });
-
-      try {
-        const parsed = JSON.parse(stripJsonComments(raw)) as Record<string, unknown>;
-        return {
-          content: parsed,
-          type: "json",
-          jsonComments: Object.keys(comments).length ? comments : undefined,
-          metadata,
-        };
-      } catch (err) {
-        relinka("warn", `Failed to parse JSON file ${relPath}: ${(err as Error).message}`);
-        return {
-          content: {} as Record<string, unknown>,
-          type: "json",
-          hasError: true,
-          error: (err as Error).message,
-          jsonComments: Object.keys(comments).length ? comments : undefined,
-          metadata,
-        };
-      }
-    }
-
-    return {
-      content: raw,
-      type: "text",
-      metadata,
-    };
-  } catch (err) {
-    relinka("warn", `Failed to read file ${relPath}: ${(err as Error).message}`);
-    return {
-      content: "",
-      type: "text",
-      hasError: true,
-      error: (err as Error).message,
-      metadata,
-    };
-  }
-};
-
-/* -------------------------------------------------------------------------- */
-/*                             Template generation                             */
-/* -------------------------------------------------------------------------- */
-
-const writeTypesFile = async (outRoot: string, outputName: string) => {
-  const typesFile = path.join(outRoot, `${outputName}-types.ts`);
-  const code = `// Auto‑generated type declarations for templates.
-
-export interface FileMetadata { updatedAt?: string; updatedHash?: string; }
-export interface TemplatesFileContent { content: string | Record<string, unknown>; type: 'text' | 'json' | 'binary'; hasError?: boolean; error?: string; jsonComments?: Record<number, string>; binaryHash?: string; metadata?: FileMetadata; }
-export interface Template { name: string; description: string; config: { files: Record<string, TemplatesFileContent> }; updatedAt?: string; }
-`;
-  await fs.writeFile(typesFile, code, "utf8");
-};
-
-/* -------------------------------------------------------------------------- */
-/*                                   CLI                                      */
-/* -------------------------------------------------------------------------- */
 
 export default defineCommand({
   meta: {
@@ -223,10 +56,20 @@ export default defineCommand({
     update: {
       type: "boolean",
       default: true,
-      description: "Update existing templates and add new ones",
+      description: "Update existing templates and add new ones if needed (default: true)",
     },
-    files: { type: "string", description: "Comma-separated list of specific files to update" },
-    lastUpdate: { type: "string", description: "Override lastUpdate timestamp" },
+    /**
+     * - Without --files: All files are checked and updated if they're newer or have different content
+     * - With --files: Only specified files are checked and updated if they're newer or have different content
+     */
+    files: {
+      type: "string",
+      description: "Comma-separated list of specific files to update (relative to template dir)",
+    },
+    lastUpdate: {
+      type: "string",
+      description: "Override lastUpdate timestamp (format: 2025-06-06T14:33:09.240Z)",
+    },
   }),
   async run({ args }) {
     if (args.cdn) throw new Error("Remote CDN support is not implemented yet.");
@@ -237,13 +80,11 @@ export default defineCommand({
     const typesFile = `${outDirName}-types.ts`;
     const modFile = `${outDirName}-mod.ts`;
 
-    relinka("info", `Packing templates from ${dirToProcess} to ${outDir}`);
-
     // Parse files to update if specified
     const filesToUpdate = args.files ? new Set(args.files.split(",").map((f) => f.trim())) : null;
 
     // Check if output directory exists and handle accordingly
-    let existingTemplates: ExistingTemplates = {};
+    let existingTemplates: Record<string, any> = {};
     try {
       const files = await fs.readdir(outDir);
       if (files.length > 0) {
@@ -260,10 +101,9 @@ export default defineCommand({
           // Load existing templates for update mode
           try {
             const modPath = path.join(outDir, modFile);
-            const jiti = createJiti(process.cwd());
             const mod = await jiti.import<{
-              DLER_TEMPLATES?: ExistingTemplates;
-              default?: ExistingTemplates;
+              DLER_TEMPLATES?: Record<string, any>;
+              default?: Record<string, any>;
             }>(modPath);
             existingTemplates = mod?.DLER_TEMPLATES || mod?.default || {};
           } catch (loadError) {
@@ -292,7 +132,37 @@ export default defineCommand({
     try {
       await fs.access(path.join(outDir, typesFile));
     } catch {
-      await writeTypesFile(outDir, outDirName);
+      const typesContent = `export type FileContent = string | Record<string, unknown>;
+
+export interface FileMetadata {
+  updatedAt?: string;
+  updatedHash?: string;
+}
+
+export interface TemplatesFileContent {
+  content: FileContent;
+  type: "text" | "json" | "binary";
+  hasError?: boolean;
+  error?: string;
+  jsonComments?: Record<number, string>;
+  binaryHash?: string;
+  metadata?: FileMetadata;
+}
+
+export interface TemplateConfig {
+  files: Record<string, TemplatesFileContent>;
+}
+
+export interface Template {
+  name: string;
+  description: string;
+  config: TemplateConfig;
+  updatedAt?: string;
+}
+
+export interface Templates extends Record<string, Template> {}
+`;
+      await fs.writeFile(path.join(outDir, typesFile), typesContent);
     }
 
     const aggregatedImports: string[] = [];
@@ -300,7 +170,6 @@ export default defineCommand({
     const mapEntries: string[] = [];
 
     for (const tplName of templateDirs) {
-      relinka("info", `Processing template: ${tplName}`);
       const absTplDir = path.join(dirToProcess, tplName);
       const allFiles = await walkDir(absTplDir);
       const filesRecord: Record<string, TemplatesFileContent> = {};
@@ -327,22 +196,14 @@ export default defineCommand({
         // Skip if file hasn't changed (same hash) or if source file is older
         if (
           existingMetadata &&
-          existingMetadata.updatedHash &&
-          fileMetadata.updatedHash &&
           (existingMetadata.updatedHash === fileMetadata.updatedHash ||
-            (fileMetadata.updatedAt &&
-              existingMetadata.updatedAt &&
-              fileMetadata.updatedAt <= existingMetadata.updatedAt))
+            fileMetadata.updatedAt <= existingMetadata.updatedAt)
         ) {
           filesRecord[rel] = existingFile;
           continue;
         }
 
-        const meta = await readFileForTemplate(
-          absFile,
-          rel,
-          path.join(outDir, TPLS_DIR, BINARIES_DIR),
-        );
+        const meta = await readFileForTemplate(absFile);
 
         if (meta.type === "binary") {
           const hash = await hashFile(absFile);
@@ -558,20 +419,9 @@ export default defineCommand({
     const templatePaths = templateDirs.map((tpl) =>
       path.relative(process.cwd(), path.join(outDir, TPLS_DIR, `${tpl}.ts`)),
     );
-    relinka("success", `Packed ${templateDirs.length} templates into ${modFile}:`);
+    relinka("log", `Packed ${templateDirs.length} templates into ${modFile}:`);
     for (const p of templatePaths) {
       relinka("log", `- ${p}`);
-    }
-
-    // Log binary files count
-    const binaryCount = Object.values(existingTemplates).reduce((count, template) => {
-      return (
-        count + Object.values(template.config.files).filter((file) => file.type === "binary").length
-      );
-    }, 0);
-
-    if (binaryCount > 0) {
-      relinka("info", `  - ${TPLS_DIR}/${BINARIES_DIR}/* (${binaryCount} binary files)`);
     }
   },
 });

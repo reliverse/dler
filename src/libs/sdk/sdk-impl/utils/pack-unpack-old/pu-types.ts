@@ -10,6 +10,7 @@ export interface TemplatesFileContent {
   content: FileContent;
   type: FileType;
   hasError?: boolean;
+  error?: string;
   jsonComments?: Record<number, string>;
   binaryHash?: string;
   metadata?: FileMetadata;

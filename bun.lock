@@ -49,6 +49,7 @@
         "rollup-plugin-dts": "latest",
         "scule": "latest",
         "semver": "latest",
+        "strip-json-comments": "latest",
         "tinyglobby": "latest",
         "ts-morph": "latest",
         "untyped": "latest",

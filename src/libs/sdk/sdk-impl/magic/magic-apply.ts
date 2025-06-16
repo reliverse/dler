@@ -829,12 +829,12 @@ async function isSpellImplementationFile(projectRelPath: string): Promise<boolea
   // Check for specific file names
   const fileName = path.basename(projectRelPath);
   if (
-    fileName === "ms-apply.ts" ||
-    fileName === "ms-apply.js" ||
-    fileName === "ms-apply.d.ts" ||
-    fileName === "ms-spells.ts" ||
-    fileName === "ms-spells.js" ||
-    fileName === "ms-spells.d.ts"
+    fileName === "magic-apply.ts" ||
+    fileName === "magic-apply.js" ||
+    fileName === "magic-apply.d.ts" ||
+    fileName === "magic-spells.ts" ||
+    fileName === "magic-spells.js" ||
+    fileName === "magic-spells.d.ts"
   ) {
     return true;
   }

@@ -45,8 +45,13 @@ export const readFileForTemplate = async (absPath: string): Promise<TemplatesFil
 
     // text
     return { type, content: data };
-  } catch {
-    return { type, content: "", hasError: true };
+  } catch (error) {
+    return {
+      type,
+      content: "",
+      hasError: true,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 };
 

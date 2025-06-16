@@ -263,13 +263,13 @@ export {
   TPLS_DIR,
   BINARIES_DIR,
   isJsonExt,
-} from "./sdk-impl/utils/pack-unpack/pu-constants.js";
+} from "./sdk-impl/utils/pack-unpack-old/pu-constants.js";
 export {
   walkDir,
   detectFileTypePU,
   readFileForTemplate,
   escapeTemplateString,
-} from "./sdk-impl/utils/pack-unpack/pu-file-utils.js";
+} from "./sdk-impl/utils/pack-unpack-old/pu-file-utils.js";
 export type {
   FileContent,
   FileType,
@@ -278,8 +278,11 @@ export type {
   TemplateConfig,
   Template,
   Templates,
-} from "./sdk-impl/utils/pack-unpack/pu-types.js";
-export { extractJsonComments, stripComments } from "./sdk-impl/utils/pack-unpack/pub-json-utils.js";
+} from "./sdk-impl/utils/pack-unpack-old/pu-types.js";
+export {
+  extractJsonComments,
+  stripComments,
+} from "./sdk-impl/utils/pack-unpack-old/pub-json-utils.js";
 export { resolveCrossLibs, resolveAllCrossLibs } from "./sdk-impl/utils/resolve-cross-libs.js";
 export { useAggregator } from "./sdk-impl/utils/tools-agg.js";
 export { printUsage } from "./sdk-impl/utils/tools-impl.js";
