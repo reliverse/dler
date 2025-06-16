@@ -230,12 +230,7 @@ export interface Templates extends Record<string, Template> {}
 
         // json post-processing
         if (meta.type === "json") {
-          if (rel.endsWith("package.json")) {
-            (meta.content as any).__satisfies = "PackageJson";
-          }
-          if (rel.endsWith("tsconfig.json")) {
-            (meta.content as any).__satisfies = "TSConfig";
-          }
+          // no side-effect additions here; we'll add type satisfaction annotation in code generation only
         }
 
         filesRecord[rel] = {

@@ -56,7 +56,13 @@ const BINARIES_DIR = "binaries";
 export const escapeTemplateString = (str: string): string =>
   str
     .replace(/`/g, "\\`")
-    .replace(/\\\${/g, "\\u0024{") // already escaped
+    // Preserve sequences that have already been escaped (\${}) using a unicode escape for '$'
+    .replace(/\\\${/g, "\\u0024{")
+    // Escape any remaining ${ so they are not interpreted in the generated file
+    .replace(/\$\{/g, "\\${")
+    // Remove superfluous escapes before Handlebars/JSX braces that were written as \{{ or \}}
+    .replace(/\\\{\{/g, "{{")
+    .replace(/\\\}\}/g, "}}")
     .replace(/\r?\n/g, "\\n");
 
 export const hashFile = async (file: string): Promise<string> => {
@@ -369,12 +375,7 @@ export default defineCommand({
 
         // json post-processing
         if (meta.type === "json") {
-          if (rel.endsWith("package.json")) {
-            (meta.content as any).__satisfies = "PackageJson";
-          }
-          if (rel.endsWith("tsconfig.json")) {
-            (meta.content as any).__satisfies = "TSConfig";
-          }
+          // no side-effect additions here; we handle type satisfaction annotations later when generating code
         }
 
         filesRecord[rel] = {
@@ -545,11 +546,11 @@ export default defineCommand({
       ...aggregatedEntries,
       "};",
       "",
-      `export const ${WL}_TEMPLATES = ${WL}_TEMPLATES_OBJ as const;`,
+      `export const ${WL}_TEMPLATES = ${WL}_TEMPLATES_OBJ;`,
       "",
-      `export interface ${WL}_TEMPLATE_NAMES extends keyof typeof ${WL}_TEMPLATES {}`,
+      `export type ${WL}_TEMPLATE_NAMES = keyof typeof ${WL}_TEMPLATES;`,
       "",
-      `export const dlerTemplatesMap: Record<string, ${WL}_TEMPLATE_NAMES> = {`,
+      `export const ${WL.toLowerCase()}TemplatesMap: Record<string, ${WL}_TEMPLATE_NAMES> = {`,
       ...mapEntries,
       "};",
     ];

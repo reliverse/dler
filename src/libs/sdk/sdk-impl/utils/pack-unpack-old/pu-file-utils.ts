@@ -57,4 +57,15 @@ export const readFileForTemplate = async (absPath: string): Promise<TemplatesFil
 
 // escape a string so it can live safely inside back-ticks
 export const escapeTemplateString = (src: string) =>
-  src.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
+  src
+    // escape backslashes first so we don't double-escape later transformations
+    .replace(/\\/g, "\\\\")
+    // escape back-ticks so they don't terminate template literals
+    .replace(/`/g, "\\`")
+    // preserve already-escaped \${ sequences
+    .replace(/\\\${/g, "\\u0024{")
+    // escape any remaining ${ sequences
+    .replace(/\$\{/g, "\\${")
+    // remove unnecessary escape before Handlebars/JSX braces
+    .replace(/\\\{\{/g, "{{")
+    .replace(/\\\}\}/g, "}}");
