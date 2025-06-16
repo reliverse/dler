@@ -135,35 +135,34 @@ export default defineCommand({
     try {
       await fs.access(path.join(outDir, typesFile));
     } catch {
-      const typesContent = `export type FileContent = string | Record<string, unknown>;
-export type FileType = "text" | "json" | "binary";
+      const typesContent = `export interface FileContent extends string | Record<string, unknown> {}
 
-export type FileMetadata = {
+export interface FileMetadata {
   updatedAt?: string;
   updatedHash?: string;
-};
+}
 
-export type TemplatesFileContent = {
+export interface TemplatesFileContent {
   content: FileContent;
-  type: FileType;
+  type: "text" | "json" | "binary";
   hasError?: boolean;
   jsonComments?: Record<number, string>;
   binaryHash?: string;
   metadata?: FileMetadata;
-};
+}
 
-export type TemplateConfig = {
+export interface TemplateConfig {
   files: Record<string, TemplatesFileContent>;
-};
+}
 
-export type Template = {
+export interface Template {
   name: string;
   description: string;
   config: TemplateConfig;
   updatedAt?: string;
-};
+}
 
-export type Templates = Record<string, Template>;
+export interface Templates extends Record<string, Template> {}
 `;
       await fs.writeFile(path.join(outDir, typesFile), typesContent);
     }
@@ -329,7 +328,7 @@ export type Templates = Record<string, Template>;
               return "        " + line.replace(/"([a-zA-Z0-9_]+)":/g, "$1:");
             })
             .join("\n")
-            .replace(/}$/m, "},");
+            .replace(/},?\s*$/, "},");
           code.push(`        content: ${jsonStr}${sat},`);
           code.push('        type: "json",');
         }
@@ -380,11 +379,13 @@ export type Templates = Record<string, Template>;
     const mod = [
       ...aggregatedImports,
       "",
-      `export const ${WL}_TEMPLATES = {`,
+      `const ${WL}_TEMPLATES_OBJ = {`,
       ...aggregatedEntries,
-      "} as const;",
+      "};",
       "",
-      `export type ${WL}_TEMPLATE_NAMES = keyof typeof ${WL}_TEMPLATES;`,
+      `export const ${WL}_TEMPLATES = ${WL}_TEMPLATES_OBJ as const;`,
+      "",
+      `export interface ${WL}_TEMPLATE_NAMES extends keyof typeof ${WL}_TEMPLATES {}`,
       "",
       `export const dlerTemplatesMap: Record<string, ${WL}_TEMPLATE_NAMES> = {`,
       ...mapEntries,

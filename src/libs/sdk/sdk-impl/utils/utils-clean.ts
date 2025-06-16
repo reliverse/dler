@@ -15,11 +15,15 @@ export async function removeDistFolders(
   distJsrDirName: string,
   libsDirDist: string,
   libsList: Record<string, LibConfig>,
+  distTmpDirName = "",
 ): Promise<boolean> {
   // Determine folders to remove based on config or use defaults
   const foldersToRemove: string[] = [];
   foldersToRemove.push(distNpmDirName);
   foldersToRemove.push(distJsrDirName);
+  if (distTmpDirName !== "") {
+    foldersToRemove.push(distTmpDirName);
+  }
 
   // Add libs dist dir if defined and at least one lib is configured
   if (libsList && Object.keys(libsList).length > 0) {

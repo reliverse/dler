@@ -440,6 +440,15 @@ export interface DlerConfig {
    */
   hooksAfterBuild: (() => Promise<void>)[];
 
+  /**
+   * When `true`, cleans up the temporary directories after the build process completes.
+   *
+   * @default true
+   */
+  postBuildSettings: {
+    cleanupTempDirs: boolean;
+  };
+
   // ==========================================================================
   // Build setup
   // ==========================================================================
@@ -571,7 +580,8 @@ export interface DlerConfig {
     >;
   };
 
-  // Build file handling configuration
+  // Files with these extensions will be built
+  // Any other files will be copied as-is to dist
   /**
    * File extensions that should be copied to temporary build directories during pre-build.
    * These files will be processed by the bundlers.
@@ -580,6 +590,8 @@ export interface DlerConfig {
    */
   buildPreExtensions: string[];
 
+  // If you need to exclude some ts/js files from being built,
+  // you can store them in the dirs with buildTemplatesDir name
   /**
    * Directory name for templates that should be excluded from pre-build processing.
    * Files in this directory will be copied as-is during post-build.

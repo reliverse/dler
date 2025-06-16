@@ -2,12 +2,12 @@ import { relinka } from "@reliverse/relinka";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-const PROCESS_DTS_FILES = true;
-
 async function resolveCrossLibs(
   libBinDir: string,
   alias = "~",
   subFolders: ("npm" | "jsr")[] = ["npm", "jsr"],
+  buildPreExtensions: string[],
+  buildTemplatesDir: string,
 ): Promise<string[]> {
   // relinka("internal", `Starting resolveCrossLibs for ${libBinDir} with alias ${alias}`);
 
@@ -41,7 +41,7 @@ async function resolveCrossLibs(
     const currentLib = pathParts[1];
     // relinka("internal", `Processing library: ${currentLib}`);
 
-    const files = await findSourceFiles(libBinDir);
+    const files = await findSourceFiles(libBinDir, buildPreExtensions, buildTemplatesDir);
     const modifiedFiles: string[] = [];
 
     await Promise.all(
@@ -65,7 +65,11 @@ async function resolveCrossLibs(
   return [];
 }
 
-async function findSourceFiles(dir: string): Promise<string[]> {
+async function findSourceFiles(
+  dir: string,
+  buildPreExtensions: string[],
+  buildTemplatesDir: string,
+): Promise<string[]> {
   // relinka("internal", `Searching for source files in: ${dir}`);
   const files: string[] = [];
 
@@ -78,13 +82,32 @@ async function findSourceFiles(dir: string): Promise<string[]> {
 
       if (entry.isDirectory()) {
         // relinka("internal", `Recursing into directory: ${fullPath}`);
-        const subFiles = await findSourceFiles(fullPath);
+        const subFiles = await findSourceFiles(fullPath, buildPreExtensions, buildTemplatesDir);
         files.push(...subFiles);
       } else if (entry.isFile()) {
-        const ext = path.extname(entry.name);
+        const ext = path.extname(entry.name).slice(1);
         const isDts = entry.name.endsWith(".d.ts");
+        const isInTemplatesDir = fullPath.includes(`/${buildTemplatesDir}/`);
 
-        if (ext === ".js" || (ext === ".ts" && !isDts) || (PROCESS_DTS_FILES && isDts)) {
+        // Skip if file is in templates directory
+        if (isInTemplatesDir) {
+          return;
+        }
+
+        // Always process .d.ts files if not in templates directory
+        if (isDts) {
+          // relinka("internal", `Found .d.ts file: ${fullPath}`);
+          files.push(fullPath);
+          return;
+        }
+
+        // For non-.d.ts files, skip if extension is NOT in buildPreExtensions
+        if (!buildPreExtensions.includes(ext)) {
+          return;
+        }
+
+        // Process files with extensions from buildPreExtensions
+        if (ext === "js" || ext === "ts") {
           // relinka("internal", `Found source file: ${fullPath}`);
           files.push(fullPath);
         }
@@ -263,6 +286,8 @@ async function directoryExists(dirPath: string): Promise<boolean> {
 async function resolveAllCrossLibs(
   alias = "~",
   subFolders: ("npm" | "jsr")[] = ["npm", "jsr"],
+  buildPreExtensions: string[],
+  buildTemplatesDir: string,
 ): Promise<string[]> {
   // relinka("internal", `Starting resolveAllCrossLibs with alias ${alias}`);
   const distLibsDir = "dist-libs";
@@ -287,7 +312,13 @@ async function resolveAllCrossLibs(
           if (binDirExists) {
             // relinka("internal", `Processing bin directory: ${binDir}`);
             try {
-              const modifiedFiles = await resolveCrossLibs(binDir, alias, subFolders);
+              const modifiedFiles = await resolveCrossLibs(
+                binDir,
+                alias,
+                subFolders,
+                buildPreExtensions,
+                buildTemplatesDir,
+              );
               allModifiedFiles.push(...modifiedFiles);
               // relinka(
               //   "internal",

@@ -1,5 +1,6 @@
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
+import { relinka } from "@reliverse/relinka";
 
 import type { DlerConfig } from "~/libs/sdk/sdk-impl/config/types";
 
@@ -11,7 +12,7 @@ import { PROJECT_ROOT } from "~/libs/sdk/sdk-impl/utils/utils-consts";
 import { handleDlerError } from "~/libs/sdk/sdk-impl/utils/utils-error-cwd";
 import { createPerfTimer } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
-import { dlerPostBuild } from "./postbuild";
+import { dlerPostBuild, wrapper_CopyNonBuildFiles } from "./postbuild";
 import { dlerPreBuild } from "./prebuild";
 
 // ==========================
@@ -23,7 +24,12 @@ import { dlerPreBuild } from "./prebuild";
  * Handles building for both main project and libraries.
  * @see `src/app/pub/impl.ts` for pub main function implementation.
  */
-export async function dlerBuild(isDev: boolean, config?: DlerConfig) {
+export async function dlerBuild(
+  isDev: boolean,
+  config?: DlerConfig,
+  debugOnlyCopyNonBuildFiles?: boolean,
+  debugDontCopyNonBuildFiles?: boolean,
+) {
   // Create a performance timer
   const timer = createPerfTimer();
 
@@ -45,7 +51,23 @@ export async function dlerBuild(isDev: boolean, config?: DlerConfig) {
       effectiveConfig.distJsrDirName,
       effectiveConfig.libsDirDist,
       effectiveConfig.libsList,
+      "dist-tmp",
     );
+
+    if (debugOnlyCopyNonBuildFiles) {
+      if (debugDontCopyNonBuildFiles) {
+        relinka(
+          "error",
+          "📝 debugOnlyCopyNonBuildFiles and debugDontCopyNonBuildFiles cannot be used together",
+        );
+        process.exit(1);
+      }
+
+      await wrapper_CopyNonBuildFiles(effectiveConfig);
+
+      relinka("info", "📝 debugOnlyCopyNonBuildFiles was used, build finished, exiting...");
+      process.exit(0);
+    }
 
     // Run pre checks/tools/hooks and copy files to temp directories
     await dlerPreBuild(effectiveConfig);
@@ -69,10 +91,12 @@ export async function dlerBuild(isDev: boolean, config?: DlerConfig) {
     await library_buildFlow(timer, isDev, tempConfig);
 
     // Run post checks/tools/hooks and copy non-build files
-    await dlerPostBuild(isDev);
+    await dlerPostBuild(isDev, debugDontCopyNonBuildFiles);
 
     // Clean up temp directories
-    await fs.remove(path.join(PROJECT_ROOT, "dist-tmp"));
+    if (effectiveConfig.postBuildSettings?.cleanupTempDirs) {
+      await fs.remove(path.join(PROJECT_ROOT, "dist-tmp"));
+    }
 
     return { timer, effectiveConfig };
   } catch (error) {

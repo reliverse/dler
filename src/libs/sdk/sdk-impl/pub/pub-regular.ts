@@ -49,6 +49,10 @@ export async function regular_pubToJsr(
         relinka("log", `Successfully ${distJsrDryRun ? "validated" : "published"} to JSR registry`);
       });
 
+      // Wait for 2 seconds so jsr.io UI will be finished
+      // Without this user may see: resource busy or locked, rm 'dist-jsr'
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       // Resume the timer after publishing is complete
       if (timer) resumePerfTimer(timer);
     }

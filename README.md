@@ -1,4 +1,4 @@
-# 🛋️ dler (prev. relidler) • build/publish/improve ts/js libs/cli/apps
+# 🧬 dler (prev. relidler) • build/publish/improve ts/js libs/cli/apps
 
 [sponsor](https://github.com/sponsors/blefnk) — [discord](https://discord.gg/pb8ukbwpsj) — [github](https://github.com/reliverse/dler) — [npm](https://npmjs.com/@reliverse/dler)
 
@@ -8,7 +8,7 @@
 
 ### 🚀 core power
 
-- **drop-in replacement** for `unjs/unbuild` — seamless migration with enhanced capabilities
+- **`unjs/unbuild` drop-in** with different powerful capabilities like publishing
 - **automated publishing** to npm/jsr registries with intelligent workflow management
 - **reliable builds** with comprehensive typescript/javascript support and error handling
 - **smart versioning** with automatic version bumps and semantic release integration
@@ -131,14 +131,19 @@ bun dev # bun src/cli.ts --dev
     ```
 
     - the `.config/dler.ts` file is automatically created on first run.
-    - **it's recommended to customize this file according to your needs.**
+
+    e. **optionally, customize `.config/dler.ts`**:
+
+    - it's recommended to customize this file according to your needs.
     - you can check an example config here: [.config/dler.ts](https://github.com/reliverse/dler/blob/main/.config/dler.ts)
+    - if you want to build files which have extensions other than `.ts` and `.js`, you can customize `buildPreExtensions` array (example: `["ts", "js", "vue", "tsx", "jsx"]`).
+    - if you want to exclude some files from being built, you can customize `buildTemplatesDir` string (example: `"templates"`). by placing them in this directory, they will not be built, whole directory will be copied from e.g. `src/foo/templates` to `dist-*/bin/foo/templates` as-is.
 
 3. **run and enjoy**:
 
     ```sh
-    bun [build|pub] # if installed as dev dep
-    dler [build|pub] # if installed globally
+    bun dler [build|pub|--help] # if installed as dev dep
+    dler [build|pub|--help] # if installed globally
     ```
 
 ## dler commands
@@ -151,9 +156,27 @@ if you run just `dler` — it will display a list of commands which you can laun
 
 ## **available commands**
 
-[agg](#1-agg) [build](#2-build) [check](#3-check) [conv](#4-conv) [copy](#6-copy) [init](#7-init) [inject](#8-inject) [libs](#9-libs) [merge](#10-merge) [migrate](#11-migrate) [pub](#12-pub) [rempts](#13-rempts) [rename](#14-rename) [spell](#15-magic) [split](#16-split) [pack](#17-pack) [unpack](#18-unpack)
+[build](#1-build) — [pub](#2-pub) — [agg](#3-agg) — [check](#4-check) — [conv](#5-conv) — [copy](#6-copy) — [init](#7-init) — [inject](#8-inject) — [libs](#9-libs) — [merge](#10-merge) — [migrate](#11-migrate) — [rempts](#12-rempts) — [rename](#13-rename) — [spell](#14-magic) — [split](#15-split) — [pack](#16-pack) — [unpack](#17-unpack)
 
-### 1. `agg`
+### 1. `build`
+
+since dler is fully modular, build command is separated for its own build-in plugin as well.
+
+```bash
+bun dler build ...
+```
+
+### 2. `pub`
+
+pub command is separated for its own build-in plugin as well.
+
+it already calls build command by itself, so you don't need to run `dler build` separately.
+
+```bash
+bun dler pub ...
+```
+
+### 3. `agg`
 
 generates aggregator file with content like `import { getsomething } from "./utils.js"`.
 
@@ -174,15 +197,7 @@ bun tools:agg # shortcut for:
 bun src/cli.ts tools --dev --tool agg --input src/libs/sdk/sdk-impl --out src/libs/sdk/sdk-mod.ts --recursive --named --strip src/libs/sdk
 ```
 
-### 2. `build`
-
-since dler is fully modular, build command is separated for its own build-in plugin as well.
-
-```bash
-bun dler build ...
-```
-
-### 3. `check`
+### 4. `check`
 
 checks your project for common issues and potential improvements. This command performs several types of checks (aka rules of dler):
 
@@ -248,11 +263,7 @@ dler check --json
 **pro tip:**  
 the command will prompt you only for the arguments you haven't provided. for example, if you specify `--directory` but not `--checks`, it will only prompt you to select which checks to run.
 
-### 4. `conv`
-
-not yet documented.
-
-### 5. `deps`
+**how deps check works**:
 
 finds missing dependencies in your project by scanning your code for imports and comparing them to your `package.json`. This command is particularly useful for maintaining clean dependency lists and preventing runtime errors.
 
@@ -298,7 +309,6 @@ dler deps --include-builtins
 dler deps --all --directory ./src --include-builtins
 ```
 
-**pro tip:**  
 missing dependencies are shown only once, even if used in multiple files.  
 deep imports like `dep/some/file` or `@org/dep/some/thing` are always resolved to their root package.
 
@@ -307,6 +317,10 @@ deep imports like `dep/some/file` or `@org/dep/some/thing` are always resolved t
 - **Missing Dependencies**: Packages that are imported but not listed in `package.json`
 - **Dev-only Dependencies**: Packages that are only in `devDependencies` but imported in production code
 - **Duplicate Dependencies**: Packages listed in both `dependencies` and `devDependencies`
+
+### 5. `conv`
+
+not yet documented.
 
 ### 6. `copy`
 
@@ -600,17 +614,7 @@ dler relinka --input src/app.ts --from relinkaFunction --to consolaObject
   3. review any file system operations that might need manual updates
   4. consider using globby's advanced features like pattern matching and recursive searching
 
-### 12. `pub`
-
-pub command is separated for its own build-in plugin as well.
-
-it already calls build command by itself, so you don't need to run `dler build` separately.
-
-```bash
-bun dler pub ...
-```
-
-### 13. `rempts`
+### 12. `rempts`
 
 @reliverse/rempts's best friend. learn more in its [docs](https://github.com/reliverse/rempts).
 
@@ -619,15 +623,43 @@ bun dler rempts
 bun dler rempts --init cmd1 cmd2
 ```
 
-### 14. `rename`
+### 13. `rename`
 
 ```bash
 bun dler rename ...
 ```
 
-### 15. `magic`
+### 14. `magic`
 
-> Contributors: Please check the [docs/cmds/SPELLS.md](./docs/cmds/SPELLS.md) file for more technical details.
+**programmatic usage:**
+
+```ts
+function main() {
+  // may be useful when your cli is a project bootstrapper tool like @reliverse/rse
+  // so you can apply spells to each bootstrapped by you cli project's file
+  await applyMagicSpells(["my-target-dir"]);
+}
+await main();
+```
+
+**or, call it from dler config's hook**:
+
+```ts
+{
+  hooksAfterBuild: [
+    async () => {
+      // useful when you want to apply spells right after dler's build
+      await applyMagicSpells(["dist-jsr", "dist-npm", "dist-libs"]);
+    }
+  ],
+}
+```
+
+**or, use `dler magic`**:
+
+```bash
+dler magic --targets "my-target-dir"
+```
 
 **available spell types:**
 
@@ -696,7 +728,9 @@ files: [] // means all files
 
 p.s. [see how rse cli uses hooked=true](https://github.com/reliverse/rse/blob/main/src/postbuild.ts)
 
-### 16. `split`
+> Contributors: Please check the [docs/cmds/SPELLS.md](./docs/cmds/SPELLS.md) file for more technical details.
+
+### 15. `split`
 
 splits your code/text file into multiple files.
 
@@ -704,7 +738,7 @@ splits your code/text file into multiple files.
 bun dler split ...
 ```
 
-### 17. `pack`
+### 16. `pack`
 
 packs a directory of templates into TypeScript modules. This command is useful for creating reusable template packages that can be distributed and used by other projects.
 
@@ -764,7 +798,7 @@ output/
 └── mod.ts
 ```
 
-### 18. `unpack`
+### 17. `unpack`
 
 creates file structure from packed templates. This command is the counterpart to `pack` and is used to extract and restore template files from a packed template package.
 
@@ -825,17 +859,6 @@ bun add @reliverse/dler-sdk
 
 **usage example**: [@reliverse/rse](https://github.com/reliverse/rse-website-builder) leverages this sdk to extend its functionality.
 
-## todo
-
-- [x] ~~implement stable `regular` build and publish~~
-- [ ] implement stable `library` build and publish
-- [ ] achieve full drop-in replacement for `unbuild`
-- [ ] support auto migration from `build.config.ts`
-- [ ] allow plugins to extend dler's `defineconfig`
-- [ ] support configuration via `.config/rse.{ts,jsonc}`
-- [ ] make config file optional with sensible defaults
-- [ ] use [@reliverse/remdn](https://github.com/reliverse/remdn) to generate npm/jsr readme
-
 ## related
 
 special thanks to the project that inspired `@reliverse/dler`:
@@ -853,6 +876,20 @@ special thanks to the project that inspired `@reliverse/dler`:
 ### notes
 
 - `<src | dist-npm | dist-jsr>/libs/<lib-name>/<files live here>` === `dist-libs/<lib-name>/<jsr | npm>/bin/<files live here>`
+
+### todo
+
+- [ ] `dist-*`-> `dist/dist-*`
+- [x] implement stable `regular` build and publish
+- [ ] implement stable `library` build and publish
+- [ ] achieve full drop-in replacement for `unbuild`
+- [ ] support auto migration from `build.config.ts`
+- [ ] support configuration via `.config/rse.{ts,jsonc}` 🤔
+- [ ] make config file fully optional with sensible defaults
+- [ ] use `dler remdn` ([@reliverse/remdn](https://github.com/reliverse/remdn)) to generate npm/jsr specific readme and a single `docs` dir for a whole project (only readmes will be published, docs are only stored in project's source cpde and can be deployed to user's website)
+- [x] allow plugins to extend dler's `defineconfig` (`hooksBeforeBuild` and `hooksAfterBuild` are now available, plugin's options can be passed directly to plugin's params, e.g. `hooksBeforeBuild: [ async () => { await myCoolPlugin({ /* plugin's options */ }); } ],`)
+- [ ] at the moment any bundler like `mkdist` can be called using `bun`, but bun's own bundler is not yet fully supported
+- [ ] support all well-known package managers (currently only bun is fully supported)
 
 ## support
 

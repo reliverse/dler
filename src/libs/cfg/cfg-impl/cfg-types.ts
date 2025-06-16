@@ -385,7 +385,7 @@ export interface DlerConfig {
 
   /**
    * List of tools to run after the build process completes.
-   * Currently only supports "dler-check".
+   * Available options: "dler-check"
    * Each tool will only run if it's installed in the system.
    *
    * @default []
@@ -439,6 +439,15 @@ export interface DlerConfig {
    * @default []
    */
   hooksAfterBuild: (() => Promise<void>)[];
+
+  /**
+   * When `true`, cleans up the temporary directories after the build process completes.
+   *
+   * @default true
+   */
+  postBuildSettings: {
+    cleanupTempDirs: boolean;
+  };
 
   // ==========================================================================
   // Build setup
@@ -570,6 +579,25 @@ export interface DlerConfig {
       }
     >;
   };
+
+  // Files with these extensions will be built
+  // Any other files will be copied as-is to dist
+  /**
+   * File extensions that should be copied to temporary build directories during pre-build.
+   * These files will be processed by the bundlers.
+   * All other files will be copied as-is to final dist directories during post-build.
+   * @default ["ts", "js"]
+   */
+  buildPreExtensions: string[];
+
+  // If you need to exclude some ts/js files from being built,
+  // you can store them in the dirs with buildTemplatesDir name
+  /**
+   * Directory name for templates that should be excluded from pre-build processing.
+   * Files in this directory will be copied as-is during post-build.
+   * @default "templates"
+   */
+  buildTemplatesDir: string;
 }
 
 export type BumpMode = "patch" | "minor" | "major" | "auto" | "manual";

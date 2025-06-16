@@ -10,13 +10,13 @@ import { defineConfigDler } from "~/libs/cfg/cfg-impl/cfg-consts";
  */
 export default defineConfigDler({
   // Bump configuration
-  bumpDisable: false,
+  bumpDisable: true,
   bumpFilter: ["package.json", ".config/rse.ts", "src/libs/sdk/sdk-impl/config/info.ts"],
   bumpMode: "patch",
 
   // Common configuration
   commonPubPause: false,
-  commonPubRegistry: "npm-jsr",
+  commonPubRegistry: "npm",
   commonVerbose: true,
 
   // Core configuration
@@ -47,7 +47,7 @@ export default defineConfigDler({
   // Publish specific dirs as separate packages
   // This feature is experimental at the moment
   // Please commit your changes before using it
-  libsActMode: "main-and-libs",
+  libsActMode: "main-project-only",
   libsDirDist: "dist-libs",
   libsDirSrc: "src/libs",
   libsList: {
@@ -65,7 +65,7 @@ export default defineConfigDler({
     },
     "@reliverse/cfg": {
       libDeclarations: true,
-      libDescription: "shared config for @reliverse/dler and @reliverse/rse",
+      libDescription: "shared config package for @reliverse/dler and @reliverse/rse",
       libDirName: "cfg",
       libMainFile: "cfg/cfg-mod.ts",
       libPkgKeepDeps: true, // TODO: temp
@@ -119,6 +119,13 @@ export default defineConfigDler({
     },
   },
 
+  // Files with these extensions will be built
+  // Any other files will be copied as-is to dist
+  buildPreExtensions: ["ts", "js"],
+  // If you need to exclude some ts/js files from being built,
+  // you can store them in the dirs with buildTemplatesDir name
+  buildTemplatesDir: "templates",
+
   // Dependency filtering
   // Global is always applied
   filterDepsPatterns: {
@@ -150,20 +157,30 @@ export default defineConfigDler({
   },
 
   // Code quality tools
-  runBeforeBuild: [], // "tsc", "eslint", "biome", "knip", "dler-check"
-  runAfterBuild: [], // "dler-check"
+  // Available: tsc, eslint, biome, knip, dler-check
+  runBeforeBuild: [],
+  // Available: dler-check
+  runAfterBuild: [],
 
   // Build hooks
   hooksBeforeBuild: [
+    // example plugin:
     // async () => {
-    //   await someAsyncOperation();
-    // }
+    //   await myCoolPlugin({
+    //     /* plugin's options */
+    //   });
+    // },
   ],
   hooksAfterBuild: [
+    // example func:
     // async () => {
-    //   await someAsyncOperation();
+    //   await applyMagicSpells(["dist-jsr", "dist-npm", "dist-libs"]);
     // }
   ],
+
+  postBuildSettings: {
+    cleanupTempDirs: true,
+  },
 
   // Build setup
   // transpileAlias: {},

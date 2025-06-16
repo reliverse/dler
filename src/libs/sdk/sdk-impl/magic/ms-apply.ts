@@ -127,6 +127,28 @@ function validateTargets(targets: string[], customOutputPaths?: Record<string, s
  * Processes files in specified output directories by applying magic directives
  * For dist targets, first scans src directory for files with magic directives, then processes corresponding output files
  * For custom targets, processes magic directives directly in the target files
+ *
+ * !! Users should call this function manually in their codebase (dler doesn't call it automatically) !!
+ * To call it:
+ * ```ts
+ * // may be useful when your cli is a project bootstrapper tool like @reliverse/rse
+ * // so you can apply spells to each bootstrapped by you cli project's file
+ * await applyMagicSpells(["my-target-dir"]);
+ * ```
+ * Or, in dler config's hook:
+ * ```ts
+ * hooksAfterBuild: [
+ *   async () => {
+ *     // useful when you want to apply spells right after dler's build
+ *     await applyMagicSpells(["dist-jsr", "dist-npm", "dist-libs"]);
+ *   }
+ * ]
+ * ```
+ * Or, use `dler magic` command:
+ * ```bash
+ * dler magic --targets "my-target-dir"
+ * ```
+ *
  * @param targets Array of output targets in format "dist-npm", "dist-jsr", "dist-libs" or "dist-libs/lib-name" or any custom path
  * @param options Configuration options for processing
  * @returns Object containing arrays of processed files and processed .d.ts files
@@ -160,7 +182,7 @@ export async function applyMagicSpells(
         const sourceFilesWithDirectives = await scanSourceForMagicDirectives(srcRoot, options);
 
         if (sourceFilesWithDirectives.length === 0) {
-          if (DEBUG_MODE) relinka("log", "[spells] No source files with magic directives found");
+          // if (DEBUG_MODE) relinka("log", "[spells] No source files with magic directives found");
           return;
         }
 
@@ -323,9 +345,9 @@ async function scanSourceForMagicDirectives(
   srcRoot: string,
   options: Partial<ApplyMagicSpellsOptions> = {},
 ): Promise<string[]> {
-  if (DEBUG_MODE) {
-    relinka("log", `[spells] ⇒ scanning src: ${srcRoot}`);
-  }
+  // if (DEBUG_MODE) {
+  //   relinka("log", `[spells] ⇒ scanning src: ${srcRoot}`);
+  // }
 
   const sourceFilesWithDirectives: string[] = [];
 

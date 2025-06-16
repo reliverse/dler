@@ -59,6 +59,10 @@ export const DEFAULT_CONFIG_DLER: DlerConfig = {
     // }
   ],
 
+  postBuildSettings: {
+    cleanupTempDirs: true,
+  },
+
   // Build setup
   transpileFailOnWarn: false,
   transpileEsbuild: "es2023",
@@ -78,6 +82,13 @@ export const DEFAULT_CONFIG_DLER: DlerConfig = {
     "dist-npm": [],
     "dist-libs": {},
   },
+
+  // Files with these extensions will be built
+  // Any other files will be copied as-is to dist
+  buildPreExtensions: ["ts", "js"],
+  // If you need to exclude some ts/js files from being built,
+  // you can store them in the dirs with buildTemplatesDir name
+  buildTemplatesDir: "templates",
 };
 
 // TODO: implement migrator from build.config.ts to .config/dler.ts
