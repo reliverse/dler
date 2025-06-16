@@ -17,7 +17,7 @@
 ### ⚡ developer experience
 
 - **performance optimized** for speed with modern build pipelines and caching
-- **18 built-in commands** — comprehensive [dler commands](#dler-commands) for every workflow
+- **16 built-in commands** — comprehensive [dler commands](#dler-commands) for every workflow
 - **path resolution magic** converts typescript aliases to relative imports automatically
 - **highly configurable** via dedicated configuration files with sensible defaults
 - **dual interface** — cli for everyday use, sdk for advanced programmatic control
@@ -148,7 +148,7 @@ bun dev # bun src/cli.ts --dev
 
 ## dler commands
 
-dler ships with a flexible command system (prev. plugins) and **18 built-in commands** (from [reliverse addons](https://reliverse.org/addons) collection).
+dler ships with a flexible command system (prev. plugins) and **16 built-in commands** (from [reliverse addons](https://reliverse.org/addons) collection).
 
 feel free to create your own commands. commands can be implemented as built-in directly in `src/app/<command>/impl/*` and then imported from `src/app/<command>/cmd.ts`; or implemented in your own library and then imported from `src/app/<command>/cmd.ts`.
 
@@ -156,7 +156,7 @@ if you run just `dler` — it will display a list of commands which you can laun
 
 ## **available commands**
 
-[build](#1-build) — [pub](#2-pub) — [agg](#3-agg) — [check](#4-check) — [conv](#5-conv) — [copy](#6-copy) — [init](#7-init) — [inject](#8-inject) — [libs](#9-libs) — [merge](#10-merge) — [migrate](#11-migrate) — [rempts](#12-rempts) — [rename](#13-rename) — [spell](#14-magic) — [split](#15-split) — [pack](#16-pack) — [unpack](#17-unpack)
+[build](#1-build) — [pub](#2-pub) — [agg](#3-agg) — [check](#4-check) — [conv](#5-conv) — [copy](#6-copy) — [init](#7-init) — [inject](#8-inject) — [libs](#9-libs) — [merge](#10-merge) — [migrate](#11-migrate) — [rempts](#12-rempts) — [rename](#13-rename) — [spell](#14-magic) — [split](#15-split) — [pack](#16-pack)
 
 ### 1. `build`
 
@@ -798,7 +798,7 @@ output/
 └── mod.ts
 ```
 
-### 17. `unpack`
+**--unpack**:
 
 creates file structure from packed templates. This command is the counterpart to `pack` and is used to extract and restore template files from a packed template package.
 
@@ -818,16 +818,16 @@ creates file structure from packed templates. This command is the counterpart to
 
 ```bash
 # Basic usage
-dler unpack ./dist-templates --output ./my-project
+dler pack ./dist-templates --output ./my-project --unpack
 
 # With custom output directory
-dler unpack ./dist-templates --output ./custom-location
+dler pack ./dist-templates --output ./custom-location --unpack
 
 # Preview changes without applying
-dler unpack ./dist-templates --output ./my-project --dry-run
+dler pack ./dist-templates --output ./my-project --dry-run --unpack
 
 # Clean up existing template files before unpacking
-dler unpack ./dist-templates --output ./my-project --cleanup
+dler pack ./dist-templates --output ./my-project --cleanup --unpack
 ```
 
 **arguments:**

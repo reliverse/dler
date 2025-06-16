@@ -39,7 +39,7 @@ interface Template {
 type ExistingTemplates = Record<string, Template>;
 
 /* -------------------------------------------------------------------------- */
-/*                                  Constants                                  */
+/*                                  Constants                                 */
 /* -------------------------------------------------------------------------- */
 
 const WHITELABEL_DEFAULT = "DLER";
@@ -49,10 +49,10 @@ const TPLS_DIR = "templates";
 const BINARIES_DIR = "binaries";
 
 /* -------------------------------------------------------------------------- */
-/*                               Helper functions                              */
+/*                               Helper functions                             */
 /* -------------------------------------------------------------------------- */
 
-/** Escape back‑`s, ${ and newlines for safe template literal embedding */
+/** Escape back-`s, ${ and newlines for safe template literal embedding */
 export const escapeTemplateString = (str: string): string =>
   str
     .replace(/`/g, "\\`")
@@ -64,6 +64,13 @@ export const escapeTemplateString = (str: string): string =>
     .replace(/\\\{\{/g, "{{")
     .replace(/\\\}\}/g, "}}")
     .replace(/\r?\n/g, "\\n");
+
+export const unescapeTemplateString = (str: string): string =>
+  str
+    .replace(/\\n/g, "\n")
+    .replace(/\\u0024\{/g, "\\${")
+    .replace(/\\\\`/g, "`")
+    .replace(/\\\\/g, "\\");
 
 export const hashFile = async (file: string): Promise<string> => {
   const buf = await fs.readFile(file);
@@ -142,7 +149,7 @@ export const readFileForTemplate = async (
       };
     }
 
-    // Non‑binary files are read as text
+    // Non-binary files are read as text
     const raw = await fs.readFile(absPath, "utf8");
     const ext = path.extname(absPath).toLowerCase();
     if (ext === ".json") {
@@ -193,12 +200,116 @@ export const readFileForTemplate = async (
 };
 
 /* -------------------------------------------------------------------------- */
-/*                             Template generation                             */
+/*                             Template UNPACKING                             */
+/* -------------------------------------------------------------------------- */
+
+/** Locate the object holding templates in a dynamically-imported module */
+const findTemplatesObject = (mod: Record<string, unknown>): ExistingTemplates => {
+  if (mod.DLER_TEMPLATES && typeof mod.DLER_TEMPLATES === "object") {
+    return mod.DLER_TEMPLATES as ExistingTemplates;
+  }
+  if (mod.default && typeof mod.default === "object") {
+    return mod.default as ExistingTemplates;
+  }
+  for (const v of Object.values(mod)) {
+    if (
+      v &&
+      typeof v === "object" &&
+      Object.values(v).every((t) => t && typeof t === "object" && "config" in t)
+    ) {
+      return v as ExistingTemplates;
+    }
+  }
+  return {};
+};
+
+/** Restore one file (text|json|binary) to the filesystem */
+const restoreFile = async (
+  outRoot: string,
+  relPath: string,
+  meta: TemplatesFileContent,
+  binsDir: string,
+  force = false,
+) => {
+  const dest = path.join(outRoot, relPath);
+  await fs.mkdir(path.dirname(dest), { recursive: true });
+
+  try {
+    if (!force) {
+      await fs.access(dest);
+      relinka("log", `Skipping existing file (use --force to overwrite): ${relPath}`);
+      return;
+    }
+  } catch {
+    /* file doesn't exist → proceed */
+  }
+
+  if (meta.type === "binary") {
+    const ext = path.extname(relPath);
+    const src = path.join(binsDir, `${meta.binaryHash}${ext}`);
+    try {
+      await fs.copyFile(src, dest);
+    } catch (err) {
+      relinka("error", `Missing binary ${src} for ${relPath}: ${(err as Error).message}`);
+    }
+  } else if (meta.type === "json") {
+    const jsonStr = JSON.stringify(meta.content, null, 2);
+    await fs.writeFile(dest, jsonStr, "utf8");
+  } else {
+    await fs.writeFile(dest, meta.content as string, "utf8");
+  }
+
+  /* preserve mtime if available */
+  if (meta.metadata?.updatedAt) {
+    const ts = new Date(meta.metadata.updatedAt);
+    await fs.utimes(dest, ts, ts);
+  }
+};
+
+/** Unpack logic */
+const unpackTemplates = async (
+  aggregatorPath: string,
+  outDir: string,
+  force = false,
+): Promise<void> => {
+  const jiti = createJiti(process.cwd());
+  let mod: Record<string, unknown>;
+  try {
+    mod = await jiti.import(aggregatorPath);
+  } catch (err) {
+    throw new Error(`Failed to import aggregator file: ${(err as Error).message}`);
+  }
+
+  const templatesObj = findTemplatesObject(mod);
+  if (!Object.keys(templatesObj).length) {
+    throw new Error("No templates found in aggregator file.");
+  }
+
+  const binsDir = path.join(path.dirname(aggregatorPath), TPLS_DIR, BINARIES_DIR);
+  let unpackedFiles = 0;
+
+  for (const [tplName, tpl] of Object.entries(templatesObj)) {
+    relinka("info", `Unpacking template: ${tplName}`);
+    for (const [relPath, meta] of Object.entries(tpl.config.files)) {
+      try {
+        await restoreFile(outDir, relPath, meta, binsDir, force);
+        unpackedFiles++;
+      } catch (err) {
+        relinka("error", `Failed restoring ${relPath}: ${(err as Error).message}`);
+      }
+    }
+  }
+
+  relinka("success", `Unpacked ${unpackedFiles} files into ${outDir}`);
+};
+
+/* -------------------------------------------------------------------------- */
+/*                             Template generation                            */
 /* -------------------------------------------------------------------------- */
 
 const writeTypesFile = async (outRoot: string, outputName: string) => {
   const typesFile = path.join(outRoot, `${outputName}-types.ts`);
-  const code = `// Auto‑generated type declarations for templates.
+  const code = `// Auto-generated type declarations for templates.
 
 export interface FileMetadata { updatedAt?: string; updatedHash?: string; }
 export interface TemplatesFileContent { content: string | Record<string, unknown>; type: 'text' | 'json' | 'binary'; hasError?: boolean; error?: string; jsonComments?: Record<number, string>; binaryHash?: string; metadata?: FileMetadata; }
@@ -214,11 +325,15 @@ export interface Template { name: string; description: string; config: { files: 
 export default defineCommand({
   meta: {
     name: "pack",
-    version: "1.1.0",
-    description: "Packs a directory of templates into TS modules",
+    version: "1.2.0",
+    description: "Pack templates into TS modules or --unpack them back to files",
   },
   args: defineArgs({
-    dir: { type: "positional", required: true, description: "Directory to process" },
+    input: {
+      type: "positional",
+      required: true,
+      description: "Input directory (pack) or aggregator file (unpack)",
+    },
     output: { type: "string", default: "my-templates", description: "Output dir" },
     whitelabel: { type: "string", default: WHITELABEL_DEFAULT, description: "Rename DLER" },
     cdn: {
@@ -229,15 +344,47 @@ export default defineCommand({
     update: {
       type: "boolean",
       default: true,
-      description: "Update existing templates and add new ones",
+      description: "Update existing templates and add new ones (pack mode only)",
     },
     files: { type: "string", description: "Comma-separated list of specific files to update" },
-    lastUpdate: { type: "string", description: "Override lastUpdate timestamp" },
+    lastUpdate: { type: "string", description: "Override lastUpdate timestamp (pack mode only)" },
+    unpack: {
+      type: "boolean",
+      default: false,
+      description: "Unpack templates from an aggregator file",
+    },
   }),
   async run({ args }) {
     if (args.cdn) throw new Error("Remote CDN support is not implemented yet.");
 
-    const dirToProcess = path.resolve(args.dir);
+    /* ----------------------------- UNPACK MODE ---------------------------- */
+    if (args.unpack) {
+      const aggrPath = path.resolve(args.input);
+      const outDir = path.resolve(args.output);
+
+      // basic validation
+      try {
+        const stat = await fs.stat(aggrPath);
+        if (!stat.isFile() || !aggrPath.endsWith(".ts")) {
+          throw new Error("Input for --unpack must be a TypeScript aggregator file (*.ts)");
+        }
+      } catch (err) {
+        relinka("error", (err as Error).message);
+        process.exit(1);
+      }
+
+      relinka("info", `Unpacking templates from ${aggrPath} to ${outDir}`);
+      try {
+        await unpackTemplates(aggrPath, outDir, args.force);
+      } catch (err) {
+        relinka("error", (err as Error).message);
+        process.exit(1);
+      }
+      return;
+    }
+
+    /* ----------------------------- PACK MODE ------------------------------ */
+    const dirToProcess = path.resolve(args.input);
     const outDir = path.resolve(args.output);
     const outDirName = path.basename(outDir);
     const typesFile = `${outDirName}-types.ts`;
@@ -375,7 +522,7 @@ export default defineCommand({
 
         // json post-processing
         if (meta.type === "json") {
-          // no side-effect additions here; we handle type satisfaction annotations later when generating code
+          // no side-effect additions here
         }
 
         filesRecord[rel] = {
@@ -448,6 +595,8 @@ export default defineCommand({
             // Create a deep clone to avoid readonly property issues
             clone = JSON.parse(JSON.stringify(meta.content)) as Record<string, unknown>;
 
+            // Add type satisfaction annotations if the
+            // file is a package.json or tsconfig.json
             if (rel.endsWith("package.json")) {
               sat = " satisfies PackageJson";
             } else if (rel.endsWith("tsconfig.json")) {
@@ -458,7 +607,8 @@ export default defineCommand({
             relinka("error", `Failed to process JSON content for ${rel}: ${error}`);
           }
 
-          const jsonStr = JSON.stringify(
+          const jsonStr = JSON.stringify(clone, null, 2)
+            /* const jsonStr = JSON.stringify(
             clone,
             (key, value) => {
               // If key is a single word without special characters, return it without quotes
@@ -468,7 +618,7 @@ export default defineCommand({
               return value;
             },
             2,
-          )
+          ) */
             .split("\n")
             .map((line, i) => {
               if (i === 0) return line;
@@ -487,7 +637,7 @@ export default defineCommand({
             code.push(`        error: "${escapeTemplateString(meta.error)}",`);
           }
         }
-        code.push(`      }${isLast ? "," : ","}`);
+        code.push(`      }${isLast ? "" : ","}`); // TODO: [consider] code.push(`      }${isLast ? "," : ","}`);
       });
 
       code.push("    },");

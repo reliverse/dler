@@ -256,33 +256,6 @@ export {
   getMimeType,
 } from "./sdk-impl/utils/file-type.js";
 export { finalizeBuild, finalizePub } from "./sdk-impl/utils/finalize.js";
-export {
-  WHITELABEL_DEFAULT,
-  JSON_EXTS,
-  TEMPLATE_VAR,
-  TPLS_DIR,
-  BINARIES_DIR,
-  isJsonExt,
-} from "./sdk-impl/utils/pack-unpack-old/pu-constants.js";
-export {
-  walkDir,
-  detectFileTypePU,
-  readFileForTemplate,
-  escapeTemplateString,
-} from "./sdk-impl/utils/pack-unpack-old/pu-file-utils.js";
-export type {
-  FileContent,
-  FileType,
-  FileMetadata,
-  TemplatesFileContent,
-  TemplateConfig,
-  Template,
-  Templates,
-} from "./sdk-impl/utils/pack-unpack-old/pu-types.js";
-export {
-  extractJsonComments,
-  stripComments,
-} from "./sdk-impl/utils/pack-unpack-old/pub-json-utils.js";
 export { resolveCrossLibs, resolveAllCrossLibs } from "./sdk-impl/utils/resolve-cross-libs.js";
 export { useAggregator } from "./sdk-impl/utils/tools-agg.js";
 export { printUsage } from "./sdk-impl/utils/tools-impl.js";

@@ -1,7 +1,7 @@
 {
   "name": "@reliverse/dler",
   "author": "reliverse",
-  "version": "1.7.50",
+  "version": "1.7.51",
   "type": "module",
   "license": "MIT",
   "description": "@reliverse/dler is a flexible, unified, and fully automated bundler for typescript and javascript projects, as well as an npm and jsr publishing tool. dler is not only a bundler, it also tries to serve as the most powerful codemod toolkit for js/ts.",
@@ -20,10 +20,10 @@
     "latest": "bun update --latest && bun check",
     "check": "tsc --noEmit && eslint --cache --fix . && biome check --fix --unsafe . && knip",
     "libs:pack": "bun src/cli.ts pack dist-libs --output example/app/libs/mock",
-    "libs:unpack": "bun src/cli.ts unpack example/app/libs/mock --output dist-libs",
+    "libs:unpack": "bun src/cli.ts pack example/app/libs/mock/mock-mod.ts --output dist-libs --unpack",
     "libs:example": "bun example/mod.ts libs",
-    "templates:pack": "bun src/cli.ts pack pack-input --output pack-output/better-t-stack",
-    "templates:unpack": "bun src/cli.ts unpack pack-output/better-t-stack --output pack-input/better-t-stack"
+    "stack:pack": "bun src/cli.ts pack pack-input --output pack-output/better-t-stack",
+    "stack:unpack": "bun src/cli.ts pack pack-output/better-t-stack/better-t-stack-mod.ts --output unpacked-output/better-t-stack --unpack"
   },
   "dependencies": {
     "@reliverse/bleump": "^1.1.4",

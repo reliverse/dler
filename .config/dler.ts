@@ -16,7 +16,7 @@ export default defineConfigDler({
 
   // Common configuration
   commonPubPause: false,
-  commonPubRegistry: "npm",
+  commonPubRegistry: "npm-jsr",
   commonVerbose: true,
 
   // Core configuration
@@ -61,7 +61,7 @@ export default defineConfigDler({
       libPkgKeepDeps: true,
       libTranspileMinify: true,
       libPubPause: false,
-      libPubRegistry: "npm",
+      libPubRegistry: "npm-jsr",
     },
     "@reliverse/cfg": {
       libDeclarations: true,
@@ -90,7 +90,7 @@ export default defineConfigDler({
       ], */
       libTranspileMinify: true,
       libPubPause: false,
-      libPubRegistry: "npm",
+      libPubRegistry: "npm-jsr",
     },
   },
 
