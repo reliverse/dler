@@ -1,6 +1,6 @@
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 
-import { applyMagicSpells } from "~/libs/sdk/sdk-impl/magic/ms-apply";
+import { applyMagicSpells } from "~/libs/sdk/sdk-impl/magic/magic-apply";
 import { formatError } from "~/libs/sdk/sdk-impl/utils/utils-error-cwd";
 
 export default defineCommand({

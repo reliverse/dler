@@ -94,7 +94,7 @@ export async function dlerBuild(
     await dlerPostBuild(isDev, debugDontCopyNonBuildFiles);
 
     // Clean up temp directories
-    if (effectiveConfig.postBuildSettings?.cleanupTempDirs) {
+    if (effectiveConfig.postBuildSettings?.deleteDistTmpAfterBuild) {
       await fs.remove(path.join(PROJECT_ROOT, "dist-tmp"));
     }
 

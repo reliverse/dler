@@ -9,8 +9,8 @@ import {
   injectMultiple,
   type SingleInjection,
 } from "~/libs/sdk/sdk-impl/cmds/inject/inject-impl-mod";
-import * as ms from "~/libs/sdk/sdk-impl/magic/ms-apply";
-import * as spells from "~/libs/sdk/sdk-impl/magic/ms-spells";
+import * as ms from "~/libs/sdk/sdk-impl/magic/magic-apply";
+import * as spells from "~/libs/sdk/sdk-impl/magic/magic-spells";
 
 type Mode = "get-info-only" | "apply-spells" | "inject-example-spells" | "revert-example-spells";
 

@@ -446,7 +446,7 @@ export interface DlerConfig {
    * @default true
    */
   postBuildSettings: {
-    cleanupTempDirs: boolean;
+    deleteDistTmpAfterBuild: boolean;
   };
 
   // ==========================================================================

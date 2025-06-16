@@ -284,7 +284,7 @@ function generateConfig(isDev: boolean, pkgDescription?: string): string {
     "  ],",
     "",
     "  postBuildSettings: {",
-    "    cleanupTempDirs: true,",
+    "    deleteDistTmpAfterBuild: true,",
     "  },",
     "",
     "  // Build setup",

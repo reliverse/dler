@@ -8,7 +8,7 @@ import type { DlerConfig } from "~/libs/sdk/sdk-mod";
 
 import { getCheckCmd } from "~/app/cmds";
 import { getConfigDler } from "~/libs/sdk/sdk-impl/config/load";
-import { applyMagicSpells } from "~/libs/sdk/sdk-impl/magic/ms-apply";
+import { applyMagicSpells } from "~/libs/sdk/sdk-impl/magic/magic-apply";
 import { resolveAllCrossLibs } from "~/libs/sdk/sdk-impl/utils/resolve-cross-libs";
 import { PROJECT_ROOT } from "~/libs/sdk/sdk-impl/utils/utils-consts";
 

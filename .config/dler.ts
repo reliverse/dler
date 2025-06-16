@@ -10,7 +10,7 @@ import { defineConfigDler } from "~/libs/cfg/cfg-impl/cfg-consts";
  */
 export default defineConfigDler({
   // Bump configuration
-  bumpDisable: true,
+  bumpDisable: false,
   bumpFilter: ["package.json", ".config/rse.ts", "src/libs/sdk/sdk-impl/config/info.ts"],
   bumpMode: "patch",
 
@@ -179,7 +179,7 @@ export default defineConfigDler({
   ],
 
   postBuildSettings: {
-    cleanupTempDirs: true,
+    deleteDistTmpAfterBuild: true,
   },
 
   // Build setup

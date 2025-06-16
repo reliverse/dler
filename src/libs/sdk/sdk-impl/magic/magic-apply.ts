@@ -21,7 +21,7 @@ import {
   evaluateMagicDirective,
   type SpellEvaluationContext,
   type SpellOutcome,
-} from "./ms-spells";
+} from "./magic-spells";
 
 const DEBUG_MODE = true;
 const PROCESS_DTS_FILES = true;
@@ -58,6 +58,8 @@ const DEFAULT_OUTPUT_PATHS: Record<string, string> = {
 export interface ApplyMagicSpellsResult {
   /** All processed files */
   processedFiles: string[];
+  /** Total number of magic spells processed */
+  totalSpellsProcessed: number;
 }
 
 /**
@@ -79,15 +81,6 @@ function validateTargets(targets: string[], customOutputPaths?: Record<string, s
       throw new Error(`Invalid output target: ${target}`);
     }
 
-    // Check if the output directory exists in the filesystem
-    const outputPath = allOutputPaths[outputDir] || outputDir;
-    const fullPath = path.isAbsolute(outputPath)
-      ? outputPath
-      : path.join(process.cwd(), outputPath);
-    if (!fs.existsSync(fullPath)) {
-      throw new Error(`Output directory does not exist: ${outputPath}`);
-    }
-
     // Check if this is a custom target (not dist-npm, dist-jsr, or dist-libs)
     const isCustomTarget = !["dist-npm", "dist-jsr", "dist-libs"].includes(outputDir);
 
@@ -96,6 +89,15 @@ function validateTargets(targets: string[], customOutputPaths?: Record<string, s
         throw new Error(`Duplicate custom target: ${outputDir}`);
       }
       customTargets.add(outputDir);
+
+      // Only check existence for custom targets
+      const outputPath = allOutputPaths[outputDir] || outputDir;
+      const fullPath = path.isAbsolute(outputPath)
+        ? outputPath
+        : path.join(process.cwd(), outputPath);
+      if (!fs.existsSync(fullPath)) {
+        throw new Error(`Output directory does not exist: ${outputPath}`);
+      }
       continue;
     }
 
@@ -159,6 +161,7 @@ export async function applyMagicSpells(
 ): Promise<ApplyMagicSpellsResult> {
   const result: ApplyMagicSpellsResult = {
     processedFiles: [],
+    totalSpellsProcessed: 0,
   };
 
   try {
@@ -174,6 +177,7 @@ export async function applyMagicSpells(
         if (outputDir && !["dist-npm", "dist-jsr", "dist-libs"].includes(outputDir)) {
           const targetResult = await processCustomTarget(outputDir, options);
           result.processedFiles.push(...targetResult.processedFiles);
+          result.totalSpellsProcessed += targetResult.totalSpellsProcessed;
           return;
         }
 
@@ -182,7 +186,6 @@ export async function applyMagicSpells(
         const sourceFilesWithDirectives = await scanSourceForMagicDirectives(srcRoot, options);
 
         if (sourceFilesWithDirectives.length === 0) {
-          // if (DEBUG_MODE) relinka("log", "[spells] No source files with magic directives found");
           return;
         }
 
@@ -196,25 +199,36 @@ export async function applyMagicSpells(
         if (outputDir === "dist-libs") {
           if (!lib) {
             const distLibsPath = DEFAULT_OUTPUT_PATHS["dist-libs"] ?? "dist-libs";
-            const libDirs = await readdir(distLibsPath, { withFileTypes: true });
-            await pMap(
-              libDirs,
-              async (libDir) => {
-                if (libDir.isDirectory()) {
-                  const targetResult = await processOutputTarget(
-                    sourceFilesWithDirectives,
-                    "dist-libs",
-                    libDir.name,
-                    options,
-                  );
-                  result.processedFiles.push(...targetResult.processedFiles);
-                }
-              },
-              {
-                concurrency: options.concurrency ?? 4,
-                stopOnError: options.stopOnError ?? true,
-              },
-            );
+            try {
+              if (await fs.pathExists(distLibsPath)) {
+                const libDirs = await readdir(distLibsPath, { withFileTypes: true });
+                await pMap(
+                  libDirs,
+                  async (libDir) => {
+                    if (libDir.isDirectory()) {
+                      const targetResult = await processOutputTarget(
+                        sourceFilesWithDirectives,
+                        "dist-libs",
+                        libDir.name,
+                        options,
+                      );
+                      result.processedFiles.push(...targetResult.processedFiles);
+                      result.totalSpellsProcessed += targetResult.totalSpellsProcessed;
+                    }
+                  },
+                  {
+                    concurrency: options.concurrency ?? 4,
+                    stopOnError: options.stopOnError ?? true,
+                  },
+                );
+              } else if (DEBUG_MODE) {
+                relinka("log", `[spells] ⊘ skipping non-existent target: ${distLibsPath}`);
+              }
+            } catch (error) {
+              if (DEBUG_MODE) {
+                relinka("warn", `Failed to process dist-libs: ${formatError(error)}`);
+              }
+            }
           } else {
             const targetResult = await processOutputTarget(
               sourceFilesWithDirectives,
@@ -223,6 +237,7 @@ export async function applyMagicSpells(
               options,
             );
             result.processedFiles.push(...targetResult.processedFiles);
+            result.totalSpellsProcessed += targetResult.totalSpellsProcessed;
           }
         } else if (outputDir) {
           const targetResult = await processOutputTarget(
@@ -232,6 +247,7 @@ export async function applyMagicSpells(
             options,
           );
           result.processedFiles.push(...targetResult.processedFiles);
+          result.totalSpellsProcessed += targetResult.totalSpellsProcessed;
         }
       },
       {
@@ -239,6 +255,13 @@ export async function applyMagicSpells(
         stopOnError: options.stopOnError ?? true,
       },
     );
+
+    if (DEBUG_MODE) {
+      relinka(
+        "log",
+        `[spells] ✓ Processed ${result.totalSpellsProcessed} magic spells in ${result.processedFiles.length} files`,
+      );
+    }
 
     return result;
   } catch (error) {
@@ -260,6 +283,7 @@ async function processCustomTarget(
 
   const result: ApplyMagicSpellsResult = {
     processedFiles: [],
+    totalSpellsProcessed: 0,
   };
 
   if (DEBUG_MODE) {
@@ -319,6 +343,12 @@ async function processCustomTarget(
           const wasProcessed = await processSingleOutputFile(outputFilePath, options);
           if (wasProcessed) {
             result.processedFiles.push(outputFilePath);
+            // Count spells in the processed file
+            const content = await fs.readFile(outputFilePath, "utf8");
+            const spellCount = (
+              content.match(/\/\/\s*(?:@ts-expect-error\s+.*?)?<\s*(dler-[^>\s]+)(.*?)>/gi) || []
+            ).length;
+            result.totalSpellsProcessed += spellCount;
           }
         } catch (error) {
           const errorMessage = `Error processing ${outputFilePath}: ${formatError(error)}`;
@@ -409,7 +439,24 @@ async function processOutputTarget(
 
   const result: ApplyMagicSpellsResult = {
     processedFiles: [],
+    totalSpellsProcessed: 0,
   };
+
+  // Get the output path from custom paths or use the outputDir directly
+  const outputPath = options.customOutputPaths?.[outputDir] || outputDir;
+  const fullOutputPath = path.isAbsolute(outputPath)
+    ? outputPath
+    : path.join(process.cwd(), outputPath);
+
+  // Early return if output directory doesn't exist
+  if (!(await fs.pathExists(fullOutputPath))) {
+    if (DEBUG_MODE) {
+      const targetName =
+        outputDir === "dist-libs" && libName ? `${outputDir}/${libName}` : outputDir;
+      relinka("log", `[spells] ⊘ skipping non-existent target: ${targetName}`);
+    }
+    return result;
+  }
 
   if (DEBUG_MODE) {
     const targetName = outputDir === "dist-libs" && libName ? `${outputDir}/${libName}` : outputDir;
@@ -448,6 +495,12 @@ async function processOutputTarget(
           const wasProcessed = await processSingleOutputFile(outputFilePath, options);
           if (wasProcessed) {
             result.processedFiles.push(outputFilePath);
+            // Count spells in the processed file
+            const content = await fs.readFile(outputFilePath, "utf8");
+            const spellCount = (
+              content.match(/\/\/\s*(?:@ts-expect-error\s+.*?)?<\s*(dler-[^>\s]+)(.*?)>/gi) || []
+            ).length;
+            result.totalSpellsProcessed += spellCount;
           }
         } catch (error) {
           const errorMessage = `Error processing ${outputFilePath}: ${formatError(error)}`;

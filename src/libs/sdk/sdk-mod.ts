@@ -153,20 +153,20 @@ export type {
   ApplyMagicSpellsOptions,
   ApplyMagicSpellsResult,
   FileWithSpells,
-} from "./sdk-impl/magic/ms-apply.js";
+} from "./sdk-impl/magic/magic-apply.js";
 export {
   applyMagicSpells,
   processSingleOutputFile,
   getAllAvailableRegistries,
   getFilesWithMagicSpells,
-} from "./sdk-impl/magic/ms-apply.js";
+} from "./sdk-impl/magic/magic-apply.js";
 export type {
   SpellEvaluationContext,
   SpellOutcome,
   SpellDirective,
   SpellInfo,
-} from "./sdk-impl/magic/ms-spells.js";
-export { getAvailableSpells, evaluateMagicDirective } from "./sdk-impl/magic/ms-spells.js";
+} from "./sdk-impl/magic/magic-spells.js";
+export { getAvailableSpells, evaluateMagicDirective } from "./sdk-impl/magic/magic-spells.js";
 export { library_publishLibrary } from "./sdk-impl/pub/pub-library.js";
 export { regular_pubToJsr, regular_pubToNpm } from "./sdk-impl/pub/pub-regular.js";
 export { regular_buildFlow, regular_pubFlow } from "./sdk-impl/regular-flow.js";

@@ -60,7 +60,7 @@ export const DEFAULT_CONFIG_DLER: DlerConfig = {
   ],
 
   postBuildSettings: {
-    cleanupTempDirs: true,
+    deleteDistTmpAfterBuild: true,
   },
 
   // Build setup
