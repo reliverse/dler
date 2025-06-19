@@ -61,13 +61,13 @@ dler excels at managing both build and publish workflows, making it ideal for:
 
 ## getting started
 
-ensure git, node.js, and bun/pnpm/yarn/npm (**[bun](https://bun.sh/get) is highly recommended**) are installed. then:
+make sure you have git, node.js, and bun/pnpm/yarn/npm (**[bun](https://bun.sh/get) is highly recommended**) are installed. then:
 
-### playground
+### 0. try the playground
 
 > **💡 tip**:
 > want to test dler before integrating it into your project?
-> clone the repo and build it using dler itself!
+> clone the dler repo and build it using dler itself!
 
 ```sh
 git clone https://github.com/reliverse/dler.git
@@ -76,75 +76,75 @@ bun i
 bun dev # bun src/cli.ts --dev
 ```
 
-### installation
+### 1. install dler
 
-1. **install**:
+**install as dev dep (recommended)**:
 
-    **install as dev dep (recommended)**:
+```sh
+bun add -D @reliverse/dler
+# or update as needed:
+bun update --latest
+```
 
-    ```sh
-    bun add -D @reliverse/dler
-    # or update as needed:
-    bun update --latest
-    ```
+**and/or install globally**:
 
-    **and/or install globally**:
+```sh
+bun add -g @reliverse/dler
+# or update as needed:
+bun i -g update --latest
+```
 
-    ```sh
-    bun add -g @reliverse/dler
-    # or update as needed:
-    bun i -g update --latest
-    ```
+- **when installed globally**: use `dler` anywhere.
+- **when installed as dev dep**: use with package manager name prefix, e.g. `bun dler`, inside your project directory.
 
-    - **when installed globally**: use `dler` anywhere.
-    - **when installed as dev dep**: use with package manager name prefix, e.g. `bun dler`, inside your project directory.
+### 2. prepare your project
 
-2. **prepare your project**:
+a. **configure `.gitignore`**:
 
-    a. **configure `.gitignore`**:
+```sh
+echo "dist*" >> .gitignore
+echo "logs" >> .gitignore
+```
 
-    ```sh
-    echo "dist*" >> .gitignore
-    echo "logs" >> .gitignore
-    ```
+b. **add `".config/**/*.ts"` to `include` in `tsconfig.json`**:
 
-    b. **add `".config/**/*.ts"` to `include` in `tsconfig.json`**:
+```json
+"include": [".config/**/*.ts", ...]
+```
 
-    ```json
-    "include": [".config/**/*.ts", ...]
-    ```
+c. **package.json**:
 
-    c. **package.json**:
+```json
+"scripts": {
+  "build": "dler build", // this is optional
+  "pub": "dler pub" // this does build+publish
+}
+```
 
-    ```json
-    "scripts": {
-      "build": "dler build", // this is optional
-      "pub": "dler pub" // this does build+publish
-    }
-    ```
+d. **initialize config**:
 
-    d. **initialize config**:
+```sh
+bun dler # if installed as dev dep
+dler # if installed globally
+```
 
-    ```sh
-    bun [build|pub] # if installed as dev dep
-    dler [build|pub] # if installed globally
-    ```
+- the `.config/dler.ts` file is automatically created on first run.
 
-    - the `.config/dler.ts` file is automatically created on first run.
+e. **optionally, customize `.config/dler.ts`**:
 
-    e. **optionally, customize `.config/dler.ts`**:
+- it's recommended to customize this file according to your needs.
+- you can check an example config here: [.config/dler.ts](https://github.com/reliverse/dler/blob/main/.config/dler.ts)
+- if you want to build files which have extensions other than `.ts` and `.js`, you can customize `buildPreExtensions` array (example: `["ts", "js", "vue", "tsx", "jsx"]`).
+- if you want to exclude some files from being built, you can customize `buildTemplatesDir` string (example: `"templates"`). by placing them in this directory, they will not be built, whole directory will be copied from e.g. `src/foo/templates` to `dist-*/bin/foo/templates` as-is.
 
-    - it's recommended to customize this file according to your needs.
-    - you can check an example config here: [.config/dler.ts](https://github.com/reliverse/dler/blob/main/.config/dler.ts)
-    - if you want to build files which have extensions other than `.ts` and `.js`, you can customize `buildPreExtensions` array (example: `["ts", "js", "vue", "tsx", "jsx"]`).
-    - if you want to exclude some files from being built, you can customize `buildTemplatesDir` string (example: `"templates"`). by placing them in this directory, they will not be built, whole directory will be copied from e.g. `src/foo/templates` to `dist-*/bin/foo/templates` as-is.
+### 3. run and enjoy
 
-3. **run and enjoy**:
+```sh
+bun dler [build|pub|--help] # if installed as dev dep
+dler [build|pub|--help] # if installed globally
+```
 
-    ```sh
-    bun dler [build|pub|--help] # if installed as dev dep
-    dler [build|pub|--help] # if installed globally
-    ```
+(_run just `dler` to see an interactive list of commands_)
 
 ## dler commands
 

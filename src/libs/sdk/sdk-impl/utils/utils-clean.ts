@@ -89,6 +89,12 @@ export async function removeLogInternalCalls(targetDir: string): Promise<boolean
         "",
       );
 
+      // Remove relinka.internal(...) method chaining calls
+      newContent = newContent.replace(
+        /relinka\.internal\s*\(\s*(?:`[^`]*`|'[^']*'|"[^"]*"|(?:[^;]*?,\s*)*[^;]*?)\s*\)\s*;?/g,
+        "",
+      );
+
       // Clean up any resulting empty lines
       newContent = newContent
         .replace(/\n\s*\n\s*\n/g, "\n\n") // Replace 3+ empty lines with 2
