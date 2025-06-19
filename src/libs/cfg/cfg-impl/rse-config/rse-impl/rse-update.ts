@@ -22,7 +22,7 @@ import { getBackupAndTempPaths } from "./rse-utils";
 function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
   const result = { ...target };
   for (const key in source) {
-    if (!Object.prototype.hasOwnProperty.call(source, key)) continue;
+    if (!Object.hasOwn(source, key)) continue;
     const sourceValue = source[key];
     const targetValue = target[key];
     if (sourceValue !== undefined) {

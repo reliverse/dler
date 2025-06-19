@@ -34,7 +34,6 @@ export {
   augmentWithDiagnostics,
 } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/utils/dts.js";
 export { copyFileWithStream } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/utils/fs.js";
-export { useSpinner } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/utils/spinner.js";
 export { getVueDeclarations } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/utils/vue-dts.js";
 export { mkdistBuild } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-mod.js";
 export { rollupBuild } from "./sdk-impl/build/bundlers/unified/rollup/build.js";

@@ -48,13 +48,7 @@ const INJECTIONS = [
   },
 ] satisfies SingleInjection[];
 
-async function main({
-  showAvailableSpells,
-  mode,
-}: {
-  showAvailableSpells: boolean;
-  mode: Mode;
-}) {
+async function main({ showAvailableSpells, mode }: { showAvailableSpells: boolean; mode: Mode }) {
   if (mode === "get-info-only") {
     if (showAvailableSpells) {
       console.log("Available spells:", spells.getAvailableSpells()); // <dler-remove-comment>

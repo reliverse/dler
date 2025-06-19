@@ -1,6 +1,7 @@
 import type { TSConfig } from "pkg-types";
 
 import { resolve, extname, join, basename, dirname } from "@reliverse/pathkit";
+import { useSpinner } from "@reliverse/rempts";
 import defu from "defu";
 import fsp from "node:fs/promises";
 import { glob } from "tinyglobby";
@@ -12,7 +13,6 @@ import type { DeclarationOutput } from "./utils/dts";
 import { createLoader } from "./loader";
 import { getDeclarations, normalizeCompilerOptions } from "./utils/dts";
 import { copyFileWithStream } from "./utils/fs";
-import { useSpinner } from "./utils/spinner";
 import { getVueDeclarations } from "./utils/vue-dts";
 
 export async function mkdist(options: MkdistOptions /* istanbul ignore next */ = {}) {

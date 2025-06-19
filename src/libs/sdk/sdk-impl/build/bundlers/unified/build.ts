@@ -2,6 +2,7 @@ import type { PackageJson } from "pkg-types";
 
 import { isAbsolute, normalize, relative, resolve } from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
+import { useSpinner } from "@reliverse/rempts";
 import { defu } from "defu";
 import { createHooks } from "hookable";
 import { createJiti } from "jiti";
@@ -16,7 +17,6 @@ import type { BuildContext, BuildOptions, UnifiedBuildConfig } from "~/libs/sdk/
 import { createPerfTimer, getElapsedPerfTime } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 import { copyBuild } from "./copy/copy-mod";
-import { useSpinner } from "./mkdist/mkdist-impl/utils/spinner";
 import { mkdistBuild } from "./mkdist/mkdist-mod";
 import { rollupBuild } from "./rollup/build";
 import { typesBuild } from "./untyped/untyped-mod";

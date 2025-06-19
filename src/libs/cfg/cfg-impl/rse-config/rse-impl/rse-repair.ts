@@ -24,7 +24,7 @@ export function repairAndParseJSON(raw: string): any {
   try {
     const repaired = jsonrepair(raw);
     return JSON.parse(repaired);
-  } catch (error) {
+  } catch (_error) {
     return null;
   }
 }

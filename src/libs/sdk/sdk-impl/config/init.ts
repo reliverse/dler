@@ -19,7 +19,7 @@ export async function ensureDlerConfig(isDev: boolean) {
   // If it doesn't exist, create it.
   try {
     // Read package.json description using pkg-types
-    let pkgDescription: string | undefined = undefined;
+    let pkgDescription: string | undefined;
     try {
       const pkg = await readPackageJSON();
       if (pkg && typeof pkg.description === "string" && pkg.description.trim()) {

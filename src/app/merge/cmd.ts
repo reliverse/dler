@@ -57,7 +57,6 @@ const parseCSV = (s: string) =>
     .map((t) => sanitizeInput(t.trim()))
     .filter(Boolean);
 
-// biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
 const unescape = (s: string) => s.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
 
 const maybePrompt = async <T>(

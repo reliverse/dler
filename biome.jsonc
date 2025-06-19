@@ -1,37 +1,61 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
   "vcs": {
     "enabled": false,
     "clientKind": "git",
     "useIgnoreFile": false
   },
   "files": {
-    "ignore": ["node_modules/", "bun.lock", "dist-jsr/", "dist-npm/", "dist-libs/"],
+    "includes": [
+      "**",
+      "!**/node_modules/",
+      "!**/bun.lock",
+      "!**/dist-jsr/",
+      "!**/dist-npm/",
+      "!**/dist-libs/"
+    ],
     "ignoreUnknown": false
   },
-  "organizeImports": {
-    "enabled": false
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "off"
+      }
+    }
   },
   "linter": {
     "enabled": true,
-    "ignore": ["src/templates/"],
+    "includes": ["**", "!**/src/templates/"],
     "rules": {
       "recommended": true,
       "suspicious": {
-        "noExplicitAny": "off"
+        "noShadowRestrictedNames": "off",
+        "noExplicitAny": "off",
+        "noTemplateCurlyInString": "off"
       },
       "style": {
         "noUnusedTemplateLiteral": "off",
         "useTemplate": "off",
         "useDefaultParameterLast": "off",
         "noUselessElse": "off",
-        "noNonNullAssertion": "off"
+        "noNonNullAssertion": "off",
+        "noParameterAssign": "error",
+        "useAsConstAssertion": "error",
+        "useEnumInitializers": "error",
+        "useSelfClosingElements": "error",
+        "useSingleVarDeclarator": "error",
+        "useNumberNamespace": "error",
+        "noInferrableTypes": "error"
       },
       "complexity": {
         "noForEach": "off",
         "noBannedTypes": "off",
         "noUselessLoneBlockStatements": "off",
-        "useOptionalChain": "off"
+        "useOptionalChain": "off",
+        "noUselessStringRaw": "off"
+      },
+      "correctness": {
+        "noUnusedVariables": "off"
       }
     }
   },

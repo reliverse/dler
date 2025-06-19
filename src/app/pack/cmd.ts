@@ -45,7 +45,7 @@ type ExistingTemplates = Record<string, Template>;
 const WHITELABEL_DEFAULT = "DLER";
 const TEMPLATE_VAR = (name: string, whitelabel: string) =>
   `${whitelabel}_TPL_${name.toUpperCase()}`;
-const TPLS_DIR = "templates";
+const TPLS_DIR = "packed";
 const BINARIES_DIR = "binaries";
 
 /* -------------------------------------------------------------------------- */
@@ -334,20 +334,38 @@ export default defineCommand({
       required: true,
       description: "Input directory (pack) or aggregator file (unpack)",
     },
-    output: { type: "string", default: "my-templates", description: "Output dir" },
-    whitelabel: { type: "string", default: WHITELABEL_DEFAULT, description: "Rename DLER" },
+    output: {
+      type: "string",
+      default: "my-templates",
+      description: "Output dir",
+    },
+    whitelabel: {
+      type: "string",
+      default: WHITELABEL_DEFAULT,
+      description: "Rename DLER",
+    },
     cdn: {
       type: "string",
       description: "Remote CDN for binary assets upload (not yet implemented)",
     },
-    force: { type: "boolean", default: false, description: "Force overwrite existing files" },
+    force: {
+      type: "boolean",
+      default: false,
+      description: "Force overwrite existing files",
+    },
     update: {
       type: "boolean",
       default: true,
       description: "Update existing templates and add new ones (pack mode only)",
     },
-    files: { type: "string", description: "Comma-separated list of specific files to update" },
-    lastUpdate: { type: "string", description: "Override lastUpdate timestamp (pack mode only)" },
+    files: {
+      type: "string",
+      description: "Comma-separated list of specific files to update",
+    },
+    lastUpdate: {
+      type: "string",
+      description: "Override lastUpdate timestamp (pack mode only)",
+    },
     unpack: {
       type: "boolean",
       default: false,
@@ -479,15 +497,14 @@ export default defineCommand({
 
         // Skip if file hasn't changed (same hash) or if source file is older
         if (
-          existingMetadata &&
-          existingMetadata.updatedHash &&
+          existingMetadata?.updatedHash &&
           fileMetadata.updatedHash &&
           (existingMetadata.updatedHash === fileMetadata.updatedHash ||
             (fileMetadata.updatedAt &&
               existingMetadata.updatedAt &&
               fileMetadata.updatedAt <= existingMetadata.updatedAt))
         ) {
-          filesRecord[rel] = existingFile;
+          filesRecord[rel] = existingFile as TemplatesFileContent;
           continue;
         }
 
@@ -535,18 +552,26 @@ export default defineCommand({
       const varName = TEMPLATE_VAR(tplName, args.whitelabel);
       const code: string[] = [];
 
-      // Check if we need to import PackageJson or TSConfig
-      const hasPackageJson = Object.values(filesRecord).some(
-        (f) =>
-          f.type === "json" && f.content && typeof f.content === "object" && "name" in f.content,
-      );
-      const hasTSConfig = Object.values(filesRecord).some(
-        (f) =>
-          f.type === "json" &&
-          f.content &&
-          typeof f.content === "object" &&
-          "compilerOptions" in f.content,
-      );
+      // Determine if we need to import types from `pkg-types`.
+      // 1) Detect by file ‑ path (more reliable for minimal files).
+      // 2) Fallback to structure detection to stay compatible with the previous logic.
+      const hasPackageJson =
+        Object.keys(filesRecord).some((rel) => rel.endsWith("package.json")) ||
+        Object.values(filesRecord).some(
+          (f) =>
+            f.type === "json" && f.content && typeof f.content === "object" && "name" in f.content,
+        );
+
+      const tsconfigPathRe = /(?:^|\/)tsconfig(?:\.[^/]+)?\.json$/;
+      const hasTSConfig =
+        Object.keys(filesRecord).some((rel) => tsconfigPathRe.test(rel)) ||
+        Object.values(filesRecord).some(
+          (f) =>
+            f.type === "json" &&
+            f.content &&
+            typeof f.content === "object" &&
+            "compilerOptions" in f.content,
+        );
 
       if (hasPackageJson || hasTSConfig) {
         const t: string[] = [];
@@ -577,6 +602,7 @@ export default defineCommand({
             .replace(/^ {7} {/m, " {")
             .replace(/^ {8}}/m, "        }")
             .replace(/"([a-zA-Z0-9_]+)":/g, "$1:")
+            .replace(/\n(\s*)}/, ",\n$1}")
             .replace(/}$/m, "},");
           code.push(`        metadata:${metadataStr}`);
         }
@@ -599,7 +625,7 @@ export default defineCommand({
             // file is a package.json or tsconfig.json
             if (rel.endsWith("package.json")) {
               sat = " satisfies PackageJson";
-            } else if (rel.endsWith("tsconfig.json")) {
+            } else if (tsconfigPathRe.test(rel)) {
               sat = " satisfies TSConfig";
             }
           } catch (error) {
@@ -608,25 +634,14 @@ export default defineCommand({
           }
 
           const jsonStr = JSON.stringify(clone, null, 2)
-            /* const jsonStr = JSON.stringify(
-            clone,
-            (key, value) => {
-              // If key is a single word without special characters, return it without quotes
-              if (typeof key === "string" && /^[a-zA-Z0-9_]+$/.test(key)) {
-                return value;
-              }
-              return value;
-            },
-            2,
-          ) */
             .split("\n")
             .map((line, i) => {
               if (i === 0) return line;
               // Remove quotes from single-word property names and reduce indentation by 2 spaces
-              return "        " + line.replace(/"([a-zA-Z0-9_]+)":/g, "$1:");
+              return `        ${line.replace(/"([a-zA-Z0-9_]+)":/g, "$1:")}`;
             })
             .join("\n")
-            .replace(/,?\s*}(\s*)$/, "}$1") // Remove any trailing comma before closing brace, don't add one
+            .replace(/\n(\s*)}/, ",\n$1}")
             .replace(/,\s*,/g, ","); // Remove double commas
           code.push(`        content: ${jsonStr}${sat},`);
           code.push('        type: "json",');

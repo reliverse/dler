@@ -1,5 +1,6 @@
 import { relative, dirname as pathDirname } from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
+import { useSpinner } from "@reliverse/rempts";
 
 import type { BuildContext, MkdistBuildEntry, MkdistOptions } from "~/libs/sdk/sdk-impl/sdk-types";
 
@@ -7,7 +8,6 @@ import { rmdir, symlink, warn } from "~/libs/sdk/sdk-impl/build/bundlers/unified
 
 // import { mkdist } from "mkdist";
 import { mkdist } from "./mkdist-impl/make";
-import { useSpinner } from "./mkdist-impl/utils/spinner";
 
 export async function mkdistBuild(ctx: BuildContext): Promise<void> {
   const entries = ctx.options.entries.filter((e) => e.builder === "mkdist") as MkdistBuildEntry[];

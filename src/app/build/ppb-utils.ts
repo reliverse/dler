@@ -52,7 +52,7 @@ async function isCommandInPackageJson(command: string): Promise<boolean> {
       packageName in (packageJson.dependencies || {}) ||
       packageName in (packageJson.devDependencies || {})
     );
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }

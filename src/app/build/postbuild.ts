@@ -188,8 +188,16 @@ async function compareFileStructures(srcDir: string, distDir: string): Promise<v
       dot: true,
     });
 
-    const srcSet = new Set(srcFiles);
-    const distSet = new Set(distFiles);
+    // Filter out test files
+    const filteredSrcFiles = srcFiles.filter(
+      (file) => !file.endsWith(".test.ts") && !file.endsWith(".test.js"),
+    );
+    const filteredDistFiles = distFiles.filter(
+      (file) => !file.endsWith(".test.ts") && !file.endsWith(".test.js"),
+    );
+
+    const srcSet = new Set(filteredSrcFiles);
+    const distSet = new Set(filteredDistFiles);
 
     const onlyInSrc = [...srcSet].filter((x) => !distSet.has(x));
     const onlyInDist = [...distSet].filter((x) => !srcSet.has(x));
