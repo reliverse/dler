@@ -3,6 +3,7 @@
 // ============================
 
 import path from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { execaCommand } from "execa";
 
@@ -10,6 +11,7 @@ import type { PerfTimer } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { PROJECT_ROOT } from "~/libs/sdk/sdk-impl/utils/utils-consts";
 import { withWorkingDirectory } from "~/libs/sdk/sdk-impl/utils/utils-error-cwd";
+import { writeFileSafe } from "~/libs/sdk/sdk-impl/utils/utils-fs";
 import { pausePerfTimer, resumePerfTimer } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 /**
@@ -18,7 +20,7 @@ import { pausePerfTimer, resumePerfTimer } from "~/libs/sdk/sdk-impl/utils/utils
 export async function regular_pubToJsr(
   distJsrDryRun: boolean,
   distJsrFailOnWarn: boolean,
-  _isDev: boolean,
+  isDev: boolean,
   commonPubPause: boolean,
   distJsrDirName: string,
   distJsrAllowDirty: boolean,
@@ -29,6 +31,22 @@ export async function regular_pubToJsr(
     if (!commonPubPause) {
       relinka("log", "Publishing to JSR...");
       const distJsrDirNameResolved = path.resolve(PROJECT_ROOT, distJsrDirName);
+
+      // Prepare bun package.json if in dev mode
+      let bunDirCreated = false;
+      const bunDir = "node_modules/bun";
+      const bunPkgPath = `${bunDir}/package.json`;
+      if (isDev) {
+        if (!(await fs.pathExists(bunPkgPath))) {
+          await fs.ensureDir(bunDir);
+          await writeFileSafe(
+            bunPkgPath,
+            '{\n  "name": "bun"\n}',
+            "Create bun package.json for dev publish",
+          );
+          bunDirCreated = true;
+        }
+      }
 
       // Pause the timer before publishing (interactive)
       if (timer) pausePerfTimer(timer);
@@ -50,11 +68,16 @@ export async function regular_pubToJsr(
       });
 
       // Wait for 2 seconds so jsr.io UI will be finished
-      // Without this user may see: resource busy or locked, rm 'dist-jsr'
+      // Without this user may see: `resource busy or locked, rm 'dist-jsr'`
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Resume the timer after publishing is complete
       if (timer) resumePerfTimer(timer);
+
+      // Clean up node_modules/bun after publish
+      if (isDev && bunDirCreated) {
+        await fs.remove(bunDir);
+      }
     }
   } catch (error) {
     // Resume timer even on error

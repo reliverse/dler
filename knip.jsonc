@@ -38,6 +38,5 @@
     "dist-libs",
     "src/libs/sdk/sdk-impl/**/*.ts",
     "src/libs/cfg/types.ts"
-  ],
-  "ignoreDependencies": ["bun"]
+  ]
 }

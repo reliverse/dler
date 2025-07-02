@@ -98,7 +98,6 @@ function getFilterDepsPatterns(isDev: boolean): string {
   return isDev
     ? `{
     global: [
-      "bun",
       "@types",
       "biome",
       "eslint",
@@ -111,10 +110,10 @@ function getFilterDepsPatterns(isDev: boolean): string {
       "!@reliverse/dler-sdk",
     ],
     "dist-npm": [],
-    "dist-jsr": [],
+    "dist-jsr": ["+bun"],
     "dist-libs": {
       "@reliverse/dler-sdk": {
-        jsr: ["!bun"],
+        jsr: ["+bun"],
         npm: [],
       },
     },

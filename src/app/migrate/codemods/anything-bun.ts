@@ -164,7 +164,9 @@ const analyzeProject = async (projectRoot: string): Promise<ProjectAnalysis> => 
     framework,
     dependencies,
     devDependencies,
-    scripts: packageJson.scripts || {},
+    scripts: Object.fromEntries(
+      Object.entries(packageJson.scripts || {}).filter(([, v]) => typeof v === "string"),
+    ) as Record<string, string>,
     configFiles,
     sourceFiles,
     testFiles,

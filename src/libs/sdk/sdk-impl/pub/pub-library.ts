@@ -1,3 +1,4 @@
+import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { execaCommand } from "execa";
 import pAll from "p-all";
@@ -6,6 +7,7 @@ import type { PerfTimer } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { CONCURRENCY_DEFAULT } from "~/libs/sdk/sdk-impl/utils/utils-consts";
 import { withWorkingDirectory } from "~/libs/sdk/sdk-impl/utils/utils-error-cwd";
+import { writeFileSafe } from "~/libs/sdk/sdk-impl/utils/utils-fs";
 import { pausePerfTimer, resumePerfTimer } from "~/libs/sdk/sdk-impl/utils/utils-perf";
 
 /**
@@ -81,11 +83,26 @@ async function library_pubToJsr(
   distJsrAllowDirty: boolean,
   distJsrSlowTypes: boolean,
   libName: string,
-  _isDev: boolean,
+  isDev: boolean,
   timer: PerfTimer,
 ): Promise<void> {
   relinka("verbose", `Starting library_pubToJsr for lib: ${libName}`);
+  let bunDirCreated = false;
+  const bunDir = "node_modules/bun";
+  const bunPkgPath = `${bunDir}/package.json`;
   try {
+    if (isDev) {
+      // Ensure node_modules/bun/package.json exists
+      if (!(await fs.pathExists(bunPkgPath))) {
+        await fs.ensureDir(bunDir);
+        await writeFileSafe(
+          bunPkgPath,
+          '{\n  "name": "bun"\n}',
+          "Create bun package.json for dev publish",
+        );
+        bunDirCreated = true;
+      }
+    }
     if (timer) pausePerfTimer(timer);
     await withWorkingDirectory(libOutDir, async () => {
       relinka("log", `Publishing lib ${libName} to JSR from ${libOutDir}`);
@@ -108,7 +125,7 @@ async function library_pubToJsr(
     });
 
     // Wait for 2 seconds so jsr.io UI will be finished
-    // Without this user may see: resource busy or locked, rm 'dist-jsr'
+    // Without this user may see: `resource busy or locked, rm 'dist-jsr'`
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Resume the timer after publishing is complete
@@ -116,6 +133,11 @@ async function library_pubToJsr(
   } catch (error) {
     if (timer) resumePerfTimer(timer);
     throw error;
+  } finally {
+    if (isDev && bunDirCreated) {
+      // Clean up node_modules/bun after publish
+      await fs.remove(bunDir);
+    }
   }
 }
 

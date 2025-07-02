@@ -4,7 +4,7 @@
 import { join, dirname, basename } from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
 import { defineCommand, selectPrompt, inputPrompt } from "@reliverse/rempts";
-import { copyFile, access, mkdir } from "node:fs/promises";
+import { copyFile, access, mkdir, readFile } from "node:fs/promises";
 import pMap from "p-map";
 import prettyMilliseconds from "pretty-ms";
 import { glob } from "tinyglobby";
@@ -64,6 +64,11 @@ export default defineCommand({
       description: "Number of concurrent copy operations (default: 8)",
       default: 8,
     },
+    gitignore: {
+      type: "boolean",
+      description: "Ignore files and directories specified in .gitignore",
+      default: false,
+    },
   },
   async run({ args }) {
     const {
@@ -73,6 +78,7 @@ export default defineCommand({
       preserveStructure = true,
       increment = false,
       concurrency = 8,
+      gitignore = false,
     } = args;
 
     let finalSource = s;
@@ -97,10 +103,26 @@ export default defineCommand({
       process.exit(1);
     }
 
+    let ignorePatterns: string[] = recursive ? [] : ["**/*"];
+    if (gitignore) {
+      try {
+        const gitignoreContent = await readFile(".gitignore", "utf8");
+        ignorePatterns = ignorePatterns.concat(
+          gitignoreContent
+            .split("\n")
+            .map((line) => line.trim())
+            .filter((line) => line && !line.startsWith("#")),
+        );
+      } catch (err) {
+        relinka("error", ".gitignore not found or unreadable, but --gitignore was specified.");
+        process.exit(1);
+      }
+    }
+
     try {
       const files = await glob(finalSource, {
         dot: true,
-        ignore: recursive ? [] : ["**/*"],
+        ignore: ignorePatterns,
       });
 
       if (files.length === 0) {

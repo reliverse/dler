@@ -168,7 +168,7 @@ async function emitVueTscV2(
       },
       // @ts-expect-error TODO: fix ts
       options.options,
-      vueLanguageCore.resolveVueCompilerOptions({}),
+      {},
     );
     return [vueLanguagePlugin];
   });

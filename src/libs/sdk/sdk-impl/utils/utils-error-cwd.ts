@@ -1,6 +1,5 @@
 import { re } from "@reliverse/relico";
 import { relinka } from "@reliverse/relinka";
-import { deleteLastLines } from "@reliverse/rempts";
 import { ExecaError } from "execa";
 
 /**
@@ -12,7 +11,7 @@ export function handleDlerError(error: unknown): never {
 
   if (error instanceof ExecaError) {
     rootCause = error.message;
-    deleteLastLines(8); // remove execa error stack trace lines
+    // deleteLastLines(8); // remove execa error stack trace lines (TODO: ensure it executed only when there is actualy execa error)
   } else if (error instanceof Error) {
     rootCause = error.message;
   }

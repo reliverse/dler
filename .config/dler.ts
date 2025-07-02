@@ -130,11 +130,10 @@ export default defineConfigDler({
   // Global is always applied
   filterDepsPatterns: {
     global: [
-      "bun",
       "@types",
       "biome",
-      "eslint",
       "knip",
+      "eslint",
       "prettier",
       "typescript",
       "@reliverse/rse",
@@ -143,10 +142,10 @@ export default defineConfigDler({
       "!@reliverse/dler-sdk",
     ],
     "dist-npm": [],
-    "dist-jsr": [],
+    "dist-jsr": ["+bun"],
     "dist-libs": {
       "@reliverse/dler-sdk": {
-        jsr: ["!bun"],
+        jsr: ["+bun"],
         npm: [],
       },
       "@reliverse/cfg": {
