@@ -1,4 +1,4 @@
-import type {Result, Output} from './main.js';
+import type { Result, Output } from "./exec-mod.js";
 
 export class NonZeroExitError extends Error {
   public readonly result: Result;
@@ -13,7 +13,6 @@ export class NonZeroExitError extends Error {
 
   public constructor(result: Result, output?: Output) {
     super(`Process exited with non-zero status (${result.exitCode})`);
-
     this.result = result;
     this.output = output;
   }

@@ -2,7 +2,6 @@ import type { PackageJson } from "pkg-types";
 
 import { isAbsolute, normalize, relative, resolve } from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
-import { useSpinner } from "@reliverse/rempts";
 import { defu } from "defu";
 import { createHooks } from "hookable";
 import { createJiti } from "jiti";
@@ -129,392 +128,364 @@ async function _build(
   showOutLog: boolean,
   isLib: boolean,
 ): Promise<void> {
-  await useSpinner.withTiming(
-    async (buildSpinner) => {
-      // Start timing the build process
-      const timer = createPerfTimer();
+  // Start timing the build process
+  const timer = createPerfTimer();
 
-      buildSpinner.setText("Resolving build configuration...");
+  relinka("info", "Resolving build configuration...");
 
-      // Resolve preset
-      const preset = await resolvePreset(
-        buildConfig.preset || pkg.dler?.preset || pkg.build?.preset || inputConfig.preset || "auto",
-        rootDir,
-      );
+  // Resolve preset
+  const preset = await resolvePreset(
+    buildConfig.preset || pkg.dler?.preset || pkg.build?.preset || inputConfig.preset || "auto",
+    rootDir,
+  );
 
-      // Merge options
-      const options = defu(buildConfig, pkg.dler || pkg.build, inputConfig, preset, {
-        alias: {},
-        clean: false,
-        declaration: undefined,
-        dependencies: [],
-        devDependencies: [],
-        entries: [],
-        externals: [...Module.builtinModules, ...Module.builtinModules.map((m) => `node:${m}`)],
-        transpileFailOnWarn: true,
-        name: (pkg?.name || "").split("/").pop() || "default",
-        outDir: outDir,
-        parallel: false,
-        peerDependencies: [],
-        replace: {},
-        rollup: {
-          alias: {},
-          cjsBridge: false,
-          commonjs: {
-            ignoreTryCatch: true,
-          },
-          dts: {
-            compilerOptions: {
-              /**
-               * @see https://github.com/Swatinem/rollup-plugin-dts/issues/127
-               */
-              composite: false,
-              /**
-               * @see https://github.com/Swatinem/rollup-plugin-dts/issues/143
-               */
-              preserveSymlinks: false,
-            },
-            respectExternal: true,
-          },
-          emitCJS: false,
-          esbuild: { target: "esnext" },
-          inlineDependencies: false,
-          json: {
-            preferConst: true,
-          },
-          output: {
-            /**
-             * @see https://v8.dev/features/import-attributes
-             */
-            importAttributesKey: "with",
-          },
-          preserveDynamicImports: true,
-          // Plugins
-          replace: {
-            preventAssignment: true,
-          },
-          resolve: {
-            preferBuiltins: true,
-          },
-          watch: false,
-        },
-        rootDir,
-        showOutLog: true,
-        transpileSourcemap: false,
-        transpileStub: _transpileStubMode,
-        transpileStubOptions: {
+  // Merge options
+  const options = defu(buildConfig, pkg.dler || pkg.build, inputConfig, preset, {
+    alias: {},
+    clean: false,
+    declaration: undefined,
+    dependencies: [],
+    devDependencies: [],
+    entries: [],
+    externals: [...Module.builtinModules, ...Module.builtinModules.map((m) => `node:${m}`)],
+    transpileFailOnWarn: true,
+    name: (pkg?.name || "").split("/").pop() || "default",
+    outDir: outDir,
+    parallel: false,
+    peerDependencies: [],
+    replace: {},
+    rollup: {
+      alias: {},
+      cjsBridge: false,
+      commonjs: {
+        ignoreTryCatch: true,
+      },
+      dts: {
+        compilerOptions: {
           /**
-           * @see https://github.com/unjs/jiti#%EF%B8%8F-options
+           * @see https://github.com/Swatinem/rollup-plugin-dts/issues/127
            */
-          jiti: {
-            alias: {},
-            interopDefault: true,
-          },
+          composite: false,
+          /**
+           * @see https://github.com/Swatinem/rollup-plugin-dts/issues/143
+           */
+          preserveSymlinks: false,
         },
-        transpileWatch: _transpileWatchMode,
-        transpileWatchOptions: _transpileWatchMode
-          ? {
-              exclude: "node_modules/**",
-              include: "src/**",
-            }
-          : undefined,
-        isLib,
-      } satisfies BuildOptions) as BuildOptions;
-      shouldStopAtStep(5);
-      relinka("log", "Build-specific configuration merged with defaults"); // Step 5
-      relinka("verbose", `Build options: clean=${options.clean}, parallel=${options.parallel}`);
-      relinka("verbose", `Declaration files: ${options.declaration ? "enabled" : "disabled"}`);
-
-      // Resolve dirs relative to rootDir
-      options.outDir = resolve(options.rootDir, options.outDir);
-
-      // Create shared jiti instance for context
-      const jiti = createJiti(options.rootDir, { interopDefault: true });
-
-      buildSpinner.setText("Initializing build context...");
-
-      // Build context
-      const ctx: BuildContext = {
-        buildEntries: [],
-        hooks: createHooks(),
-        jiti,
-        options,
-        pkg,
-        usedImports: new Set(),
-        warnings: new Set(),
-        isLib,
-      };
-
-      // Register hooks
-      if (preset.hooks) {
-        ctx.hooks.addHooks(preset.hooks);
-      }
-      if (inputConfig.hooks) {
-        ctx.hooks.addHooks(inputConfig.hooks);
-      }
-      if (buildConfig.hooks) {
-        ctx.hooks.addHooks(buildConfig.hooks);
-      }
-
-      // Allow prepare and extending context
-      await ctx.hooks.callHook("build:prepare", ctx);
-
-      buildSpinner.setText("Processing build entries...");
-
-      // Normalize entries
-      options.entries = options.entries.map((entry) =>
-        typeof entry === "string" ? { input: entry, isLib } : entry,
-      );
-
-      for (const entry of options.entries) {
-        if (typeof entry.name !== "string") {
-          let relativeInput = isAbsolute(entry.input)
-            ? relative(rootDir, entry.input)
-            : normalize(entry.input);
-          if (relativeInput.startsWith("./")) {
-            relativeInput = relativeInput.slice(2);
-          }
-          entry.name = removeExtension(relativeInput.replace(/^src\//, ""));
+        respectExternal: true,
+      },
+      emitCJS: false,
+      esbuild: { target: "esnext" },
+      inlineDependencies: false,
+      json: {
+        preferConst: true,
+      },
+      output: {
+        /**
+         * @see https://v8.dev/features/import-attributes
+         */
+        importAttributesKey: "with",
+      },
+      preserveDynamicImports: true,
+      // Plugins
+      replace: {
+        preventAssignment: true,
+      },
+      resolve: {
+        preferBuiltins: true,
+      },
+      watch: false,
+    },
+    rootDir,
+    showOutLog: true,
+    transpileSourcemap: false,
+    transpileStub: _transpileStubMode,
+    transpileStubOptions: {
+      /**
+       * @see https://github.com/unjs/jiti#%EF%B8%8F-options
+       */
+      jiti: {
+        alias: {},
+        interopDefault: true,
+      },
+    },
+    transpileWatch: _transpileWatchMode,
+    transpileWatchOptions: _transpileWatchMode
+      ? {
+          exclude: "node_modules/**",
+          include: "src/**",
         }
+      : undefined,
+    isLib,
+  } satisfies BuildOptions) as BuildOptions;
+  shouldStopAtStep(5);
+  relinka("log", "Build-specific configuration merged with defaults"); // Step 5
+  relinka("verbose", `Build options: clean=${options.clean}, parallel=${options.parallel}`);
+  relinka("verbose", `Declaration files: ${options.declaration ? "enabled" : "disabled"}`);
 
-        if (!entry.input) {
-          throw new Error(`Missing entry input: ${dumpObject(entry)}`);
-        }
+  // Resolve dirs relative to rootDir
+  options.outDir = resolve(options.rootDir, options.outDir);
 
-        if (!entry.builder) {
-          entry.builder = entry.input.endsWith("/") ? "mkdist" : "rollup";
-        }
+  // Create shared jiti instance for context
+  const jiti = createJiti(options.rootDir, { interopDefault: true });
 
-        if (options.declaration !== undefined && entry.declaration === undefined) {
-          entry.declaration = options.declaration;
-        }
+  relinka("info", "Initializing build context...");
 
-        entry.input = resolve(options.rootDir, entry.input);
-        entry.outDir = resolve(options.rootDir, entry.outDir || options.outDir);
-        entry.isLib = isLib;
+  // Build context
+  const ctx: BuildContext = {
+    buildEntries: [],
+    hooks: createHooks(),
+    jiti,
+    options,
+    pkg,
+    usedImports: new Set(),
+    warnings: new Set(),
+    isLib,
+  };
+
+  // Register hooks
+  if (preset.hooks) {
+    ctx.hooks.addHooks(preset.hooks);
+  }
+  if (inputConfig.hooks) {
+    ctx.hooks.addHooks(inputConfig.hooks);
+  }
+  if (buildConfig.hooks) {
+    ctx.hooks.addHooks(buildConfig.hooks);
+  }
+
+  // Allow prepare and extending context
+  await ctx.hooks.callHook("build:prepare", ctx);
+
+  relinka("info", "Processing build entries...");
+
+  // Normalize entries
+  options.entries = options.entries.map((entry) =>
+    typeof entry === "string" ? { input: entry, isLib } : entry,
+  );
+
+  for (const entry of options.entries) {
+    if (typeof entry.name !== "string") {
+      let relativeInput = isAbsolute(entry.input)
+        ? relative(rootDir, entry.input)
+        : normalize(entry.input);
+      if (relativeInput.startsWith("./")) {
+        relativeInput = relativeInput.slice(2);
       }
+      entry.name = removeExtension(relativeInput.replace(/^src\//, ""));
+    }
 
-      // Infer dependencies from pkg
-      options.dependencies = Object.keys(pkg.dependencies || {});
-      options.peerDependencies = Object.keys(pkg.peerDependencies || {});
-      options.devDependencies = Object.keys(pkg.devDependencies || {});
+    if (!entry.input) {
+      throw new Error(`Missing entry input: ${dumpObject(entry)}`);
+    }
 
-      // Inject all dependencies as externals
-      options.externals.push(...inferPkgExternals(pkg));
-      options.externals = [...new Set(options.externals)];
+    if (!entry.builder) {
+      entry.builder = entry.input.endsWith("/") ? "mkdist" : "rollup";
+    }
 
-      // Call build:before
-      await ctx.hooks.callHook("build:before", ctx);
+    if (options.declaration !== undefined && entry.declaration === undefined) {
+      entry.declaration = options.declaration;
+    }
 
-      // Start info
-      relinka(
-        "verbose",
-        `${options.transpileStub ? "Stubbing" : "[unified] Building"} ${options.name}`,
-      );
-      if (process.env.DEBUG) {
-        relinka(
-          "log",
-          `Root dir: ${options.rootDir}
+    entry.input = resolve(options.rootDir, entry.input);
+    entry.outDir = resolve(options.rootDir, entry.outDir || options.outDir);
+    entry.isLib = isLib;
+  }
+
+  // Infer dependencies from pkg
+  options.dependencies = Object.keys(pkg.dependencies || {});
+  options.peerDependencies = Object.keys(pkg.peerDependencies || {});
+  options.devDependencies = Object.keys(pkg.devDependencies || {});
+
+  // Inject all dependencies as externals
+  options.externals.push(...inferPkgExternals(pkg));
+  options.externals = [...new Set(options.externals)];
+
+  // Call build:before
+  await ctx.hooks.callHook("build:before", ctx);
+
+  // Start info
+  relinka(
+    "verbose",
+    `${options.transpileStub ? "Stubbing" : "[unified] Building"} ${options.name}`,
+  );
+  if (process.env.DEBUG) {
+    relinka(
+      "log",
+      `Root dir: ${options.rootDir}
 Entries:
 ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
 `,
-        );
+    );
+  }
+
+  // Clean dist dirs
+  if (options.clean) {
+    relinka("info", "Cleaning output directories...");
+    for (const dir of new Set(
+      options.entries
+        .map((e) => e.outDir)
+        .filter((p): p is NonNullable<typeof p> => !!p)
+        .sort(),
+    )) {
+      if (
+        dir === options.rootDir ||
+        options.rootDir.startsWith(withTrailingSlash(dir)) ||
+        cleanedDirs.some((c) => dir.startsWith(c))
+      ) {
+        continue;
+      }
+      cleanedDirs.push(dir);
+      relinka("log", `Cleaning dist directory: \`./${relative(process.cwd(), dir)}\``);
+      await rmdir(dir);
+      await fsp.mkdir(dir, { recursive: true });
+    }
+  }
+
+  // Try to selflink
+  // if (ctx.transpileStub && ctx.pkg.name) {
+  //   const nodemodulesDir = resolve(ctx.rootDir, 'node_modules', ctx.pkg.name)
+  //   await symlink(resolve(ctx.rootDir), nodemodulesDir).catch(() => {})
+  // }
+
+  const buildTasks = [
+    { name: "Type generation", task: typesBuild },
+    { name: "mkdist build", task: mkdistBuild },
+    { name: "Rollup build", task: rollupBuild },
+    { name: "Copy files", task: copyBuild },
+  ] as const;
+
+  // Filter tasks that have relevant entries
+  const activeTasks = buildTasks.filter(({ task }) => {
+    if (task === typesBuild) return options.entries.some((e) => e.builder === "untyped");
+    if (task === mkdistBuild) return options.entries.some((e) => e.builder === "mkdist");
+    if (task === rollupBuild) return options.entries.some((e) => e.builder === "rollup");
+    if (task === copyBuild) return options.entries.some((e) => e.builder === "copy");
+    return false;
+  });
+
+  if (activeTasks.length === 0) {
+    relinka("info", "No build tasks to execute");
+  } else {
+    if (options.parallel) {
+      relinka("info", `Running ${activeTasks.length} build tasks in parallel...`);
+      await Promise.all(
+        activeTasks.map(async ({ task }) => {
+          await task(ctx);
+        }),
+      );
+    } else {
+      for (const { task, name } of activeTasks) {
+        relinka("info", `Running ${name}...`);
+        await task(ctx);
+      }
+    }
+  }
+
+  // Skip rest for transpileStub and transpileWatch mode
+  if (options.transpileStub || options.transpileWatch) {
+    await ctx.hooks.callHook("build:done", ctx);
+    return;
+  }
+
+  relinka("info", "Finalizing build output...");
+
+  // Done info
+  relinka("success", `Build succeeded for ${options.name}`);
+
+  // Find all dist files and add missing entries as chunks
+  const outFiles = await glob(["**"], { cwd: options.outDir });
+  for (const file of outFiles) {
+    let entry = ctx.buildEntries.find((e) => e.path === file);
+    if (!entry) {
+      entry = {
+        chunk: true,
+        path: file,
+        isLib: ctx.options.isLib,
+      };
+      ctx.buildEntries.push(entry);
+    }
+    if (!entry.bytes) {
+      const stat = await fsp.stat(resolve(options.outDir, file));
+      entry.bytes = stat.size;
+    }
+  }
+
+  const rPath = (p: string): string => relative(process.cwd(), resolve(options.outDir, p));
+
+  if (showOutLog) {
+    for (const entry of ctx.buildEntries.filter((e) => !e.chunk)) {
+      let totalBytes = entry.bytes || 0;
+      for (const chunk of entry.chunks || []) {
+        totalBytes += ctx.buildEntries.find((e) => e.path === chunk)?.bytes || 0;
+      }
+      let line = `  ${rPath(entry.path)} (${[
+        totalBytes && `total size: ${prettyBytes(totalBytes)}`,
+        entry.bytes && `chunk size: ${prettyBytes(entry.bytes)}`,
+        entry.exports?.length && `exports: ${entry.exports.join(", ")}`,
+      ]
+        .filter(Boolean)
+        .join(", ")})`;
+
+      if (entry.chunks?.length) {
+        line += `\n${entry.chunks
+          .map((p) => {
+            const chunk = ctx.buildEntries.find((e) => e.path === p) || ({} as any);
+            return `  └─ ${rPath(p)}${chunk.bytes ? ` (${prettyBytes(chunk.bytes)})` : ""}`;
+          })
+          .join("\n")}`;
       }
 
-      // Clean dist dirs
-      if (options.clean) {
-        buildSpinner.setText("Cleaning output directories...");
-        for (const dir of new Set(
-          options.entries
-            .map((e) => e.outDir)
-            .filter((p): p is NonNullable<typeof p> => !!p)
-            .sort(),
-        )) {
-          if (
-            dir === options.rootDir ||
-            options.rootDir.startsWith(withTrailingSlash(dir)) ||
-            cleanedDirs.some((c) => dir.startsWith(c))
-          ) {
-            continue;
-          }
-          cleanedDirs.push(dir);
-          relinka("log", `Cleaning dist directory: \`./${relative(process.cwd(), dir)}\``);
-          await rmdir(dir);
-          await fsp.mkdir(dir, { recursive: true });
-        }
+      if (entry.modules?.length) {
+        line += `\n${entry.modules
+          .filter((m) => m.id.includes("node_modules"))
+          .sort((a, b) => (b.bytes || 0) - (a.bytes || 0))
+          .map((m) => {
+            return `  📦 ${rPath(m.id)}${m.bytes ? ` (${prettyBytes(m.bytes)})` : ""}`;
+          })
+          .join("\n")}`;
       }
 
-      // Try to selflink
-      // if (ctx.transpileStub && ctx.pkg.name) {
-      //   const nodemodulesDir = resolve(ctx.rootDir, 'node_modules', ctx.pkg.name)
-      //   await symlink(resolve(ctx.rootDir), nodemodulesDir).catch(() => {})
-      // }
+      relinka("log", entry.chunk ? line : line);
+    }
 
-      const buildTasks = [
-        { name: "Type generation", task: typesBuild },
-        { name: "mkdist build", task: mkdistBuild },
-        { name: "Rollup build", task: rollupBuild },
-        { name: "Copy files", task: copyBuild },
-      ] as const;
+    // Calculate elapsed time
+    const elapsedTime = getElapsedPerfTime(timer);
+    const transpileFormattedTime = prettyMilliseconds(elapsedTime, {
+      verbose: true,
+    });
 
-      // Filter tasks that have relevant entries
-      const activeTasks = buildTasks.filter(({ task }) => {
-        if (task === typesBuild) return options.entries.some((e) => e.builder === "untyped");
-        if (task === mkdistBuild) return options.entries.some((e) => e.builder === "mkdist");
-        if (task === rollupBuild) return options.entries.some((e) => e.builder === "rollup");
-        if (task === copyBuild) return options.entries.some((e) => e.builder === "copy");
-        return false;
-      });
+    const totalSize = ctx.buildEntries.reduce((a, e) => a + (e.bytes || 0), 0);
+    relinka("info", `Build complete! ${prettyBytes(totalSize)} in ${transpileFormattedTime}`);
 
-      if (activeTasks.length === 0) {
-        buildSpinner.setText("No build tasks to execute");
-      } else {
-        let completedTasks = 0;
+    relinka(
+      "info",
+      `Σ Total dist size: ${prettyBytes(totalSize)} (build time: ${transpileFormattedTime})`,
+    );
+  }
 
-        if (options.parallel) {
-          buildSpinner.setText(`Running ${activeTasks.length} build tasks in parallel...`);
-          await Promise.all(
-            activeTasks.map(async ({ task }) => {
-              await task(ctx);
-              completedTasks++;
-              buildSpinner.setProgress({
-                current: completedTasks,
-                total: activeTasks.length,
-              });
-            }),
-          );
-        } else {
-          for (const { task, name } of activeTasks) {
-            completedTasks++;
-            buildSpinner.setProgress({
-              current: completedTasks,
-              total: activeTasks.length,
-            });
-            buildSpinner.setText(`Running ${name}...`);
-            await task(ctx);
-          }
-        }
-      }
+  // Validate
+  validateDependencies(ctx);
+  validatePackage(pkg, rootDir, ctx);
 
-      // Skip rest for transpileStub and transpileWatch mode
-      if (options.transpileStub || options.transpileWatch) {
-        await ctx.hooks.callHook("build:done", ctx);
-        return;
-      }
+  // Call build:done
+  await ctx.hooks.callHook("build:done", ctx);
 
-      buildSpinner.setText("Finalizing build output...");
-
-      // Done info
-      relinka("success", `Build succeeded for ${options.name}`);
-
-      // Find all dist files and add missing entries as chunks
-      const outFiles = await glob(["**"], { cwd: options.outDir });
-      for (const file of outFiles) {
-        let entry = ctx.buildEntries.find((e) => e.path === file);
-        if (!entry) {
-          entry = {
-            chunk: true,
-            path: file,
-            isLib: ctx.options.isLib,
-          };
-          ctx.buildEntries.push(entry);
-        }
-        if (!entry.bytes) {
-          const stat = await fsp.stat(resolve(options.outDir, file));
-          entry.bytes = stat.size;
-        }
-      }
-
-      const rPath = (p: string): string => relative(process.cwd(), resolve(options.outDir, p));
-
-      if (showOutLog) {
-        for (const entry of ctx.buildEntries.filter((e) => !e.chunk)) {
-          let totalBytes = entry.bytes || 0;
-          for (const chunk of entry.chunks || []) {
-            totalBytes += ctx.buildEntries.find((e) => e.path === chunk)?.bytes || 0;
-          }
-          let line = `  ${rPath(entry.path)} (${[
-            totalBytes && `total size: ${prettyBytes(totalBytes)}`,
-            entry.bytes && `chunk size: ${prettyBytes(entry.bytes)}`,
-            entry.exports?.length && `exports: ${entry.exports.join(", ")}`,
-          ]
-            .filter(Boolean)
-            .join(", ")})`;
-
-          if (entry.chunks?.length) {
-            line += `\n${entry.chunks
-              .map((p) => {
-                const chunk = ctx.buildEntries.find((e) => e.path === p) || ({} as any);
-                return `  └─ ${rPath(p)}${chunk.bytes ? ` (${prettyBytes(chunk.bytes)})` : ""}`;
-              })
-              .join("\n")}`;
-          }
-
-          if (entry.modules?.length) {
-            line += `\n${entry.modules
-              .filter((m) => m.id.includes("node_modules"))
-              .sort((a, b) => (b.bytes || 0) - (a.bytes || 0))
-              .map((m) => {
-                return `  📦 ${rPath(m.id)}${m.bytes ? ` (${prettyBytes(m.bytes)})` : ""}`;
-              })
-              .join("\n")}`;
-          }
-
-          relinka("log", entry.chunk ? line : line);
-        }
-
-        // Calculate elapsed time
-        const elapsedTime = getElapsedPerfTime(timer);
-        const transpileFormattedTime = prettyMilliseconds(elapsedTime, {
-          verbose: true,
-        });
-
-        const totalSize = ctx.buildEntries.reduce((a, e) => a + (e.bytes || 0), 0);
-        buildSpinner.setText(
-          `Build complete! ${prettyBytes(totalSize)} in ${transpileFormattedTime}`,
-        );
-
-        relinka(
-          "info",
-          `Σ Total dist size: ${prettyBytes(totalSize)} (build time: ${transpileFormattedTime})`,
-        );
-      }
-
-      // Validate
-      validateDependencies(ctx);
-      validatePackage(pkg, rootDir, ctx);
-
-      // Call build:done
-      await ctx.hooks.callHook("build:done", ctx);
-
-      if (ctx.warnings.size > 0) {
-        const warningMessage = `Build completed with ${ctx.warnings.size} warnings`;
-        buildSpinner.warn(warningMessage);
-        relinka(
-          "warn",
-          `Build is done with some warnings:\n\n${[...ctx.warnings]
-            .map((msg) => `- ${msg}`)
-            .join("\n")}`,
-        );
-        if (ctx.options.transpileFailOnWarn) {
-          relinka(
-            "error",
-            "Exiting with code (1). You can change this behavior by setting `transpileFailOnWarn: false` .",
-          );
-          process.exit(1);
-        }
-        shouldStopAtStep(15);
-        relinka("info", `Build complete (with ${ctx.warnings.size} warnings)`); // Step 15
-      }
-    },
-    {
-      text: _transpileStubMode
-        ? `Stubbing ${pkg?.name || "project"}...`
-        : `Building ${pkg?.name || "project"}...`,
-      color: "green",
-      successText: `${pkg?.name || "Project"} built successfully!`,
-      failText: `Build failed for ${pkg?.name || "project"}`,
-      prefixText: "[unified]",
-    },
-  );
+  if (ctx.warnings.size > 0) {
+    relinka("warn", `Build completed with ${ctx.warnings.size} warnings`);
+    relinka(
+      "warn",
+      `Build is done with some warnings:\n\n${[...ctx.warnings]
+        .map((msg) => `- ${msg}`)
+        .join("\n")}`,
+    );
+    if (ctx.options.transpileFailOnWarn) {
+      relinka(
+        "error",
+        "Exiting with code (1). You can change this behavior by setting `transpileFailOnWarn: false` .",
+      );
+      process.exit(1);
+    }
+    shouldStopAtStep(15);
+    relinka("info", `Build complete (with ${ctx.warnings.size} warnings)`); // Step 15
+  }
 }

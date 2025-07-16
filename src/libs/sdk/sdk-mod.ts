@@ -248,6 +248,33 @@ export { isBinaryExt } from "./sdk-impl/utils/binary.js";
 export type { CommentStyle, FileExtension, CommentMapping } from "./sdk-impl/utils/comments.js";
 export { DEFAULT_COMMENT, COMMENT_MAP, getCommentPrefix } from "./sdk-impl/utils/comments.js";
 export {
+  notFoundError,
+  hookChildProcess,
+  verifyENOENT,
+  verifyENOENTSync,
+} from "./sdk-impl/utils/exec/exec-enoent.js";
+export type { EnvLike, EnvPathInfo } from "./sdk-impl/utils/exec/exec-env.js";
+export { computeEnv } from "./sdk-impl/utils/exec/exec-env.js";
+export { NonZeroExitError } from "./sdk-impl/utils/exec/exec-error.js";
+export { escapeCommand, escapeArgument } from "./sdk-impl/utils/exec/exec-escape.js";
+export type {
+  Output,
+  PipeOptions,
+  KillSignal,
+  OutputApi,
+  Result,
+  Options,
+  XExec,
+} from "./sdk-impl/utils/exec/exec-mod.js";
+export { ExecProcess, x, exec } from "./sdk-impl/utils/exec/exec-mod.js";
+export { parse } from "./sdk-impl/utils/exec/exec-parse.js";
+export { resolveCommand } from "./sdk-impl/utils/exec/exec-resolve.js";
+export { readShebang } from "./sdk-impl/utils/exec/exec-shebang.js";
+export { spawn, spawnSync } from "./sdk-impl/utils/exec/exec-spawn.js";
+export { waitForEvent, combineStreams } from "./sdk-impl/utils/exec/exec-stream.js";
+export type { ExecParseResult } from "./sdk-impl/utils/exec/exec-types.js";
+export { _parse } from "./sdk-impl/utils/exec/exec-types.js";
+export {
   detectFileType,
   detectBufferType,
   detectStreamType,
@@ -255,6 +282,58 @@ export {
   getMimeType,
 } from "./sdk-impl/utils/file-type.js";
 export { finalizeBuild, finalizePub } from "./sdk-impl/utils/finalize.js";
+export { safeRename, prepareCLIFiles } from "./sdk-impl/utils/fs-rename.js";
+export {
+  FILE_TYPES,
+  INIT_BEHAVIOURS,
+  DEST_FILE_EXISTS_BEHAVIOURS,
+  CONTENT_CREATE_MODES,
+} from "./sdk-impl/utils/init/init-const.js";
+export {
+  createFileFromScratch,
+  initFile,
+  initFiles,
+  escapeMarkdownCodeBlocks,
+} from "./sdk-impl/utils/init/init-impl.js";
+export {
+  gitignoreTemplate,
+  readmeTemplate,
+  licenseTemplate,
+} from "./sdk-impl/utils/init/init-tmpl.js";
+export type {
+  FileType,
+  InitBehaviour,
+  DestFileExistsBehaviour,
+  ReinitUserConfig,
+  InitFileRequest,
+  InitFileOptions,
+  InitFileResult,
+} from "./sdk-impl/utils/init/init-types.js";
+export {
+  installDependencies,
+  addDependency,
+  addDevDependency,
+  removeDependency,
+  ensureDependencyInstalled,
+  dedupeDependencies,
+  updateDependencies,
+  runScript,
+} from "./sdk-impl/utils/pm/pm-api.js";
+export { packageManagers, detectPackageManager } from "./sdk-impl/utils/pm/pm-detect.js";
+export { findup, parsePackageManagerField } from "./sdk-impl/utils/pm/pm-parse.js";
+export type {
+  PackageManagerName,
+  PackageManager,
+  OperationOptions,
+  DetectPackageManagerOptions,
+} from "./sdk-impl/utils/pm/pm-types.js";
+export {
+  executeCommand,
+  NO_PACKAGE_MANAGER_DETECTED_ERROR_MSG,
+  resolveOperationOptions,
+  getWorkspaceArgs,
+  doesDependencyExist,
+} from "./sdk-impl/utils/pm/pm-utils.js";
 export { resolveCrossLibs, resolveAllCrossLibs } from "./sdk-impl/utils/resolve-cross-libs.js";
 export { useAggregator } from "./sdk-impl/utils/tools-agg.js";
 export { printUsage } from "./sdk-impl/utils/tools-impl.js";

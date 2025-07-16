@@ -1,6 +1,6 @@
 import { endPrompt, startPrompt } from "@reliverse/rempts";
 
-const version= "1.7.60";
+const version= "1.7.64";
 
 export async function showStartPrompt(isDev: boolean) {
   await startPrompt({

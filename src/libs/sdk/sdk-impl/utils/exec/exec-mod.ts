@@ -5,12 +5,10 @@ import { normalize as normalizePath } from "node:path";
 import { cwd as getCwd } from "node:process";
 import readline from "node:readline";
 
-import { computeEnv } from "./env.js";
+import { computeEnv } from "./exec-env.js";
+import { NonZeroExitError } from "./exec-error.js";
+import { combineStreams } from "./exec-stream.js";
 import { _parse } from "./exec-types.js";
-import { NonZeroExitError } from "./non-zero-exit-error.js";
-import { combineStreams } from "./stream.js";
-
-export { NonZeroExitError };
 
 export interface Output {
   stderr: string;
@@ -37,15 +35,15 @@ export interface OutputApi extends AsyncIterable<string> {
 export type Result = PromiseLike<Output> & OutputApi;
 
 export interface Options {
-  signal: AbortSignal;
-  nodeOptions: SpawnOptions;
-  timeout: number;
-  persist: boolean;
-  stdin: ExecProcess;
-  throwOnError: boolean;
+  signal?: AbortSignal;
+  nodeOptions?: SpawnOptions;
+  timeout?: number;
+  persist?: boolean;
+  stdin?: ExecProcess;
+  throwOnError?: boolean;
 }
 
-export type TinyExec = (command: string, args?: string[], options?: Partial<Options>) => Result;
+export type XExec = (command: string, args?: string[], options?: Partial<Options>) => Result;
 
 const defaultOptions: Partial<Options> = {
   timeout: undefined,
@@ -234,6 +232,7 @@ export class ExecProcess implements Result {
     return result;
   }
 
+  // biome-ignore lint/suspicious/noThenProperty: <>
   public then<TResult1 = Output, TResult2 = never>(
     onfulfilled?: ((value: Output) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
@@ -280,7 +279,13 @@ export class ExecProcess implements Result {
 
     const crossResult = _parse(normalisedCommand, normalisedArgs, nodeOptions);
 
-    const handle = spawn(crossResult.command, crossResult.args, crossResult.options);
+    let handle: ChildProcess;
+    if (process.versions.bun) {
+      const bunSpawn = (Bun as any).spawn;
+      handle = bunSpawn(crossResult.command, crossResult.args, crossResult.options);
+    } else {
+      handle = spawn(crossResult.command, crossResult.args, crossResult.options);
+    }
 
     if (handle.stderr) {
       this._streamErr = handle.stderr;
@@ -327,7 +332,7 @@ export class ExecProcess implements Result {
   };
 }
 
-export const x: TinyExec = (command, args, userOptions) => {
+export const x: XExec = (command, args, userOptions) => {
   const proc = new ExecProcess(command, args, userOptions);
 
   proc.spawn();

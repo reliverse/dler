@@ -156,7 +156,7 @@ if you run just `dler` — it will display a list of commands which you can laun
 
 ## **available commands**
 
-[build](#1-build) — [pub](#2-pub) — [agg](#3-agg) — [check](#4-check) — [conv](#5-conv) — [copy](#6-copy) — [init](#7-init) — [inject](#8-inject) — [libs](#9-libs) — [merge](#10-merge) — [migrate](#11-migrate) — [rempts](#12-rempts) — [rename](#13-rename) — [spell](#14-magic) — [split](#15-split) — [pack](#16-pack)
+[build](#1-build) — [pub](#2-pub) — [agg](#3-agg) — [check](#4-check) — [conv](#5-conv) — [fs](#6-fs) — [init](#7-init) — [inject](#8-inject) — [libs](#9-libs) — [merge](#10-merge) — [migrate](#11-migrate) — [rempts](#12-rempts) — [x](#13-x) — [spell](#14-magic) — [split](#15-split) — [pack](#16-pack)
 
 ### 1. `build`
 
@@ -187,7 +187,7 @@ dler > "agg"
 dler agg --input <dir> --out <file> [options]
 ```
 
-**usage example**: if you're exploring the example [playground](#playground), you can try the following:
+**usage example**: if you're exploring the example [playground](#0-try-the-playground), you can try the following:
 
 1. open [src/libs/sdk/sdk-mod.ts](https://github.com/reliverse/dler/blob/main/src/libs/sdk/sdk-mod.ts) in your ide.
 2. press `ctrl+a`, then `backspace`. run the command below and watch the magic happen:
@@ -322,14 +322,17 @@ deep imports like `dep/some/file` or `@org/dep/some/thing` are always resolved t
 
 not yet documented.
 
-### 6. `copy`
+### 6. `fs`
 
 ```bash
 # simple example:
-bun dler copy --s "src/**/*.ts" --d "dist"
+bun dler fs --mode copy --s "src/**/*.ts" --d "dist"
+bun dler fs --mode rm --target "node_modules"
+bun dler fs --mode rename --source "index.ts" --destination "index.ts.bak"
 
 # advanced example:
-bun dler copy --s ".temp/packages/*/lib/**/*" --d "src/libs/sdk/sdk-impl/rules/external"
+bun dler fs --mode copy --s ".temp/packages/*/lib/**/*" --d "src/libs/sdk/sdk-impl/rules/external"
+bun dler fs --mode rm --target "**/node_modules"
 ```
 
 ### 7. `init`
@@ -623,10 +626,12 @@ bun dler rempts
 bun dler rempts --init cmd1 cmd2
 ```
 
-### 13. `rename`
+### 13. `x`
+
+`dler x` — your package manager — refined.
 
 ```bash
-bun dler rename ...
+bun dler x ...
 ```
 
 ### 14. `magic`

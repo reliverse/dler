@@ -1,8 +1,13 @@
-import type { ChildProcess, ExecParseResult } from "./exec-types";
+import type { ChildProcess } from "node:child_process";
+
+import type { ExecParseResult } from "./exec-types.js";
 
 const isWin = process.platform === "win32";
 
-function notFoundError(original: ExecParseResult, syscall: string) {
+export function notFoundError(
+  original: { command: string; args: string[] },
+  syscall: string,
+): Error & { code: string; errno: string; syscall: string; path: string; spawnargs: string[] } {
   return Object.assign(new Error(`${syscall} ${original.command} ENOENT`), {
     code: "ENOENT",
     errno: "ENOENT",
@@ -12,47 +17,33 @@ function notFoundError(original: ExecParseResult, syscall: string) {
   });
 }
 
-function hookChildProcess(cp: ChildProcess, parsed: ExecParseResult) {
-  if (!isWin) {
-    return;
-  }
-
+export function hookChildProcess(cp: ChildProcess, parsed: ExecParseResult): void {
+  if (!isWin) return;
   const originalEmit = cp.emit;
-
-  cp.emit = (name: string, arg1: any) => {
-    // If emitting "exit" event and exit code is 1, we need
-    // to check if the command exists and emit an "error"
+  (cp.emit as any) = (name: string | symbol, ...args: any[]): boolean => {
     if (name === "exit") {
-      const err = verifyENOENT(arg1, parsed);
-
+      const code = args[0] as number | null;
+      const signal = args[1] as NodeJS.Signals | null;
+      const err = verifyENOENT(code ?? 0, parsed);
       if (err) {
-        return originalEmit.call(cp, "error", err);
+        return (originalEmit as any).apply(cp, ["error", err]);
       }
+      return (originalEmit as any).apply(cp, ["exit", code, signal]);
     }
-
-    return originalEmit.apply(cp, arguments);
+    return (originalEmit as any).apply(cp, [name, ...args]);
   };
 }
 
-function verifyENOENT(status, parsed) {
+export function verifyENOENT(status: number | null, parsed: ExecParseResult): Error | null {
   if (isWin && status === 1 && !parsed.file) {
     return notFoundError(parsed.original, "spawn");
   }
-
   return null;
 }
 
-function verifyENOENTSync(status, parsed) {
+export function verifyENOENTSync(status: number | null, parsed: ExecParseResult): Error | null {
   if (isWin && status === 1 && !parsed.file) {
     return notFoundError(parsed.original, "spawnSync");
   }
-
   return null;
 }
-
-export default {
-  hookChildProcess,
-  verifyENOENT,
-  verifyENOENTSync,
-  notFoundError,
-};

@@ -10,7 +10,33 @@ import { confirmPrompt } from "@reliverse/rempts";
 import { Value } from "@sinclair/typebox/value";
 import { execaCommand } from "execa";
 
-import { addDevDependency } from "~/libs/sdk/sdk-impl/pm/pm-api";
+/**
+ * Adds @reliverse/cfg as a devDependency to the nearest package.json in the given cwd.
+ */
+async function addDevDependency(pkgName: string, opts: { cwd: string }): Promise<void> {
+  const pkgPath = path.join(opts.cwd, "package.json");
+  let pkg: any;
+  try {
+    // Try to use pkg-types if available
+    const { readPackageJSON } = await import("pkg-types");
+    pkg = await readPackageJSON(pkgPath);
+  } catch {
+    // Fallback to fs
+    if (await fs.pathExists(pkgPath)) {
+      pkg = JSON.parse(await fs.readFile(pkgPath, "utf8"));
+    } else {
+      pkg = {};
+    }
+  }
+  if (!pkg.devDependencies) pkg.devDependencies = {};
+  if (!pkg.devDependencies[pkgName]) {
+    pkg.devDependencies[pkgName] = "latest";
+    await fs.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
+    relinka("log", `Added ${pkgName} to devDependencies in ${pkgPath}`);
+  } else {
+    relinka("log", `${pkgName} already present in devDependencies in ${pkgPath}`);
+  }
+}
 
 import type { DeploymentService } from "./rse-types";
 import type { RseConfig } from "./rse-types";
@@ -86,14 +112,14 @@ export async function writeRseConfig(
 
       // Build the import path for dev or production
       // - If dev is true, create an alias path to ~/libs/sdk/sdk-mod.js
-      // - Otherwise default to "@reliverse/rse"
+      // - Otherwise default to "@reliverse/cfg"
       let importPath: string;
       if (customPathToTypes) {
         importPath = customPathToTypes;
       } else if (isDev) {
         importPath = "~/mod";
       } else {
-        importPath = "@reliverse/rse";
+        importPath = "@reliverse/cfg";
       }
 
       // Produce TypeScript config file content
@@ -110,13 +136,13 @@ export default defineConfigRse(${objectLiteralWithComments});
 
       // Optionally add devDependency and prompt for install if not dev
       if (!isDev && !skipInstallPrompt) {
-        await addDevDependency("@reliverse/rse", {
+        await addDevDependency("@reliverse/cfg", {
           cwd: path.dirname(configPath),
         });
         relinka("verbose", "TS config written successfully");
 
         const shouldRunInstall = await confirmPrompt({
-          title: "Run `bun install` now to install '@reliverse/rse'?",
+          title: "Run `bun install` now to install '@reliverse/cfg'?",
           defaultValue: true,
         });
         if (shouldRunInstall) {

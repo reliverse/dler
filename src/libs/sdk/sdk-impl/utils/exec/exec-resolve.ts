@@ -1,51 +1,49 @@
+import { lookpath } from "lookpath";
+import path from "node:path";
+import getPathKey from "path-key";
 
-const path = require('path');
-const which = require('which');
-const getPathKey = require('path-key');
+import type { ExecParseResult } from "./exec-types.js";
 
-function resolveCommandAttempt(parsed, withoutPathExt) {
-    const env = parsed.options.env || process.env;
-    const cwd = process.cwd();
-    const hasCustomCwd = parsed.options.cwd != null;
-    // Worker threads do not have process.chdir()
-    const shouldSwitchCwd = hasCustomCwd && process.chdir !== undefined && !process.chdir.disabled;
-
-    // If a custom `cwd` was specified, we need to change the process cwd
-    // because `which` will do stat calls but does not support a custom cwd
-    if (shouldSwitchCwd) {
-        try {
-            process.chdir(parsed.options.cwd);
-        } catch (err) {
-            /* Empty */
-        }
-    }
-
-    let resolved;
-
+async function resolveCommandAttempt(
+  parsed: ExecParseResult,
+  withoutPathExt?: boolean,
+): Promise<string | undefined> {
+  const env = parsed.options.env || process.env;
+  const cwd = process.cwd();
+  const hasCustomCwd = parsed.options.cwd != null;
+  const shouldSwitchCwd =
+    hasCustomCwd && typeof process.chdir === "function" && !(process.chdir as any).disabled;
+  if (shouldSwitchCwd) {
     try {
-        resolved = which.sync(parsed.command, {
-            path: env[getPathKey({ env })],
-            pathExt: withoutPathExt ? path.delimiter : undefined,
-        });
-    } catch (e) {
-        /* Empty */
-    } finally {
-        if (shouldSwitchCwd) {
-            process.chdir(cwd);
-        }
+      process.chdir(String(parsed.options.cwd ?? cwd));
+    } catch {
+      // Ignore error, we'll try to resolve the command later
     }
-
-    // If we successfully resolved, ensure that an absolute path is returned
-    // Note that when a custom `cwd` was used, we need to resolve to an absolute path based on it
-    if (resolved) {
-        resolved = path.resolve(hasCustomCwd ? parsed.options.cwd : '', resolved);
+  }
+  let resolved: string | undefined;
+  try {
+    const pathEnv = env[getPathKey({ env })];
+    const lookpathOptions: Record<string, unknown> = {
+      path: pathEnv?.split(path.delimiter),
+      include: withoutPathExt ? [] : undefined,
+    };
+    resolved = await lookpath(parsed.command, lookpathOptions);
+  } catch {
+    // Ignore error
+  } finally {
+    if (shouldSwitchCwd) {
+      process.chdir(cwd);
     }
-
-    return resolved;
+  }
+  if (resolved) {
+    resolved = path.resolve(
+      hasCustomCwd ? String(parsed.options.cwd ?? cwd) : cwd,
+      typeof resolved === "string" ? resolved : String(resolved),
+    );
+  }
+  return resolved;
 }
 
-function resolveCommand(parsed) {
-    return resolveCommandAttempt(parsed) || resolveCommandAttempt(parsed, true);
+export async function resolveCommand(parsed: ExecParseResult): Promise<string | undefined> {
+  return (await resolveCommandAttempt(parsed)) || (await resolveCommandAttempt(parsed, true));
 }
-
-module.exports = resolveCommand;

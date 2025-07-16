@@ -34,8 +34,7 @@ const createToolRunner = () =>
     "dler-check": {
       name: "Dler Check",
       async run() {
-        const checkCmd = await getCheckCmd();
-        await runCmd(checkCmd, ["--no-exit", "--no-progress"]);
+        await runCmd(await getCheckCmd(), ["--no-exit", "--no-progress"]);
       },
     },
   }) as const;

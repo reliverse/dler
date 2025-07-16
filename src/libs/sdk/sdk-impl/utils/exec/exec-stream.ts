@@ -16,11 +16,9 @@ export const combineStreams = (streams: Readable[]): Readable => {
       combined.emit("end");
     }
   };
-
   for (const stream of streams) {
     stream.pipe(combined, { end: false });
     stream.on("end", maybeEmitEnd);
   }
-
   return combined;
 };

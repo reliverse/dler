@@ -1,36 +1,34 @@
-import cp from "node:child_process";
+import {
+  spawn as nodeSpawn,
+  spawnSync as nodeSpawnSync,
+  type ChildProcess,
+  type SpawnOptions,
+  type SpawnSyncReturns,
+} from "node:child_process";
 
-import enoent from "./exec-enoent";
-import parse from "./exec-parse";
+import type { ExecParseResult } from "./exec-types.js";
 
-function spawn(command, args, options) {
-  // Parse the arguments
-  const parsed = parse(command, args, options);
+import { hookChildProcess, verifyENOENTSync } from "./exec-enoent.js";
+import { parse } from "./exec-parse.js";
 
-  // Spawn the child process
-  const spawned = cp.spawn(parsed.command, parsed.args, parsed.options);
-
-  // Hook into child process "exit" event to emit an error if the command does not exists
-  enoent.hookChildProcess(spawned, parsed);
-
+export async function spawn(
+  command: string,
+  args?: string[],
+  options?: SpawnOptions,
+): Promise<ChildProcess> {
+  const parsed: ExecParseResult = await parse(command, args, options);
+  const spawned = nodeSpawn(parsed.command, parsed.args, parsed.options);
+  hookChildProcess(spawned, parsed);
   return spawned;
 }
 
-function spawnSync(command, args, options) {
-  // Parse the arguments
-  const parsed = parse(command, args, options);
-
-  // Spawn the child process
-  const result = cp.spawnSync(parsed.command, parsed.args, parsed.options);
-
-  // Analyze if the command does not exist
-  result.error = result.error || enoent.verifyENOENTSync(result.status, parsed);
-
+export async function spawnSync(
+  command: string,
+  args?: string[],
+  options?: SpawnOptions,
+): Promise<SpawnSyncReturns<string | Buffer<ArrayBufferLike>>> {
+  const parsed: ExecParseResult = await parse(command, args, options);
+  const result = nodeSpawnSync(parsed.command, parsed.args, parsed.options);
+  (result as any).error = (result as any).error || verifyENOENTSync(result.status, parsed);
   return result;
 }
-
-module.exports = spawn;
-module.exports.spawn = spawn;
-module.exports.sync = spawnSync;
-
-module.exports._enoent = enoent;
