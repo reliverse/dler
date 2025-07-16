@@ -81,7 +81,6 @@ export default defineConfigDler({
         "confbox",
         "@reliverse/rempts",
         "execa",
-        "nypm",
         "destr",
         "magic-string",
         "jiti",

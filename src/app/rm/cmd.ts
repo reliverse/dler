@@ -3,12 +3,14 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { defineArgs, defineCommand, inputPrompt } from "@reliverse/rempts";
 import { glob } from "tinyglobby";
+import pMap from "p-map";
 
 export default defineCommand({
   meta: {
     name: "rm",
     version: "1.1.0",
-    description: "Remove a file, directory, or glob pattern recursively.",
+    description:
+      "Remove a file, directory, or glob pattern recursively. Usage example: `dler rm --target '**/node_modules'`",
   },
   args: defineArgs({
     target: {
@@ -52,22 +54,30 @@ export default defineCommand({
       return;
     }
 
+    // Sort matches so that deeper paths (files/dirs) are removed before their parent directories
+    matches.sort((a, b) => b.split(path.sep).length - a.split(path.sep).length);
+
     let removedCount = 0;
-    for (const match of matches) {
-      const resolvedPath = path.resolve(match);
-      try {
-        if (!(await fs.pathExists(resolvedPath))) {
-          relinka("warn", `Target does not exist: ${resolvedPath}`);
-          continue;
+    const concurrency = 8;
+    await pMap(
+      matches,
+      async (match) => {
+        const resolvedPath = path.resolve(match);
+        try {
+          if (!(await fs.pathExists(resolvedPath))) {
+            relinka("warn", `Target does not exist: ${resolvedPath}`);
+            return;
+          }
+          await fs.remove(resolvedPath);
+          relinka("log", `Removed: ${resolvedPath}`);
+          removedCount++;
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          relinka("error", `Failed to remove '${resolvedPath}': ${errorMessage}`);
         }
-        await fs.remove(resolvedPath);
-        relinka("log", `Removed: ${resolvedPath}`);
-        removedCount++;
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        relinka("error", `Failed to remove '${resolvedPath}': ${errorMessage}`);
-      }
-    }
+      },
+      { concurrency },
+    );
 
     if (removedCount > 0) {
       relinka("log", `Successfully removed ${removedCount} item(s) matching: ${target}`);

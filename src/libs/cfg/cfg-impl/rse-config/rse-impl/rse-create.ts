@@ -9,7 +9,8 @@ import { relinka } from "@reliverse/relinka";
 import { confirmPrompt } from "@reliverse/rempts";
 import { Value } from "@sinclair/typebox/value";
 import { execaCommand } from "execa";
-import { addDevDependency } from "nypm";
+
+import { addDevDependency } from "~/libs/sdk/sdk-impl/pm/pm-api";
 
 import type { DeploymentService } from "./rse-types";
 import type { RseConfig } from "./rse-types";
