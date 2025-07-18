@@ -5,7 +5,7 @@ import { glob } from "tinyglobby";
 
 import type { BuildContext, CopyBuildEntry } from "~/libs/sdk/sdk-impl/sdk-types";
 
-import { rmdir, symlink, warn } from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils";
+import { rmdir, symlink, warn } from "~/libs/sdk/sdk-impl/build/providers/utils";
 
 const copy = fsp.cp || fsp.copyFile;
 

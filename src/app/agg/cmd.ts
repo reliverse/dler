@@ -5,10 +5,6 @@ import { useAggregator } from "./impl";
 
 export default defineCommand({
   args: defineArgs({
-    dev: {
-      description: "Run in development mode",
-      type: "boolean",
-    },
     imports: {
       description: "If true, produce import lines instead of export lines",
       type: "boolean",

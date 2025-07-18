@@ -3,7 +3,7 @@ import { relinka } from "@reliverse/relinka";
 
 import type { BuildContext, MkdistBuildEntry, MkdistOptions } from "~/libs/sdk/sdk-impl/sdk-types";
 
-import { rmdir, symlink, warn } from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils";
+import { rmdir, symlink, warn } from "~/libs/sdk/sdk-impl/build/providers/utils";
 
 // import { mkdist } from "mkdist";
 import { mkdist } from "./mkdist-impl/make";

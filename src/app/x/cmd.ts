@@ -52,11 +52,6 @@ export default defineCommand({
       description: "Package name or script name",
       required: false,
     },
-    dev: {
-      type: "boolean",
-      alias: "D",
-      description: "Add as dev dependency",
-    },
     global: {
       type: "boolean",
       alias: "g",
@@ -119,11 +114,13 @@ export default defineCommand({
     },
     linter: {
       type: "boolean",
-      description: "Run latest checks after updating dependencies",
+      description: "Run linter checks after updating dependencies",
       default: false,
     },
   }),
   async run({ args }) {
+    console.log("DEBUG: x command starting with args:", args);
+
     const {
       action,
       name,
@@ -143,6 +140,7 @@ export default defineCommand({
       case "install":
       case "i":
       case "add":
+        console.log("DEBUG: install case, name:", name, "options:", options);
         await (name ? addDependency(name, options) : installDependencies(options));
         break;
 
@@ -302,7 +300,8 @@ export default defineCommand({
       case "latest": {
         await updateDependencies(true, options);
         if (linter) {
-          await runCmd(await getCheckCmd(), ["--no-exit", "--no-progress"]);
+          const checkCmd = await getCheckCmd();
+          await runCmd(checkCmd, ["--no-exit", "--no-progress"]);
         }
         break;
       }

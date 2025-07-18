@@ -19,6 +19,7 @@ import { checkPathExtensions } from "~/libs/sdk/sdk-impl/rules/reliverse/path-ex
 import { checkSelfInclude } from "~/libs/sdk/sdk-impl/rules/reliverse/self-include/self-include";
 import { checkTsConfigHealth } from "~/libs/sdk/sdk-impl/rules/reliverse/tsconfig-health/tsconfig-health";
 import { displayCheckResults } from "~/libs/sdk/sdk-impl/rules/rules-mod";
+import { ensureDlerConfig } from "~/libs/sdk/sdk-mod";
 
 export default defineCommand({
   meta: {
@@ -28,6 +29,11 @@ export default defineCommand({
       "Check your codebase for issues (deps, extensions, config, etc) or analyze dependencies.",
   },
   args: defineArgs({
+    dev: {
+      type: "boolean",
+      description: "Runs the CLI in dev mode",
+    },
+
     // --- check args ---
     directory: {
       type: "string",
@@ -73,10 +79,6 @@ export default defineCommand({
       type: "boolean",
       description: "include Node.js built-in modules in the output (for deps)",
     },
-    dev: {
-      type: "boolean",
-      description: "check devDependencies instead of dependencies (for deps)",
-    },
     peer: {
       type: "boolean",
       description: "check peerDependencies instead of dependencies (for deps)",
@@ -96,6 +98,9 @@ export default defineCommand({
     },
   }),
   async run({ args }) {
+    const isDev = args.dev || process.env.DLER_DEV_MODE === "true";
+    await ensureDlerConfig(isDev);
+
     // --- If --deps is set, run dependency analysis and exit ---
     if (args.deps) {
       try {
@@ -108,7 +113,7 @@ export default defineCommand({
           ignorePatterns,
           json: args.json,
           builtins: args.builtins,
-          dev: args.dev,
+          dev: isDev,
           peer: args.peer,
           optional: args.optional,
           fix: args.fix,
@@ -335,7 +340,7 @@ export default defineCommand({
             onProgress,
             json: args.json,
             builtins: args.builtins,
-            dev: args.dev,
+            dev: isDev,
             peer: args.peer,
             optional: args.optional,
             fix: args.fix,

@@ -96,7 +96,6 @@ async function emitVueTscV1(
   };
 
   try {
-    // @ts-expect-error TODO: fix ts
     const program = vueTsc.createProgram({
       rootNames: inputFiles,
       // @ts-expect-error TODO: fix ts
@@ -133,7 +132,6 @@ async function emitVueTscV2(
   // @ts-expect-error TODO: fix ts
   const tsHost = ts.createCompilerHost(opts.typescript.compilerOptions);
   tsHost.writeFile = (filename, content) => {
-    // @ts-expect-error TODO: fix ts
     vfs.set(filename, vueTsc.removeEmitGlobalTypes(content));
   };
   const _tsReadFile = tsHost.readFile.bind(tsHost);
@@ -156,7 +154,6 @@ async function emitVueTscV2(
   const createProgram = volarTs.proxyCreateProgram(ts, ts.createProgram, (ts, options) => {
     const vueLanguagePlugin = vueLanguageCore.createVueLanguagePlugin<string>(
       ts,
-      // @ts-expect-error TODO: fix ts
       (id) => id,
       () => "",
       (fileName) => {
@@ -166,8 +163,8 @@ async function emitVueTscV2(
         }
         return fileMap.has(fileName);
       },
-      // @ts-expect-error TODO: fix ts
       options.options,
+      // @ts-expect-error TODO: fix ts
       {},
     );
     return [vueLanguagePlugin];

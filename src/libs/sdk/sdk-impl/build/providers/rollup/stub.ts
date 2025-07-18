@@ -5,7 +5,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 
 import type { BuildContext } from "~/libs/sdk/sdk-impl/sdk-types";
 
-import { warn } from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils";
+import { warn } from "~/libs/sdk/sdk-impl/build/providers/utils";
 
 import { getShebang, makeExecutable } from "./plugins/shebang";
 import { DEFAULT_EXTENSIONS, resolveAliases } from "./utils";

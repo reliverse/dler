@@ -279,13 +279,17 @@ export class ExecProcess implements Result {
 
     const crossResult = _parse(normalisedCommand, normalisedArgs, nodeOptions);
 
-    let handle: ChildProcess;
-    if (process.versions.bun) {
-      const bunSpawn = (Bun as any).spawn;
-      handle = bunSpawn(crossResult.command, crossResult.args, crossResult.options);
-    } else {
-      handle = spawn(crossResult.command, crossResult.args, crossResult.options);
-    }
+    // Debug logging
+    console.log("DEBUG: spawn parameters:", {
+      command: crossResult.command,
+      args: crossResult.args,
+      commandType: typeof crossResult.command,
+      argsType: typeof crossResult.args,
+      isArgsArray: Array.isArray(crossResult.args),
+      bunVersion: process.versions.bun,
+    });
+
+    const handle: ChildProcess = spawn(crossResult.command, crossResult.args, crossResult.options);
 
     if (handle.stderr) {
       this._streamErr = handle.stderr;

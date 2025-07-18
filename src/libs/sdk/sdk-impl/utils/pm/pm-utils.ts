@@ -37,10 +37,34 @@ export async function executeCommand(
   args: string[],
   options: Pick<OperationOptions, "cwd" | "silent"> = {},
 ): Promise<void> {
+  // Debug logging
+  console.log("DEBUG: executeCommand called with:", {
+    command,
+    args,
+    options,
+    commandType: typeof command,
+    argsType: typeof args,
+    isArgsArray: Array.isArray(args),
+  });
+
+  // Add validation to ensure args is an array
+  if (!Array.isArray(args)) {
+    throw new Error(`executeCommand: args must be an array, got ${typeof args}: ${args}`);
+  }
+
   const xArgs: [string, string[]] =
     command === "npm" || command === "bun" || command === "deno" || !(await hasCorepack())
       ? [command, args]
       : ["corepack", [command, ...args]];
+
+  console.log("DEBUG: executeCommand xArgs:", {
+    xArgs,
+    command: xArgs[0],
+    args: xArgs[1],
+    commandType: typeof xArgs[0],
+    argsType: typeof xArgs[1],
+    isArgsArray: Array.isArray(xArgs[1]),
+  });
 
   const { exitCode, stdout, stderr } = await x(xArgs[0], xArgs[1], {
     nodeOptions: {

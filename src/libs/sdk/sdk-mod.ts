@@ -2,63 +2,63 @@
 export type { LibraryBuildOptions } from "./sdk-impl/build/build-library.js";
 export { library_buildLibrary } from "./sdk-impl/build/build-library.js";
 export { regular_buildJsrDist, regular_buildNpmDist } from "./sdk-impl/build/build-regular.js";
-export { definePreset, autoPreset } from "./sdk-impl/build/bundlers/unified/auto.js";
-export { unifiedBuild } from "./sdk-impl/build/bundlers/unified/build.js";
-export { copyBuild } from "./sdk-impl/build/bundlers/unified/copy/copy-mod.js";
-export { createLoader } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/loader.js";
-export { jsLoader } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/loaders/js.js";
+export { definePreset, autoPreset } from "./sdk-impl/build/providers/auto.js";
+export { unifiedBuild } from "./sdk-impl/build/providers/build.js";
+export { copyBuild } from "./sdk-impl/build/providers/copy/copy-mod.js";
+export { createLoader } from "./sdk-impl/build/providers/mkdist/mkdist-impl/loader.js";
+export { jsLoader } from "./sdk-impl/build/providers/mkdist/mkdist-impl/loaders/js.js";
 export {
   defaultLoaders,
   resolveLoader,
   resolveLoaders,
-} from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/loaders/loaders-mod.js";
-export type { PostcssLoaderOptions } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/loaders/postcss.js";
-export { postcssLoader } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/loaders/postcss.js";
-export { sassLoader } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/loaders/sass.js";
+} from "./sdk-impl/build/providers/mkdist/mkdist-impl/loaders/loaders-mod.js";
+export type { PostcssLoaderOptions } from "./sdk-impl/build/providers/mkdist/mkdist-impl/loaders/postcss.js";
+export { postcssLoader } from "./sdk-impl/build/providers/mkdist/mkdist-impl/loaders/postcss.js";
+export { sassLoader } from "./sdk-impl/build/providers/mkdist/mkdist-impl/loaders/sass.js";
 export type {
   DefineVueLoaderOptions,
   VueBlock,
   VueBlockLoader,
   DefaultBlockLoaderOptions,
-} from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/loaders/vue.js";
+} from "./sdk-impl/build/providers/mkdist/mkdist-impl/loaders/vue.js";
 export {
   fallbackVueLoader,
   vueLoader,
-} from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/loaders/vue.js";
-export { mkdist } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/make.js";
-export type { DeclarationOutput } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/utils/dts.js";
+} from "./sdk-impl/build/providers/mkdist/mkdist-impl/loaders/vue.js";
+export { mkdist } from "./sdk-impl/build/providers/mkdist/mkdist-impl/make.js";
+export type { DeclarationOutput } from "./sdk-impl/build/providers/mkdist/mkdist-impl/utils/dts.js";
 export {
   normalizeCompilerOptions,
   getDeclarations,
   extractDeclarations,
   augmentWithDiagnostics,
-} from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/utils/dts.js";
-export { copyFileWithStream } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/utils/fs.js";
-export { getVueDeclarations } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/utils/vue-dts.js";
-export { mkdistBuild } from "./sdk-impl/build/bundlers/unified/mkdist/mkdist-mod.js";
-export { rollupBuild } from "./sdk-impl/build/bundlers/unified/rollup/build.js";
-export { getRollupOptions } from "./sdk-impl/build/bundlers/unified/rollup/config.js";
+} from "./sdk-impl/build/providers/mkdist/mkdist-impl/utils/dts.js";
+export { copyFileWithStream } from "./sdk-impl/build/providers/mkdist/mkdist-impl/utils/fs.js";
+export { getVueDeclarations } from "./sdk-impl/build/providers/mkdist/mkdist-impl/utils/vue-dts.js";
+export { mkdistBuild } from "./sdk-impl/build/providers/mkdist/mkdist-mod.js";
+export { rollupBuild } from "./sdk-impl/build/providers/rollup/build.js";
+export { getRollupOptions } from "./sdk-impl/build/providers/rollup/config.js";
 export {
   cjsPlugin,
   fixCJSExportTypePlugin,
-} from "./sdk-impl/build/bundlers/unified/rollup/plugins/cjs.js";
-export { esbuild } from "./sdk-impl/build/bundlers/unified/rollup/plugins/esbuild.js";
-export { JSONPlugin } from "./sdk-impl/build/bundlers/unified/rollup/plugins/json.js";
-export { rawPlugin } from "./sdk-impl/build/bundlers/unified/rollup/plugins/raw.js";
+} from "./sdk-impl/build/providers/rollup/plugins/cjs.js";
+export { esbuild } from "./sdk-impl/build/providers/rollup/plugins/esbuild.js";
+export { JSONPlugin } from "./sdk-impl/build/providers/rollup/plugins/json.js";
+export { rawPlugin } from "./sdk-impl/build/providers/rollup/plugins/raw.js";
 export {
   getShebang,
   makeExecutable,
   removeShebangPlugin,
   shebangPlugin,
-} from "./sdk-impl/build/bundlers/unified/rollup/plugins/shebang.js";
-export { rollupStub } from "./sdk-impl/build/bundlers/unified/rollup/stub.js";
+} from "./sdk-impl/build/providers/rollup/plugins/shebang.js";
+export { rollupStub } from "./sdk-impl/build/providers/rollup/stub.js";
 export {
   DEFAULT_EXTENSIONS,
   getChunkFilename,
   resolveAliases,
-} from "./sdk-impl/build/bundlers/unified/rollup/utils.js";
-export { rollupWatch } from "./sdk-impl/build/bundlers/unified/rollup/watch.js";
-export { typesBuild } from "./sdk-impl/build/bundlers/unified/untyped/untyped-mod.js";
+} from "./sdk-impl/build/providers/rollup/utils.js";
+export { rollupWatch } from "./sdk-impl/build/providers/rollup/watch.js";
+export { typesBuild } from "./sdk-impl/build/providers/untyped/untyped-mod.js";
 export {
   arrayIncludes,
   dumpObject,
@@ -72,11 +72,11 @@ export {
   symlink,
   warn,
   withTrailingSlash,
-} from "./sdk-impl/build/bundlers/unified/utils.js";
+} from "./sdk-impl/build/providers/utils.js";
 export {
   validateDependencies,
   validatePackage,
-} from "./sdk-impl/build/bundlers/unified/validate.js";
+} from "./sdk-impl/build/providers/validate.js";
 export type {
   InjectionLocation,
   SingleInjection,

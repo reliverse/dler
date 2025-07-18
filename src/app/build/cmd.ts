@@ -26,12 +26,13 @@ export default defineCommand({
     },
   }),
   async run({ args }) {
-    await ensureDlerConfig(args.dev);
+    const isDev = args.dev || process.env.DLER_DEV_MODE === "true";
+    await ensureDlerConfig(isDev);
 
     const config = await getConfigDler();
 
     const { timer } = await dlerBuild(
-      args.dev,
+      isDev,
       config,
       args.debugOnlyCopyNonBuildFiles,
       args.debugDontCopyNonBuildFiles,

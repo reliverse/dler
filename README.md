@@ -2,7 +2,9 @@
 
 [sponsor](https://github.com/sponsors/blefnk) — [discord](https://discord.gg/pb8ukbwpsj) — [github](https://github.com/reliverse/dler) — [npm](https://npmjs.com/@reliverse/dler)
 
-> @reliverse/dler (`/ˈdiː.lər/`, dealer) is a flexible, unified, and fully automated bundler for typescript/javascript projects that doubles as an npm/jsr publishing tool. beyond bundling, dler serves as a comprehensive codemod toolkit for modern typescript/javascript development.
+> @reliverse/dler (`/ˈdiː.lər/`, dealer) is your package manager's best friend. dler extends bun, pnpm, yarn, and npm core functionality and goes far beyond.
+>
+> at its core, dler is a flexible, unified, and fully automated bundler for typescript/javascript projects that doubles as an npm/jsr publishing tool. beyond bundling, dler serves as a comprehensive codemod toolkit for modern typescript/javascript development.
 
 ## features
 
@@ -166,9 +168,47 @@ since dler is fully modular, build command is separated for its own build-in plu
 bun dler build ...
 ```
 
-### 2. `pub`
+#### 1.1. `build binary` - Standalone Executable Builder
 
-pub command is separated for its own build-in plugin as well.
+creates standalone executables for different platforms using bun's `--compile` feature.
+
+```bash
+# build for default targets (linux x64, windows x64, macos arm64)
+bun dler build binary
+
+# build for all supported platforms
+bun dler build binary --targets=all
+
+# build for specific platforms
+bun dler build binary --targets=bun-linux-x64,bun-windows-x64
+
+# build with optimization
+bun dler build binary --bytecode --minify --sourcemap
+
+# windows-specific options
+bun dler build binary --windows-icon=icon.ico --windows-hide-console
+
+# debugging options
+bun dler build binary --no-compile --external=c12,terminal-kit,problematic-package
+
+# list all available targets
+bun dler build binary --targets=list
+```
+
+**supported platforms:**
+
+- linux: x64, x64-baseline, x64-modern, arm64 (with glibc/musl variants)
+- windows: x64, x64-baseline, x64-modern (with .exe extension)
+- macos: x64, arm64
+
+**output files:**
+
+- executables: `mycli-linux`, `mycli-windows.exe`, `mycli-darwin-arm64`
+- bundled scripts: `mycli-linux.js`, `mycli-windows.js`, `mycli-darwin-arm64.js`
+
+**typical file sizes:** 60-120mb per executable (includes bun runtime and dependencies)
+
+### 2. `pub`
 
 it already calls build command by itself, so you don't need to run `dler build` separately.
 
@@ -863,6 +903,35 @@ bun add @reliverse/dler-sdk
 ```
 
 **usage example**: [@reliverse/rse](https://github.com/reliverse/rse-website-builder) leverages this sdk to extend its functionality.
+
+### 17. `update`
+
+updates your project's dependencies to the latest version.
+
+updates not only `dependencies`/`devDependencies`/`peerDependencies`/`optionalDependencies`, but also [monorepo catalogs](https://bun.sh/docs/install/catalogs).
+
+```bash
+bun dler update
+```
+
+**params:**
+
+- `--with-check-script` (boolean) — runs `bun check` after updating (exclusive for bun environment at the moment)
+
+**example package.json:**
+
+```json
+{
+  "scripts": {
+    "latest": "bun dler update --with-check-script",
+    "check": "tsc --noEmit && eslint --cache --fix . && biome check --fix --unsafe . && knip"
+  }
+}
+```
+
+**coming soon:**
+
+- recursive lookup for deps in multiple package.json files (e.g. monorepo; or case when you have `C:/foo/bar1/package.json` and `C:/foo/bar2/package.json` and using `dler update` in `C:/foo`).
 
 ## related
 

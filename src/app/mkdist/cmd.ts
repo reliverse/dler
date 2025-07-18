@@ -4,7 +4,7 @@ import { defineArgs, defineCommand } from "@reliverse/rempts";
 import type { MkdistOptions } from "~/libs/sdk/sdk-impl/sdk-types";
 
 import { dlerBuild } from "~/app/build/impl";
-import { mkdist } from "~/libs/sdk/sdk-impl/build/bundlers/unified/mkdist/mkdist-impl/make";
+import { mkdist } from "~/libs/sdk/sdk-impl/build/providers/mkdist/mkdist-impl/make";
 import { ensureDlerConfig } from "~/libs/sdk/sdk-impl/config/init";
 
 // TODO: merge this command with 'build' command in the future
@@ -95,6 +95,8 @@ export default defineCommand({
     },
   }),
   async run({ args }) {
+    const isDev = args.dev || process.env.DLER_DEV_MODE === "true";
+
     if (args.mkdistOnly) {
       const {
         result: { writtenFiles },
@@ -122,7 +124,7 @@ export default defineCommand({
       process.exit(0);
     }
 
-    await ensureDlerConfig(args.dev);
-    await dlerBuild(args.dev);
+    await ensureDlerConfig(isDev);
+    await dlerBuild(isDev);
   },
 });

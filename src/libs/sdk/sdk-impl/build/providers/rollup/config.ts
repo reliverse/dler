@@ -6,7 +6,7 @@ import { parseNodeModulePath } from "mlly";
 
 import type { BuildContext, RollupOptions } from "~/libs/sdk/sdk-impl/sdk-types";
 
-import { arrayIncludes, getpkg, warn } from "~/libs/sdk/sdk-impl/build/bundlers/unified/utils";
+import { arrayIncludes, getpkg, warn } from "~/libs/sdk/sdk-impl/build/providers/utils";
 
 import { cjsPlugin } from "./plugins/cjs";
 import { esbuild } from "./plugins/esbuild";

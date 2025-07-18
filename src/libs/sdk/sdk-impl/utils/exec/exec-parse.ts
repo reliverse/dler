@@ -45,6 +45,16 @@ export async function parse(
   args?: string[] | any,
   options?: any,
 ): Promise<ExecParseResult> {
+  // Debug logging
+  console.log("DEBUG: parse function called with:", {
+    command,
+    args,
+    options,
+    commandType: typeof command,
+    argsType: typeof args,
+    isArgsArray: Array.isArray(args),
+  });
+
   let actualArgs = args;
   let actualOptions = options;
   if (actualArgs && !Array.isArray(actualArgs)) {
@@ -63,5 +73,14 @@ export async function parse(
       args: actualArgs,
     },
   };
+
+  console.log("DEBUG: parse function returning:", {
+    command: parsed.command,
+    args: parsed.args,
+    commandType: typeof parsed.command,
+    argsType: typeof parsed.args,
+    isArgsArray: Array.isArray(parsed.args),
+  });
+
   return actualOptions.shell ? parsed : await parseNonShell(parsed);
 }

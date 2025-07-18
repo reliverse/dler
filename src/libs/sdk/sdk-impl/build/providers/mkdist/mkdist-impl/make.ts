@@ -85,7 +85,7 @@ export async function mkdist(options: MkdistOptions /* istanbul ignore next */ =
   const outputs: OutputFile[] = [];
   let processedCount = 0;
 
-  // Process files with progress tracking
+  // Process files
   await Promise.all(
     files.map(async (file) => {
       const result = await loadFile(file);
@@ -95,13 +95,12 @@ export async function mkdist(options: MkdistOptions /* istanbul ignore next */ =
       processedCount++;
 
       // Update progress every file or every 10% of files, whichever is more frequent
-      const shouldUpdate =
-        processedCount % Math.max(1, Math.floor(files.length / 10)) === 0 ||
-        processedCount === files.length;
-
-      if (shouldUpdate) {
-        relinka("verbose", `Processing files: ${file.path} (${processedCount}/${files.length})`);
-      }
+      // const shouldUpdate =
+      //   processedCount % Math.max(1, Math.floor(files.length / 10)) === 0 ||
+      //   processedCount === files.length;
+      // if (shouldUpdate) {
+      //   relinka("verbose", `Processing files: ${file.path} (${processedCount}/${files.length})`);
+      // }
     }),
   );
 
@@ -149,9 +148,9 @@ export async function mkdist(options: MkdistOptions /* istanbul ignore next */ =
       }
 
       dtsProcessed++;
-      if (dtsProcessed % Math.max(1, Math.floor(dtsOutputs.length / 5)) === 0) {
-        relinka("verbose", `Generated declarations for ${dtsProcessed}/${dtsOutputs.length} files`);
-      }
+      // if (dtsProcessed % Math.max(1, Math.floor(dtsOutputs.length / 5)) === 0) {
+      //   relinka("verbose", `Generated declarations for ${dtsProcessed}/${dtsOutputs.length} files`);
+      // }
     }
   }
 
@@ -239,10 +238,10 @@ export async function mkdist(options: MkdistOptions /* istanbul ignore next */ =
       writtenCount++;
 
       // Update progress every 10 files or every 10% of files, whichever is more frequent
-      const progressUpdateInterval = Math.max(10, Math.floor(outputsToWrite.length / 10));
-      if (writtenCount % progressUpdateInterval === 0 || writtenCount === outputsToWrite.length) {
-        relinka("verbose", `Written ${writtenCount}/${outputsToWrite.length} files`);
-      }
+      // const progressUpdateInterval = Math.max(10, Math.floor(outputsToWrite.length / 10));
+      // if (writtenCount % progressUpdateInterval === 0 || writtenCount === outputsToWrite.length) {
+      //   relinka("verbose", `Written ${writtenCount}/${outputsToWrite.length} files`);
+      // }
     }),
   );
 

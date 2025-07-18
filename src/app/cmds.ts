@@ -33,3 +33,5 @@ export const getMagicCmd = async (): Promise<Command> => loadCommand("magic");
 export const getSplitCmd = async (): Promise<Command> => loadCommand("split");
 
 export const getRmCmd = async (): Promise<Command> => loadCommand("rm");
+
+export const getUpdateCmd = async (): Promise<Command> => loadCommand("update");
