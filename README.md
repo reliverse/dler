@@ -1,48 +1,126 @@
-# 🧬 dler (prev. relidler) • build/publish/improve ts/js libs/cli/apps
+# 🧬 dler • extend your bun/pnpm/yarn/npm usage
 
 [sponsor](https://github.com/sponsors/blefnk) — [discord](https://discord.gg/pb8ukbwpsj) — [github](https://github.com/reliverse/dler) — [npm](https://npmjs.com/@reliverse/dler)
 
-> @reliverse/dler (`/ˈdiː.lər/`, dealer) is your package manager's best friend. dler extends bun, pnpm, yarn, and npm core functionality and goes far beyond.
+> @reliverse/dler (formerly relidler; `/ˈdiː.lər/`, dealer) is a unified package manager for typescript/javascript projects.
 >
-> at its core, dler is a flexible, unified, and fully automated bundler for typescript/javascript projects that doubles as an npm/jsr publishing tool. beyond bundling, dler serves as a comprehensive codemod toolkit for modern typescript/javascript development.
+> dler is your package manager’s best friend — it extends bun, deno (🔜), pnpm, yarn, and npm with powerful and modern features.
+>
+> at its core, dler is a flexible and fully automated bundler that also doubles as an npm/jsr publishing tool. beyond bundling, dler provides a rich codemod toolkit designed for modern typescript/javascript development.
 
 ## features
 
-### 🚀 core power
+- **drop-in `unjs/unbuild` support** with extended capabilities like publishing
+- **automated publishing** to npm and jsr with smart workflow orchestration
+- **reliable builds** with robust typescript/javascript support and error handling
+- **smart versioning** with semantic release and automatic version bumping
+- **zero-config setup** — forget about `package.json` maintenance
+- **built-in bun environment** when used as a standalone cli app
+- **performance-optimized** using fast build pipelines and aggressive caching
+- **17 built-in commands** — see [dler commands](#dler-commands) for everything it can do
+- **path alias resolution** — automatically rewrites tsconfig aliases to relative imports
+- **configurable by design** — dedicated config files with sane defaults
+- **dual interface** — use via cli or import as sdk for programmatic use
+- **clean dist output** — strips internal logs and debug code automatically
+- **monorepo support** with experimental `libs` mode for multi-library setups
+- **magic spells** — plugin system for custom build logic and extensions
+- **codemod toolkit** — powerful code transformation utilities out of the box
+- **full monorepo system** with optimized cross-package dependency handling
+- **esp. designed for** cli tool creators, project bootstrappers (like [rse](https://github.com/reliverse/rse))
+- **perfect for** anyone who wants their package manager to have *sweet powers*
 
-- **`unjs/unbuild` drop-in** with different powerful capabilities like publishing
-- **automated publishing** to npm/jsr registries with intelligent workflow management
-- **reliable builds** with comprehensive typescript/javascript support and error handling
-- **smart versioning** with automatic version bumps and semantic release integration
-- **zero configuration** eliminates `package.json` maintenance headaches forever
+## getting started
 
-### ⚡ developer experience
+before using dler, make sure you have [git](https://git-scm.com/downloads), [node.js](https://nodejs.org/en/download), and a supported package manager installed — **[bun](https://bun.sh/get) is highly recommended** for the best experience.
 
-- **performance optimized** for speed with modern build pipelines and caching
-- **16 built-in commands** — comprehensive [dler commands](#dler-commands) for every workflow
-- **path resolution magic** converts typescript aliases to relative imports automatically
-- **highly configurable** via dedicated configuration files with sensible defaults
-- **dual interface** — cli for everyday use, sdk for advanced programmatic control
+### 0. try the playground
 
-### 🔧 advanced capabilities
+> 💡 **tip**
+> curious to see dler in action before integrating it into your project?
+> clone the repo and try e.g. `bun dler build` to build dler using... dler itself!
 
-- **clean distribution builds** automatically removes internal logs and debug code
-- **monorepo ready** with experimental `libs` feature for multi-library projects
-- **magic spells** — extensible plugin system for custom build transformations
-- **codemod toolkit** — powerful code transformation utilities built-in
+```sh
+git clone https://github.com/reliverse/dler.git
+cd dler
+bun i
+bun dler build # runs dler from source (cli entry: src/cli.ts)
+```
 
-### 🎯 perfect for
+### 1. install dler
 
-dler excels at managing both build and publish workflows, making it ideal for:
+it is recommended to install dler both globally and as a dev dependency:
 
-- cli tool creators and maintainers
-- project bootstrappers (like [rse](https://github.com/reliverse/rse))
-- library authors seeking streamlined workflows
-- teams wanting consistent build processes
+- **global install** — `bun add -g @reliverse/dler` — lets you use dler anywhere, like a system-level cli.
+- **dev dependency** — `bun add -D @reliverse/dler` — pins the version per project, so all contributors use the same version.
 
-### 🔜 coming soon
+instead of global install, you can alternatively install dler as a standalone binary: `bunx @reliverse/dler`
 
-**full monorepo system** with advanced dependency management and cross-package optimization.
+> usage depends on how dler is installed:
+>
+> - `dler` → if installed globally (or as standalone binary)
+> - `bun dler` → if installed as a dev dependency
+
+### 2. initialize dler config
+
+first-time dler run initializes config, repeatable runs launches dler interactive menu.
+
+```sh
+bun dler # if installed locally
+dler     # if installed globally
+```
+
+this creates a starter config file: `.config/dler.ts`
+
+- it is recommended to tweak the config to match your project structure
+- example config: [.config/dler.ts →](https://github.com/reliverse/dler/blob/main/.config/dler.ts)
+- useful options:
+
+  - `buildPreExtensions`: support additional file types like `["ts", "js", "vue", "tsx", "jsx"]`
+  - `buildTemplatesDir`: exclude a directory from being built; it will be copied as-is (e.g. `src/foo/templates → dist-*/bin/foo/templates`)
+
+### 3. run and enjoy
+
+```sh
+bun dler [build|pub|--help] # if local
+dler [build|pub|--help]     # if global
+```
+
+> 💡 run `dler` for an interactive menu, or `dler --help` for full command list.
+
+### 4. upgrade your dev tools
+
+keeping your tools fresh is always a good practice.
+
+the command below **upgrades not just dler**, but also your local setup — including `git`, `node.js`, `bun`, `npm`, `yarn`, `pnpm`, and more.
+
+just run:
+
+```sh
+bun dler upgrade
+```
+
+> ⚠️ don’t confuse this with `dler update`, which upgrades your **project dependencies** and **global packages**, not your system tools.
+> 👉 *note:* both `upgrade` and `update` will update **dler** itself — globally and in your `dependencies` or `devDependencies` if run inside a project with a `package.json` — depends on how dler is installed.
+
+## dler commands
+
+dler ships with a flexible command system (prev. plugins) and **17 built-in commands** (from [reliverse addons](https://reliverse.org/addons) collection).
+
+feel free to create your own commands. commands can be implemented as built-in directly in `src/app/<command>/impl/*` and then imported from `src/app/<command>/cmd.ts`; or implemented in your own library and then imported from `src/app/<command>/cmd.ts`.
+
+if you run just `dler` — it will display a list of commands which you can launch interactively.
+
+## **available commands**
+
+[build](#1-build) — [pub](#2-pub) — [agg](#3-agg) — [check](#4-check) — [conv](#5-conv) — [fs](#6-fs) — [init](#7-init) — [inject](#8-inject) — [libs](#9-libs) — [merge](#10-merge) — [migrate](#11-migrate) — [rempts](#12-rempts) — [x](#13-x) — [spell](#14-magic) — [split](#15-split) — [pack](#16-pack)
+
+### 1. `build`
+
+since dler is fully modular, build command is separated for its own build-in plugin as well.
+
+```bash
+bun dler build ...
+```
 
 ### supported bundlers
 
@@ -60,113 +138,6 @@ dler excels at managing both build and publish workflows, making it ideal for:
 - ✅ well tested with big projects
 - 🏗️ not well tested yet
 - 🔜 coming soon
-
-## getting started
-
-make sure you have git, node.js, and bun/pnpm/yarn/npm (**[bun](https://bun.sh/get) is highly recommended**) are installed. then:
-
-### 0. try the playground
-
-> **💡 tip**:
-> want to test dler before integrating it into your project?
-> clone the dler repo and build it using dler itself!
-
-```sh
-git clone https://github.com/reliverse/dler.git
-cd dler
-bun i
-bun dev # bun src/cli.ts --dev
-```
-
-### 1. install dler
-
-**install as dev dep (recommended)**:
-
-```sh
-bun add -D @reliverse/dler
-# or update as needed:
-bun update --latest
-```
-
-**and/or install globally**:
-
-```sh
-bun add -g @reliverse/dler
-# or update as needed:
-bun i -g update --latest
-```
-
-- **when installed globally**: use `dler` anywhere.
-- **when installed as dev dep**: use with package manager name prefix, e.g. `bun dler`, inside your project directory.
-
-### 2. prepare your project
-
-a. **configure `.gitignore`**:
-
-```sh
-echo "dist*" >> .gitignore
-echo "logs" >> .gitignore
-```
-
-b. **add `".config/**/*.ts"` to `include` in `tsconfig.json`**:
-
-```json
-"include": [".config/**/*.ts", ...]
-```
-
-c. **package.json**:
-
-```json
-"scripts": {
-  "build": "dler build", // this is optional
-  "pub": "dler pub" // this does build+publish
-}
-```
-
-d. **initialize config**:
-
-```sh
-bun dler # if installed as dev dep
-dler # if installed globally
-```
-
-- the `.config/dler.ts` file is automatically created on first run.
-
-e. **optionally, customize `.config/dler.ts`**:
-
-- it's recommended to customize this file according to your needs.
-- you can check an example config here: [.config/dler.ts](https://github.com/reliverse/dler/blob/main/.config/dler.ts)
-- if you want to build files which have extensions other than `.ts` and `.js`, you can customize `buildPreExtensions` array (example: `["ts", "js", "vue", "tsx", "jsx"]`).
-- if you want to exclude some files from being built, you can customize `buildTemplatesDir` string (example: `"templates"`). by placing them in this directory, they will not be built, whole directory will be copied from e.g. `src/foo/templates` to `dist-*/bin/foo/templates` as-is.
-
-### 3. run and enjoy
-
-```sh
-bun dler [build|pub|--help] # if installed as dev dep
-dler [build|pub|--help] # if installed globally
-```
-
-(_run just `dler` to see an interactive list of commands_)
-
-## dler commands
-
-dler ships with a flexible command system (prev. plugins) and **16 built-in commands** (from [reliverse addons](https://reliverse.org/addons) collection).
-
-feel free to create your own commands. commands can be implemented as built-in directly in `src/app/<command>/impl/*` and then imported from `src/app/<command>/cmd.ts`; or implemented in your own library and then imported from `src/app/<command>/cmd.ts`.
-
-if you run just `dler` — it will display a list of commands which you can launch interactively.
-
-## **available commands**
-
-[build](#1-build) — [pub](#2-pub) — [agg](#3-agg) — [check](#4-check) — [conv](#5-conv) — [fs](#6-fs) — [init](#7-init) — [inject](#8-inject) — [libs](#9-libs) — [merge](#10-merge) — [migrate](#11-migrate) — [rempts](#12-rempts) — [x](#13-x) — [spell](#14-magic) — [split](#15-split) — [pack](#16-pack)
-
-### 1. `build`
-
-since dler is fully modular, build command is separated for its own build-in plugin as well.
-
-```bash
-bun dler build ...
-```
 
 #### 1.1. `build binary` - Standalone Executable Builder
 
@@ -964,6 +935,81 @@ special thanks to the project that inspired `@reliverse/dler`:
 - [x] allow plugins to extend dler's `defineconfig` (`hooksBeforeBuild` and `hooksAfterBuild` are now available, plugin's options can be passed directly to plugin's params, e.g. `hooksBeforeBuild: [ async () => { await myCoolPlugin({ /* plugin's options */ }); } ],`)
 - [ ] at the moment any bundler like `mkdist` can be called using `bun`, but bun's own bundler is not yet fully supported
 - [ ] support all well-known package managers (currently only bun is fully supported)
+- [ ] `dler <command> [...flags] [...args]` usage should support both `bun` and `dler` own commands and flags
+- [ ] fully support deno and jsr
+
+### todo: commands
+
+- [ ]  run       ./my-script.ts       Execute a file with Bun
+- [ ]            lint                 Run a package.json script
+- [ ]  test                           Run unit tests with Bun
+- [ ]  x         nuxi                 Execute a package binary (CLI), installing if needed (dler x)
+- [ ]  repl                           Start a REPL session with Bun
+- [ ]  exec                           Run a shell script directly with Bun
+- [ ]  install                        Install dependencies for a package.json (dler i)
+- [ ]  add       elysia               Add a dependency to package.json (dler a)
+- [ ]  remove    backbone             Remove a dependency from package.json (dler rm)
+- [ ]  update    @shumai/shumai       Update outdated dependencies
+- [ ]  audit                          Check installed packages for vulnerabilities
+- [ ]  outdated                       Display latest versions of outdated dependencies
+- [ ]  link      [<package>]          Register or link a local npm package
+- [ ]  unlink                         Unregister a local npm package
+- [ ]  publish                        Publish a package(s) to the npm/jsr registry
+- [ ]  patch <pkg>                    Prepare a package for patching
+- [ ]  pm <subcommand>                Additional package management utilities
+- [ ]  info      hono                 Display package metadata from the registry
+- [ ]  build     ./a.ts ./b.jsx       Bundle TypeScript & JavaScript into a single file
+- [ ]  init                           Start an empty project from a built-in template
+- [ ]  create    next-app             Create a new project from a template (bun c)
+- [ ]  upgrade                        Upgrade to latest version both of dler and your package manager.
+- [x]  <command> --help               Print help text for command.
+
+### todo: flag
+
+- [ ]      --watch                         Automatically restart the process on file change
+- [ ]      --hot                           Enable auto reload in the Bun runtime, test runner, or bundler
+- [ ]      --no-clear-screen               Disable clearing the terminal screen on reload when --hot or --watch is enabled
+- [ ]      --smol                          Use less memory, but run garbage collection more often
+- [ ]  -r, --preload=<val>                 Import a module before other modules are loaded
+- [ ]      --require=<val>                 Alias of --preload, for Node.js compatibility
+- [ ]      --import=<val>                  Alias of --preload, for Node.js compatibility
+- [ ]      --inspect=<val>                 Activate Bun's debugger
+- [ ]      --inspect-wait=<val>            Activate Bun's debugger, wait for a connection before executing
+- [ ]      --inspect-brk=<val>             Activate Bun's debugger, set breakpoint on first line of code and wait
+- [ ]      --if-present                    Exit without an error if the entrypoint does not exist
+- [ ]      --no-install                    Disable auto install in the Bun runtime
+- [ ]      --install=<val>                 Configure auto-install behavior. One of "auto" (default, auto-installs when no node_modules), "fallback" (missing packages only), "force" (always).
+- [ ]  -i                                  Auto-install dependencies during execution. Equivalent to --install=fallback.
+- [ ]  -e, --eval=<val>                    Evaluate argument as a script
+- [ ]  -p, --print=<val>                   Evaluate argument as a script and print the result
+- [ ]      --prefer-offline                Skip staleness checks for packages in the Bun runtime and resolve from disk
+- [ ]      --prefer-latest                 Use the latest matching versions of packages in the Bun runtime, always checking npm
+- [ ]      --port=<val>                    Set the default port for Bun.serve
+- [ ]      --conditions=<val>              Pass custom conditions to resolve
+- [ ]      --fetch-preconnect=<val>        Preconnect to a URL while code is loading
+- [ ]      --max-http-header-size=<val>    Set the maximum size of HTTP headers in bytes. Default is 16KiB
+- [ ]      --dns-result-order=<val>        Set the default order of DNS lookup results. Valid orders: verbatim (default), ipv4first, ipv6first
+- [ ]      --expose-gc                     Expose gc() on the global object. Has no effect on Bun.gc().
+- [ ]      --no-deprecation                Suppress all reporting of the custom deprecation.
+- [ ]      --throw-deprecation             Determine whether or not deprecation warnings result in errors.
+- [ ]      --title=<val>                   Set the process title
+- [ ]      --zero-fill-buffers             Boolean to force Buffer.allocUnsafe(size) to be zero-filled.
+- [ ]      --redis-preconnect              Preconnect to $REDIS_URL at startup
+- [ ]      --sql-preconnect                Preconnect to PostgreSQL at startup
+- [ ]      --no-addons                     Throw an error if process.dlopen is called, and disable export condition "node-addons"
+- [ ]      --unhandled-rejections=<val>    One of "strict", "throw", "warn", "none", or "warn-with-error-code"
+- [ ]      --console-depth=<val>           Set the default depth for console.log object inspection (default: 2)
+- [ ]      --silent                        Don't print the script command
+- [ ]      --elide-lines=<val>             Number of lines of script output shown when using --filter (default: 10). Set to 0 to show all lines.
+- [ ]  -v, --version                       Print version and exit
+- [ ]      --revision                      Print version with revision and exit
+- [ ]  -F, --filter=<val>                  Run a script in all workspace packages matching the pattern
+- [ ]  -b, --bun                           Force a script or package to use Bun's runtime instead of Node.js (via symlinking node)
+- [ ]      --shell=<val>                   Control the shell used for package.json scripts. Supports either 'bun' or 'system'
+- [ ]      --env-file=<val>                Load environment variables from the specified file(s)
+- [ ]      --cwd=<val>                     Absolute path to resolve files & entry points from. This just changes the process' cwd.
+- [ ]  -c, --config=<val>                  Specify path to Bun config file. Default $cwd/bunfig.toml
+- [ ]  -h, --help                          Display this menu and exit
 
 ## support
 

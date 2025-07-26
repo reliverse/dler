@@ -74,7 +74,11 @@ export async function dlerPostBuild(
   const distJsrPath = path.join(PROJECT_ROOT, config.distJsrDirName);
   const distJsrBinPath = path.join(distJsrPath, "bin");
   if ((await directoryExists(distJsrPath)) && (await directoryExists(distJsrBinPath))) {
-    await compareFileStructures(path.join(PROJECT_ROOT, config.coreEntrySrcDir), distJsrPath);
+    await compareFileStructures(
+      path.join(PROJECT_ROOT, config.coreEntrySrcDir),
+      distJsrPath,
+      isDev,
+    );
   }
 }
 
@@ -173,7 +177,11 @@ async function copyNonBuildFiles(
   }
 }
 
-async function compareFileStructures(srcDir: string, distDir: string): Promise<void> {
+async function compareFileStructures(
+  srcDir: string,
+  distDir: string,
+  isDev: boolean,
+): Promise<void> {
   try {
     const srcFiles = await glob("**/*", {
       cwd: srcDir,
@@ -202,7 +210,7 @@ async function compareFileStructures(srcDir: string, distDir: string): Promise<v
     const onlyInSrc = [...srcSet].filter((x) => !distSet.has(x));
     const onlyInDist = [...distSet].filter((x) => !srcSet.has(x));
 
-    if (onlyInSrc.length > 0 || onlyInDist.length > 0) {
+    if ((onlyInSrc.length > 0 || onlyInDist.length > 0) && isDev) {
       relinka("warn", "File structure differences detected between src and dist-jsr/bin:");
 
       if (onlyInSrc.length > 0) {

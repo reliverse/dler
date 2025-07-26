@@ -100,7 +100,7 @@ Each file type has smart defaults and helpful variations. Choose one, or let the
 ## ✅ TODO
 
 - [x] Implement basic logic
-- [ ] Parse templates for `gitignore` ([link](https://github.com/github/gitignore#readme)), `gitattributes` ([link](https://github.com/gitattributes/gitattributes#readme)), etc
+- [ ] Parse templates for [gitignore](https://github.com/github/gitignore#readme), [gitattributes](https://github.com/gitattributes/gitattributes#readme), etc
 
 ## 🔋 Powered by
 

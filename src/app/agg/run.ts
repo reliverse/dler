@@ -1,5 +1,6 @@
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
+import { relinka } from "@reliverse/relinka";
 import { selectPrompt, runCmd, confirmPrompt, inputPrompt } from "@reliverse/rempts";
 
 import { getAggCmd } from "~/app/cmds";
@@ -10,6 +11,19 @@ import { getConfigDler } from "~/libs/sdk/sdk-impl/config/load";
  */
 async function fileExists(filePath: string): Promise<boolean> {
   return await fs.pathExists(filePath);
+}
+
+/**
+ * Checks if the first line of a file contains the disable aggregation comment
+ */
+async function isAggregationDisabled(filePath: string): Promise<boolean> {
+  try {
+    const content = await fs.readFile(filePath, "utf-8");
+    const firstLine = content.split("\n")[0]?.trim();
+    return firstLine === "// <dler-disable-agg>";
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -50,16 +64,32 @@ export async function promptAggCommand() {
 
   // Check for main package
   const mainEntryFile = await findMainEntryFile(config);
+  const isMainDisabled = mainEntryFile ? await isAggregationDisabled(mainEntryFile) : false;
 
   if (config?.libsList && Object.keys(config.libsList).length > 0) {
-    const libs = Object.entries(config.libsList).map(([name, lib]) => ({
-      value: name,
-      label: name,
-      hint: `${config.libsDirSrc}/${lib.libDirName}/${lib.libDirName}-impl`,
-    }));
+    const libEntries = await Promise.all(
+      Object.entries(config.libsList).map(async ([name, lib]) => {
+        const libMainFile = `${config.libsDirSrc}/${lib.libMainFile}`;
+        const isLibDisabled = await isAggregationDisabled(libMainFile);
 
-    // Add main package option if found
-    if (mainEntryFile) {
+        return {
+          name,
+          lib,
+          isDisabled: isLibDisabled,
+        };
+      }),
+    );
+
+    const libs = libEntries
+      .filter(({ isDisabled }) => !isDisabled)
+      .map(({ name, lib }) => ({
+        value: name,
+        label: name,
+        hint: `${config.libsDirSrc}/${lib.libDirName}/${lib.libDirName}-impl`,
+      }));
+
+    // Add main package option if found and not disabled
+    if (mainEntryFile && !isMainDisabled) {
       libs.unshift({
         value: "main",
         label: "Main package",
@@ -74,11 +104,10 @@ export async function promptAggCommand() {
       title: "Select a package to aggregate or skip",
       options: libs,
     });
-  } else if (mainEntryFile) {
-    // If no libs but main package exists, offer it as the only option
+  } else if (mainEntryFile && !isMainDisabled) {
+    // If no libs but main package exists and is not disabled, offer it as the only option
     const shouldUseMain = await confirmPrompt({
-      title: "Use main package for aggregation?",
-      content: `Found: ${mainEntryFile}`,
+      title: `Use main package for aggregation? (Found: ${mainEntryFile})`,
       defaultValue: true,
     });
 
@@ -98,13 +127,17 @@ export async function promptAggCommand() {
   let typesOut = "";
 
   if (selectedLibName && selectedLibName !== "") {
-    if (selectedLibName === "main" && mainEntryFile) {
+    if (selectedLibName === "main" && mainEntryFile && !isMainDisabled) {
       // Use main package configuration
       const entryDir = path.dirname(mainEntryFile);
 
       input = entryDir;
       out = mainEntryFile;
       strip = entryDir;
+    } else if (selectedLibName === "main" && isMainDisabled) {
+      // Main package is disabled, exit early
+      relinka.log("Main package aggregation is disabled due to <dler-disable-agg> comment.");
+      return;
     } else {
       // Use library configuration
       const libConfig = config?.libsList?.[selectedLibName];
@@ -122,11 +155,46 @@ export async function promptAggCommand() {
       title: "Enter the input directory",
       defaultValue: input,
     });
+
+    // Check if manually entered input corresponds to a disabled file
+    if (input) {
+      // Check if the input is pointing to a disabled main file (directory or file)
+      if (mainEntryFile && isMainDisabled) {
+        const mainEntryDir = path.dirname(mainEntryFile);
+        if (
+          path.resolve(input) === path.resolve(mainEntryDir) ||
+          path.resolve(input) === path.resolve(mainEntryFile)
+        ) {
+          relinka.log("Main package aggregation is disabled due to <dler-disable-agg> comment.");
+          return;
+        }
+      }
+
+      // Check if the input is pointing to a disabled library
+      if (config?.libsList) {
+        for (const [libName, libConfig] of Object.entries(config.libsList)) {
+          const libImplPath = `${config.libsDirSrc}/${libConfig.libDirName}/${libConfig.libDirName}-impl`;
+          const libMainFile = `${config.libsDirSrc}/${libConfig.libMainFile}`;
+
+          if (
+            path.resolve(input) === path.resolve(libImplPath) ||
+            path.resolve(input) === path.resolve(libMainFile)
+          ) {
+            const isLibDisabled = await isAggregationDisabled(libMainFile);
+            if (isLibDisabled) {
+              relinka.log(
+                `Library "${libName}" aggregation is disabled due to <dler-disable-agg> comment.`,
+              );
+              return;
+            }
+          }
+        }
+      }
+    }
   }
 
   imports = await confirmPrompt({
-    title: "Do you want to generate imports instead of exports?",
-    content: "(N generates exports)",
+    title: "Do you want to generate imports instead of exports? (N generates exports)",
     defaultValue: imports,
   });
 

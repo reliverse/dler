@@ -1,33 +1,29 @@
 import { relinka } from "@reliverse/relinka";
-import {
-  runMain,
-  defineCommand,
-  defineArgs,
-  selectPrompt,
-  showUsage,
-  runCmd,
-} from "@reliverse/rempts";
+import { runMain, defineCommand, defineArgs, selectPrompt, showUsage } from "@reliverse/rempts";
 
 import { promptAggCommand } from "./app/agg/run";
-import { getBuildCmd, getPubCmd, getUpdateCmd } from "./app/cmds";
+import { callCmd } from "./app/cmds";
 import { showEndPrompt, showStartPrompt } from "./libs/sdk/sdk-impl/config/info";
-import { ensureDlerConfig } from "./libs/sdk/sdk-impl/config/init";
+import { prepareDlerEnvironment } from "./libs/sdk/sdk-impl/config/prepare";
 
 const MENU_CMDS = ["agg", "build", "pub", "update"];
+let isDev = process.env.DLER_DEV_MODE === "true";
 
 const main = defineCommand({
   meta: {
     name: "dler",
     description: `Displays dler's command menu.\nTo see ALL available commands and arguments, run: 'dler --help' (or 'dler <command> --help')\nAvailable menu commands: ${MENU_CMDS.join(", ")}`,
   },
-  onLauncherInit() {
+  async onLauncherInit() {
     const isBun = process.versions.bun;
     if (!isBun) {
       relinka(
         "warn",
-        "🔥 At the moment Dler is optimized only for Bun! We can't guarantee any success for other environments like Node.js, Deno, etc.",
+        "🔥 dler is currently bun-first. support for node.js, deno, and others is experimental until v2.0.",
       );
     }
+    await prepareDlerEnvironment(isDev);
+    relinka("verbose", `Running in ${isDev ? "dev" : "prod"} mode`);
   },
   args: defineArgs({
     dev: {
@@ -41,11 +37,7 @@ const main = defineCommand({
     },
   }),
   async run({ args }) {
-    const isDev = args.dev || process.env.DLER_DEV_MODE === "true";
-    relinka("verbose", `Running in ${isDev ? "dev" : "prod"} mode`);
-
-    await ensureDlerConfig(isDev);
-
+    isDev = args.dev;
     const isCI = process.env.CI === "true";
     const isNonInteractive = !process.stdout.isTTY;
     if (isCI || isNonInteractive) {
@@ -59,11 +51,13 @@ const main = defineCommand({
     await showStartPrompt(isDev);
 
     const cmdToRun = await selectPrompt({
-      title: "Select a command to run (run 'dler --help' to see all available commands)",
+      title: "Select a command to run",
+      content: "Run 'dler --help' to see all available commands",
       options: [
-        { value: "build", label: "build project" },
-        { value: "pub", label: "publish project" },
-        { value: "update", label: "update deps" },
+        { value: "build", label: "build only project" },
+        { value: "pub", label: "build+pub project" },
+        { value: "upgrade", label: "upgrade dev tools" },
+        { value: "update", label: "update all deps" },
         { value: "agg", label: "aggregate" },
         { value: "exit", label: "exit" },
       ],
@@ -71,19 +65,23 @@ const main = defineCommand({
 
     switch (cmdToRun) {
       case "build": {
-        await runCmd(await getBuildCmd(), [`--dev=${isDev} --no-pub`]);
+        await callCmd("build", { dev: isDev });
         break;
       }
       case "pub": {
-        await runCmd(await getPubCmd(), [`--dev=${isDev}`]);
+        await callCmd("pub", { dev: isDev });
+        break;
+      }
+      case "update": {
+        await callCmd("update");
+        break;
+      }
+      case "upgrade": {
+        await callCmd("upgrade");
         break;
       }
       case "agg": {
         await promptAggCommand();
-        break;
-      }
-      case "update": {
-        await runCmd(await getUpdateCmd(), []);
         break;
       }
     }

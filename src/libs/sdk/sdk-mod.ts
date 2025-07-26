@@ -126,9 +126,9 @@ export {
   createBundle,
   compose,
 } from "./sdk-impl/cmds/transform/transform-impl-mod.js";
-export { DEFAULT_CONFIG_DLER, defineConfigDler } from "./sdk-impl/config/default.js";
+export { DEFAULT_CONFIG_DLER, defineConfig } from "./sdk-impl/config/default.js";
 export { showStartPrompt, showEndPrompt } from "./sdk-impl/config/info.js";
-export { ensureDlerConfig } from "./sdk-impl/config/init.js";
+export { ensureDlerConfig } from "./sdk-impl/config/prepare.js";
 export { getConfigDler } from "./sdk-impl/config/load.js";
 export type {
   DlerConfig,

@@ -21,7 +21,7 @@ Default to using Bun instead of Node.js.
 - `Bun.sql` for Postgres. Don't use `pg` or `postgres.js`.
 - `WebSocket` is built-in. Don't use `ws`.
 - Bun.$`ls` instead of execa.
- 
+
 When needed, ensure compatibility with Node.js by detecting environment. If detected !isBun, then use available alternatives (e.g. execa instead of Bun.$`ls`).
 
 ### Detect when code is executed with Bun
@@ -30,7 +30,7 @@ The recommended way to conditionally detect when code is being executed with bun
 
 This is similar to how you'd check for the existence of the window variable to detect when code is being executed in a browser.
 
-```
+```ts
 if (typeof Bun !== "undefined") {
   // this code will only run when the file is run with Bun
 }
@@ -38,7 +38,7 @@ if (typeof Bun !== "undefined") {
 
 In TypeScript environments, the previous approach will result in a type error unless bun-types is globally installed. To avoid this, you can check process.versions instead.
 
-```
+```ts
 if (process.versions.bun) {
   // this code will only run when the file is run with Bun
 }

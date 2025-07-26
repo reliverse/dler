@@ -1,6 +1,8 @@
-import { defineConfigDler } from "~/libs/cfg/cfg-impl/cfg-consts";
+// import { defineConfig } from "https://raw.githubusercontent.com/reliverse/dler/refs/heads/main/src/libs/cfg/cfg-impl/cfg-consts.ts";
 
-// TODO: cache src's files in `.reliverse/dler/<project-name>/<src-file-path>` dir (this will allow to implement new option e.g. buildPubOnlyAtLeastOneFileChanged, esp. useful for cases like `@reliverse/cfg` library) (we can use hash of the file name and/or date of the last file modification)
+import { defineConfig } from "~/libs/cfg/cfg-impl/cfg-consts";
+
+// TODO: cache src's files in `.reliverse/dler/<project-name>/<src-file-path>` dir (this will allow to implement new option e.g. buildPubOnlyAtLeastOneFileChanged, esp. useful for cases like `@reliverse/dler-cfg` library) (we can use hash of the file name and/or date of the last file modification)
 // TODO: introduce new option which allows to enable/disable transpiling other extensions that .ts and .js (disabling from build process of e.g. .tsx extension is especially useful for bootstrapping clis tools like @reliverse/rse, where cli's developers usually expect to have their original .tsx files in the dist)
 
 /**
@@ -8,7 +10,7 @@ import { defineConfigDler } from "~/libs/cfg/cfg-impl/cfg-consts";
  * Hover over a field to see more details
  * @see https://github.com/reliverse/dler
  */
-export default defineConfigDler({
+export default defineConfig({
   // Bump configuration
   bumpDisable: false,
   bumpFilter: ["package.json", ".config/rse.ts", "src/libs/sdk/sdk-impl/config/info.ts"],
@@ -53,7 +55,8 @@ export default defineConfigDler({
   libsList: {
     "@reliverse/dler-sdk": {
       libDeclarations: true,
-      libDescription: "@reliverse/dler without cli",
+      libDescription:
+        "@reliverse/dler-sdk without cli. @reliverse/dler-sdk allows you to create new plugins for @reliverse/dler CLI, and even extend your own CLI functionality (you may also try @reliverse/rse-sdk for this case).",
       libDirName: "sdk",
       libMainFile: "sdk/sdk-mod.ts",
       // TODO: [dler] eliminate libPkgKeepDeps
@@ -63,30 +66,29 @@ export default defineConfigDler({
       libPubPause: false,
       libPubRegistry: "npm-jsr",
     },
-    "@reliverse/cfg": {
+    "@reliverse/dler-cfg": {
       libDeclarations: true,
-      libDescription: "shared config package for @reliverse/dler and @reliverse/rse",
+      libDescription: "config typescript definitions for @reliverse/dler",
       libDirName: "cfg",
       libMainFile: "cfg/cfg-mod.ts",
-      libPkgKeepDeps: true, // TODO: temp
-      /* libPkgKeepDeps: [
-        // most of the deps here are temporary at the moment
-        // TODO: move prompts and logs to dler's or rse's impl to reduce deps number
-        "@reliverse/relinka",
-        "@reliverse/runtime",
-        "@reliverse/relifso",
+      libPkgKeepDeps: false,
+      libTranspileMinify: true,
+      libPubPause: false,
+      libPubRegistry: "npm-jsr",
+    },
+    "@reliverse/get": {
+      libDeclarations: true,
+      libDescription: "get binaries for @reliverse/dler and other dev tools",
+      libDirName: "get",
+      libMainFile: "get/get-mod.ts",
+      libPkgKeepDeps: [
         "@reliverse/pathkit",
-        "@sinclair/typebox",
-        "c12", // TODO: replace with @reliverse/reconf
-        "confbox",
+        "@reliverse/relifso",
+        "@reliverse/relinka",
         "@reliverse/rempts",
+        "lookpath",
         "execa",
-        "destr",
-        "magic-string",
-        "jiti",
-        "jsonrepair", // TODO: migrate to @reliverse/relifso (jsonrepair is already built-in there)
-        "pkg-types",
-      ], */
+      ],
       libTranspileMinify: true,
       libPubPause: false,
       libPubRegistry: "npm-jsr",
@@ -111,7 +113,11 @@ export default defineConfigDler({
         jsr: [],
         npm: [],
       },
-      "@reliverse/cfg": {
+      "@reliverse/dler-cfg": {
+        jsr: [],
+        npm: [],
+      },
+      "@reliverse/get": {
         jsr: [],
         npm: [],
       },
@@ -147,7 +153,11 @@ export default defineConfigDler({
         jsr: ["+bun"],
         npm: [],
       },
-      "@reliverse/cfg": {
+      "@reliverse/dler-cfg": {
+        jsr: [],
+        npm: [],
+      },
+      "@reliverse/get": {
         jsr: [],
         npm: [],
       },

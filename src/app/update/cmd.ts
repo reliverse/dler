@@ -1,14 +1,16 @@
-// usage example: bun src/cli.ts update --dry-run
+// usage example: bun src/cli.ts update --dry-run --no-install
 
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { defineArgs, defineCommand } from "@reliverse/rempts";
+import { defineArgs, defineCommand, multiselectPrompt } from "@reliverse/rempts";
 import { $ } from "bun";
+import { lookpath } from "lookpath";
 import pMap from "p-map";
 import { readPackageJSON } from "pkg-types";
 import semver from "semver";
 
+import { getConfigBunfig } from "~/libs/sdk/sdk-impl/config/load";
 import { latestVersion } from "~/libs/sdk/sdk-impl/utils/pm/pm-meta";
 
 interface UpdateResult {
@@ -95,6 +97,279 @@ async function getLatestVersion(packageName: string): Promise<string> {
   }
 }
 
+/**
+ * Get globally installed packages for different package managers
+ */
+async function getGlobalPackages(packageManager: string): Promise<Record<string, string>> {
+  try {
+    let result: any;
+
+    if (packageManager === "npm") {
+      result = await $`npm list -g --depth=0 --json`.json();
+    } else if (packageManager === "yarn") {
+      // Yarn Classic vs Berry have different commands
+      try {
+        result = await $`yarn global list --json`.json();
+      } catch {
+        // Try Yarn Berry command
+        result = await $`yarn global list`.text();
+        // Parse yarn berry output manually since it doesn't have --json
+        const packages: Record<string, string> = {};
+        const lines = result.split("\n");
+        for (const line of lines) {
+          const match = line.match(/^(.+)@([^@]+)$/);
+          if (match) {
+            packages[match[1]] = match[2];
+          }
+        }
+        return packages;
+      }
+    } else if (packageManager === "pnpm") {
+      result = await $`pnpm list -g --depth=0 --json`.json();
+    } else if (packageManager === "bun") {
+      result = await $`bun pm ls -g --json`.json();
+    } else {
+      throw new Error(`Unsupported package manager: ${packageManager}`);
+    }
+
+    const dependencies = result?.dependencies || {};
+    const packages: Record<string, string> = {};
+
+    for (const [name, info] of Object.entries(dependencies)) {
+      if (info && typeof info === "object" && "version" in info) {
+        packages[name] = (info as any).version;
+      }
+    }
+
+    return packages;
+  } catch (error) {
+    relinka("warn", `Failed to get global packages for ${packageManager}: ${error}`);
+    return {};
+  }
+}
+
+/**
+ * Update global packages for different package managers
+ */
+async function updateGlobalPackage(packageManager: string, packageName: string): Promise<boolean> {
+  try {
+    if (packageManager === "npm") {
+      await $`npm install -g ${packageName}@latest`;
+    } else if (packageManager === "yarn") {
+      await $`yarn global add ${packageName}@latest`;
+    } else if (packageManager === "pnpm") {
+      await $`pnpm add -g ${packageName}@latest`;
+    } else if (packageManager === "bun") {
+      await $`bun install -g ${packageName}@latest`;
+    } else {
+      throw new Error(`Unsupported package manager: ${packageManager}`);
+    }
+    return true;
+  } catch (error) {
+    relinka(
+      "warn",
+      `Failed to update global package ${packageName} with ${packageManager}: ${error}`,
+    );
+    return false;
+  }
+}
+
+/**
+ * Handle global package updates
+ */
+async function handleGlobalUpdates(args: any): Promise<void> {
+  const packageManagers = ["bun", "npm", "yarn", "pnpm"];
+  const availablePackageManagers: string[] = [];
+
+  // Check which package managers are available
+  for (const pm of packageManagers) {
+    if (await lookpath(pm)) {
+      availablePackageManagers.push(pm);
+    }
+  }
+
+  if (availablePackageManagers.length === 0) {
+    relinka("error", "No supported package managers found");
+    return process.exit(1);
+  }
+
+  relinka("info", `Found package managers: ${availablePackageManagers.join(", ")}`);
+
+  // Get global packages from all available package managers
+  const allGlobalPackages: Record<string, { version: string; packageManager: string }> = {};
+
+  for (const pm of availablePackageManagers) {
+    const packages = await getGlobalPackages(pm);
+    for (const [name, version] of Object.entries(packages)) {
+      if (!allGlobalPackages[name] || semver.gt(version, allGlobalPackages[name].version)) {
+        allGlobalPackages[name] = { version, packageManager: pm };
+      }
+    }
+  }
+
+  const globalPackageNames = Object.keys(allGlobalPackages);
+
+  if (globalPackageNames.length === 0) {
+    relinka("warn", "No global packages found");
+    return;
+  }
+
+  // Filter packages based on name and ignore parameters
+  let filteredPackages: string[] = [];
+
+  if (args.name && args.name.length > 0) {
+    filteredPackages = args.name.filter((pkg: string) => pkg in allGlobalPackages);
+    const notFound = args.name.filter((pkg: string) => !(pkg in allGlobalPackages));
+    if (notFound.length > 0) {
+      relinka("warn", `Global packages not found: ${notFound.join(", ")}`);
+    }
+  } else {
+    const ignoreList = args.ignore || [];
+    filteredPackages = globalPackageNames.filter((pkg) => !ignoreList.includes(pkg));
+  }
+
+  if (filteredPackages.length === 0) {
+    relinka("warn", "No global packages to update");
+    return;
+  }
+
+  relinka("info", `Checking ${filteredPackages.length} global packages for updates...`);
+
+  // Check versions concurrently
+  const results = await pMap(
+    filteredPackages,
+    async (packageName): Promise<UpdateResult> => {
+      const globalPackage = allGlobalPackages[packageName];
+      if (!globalPackage) {
+        return {
+          package: packageName,
+          currentVersion: "unknown",
+          latestVersion: "unknown",
+          updated: false,
+          error: "Package not found in global packages",
+          location: "global",
+        };
+      }
+
+      try {
+        const latest = await getLatestVersion(packageName);
+        const needsUpdate = semver.gt(latest, globalPackage.version);
+
+        return {
+          package: packageName,
+          currentVersion: globalPackage.version,
+          latestVersion: latest,
+          updated: needsUpdate,
+          location: `global (${globalPackage.packageManager})`,
+        };
+      } catch (error) {
+        return {
+          package: packageName,
+          currentVersion: globalPackage.version,
+          latestVersion: globalPackage.version,
+          updated: false,
+          error: error instanceof Error ? error.message : String(error),
+          location: `global (${globalPackage.packageManager})`,
+        };
+      }
+    },
+    { concurrency: args.concurrency },
+  );
+
+  // Show results
+  let toUpdate = results.filter((r) => r.updated && !r.error);
+  const errors = results.filter((r) => r.error);
+  const upToDate = results.filter((r) => !r.updated && !r.error);
+
+  if (errors.length > 0) {
+    relinka("warn", `Failed to check ${errors.length} global packages:`);
+    for (const error of errors) {
+      relinka("warn", `  ${error.package} (${error.location}): ${error.error}`);
+    }
+  }
+
+  if (upToDate.length > 0) {
+    relinka("success", `${upToDate.length} global packages are up to date`);
+  }
+
+  if (toUpdate.length === 0) {
+    relinka("success", "All global packages are up to date");
+    return;
+  }
+
+  relinka("info", `${toUpdate.length} global packages can be updated:`);
+  for (const update of toUpdate) {
+    relinka(
+      "log",
+      `  ${update.package} (${update.location}): ${update.currentVersion} → ${update.latestVersion}`,
+    );
+  }
+
+  // Interactive selection for global packages
+  if (args.interactive) {
+    // Combine all global packages for selection
+    const allGlobalPackages = [
+      ...toUpdate.map((pkg) => ({ ...pkg, canUpdate: true, isUpToDate: false, hasError: false })),
+      ...upToDate.map((pkg) => ({ ...pkg, canUpdate: false, isUpToDate: true, hasError: false })),
+      ...errors.map((pkg) => ({ ...pkg, canUpdate: false, isUpToDate: false, hasError: true })),
+    ];
+
+    const selectedPackages = await multiselectPrompt({
+      title: "Select global packages to update",
+      options: [
+        { label: "Exit", value: "exit" },
+        ...allGlobalPackages.map((pkg) => {
+          let label = `${pkg.package} (${pkg.location})`;
+
+          if (pkg.canUpdate) {
+            label += `: ${pkg.currentVersion} → ${pkg.latestVersion}`;
+          } else if (pkg.isUpToDate) {
+            label += `: ${pkg.currentVersion} (up-to-date)`;
+          } else if (pkg.hasError) {
+            label += `: ${pkg.currentVersion} (has errors)`;
+          }
+
+          return {
+            label,
+            value: pkg.package,
+            disabled: !pkg.canUpdate,
+            hint: pkg.hasError ? pkg.error : undefined,
+          };
+        }),
+      ],
+    });
+
+    if (selectedPackages.length === 0 || selectedPackages.includes("exit")) {
+      relinka("info", "Exiting global update process");
+      return;
+    }
+
+    // Filter out "exit" and update toUpdate to only include selected packages
+    const actualSelectedPackages = selectedPackages.filter((pkg) => pkg !== "exit");
+    toUpdate = toUpdate.filter((update) => actualSelectedPackages.includes(update.package));
+    relinka("info", `Updating ${actualSelectedPackages.length} selected global packages...`);
+  }
+
+  if (args["dry-run"]) {
+    relinka("info", "Dry run mode - no changes were made");
+    return;
+  }
+
+  // Update global packages
+  let successCount = 0;
+  for (const update of toUpdate) {
+    const globalPackage = allGlobalPackages[update.package];
+    if (
+      globalPackage &&
+      (await updateGlobalPackage(globalPackage.packageManager, update.package))
+    ) {
+      successCount++;
+    }
+  }
+
+  relinka("success", `Successfully updated ${successCount}/${toUpdate.length} global packages`);
+}
+
 export default defineCommand({
   meta: {
     name: "update",
@@ -149,9 +424,38 @@ export default defineCommand({
       description: "Run `bun check` after updating (exclusive for bun environment at the moment)",
       default: false,
     },
+    linker: {
+      type: "string",
+      description:
+        "Linker strategy (pro tip: use 'isolated' in a monorepo project, 'hoisted' (default) in a project where you have only one package.json). When this option is explicitly set, it takes precedence over bunfig.toml install.linker setting.",
+      allowed: ["isolated", "hoisted"],
+      default: "hoisted",
+    },
+    "no-install": {
+      type: "boolean",
+      description: "Skip the install step after updating dependencies",
+      default: false,
+      alias: "no-i",
+    },
+    global: {
+      type: "boolean",
+      description: "Update global packages instead of local dependencies",
+      default: false,
+      alias: "g",
+    },
+    interactive: {
+      type: "boolean",
+      description: "Interactively select which dependencies to update",
+      default: false,
+    },
   }),
   async run({ args }) {
     try {
+      // Handle global package updates
+      if (args.global) {
+        return await handleGlobalUpdates(args);
+      }
+
       const packageJsonPath = path.resolve(process.cwd(), "package.json");
 
       if (!(await fs.pathExists(packageJsonPath))) {
@@ -159,7 +463,38 @@ export default defineCommand({
         return process.exit(1);
       }
 
-      relinka("info", "Reading package.json...");
+      // Load bunfig configuration for linker strategy (only in Bun environment)
+      let effectiveLinker = args.linker; // CLI argument takes precedence
+      // let linkerSource = "CLI default";
+
+      if (typeof Bun !== "undefined") {
+        const bunfigConfig = await getConfigBunfig();
+
+        // Check if bunfig has a different linker setting
+        if (bunfigConfig?.install?.linker) {
+          const bunfigLinker = bunfigConfig.install.linker;
+          if (
+            (bunfigLinker === "isolated" || bunfigLinker === "hoisted") &&
+            args.linker === "hoisted"
+          ) {
+            // Use bunfig setting only if CLI is using the default "hoisted"
+            // This means bunfig takes precedence unless user explicitly overrides
+            effectiveLinker = bunfigLinker;
+            // linkerSource =
+            //   bunfigLinker === "hoisted" ? "bunfig.toml (same as default)" : "bunfig.toml";
+          }
+        }
+      }
+
+      // If user provided non-default CLI value, it always wins
+      if (args.linker !== "hoisted") {
+        effectiveLinker = args.linker;
+        // linkerSource = "CLI argument (explicit override)";
+      }
+
+      // relinka("verbose", `Using linker strategy: ${effectiveLinker} (from ${linkerSource})`);
+
+      // relinka("verbose", "Reading package.json...");
       const packageJson = await readPackageJSON();
 
       const dependencies = packageJson.dependencies || {};
@@ -293,7 +628,7 @@ export default defineCommand({
         return;
       }
 
-      relinka("info", `Checking ${semverDeps.length} dependencies for updates...`);
+      // relinka("verbose", `Checking ${semverDeps.length} dependencies for updates...`);
 
       // Check versions concurrently using p-map
       const results = await pMap(
@@ -342,7 +677,7 @@ export default defineCommand({
       );
 
       // Show results - only show compatible updates and errors
-      const toUpdate = results.filter((r) => r.updated && !r.error);
+      let toUpdate = results.filter((r) => r.updated && !r.error);
       const errors = results.filter((r) => r.error);
       const upToDate = results.filter((r) => !r.updated && !r.error && r.semverCompatible);
 
@@ -353,12 +688,17 @@ export default defineCommand({
         }
       }
 
+      if (toUpdate.length === 0) {
+        relinka("success", `All ${upToDate.length} deps are already up to date`);
+        return;
+      }
+
       if (upToDate.length > 0) {
         relinka("success", `${upToDate.length} dependencies are up to date`);
       }
 
       if (toUpdate.length === 0) {
-        relinka("info", "All dependencies are up to date");
+        relinka("success", `All ${upToDate.length} deps are already up to date`);
         return;
       }
 
@@ -370,13 +710,68 @@ export default defineCommand({
         );
       }
 
+      // Interactive selection
+      if (args.interactive) {
+        // Combine all packages for selection
+        const allPackages = [
+          ...toUpdate.map((pkg) => ({
+            ...pkg,
+            canUpdate: true,
+            isUpToDate: false,
+            hasError: false,
+          })),
+          ...upToDate.map((pkg) => ({
+            ...pkg,
+            canUpdate: false,
+            isUpToDate: true,
+            hasError: false,
+          })),
+          ...errors.map((pkg) => ({ ...pkg, canUpdate: false, isUpToDate: false, hasError: true })),
+        ];
+
+        const selectedPackages = await multiselectPrompt({
+          title: "Select dependencies to update",
+          options: [
+            { label: "Exit", value: "exit" },
+            ...allPackages.map((pkg) => {
+              let label = `${pkg.package} (${pkg.location})`;
+
+              if (pkg.canUpdate) {
+                label += `: ${pkg.currentVersion} → ${pkg.latestVersion}`;
+              } else if (pkg.isUpToDate) {
+                label += `: ${pkg.currentVersion} (up-to-date)`;
+              } else if (pkg.hasError) {
+                label += `: ${pkg.currentVersion} (has errors)`;
+              }
+
+              return {
+                label,
+                value: pkg.package,
+                disabled: !pkg.canUpdate,
+                hint: pkg.hasError ? pkg.error : undefined,
+              };
+            }),
+          ],
+        });
+
+        if (selectedPackages.length === 0 || selectedPackages.includes("exit")) {
+          relinka("info", "Exiting update process");
+          return;
+        }
+
+        // Filter out "exit" and update toUpdate to only include selected packages
+        const actualSelectedPackages = selectedPackages.filter((pkg) => pkg !== "exit");
+        toUpdate = toUpdate.filter((update) => actualSelectedPackages.includes(update.package));
+        relinka("info", `Updating ${actualSelectedPackages.length} selected dependencies...`);
+      }
+
       if (args["dry-run"]) {
         relinka("info", "Dry run mode - no changes were made");
         return;
       }
 
       // Update package.json
-      relinka("info", "Updating package.json...");
+      // relinka("verbose", "Updating package.json...");
 
       const updatedPackageJson = { ...packageJson };
 
@@ -442,8 +837,8 @@ export default defineCommand({
 
       relinka("success", `Updated ${toUpdate.length} dependencies in package.json`);
 
-      if (typeof Bun !== "undefined") {
-        await $`bun install`;
+      if (typeof Bun !== "undefined" && !args["no-install"]) {
+        await $`bun install --linker ${effectiveLinker}`;
         if (packageJson.scripts?.check && args["with-check-script"]) {
           await $`bun check`;
         }

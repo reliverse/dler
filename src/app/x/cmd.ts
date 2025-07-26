@@ -1,37 +1,20 @@
 /**
  * USAGE EXAMPLES:
- * - dler x install package-name - installs a package
- * - dler x remove package-name - removes a package
  * - dler x detect - detects the package manager
- * - dler x dedupe - deduplicates dependencies
  * - dler x run script-name - runs a script
  * - dler x exec --target 'bun run build' - executes a command
+ * - dler x package-name - runs a package directly (like bunx/npx)
+ * - dler x package-name --args arg1 arg2 - runs a package with arguments
+ * - dler x package-name --bun - force using bunx even if different PM detected
+ * - dler x prettier --npm --yes - force using npx with auto-confirm
  */
 
 import path from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
-import {
-  defineArgs,
-  defineCommand,
-  multiselectPrompt,
-  runCmd,
-  selectPrompt,
-} from "@reliverse/rempts";
+import { defineArgs, defineCommand } from "@reliverse/rempts";
 
-import type { FileType, InitFileRequest } from "~/libs/sdk/sdk-impl/utils/init/init-types";
-
-import { getCheckCmd } from "~/app/cmds";
 import { x } from "~/libs/sdk/sdk-impl/utils/exec/exec-mod";
-import { FILE_TYPES } from "~/libs/sdk/sdk-impl/utils/init/init-const";
-import { initFile, initFiles } from "~/libs/sdk/sdk-impl/utils/init/init-impl";
-import {
-  addDependency,
-  dedupeDependencies,
-  updateDependencies,
-  installDependencies,
-  removeDependency,
-  runScript,
-} from "~/libs/sdk/sdk-impl/utils/pm/pm-api";
+import { runScript } from "~/libs/sdk/sdk-impl/utils/pm/pm-api";
 import { detectPackageManager } from "~/libs/sdk/sdk-impl/utils/pm/pm-detect";
 
 export default defineCommand({
@@ -39,43 +22,26 @@ export default defineCommand({
     name: "x",
     version: "1.1.0",
     description:
-      "Unified package manager and command executor. Usage example: `dler x install` or `dler x exec --target 'bun run build'`",
+      "Utility command executor and package runner. Usage example: `dler x detect` or `dler x package-name` (like bunx/npx)",
   },
   args: defineArgs({
     action: {
       type: "string",
-      description: "Action to perform: install, remove, detect, dedupe, run, exec, latest",
+      description: "Action to perform: detect, run, exec, or package name to run directly",
       required: true,
     },
     name: {
       type: "positional",
-      description: "Package name or script name",
+      description: "Script name (for run action) or additional arguments",
       required: false,
-    },
-    global: {
-      type: "boolean",
-      alias: "g",
-      description: "Add globally",
-    },
-    "frozen-lockfile": {
-      type: "boolean",
-      description: "Install dependencies with frozen lock file",
     },
     cwd: {
       type: "string",
       description: "Current working directory",
     },
-    workspace: {
-      type: "boolean",
-      description: "Add to workspace",
-    },
     silent: {
       type: "boolean",
       description: "Run in silent mode",
-    },
-    recreateLockFile: {
-      type: "boolean",
-      description: "Recreate lock file (for dedupe)",
     },
     target: {
       type: "string",
@@ -83,43 +49,46 @@ export default defineCommand({
     },
     timeout: {
       type: "number",
-      description: "Timeout in milliseconds (for exec action)",
+      description: "Timeout in milliseconds",
     },
     throwOnError: {
       type: "boolean",
       description: "Throw error if command fails",
       default: true,
     },
-    fileType: {
+    args: {
       type: "string",
-      description: "File type to initialize (e.g. 'md:README')",
+      description: "Additional arguments to pass to the package (space-separated)",
     },
-    destDir: {
-      type: "string",
-      description: "Destination directory",
-      default: ".",
-    },
-    multiple: {
+    global: {
       type: "boolean",
-      description: "Whether to select multiple file types from the library",
+      alias: "g",
+      description: "Use global package manager execution",
     },
-    parallel: {
+    yes: {
       type: "boolean",
-      description: "Run tasks in parallel",
+      alias: "y",
+      description: "Automatically confirm package installation if needed",
     },
-    concurrency: {
-      type: "string",
-      description: "Concurrency limit if parallel is true",
-      default: "4",
-    },
-    linter: {
+    bun: {
       type: "boolean",
-      description: "Run linter checks after updating dependencies",
-      default: false,
+      description: "Force using bunx (overrides package manager detection)",
+    },
+    npm: {
+      type: "boolean",
+      description: "Force using npx (overrides package manager detection)",
+    },
+    pnpm: {
+      type: "boolean",
+      description: "Force using pnpx (overrides package manager detection)",
+    },
+    yarn: {
+      type: "boolean",
+      description: "Force using yarn dlx (overrides package manager detection)",
     },
   }),
   async run({ args }) {
-    console.log("DEBUG: x command starting with args:", args);
+    // console.log("DEBUG: x command starting with args:", args);
 
     const {
       action,
@@ -127,36 +96,38 @@ export default defineCommand({
       target,
       timeout,
       throwOnError,
-      fileType,
-      destDir,
-      multiple,
-      parallel,
-      concurrency,
-      linter,
+      args: packageArgs,
+      global,
+      yes,
+      bun,
+      npm,
+      pnpm,
+      yarn,
       ...options
     } = args;
 
+    // Check if action is one of the built-in commands
+    const builtInActions = ["detect", "run", "exec"];
+    const isBuiltInAction = builtInActions.includes(action);
+
+    if (!isBuiltInAction) {
+      // Treat action as a package name to run (bunx/npx style)
+      await runPackage({
+        packageName: action,
+        packageArgs: name
+          ? [name, ...(packageArgs?.split(/\s+/) || [])]
+          : packageArgs?.split(/\s+/) || [],
+        cwd: options.cwd,
+        timeout,
+        throwOnError,
+        global,
+        yes,
+        forcePm: { bun, npm, pnpm, yarn },
+      });
+      return;
+    }
+
     switch (action) {
-      case "install":
-      case "i":
-      case "add":
-        console.log("DEBUG: install case, name:", name, "options:", options);
-        await (name ? addDependency(name, options) : installDependencies(options));
-        break;
-
-      case "remove":
-      case "rm":
-      case "uninstall":
-      case "un":
-      case "delete":
-      case "del":
-        if (!name) {
-          relinka.error("Package name is required for remove action");
-          return process.exit(1);
-        }
-        await removeDependency(name, options);
-        break;
-
       case "detect": {
         const cwd = path.resolve(options.cwd || ".");
         const packageManager = await detectPackageManager(cwd);
@@ -175,11 +146,6 @@ export default defineCommand({
         relinka.log(
           `Detected package manager in \`${cwd}\`: \`${packageManager.name}@${packageManager.version}\``,
         );
-        break;
-      }
-
-      case "dedupe": {
-        await dedupeDependencies(options);
         break;
       }
 
@@ -241,76 +207,125 @@ export default defineCommand({
         break;
       }
 
-      case "init": {
-        const concurrencyNum = Number(concurrency);
-
-        // throw error if fileType doesn't include FILE_TYPES.type
-        if (fileType && !FILE_TYPES.find((ft) => ft.type === fileType)) {
-          throw new Error(`Invalid file type: ${fileType}`);
-        }
-
-        const effectiveFileType: FileType = fileType as FileType;
-
-        if (multiple) {
-          // Let the user choose multiple file types from a prompt
-          const possibleTypes = FILE_TYPES.map((ft) => ft.type);
-          const chosen = await multiselectPrompt({
-            title: "Select file types to initialize",
-            options: possibleTypes.map((pt) => ({ label: pt, value: pt })),
-          });
-
-          if (chosen.length === 0) {
-            relinka("log", "No file types selected. Exiting...");
-            return;
-          }
-
-          // Construct an array of requests
-          const requests: InitFileRequest[] = chosen.map((ct) => ({
-            fileType: ct,
-            destDir,
-          }));
-
-          const results = await initFiles(requests, {
-            parallel,
-            concurrency: concurrencyNum,
-          });
-          relinka("verbose", `Multiple files result: ${JSON.stringify(results)}`);
-        } else {
-          // Single file approach
-          let finalFileType = effectiveFileType;
-          if (!finalFileType) {
-            // If user didn't specify, prompt for a single file type
-            const possibleTypes = FILE_TYPES.map((ft) => ft.type);
-            const picked = await selectPrompt({
-              title: "Pick a file type to initialize",
-              options: possibleTypes.map((pt) => ({ label: pt, value: pt })),
-            });
-            finalFileType = picked;
-          }
-
-          const result = await initFile({
-            fileType: finalFileType,
-            destDir,
-          });
-          relinka("verbose", `Single file result: ${JSON.stringify(result)}`);
-        }
-        break;
-      }
-
-      case "latest": {
-        await updateDependencies(true, options);
-        if (linter) {
-          const checkCmd = await getCheckCmd();
-          await runCmd(checkCmd, ["--no-exit", "--no-progress"]);
-        }
-        break;
-      }
-
       default: {
         relinka.error(`Unknown action: ${action}`);
-        relinka.log("Available actions: install, remove, detect, dedupe, run, exec");
+        relinka.log("Available actions: detect, run, exec, or package name to run directly");
         return process.exit(1);
       }
     }
   },
 });
+
+async function runPackage({
+  packageName,
+  packageArgs,
+  cwd,
+  timeout,
+  throwOnError,
+  global,
+  yes,
+  forcePm,
+}: {
+  packageName: string;
+  packageArgs: string[];
+  cwd?: string;
+  timeout?: number;
+  throwOnError: boolean;
+  global?: boolean;
+  yes?: boolean;
+  forcePm: { bun?: boolean; npm?: boolean; pnpm?: boolean; yarn?: boolean };
+}) {
+  try {
+    const workingDir = cwd ? path.resolve(cwd) : process.cwd();
+
+    // Determine which package manager to use
+    let pmName: string;
+
+    // Check for forced package manager flags
+    const forcedPmFlags = Object.entries(forcePm).filter(([_, isForced]) => isForced);
+
+    if (forcedPmFlags.length > 1) {
+      relinka.error(
+        "Multiple package manager flags specified. Use only one: --bun, --npm, --pnpm, or --yarn",
+      );
+      return process.exit(1);
+    }
+
+    if (forcedPmFlags.length === 1) {
+      pmName = forcedPmFlags[0]![0];
+      relinka.log(`Forcing package manager: ${pmName}`);
+    } else {
+      // Auto-detect package manager
+      const packageManager = await detectPackageManager(workingDir);
+
+      if (!packageManager) {
+        relinka.warn("Cannot detect package manager. Defaulting to npm.");
+        pmName = "npm";
+      } else {
+        pmName = packageManager.name;
+      }
+    }
+
+    let runCommand: string[];
+
+    switch (pmName) {
+      case "bun":
+        runCommand = ["bunx"];
+        break;
+      case "pnpm":
+        runCommand = ["pnpx", "dlx"];
+        break;
+      case "yarn":
+        runCommand = ["yarn", "dlx"];
+        break;
+      case "npm":
+        runCommand = ["npx"];
+        break;
+      default:
+        runCommand = ["npx"];
+        break;
+    }
+
+    // Add flags
+    if (global && pmName !== "yarn") {
+      runCommand.push("--global");
+    }
+    if (yes && (pmName === "npm" || pmName === "pnpm")) {
+      runCommand.push("--yes");
+    }
+
+    // Add package name and arguments
+    runCommand.push(packageName);
+    runCommand.push(...packageArgs);
+
+    relinka.log(`Running package: ${packageName}`);
+    relinka.log(`Using command: ${runCommand.join(" ")}`);
+
+    // Execute the package runner command
+    const result = x(runCommand[0]!, runCommand.slice(1), {
+      nodeOptions: {
+        cwd: workingDir,
+        stdio: "inherit",
+      },
+      timeout,
+      throwOnError,
+    });
+
+    // Wait for the command to complete
+    const output = await result;
+
+    if (output.exitCode === 0) {
+      relinka.success(`Successfully ran package: ${packageName}`);
+    } else {
+      relinka.warn(`Package exited with code: ${output.exitCode}`);
+      if (throwOnError) {
+        return process.exit(output.exitCode || 1);
+      }
+    }
+  } catch (error) {
+    relinka.error(
+      `Failed to run package: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return process.exit(1);
+  }
+}

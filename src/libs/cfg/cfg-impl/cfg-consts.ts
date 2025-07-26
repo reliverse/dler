@@ -98,6 +98,6 @@ export const DEFAULT_CONFIG_DLER: DlerConfig = {
 //   return (Array.isArray(config) ? config : [config]).filter(Boolean);
 // }
 
-export const defineConfigDler = (userConfig: Partial<DlerConfig> = {}) => {
+export const defineConfig = (userConfig: Partial<DlerConfig> = {}) => {
   return { ...DEFAULT_CONFIG_DLER, ...userConfig };
 };

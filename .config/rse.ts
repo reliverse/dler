@@ -1,6 +1,6 @@
-import { defineConfigRse } from "~/libs/cfg/cfg-impl/rse-config/rse-mod";
+import { defineConfig } from "@reliverse/rse-cfg";
 
-export default defineConfigRse({
+export default defineConfig({
   // RELIVERSE CONFIG (https://docs.reliverse.org/cli)
   // Restart the CLI to apply your config changes
   $schema: "./schema.json",
@@ -10,7 +10,7 @@ export default defineConfigRse({
   projectAuthor: "reliverse",
   projectDescription:
     "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
-  version: "1.7.67",
+  version: "1.7.73",
   projectLicense: "MIT",
   projectState: "creating",
   projectRepository: "https://github.com/reliverse/dler",

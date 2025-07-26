@@ -49,6 +49,138 @@ export async function ensureDlerConfig(isDev: boolean) {
   }
 }
 
+export async function prepareDlerEnvironment(isDev: boolean) {
+  // 1. Ensure dler config exists
+  await ensureDlerConfig(isDev);
+
+  const cwd = process.cwd();
+
+  // 2. Handle .gitignore if .git directory exists
+  const gitDir = path.resolve(cwd, ".git");
+  if (await fs.pathExists(gitDir)) {
+    await ensureGitignoreEntries(cwd);
+  }
+
+  // 3. Handle tsconfig.json
+  const tsconfigPath = path.resolve(cwd, "tsconfig.json");
+  if (await fs.pathExists(tsconfigPath)) {
+    await ensureTsconfigIncludes(tsconfigPath);
+  }
+
+  // 4. Handle package.json scripts
+  // TODO: maybe this is not useful, because e.g. `"latest": "bun dler update"` triggers `"dler": "bun dler"`
+  // TODO: instead of `@reliverse/dler` directly, so user may get infinite recursion
+  // const packageJsonPath = path.resolve(cwd, "package.json");
+  // if (await fs.pathExists(packageJsonPath)) {
+  //   await ensurePackageJsonScript(cwd, packageJsonPath);
+  // }
+}
+
+async function ensureGitignoreEntries(cwd: string) {
+  const gitignorePath = path.resolve(cwd, ".gitignore");
+
+  let gitignoreContent = "";
+  if (await fs.pathExists(gitignorePath)) {
+    gitignoreContent = await fs.readFile(gitignorePath, "utf8");
+  }
+
+  const requiredEntries = ["dist", "dist*", "logs"];
+  const lines = gitignoreContent.split("\n");
+  let modified = false;
+
+  for (const entry of requiredEntries) {
+    const hasEntry = lines.some((line) => {
+      const trimmedLine = line.trim();
+      return (
+        trimmedLine === entry ||
+        (entry === "dist*" && (trimmedLine === "dist*" || trimmedLine.startsWith("dist")))
+      );
+    });
+
+    if (!hasEntry) {
+      if (gitignoreContent && !gitignoreContent.endsWith("\n")) {
+        gitignoreContent += "\n";
+      }
+      gitignoreContent += entry + "\n";
+      modified = true;
+    }
+  }
+
+  if (modified) {
+    await fs.writeFile(gitignorePath, gitignoreContent, "utf8");
+    relinka("success", `Updated .gitignore with required entries`);
+  }
+}
+
+async function ensureTsconfigIncludes(tsconfigPath: string) {
+  try {
+    const tsconfigContent = await fs.readFile(tsconfigPath, "utf8");
+    const tsconfig = JSON.parse(tsconfigContent) as {
+      include?: string[];
+      [key: string]: unknown;
+    };
+
+    if (!tsconfig.include) {
+      tsconfig.include = [];
+    }
+
+    const requiredInclude = ".config/**/*.ts";
+    const hasConfigInclude = tsconfig.include.includes(requiredInclude);
+
+    if (!hasConfigInclude) {
+      tsconfig.include.push(requiredInclude);
+      await fs.writeFile(tsconfigPath, JSON.stringify(tsconfig, null, 2), "utf8");
+      relinka("success", `Added ".config/**/*.ts" to tsconfig.json includes`);
+    }
+  } catch (error) {
+    relinka(
+      "warn",
+      `Could not update tsconfig.json: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+/* async function ensurePackageJsonScript(cwd: string, packageJsonPath: string) {
+  try {
+    const pkg = await readPackageJSON(packageJsonPath);
+
+    // Check if @reliverse/dler is in dependencies or devDependencies
+    const hasDlerDep =
+      (pkg.dependencies && "@reliverse/dler" in pkg.dependencies) ||
+      (pkg.devDependencies && "@reliverse/dler" in pkg.devDependencies);
+
+    if (!hasDlerDep) {
+      return; // No dler dependency, skip script setup
+    }
+
+    // Check if scripts.dler already exists
+    if (pkg.scripts && pkg.scripts.dler) {
+      return; // Script already exists
+    }
+
+    // Detect package manager
+    const packageManager = await detectPackageManager(cwd);
+    const pmCommand = packageManager?.command || "bun";
+
+    // Add the dler script
+    const updatedPkg = {
+      ...pkg,
+      scripts: {
+        ...pkg.scripts,
+        dler: `${pmCommand} dler`,
+      },
+    };
+
+    await writePackageJSON(packageJsonPath, updatedPkg);
+    relinka("success", `Added "dler": "${pmCommand} dler" script to package.json`);
+  } catch (error) {
+    relinka(
+      "warn",
+      `Could not update package.json: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+} */
+
 function getCoreIsCLI(isDev: boolean): string {
   return isDev
     ? `coreIsCLI: { enabled: true, scripts: { dler: "cli.ts" } },`
@@ -139,9 +271,9 @@ function getFilterDepsPatterns(isDev: boolean): string {
 
 // Generate the config file content
 function generateConfig(isDev: boolean, pkgDescription?: string): string {
-  const importDefineConfigDlerStatement = isDev
-    ? `import { defineConfigDler } from "~/mod";`
-    : `import { defineConfigDler } from "@reliverse/cfg";`;
+  const importdefineConfigStatement = isDev
+    ? `import { defineConfig } from "~/libs/cfg/cfg-impl/cfg-consts";`
+    : `import { defineConfig } from "@reliverse/dler-cfg";`;
   const verboseValue = getValue(isDev, true, DEFAULT_CONFIG_DLER.commonVerbose);
   const coreIsCLI = getCoreIsCLI(isDev);
   const registryValue = getValue(isDev, "npm-jsr", DEFAULT_CONFIG_DLER.commonPubRegistry);
@@ -166,7 +298,7 @@ function generateConfig(isDev: boolean, pkgDescription?: string): string {
   },
   "@reliverse/cfg": {
     libDeclarations: true,
-    libDescription: "shared config for @reliverse/dler (defineConfigDler) and @reliverse/rse (defineConfigRse)",
+    libDescription: "config for @reliverse/dler",
     libDirName: "cfg",
     libMainFile: "cfg/cfg-mod.ts",
     libPkgKeepDeps: true,
@@ -192,14 +324,14 @@ function generateConfig(isDev: boolean, pkgDescription?: string): string {
   // .config/dler.ts default config template
   // ===================================================
   const configTemplate = [
-    importDefineConfigDlerStatement,
+    importdefineConfigStatement,
     "",
     "/**",
     " * Reliverse Bundler Configuration",
     " * Hover over a field to see more details",
     " * @see https://github.com/reliverse/dler",
     " */",
-    "export default defineConfigDler({",
+    "export default defineConfig({",
     "  // Bump configuration",
     "  bumpDisable: " + DEFAULT_CONFIG_DLER.bumpDisable + ",",
     "  bumpFilter: " + getBumpFilter(isDev) + ",",
