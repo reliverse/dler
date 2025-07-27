@@ -43,7 +43,7 @@ export class VersionNotFoundError extends Error {
   }
 }
 
-export default async function packageJson(
+export async function pmPackageJson(
   packageName: string,
   options: PackageJsonOptions = {},
 ): Promise<PackageData | PackageVersion> {
@@ -133,7 +133,7 @@ export default async function packageJson(
 }
 
 export async function latestVersion(packageName: string, options: PackageJsonOptions = {}) {
-  const { version } = (await packageJson(packageName.toLowerCase(), options)) as PackageVersion;
+  const { version } = (await pmPackageJson(packageName.toLowerCase(), options)) as PackageVersion;
   return version;
 }
 

@@ -33,6 +33,7 @@ export async function dlerPostBuild(
 
   // Cross replacements
   await resolveAllCrossLibs(
+    "package",
     ALIAS_TO_REPLACE,
     ["npm", "jsr"],
     config.buildPreExtensions,

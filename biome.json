@@ -13,7 +13,8 @@
       "!**/dist/",
       "!**/dist-jsr/",
       "!**/dist-npm/",
-      "!**/dist-libs/"
+      "!**/dist-libs/",
+      "!**/dist-tmp/"
     ],
     "ignoreUnknown": false
   },

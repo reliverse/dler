@@ -9,7 +9,7 @@ interface BuildTarget {
   target: string;
 }
 
-export interface BuildOptions {
+export interface BunBuildOptions {
   minify: boolean;
   sourcemap: boolean;
   bytecode: boolean;
@@ -54,7 +54,7 @@ export const getOutputFileName = (
 export const buildForTarget = async (
   target: BuildTarget,
   inputFile: string,
-  options: BuildOptions,
+  options: BunBuildOptions,
 ): Promise<void> => {
   const outputFile = join(options.outdir, getOutputFileName(target, "dler", options.compile));
 

@@ -792,7 +792,6 @@ async function getSpellImplementationPaths(): Promise<string[]> {
                 (registryDir.name === "npm" || registryDir.name === "jsr")
               ) {
                 const registryName = registryDir.name;
-                // Add more specific paths if needed
                 paths.push(`/libs/${libName}/${registryName}/sdk-impl/spell/`);
                 paths.push(`/${libName}/${registryName}/sdk-impl/spell/`);
               }

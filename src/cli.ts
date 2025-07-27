@@ -1,7 +1,7 @@
 import { relinka } from "@reliverse/relinka";
 import { runMain, defineCommand, defineArgs, selectPrompt, showUsage } from "@reliverse/rempts";
 
-import { promptAggCommand } from "./app/agg/run";
+import { promptAggCommand } from "./app/agg/cmd";
 import { callCmd } from "./app/cmds";
 import { showEndPrompt, showStartPrompt } from "./libs/sdk/sdk-impl/config/info";
 import { prepareDlerEnvironment } from "./libs/sdk/sdk-impl/config/prepare";

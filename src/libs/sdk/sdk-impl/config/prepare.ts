@@ -3,6 +3,7 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { readPackageJSON } from "pkg-types";
 
+import { ensureConfigMod } from "~/libs/sdk/sdk-impl/config/core";
 import { DEFAULT_CONFIG_DLER } from "~/libs/sdk/sdk-impl/config/default";
 
 // Supported configuration filename
@@ -39,6 +40,10 @@ export async function ensureDlerConfig(isDev: boolean) {
     } else {
       relinka("log", "When you're ready, run `bun pub` to build and publish");
     }
+
+    // Generate .config/mod.ts with dler configuration
+    await ensureConfigMod({ tool: "dler", mode: "copy-internal", isDev });
+
     process.exit(0);
   } catch (error: unknown) {
     relinka(

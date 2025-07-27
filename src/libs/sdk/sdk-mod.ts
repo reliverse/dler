@@ -4,6 +4,15 @@ export { library_buildLibrary } from "./sdk-impl/build/build-library.js";
 export { regular_buildJsrDist, regular_buildNpmDist } from "./sdk-impl/build/build-regular.js";
 export { definePreset, autoPreset } from "./sdk-impl/build/providers/auto.js";
 export { unifiedBuild } from "./sdk-impl/build/providers/build.js";
+export type { BunBuildOptions } from "./sdk-impl/build/providers/bun/single-file.js";
+export {
+  getOutputFileName,
+  buildForTarget,
+  cleanOutputDir,
+  validateInputFile,
+  parseTargets,
+  listAvailableTargets,
+} from "./sdk-impl/build/providers/bun/single-file.js";
 export { copyBuild } from "./sdk-impl/build/providers/copy/copy-mod.js";
 export { createLoader } from "./sdk-impl/build/providers/mkdist/mkdist-impl/loader.js";
 export { jsLoader } from "./sdk-impl/build/providers/mkdist/mkdist-impl/loaders/js.js";
@@ -73,10 +82,7 @@ export {
   warn,
   withTrailingSlash,
 } from "./sdk-impl/build/providers/utils.js";
-export {
-  validateDependencies,
-  validatePackage,
-} from "./sdk-impl/build/providers/validate.js";
+export { validateDependencies, validatePackage } from "./sdk-impl/build/providers/validate.js";
 export type {
   InjectionLocation,
   SingleInjection,
@@ -128,8 +134,8 @@ export {
 } from "./sdk-impl/cmds/transform/transform-impl-mod.js";
 export { DEFAULT_CONFIG_DLER, defineConfig } from "./sdk-impl/config/default.js";
 export { showStartPrompt, showEndPrompt } from "./sdk-impl/config/info.js";
-export { ensureDlerConfig } from "./sdk-impl/config/prepare.js";
-export { getConfigDler } from "./sdk-impl/config/load.js";
+export { getConfigDler, getConfigBunfig } from "./sdk-impl/config/load.js";
+export { ensureDlerConfig, prepareDlerEnvironment } from "./sdk-impl/config/prepare.js";
 export type {
   DlerConfig,
   BumpMode,
@@ -320,6 +326,12 @@ export {
   runScript,
 } from "./sdk-impl/utils/pm/pm-api.js";
 export { packageManagers, detectPackageManager } from "./sdk-impl/utils/pm/pm-detect.js";
+export {
+  PackageNotFoundError,
+  VersionNotFoundError,
+  pmPackageJson,
+  latestVersion,
+} from "./sdk-impl/utils/pm/pm-meta.js";
 export { findup, parsePackageManagerField } from "./sdk-impl/utils/pm/pm-parse.js";
 export type {
   PackageManagerName,
@@ -334,7 +346,7 @@ export {
   getWorkspaceArgs,
   doesDependencyExist,
 } from "./sdk-impl/utils/pm/pm-utils.js";
-export { resolveCrossLibs, resolveAllCrossLibs } from "./sdk-impl/utils/resolve-cross-libs.js";
+export { resolveAllCrossLibs } from "./sdk-impl/utils/resolve-cross-libs.js";
 export { useAggregator } from "./sdk-impl/utils/tools-agg.js";
 export { printUsage } from "./sdk-impl/utils/tools-impl.js";
 export {

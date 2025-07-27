@@ -43,7 +43,7 @@ import { existsSync, mkdir } from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { defineCommand, defineArgs } from "@reliverse/rempts";
 
-import type { BuildOptions } from "~/libs/sdk/sdk-impl/build/providers/bun/single-file";
+import type { BunBuildOptions } from "~/libs/sdk/sdk-impl/build/providers/bun/single-file";
 
 import {
   listAvailableTargets,
@@ -147,7 +147,7 @@ export default defineCommand({
       }
 
       // Build options
-      const options: BuildOptions = {
+      const options: BunBuildOptions = {
         minify: args.minify,
         sourcemap: args.sourcemap,
         bytecode: args.bytecode,

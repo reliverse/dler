@@ -206,6 +206,7 @@ function isValidMagicDirective(directive: string): directive is SpellDirective {
     "dler-remove-file",
     "dler-remove-comment",
     "dler-ignore-this-line",
+    "dler-disable-agg",
   ].includes(directive);
 }
 

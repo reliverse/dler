@@ -1,5 +1,4 @@
 // AUTO-GENERATED AGGREGATOR START (via `dler agg`)
-export { DEFAULT_CONFIG_DLER, defineConfig } from "./cfg-impl/cfg-consts.js";
 export type {
   DlerConfig,
   BumpMode,
@@ -10,5 +9,6 @@ export type {
   transpileFormat,
   Sourcemap,
   transpileTarget,
-} from "./cfg-impl/cfg-types.js";
+} from "./cfg-impl/cfg-dler.js";
+export { DEFAULT_CONFIG_DLER, defineConfig } from "./cfg-impl/cfg-dler.js";
 // AUTO-GENERATED AGGREGATOR END

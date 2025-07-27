@@ -1,7 +1,6 @@
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { execa } from "execa";
 import { lookpath } from "lookpath";
 import { createWriteStream } from "node:fs";

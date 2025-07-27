@@ -4,6 +4,6 @@ import { resolveAllCrossLibs } from "~/libs/sdk/sdk-impl/utils/resolve-cross-lib
 
 export default defineCommand({
   async run() {
-    await resolveAllCrossLibs("~", ["npm", "jsr"], ["ts", "js"], "templates");
+    await resolveAllCrossLibs("package", "~", ["npm", "jsr"], ["ts", "js"], "templates");
   },
 });
