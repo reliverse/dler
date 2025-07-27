@@ -132,6 +132,7 @@ export {
   createBundle,
   compose,
 } from "./sdk-impl/cmds/transform/transform-impl-mod.js";
+export { ensureConfigMod } from "./sdk-impl/config/core.js";
 export { DEFAULT_CONFIG_DLER, defineConfig } from "./sdk-impl/config/default.js";
 export { showStartPrompt, showEndPrompt } from "./sdk-impl/config/info.js";
 export { getConfigDler, getConfigBunfig } from "./sdk-impl/config/load.js";
@@ -249,6 +250,18 @@ export type {
   CreateLoaderOptions,
   MkdistOptions,
 } from "./sdk-impl/sdk-types.js";
+export { promptAggCommand } from "./sdk-impl/utils/agg/agg-1.js";
+export { useAggregator } from "./sdk-impl/utils/agg/agg-2.js";
+export {
+  buildPathRelative,
+  collectFiles,
+  generateAggregatorLines,
+  getNamedExports,
+  guessStarImportIdentifier,
+  printUsage,
+} from "./sdk-impl/utils/agg/agg-3.js";
+export { fileExists, findMainEntryFile } from "./sdk-impl/utils/agg/agg-4.js";
+export { isAggregationDisabled } from "./sdk-impl/utils/agg/agg-5.js";
 export { BINARY_EXTS, BINARY_SET } from "./sdk-impl/utils/b-exts.js";
 export { isBinaryExt } from "./sdk-impl/utils/binary.js";
 export type { CommentStyle, FileExtension, CommentMapping } from "./sdk-impl/utils/comments.js";
@@ -347,8 +360,6 @@ export {
   doesDependencyExist,
 } from "./sdk-impl/utils/pm/pm-utils.js";
 export { resolveAllCrossLibs } from "./sdk-impl/utils/resolve-cross-libs.js";
-export { useAggregator } from "./sdk-impl/utils/tools-agg.js";
-export { printUsage } from "./sdk-impl/utils/tools-impl.js";
 export {
   getBunSourcemapOption,
   getUnifiedSourcemapOption,

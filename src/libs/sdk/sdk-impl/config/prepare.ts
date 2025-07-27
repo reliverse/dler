@@ -3,7 +3,6 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { readPackageJSON } from "pkg-types";
 
-import { ensureConfigMod } from "~/libs/sdk/sdk-impl/config/core";
 import { DEFAULT_CONFIG_DLER } from "~/libs/sdk/sdk-impl/config/default";
 
 // Supported configuration filename
@@ -41,8 +40,21 @@ export async function ensureDlerConfig(isDev: boolean) {
       relinka("log", "When you're ready, run `bun pub` to build and publish");
     }
 
-    // Generate .config/mod.ts with dler configuration
-    await ensureConfigMod({ tool: "dler", mode: "copy-internal", isDev });
+    // Generate .config/mod.ts with .config/types/dler.schema.ts
+    // TODO: finish implementation of this function
+    /*
+    Currently in non-dler projects output is:
+    ```ts
+    ensureConfigMod {
+      tool: "dler",
+      mode: "copy-internal",
+      isDev: false,
+    }
+    ✖   Failed to copy internal schema: Internal schema file not found: bin/libs/cfg/cfg-dler.ts
+    ✖   Error creating configuration file: Internal schema file not found: bin/libs/cfg/cfg-dler.ts
+    ```
+    */
+    // await ensureConfigMod({ tool: "dler", mode: "copy-internal", isDev });
 
     process.exit(0);
   } catch (error: unknown) {
@@ -278,7 +290,7 @@ function getFilterDepsPatterns(isDev: boolean): string {
 function generateConfig(isDev: boolean, pkgDescription?: string): string {
   const importdefineConfigStatement = isDev
     ? `import { defineConfig } from "~/libs/cfg/cfg-impl/cfg-consts";`
-    : `import { defineConfig } from "@reliverse/dler-cfg";`;
+    : `import { defineConfig } from "@reliverse/cfg";`;
   const verboseValue = getValue(isDev, true, DEFAULT_CONFIG_DLER.commonVerbose);
   const coreIsCLI = getCoreIsCLI(isDev);
   const registryValue = getValue(isDev, "npm-jsr", DEFAULT_CONFIG_DLER.commonPubRegistry);

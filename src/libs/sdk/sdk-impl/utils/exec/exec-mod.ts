@@ -232,7 +232,6 @@ export class ExecProcess implements Result {
     return result;
   }
 
-  // biome-ignore lint/suspicious/noThenProperty: <>
   public then<TResult1 = Output, TResult2 = never>(
     onfulfilled?: ((value: Output) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,

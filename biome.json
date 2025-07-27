@@ -31,25 +31,21 @@
     "rules": {
       "recommended": true,
       "suspicious": {
+        "noThenProperty": "off",
         "noShadowRestrictedNames": "off",
         "noExplicitAny": "off",
         "noTemplateCurlyInString": "off"
       },
       "style": {
+        "useImportType": "off",
         "noUnusedTemplateLiteral": "off",
         "useTemplate": "off",
         "useDefaultParameterLast": "off",
         "noUselessElse": "off",
-        "noNonNullAssertion": "off",
-        "noParameterAssign": "error",
-        "useAsConstAssertion": "error",
-        "useEnumInitializers": "error",
-        "useSelfClosingElements": "error",
-        "useSingleVarDeclarator": "error",
-        "useNumberNamespace": "error",
-        "noInferrableTypes": "error"
+        "noNonNullAssertion": "off"
       },
       "complexity": {
+        "noUselessEmptyExport": "off",
         "noForEach": "off",
         "noBannedTypes": "off",
         "noUselessLoneBlockStatements": "off",

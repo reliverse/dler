@@ -1,10 +1,10 @@
 import { relinka } from "@reliverse/relinka";
 import { runMain, defineCommand, defineArgs, selectPrompt, showUsage } from "@reliverse/rempts";
 
-import { promptAggCommand } from "./app/agg/cmd";
 import { callCmd } from "./app/cmds";
 import { showEndPrompt, showStartPrompt } from "./libs/sdk/sdk-impl/config/info";
 import { prepareDlerEnvironment } from "./libs/sdk/sdk-impl/config/prepare";
+import { promptAggCommand } from "./libs/sdk/sdk-impl/utils/agg/agg-1";
 
 const MENU_CMDS = ["agg", "build", "pub", "update"];
 let isDev = process.env.DLER_DEV_MODE === "true";

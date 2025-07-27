@@ -1,6 +1,6 @@
 import { defineConfig } from "./types/dler.schema";
 
-// TODO: cache src's files in `.reliverse/dler/<project-name>/<src-file-path>` dir (this will allow to implement new option e.g. buildPubOnlyAtLeastOneFileChanged, esp. useful for cases like `@reliverse/dler-cfg` library) (we can use hash of the file name and/or date of the last file modification)
+// TODO: cache src's files in `.reliverse/dler/<project-name>/<src-file-path>` dir (this will allow to implement new option e.g. buildPubOnlyAtLeastOneFileChanged, esp. useful for cases like `@reliverse/cfg` library) (we can use hash of the file name and/or date of the last file modification)
 // TODO: introduce new option which allows to enable/disable transpiling other extensions that .ts and .js (disabling from build process of e.g. .tsx extension is especially useful for bootstrapping clis tools like @reliverse/rse, where cli's developers usually expect to have their original .tsx files in the dist)
 
 /**
@@ -64,7 +64,7 @@ export default defineConfig({
       libPubPause: false,
       libPubRegistry: "npm-jsr",
     },
-    "@reliverse/dler-cfg": {
+    "@reliverse/cfg": {
       libDeclarations: true,
       libDescription: "config typescript definitions for @reliverse/dler",
       libDirName: "cfg",
@@ -111,7 +111,7 @@ export default defineConfig({
         jsr: [],
         npm: [],
       },
-      "@reliverse/dler-cfg": {
+      "@reliverse/cfg": {
         jsr: [],
         npm: [],
       },
@@ -151,7 +151,7 @@ export default defineConfig({
         jsr: ["+bun"],
         npm: [],
       },
-      "@reliverse/dler-cfg": {
+      "@reliverse/cfg": {
         jsr: [],
         npm: [],
       },
