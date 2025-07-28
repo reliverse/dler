@@ -1,4 +1,6 @@
-// usage example: bun src/cli.ts update --dry-run --no-install
+// usage example: bun src/cli.ts update --dry-run --with-install
+
+// TODO: fix: when package.json has both workspaces.catalog section and dependencies/devDependencies in root package.json then only catalog's deps are updated.
 
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
@@ -11,6 +13,8 @@ import { readPackageJSON } from "pkg-types";
 import semver from "semver";
 
 import { getConfigBunfig } from "~/libs/sdk/sdk-impl/config/load";
+import { updateCatalogs, isCatalogSupported } from "~/libs/sdk/sdk-impl/utils/pm/pm-catalog";
+import { detectPackageManager } from "~/libs/sdk/sdk-impl/utils/pm/pm-detect";
 import { latestVersion } from "~/libs/sdk/sdk-impl/utils/pm/pm-meta";
 
 interface UpdateResult {
@@ -145,6 +149,83 @@ async function getGlobalPackages(packageManager: string): Promise<Record<string,
   } catch (error) {
     relinka("warn", `Failed to get global packages for ${packageManager}: ${error}`);
     return {};
+  }
+}
+
+/**
+ * Run install command for the detected package manager
+ */
+async function runInstallCommand(packageManager: any, linker?: string): Promise<void> {
+  try {
+    switch (packageManager.name) {
+      case "bun": {
+        const linkerArg = linker ? `--linker ${linker}` : "";
+        await $`bun install ${linkerArg}`;
+        break;
+      }
+      case "npm":
+        await $`npm install`;
+        break;
+      case "yarn":
+        await $`yarn install`;
+        break;
+      case "pnpm":
+        await $`pnpm install`;
+        break;
+      case "deno":
+        // Deno doesn't have a traditional install command, but we can run deno cache
+        await $`deno cache --reload import_map.json`;
+        break;
+      default:
+        throw new Error(`Unsupported package manager: ${packageManager.name}`);
+    }
+  } catch (error) {
+    relinka("warn", `Failed to run install command for ${packageManager.name}: ${error}`);
+    throw error;
+  }
+}
+
+/**
+ * Run install command with filter arguments for monorepo support
+ */
+async function runInstallCommandWithFilter(
+  packageManager: any,
+  linker?: string,
+  filterArgs: string[] = [],
+): Promise<void> {
+  try {
+    switch (packageManager.name) {
+      case "bun": {
+        const linkerArg = linker ? `--linker ${linker}` : "";
+        const filterStr = filterArgs.join(" ");
+        await $`bun install ${linkerArg} ${filterStr}`;
+        break;
+      }
+      case "npm": {
+        const npmFilterStr = filterArgs.join(" ");
+        await $`npm install ${npmFilterStr}`;
+        break;
+      }
+      case "yarn": {
+        const yarnFilterStr = filterArgs.join(" ");
+        await $`yarn install ${yarnFilterStr}`;
+        break;
+      }
+      case "pnpm": {
+        const pnpmFilterStr = filterArgs.join(" ");
+        await $`pnpm install ${pnpmFilterStr}`;
+        break;
+      }
+      case "deno":
+        // Deno doesn't have traditional workspace filtering, but we can run deno cache
+        await $`deno cache --reload import_map.json`;
+        break;
+      default:
+        throw new Error(`Unsupported package manager: ${packageManager.name}`);
+    }
+  } catch (error) {
+    relinka("warn", `Failed to run install command for ${packageManager.name}: ${error}`);
+    throw error;
   }
 }
 
@@ -387,32 +468,26 @@ export default defineCommand({
     "dev-only": {
       type: "boolean",
       description: "Update only devDependencies",
-      default: false,
     },
     "prod-only": {
       type: "boolean",
       description: "Update only dependencies (production)",
-      default: false,
     },
     "peer-only": {
       type: "boolean",
       description: "Update only peerDependencies",
-      default: false,
     },
     "optional-only": {
       type: "boolean",
       description: "Update only optionalDependencies",
-      default: false,
     },
     "catalogs-only": {
       type: "boolean",
       description: "Update only catalog dependencies",
-      default: false,
     },
     "dry-run": {
       type: "boolean",
       description: "Show what would be updated without making changes",
-      default: false,
     },
     concurrency: {
       type: "number",
@@ -422,7 +497,6 @@ export default defineCommand({
     "with-check-script": {
       type: "boolean",
       description: "Run `bun check` after updating (exclusive for bun environment at the moment)",
-      default: false,
     },
     linker: {
       type: "string",
@@ -431,22 +505,27 @@ export default defineCommand({
       allowed: ["isolated", "hoisted"],
       default: "hoisted",
     },
-    "no-install": {
+    "with-install": {
       type: "boolean",
-      description: "Skip the install step after updating dependencies",
-      default: false,
-      alias: "no-i",
+      description: "Run the install step after updating dependencies",
+      alias: "with-i",
     },
     global: {
       type: "boolean",
       description: "Update global packages instead of local dependencies",
-      default: false,
       alias: "g",
     },
     interactive: {
       type: "boolean",
       description: "Interactively select which dependencies to update",
-      default: false,
+    },
+    filter: {
+      type: "array",
+      description: "Filter workspaces to operate on (e.g., 'pkg-*', '!pkg-c', './packages/pkg-*')",
+    },
+    "update-catalogs": {
+      type: "boolean",
+      description: "Update catalog dependencies to latest versions",
     },
   }),
   async run({ args }) {
@@ -454,6 +533,26 @@ export default defineCommand({
       // Handle global package updates
       if (args.global) {
         return await handleGlobalUpdates(args);
+      }
+
+      // Handle catalog updates
+      if (args["update-catalogs"]) {
+        const packageManager = await detectPackageManager(process.cwd());
+        if (!packageManager) {
+          relinka("error", "Could not detect package manager");
+          return process.exit(1);
+        }
+
+        if (!isCatalogSupported(packageManager)) {
+          relinka(
+            "error",
+            `Catalogs are not supported by ${packageManager.name}. Only Bun supports catalogs.`,
+          );
+          return process.exit(1);
+        }
+
+        await updateCatalogs(process.cwd());
+        return;
       }
 
       const packageJsonPath = path.resolve(process.cwd(), "package.json");
@@ -465,7 +564,7 @@ export default defineCommand({
 
       // Load bunfig configuration for linker strategy (only in Bun environment)
       let effectiveLinker = args.linker; // CLI argument takes precedence
-      // let linkerSource = "CLI default";
+      let linkerSource = "CLI default";
 
       if (typeof Bun !== "undefined") {
         const bunfigConfig = await getConfigBunfig();
@@ -480,8 +579,8 @@ export default defineCommand({
             // Use bunfig setting only if CLI is using the default "hoisted"
             // This means bunfig takes precedence unless user explicitly overrides
             effectiveLinker = bunfigLinker;
-            // linkerSource =
-            //   bunfigLinker === "hoisted" ? "bunfig.toml (same as default)" : "bunfig.toml";
+            linkerSource =
+              bunfigLinker === "hoisted" ? "bunfig.toml (same as default)" : "bunfig.toml";
           }
         }
       }
@@ -489,10 +588,10 @@ export default defineCommand({
       // If user provided non-default CLI value, it always wins
       if (args.linker !== "hoisted") {
         effectiveLinker = args.linker;
-        // linkerSource = "CLI argument (explicit override)";
+        linkerSource = "CLI argument (explicit override)";
       }
 
-      // relinka("verbose", `Using linker strategy: ${effectiveLinker} (from ${linkerSource})`);
+      relinka("verbose", `Using linker strategy: ${effectiveLinker} (from ${linkerSource})`);
 
       // relinka("verbose", "Reading package.json...");
       const packageJson = await readPackageJSON();
@@ -562,39 +661,56 @@ export default defineCommand({
           });
         });
       } else {
-        // Include all types
-        targetDeps = {
-          ...dependencies,
-          ...devDependencies,
-          ...peerDependencies,
-          ...optionalDependencies,
-        };
+        // Include all types - collect all dependencies first
+        const allDeps: Record<string, string> = {};
+        const allDepSources: Record<string, string> = {};
+
+        // Add regular dependencies first
         Object.keys(dependencies).forEach((dep) => {
-          depSources[dep] = "dependencies";
+          const version = dependencies[dep];
+          if (version) {
+            allDeps[dep] = version;
+            allDepSources[dep] = "dependencies";
+          }
         });
         Object.keys(devDependencies).forEach((dep) => {
-          depSources[dep] = "devDependencies";
+          const version = devDependencies[dep];
+          if (version) {
+            allDeps[dep] = version;
+            allDepSources[dep] = "devDependencies";
+          }
         });
         Object.keys(peerDependencies).forEach((dep) => {
-          depSources[dep] = "peerDependencies";
+          const version = peerDependencies[dep];
+          if (version) {
+            allDeps[dep] = version;
+            allDepSources[dep] = "peerDependencies";
+          }
         });
         Object.keys(optionalDependencies).forEach((dep) => {
-          depSources[dep] = "optionalDependencies";
+          const version = optionalDependencies[dep];
+          if (version) {
+            allDeps[dep] = version;
+            allDepSources[dep] = "optionalDependencies";
+          }
         });
 
-        // Add catalog dependencies
+        // Add catalog dependencies (these will be checked separately)
         Object.keys(catalog).forEach((dep) => {
-          targetDeps[dep] = catalog[dep];
-          depSources[dep] = "catalog";
+          allDeps[dep] = catalog[dep];
+          allDepSources[dep] = "catalog";
         });
 
         // Add named catalogs
         Object.keys(catalogs).forEach((catalogName) => {
           Object.keys(catalogs[catalogName]).forEach((dep) => {
-            targetDeps[dep] = catalogs[catalogName][dep];
-            depSources[dep] = `catalogs.${catalogName}`;
+            allDeps[dep] = catalogs[catalogName][dep];
+            allDepSources[dep] = `catalogs.${catalogName}`;
           });
         });
+
+        targetDeps = allDeps;
+        Object.assign(depSources, allDepSources);
       }
 
       // Filter dependencies based on name and ignore parameters
@@ -778,22 +894,37 @@ export default defineCommand({
       for (const update of toUpdate) {
         const dep = update.package;
         const newVersion = `^${update.latestVersion}`;
-        const location = update.location;
 
-        if (location === "dependencies" && dependencies[dep]) {
+        // Instead of relying on location tracking, check all possible locations
+        // and update wherever the dependency exists
+        let updated = false;
+
+        if (dependencies[dep]) {
           if (!updatedPackageJson.dependencies) updatedPackageJson.dependencies = {};
           updatedPackageJson.dependencies[dep] = newVersion;
-        } else if (location === "devDependencies" && devDependencies[dep]) {
+          updated = true;
+        }
+
+        if (devDependencies[dep]) {
           if (!updatedPackageJson.devDependencies) updatedPackageJson.devDependencies = {};
           updatedPackageJson.devDependencies[dep] = newVersion;
-        } else if (location === "peerDependencies" && peerDependencies[dep]) {
+          updated = true;
+        }
+
+        if (peerDependencies[dep]) {
           if (!updatedPackageJson.peerDependencies) updatedPackageJson.peerDependencies = {};
           updatedPackageJson.peerDependencies[dep] = newVersion;
-        } else if (location === "optionalDependencies" && optionalDependencies[dep]) {
+          updated = true;
+        }
+
+        if (optionalDependencies[dep]) {
           if (!updatedPackageJson.optionalDependencies)
             updatedPackageJson.optionalDependencies = {};
           updatedPackageJson.optionalDependencies[dep] = newVersion;
-        } else if (location === "catalog" && catalog[dep]) {
+          updated = true;
+        }
+
+        if (catalog[dep]) {
           // Update catalog
           if (!(updatedPackageJson as any).workspaces) (updatedPackageJson as any).workspaces = {};
           if (!(updatedPackageJson as any).workspaces.catalog)
@@ -804,10 +935,12 @@ export default defineCommand({
           if ((updatedPackageJson as any).catalog) {
             (updatedPackageJson as any).catalog[dep] = newVersion;
           }
-        } else if (location?.startsWith("catalogs.")) {
-          // Update named catalog
-          const catalogName = location.split(".")[1];
-          if (catalogName) {
+          updated = true;
+        }
+
+        // Check named catalogs
+        Object.keys(catalogs).forEach((catalogName) => {
+          if (catalogs[catalogName][dep]) {
             if (!(updatedPackageJson as any).workspaces)
               (updatedPackageJson as any).workspaces = {};
             if (!(updatedPackageJson as any).workspaces.catalogs)
@@ -824,8 +957,9 @@ export default defineCommand({
             ) {
               (updatedPackageJson as any).catalogs[catalogName][dep] = newVersion;
             }
+            updated = true;
           }
-        }
+        });
       }
 
       // Write updated package.json
@@ -837,13 +971,53 @@ export default defineCommand({
 
       relinka("success", `Updated ${toUpdate.length} dependencies in package.json`);
 
-      if (typeof Bun !== "undefined" && !args["no-install"]) {
-        await $`bun install --linker ${effectiveLinker}`;
-        if (packageJson.scripts?.check && args["with-check-script"]) {
-          await $`bun check`;
+      // Check if --with-install is NOT specified to skip the install step
+      if (args["with-install"] !== true) {
+        // Detect package manager for the message
+        const packageManager = await detectPackageManager(process.cwd());
+        const installCommand = packageManager
+          ? `${packageManager.command} install`
+          : "your package manager's install command";
+
+        relinka(
+          "info",
+          `Skipped install step. Use --with-install flag to run '${installCommand}' after updating.`,
+        );
+        return; // Exit early to prevent any automatic install
+      }
+
+      // Only proceed with install if --with-install is specified
+      // Detect package manager
+      const packageManager = await detectPackageManager(process.cwd());
+
+      if (packageManager) {
+        try {
+          // Handle workspace filtering
+          if (args.filter && args.filter.length > 0) {
+            // For filtered installs, we need to pass the filter arguments
+            const filterArgs = args.filter.flatMap((filter) => ["--filter", filter]);
+            await runInstallCommandWithFilter(packageManager, effectiveLinker, filterArgs);
+          } else {
+            await runInstallCommand(packageManager, effectiveLinker);
+          }
+
+          // Run check script if available and requested (only for bun)
+          if (
+            packageManager.name === "bun" &&
+            packageJson.scripts?.check &&
+            args["with-check-script"]
+          ) {
+            await $`bun check`;
+          }
+        } catch (error) {
+          relinka(
+            "warn",
+            `Install failed: ${error instanceof Error ? error.message : String(error)}`,
+          );
+          relinka("info", `Run '${packageManager.command} install' manually to apply the changes`);
         }
       } else {
-        relinka("info", "Run your package manager's install command to apply the changes");
+        relinka("warn", "Could not detect package manager. Please run install manually.");
       }
     } catch (error) {
       relinka(

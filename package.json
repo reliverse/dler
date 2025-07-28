@@ -1,7 +1,7 @@
 {
   "name": "@reliverse/dler",
   "author": "reliverse",
-  "version": "1.7.78",
+  "version": "1.7.81",
   "type": "module",
   "license": "MIT",
   "description": "@reliverse/dler is a flexible, unified, and fully automated bundler for typescript and javascript projects, as well as an npm and jsr publishing tool. dler is not only a bundler, it also tries to serve as the most powerful codemod toolkit for js/ts.",
@@ -62,7 +62,7 @@
     "pretty-ms": "^9.2.0",
     "registry-auth-token": "^5.1.0",
     "registry-url": "^7.2.0",
-    "rollup": "^4.46.0",
+    "rollup": "^4.46.1",
     "rollup-plugin-dts": "^6.2.1",
     "scule": "^1.3.0",
     "semver": "^7.7.2",

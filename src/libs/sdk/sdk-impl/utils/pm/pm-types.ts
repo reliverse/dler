@@ -18,6 +18,9 @@ export interface OperationOptions {
   dev?: boolean;
   workspace?: boolean | string;
   global?: boolean;
+  filter?: string[];
+  asCatalog?: string;
+  catalogName?: string;
 }
 
 export interface DetectPackageManagerOptions {

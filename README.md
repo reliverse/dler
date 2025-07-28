@@ -114,6 +114,47 @@ if you run just `dler` — it will display a list of commands which you can laun
 
 [build](#1-build) — [pub](#2-pub) — [agg](#3-agg) — [check](#4-check) — [conv](#5-conv) — [fs](#6-fs) — [init](#7-init) — [inject](#8-inject) — [libs](#9-libs) — [merge](#10-merge) — [migrate](#11-migrate) — [rempts](#12-rempts) — [x](#13-x) — [spell](#14-magic) — [split](#15-split) — [pack](#16-pack)
 
+### 0. `core`
+
+#### `install`
+
+```bash
+# Install all dependencies
+dler install
+
+# Install with workspace filtering
+dler install --filter "pkg-*" --filter "!pkg-c"
+dler install --filter "./packages/pkg-*"
+
+# Install specific package in filtered workspaces
+dler install lodash --filter "pkg-*"
+```
+
+#### `remove`
+
+```bash
+# Remove package from all workspaces
+dler remove lodash
+
+# Remove from specific workspaces
+dler remove lodash --filter "pkg-*" --filter "!pkg-c"
+```
+
+#### `update`
+
+when dler detects that you are in a monorepo, it will uses linked dependencies (`--linker`).
+
+```bash
+# Update all dependencies
+dler update
+
+# Update with workspace filtering
+dler update --filter "pkg-*" --filter "!pkg-c"
+
+# Update specific packages in filtered workspaces
+dler update lodash --filter "pkg-*"
+```
+
 ### 1. `build`
 
 since dler is fully modular, build command is separated for its own build-in plugin as well.
@@ -904,11 +945,156 @@ bun dler update
 
 - recursive lookup for deps in multiple package.json files (e.g. monorepo; or case when you have `C:/foo/bar1/package.json` and `C:/foo/bar2/package.json` and using `dler update` in `C:/foo`).
 
-## related
+## workspaces and catalogs
 
-special thanks to the project that inspired `@reliverse/dler`:
+dler has full workspaces and catalogs support for the package management commands. Catalog logic is similar to Bun across all package management commands.
 
-- [unjs/unbuild](https://github.com/unjs/unbuild#readme)
+### **Catalog Features:**
+
+#### **1. Install Dependencies as Catalogs**
+
+```bash
+# Add to default catalog
+dler install react react-dom --as-catalog default
+
+# Add to named catalog
+dler install jest testing-library --as-catalog testing
+dler install webpack babel --as-catalog build --catalog-name build
+
+# With workspace filtering
+dler install lodash --as-catalog default --filter "pkg-*"
+```
+
+#### **2. Remove Dependencies from Catalogs**
+
+```bash
+# Remove from default catalog
+dler remove react react-dom --from-catalog default
+
+# Remove from named catalog
+dler remove jest --from-catalog testing
+dler remove webpack --from-catalog build --catalog-name build
+```
+
+#### **3. List Catalogs**
+
+```bash
+# List all catalogs and their dependencies
+dler catalog list
+dler catalog ls
+```
+
+#### **4. Update Catalogs**
+
+```bash
+# Update all catalog dependencies to latest versions
+dler update --update-catalogs
+```
+
+### **Technical Implementation:**
+
+#### **Smart Version Management**
+
+- Dler automatically fetches latest versions from npm registry
+- Uses `^` and `~` prefixes for semver compatibility
+- Handles scoped packages correctly
+
+### **Catalog Structure Support:**
+
+#### **Default Catalog**
+
+```json
+{
+  "workspaces": {
+    "packages": ["packages/*"],
+    "catalog": {
+      "react": "^19.0.0",
+      "react-dom": "^19.0.0"
+    }
+  }
+}
+```
+
+#### **Named Catalogs**
+
+```json
+{
+  "workspaces": {
+    "packages": ["packages/*"],
+    "catalogs": {
+      "testing": {
+        "jest": "^30.0.0",
+        "testing-library": "^14.0.0"
+      },
+      "build": {
+        "webpack": "^5.88.2",
+        "babel": "^7.22.10"
+      }
+    }
+  }
+}
+```
+
+### **Usage Examples:**
+
+#### **Setting up a React Monorepo with Catalogs:**
+
+```bash
+# 1. Add core React dependencies to default catalog
+dler install react react-dom react-router-dom --as-catalog default
+
+# 2. Add build tools to named catalog
+dler install webpack babel --as-catalog build
+
+# 3. Add testing tools to named catalog
+dler install jest react-testing-library --as-catalog testing
+
+# 4. List all catalogs
+dler catalog list
+
+# 5. Update all catalogs to latest versions
+dler update --update-catalogs
+```
+
+#### **Workspace Package Usage:**
+
+```json
+// packages/app/package.json
+{
+  "dependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router-dom": "catalog:"
+  },
+  "devDependencies": {
+    "webpack": "catalog:build",
+    "jest": "catalog:testing"
+  }
+}
+```
+
+#### **Advanced Operations:**
+
+```bash
+# Add dependencies to specific workspaces as catalogs
+dler install lodash --as-catalog default --filter "pkg-*" --filter "!pkg-c"
+
+# Remove dependencies from catalogs in filtered workspaces
+dler remove typescript --from-catalog default --filter "pkg-*"
+
+# Update catalogs and then install
+dler update --update-catalogs
+dler install
+```
+
+### **Benefits:**
+
+1. **Consistency**: Ensures all packages use the same version of critical dependencies
+2. **Maintenance**: Update a dependency version in one place instead of across multiple package.json files
+3. **Clarity**: Makes it obvious which dependencies are standardized across your monorepo
+4. **Simplicity**: No need for complex version resolution strategies or external tools
+5. **Workspace Integration**: Seamlessly works with workspace filtering
+6. **Cross-Package Manager**: Works with Bun (full support) and provides helpful messages for others
 
 ## contributors
 
@@ -1010,6 +1196,12 @@ special thanks to the project that inspired `@reliverse/dler`:
 - [ ]      --cwd=<val>                     Absolute path to resolve files & entry points from. This just changes the process' cwd.
 - [ ]  -c, --config=<val>                  Specify path to Bun config file. Default $cwd/bunfig.toml
 - [ ]  -h, --help                          Display this menu and exit
+
+## related
+
+special thanks to the project that inspired `@reliverse/dler`:
+
+- [unjs/unbuild](https://github.com/unjs/unbuild#readme)
 
 ## support
 

@@ -86,7 +86,7 @@ export const NO_PACKAGE_MANAGER_DETECTED_ERROR_MSG = "No package manager auto-de
 
 export async function resolveOperationOptions(options: OperationOptions = {}): Promise<
   NonPartial<Pick<OperationOptions, "cwd" | "silent" | "dev" | "global">> &
-    Pick<OperationOptions, "workspace"> & {
+    Pick<OperationOptions, "workspace" | "filter" | "asCatalog" | "catalogName"> & {
       packageManager: PackageManager;
     }
 > {
@@ -107,6 +107,9 @@ export async function resolveOperationOptions(options: OperationOptions = {}): P
     packageManager,
     dev: options.dev ?? false,
     workspace: options.workspace,
+    filter: options.filter,
+    asCatalog: options.asCatalog,
+    catalogName: options.catalogName,
     global: options.global ?? false,
   };
 }
@@ -114,6 +117,17 @@ export async function resolveOperationOptions(options: OperationOptions = {}): P
 export function getWorkspaceArgs(
   options: Awaited<ReturnType<typeof resolveOperationOptions>>,
 ): string[] {
+  const args: string[] = [];
+
+  // Handle filter option (monorepo workspace filtering)
+  if (options.filter && options.filter.length > 0) {
+    for (const filter of options.filter) {
+      args.push("--filter", filter);
+    }
+    return args;
+  }
+
+  // Handle legacy workspace option
   if (!options.workspace) {
     return [];
   }

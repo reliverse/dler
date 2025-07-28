@@ -13,6 +13,8 @@ import {
   dedupeDependencies,
   installDependencies,
 } from "~/libs/sdk/sdk-impl/utils/pm/pm-api";
+import { addToCatalog, isCatalogSupported } from "~/libs/sdk/sdk-impl/utils/pm/pm-catalog";
+import { detectPackageManager } from "~/libs/sdk/sdk-impl/utils/pm/pm-detect";
 
 export default defineCommand({
   meta: {
@@ -63,11 +65,64 @@ export default defineCommand({
       description: "Run linter checks after updating dependencies",
       default: false,
     },
+    filter: {
+      type: "array",
+      description: "Filter workspaces to operate on (e.g., 'pkg-*', '!pkg-c', './packages/pkg-*')",
+    },
+    "as-catalog": {
+      type: "string",
+      description: "Install dependencies as catalog entries (e.g., 'default', 'testing', 'build')",
+    },
+    "catalog-name": {
+      type: "string",
+      description: "Name of the catalog to add dependencies to (used with --as-catalog)",
+    },
   }),
   async run({ args }) {
     console.log("DEBUG: install command starting with args:", args);
 
-    const { action, name, linter, ...options } = args;
+    const {
+      action,
+      name,
+      linter,
+      filter,
+      "as-catalog": asCatalog,
+      "catalog-name": catalogName,
+      ...options
+    } = args;
+
+    // Handle workspace filtering
+    if (filter && filter.length > 0) {
+      const packageManager = await detectPackageManager(process.cwd());
+      if (packageManager) {
+        // Add filter arguments to the options
+        (options as any).filter = filter;
+      }
+    }
+
+    // Handle catalog operations
+    if (asCatalog && name) {
+      const packageManager = await detectPackageManager(process.cwd());
+      if (!packageManager) {
+        relinka("error", "Could not detect package manager");
+        return process.exit(1);
+      }
+
+      if (!isCatalogSupported(packageManager)) {
+        relinka(
+          "error",
+          `Catalogs are not supported by ${packageManager.name}. Only Bun supports catalogs.`,
+        );
+        return process.exit(1);
+      }
+
+      const dependencies = Array.isArray(name) ? (name as string[]) : [name as string];
+      const catalogType = asCatalog === "default" ? "catalog" : "catalogs";
+      const actualCatalogName = asCatalog === "default" ? undefined : catalogName || asCatalog;
+
+      await addToCatalog(dependencies, catalogType, actualCatalogName, options.cwd);
+      return;
+    }
 
     switch (action) {
       case "install":

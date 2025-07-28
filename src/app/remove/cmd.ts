@@ -15,6 +15,8 @@ import { lookpath } from "lookpath";
 import { homedir, platform } from "node:os";
 
 import { removeDependency } from "~/libs/sdk/sdk-impl/utils/pm/pm-api";
+import { removeFromCatalog, isCatalogSupported } from "~/libs/sdk/sdk-impl/utils/pm/pm-catalog";
+import { detectPackageManager } from "~/libs/sdk/sdk-impl/utils/pm/pm-detect";
 
 interface MetaInfo {
   version: string;
@@ -64,6 +66,18 @@ export default defineCommand({
       description: "Run linter checks after removing dependencies",
       default: false,
     },
+    filter: {
+      type: "array",
+      description: "Filter workspaces to operate on (e.g., 'pkg-*', '!pkg-c', './packages/pkg-*')",
+    },
+    "from-catalog": {
+      type: "string",
+      description: "Remove dependencies from catalog (e.g., 'default', 'testing', 'build')",
+    },
+    "catalog-name": {
+      type: "string",
+      description: "Name of the catalog to remove dependencies from (used with --from-catalog)",
+    },
     standalone: {
       type: "boolean",
       description: "Remove standalone dler installation",
@@ -73,7 +87,49 @@ export default defineCommand({
   async run({ args }) {
     // console.log("DEBUG: remove command starting with args:", args);
 
-    const { action, name, linter, standalone, ...options } = args;
+    const {
+      action,
+      name,
+      linter,
+      standalone,
+      filter,
+      "from-catalog": fromCatalog,
+      "catalog-name": catalogName,
+      ...options
+    } = args;
+
+    // Handle workspace filtering
+    if (filter && filter.length > 0) {
+      const packageManager = await detectPackageManager(process.cwd());
+      if (packageManager) {
+        // Add filter arguments to the options
+        (options as any).filter = filter;
+      }
+    }
+
+    // Handle catalog removal operations
+    if (fromCatalog && name) {
+      const packageManager = await detectPackageManager(process.cwd());
+      if (!packageManager) {
+        relinka("error", "Could not detect package manager");
+        return process.exit(1);
+      }
+
+      if (!isCatalogSupported(packageManager)) {
+        relinka(
+          "error",
+          `Catalogs are not supported by ${packageManager.name}. Only Bun supports catalogs.`,
+        );
+        return process.exit(1);
+      }
+
+      const dependencies = Array.isArray(name) ? (name as string[]) : [name as string];
+      const catalogType = fromCatalog === "default" ? "catalog" : "catalogs";
+      const actualCatalogName = fromCatalog === "default" ? undefined : catalogName || fromCatalog;
+
+      await removeFromCatalog(dependencies, catalogType, actualCatalogName, options.cwd);
+      return;
+    }
 
     // Handle standalone dler removal
     if (standalone) {

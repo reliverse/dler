@@ -19,9 +19,10 @@ import {
  * @param options.silent - Whether to run the command in silent mode.
  * @param options.packageManager - The package manager info to use (auto-detected).
  * @param options.frozenLockFile - Whether to install dependencies with frozen lock file.
+ * @param options.filter - Filter workspaces to operate on (e.g., 'pkg-*', '!pkg-c').
  */
 export async function installDependencies(
-  options: Pick<OperationOptions, "cwd" | "silent" | "packageManager"> & {
+  options: Pick<OperationOptions, "cwd" | "silent" | "packageManager" | "filter"> & {
     frozenLockFile?: boolean;
   } = {},
 ) {
@@ -39,7 +40,11 @@ export async function installDependencies(
     ? pmToFrozenLockfileInstallCommand[resolvedOptions.packageManager.name]
     : ["install"];
 
-  await executeCommand(resolvedOptions.packageManager.command, commandArgs, {
+  // Add workspace filter arguments
+  const workspaceArgs = getWorkspaceArgs(resolvedOptions);
+  const finalArgs = [...commandArgs, ...workspaceArgs];
+
+  await executeCommand(resolvedOptions.packageManager.command, finalArgs, {
     cwd: resolvedOptions.cwd,
     silent: resolvedOptions.silent,
   });
@@ -168,6 +173,7 @@ export async function addDevDependency(
  * @param options.dev - Whether to remove dev dependency.
  * @param options.workspace - The name of the workspace to use.
  * @param options.global - Whether to run the command in global mode.
+ * @param options.filter - Filter workspaces to operate on (e.g., 'pkg-*', '!pkg-c').
  */
 export async function removeDependency(name: string | string[], options: OperationOptions = {}) {
   const resolvedOptions = await resolveOperationOptions(options);
