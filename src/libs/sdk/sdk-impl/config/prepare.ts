@@ -141,14 +141,14 @@ async function ensureTsconfigIncludes(tsconfigPath: string) {
       tsconfig.include = [];
     }
 
-    const requiredInclude = ".config/**/*.ts";
-    const hasConfigInclude = tsconfig.include.includes(requiredInclude);
+    // const requiredInclude = ".config/**/*.ts";
+    // const hasConfigInclude = tsconfig.include.includes(requiredInclude);
 
-    if (!hasConfigInclude) {
-      tsconfig.include.push(requiredInclude);
-      await fs.writeFile(tsconfigPath, JSON.stringify(tsconfig, null, 2), "utf8");
-      relinka("success", `Added ".config/**/*.ts" to tsconfig.json includes`);
-    }
+    // if (!hasConfigInclude) {
+    //   tsconfig.include.push(requiredInclude);
+    //   await fs.writeFile(tsconfigPath, JSON.stringify(tsconfig, null, 2), "utf8");
+    //   relinka("success", `Added ".config/**/*.ts" to tsconfig.json includes`);
+    // }
   } catch (error) {
     relinka(
       "warn",

@@ -1,6 +1,7 @@
 // usage example: bun src/cli.ts update --dry-run --with-install
 
 // TODO: fix: when package.json has both workspaces.catalog section and dependencies/devDependencies in root package.json then only catalog's deps are updated.
+// TODO: OR: maybe dependencies/devDependencies themselves are just ignored when catalog is present...
 
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
@@ -897,31 +898,26 @@ export default defineCommand({
 
         // Instead of relying on location tracking, check all possible locations
         // and update wherever the dependency exists
-        let updated = false;
 
         if (dependencies[dep]) {
           if (!updatedPackageJson.dependencies) updatedPackageJson.dependencies = {};
           updatedPackageJson.dependencies[dep] = newVersion;
-          updated = true;
         }
 
         if (devDependencies[dep]) {
           if (!updatedPackageJson.devDependencies) updatedPackageJson.devDependencies = {};
           updatedPackageJson.devDependencies[dep] = newVersion;
-          updated = true;
         }
 
         if (peerDependencies[dep]) {
           if (!updatedPackageJson.peerDependencies) updatedPackageJson.peerDependencies = {};
           updatedPackageJson.peerDependencies[dep] = newVersion;
-          updated = true;
         }
 
         if (optionalDependencies[dep]) {
           if (!updatedPackageJson.optionalDependencies)
             updatedPackageJson.optionalDependencies = {};
           updatedPackageJson.optionalDependencies[dep] = newVersion;
-          updated = true;
         }
 
         if (catalog[dep]) {
@@ -935,7 +931,6 @@ export default defineCommand({
           if ((updatedPackageJson as any).catalog) {
             (updatedPackageJson as any).catalog[dep] = newVersion;
           }
-          updated = true;
         }
 
         // Check named catalogs
@@ -957,7 +952,6 @@ export default defineCommand({
             ) {
               (updatedPackageJson as any).catalogs[catalogName][dep] = newVersion;
             }
-            updated = true;
           }
         });
       }
