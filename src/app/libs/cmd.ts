@@ -109,7 +109,7 @@ export default defineCommand({
       // Create directory if it doesn't exist
       if (!(await fs.pathExists(libDirPath))) {
         await fs.ensureDir(libDirPath);
-        relinka("log", `✅ Created library directory: ${libDirPath}`);
+        relinka("verbose", `✅ Created library directory: ${libDirPath}`);
       }
 
       // Create main file if it doesn't exist
@@ -119,7 +119,7 @@ export default defineCommand({
   `;
         await fs.ensureDir(path.dirname(mainFilePath));
         await fs.writeFile(mainFilePath, mainFileContent, "utf8");
-        relinka("log", `✅ Created/Updated main file: ${mainFilePath}`);
+        relinka("verbose", `✅ Created/Updated main file: ${mainFilePath}`);
       } else {
         relinka("warn", `⚠️ Main file already exists: ${mainFilePath}. Use --overwrite to update.`);
       }

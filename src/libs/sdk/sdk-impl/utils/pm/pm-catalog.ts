@@ -161,7 +161,7 @@ export async function listCatalogs(cwd: string = process.cwd()): Promise<void> {
     if (catalog && Object.keys(catalog).length > 0) {
       relinka("info", "Default catalog:");
       for (const [dep, version] of Object.entries(catalog)) {
-        relinka("log", `  ${dep}: ${version}`);
+        relinka("verbose", `  ${dep}: ${version}`);
       }
     }
 
@@ -169,7 +169,7 @@ export async function listCatalogs(cwd: string = process.cwd()): Promise<void> {
       for (const [catalogName, dependencies] of Object.entries(catalogs)) {
         relinka("info", `\nCatalog '${catalogName}':`);
         for (const [dep, version] of Object.entries(dependencies)) {
-          relinka("log", `  ${dep}: ${version}`);
+          relinka("verbose", `  ${dep}: ${version}`);
         }
       }
     }
@@ -204,7 +204,7 @@ export async function updateCatalogs(cwd: string = process.cwd()): Promise<void>
             if (latestVersion !== currentVersion) {
               updatedCatalog[dep] = latestVersion;
               updatedCount++;
-              relinka("log", `  ${dep}: ${currentVersion} → ${latestVersion}`);
+              relinka("verbose", `  ${dep}: ${currentVersion} → ${latestVersion}`);
             } else {
               updatedCatalog[dep] = currentVersion;
             }
@@ -252,7 +252,7 @@ export async function updateCatalogs(cwd: string = process.cwd()): Promise<void>
               if (latestVersion !== currentVersion) {
                 updatedNamedCatalog[dep] = latestVersion;
                 updatedCount++;
-                relinka("log", `  ${catalogName}:${dep}: ${currentVersion} → ${latestVersion}`);
+                relinka("verbose", `  ${catalogName}:${dep}: ${currentVersion} → ${latestVersion}`);
               } else {
                 updatedNamedCatalog[dep] = currentVersion;
               }

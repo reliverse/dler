@@ -147,6 +147,11 @@ export type {
   transpileFormat,
   Sourcemap,
   transpileTarget,
+  RelinkaConfig,
+  LogLevel,
+  LogLevelConfig,
+  LogLevelsConfig,
+  RelinkaDirsConfig,
 } from "./sdk-impl/config/types.js";
 export { IGNORE_PATTERNS } from "./sdk-impl/constants.js";
 export {
@@ -301,6 +306,7 @@ export {
   getMimeType,
 } from "./sdk-impl/utils/file-type.js";
 export { finalizeBuild, finalizePub } from "./sdk-impl/utils/finalize.js";
+export { createSpinner, SimpleSpinner } from "./sdk-impl/utils/spinner.js";
 export { safeRename, prepareCLIFiles } from "./sdk-impl/utils/fs-rename.js";
 export {
   FILE_TYPES,

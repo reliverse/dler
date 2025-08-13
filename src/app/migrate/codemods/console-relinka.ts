@@ -167,7 +167,7 @@ export async function consoleToRelinka(input?: string, from?: LogFormat, to?: Lo
 
     if (newContent !== content) {
       content = newContent;
-      relinka("log", `✅ Converted ${level} calls from ${finalFrom} to ${finalTo} format`);
+      relinka("verbose", `✅ Converted ${level} calls from ${finalFrom} to ${finalTo} format`);
     }
   }
 

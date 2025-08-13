@@ -25,14 +25,14 @@ export async function mkdist(options: MkdistOptions /* istanbul ignore next */ =
 
   // Setup dist
   if (options.cleanDist !== false) {
-    relinka("info", "Cleaning distribution directory...");
+    relinka("verbose", "Cleaning distribution directory...");
     await fsp.unlink(options.distDir).catch(() => {});
     await fsp.rm(options.distDir, { recursive: true, force: true });
     await fsp.mkdir(options.distDir, { recursive: true });
   }
 
   // Scan input files
-  relinka("info", "Scanning input files...");
+  relinka("verbose", "Scanning input files...");
   const filePaths = await glob(options.pattern || "**", {
     absolute: false,
     ignore: ["**/node_modules", "**/coverage", "**/.git"],
@@ -52,12 +52,12 @@ export async function mkdist(options: MkdistOptions /* istanbul ignore next */ =
     };
   });
 
-  relinka("info", `Found ${files.length} files to process`);
+  relinka("verbose", `Found ${files.length} files to process`);
 
   // Read and normalise TypeScript compiler options for emitting declarations
   options.typescript ||= {};
   if (options.typescript.compilerOptions) {
-    relinka("info", "Normalizing TypeScript compiler options...");
+    relinka("verbose", "Normalizing TypeScript compiler options...");
     options.typescript.compilerOptions = await normalizeCompilerOptions(
       options.typescript.compilerOptions,
     );
@@ -77,11 +77,11 @@ export async function mkdist(options: MkdistOptions /* istanbul ignore next */ =
   );
 
   // Create loader
-  relinka("info", "Creating file loaders...");
+  relinka("verbose", "Creating file loaders...");
   const { loadFile } = createLoader(options);
 
   // Use loaders to get output files
-  relinka("info", "Processing files with loaders...");
+  relinka("verbose", "Processing files with loaders...");
   const outputs: OutputFile[] = [];
   let processedCount = 0;
 
@@ -105,7 +105,7 @@ export async function mkdist(options: MkdistOptions /* istanbul ignore next */ =
   );
 
   // Normalize output extensions
-  relinka("info", "Normalizing output extensions...");
+  relinka("verbose", "Normalizing output extensions...");
   const pathConflicts: string[] = [];
 
   for (const output of outputs.filter((o) => o.extension)) {
@@ -129,7 +129,7 @@ export async function mkdist(options: MkdistOptions /* istanbul ignore next */ =
   // Generate declarations
   const dtsOutputs = outputs.filter((o) => o.declaration && !o.skip);
   if (dtsOutputs.length > 0) {
-    relinka("info", `Generating TypeScript declarations for ${dtsOutputs.length} files...`);
+    relinka("verbose", `Generating TypeScript declarations for ${dtsOutputs.length} files...`);
     const vfs = new Map(dtsOutputs.map((o) => [o.srcPath, o.contents || ""]));
     const declarations: DeclarationOutput = Object.create(null);
 
@@ -155,7 +155,7 @@ export async function mkdist(options: MkdistOptions /* istanbul ignore next */ =
   }
 
   // Resolve relative imports
-  relinka("info", "Resolving relative imports...");
+  relinka("verbose", "Resolving relative imports...");
   const outPaths = new Set(outputs.map((o) => o.path));
   const resolveId = (from: string, id = "", resolveExtensions: string[]) => {
     if (!id.startsWith(".")) {
@@ -204,7 +204,7 @@ export async function mkdist(options: MkdistOptions /* istanbul ignore next */ =
 
   // Write outputs
   const outputsToWrite = outputs.filter((o) => !o.skip);
-  relinka("info", `Writing ${outputsToWrite.length} output files...`);
+  relinka("verbose", `Writing ${outputsToWrite.length} output files...`);
 
   const writtenFiles: string[] = [];
   const errors: { filename: string; errors: TypeError[] }[] = [];

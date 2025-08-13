@@ -23,11 +23,11 @@ export function rollupWatch(rollupOptions: RollupOptions): void {
   relinka("warn", "[dler] [rollup] Watch mode is experimental and may be unstable");
 
   transpileWatcher.on("change", (id, { event }) => {
-    relinka("log", `${relative(".", id)} was ${event}d`);
+    relinka("verbose", `${relative(".", id)} was ${event}d`);
   });
 
   transpileWatcher.on("restart", () => {
-    relinka("log", "[dler] [rollup] Rebuilding bundle");
+    relinka("verbose", "[dler] [rollup] Rebuilding bundle");
   });
 
   transpileWatcher.on("event", (event) => {

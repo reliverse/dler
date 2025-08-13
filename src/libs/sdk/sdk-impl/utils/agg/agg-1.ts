@@ -87,7 +87,7 @@ export async function promptAggCommand() {
       strip = entryDir;
     } else if (selectedLibName === "main" && isMainDisabled) {
       // Main package is disabled, exit early
-      relinka.log("Main package aggregation is disabled due to <dler-disable-agg> comment.");
+      relinka.verbose("Main package aggregation is disabled due to <dler-disable-agg> comment.");
       return;
     } else {
       // Use library configuration
@@ -116,7 +116,9 @@ export async function promptAggCommand() {
           path.resolve(input) === path.resolve(mainEntryDir) ||
           path.resolve(input) === path.resolve(mainEntryFile)
         ) {
-          relinka.log("Main package aggregation is disabled due to <dler-disable-agg> comment.");
+          relinka.verbose(
+            "Main package aggregation is disabled due to <dler-disable-agg> comment.",
+          );
           return;
         }
       }
@@ -133,7 +135,7 @@ export async function promptAggCommand() {
           ) {
             const isLibDisabled = await isAggregationDisabled(libMainFile);
             if (isLibDisabled) {
-              relinka.log(
+              relinka.verbose(
                 `Library "${libName}" aggregation is disabled due to <dler-disable-agg> comment.`,
               );
               return;

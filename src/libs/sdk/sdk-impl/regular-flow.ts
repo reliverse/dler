@@ -16,16 +16,16 @@ export async function regular_buildFlow(
   isDev: boolean,
   config: DlerConfig,
 ): Promise<void> {
-  relinka("info", "— — — regular_buildFlow — — —");
+  relinka("verbose", "— — — regular_buildFlow — — —");
 
   if (config.libsActMode === "libs-only") {
-    relinka("log", "Skipping main project build as libsActMode is set to 'libs-only'");
+    relinka("verbose", "Skipping main project build as libsActMode is set to 'libs-only'");
     return;
   }
 
   switch (config.commonPubRegistry) {
     case "jsr":
-      relinka("log", "Initializing build process for main project to JSR only...");
+      relinka("verbose", "Initializing build process for main project to JSR only...");
       await regular_buildJsrDist(
         isDev,
         true,
@@ -50,7 +50,7 @@ export async function regular_buildFlow(
       );
       break;
     case "npm":
-      relinka("log", "Initializing build process for main project to NPM only...");
+      relinka("verbose", "Initializing build process for main project to NPM only...");
       await regular_buildNpmDist(
         isDev,
         config.coreIsCLI,
@@ -73,7 +73,7 @@ export async function regular_buildFlow(
       );
       break;
     case "npm-jsr": {
-      relinka("log", "Initializing build process for main project to both NPM and JSR...");
+      relinka("verbose", "Initializing build process for main project to both NPM and JSR...");
 
       const buildTasks = [
         () =>
@@ -138,16 +138,16 @@ export async function regular_pubFlow(
   isDev: boolean,
   config: DlerConfig,
 ): Promise<void> {
-  relinka("info", "— — — regular_pubFlow — — —");
+  relinka("verbose", "— — — regular_pubFlow — — —");
 
   if (config.libsActMode === "libs-only") {
-    relinka("log", "Skipping main project publish as libsActMode is set to 'libs-only'");
+    relinka("verbose", "Skipping main project publish as libsActMode is set to 'libs-only'");
     return;
   }
 
   switch (config.commonPubRegistry) {
     case "jsr":
-      relinka("log", "Publishing main project to JSR...");
+      relinka("verbose", "Publishing main project to JSR...");
       await regular_pubToJsr(
         config.distJsrDryRun,
         config.distJsrFailOnWarn,
@@ -160,7 +160,7 @@ export async function regular_pubFlow(
       );
       break;
     case "npm":
-      relinka("log", "Publishing main project to NPM...");
+      relinka("verbose", "Publishing main project to NPM...");
       await regular_pubToNpm(
         config.distJsrDryRun,
         isDev,
@@ -170,7 +170,7 @@ export async function regular_pubFlow(
       );
       break;
     case "npm-jsr": {
-      relinka("log", "Publishing main project to both NPM and JSR...");
+      relinka("verbose", "Publishing main project to both NPM and JSR...");
       const publishTasks = [
         () =>
           regular_pubToJsr(

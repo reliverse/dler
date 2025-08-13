@@ -218,7 +218,7 @@ async function _build(
     isLib,
   } satisfies BuildOptions) as BuildOptions;
   shouldStopAtStep(5);
-  relinka("log", "Build-specific configuration merged with defaults"); // Step 5
+  relinka("verbose", "Build-specific configuration merged with defaults"); // Step 5
   relinka("verbose", `Build options: clean=${options.clean}, parallel=${options.parallel}`);
   relinka("verbose", `Declaration files: ${options.declaration ? "enabled" : "disabled"}`);
 
@@ -335,7 +335,7 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
         continue;
       }
       cleanedDirs.push(dir);
-      relinka("log", `Cleaning dist directory: \`./${relative(process.cwd(), dir)}\``);
+      relinka("verbose", `Cleaning dist directory: \`./${relative(process.cwd(), dir)}\``);
       await rmdir(dir);
       await fsp.mkdir(dir, { recursive: true });
     }
@@ -445,7 +445,7 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
           .join("\n")}`;
       }
 
-      relinka("log", entry.chunk ? line : line);
+      relinka("verbose", entry.chunk ? line : line);
     }
 
     // Calculate elapsed time

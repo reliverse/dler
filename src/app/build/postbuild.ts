@@ -27,7 +27,7 @@ export async function dlerPostBuild(
   isDev: boolean,
   debugDontCopyNonBuildFiles?: boolean,
 ): Promise<void> {
-  relinka("info", "— — — dlerPostBuild — — —");
+  relinka("verbose", "— — — dlerPostBuild — — —");
 
   const config = await getConfigDler();
 
@@ -66,7 +66,7 @@ export async function dlerPostBuild(
       .map((toolName) => ({ toolName, ...tools[toolName] }));
 
     for (const { name, run } of availableTools) {
-      relinka("log", `Running ${name}...`);
+      relinka("verbose", `Running ${name}...`);
       await run();
     }
   }

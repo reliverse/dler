@@ -237,7 +237,7 @@ const restoreFile = async (
   try {
     if (!force) {
       await fs.access(dest);
-      relinka("log", `Skipping existing file (use --force to overwrite): ${relPath}`);
+      relinka("verbose", `Skipping existing file (use --force to overwrite): ${relPath}`);
       return;
     }
   } catch {
@@ -442,7 +442,7 @@ export default defineCommand({
               "warn",
               `Warning: Could not load existing templates from ${modFile}. Will create new ones.`,
             );
-            relinka("log", `Error details: ${(loadError as Error).message}`);
+            relinka("verbose", `Error details: ${(loadError as Error).message}`);
           }
         }
       }
@@ -670,19 +670,19 @@ export default defineCommand({
 
           if (existingContent !== newContent) {
             if (filesToUpdate) {
-              relinka("log", `Updating specific files in template: ${tplName}`);
+              relinka("verbose", `Updating specific files in template: ${tplName}`);
             } else {
-              relinka("log", `Updating template: ${tplName}`);
+              relinka("verbose", `Updating template: ${tplName}`);
             }
           }
         } catch (error) {
           if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
             throw error;
           }
-          relinka("log", `Creating new template: ${tplName}`);
+          relinka("verbose", `Creating new template: ${tplName}`);
         }
       } else if (!args.update) {
-        relinka("log", `Creating template: ${tplName}`);
+        relinka("verbose", `Creating template: ${tplName}`);
       }
 
       // Log files with errors
@@ -726,7 +726,7 @@ export default defineCommand({
     );
     relinka("success", `Packed ${templateDirs.length} templates into ${modFile}:`);
     for (const p of templatePaths) {
-      relinka("log", `- ${p}`);
+      relinka("verbose", `- ${p}`);
     }
 
     // Log binary files count

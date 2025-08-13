@@ -154,7 +154,7 @@ export async function renameEntryFile(
   // 5. Rename Main Entry File
   if (sourceEntryPath !== targetEntryPath) {
     await fs.rename(sourceEntryPath, targetEntryPath);
-    relinka("log", `Renamed entry file to ${targetEntryPath}`);
+    relinka("verbose", `Renamed entry file to ${targetEntryPath}`);
   } else {
     relinka(
       "log",

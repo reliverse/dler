@@ -163,7 +163,7 @@ export default defineCommand({
               return;
             }
             await fs.remove(resolvedPath);
-            relinka("log", `Removed: ${resolvedPath}`);
+            relinka("verbose", `Removed: ${resolvedPath}`);
             removedCount++;
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
@@ -174,7 +174,7 @@ export default defineCommand({
       );
 
       if (removedCount > 0) {
-        relinka("log", `Successfully removed ${removedCount} item(s) matching: ${target}`);
+        relinka("verbose", `Successfully removed ${removedCount} item(s) matching: ${target}`);
       } else {
         relinka("warn", `No items were removed for pattern: ${target}`);
       }
@@ -238,7 +238,7 @@ export default defineCommand({
           });
 
           if (confirm === "no") {
-            relinka("log", "Operation cancelled by user");
+            relinka("verbose", "Operation cancelled by user");
             return;
           }
         }
@@ -294,7 +294,7 @@ export default defineCommand({
             }
 
             await fs.copyFile(file, destPath);
-            relinka("log", `Copied '${file}' to '${destPath}'`);
+            relinka("verbose", `Copied '${file}' to '${destPath}'`);
           },
           { concurrency, stopOnError: true },
         );
@@ -313,7 +313,7 @@ export default defineCommand({
       if (prepareMyCLI === true) {
         try {
           await prepareCLIFiles(revert === true, recursive, useDtsTxtForPrepareMyCLI);
-          relinka("log", "Successfully prepared CLI files");
+          relinka("verbose", "Successfully prepared CLI files");
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : String(error);
           relinka("error", `Error preparing CLI: ${errorMessage}`);
@@ -332,7 +332,7 @@ export default defineCommand({
 
       try {
         await safeRename(source, destination);
-        relinka("log", `Successfully renamed '${source}' to '${destination}'`);
+        relinka("verbose", `Successfully renamed '${source}' to '${destination}'`);
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         relinka("error", `Error renaming: ${errorMessage}`);

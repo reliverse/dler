@@ -167,7 +167,7 @@ export async function useAggregator({
     if (sortLines) {
       typeLines.sort();
       valueLines.sort();
-      if (verbose) relinka("log", "Sorted aggregator lines alphabetically.");
+      if (verbose) relinka("verbose", "Sorted aggregator lines alphabetically.");
     }
 
     // Build the aggregator block content

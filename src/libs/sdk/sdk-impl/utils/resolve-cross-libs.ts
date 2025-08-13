@@ -63,7 +63,7 @@ async function resolveCrossLibsViaInline(
         );
 
         if (processed !== content) {
-          relinka("log", `[resolve-cross-libs] File modified: ${filePath}`);
+          relinka("verbose", `[resolve-cross-libs] File modified: ${filePath}`);
           await fs.writeFile(filePath, processed, "utf-8");
           modifiedFiles.push(path.resolve(filePath));
         }
@@ -155,7 +155,7 @@ async function processFileViaInline(
     // Track inlined block boundaries
     if (line.includes("/* inlined-start ")) {
       insideInlined = true;
-      relinka("log", `[resolve-cross-libs] Entering inlined block: ${line.trim()}`);
+      relinka("verbose", `[resolve-cross-libs] Entering inlined block: ${line.trim()}`);
       result.push(line);
       continue;
     }
@@ -183,7 +183,7 @@ async function processFileViaInline(
     if (match) {
       // processedImports++;
       const [, indentation, fullStatement, quote, libName, rest, comment] = match;
-      relinka("log", `[resolve-cross-libs] Processing import/export: ${libName}/${rest}`);
+      relinka("verbose", `[resolve-cross-libs] Processing import/export: ${libName}/${rest}`);
 
       // Skip if already converted to relative path (idempotent)
       if (fullStatement?.includes(`${quote}./`)) {
@@ -207,7 +207,7 @@ async function processFileViaInline(
           if (!libName || !rest) {
             throw new Error("Library name or path is undefined");
           }
-          relinka("log", `[resolve-cross-libs] Attempting to inline: ${libName}/${rest}`);
+          relinka("verbose", `[resolve-cross-libs] Attempting to inline: ${libName}/${rest}`);
           const targetPath = await resolveTargetFile(libName, rest, subFolders, currentFilePath);
           // relinka("internal", `Found target file: ${targetPath}`);
           const targetContent = await fs.readFile(targetPath, "utf-8");
@@ -249,7 +249,7 @@ async function resolveTargetFile(
   subFolders: ("npm" | "jsr")[],
   currentFilePath: string,
 ): Promise<string> {
-  relinka("log", `[resolve-cross-libs] Resolving target file for ${libName}/${rest}`);
+  relinka("verbose", `[resolve-cross-libs] Resolving target file for ${libName}/${rest}`);
 
   // Determine extension priority based on current file type
   const isCurrentFileDts = currentFilePath.endsWith(".d.ts");
@@ -354,7 +354,7 @@ async function resolveAllCrossLibsViaInline(
 
   if (allModifiedFiles.length > 0) {
     relinka("info", "[resolveAllCrossLibsViaInline] Cross libraries replacements done in:");
-    relinka("log", "[resolveAllCrossLibsViaInline] " + allModifiedFiles.join(", "));
+    relinka("verbose", "[resolveAllCrossLibsViaInline] " + allModifiedFiles.join(", "));
   }
 
   // relinka(
@@ -423,7 +423,7 @@ async function resolveCrossLibsViaCopy(
         );
 
         if (processed !== content) {
-          relinka("log", `[resolveCrossLibsViaCopy] File modified: ${filePath}`);
+          relinka("verbose", `[resolveCrossLibsViaCopy] File modified: ${filePath}`);
           await fs.writeFile(filePath, processed, "utf-8");
           modifiedFiles.push(path.resolve(filePath));
         }
@@ -468,7 +468,7 @@ async function processFileViaCopy(
 
     if (match) {
       const [, indentation, fullStatement, quote, libName, rest, comment] = match;
-      relinka("log", `[resolveCrossLibsViaCopy] Processing import/export: ${libName}/${rest}`);
+      relinka("verbose", `[resolveCrossLibsViaCopy] Processing import/export: ${libName}/${rest}`);
 
       // Skip if already converted to relative path (idempotent)
       if (fullStatement?.includes(`${quote}./`)) {
@@ -492,7 +492,10 @@ async function processFileViaCopy(
           if (!libName || !rest) {
             throw new Error("Library name or path is undefined");
           }
-          relinka("log", `[resolveCrossLibsViaCopy] Rewriting to copied path: ${libName}/${rest}`);
+          relinka(
+            "verbose",
+            `[resolveCrossLibsViaCopy] Rewriting to copied path: ${libName}/${rest}`,
+          );
 
           // Mark this library for copying
           copiedLibraries.add(libName);
@@ -532,7 +535,10 @@ async function copyLibraryDirectory(
   // Check if already copied
   try {
     await fs.access(targetDir);
-    relinka("log", `[resolveCrossLibsViaCopy] Library ${libName} already copied to ${targetDir}`);
+    relinka(
+      "verbose",
+      `[resolveCrossLibsViaCopy] Library ${libName} already copied to ${targetDir}`,
+    );
     return;
   } catch {
     // Directory doesn't exist, proceed with copying
@@ -547,7 +553,7 @@ async function copyLibraryDirectory(
     // Copy the entire library directory
     await copyDirectoryRecursive(sourceDir, targetDir);
 
-    relinka("log", `[resolveCrossLibsViaCopy] Successfully copied library ${libName}`);
+    relinka("verbose", `[resolveCrossLibsViaCopy] Successfully copied library ${libName}`);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     relinka(
@@ -636,7 +642,7 @@ async function resolveAllCrossLibsViaCopy(
 
   if (allModifiedFiles.length > 0) {
     relinka("info", "[resolveAllCrossLibsViaCopy] Cross libraries copy replacements done in:");
-    relinka("log", "[resolveAllCrossLibsViaCopy] " + allModifiedFiles.join(", "));
+    relinka("verbose", "[resolveAllCrossLibsViaCopy] " + allModifiedFiles.join(", "));
   }
 
   // relinka(
@@ -814,7 +820,7 @@ async function resolveCrossLibsViaPackage(
         );
 
         if (processed !== content) {
-          relinka("log", `[resolveCrossLibsViaPackage] File modified: ${filePath}`);
+          relinka("verbose", `[resolveCrossLibsViaPackage] File modified: ${filePath}`);
           await fs.writeFile(filePath, processed, "utf-8");
           modifiedFiles.push(path.resolve(filePath));
         }
@@ -858,7 +864,10 @@ async function processFileViaPackage(
 
     if (match) {
       const [, indentation, fullStatement, quote, libName, rest, comment] = match;
-      relinka("log", `[resolveCrossLibsViaPackage] Processing import/export: ${libName}/${rest}`);
+      relinka(
+        "verbose",
+        `[resolveCrossLibsViaPackage] Processing import/export: ${libName}/${rest}`,
+      );
 
       // Skip if already converted to relative path (idempotent)
       if (fullStatement?.includes(`${quote}./`)) {
@@ -987,7 +996,7 @@ async function resolveAllCrossLibsViaPackage(
       "info",
       "[resolveAllCrossLibsViaPackage] Cross libraries package replacements done in:",
     );
-    relinka("log", "[resolveAllCrossLibsViaPackage] " + allModifiedFiles.join(", "));
+    relinka("verbose", "[resolveAllCrossLibsViaPackage] " + allModifiedFiles.join(", "));
   }
 
   // relinka(

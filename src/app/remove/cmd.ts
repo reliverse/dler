@@ -158,7 +158,7 @@ export default defineCommand({
           await removeDependency(name, options);
         } else {
           relinka.error(`Unknown action: ${action}`);
-          relinka.log("Available actions: remove, rm, uninstall, un, delete, del");
+          relinka.verbose("Available actions: remove, rm, uninstall, un, delete, del");
           return process.exit(1);
         }
       }

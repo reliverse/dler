@@ -21,7 +21,7 @@ export async function regular_createPackageJSON(
   coreDescription: string,
   coreBuildOutDir = "bin",
 ): Promise<void> {
-  relinka("log", `Generating distribution package.json and tsconfig.json (isJsr=${isJsr})...`);
+  relinka("verbose", `Generating distribution package.json and tsconfig.json (isJsr=${isJsr})...`);
   const commonPkg = await regular_createCommonPackageFields(coreIsCLI, coreDescription);
   const originalPkg = await readPackageJSON();
   const packageName = originalPkg.name || "";

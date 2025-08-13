@@ -1,8 +1,5 @@
 // usage example: bun src/cli.ts update --dry-run --with-install
 
-// TODO: fix: when package.json has both workspaces.catalog section and dependencies/devDependencies in root package.json then only catalog's deps are updated.
-// TODO: OR: maybe dependencies/devDependencies themselves are just ignored when catalog is present...
-
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
@@ -12,6 +9,7 @@ import { lookpath } from "lookpath";
 import pMap from "p-map";
 import { readPackageJSON } from "pkg-types";
 import semver from "semver";
+import { glob } from "tinyglobby";
 
 import { getConfigBunfig } from "~/libs/sdk/sdk-impl/config/load";
 import { updateCatalogs, isCatalogSupported } from "~/libs/sdk/sdk-impl/utils/pm/pm-catalog";
@@ -28,6 +26,21 @@ interface UpdateResult {
   location?: string; // Track where the dependency comes from (dependencies, devDependencies, catalog, etc.)
 }
 
+interface DependencyInfo {
+  versionSpec: string;
+  locations: Set<string>;
+}
+
+interface PackageCheckOptions {
+  allowMajor: boolean;
+  savePrefix: string;
+  concurrency: number;
+}
+
+// Cache for version lookups to avoid duplicate API calls
+const versionCache = new Map<string, { version: string; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 /**
  * Check if a dependency is an npm alias (e.g., "npm:package-name@version")
  */
@@ -42,8 +55,28 @@ function isWorkspaceDependency(versionSpec: string): boolean {
   return versionSpec.startsWith("workspace:");
 }
 
+// Detect catalog reference like `catalog:foo`
+function isCatalogReference(versionSpec: string): boolean {
+  return versionSpec.startsWith("catalog:");
+}
+
+// Detect other non-semver specs we should skip updating
+function isNonSemverSpecifier(versionSpec: string): boolean {
+  return (
+    isNpmAlias(versionSpec) ||
+    isWorkspaceDependency(versionSpec) ||
+    isCatalogReference(versionSpec) ||
+    versionSpec.startsWith("git+") ||
+    versionSpec.startsWith("file:") ||
+    versionSpec.startsWith("link:") ||
+    versionSpec.startsWith("http:") ||
+    versionSpec.startsWith("https:")
+  );
+}
+
 /**
  * Check if a version update is semver-compatible with the current version range
+ * Note: Returns false for exact versions (handled separately in checkPackageUpdate)
  */
 function isSemverCompatible(currentVersionRange: string, latestVersion: string): boolean {
   try {
@@ -71,6 +104,244 @@ function isSemverCompatible(currentVersionRange: string, latestVersion: string):
 }
 
 /**
+ * Collect dependencies from package.json according to flags.
+ * Returns a map of dependency name to its version and all locations where it appears.
+ */
+function collectTargetDependencies(pkg: any, args: any): { map: Record<string, DependencyInfo> } {
+  const map: Record<string, DependencyInfo> = {};
+
+  const dependencies = pkg.dependencies || {};
+  const devDependencies = pkg.devDependencies || {};
+  const peerDependencies = pkg.peerDependencies || {};
+  const optionalDependencies = pkg.optionalDependencies || {};
+
+  const includeDeps =
+    !args["dev-only"] && !args["peer-only"] && !args["optional-only"] && !args["catalogs-only"];
+  const includeCatalogs =
+    !args["dev-only"] && !args["peer-only"] && !args["optional-only"] && !args["prod-only"];
+
+  if (args["prod-only"] || includeDeps) {
+    for (const dep of Object.keys(dependencies)) {
+      const version = dependencies[dep];
+      if (!version) continue;
+      if (!map[dep]) map[dep] = { versionSpec: version, locations: new Set() };
+      map[dep].versionSpec = version;
+      map[dep].locations.add("dependencies");
+    }
+  }
+
+  if (args["dev-only"] || includeDeps) {
+    for (const dep of Object.keys(devDependencies)) {
+      const version = devDependencies[dep];
+      if (!version) continue;
+      if (!map[dep]) map[dep] = { versionSpec: version, locations: new Set() };
+      map[dep].versionSpec = version;
+      map[dep].locations.add("devDependencies");
+    }
+  }
+
+  if (args["peer-only"] || includeDeps) {
+    for (const dep of Object.keys(peerDependencies)) {
+      const version = peerDependencies[dep];
+      if (!version) continue;
+      if (!map[dep]) map[dep] = { versionSpec: version, locations: new Set() };
+      map[dep].versionSpec = version;
+      map[dep].locations.add("peerDependencies");
+    }
+  }
+
+  if (args["optional-only"] || includeDeps) {
+    for (const dep of Object.keys(optionalDependencies)) {
+      const version = optionalDependencies[dep];
+      if (!version) continue;
+      if (!map[dep]) map[dep] = { versionSpec: version, locations: new Set() };
+      map[dep].versionSpec = version;
+      map[dep].locations.add("optionalDependencies");
+    }
+  }
+
+  // Include catalog dependencies by default
+  if (args["catalogs-only"] || includeCatalogs) {
+    // Check for workspaces.catalog
+    const workspacesCatalog = pkg.workspaces?.catalog || {};
+    for (const dep of Object.keys(workspacesCatalog)) {
+      const version = workspacesCatalog[dep];
+      if (!version) continue;
+      if (!map[dep]) map[dep] = { versionSpec: version, locations: new Set() };
+      map[dep].versionSpec = version;
+      map[dep].locations.add("catalog");
+    }
+
+    // Check for workspaces.catalogs (named catalogs)
+    const workspacesCatalogs = pkg.workspaces?.catalogs || {};
+    for (const catalogName of Object.keys(workspacesCatalogs)) {
+      const catalog = workspacesCatalogs[catalogName] || {};
+      for (const dep of Object.keys(catalog)) {
+        const version = catalog[dep];
+        if (!version) continue;
+        if (!map[dep]) map[dep] = { versionSpec: version, locations: new Set() };
+        map[dep].versionSpec = version;
+        map[dep].locations.add(`catalogs.${catalogName}`);
+      }
+    }
+
+    // Check for top-level catalog (legacy)
+    const topLevelCatalog = pkg.catalog || {};
+    for (const dep of Object.keys(topLevelCatalog)) {
+      const version = topLevelCatalog[dep];
+      if (!version) continue;
+      if (!map[dep]) map[dep] = { versionSpec: version, locations: new Set() };
+      map[dep].versionSpec = version;
+      map[dep].locations.add("catalog");
+    }
+
+    // Check for top-level catalogs (legacy)
+    const topLevelCatalogs = pkg.catalogs || {};
+    for (const catalogName of Object.keys(topLevelCatalogs)) {
+      const catalog = topLevelCatalogs[catalogName] || {};
+      for (const dep of Object.keys(catalog)) {
+        const version = catalog[dep];
+        if (!version) continue;
+        if (!map[dep]) map[dep] = { versionSpec: version, locations: new Set() };
+        map[dep].versionSpec = version;
+        map[dep].locations.add(`catalogs.${catalogName}`);
+      }
+    }
+  }
+
+  return { map };
+}
+
+/**
+ * Apply a version update into all relevant places in package.json for a dependency.
+ */
+function applyVersionUpdate(
+  pkg: any,
+  depName: string,
+  newVersion: string,
+  locations: Set<string>,
+): void {
+  if (locations.has("dependencies")) {
+    if (!pkg.dependencies) pkg.dependencies = {};
+    pkg.dependencies[depName] = newVersion;
+  }
+  if (locations.has("devDependencies")) {
+    if (!pkg.devDependencies) pkg.devDependencies = {};
+    pkg.devDependencies[depName] = newVersion;
+  }
+  if (locations.has("peerDependencies")) {
+    if (!pkg.peerDependencies) pkg.peerDependencies = {};
+    pkg.peerDependencies[depName] = newVersion;
+  }
+  if (locations.has("optionalDependencies")) {
+    if (!pkg.optionalDependencies) pkg.optionalDependencies = {};
+    pkg.optionalDependencies[depName] = newVersion;
+  }
+
+  // For catalogs, update both workspaces.* and top-level if present
+  const ensureWorkspaces = () => {
+    if (!(pkg as any).workspaces) (pkg as any).workspaces = {};
+  };
+
+  if (locations.has("catalog")) {
+    ensureWorkspaces();
+    if (!(pkg as any).workspaces.catalog) (pkg as any).workspaces.catalog = {};
+    (pkg as any).workspaces.catalog[depName] = newVersion;
+    if ((pkg as any).catalog) (pkg as any).catalog[depName] = newVersion;
+  }
+
+  for (const loc of locations) {
+    const match = /^catalogs\.(.+)$/.exec(loc);
+    if (match) {
+      const catalogName = (match[1] ?? "") as string;
+      if (!catalogName) continue;
+      ensureWorkspaces();
+      if (!(pkg as any).workspaces.catalogs) (pkg as any).workspaces.catalogs = {};
+      if (!(pkg as any).workspaces.catalogs[catalogName])
+        (pkg as any).workspaces.catalogs[catalogName] = {};
+      (pkg as any).workspaces.catalogs[catalogName][depName] = newVersion;
+      if ((pkg as any).catalogs && (pkg as any).catalogs[catalogName]) {
+        (pkg as any).catalogs[catalogName][depName] = newVersion;
+      }
+    }
+  }
+}
+
+// Find all workspace package.json paths from root cwd. Supports workspaces array or { packages: [] }.
+async function findWorkspacePackageJsons(cwd: string): Promise<string[]> {
+  const root = await readPackageJSON(cwd);
+  const ws: any = (root as any).workspaces;
+  let patterns: string[] = [];
+  if (Array.isArray(ws)) {
+    patterns = ws as string[];
+  } else if (ws && Array.isArray(ws.packages)) {
+    patterns = ws.packages as string[];
+  }
+  if (!patterns.length) return [];
+  const dirs = await glob(patterns, {
+    cwd,
+    onlyDirectories: true,
+    absolute: true,
+    ignore: ["**/node_modules/**", "**/dist/**", "**/.git/**"],
+  });
+  const pkgJsonPaths: string[] = [];
+  for (const dir of dirs) {
+    const pj = path.join(dir, "package.json");
+    if (await fs.pathExists(pj)) pkgJsonPaths.push(pj);
+  }
+  return pkgJsonPaths;
+}
+
+/**
+ * Check if we're in a monorepo by detecting workspace configuration
+ */
+async function isMonorepo(cwd: string): Promise<boolean> {
+  try {
+    const root = await readPackageJSON(cwd);
+    const ws: any = (root as any).workspaces;
+    if (Array.isArray(ws) && ws.length > 0) {
+      return true;
+    }
+    if (ws && Array.isArray(ws.packages) && ws.packages.length > 0) {
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Recursively find ALL package.json files in the directory tree
+ */
+async function findAllPackageJsons(cwd: string): Promise<string[]> {
+  const packageJsonFiles = await glob("**/package.json", {
+    cwd,
+    absolute: true,
+    ignore: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/.git/**",
+      "**/coverage/**",
+      "**/.next/**",
+      "**/.nuxt/**",
+      "**/out/**",
+    ],
+  });
+
+  // Filter out files that don't actually exist (glob can sometimes return stale results)
+  const existingFiles: string[] = [];
+  for (const file of packageJsonFiles) {
+    if (await fs.pathExists(file)) {
+      existingFiles.push(file);
+    }
+  }
+
+  return existingFiles;
+}
+
+/**
  * Fallback function to fetch package version directly from npm registry
  */
 async function fetchVersionFromRegistry(packageName: string): Promise<string> {
@@ -83,21 +354,268 @@ async function fetchVersionFromRegistry(packageName: string): Promise<string> {
 }
 
 /**
- * Get latest version with fallback mechanism
+ * Get latest version with fallback mechanism and caching
  */
 async function getLatestVersion(packageName: string): Promise<string> {
+  // Check cache first
+  const cached = versionCache.get(packageName);
+  const now = Date.now();
+
+  if (cached && now - cached.timestamp < CACHE_TTL) {
+    return cached.version;
+  }
+
   try {
-    return await latestVersion(packageName);
+    const version = await latestVersion(packageName);
+    versionCache.set(packageName, { version, timestamp: now });
+    return version;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
     // For any error, try the registry fallback once
     try {
-      return await fetchVersionFromRegistry(packageName);
+      const version = await fetchVersionFromRegistry(packageName);
+      versionCache.set(packageName, { version, timestamp: now });
+      return version;
     } catch (fallbackError) {
       throw new Error(
         `Latest version main check and npm registry fallback failed. Main check error: ${errorMessage}. Registry error: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`,
       );
+    }
+  }
+}
+
+/**
+ * Check if a package needs updating and get update information
+ *
+ * Update behavior:
+ * - Gets latest version from registry (not just semver-compatible)
+ * - Exact versions (1.0.0): Always allow updates to latest
+ * - Prefixed versions (^1.0.0, ~1.0.0): Updates to latest if allowMajor=true (default)
+ * - When allowMajor=false: Only allows updates within semver range
+ */
+async function checkPackageUpdate(
+  packageName: string,
+  versionSpec: string,
+  locations: Set<string>,
+  options: PackageCheckOptions,
+): Promise<UpdateResult> {
+  try {
+    const latest = await getLatestVersion(packageName);
+    const cleanCurrent = versionSpec.replace(/^[\^~]/, "");
+    let isCompatible = isSemverCompatible(versionSpec, latest);
+    const isExact = !versionSpec.startsWith("^") && !versionSpec.startsWith("~");
+
+    // Allow updates to latest version: exact versions always, and major updates when enabled (default)
+    if (isExact || (!isCompatible && options.allowMajor)) {
+      isCompatible = true;
+    }
+
+    return {
+      package: packageName,
+      currentVersion: cleanCurrent,
+      latestVersion: latest,
+      updated: latest !== cleanCurrent && isCompatible,
+      semverCompatible: isCompatible,
+      location: Array.from(locations).join(", "),
+    };
+  } catch (error) {
+    return {
+      package: packageName,
+      currentVersion: versionSpec,
+      latestVersion: versionSpec,
+      updated: false,
+      error: error instanceof Error ? error.message : String(error),
+      semverCompatible: false,
+      location: Array.from(locations).join(", "),
+    };
+  }
+}
+
+/**
+ * Filter and prepare dependencies for updating
+ */
+function prepareDependenciesForUpdate(
+  allDepsMap: Record<string, DependencyInfo>,
+  args: any,
+): string[] {
+  // Filter dependencies based on name and ignore parameters
+  const depsToUpdate = Object.keys(allDepsMap);
+  let filteredDeps: string[] = [];
+
+  if (args.name && args.name.length > 0) {
+    // Update only specified dependencies
+    filteredDeps = args.name.filter((dep: string) => dep in allDepsMap);
+    const notFound = args.name.filter((dep: string) => !(dep in allDepsMap));
+    if (notFound.length > 0) {
+      relinka("warn", `Dependencies not found: ${notFound.join(", ")}`);
+    }
+  } else {
+    // Update all dependencies, respecting ignore list
+    const ignoreList = args.ignore || [];
+    filteredDeps = depsToUpdate.filter((dep) => !ignoreList.includes(dep));
+  }
+
+  // Filter out aliases, workspace, catalog and other non-semver specs
+  // By default, include all semver-compatible dependencies (both prefixed and exact)
+  return filteredDeps.filter((dep) => {
+    const versionSpec = allDepsMap[dep]?.versionSpec ?? "";
+    if (!versionSpec) return false;
+    if (isNonSemverSpecifier(versionSpec)) return false;
+    // Include all semver-compatible dependencies by default
+    return true;
+  });
+}
+
+/**
+ * Update a single package.json file with new dependency versions
+ */
+async function updatePackageJsonFile(
+  packageJsonPath: string,
+  dependencies: Record<string, DependencyInfo>,
+  updatesToApply: UpdateResult[],
+  savePrefix: string,
+): Promise<number> {
+  if (updatesToApply.length === 0) return 0;
+
+  try {
+    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, "utf8")) as Record<
+      string,
+      any
+    >;
+    const updatedPackageJson = { ...packageJson };
+
+    for (const update of updatesToApply) {
+      const prefix = savePrefix === "none" ? "" : savePrefix;
+      const newVersion = `${prefix}${update.latestVersion}`;
+      const locations = dependencies[update.package]?.locations || new Set<string>();
+      applyVersionUpdate(updatedPackageJson, update.package, newVersion, locations);
+    }
+
+    await fs.writeFile(packageJsonPath, JSON.stringify(updatedPackageJson, null, 2) + "\n", "utf8");
+
+    return updatesToApply.length;
+  } catch (error) {
+    relinka(
+      "warn",
+      `Failed to update ${packageJsonPath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return 0;
+  }
+}
+
+/**
+ * Update dependencies across all workspace packages
+ */
+async function updateWorkspacePackages(
+  workspacePaths: string[],
+  args: any,
+  options: PackageCheckOptions,
+): Promise<number> {
+  if (workspacePaths.length === 0) return 0;
+
+  relinka("log", `Scanning ${workspacePaths.length} workspace packages...`);
+  let totalWorkspaceUpdated = 0;
+
+  for (const packageJsonPath of workspacePaths) {
+    try {
+      const packageJson = JSON.parse(await fs.readFile(packageJsonPath, "utf8")) as Record<
+        string,
+        any
+      >;
+
+      // Use same args for workspace packages (catalogs are included by default)
+      const { map } = collectTargetDependencies(packageJson, args);
+      const candidates = prepareDependenciesForUpdate(map, args);
+
+      if (candidates.length === 0) continue;
+
+      const results = await pMap(
+        candidates,
+        (dep) => {
+          const depInfo = map[dep];
+          if (!depInfo?.versionSpec) {
+            return Promise.resolve({
+              package: dep,
+              currentVersion: "unknown",
+              latestVersion: "unknown",
+              updated: false,
+              error: "Current version not found",
+              semverCompatible: false,
+              location: Array.from(depInfo?.locations || ["unknown"]).join(", "),
+            } as UpdateResult);
+          }
+          return checkPackageUpdate(dep, depInfo.versionSpec, depInfo.locations, options);
+        },
+        { concurrency: options.concurrency },
+      );
+
+      const toUpdate = results.filter((r) => r.updated && !r.error);
+      const updated = await updatePackageJsonFile(
+        packageJsonPath,
+        map,
+        toUpdate,
+        options.savePrefix,
+      );
+
+      if (updated > 0) {
+        totalWorkspaceUpdated += updated;
+        relinka("log", `Updated ${updated} deps in ${packageJsonPath}`);
+      }
+    } catch (error) {
+      relinka(
+        "warn",
+        `Skipping ${packageJsonPath}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  return totalWorkspaceUpdated;
+}
+
+/**
+ * Display update results in a formatted way
+ */
+function displayUpdateResults(results: UpdateResult[]): void {
+  const toUpdate = results.filter((r) => r.updated && !r.error);
+  const errors = results.filter((r) => r.error);
+  const upToDate = results.filter((r) => !r.updated && !r.error && r.semverCompatible);
+
+  // Show errors
+  if (errors.length > 0) {
+    relinka("warn", `Failed to check ${errors.length} dependencies:`);
+    for (const error of errors) {
+      relinka("warn", `  ${error.package} (${error.location}): ${error.error}`);
+    }
+  }
+
+  // Show up-to-date packages
+  if (upToDate.length > 0) {
+    relinka("log", `${upToDate.length} deps are already up to date`);
+  }
+
+  // Show available updates
+  if (toUpdate.length === 0) {
+    relinka("verbose", `All ${upToDate.length} deps are already up to date`);
+    return;
+  }
+
+  relinka("log", `${toUpdate.length} deps can be updated:`);
+
+  // Group by location for better display
+  const byLocation = new Map<string, UpdateResult[]>();
+  for (const update of toUpdate) {
+    const location = update.location || "unknown";
+    if (!byLocation.has(location)) {
+      byLocation.set(location, []);
+    }
+    byLocation.get(location)!.push(update);
+  }
+
+  for (const [location, updates] of byLocation.entries()) {
+    relinka("log", `  ${location}:`);
+    for (const update of updates) {
+      relinka("log", `    ${update.package}: ${update.currentVersion} → ${update.latestVersion}`);
     }
   }
 }
@@ -275,7 +793,7 @@ async function handleGlobalUpdates(args: any): Promise<void> {
     return process.exit(1);
   }
 
-  relinka("info", `Found package managers: ${availablePackageManagers.join(", ")}`);
+  relinka("log", `Found package managers: ${availablePackageManagers.join(", ")}`);
 
   // Get global packages from all available package managers
   const allGlobalPackages: Record<string, { version: string; packageManager: string }> = {};
@@ -315,7 +833,7 @@ async function handleGlobalUpdates(args: any): Promise<void> {
     return;
   }
 
-  relinka("info", `Checking ${filteredPackages.length} global packages for updates...`);
+  relinka("log", `Checking ${filteredPackages.length} global packages for updates...`);
 
   // Check versions concurrently
   const results = await pMap(
@@ -371,15 +889,15 @@ async function handleGlobalUpdates(args: any): Promise<void> {
   }
 
   if (upToDate.length > 0) {
-    relinka("success", `${upToDate.length} global packages are up to date`);
+    relinka("log", `${upToDate.length} global packages are up to date`);
   }
 
   if (toUpdate.length === 0) {
-    relinka("success", "All global packages are up to date");
+    relinka("log", "All global packages are up to date");
     return;
   }
 
-  relinka("info", `${toUpdate.length} global packages can be updated:`);
+  relinka("log", `${toUpdate.length} global packages can be updated:`);
   for (const update of toUpdate) {
     relinka(
       "log",
@@ -422,18 +940,18 @@ async function handleGlobalUpdates(args: any): Promise<void> {
     });
 
     if (selectedPackages.length === 0 || selectedPackages.includes("exit")) {
-      relinka("info", "Exiting global update process");
+      relinka("log", "Exiting global update process");
       return;
     }
 
     // Filter out "exit" and update toUpdate to only include selected packages
     const actualSelectedPackages = selectedPackages.filter((pkg) => pkg !== "exit");
     toUpdate = toUpdate.filter((update) => actualSelectedPackages.includes(update.package));
-    relinka("info", `Updating ${actualSelectedPackages.length} selected global packages...`);
+    relinka("log", `Updating ${actualSelectedPackages.length} selected global packages...`);
   }
 
   if (args["dry-run"]) {
-    relinka("info", "Dry run mode - no changes were made");
+    relinka("log", "Dry run mode - no changes were made");
     return;
   }
 
@@ -449,22 +967,26 @@ async function handleGlobalUpdates(args: any): Promise<void> {
     }
   }
 
-  relinka("success", `Successfully updated ${successCount}/${toUpdate.length} global packages`);
+  relinka("log", `Successfully updated ${successCount}/${toUpdate.length} global packages`);
 }
 
+// By default tool recursively updates all dependencies to their latest available versions including catalogs.
+// Finds and updates ALL package.json files in the directory tree by default.
+// Use --no-recursive with --all-workspaces or --root-only for workspace-based behavior.
 export default defineCommand({
   meta: {
     name: "update",
-    description: "Update dependencies to the latest version",
+    description:
+      "Update all dependencies and catalogs to their latest available versions (recursively finds all package.json files by default)",
   },
   args: defineArgs({
     name: {
       type: "array",
-      description: "The names of the dependencies to update (leave empty to update all)",
+      description: "Specific dependencies to update (default: all dependencies)",
     },
     ignore: {
       type: "array",
-      description: "The names of the dependencies to ignore when --name is not provided",
+      description: "Dependencies to exclude from updates",
     },
     "dev-only": {
       type: "boolean",
@@ -484,11 +1006,11 @@ export default defineCommand({
     },
     "catalogs-only": {
       type: "boolean",
-      description: "Update only catalog dependencies",
+      description: "Update ONLY catalog dependencies (catalogs are included by default)",
     },
     "dry-run": {
       type: "boolean",
-      description: "Show what would be updated without making changes",
+      description: "Preview updates without making changes",
     },
     concurrency: {
       type: "number",
@@ -497,47 +1019,101 @@ export default defineCommand({
     },
     "with-check-script": {
       type: "boolean",
-      description: "Run `bun check` after updating (exclusive for bun environment at the moment)",
+      description: "Run `bun check` after updating (Bun only)",
     },
     linker: {
       type: "string",
-      description:
-        "Linker strategy (pro tip: use 'isolated' in a monorepo project, 'hoisted' (default) in a project where you have only one package.json). When this option is explicitly set, it takes precedence over bunfig.toml install.linker setting.",
+      description: "Linker strategy: 'isolated' for monorepos, 'hoisted' for single packages",
       allowed: ["isolated", "hoisted"],
       default: "hoisted",
     },
     "with-install": {
       type: "boolean",
-      description: "Run the install step after updating dependencies",
+      description: "Run install after updating",
       alias: "with-i",
     },
     global: {
       type: "boolean",
-      description: "Update global packages instead of local dependencies",
+      description: "Update global packages",
       alias: "g",
     },
     interactive: {
       type: "boolean",
-      description: "Interactively select which dependencies to update",
+      description: "Interactively select dependencies to update",
     },
     filter: {
       type: "array",
-      description: "Filter workspaces to operate on (e.g., 'pkg-*', '!pkg-c', './packages/pkg-*')",
+      description: "Filter workspaces (e.g., 'pkg-*', '!pkg-c')",
     },
-    "update-catalogs": {
+    "all-workspaces": {
       type: "boolean",
-      description: "Update catalog dependencies to latest versions",
+      description: "Update dependencies across all workspace packages (requires --no-recursive)",
+    },
+    "root-only": {
+      type: "boolean",
+      description: "Update only the root package.json (requires --no-recursive)",
+    },
+    recursive: {
+      type: "boolean",
+      description:
+        "Recursively find and update ALL package.json files in current directory tree (default: true, use --no-recursive to disable)",
+      alias: "r",
+      default: true,
+    },
+    "save-prefix": {
+      type: "string",
+      description: "Version prefix: '^', '~', or 'none' for exact",
+      allowed: ["^", "~", "none"],
+      default: "^",
+    },
+
+    "allow-major": {
+      type: "boolean",
+      description:
+        "Allow major version updates to latest available (disable with --no-allow-major)",
+      default: true,
     },
   }),
   async run({ args }) {
     try {
+      // Early argument validation for exclusive flags
+      const exclusiveFlags = [
+        args["dev-only"],
+        args["prod-only"],
+        args["peer-only"],
+        args["optional-only"],
+        args["catalogs-only"],
+      ];
+
+      if (exclusiveFlags.filter(Boolean).length > 1) {
+        relinka(
+          "error",
+          "Cannot specify multiple exclusive flags (--dev-only, --prod-only, --peer-only, --optional-only, --catalogs-only)",
+        );
+        return process.exit(1);
+      }
+
+      // Validate mutually exclusive workspace flags
+      if (args["all-workspaces"] && args["root-only"]) {
+        relinka("error", "Cannot specify both --all-workspaces and --root-only flags");
+        return process.exit(1);
+      }
+
+      if (args.recursive && (args["all-workspaces"] || args["root-only"])) {
+        relinka(
+          "error",
+          "Cannot use --recursive with --all-workspaces or --root-only flags. Use --no-recursive to disable recursive mode.",
+        );
+        return process.exit(1);
+      }
+
       // Handle global package updates
       if (args.global) {
         return await handleGlobalUpdates(args);
       }
 
-      // Handle catalog updates
-      if (args["update-catalogs"]) {
+      // Handle catalog-only updates (when user explicitly wants only catalogs)
+      if (args["catalogs-only"]) {
         const packageManager = await detectPackageManager(process.cwd());
         if (!packageManager) {
           relinka("error", "Could not detect package manager");
@@ -570,190 +1146,51 @@ export default defineCommand({
       if (typeof Bun !== "undefined") {
         const bunfigConfig = await getConfigBunfig();
 
-        // Check if bunfig has a different linker setting
-        if (bunfigConfig?.install?.linker) {
-          const bunfigLinker = bunfigConfig.install.linker;
-          if (
-            (bunfigLinker === "isolated" || bunfigLinker === "hoisted") &&
-            args.linker === "hoisted"
-          ) {
-            // Use bunfig setting only if CLI is using the default "hoisted"
-            // This means bunfig takes precedence unless user explicitly overrides
-            effectiveLinker = bunfigLinker;
-            linkerSource =
-              bunfigLinker === "hoisted" ? "bunfig.toml (same as default)" : "bunfig.toml";
-          }
+        // Use bunfig linker setting if CLI uses default and bunfig has valid value
+        const bunfigLinker = bunfigConfig?.install?.linker;
+        if (
+          bunfigLinker &&
+          ["isolated", "hoisted"].includes(bunfigLinker) &&
+          args.linker === "hoisted"
+        ) {
+          effectiveLinker = bunfigLinker;
+          linkerSource =
+            bunfigLinker === "hoisted" ? "bunfig.toml (same as default)" : "bunfig.toml";
         }
       }
 
-      // If user provided non-default CLI value, it always wins
+      // Explicit CLI override always wins
       if (args.linker !== "hoisted") {
         effectiveLinker = args.linker;
-        linkerSource = "CLI argument (explicit override)";
+        linkerSource = "CLI override";
       }
 
       relinka("verbose", `Using linker strategy: ${effectiveLinker} (from ${linkerSource})`);
 
-      // relinka("verbose", "Reading package.json...");
       const packageJson = await readPackageJSON();
 
-      const dependencies = packageJson.dependencies || {};
-      const devDependencies = packageJson.devDependencies || {};
-      const peerDependencies = packageJson.peerDependencies || {};
-      const optionalDependencies = packageJson.optionalDependencies || {};
+      const { map: allDepsMap } = collectTargetDependencies(packageJson, args);
 
-      // Handle catalogs - both singular and plural
-      const workspaces = (packageJson as any).workspaces || {};
-      const catalog = (workspaces as any).catalog || (packageJson as any).catalog || {};
-      const catalogs = (workspaces as any).catalogs || (packageJson as any).catalogs || {};
+      // Filter and prepare dependencies for updating
+      const candidates = prepareDependenciesForUpdate(allDepsMap, args);
 
-      // Determine which dependencies to check
-      let targetDeps: Record<string, string> = {};
-      const depSources: Record<string, string> = {}; // Track where each dep comes from
-
-      // Check for conflicting flags
-      const exclusiveFlags = [
-        args["dev-only"],
-        args["prod-only"],
-        args["peer-only"],
-        args["optional-only"],
-        args["catalogs-only"],
-      ].filter(Boolean);
-      if (exclusiveFlags.length > 1) {
-        relinka(
-          "error",
-          "Cannot specify multiple exclusive flags (--dev-only, --prod-only, --peer-only, --optional-only, --catalogs-only)",
-        );
-        return process.exit(1);
-      }
-
-      if (args["dev-only"]) {
-        targetDeps = { ...devDependencies };
-        Object.keys(devDependencies).forEach((dep) => {
-          depSources[dep] = "devDependencies";
-        });
-      } else if (args["prod-only"]) {
-        targetDeps = { ...dependencies };
-        Object.keys(dependencies).forEach((dep) => {
-          depSources[dep] = "dependencies";
-        });
-      } else if (args["peer-only"]) {
-        targetDeps = { ...peerDependencies };
-        Object.keys(peerDependencies).forEach((dep) => {
-          depSources[dep] = "peerDependencies";
-        });
-      } else if (args["optional-only"]) {
-        targetDeps = { ...optionalDependencies };
-        Object.keys(optionalDependencies).forEach((dep) => {
-          depSources[dep] = "optionalDependencies";
-        });
-      } else if (args["catalogs-only"]) {
-        // Add catalog dependencies
-        Object.keys(catalog).forEach((dep) => {
-          targetDeps[dep] = catalog[dep];
-          depSources[dep] = "catalog";
-        });
-
-        // Add named catalogs
-        Object.keys(catalogs).forEach((catalogName) => {
-          Object.keys(catalogs[catalogName]).forEach((dep) => {
-            targetDeps[dep] = catalogs[catalogName][dep];
-            depSources[dep] = `catalogs.${catalogName}`;
-          });
-        });
-      } else {
-        // Include all types - collect all dependencies first
-        const allDeps: Record<string, string> = {};
-        const allDepSources: Record<string, string> = {};
-
-        // Add regular dependencies first
-        Object.keys(dependencies).forEach((dep) => {
-          const version = dependencies[dep];
-          if (version) {
-            allDeps[dep] = version;
-            allDepSources[dep] = "dependencies";
-          }
-        });
-        Object.keys(devDependencies).forEach((dep) => {
-          const version = devDependencies[dep];
-          if (version) {
-            allDeps[dep] = version;
-            allDepSources[dep] = "devDependencies";
-          }
-        });
-        Object.keys(peerDependencies).forEach((dep) => {
-          const version = peerDependencies[dep];
-          if (version) {
-            allDeps[dep] = version;
-            allDepSources[dep] = "peerDependencies";
-          }
-        });
-        Object.keys(optionalDependencies).forEach((dep) => {
-          const version = optionalDependencies[dep];
-          if (version) {
-            allDeps[dep] = version;
-            allDepSources[dep] = "optionalDependencies";
-          }
-        });
-
-        // Add catalog dependencies (these will be checked separately)
-        Object.keys(catalog).forEach((dep) => {
-          allDeps[dep] = catalog[dep];
-          allDepSources[dep] = "catalog";
-        });
-
-        // Add named catalogs
-        Object.keys(catalogs).forEach((catalogName) => {
-          Object.keys(catalogs[catalogName]).forEach((dep) => {
-            allDeps[dep] = catalogs[catalogName][dep];
-            allDepSources[dep] = `catalogs.${catalogName}`;
-          });
-        });
-
-        targetDeps = allDeps;
-        Object.assign(depSources, allDepSources);
-      }
-
-      // Filter dependencies based on name and ignore parameters
-      const depsToUpdate = Object.keys(targetDeps);
-      let filteredDeps: string[] = [];
-
-      if (args.name && args.name.length > 0) {
-        // Update only specified dependencies
-        filteredDeps = args.name.filter((dep) => dep in targetDeps);
-        const notFound = args.name.filter((dep) => !(dep in targetDeps));
-        if (notFound.length > 0) {
-          relinka("warn", `Dependencies not found: ${notFound.join(", ")}`);
-        }
-      } else {
-        // Update all dependencies, respecting ignore list
-        const ignoreList = args.ignore || [];
-        filteredDeps = depsToUpdate.filter((dep) => !ignoreList.includes(dep));
-      }
-
-      // Filter out dependencies that don't start with ~ or ^ (npm aliases, workspace deps, etc.)
-      const semverDeps = filteredDeps.filter((dep) => {
-        const versionSpec = targetDeps[dep];
-        return versionSpec && (versionSpec.startsWith("^") || versionSpec.startsWith("~"));
-      });
-
-      if (semverDeps.length === 0) {
-        relinka(
-          "warn",
-          "No dependencies to update (only semver-compatible dependencies with ^ or ~ prefixes are supported)",
-        );
+      if (candidates.length === 0) {
+        relinka("warn", "No dependencies to update based on provided filters");
         return;
       }
 
-      // relinka("verbose", `Checking ${semverDeps.length} dependencies for updates...`);
+      // Check versions concurrently using p-map with extracted function
+      const options: PackageCheckOptions = {
+        allowMajor: !!args["allow-major"],
+        savePrefix: args["save-prefix"] as string,
+        concurrency: args.concurrency,
+      };
 
-      // Check versions concurrently using p-map
       const results = await pMap(
-        semverDeps,
+        candidates,
         async (dep): Promise<UpdateResult> => {
-          const currentVersion = targetDeps[dep];
-
-          if (!currentVersion) {
+          const depInfo = allDepsMap[dep];
+          if (!depInfo?.versionSpec) {
             return {
               package: dep,
               currentVersion: "unknown",
@@ -761,74 +1198,29 @@ export default defineCommand({
               updated: false,
               error: "Current version not found",
               semverCompatible: false,
-              location: depSources[dep],
+              location: Array.from(depInfo?.locations || ["unknown"]).join(", "),
             };
           }
 
-          try {
-            const latest = await getLatestVersion(dep);
-            const cleanCurrent = currentVersion.replace(/^[\^~]/, "");
-            const isCompatible = isSemverCompatible(currentVersion, latest);
-
-            return {
-              package: dep,
-              currentVersion: cleanCurrent,
-              latestVersion: latest,
-              updated: latest !== cleanCurrent && isCompatible,
-              semverCompatible: isCompatible,
-              location: depSources[dep],
-            };
-          } catch (error) {
-            return {
-              package: dep,
-              currentVersion,
-              latestVersion: currentVersion,
-              updated: false,
-              error: error instanceof Error ? error.message : String(error),
-              semverCompatible: false,
-              location: depSources[dep],
-            };
-          }
+          return checkPackageUpdate(dep, depInfo.versionSpec, depInfo.locations, options);
         },
         { concurrency: args.concurrency },
       );
 
-      // Show results - only show compatible updates and errors
+      // Display results with improved formatting
+      displayUpdateResults(results);
+
       let toUpdate = results.filter((r) => r.updated && !r.error);
-      const errors = results.filter((r) => r.error);
-      const upToDate = results.filter((r) => !r.updated && !r.error && r.semverCompatible);
-
-      if (errors.length > 0) {
-        relinka("warn", `Failed to check ${errors.length} dependencies:`);
-        for (const error of errors) {
-          relinka("warn", `  ${error.package} (${error.location}): ${error.error}`);
-        }
-      }
 
       if (toUpdate.length === 0) {
-        relinka("success", `All ${upToDate.length} deps are already up to date`);
         return;
-      }
-
-      if (upToDate.length > 0) {
-        relinka("success", `${upToDate.length} dependencies are up to date`);
-      }
-
-      if (toUpdate.length === 0) {
-        relinka("success", `All ${upToDate.length} deps are already up to date`);
-        return;
-      }
-
-      relinka("info", `${toUpdate.length} dependencies can be updated:`);
-      for (const update of toUpdate) {
-        relinka(
-          "log",
-          `  ${update.package} (${update.location}): ${update.currentVersion} → ${update.latestVersion}`,
-        );
       }
 
       // Interactive selection
       if (args.interactive) {
+        const errors = results.filter((r) => r.error);
+        const upToDate = results.filter((r) => !r.updated && !r.error && r.semverCompatible);
+
         // Combine all packages for selection
         const allPackages = [
           ...toUpdate.map((pkg) => ({
@@ -872,117 +1264,109 @@ export default defineCommand({
         });
 
         if (selectedPackages.length === 0 || selectedPackages.includes("exit")) {
-          relinka("info", "Exiting update process");
+          relinka("log", "Exiting update process");
           return;
         }
 
         // Filter out "exit" and update toUpdate to only include selected packages
         const actualSelectedPackages = selectedPackages.filter((pkg) => pkg !== "exit");
         toUpdate = toUpdate.filter((update) => actualSelectedPackages.includes(update.package));
-        relinka("info", `Updating ${actualSelectedPackages.length} selected dependencies...`);
+        relinka("log", `Updating ${actualSelectedPackages.length} selected dependencies...`);
       }
 
       if (args["dry-run"]) {
-        relinka("info", "Dry run mode - no changes were made");
+        relinka("log", "Dry run mode - no changes were made");
         return;
       }
 
-      // Update package.json
-      // relinka("verbose", "Updating package.json...");
-
-      const updatedPackageJson = { ...packageJson };
-
-      for (const update of toUpdate) {
-        const dep = update.package;
-        const newVersion = `^${update.latestVersion}`;
-
-        // Instead of relying on location tracking, check all possible locations
-        // and update wherever the dependency exists
-
-        if (dependencies[dep]) {
-          if (!updatedPackageJson.dependencies) updatedPackageJson.dependencies = {};
-          updatedPackageJson.dependencies[dep] = newVersion;
-        }
-
-        if (devDependencies[dep]) {
-          if (!updatedPackageJson.devDependencies) updatedPackageJson.devDependencies = {};
-          updatedPackageJson.devDependencies[dep] = newVersion;
-        }
-
-        if (peerDependencies[dep]) {
-          if (!updatedPackageJson.peerDependencies) updatedPackageJson.peerDependencies = {};
-          updatedPackageJson.peerDependencies[dep] = newVersion;
-        }
-
-        if (optionalDependencies[dep]) {
-          if (!updatedPackageJson.optionalDependencies)
-            updatedPackageJson.optionalDependencies = {};
-          updatedPackageJson.optionalDependencies[dep] = newVersion;
-        }
-
-        if (catalog[dep]) {
-          // Update catalog
-          if (!(updatedPackageJson as any).workspaces) (updatedPackageJson as any).workspaces = {};
-          if (!(updatedPackageJson as any).workspaces.catalog)
-            (updatedPackageJson as any).workspaces.catalog = {};
-          (updatedPackageJson as any).workspaces.catalog[dep] = newVersion;
-
-          // Also update top-level catalog if it exists
-          if ((updatedPackageJson as any).catalog) {
-            (updatedPackageJson as any).catalog[dep] = newVersion;
-          }
-        }
-
-        // Check named catalogs
-        Object.keys(catalogs).forEach((catalogName) => {
-          if (catalogs[catalogName][dep]) {
-            if (!(updatedPackageJson as any).workspaces)
-              (updatedPackageJson as any).workspaces = {};
-            if (!(updatedPackageJson as any).workspaces.catalogs)
-              (updatedPackageJson as any).workspaces.catalogs = {};
-            if (!(updatedPackageJson as any).workspaces.catalogs[catalogName]) {
-              (updatedPackageJson as any).workspaces.catalogs[catalogName] = {};
-            }
-            (updatedPackageJson as any).workspaces.catalogs[catalogName][dep] = newVersion;
-
-            // Also update top-level catalogs if it exists
-            if (
-              (updatedPackageJson as any).catalogs &&
-              (updatedPackageJson as any).catalogs[catalogName]
-            ) {
-              (updatedPackageJson as any).catalogs[catalogName][dep] = newVersion;
-            }
-          }
-        });
-      }
-
-      // Write updated package.json
-      await fs.writeFile(
+      // Update root package.json
+      const rootUpdated = await updatePackageJsonFile(
         packageJsonPath,
-        JSON.stringify(updatedPackageJson, null, 2) + "\n",
-        "utf8",
+        allDepsMap,
+        toUpdate,
+        args["save-prefix"] as string,
       );
 
-      relinka("success", `Updated ${toUpdate.length} dependencies in package.json`);
+      let totalUpdated = rootUpdated;
 
-      // Check if --with-install is NOT specified to skip the install step
-      if (args["with-install"] !== true) {
-        // Detect package manager for the message
-        const packageManager = await detectPackageManager(process.cwd());
-        const installCommand = packageManager
-          ? `${packageManager.command} install`
-          : "your package manager's install command";
+      // Handle recursive updates (finds ALL package.json files)
+      if (args.recursive) {
+        const allPackageJsons = await findAllPackageJsons(process.cwd());
+        // Exclude the root package.json since it's already updated
+        const rootPackageJsonPath = path.resolve(process.cwd(), "package.json");
+        const otherPackageJsons = allPackageJsons.filter((p) => p !== rootPackageJsonPath);
 
-        relinka(
-          "info",
-          `Skipped install step. Use --with-install flag to run '${installCommand}' after updating.`,
-        );
-        return; // Exit early to prevent any automatic install
+        if (otherPackageJsons.length > 0) {
+          relinka(
+            "info",
+            `Found ${otherPackageJsons.length} additional package.json files to update recursively`,
+          );
+          const recursiveUpdated = await updateWorkspacePackages(otherPackageJsons, args, options);
+          totalUpdated += recursiveUpdated;
+        }
+        // else {
+        //   relinka("log", "No additional package.json files found for recursive update");
+        // }
+      } else {
+        // Non-recursive mode: use workspace-based logic
+        const isMonorepoProject = await isMonorepo(process.cwd());
+
+        // Determine if we should update workspaces
+        const shouldUpdateWorkspaces =
+          args["all-workspaces"] || (!args["root-only"] && isMonorepoProject);
+
+        if (shouldUpdateWorkspaces) {
+          const workspacePkgJsons = await findWorkspacePackageJsons(process.cwd());
+          if (workspacePkgJsons.length > 0) {
+            const workspaceUpdated = await updateWorkspacePackages(
+              workspacePkgJsons,
+              args,
+              options,
+            );
+            totalUpdated += workspaceUpdated;
+          } else if (args["all-workspaces"]) {
+            relinka("warn", "No workspace packages found but --all-workspaces flag was provided");
+          }
+        } else if (isMonorepoProject) {
+          relinka("log", "Skipping workspace packages due to --root-only flag");
+        }
       }
 
-      // Only proceed with install if --with-install is specified
-      // Detect package manager
+      // Success message based on what was actually updated
+      if (args.recursive) {
+        const allPackageJsonCount = (await findAllPackageJsons(process.cwd())).length;
+        relinka(
+          "success",
+          `Updated ${totalUpdated} dependencies across ${allPackageJsonCount} package.json files (recursive)`,
+        );
+      } else {
+        const isMonorepoProject = await isMonorepo(process.cwd());
+        const shouldUpdateWorkspaces =
+          args["all-workspaces"] || (!args["root-only"] && isMonorepoProject);
+
+        if (isMonorepoProject && shouldUpdateWorkspaces) {
+          relinka(
+            "success",
+            `Updated ${totalUpdated} dependencies across workspace (root + workspaces)`,
+          );
+        } else if (isMonorepoProject) {
+          relinka("log", `Updated ${totalUpdated} dependencies in root package.json only`);
+        } else {
+          relinka("log", `Updated ${totalUpdated} dependencies`);
+        }
+      }
+
+      // Handle installation
       const packageManager = await detectPackageManager(process.cwd());
+
+      if (!args["with-install"]) {
+        const installCommand = packageManager?.command || "your package manager";
+        relinka(
+          "info",
+          `Skipped install step. Use --with-install to run '${installCommand} install'.`,
+        );
+        return;
+      }
 
       if (packageManager) {
         try {
@@ -1008,7 +1392,7 @@ export default defineCommand({
             "warn",
             `Install failed: ${error instanceof Error ? error.message : String(error)}`,
           );
-          relinka("info", `Run '${packageManager.command} install' manually to apply the changes`);
+          relinka("log", `Run '${packageManager.command} install' manually to apply the changes`);
         }
       } else {
         relinka("warn", "Could not detect package manager. Please run install manually.");

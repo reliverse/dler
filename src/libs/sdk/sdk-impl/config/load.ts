@@ -49,7 +49,7 @@ export async function getConfigDler(): Promise<DlerConfig> {
   }
 
   // Config file not found or error loading it, return default config
-  relinka("log", `Config file not found at ${configPath}. Using default configuration.`);
+  relinka("verbose", `Config file not found at ${configPath}. Using default configuration.`);
   return defineConfig();
 }
 
@@ -94,7 +94,7 @@ export async function getConfigBunfig(): Promise<Record<string, any> | null> {
         }
 
         globalConfig = { ...globalConfig, ...config };
-        // relinka("log", `Loaded global bunfig from ${configPath}`);
+        // relinka("verbose", `Loaded global bunfig from ${configPath}`);
       } catch (error) {
         relinka("error", `Error loading global bunfig from ${configPath}:`, error);
       }
@@ -132,7 +132,7 @@ export async function getConfigBunfig(): Promise<Record<string, any> | null> {
 
   // Return null if no config was found
   if (Object.keys(mergedConfig).length === 0) {
-    // relinka("log", "No bunfig.toml configuration found.");
+    // relinka("verbose", "No bunfig.toml configuration found.");
     return null;
   }
 

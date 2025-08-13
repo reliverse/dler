@@ -133,7 +133,7 @@ export async function executeDlerHooks(
 ): Promise<void> {
   if (!hooks.length) return;
 
-  relinka("log", `[dlerPreBuild] Running ${phase} hooks...`);
+  relinka("verbose", `[dlerPreBuild] Running ${phase} hooks...`);
 
   for (const hook of hooks) {
     try {

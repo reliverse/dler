@@ -2,7 +2,7 @@
 
 [sponsor](https://github.com/sponsors/blefnk) — [discord](https://discord.gg/pb8ukbwpsj) — [github](https://github.com/reliverse/dler) — [npm](https://npmjs.com/@reliverse/dler)
 
-> @reliverse/dler (formerly relidler; `/ˈdiː.lər/`, dealer) is a unified package manager for typescript/javascript projects.
+> @reliverse/dler (formerly relidler; `/ˈdiː.lər/`, dealer) is both a unified package manager for typescript/javascript projects and a flexible framework for creating, building, and publishing js/ts libraries to npm and jsr.
 >
 > dler is your package manager’s best friend — it extends bun, deno (🔜), pnpm, yarn, and npm with powerful and modern features.
 >

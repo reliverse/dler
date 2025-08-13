@@ -124,22 +124,28 @@ export default defineCommand({
 
     if (upgraded.length > 0) {
       relinka("success", `Upgraded ${upgraded.length} tools:`);
-      upgraded.forEach((r) => relinka("log", `  ✓ ${r.tool}${r.message ? ` - ${r.message}` : ""}`));
+      upgraded.forEach((r) =>
+        relinka("verbose", `  ✓ ${r.tool}${r.message ? ` - ${r.message}` : ""}`),
+      );
     }
 
     if (upToDate.length > 0) {
       relinka("info", `${upToDate.length} tools already up-to-date:`);
-      upToDate.forEach((r) => relinka("log", `  • ${r.tool}${r.message ? ` - ${r.message}` : ""}`));
+      upToDate.forEach((r) =>
+        relinka("verbose", `  • ${r.tool}${r.message ? ` - ${r.message}` : ""}`),
+      );
     }
 
     if (notFound.length > 0) {
       relinka("warn", `${notFound.length} tools not installed (skipped):`);
-      notFound.forEach((r) => relinka("log", `  - ${r.tool}`));
+      notFound.forEach((r) => relinka("verbose", `  - ${r.tool}`));
     }
 
     if (errors.length > 0) {
       relinka("error", `${errors.length} tools had errors:`);
-      errors.forEach((r) => relinka("log", `  ✗ ${r.tool}${r.message ? ` - ${r.message}` : ""}`));
+      errors.forEach((r) =>
+        relinka("verbose", `  ✗ ${r.tool}${r.message ? ` - ${r.message}` : ""}`),
+      );
     }
 
     relinka("success", "Upgrade check completed!");

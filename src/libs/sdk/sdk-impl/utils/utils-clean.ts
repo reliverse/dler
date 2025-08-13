@@ -50,7 +50,7 @@ export async function removeDistFolders(
       },
       { concurrency: CONCURRENCY_DEFAULT },
     );
-    relinka("log", "Distribution folders removed successfully");
+    relinka("verbose", "Distribution folders removed successfully");
   }
 
   return true;
@@ -109,6 +109,6 @@ export async function removeLogInternalCalls(targetDir: string): Promise<boolean
     { concurrency: CONCURRENCY_DEFAULT },
   );
 
-  relinka("success", "Successfully removed logInternal and relinka internal calls from files");
+  relinka("verbose", "Successfully removed logInternal and relinka internal calls from files");
   return true;
 }

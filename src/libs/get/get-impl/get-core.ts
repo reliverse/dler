@@ -48,8 +48,8 @@ export async function installDlerStandalone(installDir: string, appsPath: string
 
   if (args["dry-run"]) {
     relinka("info", "Dry run mode - would download:");
-    relinka("log", `  From: ${downloadUrl}`);
-    relinka("log", `  To: ${binaryPath}`);
+    relinka("verbose", `  From: ${downloadUrl}`);
+    relinka("verbose", `  To: ${binaryPath}`);
     return;
   }
 
@@ -98,7 +98,7 @@ export async function installFromGitHub(
   const asset = findBinaryAsset(release.assets, args.binary);
   if (!asset) {
     relinka("error", "Available assets:");
-    release.assets.forEach((a) => relinka("log", `  - ${a.name}`));
+    release.assets.forEach((a) => relinka("verbose", `  - ${a.name}`));
     throw new Error(`No suitable binary found for your platform`);
   }
 
@@ -110,9 +110,9 @@ export async function installFromGitHub(
 
   if (args["dry-run"]) {
     relinka("info", "Dry run mode - would download:");
-    relinka("log", `  Asset: ${asset.name}`);
-    relinka("log", `  From: ${asset.browser_download_url}`);
-    relinka("log", `  To: ${binaryPath}`);
+    relinka("verbose", `  Asset: ${asset.name}`);
+    relinka("verbose", `  From: ${asset.browser_download_url}`);
+    relinka("verbose", `  To: ${binaryPath}`);
     return;
   }
 
@@ -272,15 +272,18 @@ export async function checkPowerShellVersion(): Promise<void> {
 
     if (!isVersionValid) {
       relinka("error", "❌ PowerShell 7.5+ is required for dler installation on Windows");
-      relinka("log", `   Current version: ${versionString}`);
-      relinka("log", `   Required version: 7.5.0 or higher`);
-      relinka("log", "");
+      relinka("verbose", `   Current version: ${versionString}`);
+      relinka("verbose", `   Required version: 7.5.0 or higher`);
+      relinka("verbose", "");
       relinka("info", "🔧 To install PowerShell 7.5+:");
-      relinka("log", "   • Visit: https://github.com/PowerShell/PowerShell/releases");
-      relinka("log", "   • Or use Windows Package Manager: winget install Microsoft.PowerShell");
-      relinka("log", "   • Or use Chocolatey: choco install powershell-core");
-      relinka("log", "   • Or use Scoop: scoop install pwsh");
-      relinka("log", "");
+      relinka("verbose", "   • Visit: https://github.com/PowerShell/PowerShell/releases");
+      relinka(
+        "verbose",
+        "   • Or use Windows Package Manager: winget install Microsoft.PowerShell",
+      );
+      relinka("verbose", "   • Or use Chocolatey: choco install powershell-core");
+      relinka("verbose", "   • Or use Scoop: scoop install pwsh");
+      relinka("verbose", "");
       relinka("info", "After installation, restart your terminal and try again.");
 
       process.exit(1);
@@ -377,7 +380,7 @@ async function checkGlobalDlerConflicts(force: boolean): Promise<void> {
 
     relinka("warn", "\n🔧 To avoid conflicts, please remove the global installation(s) first:");
     conflicts.forEach((conflict) => {
-      relinka("log", `  ${conflict.command}`);
+      relinka("verbose", `  ${conflict.command}`);
     });
 
     relinka(
@@ -579,7 +582,7 @@ async function ensureInPath(installDir: string): Promise<void> {
     } catch (error) {
       relinka("warn", `Failed to automatically modify PATH: ${error}`);
       relinka("warn", "Please add manually:");
-      relinka("log", `Add ${installDir} to your PATH environment variable`);
+      relinka("verbose", `Add ${installDir} to your PATH environment variable`);
       relinka(
         "log",
         "You can do this through Environment Variables > System Properties > Path > Edit",

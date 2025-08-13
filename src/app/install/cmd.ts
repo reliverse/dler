@@ -144,7 +144,7 @@ export default defineCommand({
           await (name ? addDependency(name, options) : installDependencies(options));
         } else {
           relinka.error(`Unknown action: ${action}`);
-          relinka.log("Available actions: install, add, i, dedupe");
+          relinka.verbose("Available actions: install, add, i, dedupe");
           return process.exit(1);
         }
       }

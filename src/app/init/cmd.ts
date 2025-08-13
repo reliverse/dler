@@ -8,7 +8,7 @@ export default defineCommand({
     description: "Initialize a new project",
   },
   async run() {
-    relinka.info(
+    relinka.verbose(
       "Command not implemented yet. For now, please install `@reliverse/rse` and run `rse cli`.",
     );
   },

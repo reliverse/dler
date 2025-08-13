@@ -190,7 +190,7 @@ async function doInitFile(
     }
 
     if (maybeNewDest !== resolvedDestPath) {
-      relinka("log", `Using new path: ${maybeNewDest}`);
+      relinka("verbose", `Using new path: ${maybeNewDest}`);
       return finalizeInit(req, initBehaviour, chosenVariation, maybeNewDest);
     }
   }

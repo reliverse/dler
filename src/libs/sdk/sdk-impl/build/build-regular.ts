@@ -64,7 +64,7 @@ export async function regular_buildJsrDist(
   const singleFile = path.join(process.cwd(), coreEntrySrcDir, coreEntryFile);
   const srcDir = path.join(process.cwd(), coreEntrySrcDir);
 
-  relinka("log", `Building JSR distribution (isDev=${isDev}, isJsr=${isJsr})...`);
+  relinka("verbose", `Building JSR distribution (isDev=${isDev}, isJsr=${isJsr})...`);
 
   try {
     // Create the output directory
@@ -165,7 +165,7 @@ export async function regular_buildNpmDist(
   const singleFile = path.join(process.cwd(), coreEntrySrcDir, coreEntryFile);
   const srcDir = path.join(process.cwd(), coreEntrySrcDir);
 
-  relinka("log", `Building NPM distribution (isDev=${isDev})...`);
+  relinka("verbose", `Building NPM distribution (isDev=${isDev})...`);
 
   try {
     // Create the output directory
@@ -293,7 +293,7 @@ async function regular_bundleUsingBun(
  * Bundles a regular project using JSR by copying the source directory.
  */
 async function regular_bundleUsingJsr(src: string, dest: string): Promise<void> {
-  relinka("log", `Starting regular_bundleUsingJsr: ${src} -> ${dest}`);
+  relinka("verbose", `Starting regular_bundleUsingJsr: ${src} -> ${dest}`);
   await fs.ensureDir(path.dirname(dest));
 
   // Validate source is a directory
@@ -531,7 +531,7 @@ async function regular_performCommonBuildSteps({
   coreDescription: string;
   coreBuildOutDir?: string;
 }): Promise<void> {
-  relinka("log", `Performing common build steps in ${outDirBin} (regular)`);
+  relinka("verbose", `Performing common build steps in ${outDirBin} (regular)`);
 
   // await convertImportPaths({
   //   aliasPrefix: "~/",

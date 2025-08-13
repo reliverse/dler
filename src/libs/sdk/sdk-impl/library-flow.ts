@@ -27,7 +27,7 @@ export async function library_buildFlow(
   isDev: boolean,
   config: DlerConfig,
 ): Promise<void> {
-  relinka("info", "— — — library_buildFlow — — —");
+  relinka("verbose", "— — — library_buildFlow — — —");
 
   if (config.libsActMode !== "libs-only" && config.libsActMode !== "main-and-libs") {
     relinka("verbose", "Skipping libs build as libsActMode is set to 'main-project-only'");
@@ -67,7 +67,7 @@ export async function library_pubFlow(
   isDev: boolean,
   config: DlerConfig,
 ): Promise<void> {
-  relinka("info", "— — — library_pubFlow — — —");
+  relinka("verbose", "— — — library_pubFlow — — —");
 
   if (config.libsActMode !== "libs-only" && config.libsActMode !== "main-and-libs") {
     relinka("verbose", "Skipping libs publish as libsActMode is set to 'main-project-only'");
@@ -149,7 +149,7 @@ export async function libraries_build(
   relinka("verbose", "Starting libraries_build");
 
   if (!libsList || Object.keys(libsList).length === 0) {
-    relinka("log", "No lib configs found in config, skipping libs build.");
+    relinka("verbose", "No lib configs found in config, skipping libs build.");
     return;
   }
 
@@ -266,7 +266,7 @@ export async function libraries_publish(
   relinka("verbose", "Starting libraries_publish");
 
   if (!libsList || Object.keys(libsList).length === 0) {
-    relinka("log", "No lib configs found in config, skipping libs publish.");
+    relinka("verbose", "No lib configs found in config, skipping libs publish.");
     return;
   }
 
@@ -299,7 +299,7 @@ export async function libraries_publish(
             timer,
           );
         } else if (libConfig.libPubPause && !commonPubPause) {
-          relinka("log", `Publishing is paused for lib ${libName} (libPubPause: true)`);
+          relinka("verbose", `Publishing is paused for lib ${libName} (libPubPause: true)`);
         }
       } catch (error) {
         relinka(

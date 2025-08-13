@@ -64,7 +64,7 @@ export async function collectFiles(
     // Skip the output file if it matches
     if (outFile && path.resolve(fullPath) === path.resolve(outFile)) {
       if (verbose) {
-        relinka("log", `Skipping output file: ${fullPath}`);
+        relinka("verbose", `Skipping output file: ${fullPath}`);
       }
       continue;
     }
@@ -72,7 +72,7 @@ export async function collectFiles(
     if (entry.isDirectory()) {
       if (ignoreDirs.includes(entry.name)) {
         if (verbose) {
-          relinka("log", `Skipping ignored directory: ${fullPath}`);
+          relinka("verbose", `Skipping ignored directory: ${fullPath}`);
         }
         continue;
       }
@@ -93,13 +93,13 @@ export async function collectFiles(
       // Skip file if its basename starts with the internal marker and internal files are not included.
       if (!includeInternal && path.basename(fullPath).startsWith(internalMarker)) {
         if (verbose) {
-          relinka("log", `Skipping internal file: ${fullPath}`);
+          relinka("verbose", `Skipping internal file: ${fullPath}`);
         }
         continue;
       }
       if (exts.some((ext) => entry.name.toLowerCase().endsWith(ext))) {
         if (verbose) {
-          relinka("log", `Found file: ${fullPath}`);
+          relinka("verbose", `Found file: ${fullPath}`);
         }
         found.push(fullPath);
       }
@@ -278,9 +278,9 @@ export function guessStarImportIdentifier(filePath: string): string {
  * Prints usage examples based on whether dev mode or not.
  */
 export function printUsage(isDev?: boolean) {
-  relinka("log", "====================");
-  relinka("log", "TOOLS USAGE EXAMPLES");
-  relinka("log", "====================");
+  relinka("verbose", "====================");
+  relinka("verbose", "TOOLS USAGE EXAMPLES");
+  relinka("verbose", "====================");
   relinka(
     "log",
     `${isDev ? "bun dev:agg" : "dler tools"} --tool agg --input <dir> --out <file> [options]`,

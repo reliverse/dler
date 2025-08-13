@@ -99,7 +99,7 @@ export default defineCommand({
         await fs.ensureDir(dirPath);
         const content = generateCommandTemplate(cmdName);
         await fs.writeFile(filePath, content, "utf8");
-        relinka("log", `✅ Created new command: ${filePath}`);
+        relinka("verbose", `✅ Created new command: ${filePath}`);
       }
 
       if (cliFilePath) {
@@ -138,7 +138,7 @@ export default defineCommand({
       await fs.ensureDir(path.dirname(outPath));
       await fs.writeFile(outPath, exports, "utf8");
       relinka("success", `✅ Generated command exports at: ${outPath}`);
-      relinka("log", `Found ${cmdDirs.length} command(s): ${cmdDirs.join(", ")}`);
+      relinka("verbose", `Found ${cmdDirs.length} command(s): ${cmdDirs.join(", ")}`);
       return;
     }
 
@@ -163,7 +163,7 @@ export default defineCommand({
     await fs.ensureDir(path.dirname(outPath));
     await fs.writeFile(outPath, exports, "utf8");
     relinka("success", `✅ Generated command exports at: ${outPath}`);
-    relinka("log", `Found ${cmdDirs.length} command(s): ${cmdDirs.join(", ")}`);
+    relinka("verbose", `Found ${cmdDirs.length} command(s): ${cmdDirs.join(", ")}`);
 
     // print usage example if --init was used
     if (didInit) {
@@ -244,7 +244,7 @@ async function ensureCliFile(filePath: string): Promise<string> {
   if (!(await fs.pathExists(resolvedPath))) {
     await fs.ensureDir(path.dirname(resolvedPath));
     await fs.writeFile(resolvedPath, cliTemplate, "utf8");
-    relinka("log", `✅ Created CLI entry file: ${resolvedPath}`);
+    relinka("verbose", `✅ Created CLI entry file: ${resolvedPath}`);
     return resolvedPath;
   }
   return "";

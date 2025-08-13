@@ -143,7 +143,7 @@ export default defineCommand({
           return process.exit(1);
         }
 
-        relinka.log(
+        relinka.verbose(
           `Detected package manager in \`${cwd}\`: \`${packageManager.name}@${packageManager.version}\``,
         );
         break;
@@ -175,7 +175,7 @@ export default defineCommand({
             return process.exit(1);
           }
 
-          relinka.log(`Executing: ${target}`);
+          relinka.verbose(`Executing: ${target}`);
 
           // Execute the command using the exec utility
           const result = x(command, commandArgs, {
@@ -209,7 +209,7 @@ export default defineCommand({
 
       default: {
         relinka.error(`Unknown action: ${action}`);
-        relinka.log("Available actions: detect, run, exec, or package name to run directly");
+        relinka.verbose("Available actions: detect, run, exec, or package name to run directly");
         return process.exit(1);
       }
     }
@@ -253,7 +253,7 @@ async function runPackage({
 
     if (forcedPmFlags.length === 1) {
       pmName = forcedPmFlags[0]![0];
-      relinka.log(`Forcing package manager: ${pmName}`);
+      relinka.verbose(`Forcing package manager: ${pmName}`);
     } else {
       // Auto-detect package manager
       const packageManager = await detectPackageManager(workingDir);
@@ -298,8 +298,8 @@ async function runPackage({
     runCommand.push(packageName);
     runCommand.push(...packageArgs);
 
-    relinka.log(`Running package: ${packageName}`);
-    relinka.log(`Using command: ${runCommand.join(" ")}`);
+    relinka.verbose(`Running package: ${packageName}`);
+    relinka.verbose(`Using command: ${runCommand.join(" ")}`);
 
     // Execute the package runner command
     const result = x(runCommand[0]!, runCommand.slice(1), {

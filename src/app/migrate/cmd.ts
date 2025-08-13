@@ -80,20 +80,20 @@ export default defineCommand({
     }
 
     if (args.codemod === "anything-bun") {
-      relinka("log", "Migrating to Bun...");
+      relinka("verbose", "Migrating to Bun...");
       await migrateAnythingToBun({
         project: args.project,
         dryRun: args.dryRun,
         noBackup: args.noBackup,
       });
       if (!args.dryRun) {
-        relinka("log", "\nMigration completed!");
-        relinka("log", "Next steps:");
-        relinka("log", "1. Run 'bun install' to install dependencies with Bun");
-        relinka("log", "2. Test your application thoroughly");
-        relinka("log", "3. Review async/await usage in converted file operations");
-        relinka("log", "4. Update any custom database queries to use Bun.sql syntax");
-        relinka("log", "5. Review and update any custom middleware in Express apps");
+        relinka("verbose", "\nMigration completed!");
+        relinka("verbose", "Next steps:");
+        relinka("verbose", "1. Run 'bun install' to install dependencies with Bun");
+        relinka("verbose", "2. Test your application thoroughly");
+        relinka("verbose", "3. Review async/await usage in converted file operations");
+        relinka("verbose", "4. Update any custom database queries to use Bun.sql syntax");
+        relinka("verbose", "5. Review and update any custom middleware in Express apps");
       }
       return;
     }
@@ -101,26 +101,26 @@ export default defineCommand({
     let results: any[] = [];
 
     if (args.codemod === "path-pathkit") {
-      relinka("log", "Migrating from node:path and/or pathe to @reliverse/pathkit...");
+      relinka("verbose", "Migrating from node:path and/or pathe to @reliverse/pathkit...");
       results = await migratePathToPathkit(args.dryRun);
     } else if (args.codemod === "fs-relifso") {
-      relinka("log", "Migrating from node:fs and/or fs-extra to @reliverse/relifso...");
+      relinka("verbose", "Migrating from node:fs and/or fs-extra to @reliverse/relifso...");
       results = await migrateFsToRelifso(args.dryRun);
     } else if (args.codemod === "nodenext-bundler") {
       if (!["nodenext", "bundler"].includes(args.mrTarget)) {
         relinka("error", `Invalid mrTarget: ${args.mrTarget}`);
-        relinka("log", "Available targets:");
-        relinka("log", "  - nodenext");
-        relinka("log", "  - bundler");
+        relinka("verbose", "Available targets:");
+        relinka("verbose", "  - nodenext");
+        relinka("verbose", "  - bundler");
         return;
       }
-      relinka("log", `Migrating to ${args.mrTarget} module resolution...`);
+      relinka("verbose", `Migrating to ${args.mrTarget} module resolution...`);
       results = await migrateModuleResolution(args.mrTarget as "nodenext" | "bundler", args.dryRun);
     } else if (args.codemod === "readdir-glob") {
-      relinka("log", "Migrating from fs.readdir to globby...");
+      relinka("verbose", "Migrating from fs.readdir to globby...");
       results = await migrateReaddirToGlob(args.dryRun);
     } else if (args.codemod === "console-relinka") {
-      relinka("log", "Migrating logging format...");
+      relinka("verbose", "Migrating logging format...");
       await consoleToRelinka(
         args.consoleRelinkaInput,
         args.consoleRelinkaFrom as LogFormat,
@@ -129,13 +129,13 @@ export default defineCommand({
       return;
     } else {
       relinka("error", `Unknown migration: ${args.codemod}`);
-      relinka("log", "Available migrations:");
-      relinka("log", "  - anything-bun");
-      relinka("log", "  - path-pathkit");
-      relinka("log", "  - fs-relifso");
-      relinka("log", "  - nodenext-bundler");
-      relinka("log", "  - readdir-glob");
-      relinka("log", "  - console-relinka");
+      relinka("verbose", "Available migrations:");
+      relinka("verbose", "  - anything-bun");
+      relinka("verbose", "  - path-pathkit");
+      relinka("verbose", "  - fs-relifso");
+      relinka("verbose", "  - nodenext-bundler");
+      relinka("verbose", "  - readdir-glob");
+      relinka("verbose", "  - console-relinka");
       return;
     }
 
@@ -147,15 +147,15 @@ export default defineCommand({
 
     for (const result of results) {
       const status = result.success ? "✓" : "✗";
-      relinka("log", `${status} ${result.file}: ${result.message}`);
+      relinka("verbose", `${status} ${result.file}: ${result.message}`);
 
       if (result.changes && result.changes.length > 0) {
         for (const change of result.changes) {
           if (change.startsWith("⚠️")) {
-            relinka("log", `    ${change}`);
+            relinka("verbose", `    ${change}`);
             warningCount++;
           } else {
-            relinka("log", `    - ${change}`);
+            relinka("verbose", `    - ${change}`);
           }
         }
       }
@@ -171,36 +171,39 @@ export default defineCommand({
 
     if (args.dryRun) {
       relinka("info", "\nThis was a dry run. No changes were made.");
-      relinka("log", "Run without --dryRun to apply the changes.");
+      relinka("verbose", "Run without --dryRun to apply the changes.");
     } else {
       relinka("success", "\nMigration completed!");
 
       if (args.codemod === "path-pathkit") {
-        relinka("log", "Next steps:");
-        relinka("log", "1. Run 'bun install' to install @reliverse/pathkit");
-        relinka("log", "2. Test your application");
-        relinka("log", "3. Tip: Consider using advanced pathkit features like alias resolution");
+        relinka("verbose", "Next steps:");
+        relinka("verbose", "1. Run 'bun install' to install @reliverse/pathkit");
+        relinka("verbose", "2. Test your application");
+        relinka(
+          "verbose",
+          "3. Tip: Consider using advanced pathkit features like alias resolution",
+        );
       } else if (args.codemod === "fs-relifso") {
-        relinka("log", "Next steps:");
-        relinka("log", "1. Run 'bun install' to install @reliverse/relifso");
-        relinka("log", "2. Test your application");
-        relinka("log", "3. Review any file system operations that might need manual updates");
+        relinka("verbose", "Next steps:");
+        relinka("verbose", "1. Run 'bun install' to install @reliverse/relifso");
+        relinka("verbose", "2. Test your application");
+        relinka("verbose", "3. Review any file system operations that might need manual updates");
       } else if (args.codemod === "nodenext-bundler") {
-        relinka("log", "Next steps:");
-        relinka("log", "1. Test your application");
+        relinka("verbose", "Next steps:");
+        relinka("verbose", "1. Test your application");
         if (args.mrTarget === "nodenext") {
-          relinka("log", "2. Ensure your build tools support .js extensions in imports");
+          relinka("verbose", "2. Ensure your build tools support .js extensions in imports");
         } else if (args.mrTarget === "bundler") {
-          relinka("log", "2. Ensure your bundler is configured correctly");
+          relinka("verbose", "2. Ensure your bundler is configured correctly");
         }
         if (warningCount > 0) {
           relinka("warn", "3. ⚠️  Review files with warnings - they may need manual updates");
         }
       } else if (args.codemod === "readdir-glob") {
-        relinka("log", "Next steps:");
-        relinka("log", "1. Run 'bun install' to install globby");
-        relinka("log", "2. Test your application");
-        relinka("log", "3. Review any file system operations that might need manual updates");
+        relinka("verbose", "Next steps:");
+        relinka("verbose", "1. Run 'bun install' to install globby");
+        relinka("verbose", "2. Test your application");
+        relinka("verbose", "3. Review any file system operations that might need manual updates");
       }
     }
   },

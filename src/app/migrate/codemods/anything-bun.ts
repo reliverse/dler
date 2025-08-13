@@ -432,7 +432,7 @@ const server = serve({
   },
 });
 
-relinka("log", \`Server running on localhost:\${server.port}\`);
+relinka("verbose", \`Server running on localhost:\${server.port}\`);
 `;
 
     if (content.includes("const app = express()")) {
@@ -580,18 +580,18 @@ const writeTransformedFile = async (
   dryRun: boolean,
 ): Promise<void> => {
   if (dryRun) {
-    relinka("log", `[DRY RUN] Would transform ${result.filePath}`);
+    relinka("verbose", `[DRY RUN] Would transform ${result.filePath}`);
     for (const change of result.changes) {
-      relinka("log", `  - ${change}`);
+      relinka("verbose", `  - ${change}`);
     }
     return;
   }
 
   const fullPath = join(projectRoot, result.filePath);
   await writeFile(fullPath, result.transformedContent);
-  relinka("log", `✓ Transformed ${result.filePath}`);
+  relinka("verbose", `✓ Transformed ${result.filePath}`);
   for (const change of result.changes) {
-    relinka("log", `  - ${change}`);
+    relinka("verbose", `  - ${change}`);
   }
 };
 
@@ -599,7 +599,7 @@ const writeTransformedFile = async (
 const migrateProject = async (config: MigrationConfig): Promise<MigrationReport> => {
   const { projectRoot, dryRun, backup } = config;
 
-  relinka("log", "🔍 Analyzing project...");
+  relinka("verbose", "🔍 Analyzing project...");
   const analysis = await analyzeProject(projectRoot);
 
   relinka(
@@ -614,7 +614,7 @@ const migrateProject = async (config: MigrationConfig): Promise<MigrationReport>
   );
 
   if (backup && !dryRun) {
-    relinka("log", "💾 Creating backup...");
+    relinka("verbose", "💾 Creating backup...");
     await createBackup(projectRoot);
   }
 
@@ -625,13 +625,13 @@ const migrateProject = async (config: MigrationConfig): Promise<MigrationReport>
 
   try {
     // Transform package.json
-    relinka("log", "📦 Transforming package.json...");
+    relinka("verbose", "📦 Transforming package.json...");
     const packageJsonResult = transformPackageJson(analysis);
     transformResults.push(packageJsonResult);
     await writeTransformedFile(projectRoot, packageJsonResult, dryRun);
 
     // Transform source files
-    relinka("log", "🔧 Transforming source files...");
+    relinka("verbose", "🔧 Transforming source files...");
     for (const sourceFile of analysis.sourceFiles.slice(0, 50)) {
       // Increased limit
       try {
@@ -650,7 +650,7 @@ const migrateProject = async (config: MigrationConfig): Promise<MigrationReport>
 
     // Transform test files
     if (analysis.hasTests) {
-      relinka("log", "🧪 Transforming test files...");
+      relinka("verbose", "🧪 Transforming test files...");
       for (const testFile of analysis.testFiles.slice(0, 20)) {
         // Increased limit
         try {
@@ -670,7 +670,7 @@ const migrateProject = async (config: MigrationConfig): Promise<MigrationReport>
 
     // Generate new config files
     if (!dryRun) {
-      relinka("log", "⚙️  Generating Bun configuration...");
+      relinka("verbose", "⚙️  Generating Bun configuration...");
       const bunConfig = generateBunConfig(analysis);
       await writeFile(join(projectRoot, "bunfig.toml"), bunConfig);
 
@@ -737,41 +737,41 @@ export async function migrateAnythingToBun({
     skipFrameworks: [],
   };
 
-  relinka("log", "🚀 Starting Bun migration...");
-  relinka("log", `📁 Project: ${config.projectRoot}`);
-  relinka("log", `🔍 Mode: ${config.dryRun ? "DRY RUN" : "LIVE MIGRATION"}`);
-  relinka("log", "");
+  relinka("verbose", "🚀 Starting Bun migration...");
+  relinka("verbose", `📁 Project: ${config.projectRoot}`);
+  relinka("verbose", `🔍 Mode: ${config.dryRun ? "DRY RUN" : "LIVE MIGRATION"}`);
+  relinka("verbose", "");
 
   try {
     const report = await migrateProject(config);
 
-    relinka("log", "\n✅ Migration complete!");
-    relinka("log", `📊 Files transformed: ${report.filesTransformed}`);
+    relinka("verbose", "\n✅ Migration complete!");
+    relinka("verbose", `📊 Files transformed: ${report.filesTransformed}`);
 
     if (report.manualSteps.length > 0) {
-      relinka("log", "\n📋 Manual steps required:");
+      relinka("verbose", "\n📋 Manual steps required:");
       for (const step of report.manualSteps) {
-        relinka("log", `  • ${step}`);
+        relinka("verbose", `  • ${step}`);
       }
     }
 
     if (report.warnings.length > 0) {
-      relinka("log", "\n⚠️  Warnings:");
+      relinka("verbose", "\n⚠️  Warnings:");
       for (const warning of report.warnings) {
-        relinka("log", `  • ${warning}`);
+        relinka("verbose", `  • ${warning}`);
       }
     }
 
     if (report.errors.length > 0) {
-      relinka("log", "\n❌ Errors:");
+      relinka("verbose", "\n❌ Errors:");
       for (const error of report.errors) {
-        relinka("log", `  • ${error}`);
+        relinka("verbose", `  • ${error}`);
       }
     }
 
     if (!config.dryRun) {
-      relinka("log", "\n🎉 Your project has been migrated to Bun!");
-      relinka("log", "Run 'bun install' to get started.");
+      relinka("verbose", "\n🎉 Your project has been migrated to Bun!");
+      relinka("verbose", "Run 'bun install' to get started.");
     }
   } catch (error) {
     relinka("error", "❌ Migration failed:", error);

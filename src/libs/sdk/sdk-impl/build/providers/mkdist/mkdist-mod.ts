@@ -21,11 +21,11 @@ export async function mkdistBuild(ctx: BuildContext): Promise<void> {
   let totalWrittenFiles = 0;
   let totalErrors = 0;
 
-  relinka("info", `Processing ${entries.length} mkdist entries...`);
+  relinka("verbose", `Processing ${entries.length} mkdist entries...`);
 
   for (const entry of entries) {
     processedEntries++;
-    relinka("info", `Processing entry ${processedEntries}/${entries.length}: ${entry.input}`);
+    relinka("verbose", `Processing entry ${processedEntries}/${entries.length}: ${entry.input}`);
 
     const distDir = entry.outDir || entry.input;
 
@@ -59,7 +59,7 @@ export async function mkdistBuild(ctx: BuildContext): Promise<void> {
     };
 
     relinka(
-      "info",
+      "verbose",
       `[mkdist] Building with options: srcDir=${mkdistOptions.srcDir}, distDir=${mkdistOptions.distDir}, rootDir=${mkdistOptions.rootDir}`,
     );
 

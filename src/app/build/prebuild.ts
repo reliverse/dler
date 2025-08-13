@@ -76,7 +76,7 @@ async function copyFilesToTempDir(
 }
 
 export async function dlerPreBuild(config: DlerConfig): Promise<void> {
-  relinka("info", "— — — dlerPreBuild — — —");
+  relinka("verbose", "— — — dlerPreBuild — — —");
 
   await executeDlerHooks(config?.hooksBeforeBuild ?? [], "pre-build");
 
@@ -143,7 +143,7 @@ export async function dlerPreBuild(config: DlerConfig): Promise<void> {
   const commandsToRun = availableTools.filter(Boolean);
 
   for (const { name, run } of commandsToRun) {
-    relinka("log", `Running ${name}...`);
+    relinka("verbose", `Running ${name}...`);
     await run();
   }
 }

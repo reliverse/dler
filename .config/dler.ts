@@ -11,13 +11,18 @@ import { defineConfig } from "./types/dler.schema";
 export default defineConfig({
   // Bump configuration
   bumpDisable: false,
-  bumpFilter: ["package.json", ".config/rse.ts", "src/libs/sdk/sdk-impl/config/info.ts"],
+  bumpFilter: [
+    "package.json",
+    ".config/rse.ts",
+    "src/libs/sdk/sdk-impl/config/info.ts",
+    "src/cli.ts",
+  ],
   bumpMode: "patch",
 
   // Common configuration
   commonPubPause: false,
-  commonPubRegistry: "npm-jsr",
-  commonVerbose: true,
+  commonPubRegistry: "npm",
+  commonVerbose: false,
 
   // Core configuration
   coreBuildOutDir: "bin",
@@ -27,6 +32,9 @@ export default defineConfig({
   coreEntryFile: "mod.ts",
   coreEntrySrcDir: "src",
   coreIsCLI: { enabled: true, scripts: { dler: "cli.ts" } },
+
+  // Logs
+  displayBuildPubLogs: false,
 
   // JSR-only config
   distJsrAllowDirty: true,
@@ -47,7 +55,7 @@ export default defineConfig({
   // Publish specific dirs as separate packages
   // This feature is experimental at the moment
   // Please commit your changes before using it
-  libsActMode: "main-and-libs",
+  libsActMode: "main-project-only",
   libsDirDist: "dist-libs",
   libsDirSrc: "src/libs",
   libsList: {
@@ -92,10 +100,6 @@ export default defineConfig({
       libPubRegistry: "npm-jsr",
     },
   },
-
-  // @reliverse/relinka logger setup
-  logsFileName: ".logs/relinka.log",
-  logsFreshFile: true,
 
   // Specifies what resources to send to npm and jsr registries.
   // coreBuildOutDir (e.g. "bin") dir is automatically included.
@@ -217,4 +221,90 @@ export default defineConfig({
   transpileTarget: "node",
   transpileWatch: false,
   // transpileWatchOptions: undefined,
+
+  // @reliverse/relinka logger setup
+  logsFileName: ".logs/relinka.log",
+  logsFreshFile: true,
+
+  // Integrated relinka configuration
+  // https://github.com/reliverse/relinka
+  relinka: {
+    verbose: false,
+
+    // Timestamp configuration
+    timestamp: {
+      enabled: false,
+      format: "HH:mm:ss",
+    },
+
+    // Control whether logs are saved to a file
+    saveLogsToFile: false,
+
+    // Disable colors in the console
+    disableColors: false,
+
+    // Log file configuration
+    logFile: {
+      outputPath: "logs.log",
+      nameWithDate: "disable",
+      freshLogFile: true,
+    },
+
+    // Dirs settings
+    dirs: {
+      maxLogFiles: 5,
+    },
+
+    levels: {
+      success: {
+        symbol: "✓",
+        fallbackSymbol: "[OK]",
+        color: "greenBright",
+        spacing: 3,
+      },
+      info: {
+        symbol: "i",
+        fallbackSymbol: "[i]",
+        color: "cyanBright",
+        spacing: 3,
+      },
+      error: {
+        symbol: "✖",
+        fallbackSymbol: "[ERR]",
+        color: "redBright",
+        spacing: 3,
+      },
+      warn: {
+        symbol: "⚠",
+        fallbackSymbol: "[WARN]",
+        color: "yellowBright",
+        spacing: 3,
+      },
+      fatal: {
+        symbol: "‼",
+        fallbackSymbol: "[FATAL]",
+        color: "redBright",
+        spacing: 3,
+      },
+      verbose: {
+        symbol: "✧",
+        fallbackSymbol: "[VERBOSE]",
+        color: "gray",
+        spacing: 3,
+      },
+      internal: {
+        symbol: "⚙",
+        fallbackSymbol: "[INTERNAL]",
+        color: "magentaBright",
+        spacing: 3,
+      },
+      log: { symbol: "│", fallbackSymbol: "|", color: "dim", spacing: 3 },
+      message: {
+        symbol: "🞠",
+        fallbackSymbol: "[MSG]",
+        color: "cyan",
+        spacing: 3,
+      },
+    },
+  },
 });

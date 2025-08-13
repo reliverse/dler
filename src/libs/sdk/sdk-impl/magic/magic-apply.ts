@@ -191,7 +191,7 @@ export async function applyMagicSpells(
 
         if (DEBUG_MODE) {
           relinka(
-            "log",
+            "verbose",
             `[spells] Found ${sourceFilesWithDirectives.length} source files with magic directives`,
           );
         }
@@ -222,7 +222,7 @@ export async function applyMagicSpells(
                   },
                 );
               } else if (DEBUG_MODE) {
-                relinka("log", `[spells] ⊘ skipping non-existent target: ${distLibsPath}`);
+                relinka("verbose", `[spells] ⊘ skipping non-existent target: ${distLibsPath}`);
               }
             } catch (error) {
               if (DEBUG_MODE) {
@@ -258,7 +258,7 @@ export async function applyMagicSpells(
 
     if (DEBUG_MODE) {
       relinka(
-        "log",
+        "verbose",
         `[spells] ✓ Processed ${result.totalSpellsProcessed} magic spells in ${result.processedFiles.length} files`,
       );
     }
@@ -287,7 +287,7 @@ async function processCustomTarget(
   };
 
   if (DEBUG_MODE) {
-    relinka("log", `[spells] ⇒ processing custom target: ${outputDir}`);
+    relinka("verbose", `[spells] ⇒ processing custom target: ${outputDir}`);
   }
 
   const outputFilesToProcess: string[] = [];
@@ -310,7 +310,7 @@ async function processCustomTarget(
         outputFilesToProcess.push(filePath);
         if (DEBUG_MODE) {
           relinka(
-            "log",
+            "verbose",
             `[spells] ⇒ found directives in ${path.relative(process.cwd(), filePath)}`,
           );
         }
@@ -326,7 +326,7 @@ async function processCustomTarget(
   if (outputFilesToProcess.length === 0) {
     if (DEBUG_MODE) {
       relinka(
-        "log",
+        "verbose",
         `[spells] No files with magic directives found in custom target: ${outputDir}`,
       );
     }
@@ -376,7 +376,7 @@ async function scanSourceForMagicDirectives(
   options: Partial<ApplyMagicSpellsOptions> = {},
 ): Promise<string[]> {
   // if (DEBUG_MODE) {
-  //   relinka("log", `[spells] ⇒ scanning src: ${srcRoot}`);
+  //   relinka("verbose", `[spells] ⇒ scanning src: ${srcRoot}`);
   // }
 
   const sourceFilesWithDirectives: string[] = [];
@@ -399,7 +399,7 @@ async function scanSourceForMagicDirectives(
           sourceFilesWithDirectives.push(filePath);
           if (DEBUG_MODE) {
             relinka(
-              "log",
+              "verbose",
               `[spells] ⇒ found directives in ${path.relative(process.cwd(), filePath)}`,
             );
           }
@@ -453,14 +453,14 @@ async function processOutputTarget(
     if (DEBUG_MODE) {
       const targetName =
         outputDir === "dist-libs" && libName ? `${outputDir}/${libName}` : outputDir;
-      relinka("log", `[spells] ⊘ skipping non-existent target: ${targetName}`);
+      relinka("verbose", `[spells] ⊘ skipping non-existent target: ${targetName}`);
     }
     return result;
   }
 
   if (DEBUG_MODE) {
     const targetName = outputDir === "dist-libs" && libName ? `${outputDir}/${libName}` : outputDir;
-    relinka("log", `[spells] ⇒ processing target: ${targetName}`);
+    relinka("verbose", `[spells] ⇒ processing target: ${targetName}`);
   }
 
   const outputFilesToProcess: string[] = [];
@@ -480,7 +480,7 @@ async function processOutputTarget(
     if (DEBUG_MODE) {
       const targetName =
         outputDir === "dist-libs" && libName ? `${outputDir}/${libName}` : outputDir;
-      relinka("log", `[spells] No corresponding output files found for target: ${targetName}`);
+      relinka("verbose", `[spells] No corresponding output files found for target: ${targetName}`);
     }
     return result;
   }
@@ -594,7 +594,7 @@ export async function processSingleOutputFile(
   const projectRel = path.relative(process.cwd(), filePath).replaceAll(path.sep, "/");
 
   if (await isBinaryExt(filePath)) {
-    if (DEBUG_MODE) relinka("log", `[spells] ⊘ binary  ${projectRel}`);
+    if (DEBUG_MODE) relinka("verbose", `[spells] ⊘ binary  ${projectRel}`);
     return false;
   }
 
@@ -611,7 +611,7 @@ export async function processSingleOutputFile(
         await fs.copyFile(sourceFile, filePath);
         copiedFromSource = true;
         if (DEBUG_MODE)
-          relinka("log", `[spells] ↳ copied from ${path.relative(process.cwd(), sourceFile)}`);
+          relinka("verbose", `[spells] ↳ copied from ${path.relative(process.cwd(), sourceFile)}`);
       } catch (error) {
         relinka("error", `Failed to copy from source: ${formatError(error)}`);
       }
@@ -649,14 +649,14 @@ export async function processSingleOutputFile(
 
     if (removeFile) {
       await fs.unlink(filePath);
-      if (DEBUG_MODE) relinka("log", `[spells] ✖ removed ${projectRel}`);
+      if (DEBUG_MODE) relinka("verbose", `[spells] ✖ removed ${projectRel}`);
       return false;
     }
 
     const newContent = processedLines.join("\n");
     if (newContent !== source) {
       await fs.writeFile(filePath, newContent, "utf8");
-      if (DEBUG_MODE) relinka("log", `[spells] ✓ updated ${projectRel}`);
+      if (DEBUG_MODE) relinka("verbose", `[spells] ✓ updated ${projectRel}`);
     }
 
     return true;
@@ -1034,7 +1034,7 @@ export async function getFilesWithMagicSpells(
               });
               // if (DEBUG_MODE) {
               //   relinka(
-              //     "log",
+              //     "verbose",
               //     `[spells] ⇒ found ${spellLines.length} directive(s) in ${projectRel} at lines: ${spellLines.join(
               //       ", ",
               //     )}`,

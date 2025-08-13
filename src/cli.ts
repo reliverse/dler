@@ -12,6 +12,7 @@ let isDev = process.env.DLER_DEV_MODE === "true";
 const main = defineCommand({
   meta: {
     name: "dler",
+    version: "1.7.91",
     description: `Displays dler's command menu.\nTo see ALL available commands and arguments, run: 'dler --help' (or 'dler <command> --help')\nAvailable menu commands: ${MENU_CMDS.join(", ")}`,
   },
   async onLauncherInit() {

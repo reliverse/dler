@@ -178,7 +178,7 @@ export async function library_buildLibrary(options: LibraryBuildOptions): Promis
  */
 async function executeBuildTasks(options: LibraryBuildOptions): Promise<void> {
   const { libName, npm, jsr, effectivePubRegistry } = options;
-  relinka("log", `Executing build tasks for ${libName} (Registry: ${effectivePubRegistry})...`);
+  relinka("verbose", `Executing build tasks for ${libName} (Registry: ${effectivePubRegistry})...`);
 
   const buildTasks: (() => Promise<void>)[] = [];
 
@@ -230,7 +230,7 @@ async function library_buildJsrDist(options: LibraryBuildOptions): Promise<void>
   const { jsrOutDir, distJsrBuilder, distJsrOutFilesExt } = jsrOptions;
 
   const targetType = "jsr";
-  relinka("log", `[JSR] Initializing JSR build for ${libName}...`);
+  relinka("verbose", `[JSR] Initializing JSR build for ${libName}...`);
 
   // Resolve paths
   const libSourceDirResolved = path.resolve(PROJECT_ROOT, options.mainDir);
@@ -315,7 +315,7 @@ async function library_buildNpmDist(options: LibraryBuildOptions): Promise<void>
 
   const targetType = "npm";
   const distName = determineDistName(npmOutDir, false, libsList); // For logging
-  relinka("log", `[NPM:${distName}] Initializing NPM build for ${libName}...`);
+  relinka("verbose", `[NPM:${distName}] Initializing NPM build for ${libName}...`);
 
   // Ensure output directories exist
   const outputDirRootResolved = path.resolve(PROJECT_ROOT, npmOutDir);
@@ -422,12 +422,12 @@ async function library_buildDistributionTarget(
     ? "[JSR]"
     : `[NPM:${determineDistName(path.relative(PROJECT_ROOT, outputDirRoot), false, libsList)}]`;
 
-  relinka("log", `${logPrefix} Starting build target processing...`);
+  relinka("verbose", `${logPrefix} Starting build target processing...`);
 
   // Ensure output directories exist
   await fs.ensureDir(outputDirRoot);
   await fs.ensureDir(outputDirBin);
-  relinka("log", `${logPrefix} Using builder: ${builder}`);
+  relinka("verbose", `${logPrefix} Using builder: ${builder}`);
 
   // --- Bundling Step ---
   // Use BundleRequestParams type for the object passed to the dispatcher
@@ -470,7 +470,7 @@ async function library_buildDistributionTarget(
   };
   await library_performCommonBuildSteps(commonStepsParams);
 
-  relinka("log", `${logPrefix} Completed build target processing.`);
+  relinka("verbose", `${logPrefix} Completed build target processing.`);
 }
 
 // ============================================================================

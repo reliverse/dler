@@ -11,6 +11,7 @@ export const DEFAULT_CONFIG_DLER: DlerConfig = {
   commonPubPause: true,
   commonPubRegistry: "npm",
   commonVerbose: false,
+  displayBuildPubLogs: true,
   coreDeclarations: true,
   coreDescription: "",
   coreEntryFile: "mod.ts",
@@ -89,6 +90,79 @@ export const DEFAULT_CONFIG_DLER: DlerConfig = {
   // If you need to exclude some ts/js files from being built,
   // you can store them in the dirs with buildTemplatesDir name
   buildTemplatesDir: "templates",
+
+  // Integrated relinka logger configuration
+  relinka: {
+    verbose: false,
+    dirs: {
+      maxLogFiles: 5,
+    },
+    disableColors: false,
+    logFile: {
+      outputPath: "logs.log",
+      nameWithDate: "disable",
+      freshLogFile: true,
+    },
+    saveLogsToFile: true,
+    timestamp: {
+      enabled: false,
+      format: "HH:mm:ss",
+    },
+    cleanupInterval: 10000, // 10 seconds
+    bufferSize: 4096, // 4KB
+    maxBufferAge: 5000, // 5 seconds
+    levels: {
+      success: {
+        symbol: "✓",
+        fallbackSymbol: "[OK]",
+        color: "greenBright",
+        spacing: 3,
+      },
+      info: {
+        symbol: "i",
+        fallbackSymbol: "[i]",
+        color: "cyanBright",
+        spacing: 3,
+      },
+      error: {
+        symbol: "✖",
+        fallbackSymbol: "[ERR]",
+        color: "redBright",
+        spacing: 3,
+      },
+      warn: {
+        symbol: "⚠",
+        fallbackSymbol: "[WARN]",
+        color: "yellowBright",
+        spacing: 3,
+      },
+      fatal: {
+        symbol: "‼",
+        fallbackSymbol: "[FATAL]",
+        color: "redBright",
+        spacing: 3,
+      },
+      verbose: {
+        symbol: "✧",
+        fallbackSymbol: "[VERBOSE]",
+        color: "gray",
+        spacing: 3,
+      },
+      internal: {
+        symbol: "⚙",
+        fallbackSymbol: "[INTERNAL]",
+        color: "magentaBright",
+        spacing: 3,
+      },
+      log: { symbol: "│", fallbackSymbol: "|", color: "dim", spacing: 3 },
+      message: {
+        symbol: "🞠",
+        fallbackSymbol: "[MSG]",
+        color: "cyan",
+        spacing: 3,
+      },
+    },
+  },
 };
 
 // TODO: implement migrator from build.config.ts to .config/dler.ts

@@ -47,7 +47,7 @@ export async function prepareCLIFiles(
   recursive = true,
   useDtsTxtForPrepareMyCLI = false,
 ) {
-  relinka("log", "Starting CLI file preparation...");
+  relinka("verbose", "Starting CLI file preparation...");
 
   const configPath = ".config/dler.ts";
   let srcDir = "src";
@@ -63,7 +63,7 @@ export async function prepareCLIFiles(
   }
 
   const files = await getAllFilesAsync(srcDir, srcDir, recursive);
-  relinka("log", `Found ${files.length} files to process.`);
+  relinka("verbose", `Found ${files.length} files to process.`);
 
   let renamedCount = 0;
 
@@ -76,23 +76,23 @@ export async function prepareCLIFiles(
     const baseName = path.basename(file, ext);
     const dir = path.dirname(fullPath);
 
-    // relinka("log", `Processing file: ${fullPath}`);
+    // relinka("verbose", `Processing file: ${fullPath}`);
 
     if (revert) {
       // revert mode
       if (file.endsWith(".json.json")) {
         const originalName = path.join(dir, fileName.replace(".json.json", ".json"));
-        relinka("log", `Reverting ${fullPath} to ${originalName}`);
+        relinka("verbose", `Reverting ${fullPath} to ${originalName}`);
         await safeRename(fullPath, originalName);
         renamedCount++;
       } else if (file.endsWith(".d.ts.txt") && useDtsTxtForPrepareMyCLI) {
         const originalName = path.join(dir, fileName.replace(".d.ts.txt", ".d.ts"));
-        relinka("log", `Reverting ${fullPath} to ${originalName}`);
+        relinka("verbose", `Reverting ${fullPath} to ${originalName}`);
         await safeRename(fullPath, originalName);
         renamedCount++;
       } else if (file.endsWith(".cjs")) {
         const originalName = path.join(dir, `${baseName}.js`);
-        relinka("log", `Reverting ${fullPath} to ${originalName}`);
+        relinka("verbose", `Reverting ${fullPath} to ${originalName}`);
         await safeRename(fullPath, originalName);
         renamedCount++;
       }
@@ -100,12 +100,12 @@ export async function prepareCLIFiles(
       // normal mode - using `fileName` instead of `file` for comparisons
       if (fileName === "tsconfig.json" && !fileName.endsWith(".json.json")) {
         const newName = path.join(dir, "tsconfig.json.json");
-        relinka("log", `Renaming ${fullPath} to ${newName}`);
+        relinka("verbose", `Renaming ${fullPath} to ${newName}`);
         await safeRename(fullPath, newName);
         renamedCount++;
       } else if (fileName === "package.json" && !fileName.endsWith(".json.json")) {
         const newName = path.join(dir, "package.json.json");
-        relinka("log", `Renaming ${fullPath} to ${newName}`);
+        relinka("verbose", `Renaming ${fullPath} to ${newName}`);
         await safeRename(fullPath, newName);
         renamedCount++;
       } else if (
@@ -115,14 +115,14 @@ export async function prepareCLIFiles(
       ) {
         const baseWithoutD = baseName.slice(0, -2);
         const newName = path.join(dir, `${baseWithoutD}.d.ts.txt`);
-        relinka("log", `Renaming ${fullPath} to ${newName}`);
+        relinka("verbose", `Renaming ${fullPath} to ${newName}`);
         await safeRename(fullPath, newName);
         renamedCount++;
       } else if (fileName.endsWith(".js") && !fileName.endsWith(".cjs")) {
         const content = fs.readFileSync(fullPath, "utf8");
         if (isCommonJSFile(content)) {
           const newName = path.join(dir, `${baseName}.cjs`);
-          relinka("log", `Renaming ${fullPath} to ${newName}`);
+          relinka("verbose", `Renaming ${fullPath} to ${newName}`);
           await safeRename(fullPath, newName);
           renamedCount++;
         }
@@ -130,5 +130,5 @@ export async function prepareCLIFiles(
     }
   }
 
-  relinka("log", `CLI file preparation completed. Renamed ${renamedCount} files.`);
+  relinka("verbose", `CLI file preparation completed. Renamed ${renamedCount} files.`);
 }

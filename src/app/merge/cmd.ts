@@ -437,8 +437,8 @@ export default defineCommand({
       const force = args.force ?? true;
 
       if (verbose) {
-        relinka("log", "Verbose logging enabled");
-        relinka("log", `Force mode: ${force ? "enabled" : "disabled"}`);
+        relinka("verbose", "Verbose logging enabled");
+        relinka("verbose", `Force mode: ${force ? "enabled" : "disabled"}`);
       }
 
       let include = args.s ?? [];

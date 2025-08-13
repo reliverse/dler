@@ -137,7 +137,7 @@ async function library_getlibPkgKeepDeps(
 
   // If dependencies is true, include all dependencies from the original package.json
   if (libConfig.libPkgKeepDeps === true) {
-    relinka("log", `Preserving all dependencies for lib ${libName}`);
+    relinka("verbose", `Preserving all dependencies for lib ${libName}`);
 
     // Read the original package.json to determine if we're dealing with devDependencies
     const originalPkg = await readPackageJSON();

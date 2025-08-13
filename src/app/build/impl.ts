@@ -7,6 +7,7 @@ import type { DlerConfig } from "~/libs/sdk/sdk-impl/config/types";
 import { getConfigDler } from "~/libs/sdk/sdk-impl/config/load";
 import { library_buildFlow } from "~/libs/sdk/sdk-impl/library-flow";
 import { regular_buildFlow } from "~/libs/sdk/sdk-impl/regular-flow";
+import { createSpinner } from "~/libs/sdk/sdk-impl/utils/spinner";
 import { removeDistFolders } from "~/libs/sdk/sdk-impl/utils/utils-clean";
 import { PROJECT_ROOT } from "~/libs/sdk/sdk-impl/utils/utils-consts";
 import { handleDlerError } from "~/libs/sdk/sdk-impl/utils/utils-error-cwd";
@@ -29,11 +30,14 @@ export async function dlerBuild(
   config?: DlerConfig,
   debugOnlyCopyNonBuildFiles?: boolean,
   debugDontCopyNonBuildFiles?: boolean,
+  disableOwnSpinner?: boolean,
 ) {
   // Create a performance timer
   const timer = createPerfTimer();
 
   let effectiveConfig = config;
+  let shouldShowSpinner = false;
+  let spinner: ReturnType<typeof createSpinner> | null = null;
 
   try {
     if (!effectiveConfig) {
@@ -41,6 +45,10 @@ export async function dlerBuild(
       // This config load is a single source of truth
       effectiveConfig = await getConfigDler();
     }
+
+    // Start spinner if displayBuildPubLogs is false and not disabled by caller
+    shouldShowSpinner = effectiveConfig.displayBuildPubLogs === false && !disableOwnSpinner;
+    spinner = shouldShowSpinner ? createSpinner("Building...").start() : null;
 
     // Clean up previous run artifacts
     if (effectiveConfig.logsFreshFile) {
@@ -98,8 +106,17 @@ export async function dlerBuild(
       await fs.remove(path.join(PROJECT_ROOT, "dist-tmp"));
     }
 
+    // Stop spinner with success message
+    if (shouldShowSpinner && spinner) {
+      spinner.succeed("Build completed successfully!");
+    }
+
     return { timer, effectiveConfig };
   } catch (error) {
+    // Stop spinner with error message if it was running
+    if (shouldShowSpinner && spinner) {
+      spinner.fail("Build failed!");
+    }
     handleDlerError(error);
   }
 }

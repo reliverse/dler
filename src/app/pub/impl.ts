@@ -7,6 +7,7 @@ import { getConfigDler } from "~/libs/sdk/sdk-impl/config/load";
 import { library_pubFlow } from "~/libs/sdk/sdk-impl/library-flow";
 import { regular_pubFlow } from "~/libs/sdk/sdk-impl/regular-flow";
 import { finalizeBuild, finalizePub } from "~/libs/sdk/sdk-impl/utils/finalize";
+import { createSpinner } from "~/libs/sdk/sdk-impl/utils/spinner";
 import { handleDlerError } from "~/libs/sdk/sdk-impl/utils/utils-error-cwd";
 
 // ==========================
@@ -20,6 +21,8 @@ import { handleDlerError } from "~/libs/sdk/sdk-impl/utils/utils-error-cwd";
  */
 export async function dlerPub(isDev: boolean, config?: DlerConfig) {
   let effectiveConfig = config;
+  let shouldShowSpinner = false;
+  let spinner: ReturnType<typeof createSpinner> | null = null;
 
   try {
     if (!effectiveConfig) {
@@ -27,6 +30,10 @@ export async function dlerPub(isDev: boolean, config?: DlerConfig) {
       // This config load is a single source of truth
       effectiveConfig = await getConfigDler();
     }
+
+    // Start spinner if displayBuildPubLogs is false
+    shouldShowSpinner = effectiveConfig.displayBuildPubLogs === false;
+    spinner = shouldShowSpinner ? createSpinner("Building and publishing...").start() : null;
 
     // Handle version bumping if enabled
     const bumpIsDisabled = await isBumpDisabled();
@@ -44,12 +51,22 @@ export async function dlerPub(isDev: boolean, config?: DlerConfig) {
       }
     }
 
-    // Build step
-    const { timer, effectiveConfig: buildConfig } = await dlerBuild(isDev, effectiveConfig);
+    // Build step (disable build's own spinner since pub is handling it)
+    const { timer, effectiveConfig: buildConfig } = await dlerBuild(
+      isDev,
+      effectiveConfig,
+      undefined,
+      undefined,
+      shouldShowSpinner, // disable build's spinner if pub is showing one
+    );
 
     if (effectiveConfig.commonPubPause) {
       // Finalize build
       await finalizeBuild(timer, effectiveConfig.commonPubPause, "pub");
+      // Stop spinner with success message for build-only
+      if (shouldShowSpinner && spinner) {
+        spinner.succeed("Build completed successfully!");
+      }
     } else {
       // Publish step
       await regular_pubFlow(timer, isDev, buildConfig);
@@ -63,8 +80,16 @@ export async function dlerPub(isDev: boolean, config?: DlerConfig) {
         buildConfig.distJsrDirName,
         buildConfig.libsDirDist,
       );
+      // Stop spinner with success message for build+publish
+      if (shouldShowSpinner && spinner) {
+        spinner.succeed("Build and publish completed successfully!");
+      }
     }
   } catch (error) {
+    // Stop spinner with error message if it was running
+    if (shouldShowSpinner && spinner) {
+      spinner.fail("Build and publish failed!");
+    }
     handleDlerError(error);
   }
 }

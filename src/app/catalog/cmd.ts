@@ -48,7 +48,7 @@ export default defineCommand({
 
       default:
         relinka("error", `Unknown action: ${action}`);
-        relinka("log", "Available actions: list, ls");
+        relinka("verbose", "Available actions: list, ls");
         return process.exit(1);
     }
   },

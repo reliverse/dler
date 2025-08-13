@@ -32,12 +32,12 @@ export async function ensureDlerConfig(isDev: boolean) {
     const configContent = generateConfig(isDev, pkgDescription);
     await fs.outputFile(configPath, configContent, { encoding: "utf8" });
     relinka("success", `Config was created at ${configPath}`);
-    relinka("log", "Edit this file to customize build and publish settings");
+    relinka("verbose", "Edit this file to customize build and publish settings");
     if (!isDev) {
-      relinka("log", "Please note: commonPubPause is set to true by default");
-      relinka("log", "When you're ready, run `dler pub` to build and publish");
+      relinka("verbose", "Please note: commonPubPause is set to true by default");
+      relinka("verbose", "When you're ready, run `dler pub` to build and publish");
     } else {
-      relinka("log", "When you're ready, run `bun pub` to build and publish");
+      relinka("verbose", "When you're ready, run `bun pub` to build and publish");
     }
 
     // Generate .config/mod.ts with .config/types/dler.schema.ts

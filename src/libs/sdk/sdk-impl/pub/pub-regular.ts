@@ -29,7 +29,7 @@ export async function regular_pubToJsr(
 ): Promise<void> {
   try {
     if (!commonPubPause) {
-      relinka("log", "Publishing to JSR...");
+      relinka("verbose", "Publishing to JSR...");
       const distJsrDirNameResolved = path.resolve(PROJECT_ROOT, distJsrDirName);
 
       // Prepare bun package.json if in dev mode
@@ -64,7 +64,10 @@ export async function regular_pubToJsr(
         relinka("verbose", `Running publish command: ${command}`);
         await execaCommand(command, { stdio: "inherit" });
         relinka("null", "");
-        relinka("log", `Successfully ${distJsrDryRun ? "validated" : "published"} to JSR registry`);
+        relinka(
+          "verbose",
+          `Successfully ${distJsrDryRun ? "validated" : "published"} to JSR registry`,
+        );
       });
 
       // Wait for 2 seconds so jsr.io UI will be finished
@@ -98,7 +101,7 @@ export async function regular_pubToNpm(
 ): Promise<void> {
   try {
     if (!commonPubPause) {
-      relinka("log", "Publishing to NPM...");
+      relinka("verbose", "Publishing to NPM...");
       const distNpmDirNameResolved = path.resolve(PROJECT_ROOT, distNpmDirName);
 
       // Pause the timer before publishing (non-interactive)
@@ -109,7 +112,10 @@ export async function regular_pubToNpm(
         relinka("verbose", `Running publish command: ${command}`);
         await execaCommand(command, { stdio: "inherit" });
         relinka("null", "");
-        relinka("log", `Successfully ${distJsrDryRun ? "validated" : "published"} to NPM registry`);
+        relinka(
+          "verbose",
+          `Successfully ${distJsrDryRun ? "validated" : "published"} to NPM registry`,
+        );
       });
 
       // Resume the timer after publishing is complete

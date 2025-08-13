@@ -108,7 +108,7 @@ async function handleFileCreation({
     });
 
     if (chosen.length === 0) {
-      relinka("log", "No file types selected. Exiting...");
+      relinka("verbose", "No file types selected. Exiting...");
       return;
     }
 
@@ -155,8 +155,8 @@ async function handleTemplateCreation({
 }) {
   if (!template) {
     relinka.error("Template name is required for template creation");
-    relinka.log("Usage: dler create <template-name>");
-    relinka.log("Example: dler create react-app");
+    relinka.verbose("Usage: dler create <template-name>");
+    relinka.verbose("Example: dler create react-app");
     return process.exit(1);
   }
 
@@ -194,8 +194,8 @@ async function handleTemplateCreation({
       createCommand.push(destDir);
     }
 
-    relinka.log(`Creating project from template: ${template}`);
-    relinka.log(`Using command: ${createCommand.join(" ")}`);
+    relinka.verbose(`Creating project from template: ${template}`);
+    relinka.verbose(`Using command: ${createCommand.join(" ")}`);
 
     // Execute the create command
     const result = x(createCommand[0]!, createCommand.slice(1), {

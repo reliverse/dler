@@ -1,3 +1,144 @@
+// ==========================================================================
+// Relinka Logger Types (integrated from @reliverse/relinka)
+// ==========================================================================
+
+/** Configuration for directory-related settings. */
+export interface RelinkaDirsConfig {
+  maxLogFiles?: number;
+}
+
+/** Log level types used by the logger. */
+export type LogLevel =
+  | "error"
+  | "fatal"
+  | "info"
+  | "success"
+  | "verbose"
+  | "warn"
+  | "log"
+  | "internal"
+  | "null"
+  | "step"
+  | "box"
+  | "message";
+
+/** Configuration for a single log level. */
+export interface LogLevelConfig {
+  /**
+   * Symbol to display for this log level.
+   * @see https://symbl.cc
+   */
+  symbol: string;
+
+  /**
+   * Fallback symbol to use if Unicode is not supported.
+   */
+  fallbackSymbol: string;
+
+  /**
+   * Color to use for this log level.
+   */
+  color: string;
+
+  /**
+   * Number of spaces after the symbol/fallback
+   */
+  spacing?: number;
+}
+
+/** Configuration for all log levels. */
+export type LogLevelsConfig = Partial<Record<LogLevel, LogLevelConfig>>;
+
+/**
+ * Configuration options for the Relinka logger.
+ * All properties are optional to allow for partial configuration.
+ * Defaults will be applied during initialization.
+ */
+export interface RelinkaConfig {
+  /**
+   * Enables verbose (aka debug) mode for detailed logging.
+   *
+   * `true` here works only for end-users of CLIs/libs when theirs developers
+   * has been awaited for user's config via `@reliverse/relinka`'s `await relinkaConfig;`
+   */
+  verbose?: boolean;
+
+  /**
+   * Configuration for directory-related settings.
+   * - `maxLogFiles`: The maximum number of log files to keep before cleanup.
+   */
+  dirs?: RelinkaDirsConfig;
+
+  /**
+   * Disables color output in the console.
+   */
+  disableColors?: boolean;
+
+  /**
+   * Configuration for log file output.
+   */
+  logFile?: {
+    /**
+     * Path to the log file.
+     */
+    outputPath?: string;
+    /**
+     * How to handle date in the filename.
+     * - `disable`: No date prefix/suffix
+     * - `append-before`: Add date before the filename (e.g., "2024-01-15-log.txt")
+     * - `append-after`: Add date after the filename (e.g., "log-2024-01-15.txt")
+     */
+    nameWithDate?: "disable" | "append-before" | "append-after";
+    /**
+     * If true, clears the log file when relinkaConfig is executed with supportFreshLogFile: true.
+     * This is useful for starting with a clean log file on each run.
+     */
+    freshLogFile?: boolean;
+  };
+
+  /**
+   * If true, logs will be saved to a file.
+   */
+  saveLogsToFile?: boolean;
+
+  /**
+   * Configuration for timestamp in log messages.
+   */
+  timestamp?: {
+    /**
+     * If true, timestamps will be added to log messages.
+     */
+    enabled: boolean;
+    /**
+     * The format for timestamps. Default is YYYY-MM-DD HH:mm:ss.SSS
+     */
+    format?: string;
+  };
+
+  /**
+   * Allows to customize the log levels.
+   */
+  levels?: LogLevelsConfig;
+
+  /**
+   * Controls how often the log cleanup runs (in milliseconds)
+   * Default: 10000 (10 seconds)
+   */
+  cleanupInterval?: number;
+
+  /**
+   * Maximum size of the log write buffer before flushing to disk (in bytes)
+   * Default: 4096 (4KB)
+   */
+  bufferSize?: number;
+
+  /**
+   * Maximum time to hold logs in buffer before flushing to disk (in milliseconds)
+   * Default: 5000 (5 seconds)
+   */
+  maxBufferAge?: number;
+}
+
 /**
  * Defines the configuration for building and publishing packages. This includes: versioning,
  * build settings, publishing options, libraries-dler-plugin built-in plugin, and more.
@@ -81,6 +222,14 @@ export interface DlerConfig {
    * @default false
    */
   commonVerbose: boolean;
+
+  /**
+   * When `true`, displays detailed build and publish logs.
+   * When `false`, only shows spinner with status messages during build and publish.
+   *
+   * @default true
+   */
+  displayBuildPubLogs: boolean;
 
   // ==========================================================================
   // Core configuration
@@ -598,6 +747,18 @@ export interface DlerConfig {
    * @default "templates"
    */
   buildTemplatesDir: string;
+
+  // ==========================================================================
+  // Relinka Logger Configuration
+  // ==========================================================================
+
+  /**
+   * Integrated relinka logger configuration.
+   * @see https://github.com/reliverse/relinka
+   *
+   * @default See DEFAULT_RELINKA_CONFIG in defaults
+   */
+  relinka: RelinkaConfig;
 }
 
 export type BumpMode = "patch" | "minor" | "major" | "auto" | "manual";
@@ -739,6 +900,7 @@ export const DEFAULT_CONFIG_DLER: DlerConfig = {
   commonPubPause: true,
   commonPubRegistry: "npm",
   commonVerbose: false,
+  displayBuildPubLogs: true,
   coreDeclarations: true,
   coreDescription: "",
   coreEntryFile: "mod.ts",
@@ -817,6 +979,79 @@ export const DEFAULT_CONFIG_DLER: DlerConfig = {
   // If you need to exclude some ts/js files from being built,
   // you can store them in the dirs with buildTemplatesDir name
   buildTemplatesDir: "templates",
+
+  // Integrated relinka logger configuration
+  relinka: {
+    verbose: false,
+    dirs: {
+      maxLogFiles: 5,
+    },
+    disableColors: false,
+    logFile: {
+      outputPath: "logs.log",
+      nameWithDate: "disable",
+      freshLogFile: true,
+    },
+    saveLogsToFile: true,
+    timestamp: {
+      enabled: false,
+      format: "HH:mm:ss",
+    },
+    cleanupInterval: 10000, // 10 seconds
+    bufferSize: 4096, // 4KB
+    maxBufferAge: 5000, // 5 seconds
+    levels: {
+      success: {
+        symbol: "✓",
+        fallbackSymbol: "[OK]",
+        color: "greenBright",
+        spacing: 3,
+      },
+      info: {
+        symbol: "i",
+        fallbackSymbol: "[i]",
+        color: "cyanBright",
+        spacing: 3,
+      },
+      error: {
+        symbol: "✖",
+        fallbackSymbol: "[ERR]",
+        color: "redBright",
+        spacing: 3,
+      },
+      warn: {
+        symbol: "⚠",
+        fallbackSymbol: "[WARN]",
+        color: "yellowBright",
+        spacing: 3,
+      },
+      fatal: {
+        symbol: "‼",
+        fallbackSymbol: "[FATAL]",
+        color: "redBright",
+        spacing: 3,
+      },
+      verbose: {
+        symbol: "✧",
+        fallbackSymbol: "[VERBOSE]",
+        color: "gray",
+        spacing: 3,
+      },
+      internal: {
+        symbol: "⚙",
+        fallbackSymbol: "[INTERNAL]",
+        color: "magentaBright",
+        spacing: 3,
+      },
+      log: { symbol: "│", fallbackSymbol: "|", color: "dim", spacing: 3 },
+      message: {
+        symbol: "🞠",
+        fallbackSymbol: "[MSG]",
+        color: "cyan",
+        spacing: 3,
+      },
+    },
+  },
 };
 
 // TODO: implement migrator from build.config.ts to .config/dler.ts
