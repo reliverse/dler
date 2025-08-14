@@ -38,7 +38,7 @@ export default defineCommand({
     // Fallback: try to extract additional libraries from process.argv
     if (libNames.length === 1) {
       const argv = process.argv;
-      const initIndex = argv.findIndex((arg) => arg === "--init");
+      const initIndex = argv.indexOf("--init");
 
       if (initIndex !== -1 && initIndex + 1 < argv.length) {
         const additionalArgs: string[] = [];

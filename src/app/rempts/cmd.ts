@@ -52,7 +52,7 @@ export default defineCommand({
       }
       if (cmdNames.length === 1) {
         const argv = process.argv;
-        const initIndex = argv.findIndex((arg) => arg === "--init");
+        const initIndex = argv.indexOf("--init");
         if (initIndex !== -1 && initIndex + 1 < argv.length) {
           const additionalArgs: string[] = [];
           for (let i = initIndex + 2; i < argv.length; i++) {

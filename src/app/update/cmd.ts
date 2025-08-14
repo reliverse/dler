@@ -1298,7 +1298,7 @@ export default defineCommand({
 
         if (otherPackageJsons.length > 0) {
           relinka(
-            "info",
+            "verbose",
             `Found ${otherPackageJsons.length} additional package.json files to update recursively`,
           );
           const recursiveUpdated = await updateWorkspacePackages(otherPackageJsons, args, options);
@@ -1336,8 +1336,8 @@ export default defineCommand({
       if (args.recursive) {
         const allPackageJsonCount = (await findAllPackageJsons(process.cwd())).length;
         relinka(
-          "success",
-          `Updated ${totalUpdated} dependencies across ${allPackageJsonCount} package.json files (recursive)`,
+          "log",
+          `Updated ${totalUpdated} dependencies across ${allPackageJsonCount} package.json files`,
         );
       } else {
         const isMonorepoProject = await isMonorepo(process.cwd());
@@ -1346,7 +1346,7 @@ export default defineCommand({
 
         if (isMonorepoProject && shouldUpdateWorkspaces) {
           relinka(
-            "success",
+            "log",
             `Updated ${totalUpdated} dependencies across workspace (root + workspaces)`,
           );
         } else if (isMonorepoProject) {
@@ -1362,8 +1362,12 @@ export default defineCommand({
       if (!args["with-install"]) {
         const installCommand = packageManager?.command || "your package manager";
         relinka(
-          "info",
-          `Skipped install step. Use --with-install to run '${installCommand} install'.`,
+          "log",
+          `Install step is skipped by default. Run '${installCommand} install' manually to apply the changes.`,
+        );
+        relinka(
+          "log",
+          `(experimental) Next time you can try --with-install flag to run it automatically.`,
         );
         return;
       }

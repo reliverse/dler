@@ -1,7 +1,7 @@
 {
   "name": "@reliverse/dler",
   "author": "reliverse",
-  "version": "1.7.91",
+  "version": "1.7.92",
   "type": "module",
   "license": "MIT",
   "description": "@reliverse/dler is a flexible, unified, and fully automated bundler for typescript and javascript projects, as well as an npm and jsr publishing tool. dler is not only a bundler, it also tries to serve as the most powerful codemod toolkit for js/ts.",
@@ -9,7 +9,7 @@
     "dler": "bun src/cli.ts",
     "pub": "bun dler pub",
     "rse:cli": "bun rse cli",
-    "latest": "bun dler update",
+    "latest": "bun dler update && bun install",
     "build:binary": "bun dler build binary",
     "remdn": "bun dler remdn --mode dirs-scan-compare",
     "magic:example": "bun example/magic/e-ms-inject.ts",
@@ -73,7 +73,7 @@
     "untyped": "^2.0.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.1.4",
+    "@biomejs/biome": "^2.2.0",
     "@eslint/js": "^9.33.0",
     "@reliverse/rse": "^1.7.12",
     "@reliverse/rse-cfg": "^1.7.12",

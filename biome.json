@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.1.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
   "vcs": {
     "enabled": false,
     "clientKind": "git",
@@ -9,7 +9,6 @@
     "includes": [
       "**",
       "!**/node_modules/",
-      "!**/bun.lock",
       "!**/dist/",
       "!**/dist-jsr/",
       "!**/dist-npm/",
@@ -31,6 +30,7 @@
     "rules": {
       "recommended": true,
       "suspicious": {
+        "useIterableCallbackReturn": "off",
         "noThenProperty": "off",
         "noShadowRestrictedNames": "off",
         "noExplicitAny": "off",
