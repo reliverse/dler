@@ -1,11 +1,8 @@
 #!/usr/bin/env bun
-import { build, type BuildConfig } from "bun";
+import { type BuildConfig, build } from "bun";
 import plugin from "bun-plugin-tailwind";
-// biome-ignore lint/style/useNodejsImportProtocol: <bun>
 import { existsSync } from "fs";
-// biome-ignore lint/style/useNodejsImportProtocol: <bun>
 import { rm } from "fs/promises";
-// biome-ignore lint/style/useNodejsImportProtocol: <bun>
 import path from "path";
 
 // TODO: integrate this setup into dler's build flow to finish implementing bun bundler

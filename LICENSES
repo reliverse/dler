@@ -16,5 +16,6 @@ Some parts of this project are based on and significantly adapt:
 - https://github.com/unjs/nypm/tree/b13ca2f – MIT © Pooya Parsa (pi0)
 - https://github.com/unjs/unbuild/tree/a6570a5 – MIT © Pooya Parsa (pi0)
 - https://github.com/unjs/mkdist/tree/a7f029d – MIT © Pooya Parsa (pi0), Daniel Roe (danielroe)
-- https://github.com/moxystudio/node-cross-spawn/tree/77cd97f – MIT © MOXY (hello@moxy.studio)
+- https://github.com/aklinker1/buildc/tree/54de387 – MIT © Aaron Klinker (aklinker1)
+- https://github.com/moxystudio/node-cross-spawn/tree/77cd97f – MIT © MOXY
 - https://github.com/tinylibs/tinyexec/tree/daa2945 – MIT © Tinylibs

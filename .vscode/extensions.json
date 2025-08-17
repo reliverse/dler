@@ -5,6 +5,9 @@
     "chunsen.bracket-select",
     "fabiospampinato.vscode-open-multiple-files",
     "usernamehw.errorlens",
-    "usernamehw.remove-empty-lines"
+    "usernamehw.remove-empty-lines",
+    "rust-lang.rust-analyzer",
+    "oven.bun-vscode",
+    "ms-vscode.powershell"
   ]
 }

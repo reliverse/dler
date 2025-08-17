@@ -14,8 +14,8 @@ export default defineConfig({
   bumpFilter: [
     "package.json",
     ".config/rse.ts",
-    "src/libs/sdk/sdk-impl/config/info.ts",
-    "src/cli.ts",
+    "npm/libs/sdk/sdk-impl/config/info.ts",
+    "npm/dler.ts",
   ],
   bumpMode: "patch",
 
@@ -30,8 +30,8 @@ export default defineConfig({
   coreDescription:
     "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
   coreEntryFile: "mod.ts",
-  coreEntrySrcDir: "src",
-  coreIsCLI: { enabled: true, scripts: { dler: "cli.ts" } },
+  coreEntrySrcDir: "npm",
+  coreIsCLI: { enabled: true, scripts: { dler: "dler.ts" } },
 
   // Logs
   displayBuildPubLogs: false,

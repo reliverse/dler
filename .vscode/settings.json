@@ -2,17 +2,10 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.biome": "explicit"
   },
-  "eslint.rules.customizations": [
-    {
-      "rule": "perfectionist/sort-imports",
-      "severity": "off"
-    }
-  ],
   "openMultipleFiles.limit": 700,
   "markdownlint.config": {
     "MD033": false,
     "MD041": false
   },
-  "typescript.tsdk": "node_modules\\typescript\\lib",
-  "eslint.ignoreUntitled": true
+  "typescript.tsdk": "node_modules\\typescript\\lib"
 }

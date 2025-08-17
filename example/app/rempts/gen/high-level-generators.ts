@@ -1,11 +1,11 @@
 // `bun example/high-level-generators.ts`
 
 import {
-  generateCommands,
-  generateModule,
-  generateCrudModule,
   generateApiModule,
+  generateCommands,
+  generateCrudModule,
   generateDbModule,
+  generateModule,
   generateMultipleModules,
   regenerateExports,
 } from "@/app/rempts/gen/typed-generators";

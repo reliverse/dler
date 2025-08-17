@@ -1,3 +1,3 @@
-import { runMain, defineCommand } from "@reliverse/rempts";
+import { defineCommand, runMain } from "@reliverse/rempts";
 
 await runMain(defineCommand({}));

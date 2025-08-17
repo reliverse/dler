@@ -43,7 +43,7 @@ before using dler, make sure you have [git](https://git-scm.com/downloads), [nod
 git clone https://github.com/reliverse/dler.git
 cd dler
 bun i
-bun dler build # runs dler from source (cli entry: src/cli.ts)
+bun dler build # runs dler bun ts edition from source (cli entry: npm/dler.ts)
 ```
 
 ### 1. install dler
@@ -1104,8 +1104,24 @@ dler install
 - `libs:unpack`: Creates a project structure using all templates from the `cfg` and `sdk` templates (using **dler unpack** command).
 - `libs:example`: Since `libs:unpack`'s serves as a dist-libs mock, then `libs:example` helps easily test dler's features like `resolveAllCrossLibs()`.
 
+### how to build
+
+#### ts bun binaries
+
+```bash
+bun dler build binary
+```
+
+#### rust binaries
+
+```bash
+cargo build --release # release build is used for publishing
+cargo build # debug build is used for development testing
+```
+
 ### notes
 
+- `dlerust` is a temporary name for the experimental rust binary, it will be probably changed to `dler` in the future
 - `<src | dist-npm | dist-jsr>/libs/<lib-name>/<files live here>` === `dist-libs/<lib-name>/<jsr | npm>/bin/<files live here>`
 
 ### todo

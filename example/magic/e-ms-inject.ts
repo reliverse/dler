@@ -1,8 +1,8 @@
 // e-ms-inject.ts (transform-impl-mod.ts → inject-impl-mod.ts → e-ms-inject.ts) // 👉 `bun magic:example`
 
-import { confirmPrompt } from "@reliverse/rempts";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { confirmPrompt } from "@reliverse/rempts";
 
 import {
   injectAtLocation,

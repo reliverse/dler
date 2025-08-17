@@ -1,8 +1,8 @@
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { existsSync, rmSync } from "node:fs";
+import { mkdir, readFile } from "node:fs/promises";
 import { join, resolve } from "@reliverse/pathkit";
 import { runCmd } from "@reliverse/rempts";
-import { expect, test, describe, beforeEach, afterEach } from "bun:test";
-import { existsSync, rmSync } from "node:fs";
-import { readFile, mkdir } from "node:fs/promises";
 
 import { getMigrateCmd } from "~/app/cmds";
 
