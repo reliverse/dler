@@ -1,11 +1,15 @@
 {
-  "editor.codeActionsOnSave": {
-    "source.fixAll.biome": "explicit"
-  },
+  "typescript.tsdk": "node_modules\\typescript\\lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
   "openMultipleFiles.limit": 700,
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.biome": "explicit",
+    "source.fixAll.biome": "explicit",
+    "source.organizeImports.biome": "explicit"
+  },
   "markdownlint.config": {
     "MD033": false,
     "MD041": false
-  },
-  "typescript.tsdk": "node_modules\\typescript\\lib"
+  }
 }

@@ -2,11 +2,13 @@
 
 [sponsor](https://github.com/sponsors/blefnk) — [discord](https://discord.gg/pb8ukbwpsj) — [github](https://github.com/reliverse/dler) — [npm](https://npmjs.com/@reliverse/dler)
 
-> @reliverse/dler (formerly relidler; `/ˈdiː.lər/`, dealer) is both a unified package manager for typescript/javascript projects and a flexible framework for creating, building, and publishing js/ts libraries to npm and jsr.
+> @reliverse/dler (formerly relidler; `/ˈdiː.lər/`, dealer) is like nextjs, but for libraries and cli tools development. it is both a unified package manager for typescript/javascript projects and a flexible framework for creating, building, and publishing js/ts libraries to npm and jsr.
 >
 > dler is your package manager’s best friend — it extends bun, deno (🔜), pnpm, yarn, and npm with powerful and modern features.
 >
 > at its core, dler is a flexible and fully automated bundler that also doubles as an npm/jsr publishing tool. beyond bundling, dler provides a rich codemod toolkit designed for modern typescript/javascript development.
+>
+> dler-sdk serves also like a terminal component library, its like shadcn but for libraries and cli tools.
 
 ## features
 
@@ -1121,7 +1123,7 @@ cargo build # debug build is used for development testing
 
 ### notes
 
-- `dlerust` is a temporary name for the experimental rust binary, it will be probably changed to `dler` in the future
+- `dlerust` and `dlergo` are temporary names for the experimental rust and go binaries, they will be probably changed to `dler` in the future (or... maybe not 😅)
 - `<src | dist-npm | dist-jsr>/libs/<lib-name>/<files live here>` === `dist-libs/<lib-name>/<jsr | npm>/bin/<files live here>`
 
 ### todo
