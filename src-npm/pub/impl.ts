@@ -45,7 +45,7 @@ export async function dlerPub(isDev: boolean, config?: DlerConfig) {
         );
         await setBumpDisabledValueTo(true);
       } catch {
-        throw new Error("[.config/dler.ts] Failed to set bumpDisable to true");
+        throw new Error("[relivereliverse.ts] Failed to set bumpDisable to true");
       }
     }
 

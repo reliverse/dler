@@ -92,8 +92,8 @@ export async function typesBuild(ctx: BuildContext): Promise<void> {
           ? {
               contents: generateTypes(schema, {
                 interfaceName: pascalCase(`${entry.name}-schema`),
-                // addDefaults: true, // TODO: Add JSDoc default values (allow to configure via .config/dler.ts)
-                // addDescription: true, // TODO: Add JSDoc descriptions (allow to configure via .config/dler.ts)
+                // addDefaults: true, // TODO: Add JSDoc default values (allow to configure via relivereliverse.ts)
+                // addDescription: true, // TODO: Add JSDoc descriptions (allow to configure via relivereliverse.ts)
               }),
               fileName: `${entry.name}.d.ts`,
             }

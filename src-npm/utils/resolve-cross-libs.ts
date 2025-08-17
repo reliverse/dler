@@ -695,7 +695,7 @@ export async function resolveAllCrossLibs(
 async function loadDlerConfig(): Promise<{ libsList: Record<string, any> }> {
   try {
     const jiti = createJiti(import.meta.url);
-    const config = (await jiti.import(".config/dler.ts", { default: true })) as any;
+    const config = (await jiti.import("relivereliverse.ts", { default: true })) as any;
     return { libsList: config?.libsList || {} };
   } catch (error) {
     relinka(

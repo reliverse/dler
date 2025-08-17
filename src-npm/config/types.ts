@@ -167,7 +167,7 @@ export interface DlerConfig {
    * When empty, falls back to only updating "package.json".
    * Respects: .gitignore patterns, hidden files, .git & node_modules.
    *
-   * @default ["package.json", ".config/rse.ts"]
+   * @default ["package.json", "reliverse.ts"]
    */
   bumpFilter: string[];
 

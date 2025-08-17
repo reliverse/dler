@@ -72,7 +72,7 @@ export async function unifiedBuild(
   const jiti = createJiti(resolvedRootDir);
 
   const _buildConfig: UnifiedBuildConfig | UnifiedBuildConfig[] =
-    (await jiti.import(inputConfig?.config || ".config/dler.ts", {
+    (await jiti.import(inputConfig?.config || "relivereliverse.ts", {
       default: true,
       try: !inputConfig.config,
     })) || {};
@@ -87,7 +87,7 @@ export async function unifiedBuild(
       try: true,
     })) || ({} as PackageJson);
 
-  // Invoke build for every build config defined in `.config/dler.ts`
+  // Invoke build for every build config defined in `relivereliverse.ts`
   const cleanedDirs: string[] = [];
 
   const _transpileWatchMode = inputConfig.transpileWatch === true;

@@ -1,6 +1,6 @@
 import fs from "@reliverse/relifso";
 
-const cliConfigTs = ".config/rse.ts";
+const cliConfigTs = "reliverse.ts";
 const cliConfigJsonc = "rse";
 
 /**

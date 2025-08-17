@@ -1,6 +1,8 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "project": ["**/*.{ts,js}"],
+  "project": [
+    "**/*.{ts,js}"
+  ],
   "entry": [
     "src/app/**/*.ts",
     ".{config,tests}/**/*.ts",
@@ -10,12 +12,29 @@
     "example/**/*.ts"
   ],
   "ignore": [
-    ".config/rse.ts",
+    "reliverse.ts",
     "node_modules",
     "dist-jsr",
     "dist-npm",
     "dist-libs",
     "src/libs/sdk/sdk-impl/**/*.ts",
     "src/libs/cfg/types.ts"
+  ],
+  "ignoreDependencies": [
+    "octokit",
+    "querystring",
+    "bun-plugin-tailwind",
+    "@hookform/resolvers",
+    "@radix-ui/react-label",
+    "@radix-ui/react-select",
+    "@radix-ui/react-slot",
+    "class-variance-authority",
+    "clsx",
+    "lucide-react",
+    "react-hook-form",
+    "tailwind-merge",
+    "tailwindcss-animate",
+    "autoprefixer",
+    "postcss"
   ]
 }

@@ -10,10 +10,7 @@ import { tsconfigJson } from "./cfg-consts";
 import { askRseConfigType } from "./cfg-prompts";
 
 // Cache the result per project path so the prompt is only shown once.
-const configPathCache = new Map<
-  string,
-  { configPath: string; isTS: boolean }
->();
+const configPathCache = new Map<string, { configPath: string; isTS: boolean }>();
 
 /**
  * Determines the rse config file path and whether it's TS or JSONC.
@@ -41,8 +38,8 @@ export async function getRseConfigPath(
 
   // Identify potential config paths in .config directory
   const configDir = path.join(projectPath, ".config");
-  const rseJsonc = path.join(configDir, "rse.jsonc");
-  const rseTs = path.join(configDir, "rse.ts");
+  const rseJsonc = path.join(configDir, "reliverse.jsonc");
+  const rseTs = path.join(configDir, "reliverse.ts");
 
   // Check if these paths exist
   const [tsconfigExists, jsoncExists, tsExists] = await Promise.all([
@@ -65,9 +62,7 @@ export async function getRseConfigPath(
   else if (tsconfigExists && !jsoncExists && !skipPrompt) {
     const choice = await askRseConfigType();
     result =
-      choice === "ts"
-        ? { configPath: rseTs, isTS: true }
-        : { configPath: rseJsonc, isTS: false };
+      choice === "ts" ? { configPath: rseTs, isTS: true } : { configPath: rseJsonc, isTS: false };
   } else {
     // Default to JSONC
     result = { configPath: rseJsonc, isTS: false };

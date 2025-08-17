@@ -25,12 +25,12 @@ export async function ensureConfigMod(options: ConfigModOptions): Promise<void> 
   console.log("ensureConfigMod", options);
 
   const { tool, mode, forceUpdate = false, isDev = false } = options;
-  const configModPath = path.resolve(process.cwd(), ".config/mod.ts");
+  const configModPath = path.resolve(process.cwd(), "mod.ts");
 
   // Read package.json to get version
   const pkg = await readPackageJSON().catch(() => ({ version: "1.0.0" as const }));
 
-  // Read existing .config/mod.ts or create new structure
+  // Read existing mod.ts or create new structure
   let dotConfig: Record<string, ConfigModEntry> = {};
 
   if ((await fs.pathExists(configModPath)) && !forceUpdate) {
@@ -47,7 +47,7 @@ export async function ensureConfigMod(options: ConfigModOptions): Promise<void> 
     } catch (error) {
       relinka(
         "warn",
-        `Could not import existing .config/mod.ts: ${error instanceof Error ? error.message : String(error)}`,
+        `Could not import existing mod.ts: ${error instanceof Error ? error.message : String(error)}`,
       );
 
       // Fallback to manual parsing if jiti fails
@@ -67,7 +67,7 @@ export async function ensureConfigMod(options: ConfigModOptions): Promise<void> 
     mode,
     main: "defineConfig",
     input: getInputSource(tool, mode, isDev),
-    output: `.config/types/${tool}.schema.ts`,
+    output: `types/${tool}.schema.ts`,
   };
 
   // Check if we need to download fresh types
@@ -76,7 +76,7 @@ export async function ensureConfigMod(options: ConfigModOptions): Promise<void> 
 
   dotConfig[tool] = toolConfig;
 
-  // Generate .config/mod.ts content using magic-string
+  // Generate mod.ts content using magic-string
   const modContent = generateConfigModContent(dotConfig);
   await fs.outputFile(configModPath, modContent, { encoding: "utf8" });
 
@@ -92,7 +92,7 @@ export async function ensureConfigMod(options: ConfigModOptions): Promise<void> 
   // Update the tool's config file with proper imports
   await updateToolConfigImports(tool, toolConfig.main);
 
-  relinka("success", `Updated .config/mod.ts with ${tool} configuration`);
+  relinka("success", `Updated mod.ts with ${tool} configuration`);
 }
 
 async function shouldUpdateSchema(
@@ -226,10 +226,10 @@ async function downloadSchema(inputUrl: string, outputPath: string): Promise<voi
 }
 
 async function updateToolConfigImports(tool: string, mainExport: string): Promise<void> {
-  const configPath = path.resolve(process.cwd(), `.config/${tool}.ts`);
+  const configPath = path.resolve(process.cwd(), `${tool}.ts`);
 
   if (!(await fs.pathExists(configPath))) {
-    relinka("warn", `Config file .config/${tool}.ts not found, skipping import update`);
+    relinka("warn", `Config file ${tool}.ts not found, skipping import update`);
     return;
   }
 
@@ -242,7 +242,7 @@ async function updateToolConfigImports(tool: string, mainExport: string): Promis
 
     // Check if import already exists
     if (content.includes(schemaImportPath)) {
-      relinka("info", `Import already exists in .config/${tool}.ts`);
+      relinka("info", `Import already exists in ${tool}.ts`);
       return;
     }
 
@@ -285,7 +285,7 @@ async function updateToolConfigImports(tool: string, mainExport: string): Promis
 
     const updatedContent = s.toString();
     await fs.writeFile(configPath, updatedContent, "utf8");
-    relinka("success", `Updated imports in .config/${tool}.ts`);
+    relinka("success", `Updated imports in ${tool}.ts`);
   } catch (error) {
     relinka(
       "error",

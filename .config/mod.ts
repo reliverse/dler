@@ -19,6 +19,6 @@ export const dotConfig: DotConfig = {
     mode: "copy-internal",
     main: "defineConfig",
     input: "src/libs/cfg/cfg-mod.ts",
-    output: ".config/types/dler.schema.ts",
+    output: "types/dler.schema.ts",
   },
 };

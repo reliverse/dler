@@ -6,7 +6,7 @@ export const FILE_TYPES = [
   { type: "cfg:knip", variations: ["knip.json"] },
   {
     type: "cfg:reliverse",
-    variations: [".config/rse.jsonc", ".config/rse.ts"],
+    variations: ["reliverse.jsonc", "reliverse.ts"],
   },
   { type: "cfg:package.json", variations: ["package.json"] },
   { type: "cfg:tsconfig.json", variations: ["tsconfig.json"] },

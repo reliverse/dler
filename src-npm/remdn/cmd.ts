@@ -67,7 +67,7 @@ const DEFAULT_CONFIG: ConfigRemdn = {
   },
 };
 
-const DEFAULT_CONFIG_PATH = ".config/remdn.ts";
+const DEFAULT_CONFIG_PATH = "remdn.ts";
 
 const resolvePath = (path: string): string => {
   return resolve(process.cwd(), path);
@@ -186,7 +186,7 @@ const readConfig = async (path?: string): Promise<ConfigRemdn> => {
     try {
       const defaultConfigPath = resolvePath(DEFAULT_CONFIG_PATH);
       if (await Bun.file(defaultConfigPath).exists()) {
-        // Load default configuration from .config/remdn.ts
+        // Load default configuration from remdn.ts
         const cfg = await evaluateTsConfig(defaultConfigPath);
         const expandedDirs = await expandDistLibs(cfg.dirs);
         return { ...cfg, dirs: expandedDirs };

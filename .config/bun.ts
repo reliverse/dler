@@ -7,7 +7,7 @@ import path from "path";
 
 // TODO: integrate this setup into dler's build flow to finish implementing bun bundler
 
-// "web-new:build": "bun run .config/build.ts",
+// "web-new:build": "bun run build.ts",
 // "web-old:build": "bun build ./src/app/web/index.html --outdir=dist-web --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*'",
 
 // Print help text if requested

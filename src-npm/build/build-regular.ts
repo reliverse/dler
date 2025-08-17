@@ -588,8 +588,8 @@ async function regular_performCommonBuildSteps({
   if (isJsr && coreIsCLI.enabled) {
     const jsrFiles = config.publishArtifacts?.["dist-jsr"] || [
       ".gitignore",
-      ".config/rse.ts",
-      ".config/rse.jsonc",
+      "reliverse.ts",
+      "reliverse.jsonc",
       "drizzle.config.ts",
       "schema.json",
     ];

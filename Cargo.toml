@@ -1,13 +1,13 @@
 # https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [package]
-name = "dlerust"
+name = "dler-rust"
 version = "0.1.0"
 edition = "2024"
 description = "Orchestrates and caches builds for JS monorepos"
 authors = ["Reliverse <team@reliverse.dev>"]
 license = "MIT"
-repository = "https://github.com/reliverse/dlerust"
+repository = "https://github.com/reliverse/dler"
 keywords = ["monorepo", "build", "cache", "orchestration"]
 categories = ["development-tools", "build-tools"]
 

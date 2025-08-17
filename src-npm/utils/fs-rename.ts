@@ -49,7 +49,7 @@ export async function prepareCLIFiles(
 ) {
   relinka("verbose", "Starting CLI file preparation...");
 
-  const configPath = ".config/dler.ts";
+  const configPath = "relivereliverse.ts";
   let srcDir = "src";
 
   if (fs.existsSync(configPath)) {

@@ -32,10 +32,8 @@
     "noPropertyAccessFromIndexSignature": false
   },
   "include": [
-    "**/*.ts",
-    "**/*.js",
-    ".*/**/*.ts",
-    ".config/**/*.ts"
+    "src-npm/**/*.ts",
+    "reliverse.ts"
   ],
   "exclude": [
     "node_modules",

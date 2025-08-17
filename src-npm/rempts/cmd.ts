@@ -197,7 +197,7 @@ await runCmd(cmd, [
 });
 
 async function handleDlerConfig() {
-  const dlerConfigPath = path.resolve(".config/dler.ts");
+  const dlerConfigPath = path.resolve("relivereliverse.ts");
   let cmdsRoot = "src/app";
   let cliFilePath = "";
 

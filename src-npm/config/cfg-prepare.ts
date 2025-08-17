@@ -6,7 +6,7 @@ import { readPackageJSON } from "pkg-types";
 import { DEFAULT_CONFIG_RSE } from "~/libs/sdk/sdk-impl/config/default";
 
 // Supported configuration filename
-const CONFIG_FILENAME = ".config/rse.ts";
+const CONFIG_FILENAME = "reliverse.ts";
 
 export async function ensureRseConfig(isDev: boolean) {
   // Check if the config file already exists
@@ -22,11 +22,7 @@ export async function ensureRseConfig(isDev: boolean) {
     let pkgDescription: string | undefined;
     try {
       const pkg = await readPackageJSON();
-      if (
-        pkg &&
-        typeof pkg.description === "string" &&
-        pkg.description.trim()
-      ) {
+      if (pkg && typeof pkg.description === "string" && pkg.description.trim()) {
         pkgDescription = pkg.description.trim();
       }
     } catch {
@@ -97,8 +93,7 @@ async function ensureGitignoreEntries(cwd: string) {
       const trimmedLine = line.trim();
       return (
         trimmedLine === entry ||
-        (entry === "dist*" &&
-          (trimmedLine === "dist*" || trimmedLine.startsWith("dist")))
+        (entry === "dist*" && (trimmedLine === "dist*" || trimmedLine.startsWith("dist")))
       );
     });
 
@@ -129,17 +124,13 @@ async function ensureTsconfigIncludes(tsconfigPath: string) {
       tsconfig.include = [];
     }
 
-    const requiredInclude = ".config/**/*.ts";
+    const requiredInclude = "**/*.ts";
     const hasConfigInclude = tsconfig.include.includes(requiredInclude);
 
     if (!hasConfigInclude) {
       tsconfig.include.push(requiredInclude);
-      await fs.writeFile(
-        tsconfigPath,
-        JSON.stringify(tsconfig, null, 2),
-        "utf8",
-      );
-      relinka("success", `Added ".config/**/*.ts" to tsconfig.json includes`);
+      await fs.writeFile(tsconfigPath, JSON.stringify(tsconfig, null, 2), "utf8");
+      relinka("success", `Added "**/*.ts" to tsconfig.json includes`);
     }
   } catch (error) {
     relinka(

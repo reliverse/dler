@@ -5,10 +5,10 @@ import { createJiti } from "jiti";
 import { defineConfig } from "~/libs/sdk/sdk-impl/config/default";
 import type { DlerConfig } from "~/libs/sdk/sdk-impl/config/types";
 
-const CONFIG_FILENAME = ".config/dler.ts";
+const CONFIG_FILENAME = "relivereliverse.ts";
 
 /**
- * Searches for and loads the configuration file `.config/dler.ts`.
+ * Searches for and loads the configuration file `relivereliverse.ts`.
  * Falls back to default configuration if the file is not found.
  * Uses jiti for seamless TypeScript and ESM support.
  */

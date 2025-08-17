@@ -20,7 +20,7 @@ export async function checkDlerConfigHealth(): Promise<CheckResult> {
         issues.push({
           type: "dler-config-health",
           message: `currently you should specify libsMainFile like "sdk/sdk-mod.ts" to get correct build, please correct "${mainFile}" to "${typedConfig.libDirName}/${mainFile}" to continue checks.`,
-          file: ".config/dler.ts",
+          file: "relivereliverse.ts",
           line: 0,
         });
       }
@@ -29,7 +29,7 @@ export async function checkDlerConfigHealth(): Promise<CheckResult> {
     issues.push({
       type: "dler-config-health",
       message: `failed to check libsMainFile format: ${error instanceof Error ? error.message : "unknown error"}`,
-      file: ".config/dler.ts",
+      file: "relivereliverse.ts",
       line: 0,
     });
   }

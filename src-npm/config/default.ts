@@ -5,7 +5,7 @@ import type { DlerConfig } from "~/libs/sdk/sdk-impl/config/types";
  */
 export const DEFAULT_CONFIG_DLER: DlerConfig = {
   bumpDisable: false,
-  bumpFilter: ["package.json", ".config/rse.ts"],
+  bumpFilter: ["package.json", "reliverse.ts"],
   bumpMode: "patch",
   bumpSet: "",
   commonPubPause: true,
@@ -165,7 +165,7 @@ export const DEFAULT_CONFIG_DLER: DlerConfig = {
   },
 };
 
-// TODO: implement migrator from build.config.ts to .config/dler.ts
+// TODO: implement migrator from build.config.ts to relivereliverse.ts
 // export function defineBuildConfig(
 //   config: UnifiedBuildConfig | UnifiedBuildConfig[],
 // ): UnifiedBuildConfig[] {

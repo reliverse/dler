@@ -1,20 +1,15 @@
+// TODO: make everything to be defined in a main single relivereliverse.ts file
+
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-
-import type { RseConfig } from "./cfg-types";
-
-import {
-  UNKNOWN_VALUE,
-  RSE_SCHEMA_DEV,
-  cliConfigJsonc,
-  cliConfigTs,
-} from "./cfg-consts";
+import { cliConfigJsonc, cliConfigTs, RSE_SCHEMA_DEV, UNKNOWN_VALUE } from "./cfg-consts";
 import { createRseConfig } from "./cfg-create";
 import { DEFAULT_CONFIG_RSE } from "./cfg-default";
 import { getRseConfigPath } from "./cfg-path";
 import { readRseConfig } from "./cfg-read";
 import { parseAndFixRseConfig } from "./cfg-repair";
+import type { RseConfig } from "./cfg-types";
 
 /* ------------------------------------------------------------------
  * The Core Logic: Handle or Verify Config + MULTI-CONFIG
@@ -43,9 +38,7 @@ export async function getOrCreateRseConfig({
   // Collect additional configs in "mrse" folder
   if (await fs.pathExists(mrseFolderPath)) {
     const dirItems = await fs.readdir(mrseFolderPath);
-    const rseFiles = dirItems.filter(
-      (item) => item === cliConfigJsonc || item === cliConfigTs,
-    );
+    const rseFiles = dirItems.filter((item) => item === cliConfigJsonc || item === cliConfigTs);
     const configs = await Promise.all(
       rseFiles.map(async (file) => {
         const filePath = path.join(mrseFolderPath, file);
@@ -59,20 +52,11 @@ export async function getOrCreateRseConfig({
         return foundConfig;
       }),
     );
-    results.push(
-      ...configs.filter(
-        (cfg: RseConfig | null): cfg is RseConfig => cfg !== null,
-      ),
-    );
+    results.push(...configs.filter((cfg: RseConfig | null): cfg is RseConfig => cfg !== null));
   }
 
   // Retrieve the path to the main rseg
-  const { configPath } = await getRseConfigPath(
-    projectPath,
-    isDev,
-    false,
-    customTsconfigPath,
-  );
+  const { configPath } = await getRseConfigPath(projectPath, isDev, false, customTsconfigPath);
 
   // Ensure a config file exists
   if (!(await fs.pathExists(configPath))) {
@@ -88,10 +72,7 @@ export async function getOrCreateRseConfig({
       if (!validConfig) {
         const fixed = await parseAndFixRseConfig(configPath, isDev);
         if (!fixed) {
-          relinka(
-            "warn",
-            "Could not fix existing config. Using fallback defaults.",
-          );
+          relinka("warn", "Could not fix existing config. Using fallback defaults.");
         }
       }
     }

@@ -7,9 +7,7 @@ import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { readTSConfig, writeTSConfig } from "pkg-types";
-
-import { tsconfigJson } from "./cfg-consts";
-import { cliConfigTs } from "./cfg-consts";
+import { cliConfigTs, tsconfigJson } from "./cfg-consts";
 
 /**
  * Cleans GitHub repository URLs by removing git+ prefix and .git suffix.
@@ -18,10 +16,7 @@ export function cleanGitHubUrl(url: string): string {
   return url
     .trim()
     .replace(/^git\+/, "")
-    .replace(
-      /^https?:\/\/(www\.)?(github|gitlab|bitbucket|sourcehut)\.com\//i,
-      "",
-    )
+    .replace(/^https?:\/\/(www\.)?(github|gitlab|bitbucket|sourcehut)\.com\//i, "")
     .replace(/^(github|gitlab|bitbucket|sourcehut)\.com\//i, "")
     .replace(/\.git$/i, "");
 }
@@ -60,9 +55,7 @@ export function objectToCodeString(obj: any, indentLevel = 0): string {
 }
 
 // Updates tsconfig.json's "include" array to ensure "rses present.
-export async function updateTsConfigInclude(
-  projectPath: string,
-): Promise<void> {
+export async function updateTsConfigInclude(projectPath: string): Promise<void> {
   const tsconfigPath = path.join(projectPath, tsconfigJson);
   if (!(await fs.pathExists(tsconfigPath))) return;
   try {
@@ -71,7 +64,7 @@ export async function updateTsConfigInclude(
     if (!tsconfig.include.includes(cliConfigTs)) {
       tsconfig.include.push(cliConfigTs);
       await writeTSConfig(tsconfigPath, tsconfig);
-      relinka("verbose", "Updated tsconfig.json to include .config/rse.ts");
+      relinka("verbose", "Updated tsconfig.json to include reliverse.ts");
     }
   } catch (err) {
     relinka(

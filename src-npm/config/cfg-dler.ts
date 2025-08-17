@@ -167,7 +167,7 @@ export interface DlerConfig {
    * When empty, falls back to only updating "package.json".
    * Respects: .gitignore patterns, hidden files, .git & node_modules.
    *
-   * @default ["package.json", ".config/rse.ts"]
+   * @default ["package.json", "reliverse.ts"]
    */
   bumpFilter: string[];
 
@@ -894,7 +894,7 @@ export type transpileTarget = "browser" | "bun" | "node";
  */
 export const DEFAULT_CONFIG_DLER: DlerConfig = {
   bumpDisable: false,
-  bumpFilter: ["package.json", ".config/rse.ts"],
+  bumpFilter: ["package.json", "reliverse.ts"],
   bumpMode: "patch",
   bumpSet: "",
   commonPubPause: true,
@@ -1054,7 +1054,7 @@ export const DEFAULT_CONFIG_DLER: DlerConfig = {
   },
 };
 
-// TODO: implement migrator from build.config.ts to .config/dler.ts
+// TODO: implement migrator from build.config.ts to relivereliverse.ts
 // export function defineBuildConfig(
 //   config: UnifiedBuildConfig | UnifiedBuildConfig[],
 // ): UnifiedBuildConfig[] {

@@ -12,6 +12,7 @@ _.log
 *.tsbuildinfo
 /__*
 /target
+Cargo.lock
 coverage
 dist
 dist-jsr

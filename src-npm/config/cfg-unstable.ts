@@ -1,10 +1,8 @@
 import { Value } from "@sinclair/typebox/value";
 import { loadConfig, watchConfig } from "c12";
-
-import type { RseConfig } from "./cfg-types";
-
 import { DEFAULT_CONFIG_RSE } from "./cfg-default";
 import { rseSchema } from "./cfg-schema";
+import type { RseConfig } from "./cfg-types";
 
 /**
  * Loads the rse config using c12. Merges:
@@ -19,7 +17,7 @@ export async function loadrse(
   const { config } = await loadConfig<RseConfig>({
     cwd: projectPath,
     name: "rse",
-    configFile: "rse", // will look for files like `.config/rse.{ts,jsonc}`
+    configFile: "rse", // will look for files like `rse.{ts,jsonc}`
     rcFile: false,
     packageJson: false,
     dotenv: false, // disable loading .env

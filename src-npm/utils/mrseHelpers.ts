@@ -6,9 +6,7 @@ export async function hasConfigFiles(projectPath: string): Promise<boolean> {
   try {
     const files = await fs.readdir(projectPath);
     return files.some(
-      (file) =>
-        (file.endsWith(".jsonc") || file.endsWith(".ts")) &&
-        !file.includes("mrse."),
+      (file) => (file.endsWith(".jsonc") || file.endsWith(".ts")) && !file.includes("mrse."),
     );
   } catch (_err) {
     return false;
@@ -25,13 +23,11 @@ export async function isMrseProject(projectPath: string): Promise<boolean> {
 
   // Check for mrse.{ts,jsonc} in .config
   const hasMrseConfig = await Promise.all([
-    fs.pathExists(path.join(configPath, "mrse.ts")),
-    fs.pathExists(path.join(configPath, "mrse.jsonc")),
+    fs.pathExists(path.join(configPath, "mreliverse.ts")),
+    fs.pathExists(path.join(configPath, "mreliverse.jsonc")),
   ]).then(([hasTs, hasJsonc]) => hasTs || hasJsonc);
 
   return (
-    hasMrseConfig &&
-    (await fs.pathExists(mrseFolderPath)) &&
-    (await hasConfigFiles(mrseFolderPath))
+    hasMrseConfig && (await fs.pathExists(mrseFolderPath)) && (await hasConfigFiles(mrseFolderPath))
   );
 }

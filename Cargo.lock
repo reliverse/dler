@@ -3,7 +3,7 @@
 version = 4
 
 [[package]]
-name = "dlerust"
+name = "dler-rust"
 version = "0.1.0"
 dependencies = [
  "fs_extra",

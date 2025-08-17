@@ -6,7 +6,7 @@ import { readPackageJSON } from "pkg-types";
 import { DEFAULT_CONFIG_DLER } from "~/libs/sdk/sdk-impl/config/default";
 
 // Supported configuration filename
-const CONFIG_FILENAME = ".config/dler.ts";
+const CONFIG_FILENAME = "relivereliverse.ts";
 
 export async function ensureDlerConfig(isDev: boolean) {
   // Check if the config file already exists
@@ -40,7 +40,7 @@ export async function ensureDlerConfig(isDev: boolean) {
       relinka("verbose", "When you're ready, run `bun pub` to build and publish");
     }
 
-    // Generate .config/mod.ts with .config/types/dler.schema.ts
+    // Generate mod.ts with types/dler.schema.ts
     // TODO: finish implementation of this function
     /*
     Currently in non-dler projects output is:
@@ -141,13 +141,13 @@ async function ensureTsconfigIncludes(tsconfigPath: string) {
       tsconfig.include = [];
     }
 
-    // const requiredInclude = ".config/**/*.ts";
+    // const requiredInclude = "**/*.ts";
     // const hasConfigInclude = tsconfig.include.includes(requiredInclude);
 
     // if (!hasConfigInclude) {
     //   tsconfig.include.push(requiredInclude);
     //   await fs.writeFile(tsconfigPath, JSON.stringify(tsconfig, null, 2), "utf8");
-    //   relinka("success", `Added ".config/**/*.ts" to tsconfig.json includes`);
+    //   relinka("success", `Added "**/*.ts" to tsconfig.json includes`);
     // }
   } catch (error) {
     relinka(
@@ -216,10 +216,10 @@ function getBumpFilter(isDev: boolean): string {
   return isDev
     ? `[
     "package.json",
-    ".config/rse.ts",
+    "reliverse.ts",
     "src/libs/sdk/sdk-impl/config/info.ts",
   ]`
-    : `["package.json", ".config/rse.ts"]`;
+    : `["package.json", "reliverse.ts"]`;
 }
 
 function getPublishArtifacts(isDev: boolean): string {
@@ -338,7 +338,7 @@ function generateConfig(isDev: boolean, pkgDescription?: string): string {
 }`;
 
   // ===================================================
-  // .config/dler.ts default config template
+  // relivereliverse.ts default config template
   // ===================================================
   const configTemplate = [
     importdefineConfigStatement,

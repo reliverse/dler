@@ -65,7 +65,7 @@ export default defineCommand({
     }
 
     // Read dler config
-    const dlerConfigPath = path.resolve(".config/dler.ts");
+    const dlerConfigPath = path.resolve("relivereliverse.ts");
     let dlerConfig: DlerConfig | undefined;
 
     try {
@@ -74,7 +74,7 @@ export default defineCommand({
         default: true,
       });
     } catch {
-      relinka("error", "❌ Failed to read .config/dler.ts");
+      relinka("error", "❌ Failed to read relivereliverse.ts");
       return;
     }
 

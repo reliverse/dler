@@ -5,24 +5,23 @@
 
 import { generateRseConfig } from "@reliverse/cfg";
 import path from "@reliverse/pathkit";
-import { ensuredir } from "@reliverse/relifso";
-import fs from "@reliverse/relifso";
+import fs, { ensuredir } from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { defineCommand } from "@reliverse/rempts";
 import { parseJSONC } from "confbox";
 import { execaCommand } from "execa";
 import { jsonrepair } from "jsonrepair";
-import { loadFile, writeFile, builders } from "magicast";
+import { builders, loadFile, writeFile } from "magicast";
 
 import { UNKNOWN_VALUE } from "~/libs/sdk/constants";
 import {
   downloadFileFromGitHub,
   ensureEnvCacheDir,
+  type GenCfg,
+  type GenCfgJsonc,
   getEnvCacheDir,
   getEnvCachePath,
   logVerbose,
-  type GenCfg,
-  type GenCfgJsonc,
 } from "~/libs/sdk/mrse/mrse-impl";
 
 /**
@@ -57,8 +56,7 @@ export default defineCommand({
     },
     fresh: {
       type: "boolean",
-      description:
-        "Redownload all cached .env.example files, ignoring existing cache",
+      description: "Redownload all cached .env.example files, ignoring existing cache",
       default: false,
     },
     typesPath: {
@@ -97,10 +95,7 @@ export default defineCommand({
 
     // If fresh mode is enabled, let user know
     if (freshFlag) {
-      relinka(
-        "info",
-        "Fresh mode enabled: Will redownload all cached .env.example files",
-      );
+      relinka("info", "Fresh mode enabled: Will redownload all cached .env.example files");
     }
 
     // Get current working directory
@@ -111,17 +106,13 @@ export default defineCommand({
     await ensuredir(mrseFolderPath);
 
     // Check for and generate mrse file if it doesn't exist
-    const mrseFileName = useJsonc ? "mrse.jsonc" : "mrse.ts";
+    const mrseFileName = useJsonc ? "mreliverse.jsonc" : "mreliverse.ts";
     const mrsePath = path.join(cwd, ".config", mrseFileName);
     const mrseExists = await fs.pathExists(mrsePath);
 
     // Check if the other format already exists to prevent conflicts
-    const oppositeFormatFileName = useJsonc ? "mrse.ts" : "mrse.jsonc";
-    const oppositeFormatPath = path.join(
-      cwd,
-      ".config",
-      oppositeFormatFileName,
-    );
+    const oppositeFormatFileName = useJsonc ? "mreliverse.ts" : "mreliverse.jsonc";
+    const oppositeFormatPath = path.join(cwd, ".config", oppositeFormatFileName);
     const oppositeFormatExists = await fs.pathExists(oppositeFormatPath);
 
     // Throw error if trying to generate one format when the other exists
@@ -140,10 +131,10 @@ export default defineCommand({
     // Check for mixed configuration formats in the directory
     const existingFiles = await fs.readdir(mrseFolderPath);
     const hasJsoncFiles = existingFiles.some(
-      (file) => file.endsWith(".jsonc") && file !== "mrse.jsonc",
+      (file) => file.endsWith(".jsonc") && file !== "mreliverse.jsonc",
     );
     const hasTsFiles = existingFiles.some(
-      (file) => file.endsWith(".ts") && file !== "mrse.ts",
+      (file) => file.endsWith(".ts") && file !== "mreliverse.ts",
     );
 
     // Don't allow mixing of TS and JSONC project files
@@ -256,10 +247,7 @@ export const genCfg: GenCfg[] = [
 
       // If no project names were specified, exit after creating the mrse file
       if (projectNames.length === 0) {
-        relinka(
-          "info",
-          "No project names specified. Only generated the config file.",
-        );
+        relinka("info", "No project names specified. Only generated the config file.");
         return;
       }
     } else {
@@ -278,9 +266,7 @@ export const genCfg: GenCfg[] = [
             relinka(
               "warn",
               `JSONC parsing failed, attempting to repair the file: ${
-                parseError instanceof Error
-                  ? parseError.message
-                  : String(parseError)
+                parseError instanceof Error ? parseError.message : String(parseError)
               }`,
             );
 
@@ -300,14 +286,10 @@ export const genCfg: GenCfg[] = [
               relinka(
                 "error",
                 `Failed to repair JSON: ${
-                  repairError instanceof Error
-                    ? repairError.message
-                    : String(repairError)
+                  repairError instanceof Error ? repairError.message : String(repairError)
                 }`,
               );
-              throw new Error(
-                "Unable to parse or repair the JSON configuration file",
-              );
+              throw new Error("Unable to parse or repair the JSON configuration file");
             }
           }
         } else {
@@ -316,14 +298,9 @@ export const genCfg: GenCfg[] = [
             const mod = await loadFile(mrsePath);
             if (mod.exports && mod.exports.genCfg) {
               // Convert the result to a plain object
-              genCfgData = JSON.parse(
-                JSON.stringify(mod.exports.genCfg),
-              ) as GenCfg[];
+              genCfgData = JSON.parse(JSON.stringify(mod.exports.genCfg)) as GenCfg[];
             } else {
-              relinka(
-                "warn",
-                "The mrse.ts file does not export a 'genCfg' array",
-              );
+              relinka("warn", "The mreliverse.ts file does not export a 'genCfg' array");
               genCfgData = [];
             }
           } catch (error) {
@@ -361,10 +338,7 @@ export const genCfg: GenCfg[] = [
 
       if (matchingProjects.length > 0) {
         projectsToProcess = matchingProjects;
-        relinka(
-          "info",
-          `Found ${matchingProjects.length} matching projects in ${mrseFileName}`,
-        );
+        relinka("info", `Found ${matchingProjects.length} matching projects in ${mrseFileName}`);
       } else {
         // If no matching config, process the user-specified projects anyway
         projectsToProcess = projectNames;
@@ -372,10 +346,7 @@ export const genCfg: GenCfg[] = [
     } else if (mrseExists) {
       // If no projects specified but gen.cfg exists, process all from gen.cfg
       projectsToProcess = genCfgData.map((cfg) => cfg.projectName);
-      relinka(
-        "info",
-        `Processing all ${projectsToProcess.length} projects from ${mrseFileName}`,
-      );
+      relinka("info", `Processing all ${projectsToProcess.length} projects from ${mrseFileName}`);
     }
 
     // If no projects remain to process, exit
@@ -388,10 +359,7 @@ export const genCfg: GenCfg[] = [
     }
 
     // Ensure env cache directory exists if needed
-    if (
-      cacheFlag &&
-      genCfgData.some((cfg) => cfg.getEnvExample && cfg.projectTemplate)
-    ) {
+    if (cacheFlag && genCfgData.some((cfg) => cfg.getEnvExample && cfg.projectTemplate)) {
       await ensureEnvCacheDir();
       logVerbose(`Env cache directory: ${getEnvCacheDir()}`);
     }
@@ -408,9 +376,7 @@ export const genCfg: GenCfg[] = [
 
       try {
         // Find matching project configuration
-        const projectConfig = genCfgData.find(
-          (cfg) => cfg.projectName === projectName,
-        );
+        const projectConfig = genCfgData.find((cfg) => cfg.projectName === projectName);
         logVerbose(`Found config for ${projectName}:`, projectConfig);
 
         // Check if we need to retrieve .env.example
@@ -453,10 +419,7 @@ export const genCfg: GenCfg[] = [
             );
 
             if (envContent) {
-              const envFilePath = path.join(
-                mrseFolderPath,
-                `${projectName}.env`,
-              );
+              const envFilePath = path.join(mrseFolderPath, `${projectName}.env`);
               await fs.writeFile(envFilePath, envContent);
 
               if (isRefreshing) {
@@ -467,18 +430,13 @@ export const genCfg: GenCfg[] = [
                 envFilesDownloaded++;
               }
             } else {
-              relinka(
-                "warn",
-                `Could not download .env.example for ${projectName}`,
-              );
+              relinka("warn", `Could not download .env.example for ${projectName}`);
             }
           }
         }
 
         // Construct final config filename
-        const configFileName = useJsonc
-          ? `${projectName}.jsonc`
-          : `${projectName}.ts`;
+        const configFileName = useJsonc ? `${projectName}.jsonc` : `${projectName}.ts`;
         const configPath = path.join(mrseFolderPath, configFileName);
 
         // Check if config file already exists
@@ -487,10 +445,7 @@ export const genCfg: GenCfg[] = [
 
         // Skip if it already exists
         if (fileExists) {
-          relinka(
-            "warn",
-            `Skipping ${projectName} - file already exists: ${configFileName}`,
-          );
+          relinka("warn", `Skipping ${projectName} - file already exists: ${configFileName}`);
           continue;
         }
 
@@ -520,9 +475,7 @@ export const genCfg: GenCfg[] = [
           customOutputPath: mrseFolderPath,
           customFilename: configFileName,
           skipInstallPrompt,
-          ...(customTypeImportPath
-            ? { customPathToTypes: customTypeImportPath }
-            : {}),
+          ...(customTypeImportPath ? { customPathToTypes: customTypeImportPath } : {}),
           // Override project config fields
           ...(projectConfig?.projectTemplate
             ? { projectTemplate: projectConfig.projectTemplate }
@@ -530,10 +483,7 @@ export const genCfg: GenCfg[] = [
           overrides: {},
         });
 
-        relinka(
-          "success",
-          `Generated ${configFileName} in .config/mrse folder`,
-        );
+        relinka("success", `Generated ${configFileName} in mrse folder`);
         generatedCount++;
       } catch (error) {
         relinka(
@@ -553,25 +503,16 @@ export const genCfg: GenCfg[] = [
       envFilesRefreshed > 0
     ) {
       if (generatedCount > 0) {
-        relinka(
-          "success",
-          `Generated ${generatedCount} configs in the .config/mrse folder.`,
-        );
+        relinka("success", `Generated ${generatedCount} configs in the mrse folder.`);
       }
       if (envFilesDownloaded > 0) {
-        relinka(
-          "success",
-          `Downloaded ${envFilesDownloaded} .env files from templates.`,
-        );
+        relinka("success", `Downloaded ${envFilesDownloaded} .env files from templates.`);
       }
       if (envFilesFromCache > 0) {
         relinka("success", `Used ${envFilesFromCache} .env files from cache.`);
       }
       if (envFilesRefreshed > 0) {
-        relinka(
-          "success",
-          `Refreshed ${envFilesRefreshed} .env files from templates.`,
-        );
+        relinka("success", `Refreshed ${envFilesRefreshed} .env files from templates.`);
       }
     } else {
       relinka("info", "No new files were generated.");
@@ -579,10 +520,7 @@ export const genCfg: GenCfg[] = [
 
     // For dev environment, copy schema.json and run biome check
     if (isDev) {
-      await fs.copy(
-        path.join(cwd, "schema.json"),
-        path.join(mrseFolderPath, "schema.json"),
-      );
+      await fs.copy(path.join(cwd, "schema.json"), path.join(mrseFolderPath, "schema.json"));
       await execaCommand("bunx biome check --write .", {
         cwd: mrseFolderPath,
         stdio: "inherit",

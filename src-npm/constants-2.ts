@@ -1,11 +1,11 @@
-import path from "@reliverse/pathkit";
 import os from "node:os";
+import path from "@reliverse/pathkit";
 
 // PROJECT ROOT
 export const PROJECT_ROOT = path.resolve(process.cwd());
 
 // CLI VERSION AND NAME
-const version= "1.7.12";
+const version = "1.7.12";
 export const cliVersion = version;
 export const cliName = "@reliverse/rse";
 
@@ -13,14 +13,14 @@ export const cliName = "@reliverse/rse";
 export const tsconfigJson = "tsconfig.json";
 
 // RSE CONFIG
-export const cliConfigJsonc = ".config/rse.jsonc";
-export const cliConfigJsoncTmp = ".config/rse.jsonc.tmp";
-export const cliConfigJsoncBak = "rse.jsonc.bak";
+export const cliConfigJsonc = "reliverse.jsonc";
+export const cliConfigJsoncTmp = "reliverse.jsonc.tmp";
+export const cliConfigJsoncBak = "reliverse.jsonc.bak";
 
 // RSE CONFIG
-export const cliConfigTs = ".config/rse.ts";
-export const cliConfigTsTmp = ".config/rse.ts.tmp";
-export const cliConfigTsBak = "rse.ts.bak";
+export const cliConfigTs = "reliverse.ts";
+export const cliConfigTsTmp = "reliverse.ts.tmp";
+export const cliConfigTsBak = "reliverse.ts.bak";
 
 // DOCUMENTATION WEBSITE
 export const rseOrg = "https://reliverse.org";
