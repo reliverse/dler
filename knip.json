@@ -17,7 +17,7 @@
     "dist-jsr",
     "dist-npm",
     "dist-libs",
-    "src/libs/sdk/sdk-impl/**/*.ts",
+    "src/impl/**/*.ts",
     "src/libs/cfg/types.ts"
   ],
   "ignoreDependencies": [

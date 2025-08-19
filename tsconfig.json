@@ -5,7 +5,7 @@
         "./src-npm/*"
       ],
       "@/*": [
-        "./example/*"
+        "./examples/*"
       ]
     },
     "baseUrl": ".",
@@ -32,6 +32,7 @@
     "noPropertyAccessFromIndexSignature": false
   },
   "include": [
+    "examples/**/*.ts",
     "src-npm/**/*.ts",
     "reliverse.ts"
   ],

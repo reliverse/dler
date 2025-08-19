@@ -1,4 +1,4 @@
-import type { ConfigRemdn } from "~/app/remdn/cmd";
+import type { ConfigRemdn } from "~/impl/remdn/cmd";
 
 const config: ConfigRemdn = {
   title: "Directory Comparison",

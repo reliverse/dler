@@ -23,12 +23,7 @@ export default defineConfig({
 
   // Bump configuration
   bumpDisable: false,
-  bumpFilter: [
-    "package.json",
-    "reliverse.ts",
-    "npm/libs/sdk/sdk-impl/config/info.ts",
-    "npm/dler.ts",
-  ],
+  bumpFilter: ["package.json", "reliverse.ts", "npm/impl/config/info.ts", "npm/dler.ts"],
   bumpMode: "patch",
 
   // Common configuration
@@ -156,16 +151,7 @@ export default defineConfig({
     ],
     webview: ["react-native"],
     language: ["typescript"],
-    themes: [
-      "default",
-      "eslint",
-      "biome",
-      "sonner",
-      "uploadthing",
-      "zod",
-      "typebox",
-      "lucide",
-    ],
+    themes: ["default", "eslint", "biome", "sonner", "uploadthing", "zod", "typebox", "lucide"],
   },
 
   // Code style preferences

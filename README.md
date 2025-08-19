@@ -6,7 +6,7 @@
 
 ## Documentation
 
-📚 **Please visit [docs.reliverse.org](https://docs.reliverse.org) to learn how to use `@reliverse/dler` library.**
+📚 **Please visit [docs.reliverse.org/libraries/dler](https://docs.reliverse.org/libraries/dler) to learn how to use `@reliverse/dler` library.**
 
 ## Stand With Reliverse
 
