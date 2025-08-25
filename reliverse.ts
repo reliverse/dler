@@ -1,7 +1,16 @@
 import { defineConfig } from "./reltypes";
 
-// TODO: cache src's files in `.reliverse/dler/<project-name>/<src-file-path>` dir (this will allow to implement new option e.g. buildPubOnlyAtLeastOneFileChanged, esp. useful for cases like `@reliverse/cfg` library) (we can use hash of the file name and/or date of the last file modification)
+// TODO: divide different parts of dler into the plugins
+
+// TODO: cache src's files in `.reliverse/dler/<project-name>/<src-file-path>` dir (this will allow to implement new option e.g. buildPubOnlyAtLeastOneFileChanged, esp. useful for cases like `~/app/types/mod` library) (we can use hash of the file name and/or date of the last file modification)
 // TODO: introduce new option which allows to enable/disable transpiling other extensions that .ts and .js (disabling from build process of e.g. .tsx extension is especially useful for bootstrapping clis tools like @reliverse/rse, where cli's developers usually expect to have their original .tsx files in the dist)
+
+// TODO: implement migrator from build.config.ts to reliverse.ts
+// export function defineBuildConfig(
+//   config: UnifiedBuildConfig | UnifiedBuildConfig[],
+// ): UnifiedBuildConfig[] {
+//   return (Array.isArray(config) ? config : [config]).filter(Boolean);
+// }
 
 /**
  * Reliverse Bundler Configuration
@@ -14,16 +23,16 @@ export default defineConfig({
   $schema: "./schema.json",
 
   // General project information
-  projectName: "@reliverse/rse",
+  projectName: "@reliverse/dler",
   projectAuthor: "reliverse",
   projectDescription:
-    "@reliverse/rse is your all-in-one companion for bootstrapping and improving any kind of projects (especially web apps built with frameworks like Next.js) — whether you're kicking off something new or upgrading an existing app. It is also a little AI-powered toolbox in your terminal, ready to help with coding, refactoring, image gen, and more.",
-  version: "1.7.12",
+    "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
+  version: "1.7.109",
   projectLicense: "MIT",
 
   // Bump configuration
   bumpDisable: false,
-  bumpFilter: ["package.json", "reliverse.ts", "npm/impl/config/info.ts", "npm/dler.ts"],
+  bumpFilter: ["package.json", "reliverse.ts", "src-ts/app/config/constants.ts", "src-ts/dler.ts"],
   bumpMode: "patch",
 
   // Common configuration
@@ -37,7 +46,7 @@ export default defineConfig({
   coreDescription:
     "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
   coreEntryFile: "mod.ts",
-  coreEntrySrcDir: "npm",
+  coreEntrySrcDir: "src-ts",
   coreIsCLI: { enabled: true, scripts: { dler: "dler.ts" } },
 
   // Logs
@@ -233,7 +242,7 @@ export default defineConfig({
       libPubPause: false,
       libPubRegistry: "npm-jsr",
     },
-    "@reliverse/cfg": {
+    "~/app/types/mod": {
       libDeclarations: true,
       libDescription: "config typescript definitions for @reliverse/dler",
       libDirName: "cfg",
@@ -276,7 +285,7 @@ export default defineConfig({
         jsr: [],
         npm: [],
       },
-      "@reliverse/cfg": {
+      "~/app/types/mod": {
         jsr: [],
         npm: [],
       },
@@ -316,7 +325,7 @@ export default defineConfig({
         jsr: ["+bun"],
         npm: [],
       },
-      "@reliverse/cfg": {
+      "~/app/types/mod": {
         jsr: [],
         npm: [],
       },
@@ -386,6 +395,21 @@ export default defineConfig({
   // @reliverse/relinka logger setup
   logsFileName: ".logs/relinka.log",
   logsFreshFile: true,
+
+  // Remdn Configuration
+  remdn: {
+    title: "Directory Comparison",
+    output: "docs/files.html",
+    dirs: {
+      src: {},
+      "dist-npm/bin": {},
+      "dist-jsr/bin": {},
+      "dist-libs/sdk/npm/bin": {},
+    },
+    "ext-map": {
+      ts: ["ts", "js-d.ts", "ts"], // [<main>, <dist-npm/bin | dist-libs's * npm/bin>, <dist-jsr | dist-libs's * jsr/bin>]
+    },
+  },
 
   // Integrated relinka configuration
   // https://github.com/reliverse/relinka

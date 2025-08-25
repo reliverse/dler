@@ -1,17 +1,11 @@
 {
   "compilerOptions": {
     "paths": {
-      "~/*": [
-        "./src-npm/*"
-      ],
-      "@/*": [
-        "./examples/*"
-      ]
+      "~/*": ["./src-ts/*"],
+      "@/*": ["./examples/ts/*"]
     },
+    "lib": ["ESNext"],
     "baseUrl": ".",
-    "lib": [
-      "ESNext"
-    ],
     "target": "ESNext",
     "module": "preserve",
     "moduleDetection": "force",
@@ -32,12 +26,10 @@
     "noPropertyAccessFromIndexSignature": false
   },
   "include": [
-    "examples/**/*.ts",
-    "src-npm/**/*.ts",
-    "reliverse.ts"
+    "examples/ts/**/*.ts",
+    "src-ts/**/*.ts",
+    "reliverse.ts",
+    "reltypes.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "dist*"
-  ]
+  "exclude": ["node_modules", "dist*"]
 }

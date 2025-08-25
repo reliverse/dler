@@ -1,6 +1,6 @@
 // TODO: This tests manager file should be able to run all `bun dev:*` commands without any user interaction.
 
-// TODO: Use @reliverse/rempts' await runCmd(await someCmd(), [...args])
+// TODO: Use @reliverse/rempts' await callCmd(await someCmd(), [...args])
 
 /**
  * WHAT SHOULD BE TESTED:

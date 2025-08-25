@@ -266,7 +266,7 @@ async function main() {
     // Show target mapping
     if (enabledTargets.length > 0) {
       console.log("🔄 Target mapping:");
-      const inputFile = "npm/dler.ts";
+      const inputFile = "src-ts/dler.ts";
       const prefix =
         inputFile
           .split("/")
@@ -308,7 +308,7 @@ async function main() {
 
     // Convert BUILD_TARGETS to bun target format and add prefix
     const bunTargets = getBunTargets(enabledTargets);
-    const inputFile = "npm/dler.ts";
+    const inputFile = "src-ts/dler.ts";
     const prefix =
       inputFile
         .split("/")
