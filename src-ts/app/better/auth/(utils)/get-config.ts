@@ -111,7 +111,7 @@ export async function getConfig({
         };
       }>({
         configFile: resolvedPath,
-        dotenv: true,
+        dotenv: false,
         jitiOptions: await jitiOptions(cwd),
       });
       if (!config.auth && !config.default) {
@@ -139,6 +139,7 @@ export async function getConfig({
               options: BetterAuthOptions;
             };
           }>({
+            dotenv: false,
             configFile: possiblePath,
             jitiOptions: await jitiOptions(cwd),
           });

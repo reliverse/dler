@@ -1,18 +1,19 @@
+import { setTimeout } from "node:timers";
 import { re } from "@reliverse/relico";
 import { relinka } from "@reliverse/relinka";
 import { useSpinner } from "@reliverse/rempts";
 import { listen } from "async-listen";
 import http from "http";
 import { customAlphabet } from "nanoid";
-import type { ParsedUrlQuery } from "querystring";
-import "dotenv/config";
-import { setTimeout } from "node:timers";
 import open from "open";
+import type { ParsedUrlQuery } from "querystring";
 import url from "url";
 import { cliDomainDocs, memoryPath } from "~/app/config/constants";
 import { showAnykeyPrompt } from "~/app/init/use-template/cp-modules/cli-main-modules/modules/showAnykeyPrompt";
 import { getOrCreateReliverseMemory, updateReliverseMemory } from "~/app/utils/reliverseMemory";
 import type { ReliverseMemory } from "~/app/utils/schemaMemory";
+
+// import "dotenv/config";
 
 /**
  * Custom error for when a user cancels the process.

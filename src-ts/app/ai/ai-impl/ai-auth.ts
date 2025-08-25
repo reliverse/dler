@@ -1,11 +1,11 @@
 import { relinka } from "@reliverse/relinka";
 import { inputPrompt } from "@reliverse/rempts";
-import dotenv from "dotenv";
 import { ofetch } from "ofetch";
 import { updateReliverseMemory } from "~/app/utils/reliverseMemory";
 import type { ReliverseMemory } from "~/app/utils/schemaMemory";
 
-dotenv.config();
+// import dotenv from "dotenv";
+// dotenv.config();
 
 /**
  * Ensures we have a valid OpenAI API key in either:

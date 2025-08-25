@@ -4,6 +4,7 @@ import { dlerBuild } from "~/app/build/impl";
 import { mkdist } from "~/app/build/providers/mkdist/mkdist-impl/make";
 import { ensureReliverseConfig } from "~/app/config/prepare";
 import type { MkdistOptions } from "~/app/types/mod";
+import { createPerfTimer } from "../utils/utils-perf";
 
 // TODO: merge this command with 'build' command in the future
 
@@ -123,6 +124,7 @@ export default defineCommand({
     }
 
     await ensureReliverseConfig(isDev, "ts");
-    await dlerBuild(isDev);
+    const timer = createPerfTimer();
+    await dlerBuild(timer, isDev);
   },
 });

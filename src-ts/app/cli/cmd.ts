@@ -35,17 +35,6 @@ export default defineCommand({
         "Rse is currently optimized for Bun only. Unexpected behavior may occur with other runtimes.",
       );
       relinka.warn("To avoid issues, it's strongly recommended to install Bun: https://bun.sh/get");
-      // relinka.log(re.bold("Recommended ways to install and run Rse:"));
-      // relinka.log("1) Global install — bun add -g @reliverse/rse && bun rse");
-      // relinka.log(
-      //   "2) As dev dependency — bun add -D @reliverse/rse && bun rse",
-      // );
-      // relinka.log("3) Run without installing — bunx @reliverse/rse@latest");
-      // relinka.log(
-      //   re.italic(
-      //     "(p.s. you may want to install it globally and as dev dep in your project)",
-      //   ),
-      // );
     }
 
     let cwd: string;

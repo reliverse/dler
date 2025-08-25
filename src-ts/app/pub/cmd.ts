@@ -3,6 +3,7 @@ import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { getConfigDler } from "~/app/config/load";
 import { ensureReliverseConfig, prepareReliverseEnvironment } from "~/app/config/prepare";
 import { dlerPub } from "~/app/pub/impl";
+import { createPerfTimer } from "../utils/utils-perf";
 
 export default defineCommand({
   meta: {
@@ -25,6 +26,8 @@ export default defineCommand({
 
     const config = await getConfigDler();
 
-    await dlerPub(isDev, config);
+    const timer = createPerfTimer();
+
+    await dlerPub(timer, isDev, config);
   },
 });

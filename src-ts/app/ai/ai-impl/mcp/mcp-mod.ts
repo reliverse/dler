@@ -1,8 +1,8 @@
 import { relinka } from "@reliverse/relinka";
-import dotenv from "dotenv";
 import { ofetch } from "ofetch";
 
-dotenv.config();
+// import dotenv from "dotenv";
+// dotenv.config();
 
 /**
  * Handles "rse mcp" commands, supporting actions like listing servers,

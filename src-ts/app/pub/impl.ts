@@ -3,7 +3,7 @@ import { dlerBuild } from "~/app/build/impl";
 import { library_pubFlow } from "~/app/build/library-flow";
 import { regular_pubFlow } from "~/app/build/regular-flow";
 import { getConfigDler } from "~/app/config/load";
-import type { DlerConfig } from "~/app/types/mod";
+import type { DlerConfig, PerfTimer } from "~/app/types/mod";
 import { finalizeBuild, finalizePub } from "~/app/utils/finalize";
 import { createSpinner } from "~/app/utils/spinner";
 import { handleDlerError } from "~/app/utils/utils-error-cwd";
@@ -17,7 +17,7 @@ import { handleDlerError } from "~/app/utils/utils-error-cwd";
  * Handles building and publishing for both main project and libraries.
  * @see `src-ts/app/build/impl.ts` for build main function implementation.
  */
-export async function dlerPub(isDev: boolean, config?: DlerConfig) {
+export async function dlerPub(timer: PerfTimer, isDev: boolean, config?: DlerConfig) {
   let effectiveConfig = config;
   let shouldShowSpinner = false;
   let spinner: ReturnType<typeof createSpinner> | null = null;
@@ -50,7 +50,8 @@ export async function dlerPub(isDev: boolean, config?: DlerConfig) {
     }
 
     // Build step (disable build's own spinner since pub is handling it)
-    const { timer, effectiveConfig: buildConfig } = await dlerBuild(
+    const { effectiveConfig: buildConfig } = await dlerBuild(
+      timer,
       isDev,
       effectiveConfig,
       undefined,

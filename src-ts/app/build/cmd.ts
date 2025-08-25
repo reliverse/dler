@@ -4,6 +4,7 @@ import { dlerBuild } from "~/app/build/impl";
 import { getConfigDler } from "~/app/config/load";
 import { finalizeBuild } from "~/app/utils/finalize";
 import { prepareReliverseEnvironment } from "../config/prepare";
+import { createPerfTimer } from "../utils/utils-perf";
 
 export default defineCommand({
   meta: {
@@ -33,7 +34,10 @@ export default defineCommand({
 
     const config = await getConfigDler();
 
-    const { timer } = await dlerBuild(
+    const timer = createPerfTimer();
+
+    await dlerBuild(
+      timer,
       isDev,
       config,
       args.debugOnlyCopyNonBuildFiles,

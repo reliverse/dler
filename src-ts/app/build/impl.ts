@@ -5,11 +5,10 @@ import { library_buildFlow } from "~/app/build/library-flow";
 import { regular_buildFlow } from "~/app/build/regular-flow";
 import { PROJECT_ROOT } from "~/app/config/constants";
 import { getConfigDler } from "~/app/config/load";
-import type { DlerConfig } from "~/app/types/mod";
+import type { DlerConfig, PerfTimer } from "~/app/types/mod";
 import { createSpinner } from "~/app/utils/spinner";
 import { removeDistFolders } from "~/app/utils/utils-clean";
 import { handleDlerError } from "~/app/utils/utils-error-cwd";
-import { createPerfTimer } from "~/app/utils/utils-perf";
 
 import { dlerPostBuild, wrapper_CopyNonBuildFiles } from "./postbuild";
 import { dlerPreBuild } from "./prebuild";
@@ -24,15 +23,13 @@ import { dlerPreBuild } from "./prebuild";
  * @see `src-ts/app/pub/impl.ts` for pub main function implementation.
  */
 export async function dlerBuild(
+  timer: PerfTimer,
   isDev: boolean,
   config?: DlerConfig,
   debugOnlyCopyNonBuildFiles?: boolean,
   debugDontCopyNonBuildFiles?: boolean,
   disableOwnSpinner?: boolean,
 ) {
-  // Create a performance timer
-  const timer = createPerfTimer();
-
   let effectiveConfig = config;
   let shouldShowSpinner = false;
   let spinner: ReturnType<typeof createSpinner> | null = null;

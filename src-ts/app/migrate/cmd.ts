@@ -1,9 +1,19 @@
+import path from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { confirmPrompt, defineArgs, defineCommand } from "@reliverse/rempts";
-
+import { isMonorepo } from "~/app/update/utils";
+import { isCatalogSupported } from "~/app/utils/pm/pm-catalog";
+import { detectPackageManager } from "~/app/utils/pm/pm-detect";
 import { migrateAnythingToBun } from "./codemods/anything-bun";
 import { consoleToRelinka } from "./codemods/console-relinka";
 import { migrateFsToRelifso } from "./codemods/fs-relifso";
+import {
+  displayMigrationResults,
+  type MigrationResult,
+  migrateFromCatalog,
+  migrateToCatalog,
+} from "./codemods/monorepo-catalog";
 import { migrateModuleResolution } from "./codemods/nodenext-bundler";
 import { migratePathToPathkit } from "./codemods/path-pathkit";
 import { migrateReaddirToGlob } from "./codemods/readdir-glob";
@@ -31,7 +41,7 @@ export default defineCommand({
     codemod: {
       type: "string",
       description:
-        "The migration to perform (anything-bun | path-pathkit | fs-relifso | nodenext-bundler | readdir-glob | console-relinka)",
+        "The migration to perform (anything-bun | path-pathkit | fs-relifso | nodenext-bundler | readdir-glob | console-relinka | catalog-migration)",
     },
     project: {
       type: "string",
@@ -67,6 +77,22 @@ export default defineCommand({
       description:
         "Target format (console, consolaMethod, consolaObject, relinkaFunction, relinkaMethod, relinkaObject)",
     },
+    // Catalog migration specific arguments
+    "to-catalog": {
+      type: "boolean",
+      description:
+        "Migrate workspace dependencies to workspaces.catalog and replace with catalog references (use with codemod: catalog-migration)",
+    },
+    "from-catalog": {
+      type: "boolean",
+      description:
+        "Restore catalog references to actual versions from workspaces.catalog (use with codemod: catalog-migration)",
+    },
+    "remove-catalog": {
+      type: "boolean",
+      description:
+        "Remove workspaces.catalog from root package.json after restoring (only with --from-catalog)",
+    },
   }),
   async run({ args }) {
     if (args.interactive) {
@@ -95,6 +121,11 @@ export default defineCommand({
         relinka("verbose", "4. Update any custom database queries to use Bun.sql syntax");
         relinka("verbose", "5. Review and update any custom middleware in Express apps");
       }
+      return;
+    }
+
+    if (args.codemod === "catalog-migration") {
+      await handleCatalogMigration(args);
       return;
     }
 
@@ -136,6 +167,7 @@ export default defineCommand({
       relinka("verbose", "  - nodenext-bundler");
       relinka("verbose", "  - readdir-glob");
       relinka("verbose", "  - console-relinka");
+      relinka("verbose", "  - catalog-migration");
       return;
     }
 
@@ -208,3 +240,77 @@ export default defineCommand({
     }
   },
 });
+
+async function handleCatalogMigration(args: any): Promise<void> {
+  try {
+    // Validate catalog migration arguments
+    if (!args["to-catalog"] && !args["from-catalog"]) {
+      relinka("error", "Must specify either --to-catalog or --from-catalog");
+      return process.exit(1);
+    }
+
+    if (args["to-catalog"] && args["from-catalog"]) {
+      relinka("error", "Cannot specify both --to-catalog and --from-catalog");
+      return process.exit(1);
+    }
+
+    if (args["remove-catalog"] && !args["from-catalog"]) {
+      relinka("error", "--remove-catalog can only be used with --from-catalog");
+      return process.exit(1);
+    }
+
+    const cwd = process.cwd();
+    const packageJsonPath = path.resolve(cwd, "package.json");
+
+    // Check if package.json exists
+    if (!(await fs.pathExists(packageJsonPath))) {
+      relinka("error", "No package.json found in current directory");
+      return process.exit(1);
+    }
+
+    // Check if we're in a monorepo
+    if (!(await isMonorepo(cwd))) {
+      relinka("error", "This command requires a monorepo with workspace configuration");
+      return process.exit(1);
+    }
+
+    // Check if package manager supports catalogs
+    const packageManager = await detectPackageManager(cwd);
+    if (!packageManager) {
+      relinka("warn", "Could not detect package manager");
+    } else if (!isCatalogSupported(packageManager)) {
+      relinka(
+        "warn",
+        `Catalogs may not be fully supported by ${packageManager.name}. Only Bun has full catalog support.`,
+      );
+    }
+
+    let results: MigrationResult[] = [];
+
+    if (args["to-catalog"]) {
+      relinka("log", "Migrating workspace dependencies to catalog...");
+      results = await migrateToCatalog(cwd, !!args.dryRun, !!args.interactive);
+    } else if (args["from-catalog"]) {
+      relinka("log", "Restoring dependencies from catalog...");
+      results = await migrateFromCatalog(
+        cwd,
+        !!args["remove-catalog"],
+        !!args.dryRun,
+        !!args.interactive,
+      );
+    }
+
+    // Display results
+    displayMigrationResults(results);
+
+    if (args.dryRun) {
+      relinka("info", "This was a dry run - no actual changes were made");
+    }
+  } catch (error) {
+    relinka(
+      "error",
+      `Catalog migration failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    process.exit(1);
+  }
+}

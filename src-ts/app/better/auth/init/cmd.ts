@@ -14,7 +14,6 @@ import {
   spinner,
   text,
 } from "@reliverse/rempts";
-import { parse } from "dotenv";
 import { execaCommand } from "execa";
 import fs from "fs/promises";
 import path from "path";
@@ -28,6 +27,8 @@ import { generateSecretHash } from "~/app/better/auth/(utils)/generate-secret";
 import { getPackageInfo } from "~/app/better/auth/(utils)/get-package-info";
 import { getTsconfigInfo } from "~/app/better/auth/(utils)/get-tsconfig-info";
 import { installDependencies } from "~/app/better/auth/(utils)/install-dependencies";
+
+// import { parse } from "dotenv";
 
 /**
  * Should only use any database that is core DBs, and supports the Better Auth CLI generate functionality.
@@ -890,8 +891,12 @@ export const init = defineCommand({
 
     if (targetEnvFile !== "none") {
       try {
-        const fileContents = await fs.readFile(path.join(cwd, targetEnvFile), "utf8");
-        const parsed = parse(fileContents);
+        // const fileContents = await fs.readFile(path.join(cwd, targetEnvFile), "utf8");
+        // const parsed = parse(fileContents); // TODO: migrate to dotenvx
+        const parsed = {
+          BETTER_AUTH_SECRET: "some_value",
+          BETTER_AUTH_URL: "http://localhost:3000",
+        };
         let isMissingSecret = false;
         let isMissingUrl = false;
         if (parsed.BETTER_AUTH_SECRET === undefined) isMissingSecret = true;

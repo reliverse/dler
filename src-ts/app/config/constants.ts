@@ -5,7 +5,7 @@ import path from "@reliverse/pathkit";
 export const PROJECT_ROOT = path.resolve(process.cwd());
 
 // CLI VERSION AND NAME
-const version= "1.7.109";
+const version = "1.7.111";
 export const cliVersion = version;
 export const cliName = "@reliverse/rse";
 export const rseName = "@reliverse/rse";

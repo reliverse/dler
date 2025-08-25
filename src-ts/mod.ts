@@ -85,6 +85,7 @@ export { aiMenu } from "~/app/ai/ai-menu";
 export type { LibraryBuildOptions } from "~/app/build/build-library";
 export { library_buildLibrary } from "~/app/build/build-library";
 export { regular_buildJsrDist, regular_buildNpmDist } from "~/app/build/build-regular";
+export { dlerBuild } from "~/app/build/impl";
 export {
   libraries_build,
   libraries_publish,
@@ -447,6 +448,7 @@ export {
   logVerbose,
   mrseVerbose,
 } from "~/app/mrse/mrse-impl";
+export { dlerPub } from "~/app/pub/impl";
 export { library_publishLibrary } from "~/app/pub/pub-library";
 export { regular_pubToJsr, regular_pubToNpm } from "~/app/pub/pub-regular";
 export { checkDlerConfigHealth } from "~/app/rules/reliverse/dler-config-health/dler-config-health";

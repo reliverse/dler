@@ -17,7 +17,6 @@ import {
 } from "~/app/init/use-template/cp-modules/cli-main-modules/modules/showStartEndPrompt";
 import { default as pubCmd } from "~/app/pub/cmd";
 import { default as updateCmd } from "~/app/update/cmd";
-import { default as upgradeCmd } from "~/app/upgrade/cmd";
 import { promptAggCommand } from "~/app/utils/agg/agg-1";
 
 const MENU_CMDS = ["agg", "build", "pub", "update"];
@@ -25,7 +24,7 @@ const MENU_CMDS = ["agg", "build", "pub", "update"];
 const main = defineCommand({
   meta: {
     name: "dler",
-    version: "1.7.109",
+    version: "1.7.111",
     description: `Displays dler's command menu.\nTo see ALL available commands and arguments, run: 'dler --help' (or 'dler <command> --help')\nAvailable menu commands: ${MENU_CMDS.join(", ")}`,
   },
   args: defineArgs({
@@ -85,10 +84,6 @@ const main = defineCommand({
       }
       case "update": {
         await callCmd(updateCmd, {});
-        break;
-      }
-      case "upgrade": {
-        await callCmd(upgradeCmd, {});
         break;
       }
       case "agg": {
