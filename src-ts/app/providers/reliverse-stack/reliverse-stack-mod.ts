@@ -4,7 +4,7 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { selectPrompt } from "@reliverse/rempts";
 import { endTitle, UNKNOWN_VALUE } from "~/app/config/constants";
-import { detectProjectsWithRseConfig } from "~/app/config/detect";
+import { detectProjectsWithReliverseConfig } from "~/app/config/detect";
 import { getRandomMessage } from "~/app/db/messages";
 import { handleOpenProjectMenu } from "~/app/init/init-utils/mm-deprecated/editor-menu";
 import { createMobileProject } from "~/app/init/use-template/cp-mod";
@@ -13,7 +13,8 @@ import {
   optionCreateVSCodeExtension,
   optionCreateWebProject,
 } from "~/app/providers/reliverse-stack/rs-impl";
-import type { AppParams, ProjectCategory, RseConfig } from "~/app/types/mod";
+import type { ProjectCategory, ReliverseConfig } from "~/app/schema/mod";
+import type { AppParams } from "~/app/types/mod";
 import { experimental } from "~/app/utils/badgeNotifiers";
 import type { RepoOption } from "~/app/utils/projectRepository";
 import type { ReliverseMemory } from "~/app/utils/schemaMemory";
@@ -92,7 +93,7 @@ async function optionCreateMobileProject(
   cwd: string,
   isDev: boolean,
   memory: ReliverseMemory,
-  config: RseConfig,
+  config: ReliverseConfig,
   skipPrompts: boolean,
 ): Promise<void> {
   const mobileFramework = await selectPrompt({
@@ -168,7 +169,7 @@ export async function showOpenProjectMenu(params: AppParams) {
 
   const searchPath = isDev ? path.join(cwd, "tests-runtime") : cwd;
   if (await fs.pathExists(searchPath)) {
-    const detectedProjects = await detectProjectsWithRseConfig(searchPath, isDev);
+    const detectedProjects = await detectProjectsWithReliverseConfig(searchPath, isDev);
     await handleOpenProjectMenu(detectedProjects, isDev, memory, cwd, true, config);
   }
 }

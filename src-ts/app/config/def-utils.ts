@@ -10,19 +10,19 @@ import { safeDestr } from "destr";
 import { type PackageJson, readPackageJSON } from "pkg-types";
 import { getBiomeConfig } from "~/app/config/biome";
 import { cliDomainDocs, DEFAULT_DOMAIN, rseName, UNKNOWN_VALUE } from "~/app/config/constants";
-import { DEFAULT_CONFIG_RELIVERSE } from "~/app/config/default";
 import { detectFeatures, detectProjectFramework, getPackageJsonSafe } from "~/app/config/detect";
-import type { RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import { DEFAULT_CONFIG_RELIVERSE } from "~/app/schema/mod";
 
 /**
  * Generating a Default Config and Merging with Detected Data
  */
-export async function getDefaultRseConfig(
+export async function getDefaultReliverseConfig(
   projectPath: string,
   isDev: boolean,
   projectName?: string,
   projectAuthor?: string,
-): Promise<RseConfig> {
+): Promise<ReliverseConfig> {
   const packageJson = await getPackageJsonSafe(projectPath);
   const effectiveProjectName = packageJson?.name ?? projectName ?? UNKNOWN_VALUE;
 
@@ -81,13 +81,13 @@ export async function getDefaultRseConfig(
       indentSize: biomeConfig?.indentWidth ?? 2,
       tabWidth: biomeConfig?.indentWidth ?? 2,
     },
-  };
+  } as ReliverseConfig;
 }
 
 export async function generateDefaultRulesForProject(
   projectPath: string,
   isDev: boolean,
-): Promise<RseConfig | null> {
+): Promise<ReliverseConfig | null> {
   const projectCategory = await detectProjectFramework(projectPath);
 
   const packageJsonPath = path.join(projectPath, "package.json");
@@ -99,18 +99,18 @@ export async function generateDefaultRulesForProject(
       // ignore errors
     }
   }
-  const rules = await getDefaultRseConfig(projectPath, isDev);
+  const rules = await getDefaultReliverseConfig(projectPath, isDev);
   if (!projectCategory) {
     rules.features = {
       ...DEFAULT_CONFIG_RELIVERSE.features,
       language: ["typescript"],
       themes: ["default"],
-    };
+    } as ReliverseConfig["features"];
     rules.preferredLibraries = {
       ...DEFAULT_CONFIG_RELIVERSE.preferredLibraries,
       databaseLibrary: "drizzle",
       authentication: "better-auth",
-    };
+    } as ReliverseConfig["preferredLibraries"];
     return rules;
   }
 
@@ -194,17 +194,19 @@ export async function generateDefaultRulesForProject(
 
   // If no preferredLibraries object, create one
   if (!rules.preferredLibraries) {
-    rules.preferredLibraries = { ...DEFAULT_CONFIG_RELIVERSE.preferredLibraries };
+    rules.preferredLibraries = {
+      ...DEFAULT_CONFIG_RELIVERSE.preferredLibraries,
+    } as ReliverseConfig["preferredLibraries"];
   }
 
   // Set specific libraries based on detection
   // Database
   if (hasDrizzle) {
-    rules.preferredLibraries.databaseLibrary = "drizzle";
+    rules.preferredLibraries!.databaseLibrary = "drizzle";
   } else if (hasPrisma) {
-    rules.preferredLibraries.databaseLibrary = "prisma";
+    rules.preferredLibraries!.databaseLibrary = "prisma";
   } else if (hasSupabase) {
-    rules.preferredLibraries.databaseLibrary = "supabase";
+    rules.preferredLibraries!.databaseLibrary = "supabase";
   }
 
   // Database provider
@@ -212,106 +214,104 @@ export async function generateDefaultRulesForProject(
     const drizzleConfigPath = path.join(projectPath, "drizzle.config.ts");
     const content = await fs.readFile(drizzleConfigPath, "utf-8");
     if (content.includes("postgres")) {
-      rules.preferredLibraries.databaseProvider = "pg";
+      rules.preferredLibraries!.databaseProvider = "pg";
     } else if (content.includes("sqlite")) {
-      rules.preferredLibraries.databaseProvider = "sqlite";
+      rules.preferredLibraries!.databaseProvider = "sqlite";
     } else if (content.includes("mysql")) {
-      rules.preferredLibraries.databaseProvider = "mysql";
+      rules.preferredLibraries!.databaseProvider = "mysql";
     }
   } else if (hasPg) {
-    rules.preferredLibraries.databaseProvider = "pg";
+    rules.preferredLibraries!.databaseProvider = "pg";
   } else if (hasMysql) {
-    rules.preferredLibraries.databaseProvider = "mysql";
+    rules.preferredLibraries!.databaseProvider = "mysql";
   } else if (hasSqlite) {
-    rules.preferredLibraries.databaseProvider = "sqlite";
+    rules.preferredLibraries!.databaseProvider = "sqlite";
   } else if (hasMongo) {
-    rules.preferredLibraries.databaseProvider = "mongodb";
+    rules.preferredLibraries!.databaseProvider = "mongodb";
   }
 
   // Authentication
   if (hasNextAuthDir) {
-    rules.preferredLibraries.authentication = "next-auth";
+    rules.preferredLibraries!.authentication = "next-auth";
   } else if (hasClerk) {
-    rules.preferredLibraries.authentication = "clerk";
+    rules.preferredLibraries!.authentication = "clerk";
   } else if (hasBetterAuth) {
-    rules.preferredLibraries.authentication = "better-auth";
+    rules.preferredLibraries!.authentication = "better-auth";
   } else if (hasAuth0) {
-    rules.preferredLibraries.authentication = "auth0";
+    rules.preferredLibraries!.authentication = "auth0";
   } else if (hasSupabase) {
-    rules.preferredLibraries.authentication = "supabase-auth";
+    rules.preferredLibraries!.authentication = "supabase-auth";
   }
 
   // State management
   if (hasZustand) {
-    rules.preferredLibraries.stateManagement = "zustand";
+    rules.preferredLibraries!.stateManagement = "zustand";
   } else if (hasJotai) {
-    rules.preferredLibraries.stateManagement = "jotai";
+    rules.preferredLibraries!.stateManagement = "jotai";
   } else if (hasRedux) {
-    rules.preferredLibraries.stateManagement = "redux-toolkit";
+    rules.preferredLibraries!.stateManagement = "redux-toolkit";
   }
 
   // Form management
   if (hasReactHookForm) {
-    rules.preferredLibraries.formManagement = "react-hook-form";
-    rules.preferredLibraries.forms = "react-hook-form";
+    rules.preferredLibraries!.formManagement = "react-hook-form";
+    rules.preferredLibraries!.forms = "react-hook-form";
   } else if (hasFormik) {
-    rules.preferredLibraries.formManagement = "formik";
+    rules.preferredLibraries!.formManagement = "formik";
   }
 
   // Styling
   if (hasTailwind) {
-    rules.preferredLibraries.styling = "tailwind";
+    rules.preferredLibraries!.styling = "tailwind";
   } else if (hasStyledComponents) {
-    rules.preferredLibraries.styling = "styled-components";
+    rules.preferredLibraries!.styling = "styled-components";
   } else if (hasCssModules) {
-    rules.preferredLibraries.styling = "css-modules";
+    rules.preferredLibraries!.styling = "css-modules";
   } else if (hasSass) {
-    rules.preferredLibraries.styling = "sass";
+    rules.preferredLibraries!.styling = "sass";
   }
 
   // UI components
   if (hasShadcnUi) {
-    rules.preferredLibraries.uiComponents = "shadcn-ui";
+    rules.preferredLibraries!.uiComponents = "shadcn-ui";
   } else if (_hasChakraUi) {
-    rules.preferredLibraries.uiComponents = "chakra-ui";
+    rules.preferredLibraries!.uiComponents = "chakra-ui";
   } else if (_hasMaterialUi) {
-    rules.preferredLibraries.uiComponents = "material-ui";
+    rules.preferredLibraries!.uiComponents = "material-ui";
   }
 
   // Testing
   if (_hasBunTest) {
-    rules.preferredLibraries.testing = "bun";
+    rules.preferredLibraries!.testing = "bun";
   } else if (_hasVitest) {
-    rules.preferredLibraries.testing = "vitest";
+    rules.preferredLibraries!.testing = "vitest";
   } else if (hasJest) {
-    rules.preferredLibraries.testing = "jest";
+    rules.preferredLibraries!.testing = "jest";
   } else if (_hasPlaywright) {
-    rules.preferredLibraries.testing = "playwright";
+    rules.preferredLibraries!.testing = "playwright";
   } else if (_hasCypress) {
-    rules.preferredLibraries.testing = "cypress";
+    rules.preferredLibraries!.testing = "cypress";
   }
 
   // API
   if (hasHono) {
-    rules.preferredLibraries.api = "hono";
+    rules.preferredLibraries!.api = "hono";
   } else if (hasTrpc) {
-    rules.preferredLibraries.api = "trpc";
+    rules.preferredLibraries!.api = "trpc";
   } else if (hasGraphql) {
-    rules.preferredLibraries.api = "graphql";
+    rules.preferredLibraries!.api = "graphql";
   } else if (hasRest) {
-    rules.preferredLibraries.api = "rest";
+    rules.preferredLibraries!.api = "rest";
   }
 
   // Validation
   if (hasZod) {
-    rules.preferredLibraries.validation = "zod";
+    rules.preferredLibraries!.validation = "zod";
   } else if (hasTypebox) {
-    rules.preferredLibraries.validation = "typebox";
+    rules.preferredLibraries!.validation = "typebox";
   } else if (hasValibot) {
-    rules.preferredLibraries.validation = "valibot";
+    rules.preferredLibraries!.validation = "valibot";
   }
-
-  // Add more specific library detections for other categories
 
   return rules;
 }

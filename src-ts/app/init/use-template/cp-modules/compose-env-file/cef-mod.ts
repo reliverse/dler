@@ -3,7 +3,7 @@ import { relinka } from "@reliverse/relinka";
 import { inputPrompt, selectPrompt } from "@reliverse/rempts";
 import { execa } from "execa";
 import { cliDomainEnv } from "~/app/config/constants";
-import type { RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
 
 import {
   copyFromExisting,
@@ -21,7 +21,7 @@ export async function composeEnvFile(
   fallbackEnvExampleURL: string,
   maskInput: boolean,
   skipPrompts: boolean,
-  config: RseConfig | null,
+  config: ReliverseConfig | null,
   isMrse: boolean,
 ): Promise<void> {
   if (config === null) return;

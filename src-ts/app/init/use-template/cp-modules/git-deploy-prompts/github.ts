@@ -2,7 +2,7 @@ import { RequestError } from "@octokit/request-error";
 import { relinka } from "@reliverse/relinka";
 import { selectPrompt } from "@reliverse/rempts";
 import { UNKNOWN_VALUE } from "~/app/config/constants";
-import type { RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
 import { type InstanceGithub } from "~/app/utils/instanceGithub";
 import { cd } from "~/app/utils/terminalHelpers";
 
@@ -47,7 +47,7 @@ export async function createGithubRepo(
   projectPath: string,
   isDev: boolean,
   cwd: string,
-  config: RseConfig,
+  config: ReliverseConfig,
   isTemplateDownload: boolean,
 ): Promise<boolean> {
   if (isTemplateDownload) {

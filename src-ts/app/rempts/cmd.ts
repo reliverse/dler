@@ -4,7 +4,7 @@ import { relinka } from "@reliverse/relinka";
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { createJiti } from "jiti";
 
-import type { DlerConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
 
 export default defineCommand({
   meta: {
@@ -79,7 +79,7 @@ export default defineCommand({
         if (await fs.pathExists(defaultCmdsRoot)) {
           cmdsRoot = defaultCmdsRoot;
         } else {
-          const { cmdsRoot: configCmdsRoot, cliFile } = await handleDlerConfig();
+          const { cmdsRoot: configCmdsRoot, cliFile } = await handleReliverseConfig();
           cmdsRoot = configCmdsRoot;
           cliFilePath = cliFile;
         }
@@ -196,14 +196,14 @@ await callCmd(cmd, [
   },
 });
 
-async function handleDlerConfig() {
+async function handleReliverseConfig() {
   const dlerConfigPath = path.resolve("reliverse.ts");
   let cmdsRoot = "src-ts/app";
   let cliFilePath = "";
 
   try {
     const jiti = createJiti(import.meta.url);
-    const dlerConfig = await jiti.import<DlerConfig>(dlerConfigPath, {
+    const dlerConfig = await jiti.import<ReliverseConfig>(dlerConfigPath, {
       default: true,
     });
     const coreIsCLI = dlerConfig?.coreIsCLI;

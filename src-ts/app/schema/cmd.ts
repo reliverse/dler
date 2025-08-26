@@ -1,17 +1,17 @@
 import { relinka } from "@reliverse/relinka";
 import { defineCommand } from "@reliverse/rempts";
 import { cliConfigJsonc } from "~/app/config/constants";
-import { generateSchemaFile } from "~/app/config/schema";
+import { generateSchemaFile } from "~/app/config/impl/typebox";
 
 export default defineCommand({
   meta: {
     name: "schema",
-    description: `Generate JSON schema for ${cliConfigJsonc} configuration`,
+    description: `Generate schema.json for ${cliConfigJsonc} configuration`,
     hidden: true,
   },
   run: async () => {
     try {
-      await generateSchemaFile();
+      await generateSchemaFile({});
       relinka("success", `Generated schema.json for ${cliConfigJsonc} successfully!`);
     } catch (error) {
       relinka(

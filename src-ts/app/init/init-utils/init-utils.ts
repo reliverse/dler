@@ -24,9 +24,9 @@ import { getOrCreateReliverseMemory } from "~/app/utils/reliverseMemory";
 import { findTsconfigUp } from "~/app/utils/tsconfigHelpers";
 import { createTSConfig } from "~/app/utils/utils-tsconfig";
 import { getProjectContent, type RequiredProjectContent } from "../../config/content";
-import { getOrCreateRseConfig } from "../../config/core-cfg";
-import { detectProjectsWithRseConfig } from "../../config/detect";
-import type { ProjectFramework } from "../../types/mod";
+import { getOrCreateReliverseConfig } from "../../config/core-cfg";
+import { detectProjectsWithReliverseConfig } from "../../config/detect";
+import type { ProjectFramework } from "../../schema/mod";
 
 /** Constants for menu option values */
 const NEW_PROJECT_OPTION = "new-project";
@@ -73,7 +73,7 @@ function buildProjectSelectionMenuOptions(
  */
 export async function handleProjectSelectionMenu(cwd: string, isDev: boolean): Promise<string> {
   try {
-    const detectedProjects = await detectProjectsWithRseConfig(cwd, isDev);
+    const detectedProjects = await detectProjectsWithReliverseConfig(cwd, isDev);
     const directoryEmpty = await isDirectoryEmpty(cwd);
 
     const menuData = buildProjectSelectionMenuOptions(cwd, detectedProjects, directoryEmpty);
@@ -139,7 +139,7 @@ export async function initMinimalrseProject(
     }
 
     // Load or create rse configuration for the project
-    const { config } = await getOrCreateRseConfig({
+    const { config } = await getOrCreateReliverseConfig({
       projectPath,
       isDev,
       overrides: { projectFramework },
@@ -227,7 +227,7 @@ export async function showExistingProjectMenu(
     const { updateAvailable, updateInfo } = await getTemplateUpdateInfo(
       cwd,
       isDev,
-      requiredContent.fileRseConfig,
+      requiredContent.fileReliverseConfig,
     );
 
     const menuOptions = buildExistingProjectMenuOptions(depsMissing, updateAvailable, updateInfo);
@@ -313,7 +313,7 @@ function buildExistingProjectMenuOptions(
 export function determineProjectStatus(
   requiredContent: RequiredProjectContent,
 ): "new" | "existing" | "incomplete" {
-  const hasrse = Boolean(requiredContent.fileRseConfig);
+  const hasrse = Boolean(requiredContent.fileReliverseConfig);
   const hasPackageJson = Boolean(requiredContent.filePackageJson);
   const isExistingProject = Object.values(requiredContent).every(Boolean);
 
@@ -328,7 +328,7 @@ export function determineProjectStatus(
 export async function handleNewProject(cwd: string, isDev: boolean): Promise<ShowMenuResult> {
   try {
     relinka("info", "Setting up rse config for this project...");
-    await getOrCreateRseConfig({
+    await getOrCreateReliverseConfig({
       projectPath: cwd,
       isDev,
       overrides: {},

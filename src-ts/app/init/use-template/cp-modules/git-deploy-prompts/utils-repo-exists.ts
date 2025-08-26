@@ -1,8 +1,9 @@
 import { relinka } from "@reliverse/relinka";
 import { simpleGit } from "simple-git";
 import { cliName } from "~/app/config/constants";
-import { migrateRseConfig } from "~/app/config/migrate";
-import type { GitModParams, RseConfig } from "~/app/types/mod";
+import { migrateReliverseConfig } from "~/app/config/migrate";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import type { GitModParams } from "~/app/types/mod";
 import { getEffectiveDir } from "~/app/utils/getEffectiveDir";
 import type { RepoOption } from "~/app/utils/projectRepository";
 import { handleReplacements } from "~/app/utils/replacements/reps-mod";
@@ -13,7 +14,7 @@ import { handleExistingRepoContent } from "./utils-private-repo";
 export async function handleExistingRepo(
   params: GitModParams & {
     memory: ReliverseMemory;
-    config: RseConfig;
+    config: ReliverseConfig;
     githubUsername: string;
     selectedTemplate: RepoOption;
   },
@@ -24,7 +25,7 @@ export async function handleExistingRepo(
 
   relinka("info", `Using existing repo: ${params.githubUsername}/${params.projectName}`);
 
-  const { success: repoSuccess, externalRseConfig } = await handleExistingRepoContent(
+  const { success: repoSuccess, externalReliverseConfig } = await handleExistingRepoContent(
     params.memory,
     params.githubUsername,
     params.projectName,
@@ -36,8 +37,8 @@ export async function handleExistingRepo(
   }
 
   // If we have a rsesonc file, migrate its data
-  if (externalRseConfig) {
-    await migrateRseConfig(externalRseConfig, effectiveDir, isDev);
+  if (externalReliverseConfig) {
+    await migrateReliverseConfig(externalReliverseConfig, effectiveDir, isDev);
   }
 
   // Run replacements after rsesonc

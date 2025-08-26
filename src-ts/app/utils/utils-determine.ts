@@ -1,4 +1,4 @@
-import type { LibConfig } from "~/app/types/mod";
+import type { LibConfig } from "~/app/schema/mod";
 
 /**
  * Determines the distribution name based on the file path and build type.

@@ -2,15 +2,13 @@ import path from "@reliverse/pathkit";
 import { re } from "@reliverse/relico";
 import fs, { ensuredir, setHiddenAttribute } from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import type { Static } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import { parseJSONC } from "confbox";
 import { ofetch } from "ofetch";
 import { cliHomeRepos } from "~/app/config/constants";
-import { rseSchema } from "~/app/config/schema";
 import type { VSCodeRepoOption } from "~/app/providers/reliverse-stack/rs-impl";
+import type { ProjectCategory, ProjectTemplate } from "~/app/schema/mod";
 import { experimental, recommended } from "~/app/utils/badgeNotifiers";
-
 import {
   DEFAULT_REPOS_CONFIG,
   generateReposJsonSchema,
@@ -25,14 +23,10 @@ import {
 // ================================================
 
 // Extract project template type from the config schema.
-export type RepoFromSchema = NonNullable<
-  Static<(typeof rseSchema)["properties"]["projectTemplate"]>
->;
+export type RepoFromSchema = NonNullable<ProjectTemplate>;
 
 // Extract category type from the config schema.
-export type CategoryFromSchema = NonNullable<
-  Static<(typeof rseSchema)["properties"]["projectCategory"]>
->;
+export type CategoryFromSchema = NonNullable<ProjectCategory>;
 
 export interface CloneOrTemplateRepo {
   id: RepoFromSchema;

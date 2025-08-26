@@ -5,7 +5,7 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { confirmPrompt, multiselectPrompt, selectPrompt } from "@reliverse/rempts";
 import { destr } from "destr";
-import { readRseConfig } from "~/app/config/read";
+import { readReliverseConfig } from "~/app/config/read";
 import type { BaseConfig } from "~/app/types/mod";
 
 import { removeComments } from "~/app/utils/codemods/removeComments";
@@ -48,9 +48,9 @@ export async function handleCleanup(cwd: string, configPath: string, isDev: bool
 
   // Read ignoreDependencies from the active config file
   try {
-    const rules = await readRseConfig(configPath, isDev);
+    const rules = await readReliverseConfig(configPath, isDev);
     if (rules?.ignoreDependencies) {
-      rules.ignoreDependencies.forEach((dep) => ignoredDeps.add(dep));
+      rules.ignoreDependencies.forEach((dep: string) => ignoredDeps.add(dep));
     }
   } catch (error) {
     relinka(

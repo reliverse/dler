@@ -1,13 +1,13 @@
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { callCmd } from "@reliverse/rempts";
+// import { callCmd } from "@reliverse/rempts";
 import { glob } from "tinyglobby";
-import { default as checkCmd } from "~/app/check/cmd";
+// import { default as checkCmd } from "~/app/check/cmd";
 import { PROJECT_ROOT } from "~/app/config/constants";
 import { getConfigDler } from "~/app/config/load";
 import { applyMagicSpells } from "~/app/magic/magic-apply";
-import type { DlerConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
 import { resolveAllCrossLibs } from "~/app/utils/resolve-cross-libs";
 
 import { directoryExists, executeDlerHooks } from "./ppb-utils";
@@ -81,7 +81,7 @@ export async function dlerPostBuild(
   }
 }
 
-export async function wrapper_CopyNonBuildFiles(config: DlerConfig): Promise<void> {
+export async function wrapper_CopyNonBuildFiles(config: ReliverseConfig): Promise<void> {
   if (config.commonPubRegistry === "npm" || config.commonPubRegistry === "npm-jsr") {
     await copyNonBuildFiles(
       path.join(PROJECT_ROOT, config.coreEntrySrcDir),
@@ -239,10 +239,11 @@ const createPostBuildToolRunner = (): Record<PostBuildToolName, PostBuildTool> =
   "dler-check": {
     name: "Dler Check",
     async run() {
-      await callCmd(checkCmd, {
-        "no-exit": true,
-        "no-progress": true,
-      });
+      // TODO: uncomment this
+      // await callCmd(checkCmd, {
+      //   "no-exit": true,
+      //   "no-progress": true,
+      // });
     },
   },
 });

@@ -1,6 +1,7 @@
 import { relinka } from "@reliverse/relinka";
 import { selectPrompt } from "@reliverse/rempts";
-import type { DeploymentService, RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import type { DeploymentService } from "~/app/types/mod";
 import { decide } from "~/app/utils/decideHelper";
 import { type InstanceGithub, initGithubSDK } from "~/app/utils/instanceGithub";
 import { initVercelSDK } from "~/app/utils/instanceVercel";
@@ -33,7 +34,7 @@ export async function handleGitInit(
   isDev: boolean,
   projectName: string,
   projectPath: string,
-  config: RseConfig,
+  config: ReliverseConfig,
   isTemplateDownload: boolean,
 ): Promise<boolean> {
   relinka("verbose", "[B] initGitDir");
@@ -67,7 +68,7 @@ export async function configureGithubRepo(
   cwd: string,
   isDev: boolean,
   memory: ReliverseMemory,
-  config: RseConfig,
+  config: ReliverseConfig,
   projectName: string,
   projectPath: string,
   maskInput: boolean,
@@ -137,7 +138,7 @@ export async function promptGitDeploy({
 }: {
   isLib: boolean;
   projectName: string;
-  config: RseConfig;
+  config: ReliverseConfig;
   projectPath: string;
   primaryDomain: string;
   hasDbPush: boolean;

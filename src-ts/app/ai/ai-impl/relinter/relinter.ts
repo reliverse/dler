@@ -5,7 +5,7 @@ import { confirmPrompt } from "@reliverse/rempts";
 import { generateText } from "ai";
 import { countTokens } from "gpt-tokenizer/model/gpt-4o-mini";
 import { CIRCULAR_TRIGGERS, MODEL, MODEL_NAME } from "~/app/ai/ai-impl/ai-const";
-import type { RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
 
 /**
  * Describes a lint suggestion with file details and a recommended fix or note.
@@ -43,7 +43,7 @@ function calculatePrice(tokenCount: number): number {
  * Coordinates the relinter process. Accepts multiple target paths.
  */
 export async function agentRelinter(
-  config: RseConfig,
+  config: ReliverseConfig,
   targetPaths: string[],
   task?: string,
 ): Promise<void> {

@@ -5,8 +5,8 @@ import { AGENT_NAMES } from "~/app/ai/ai-impl/ai-const";
 import { aiAgenticTool } from "~/app/ai/ai-impl/ai-tools";
 import type { AiSdkAgent } from "~/app/ai/ai-impl/ai-types";
 import { aiMenu } from "~/app/ai/ai-menu";
-import { getRseConfigPath } from "~/app/config/path";
-import { readRseConfig } from "~/app/config/read";
+import { getReliverseConfigPath } from "~/app/config/path";
+import { readReliverseConfig } from "~/app/config/read";
 import { getOrCreateReliverseMemory } from "~/app/utils/reliverseMemory";
 import { getCurrentWorkingDirectory } from "~/app/utils/terminalHelpers";
 
@@ -40,8 +40,8 @@ export default defineCommand({
     }
 
     const cwd = getCurrentWorkingDirectory();
-    const { configPath } = await getRseConfigPath(cwd, isDev, false);
-    const config = await readRseConfig(configPath, isDev);
+    const { configPath } = await getReliverseConfigPath(cwd, isDev, false);
+    const config = await readReliverseConfig(configPath, isDev);
     if (!config) {
       throw new Error("Failed to read rse config");
     }

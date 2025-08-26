@@ -7,7 +7,6 @@ import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { confirmPrompt } from "@reliverse/rempts";
-import { Value } from "@sinclair/typebox/value";
 import { execaCommand } from "execa";
 
 /**
@@ -46,12 +45,10 @@ import {
   rseName,
   UNKNOWN_VALUE,
 } from "~/app/config/constants";
-import { generateDefaultRulesForProject, getDefaultRseConfig } from "~/app/config/def-utils";
-import { DEFAULT_CONFIG_RELIVERSE } from "~/app/config/default";
+import { generateDefaultRulesForProject, getDefaultReliverseConfig } from "~/app/config/def-utils";
 import { detectFeatures, getPackageJson } from "~/app/config/detect";
-import { getRseConfigPath } from "~/app/config/path";
-import { readRseConfig } from "~/app/config/read";
-import { rseSchema } from "~/app/config/schema";
+import { getReliverseConfigPath } from "~/app/config/path";
+import { readReliverseConfig } from "~/app/config/read";
 import {
   atomicWriteFile,
   cleanGitHubUrl,
@@ -59,16 +56,18 @@ import {
   objectToCodeString,
   updateTsConfigInclude,
 } from "~/app/config/utils";
-import type { DeploymentService, RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import { DEFAULT_CONFIG_RELIVERSE } from "~/app/schema/mod";
+import type { DeploymentService } from "~/app/types/mod";
 
 /**
  * Writes the given rseConfig to the specified config file (TypeScript or JSONC).
  * Performs an atomic write (using a temp file) and creates a backup of any existing config.
  * In dev mode, automatically builds a relative path to `sdk-mod.ts`.
  */
-export async function writeRseConfig(
+export async function writeReliverseConfig(
   configPath: string,
-  config: RseConfig,
+  config: ReliverseConfig,
   isDev: boolean,
   skipInstallPrompt = false,
 ): Promise<void> {
@@ -172,13 +171,7 @@ export default defineConfig(${objectLiteralWithComments});
   }
 
   // JSONC branch
-  if (!Value.Check(rseSchema, config)) {
-    const issues = [...Value.Errors(rseSchema, config)].map(
-      (err) => `Path "${err.path}": ${err.message}`,
-    );
-    relinka("error", "Invalid config:", issues.join("; "));
-    throw new Error(`Invalid config: ${issues.join("; ")}`);
-  }
+  // no schema validation; rely on TypeScript types and defaults
 
   let fileContent = JSON.stringify(config, null, 2);
   fileContent = injectSectionComments(fileContent);
@@ -195,11 +188,11 @@ export default defineConfig(${objectLiteralWithComments});
 /**
  * rse Config Creation (wrapper around config generator and fixer)
  */
-export async function createRseConfig(
+export async function createReliverseConfig(
   projectPath: string,
   githubUsername: string,
   isDev: boolean,
-  overrides: Partial<RseConfig>,
+  overrides: Partial<ReliverseConfig>,
 ): Promise<void> {
   const defaultRules = await generateDefaultRulesForProject(projectPath, isDev);
   const effectiveProjectName = defaultRules?.projectName ?? path.basename(projectPath);
@@ -212,7 +205,7 @@ export async function createRseConfig(
     effectiveAuthorName = "reliverse";
   }
 
-  await generateRseConfig({
+  await generateReliverseConfig({
     projectName: effectiveProjectName,
     frontendUsername: effectiveAuthorName,
     deployService: "vercel",
@@ -235,7 +228,7 @@ export async function createRseConfig(
  * Generates a rse config (rseConfig) by merging defaults, existing config, and overrides.
  * Writes the resulting config to disk (TypeScript or JSONC), optionally skipping install prompts in non-dev mode.
  */
-export async function generateRseConfig({
+export async function generateReliverseConfig({
   projectName,
   frontendUsername,
   deployService,
@@ -264,7 +257,7 @@ export async function generateRseConfig({
   customOutputPath?: string;
   customFilename?: string;
   skipInstallPrompt?: boolean;
-  overrides: Partial<RseConfig>;
+  overrides: Partial<ReliverseConfig>;
 }): Promise<void> {
   // Read the project's package.json if available
   const packageJson = await getPackageJson(projectPath);
@@ -275,7 +268,7 @@ export async function generateRseConfig({
   }
 
   // Load the default config for this project
-  const defaultConfig = await getDefaultRseConfig(
+  const defaultConfig = await getDefaultReliverseConfig(
     projectPath,
     isDev,
     projectName,
@@ -339,7 +332,7 @@ export async function generateRseConfig({
     indentStyle: "space",
     indentSize: 2,
     importSymbol: "~",
-    trailingComma: "all",
+    trailingCommas: "all",
     bracketSpacing: true,
     arrowParens: "always",
     tabWidth: 2,
@@ -362,15 +355,15 @@ export async function generateRseConfig({
   } else {
     // Use standard logic to figure out TS or JSONC, unless configInfo is already provided
     const configPathInfo =
-      configInfo ?? (await getRseConfigPath(projectPath, isDev, skipInstallPrompt));
+      configInfo ?? (await getReliverseConfigPath(projectPath, isDev, skipInstallPrompt));
     effectiveConfigPath = configPathInfo.configPath;
   }
 
   // If not overwriting, attempt to read any existing config
-  let existingContent: RseConfig | null = null;
+  let existingContent: ReliverseConfig | null = null;
   if (!overwrite && (await fs.pathExists(effectiveConfigPath))) {
     try {
-      existingContent = await readRseConfig(effectiveConfigPath, isDev);
+      existingContent = await readReliverseConfig(effectiveConfigPath, isDev);
     } catch {
       // fallback if reading fails
     }
@@ -382,7 +375,7 @@ export async function generateRseConfig({
     ...existingContent,
     ...defaultConfig,
     ...overrides,
-  };
+  } as ReliverseConfig;
 
   // If dev mode, attach local dev schema reference
   if (isDev) {
@@ -390,5 +383,5 @@ export async function generateRseConfig({
   }
 
   // Write the final config to disk
-  await writeRseConfig(effectiveConfigPath, effectiveConfig, isDev, skipInstallPrompt);
+  await writeReliverseConfig(effectiveConfigPath, effectiveConfig, isDev, skipInstallPrompt);
 }

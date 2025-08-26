@@ -5,7 +5,7 @@ import { cliConfigJsonc, cliConfigTs } from "~/app/config/constants";
 
 // Define a type that matches the boolean-based structure of requiredContent
 export interface RequiredProjectContent {
-  fileRseConfig: boolean;
+  fileReliverseConfig: boolean;
   filePackageJson: boolean;
 }
 
@@ -22,7 +22,7 @@ export async function getProjectContent(projectPath: string): Promise<{
   const configJSONC = path.join(projectPath, cliConfigJsonc);
   const configTS = path.join(projectPath, cliConfigTs);
 
-  const fileRseConfig = (await fs.pathExists(configJSONC)) || (await fs.pathExists(configTS));
+  const fileReliverseConfig = (await fs.pathExists(configJSONC)) || (await fs.pathExists(configTS));
 
   const filePackageJson = await fs.pathExists(path.join(projectPath, "package.json"));
 
@@ -31,7 +31,7 @@ export async function getProjectContent(projectPath: string): Promise<{
   const dirGit = await fs.pathExists(path.join(projectPath, ".git"));
 
   return {
-    requiredContent: { fileRseConfig, filePackageJson },
+    requiredContent: { fileReliverseConfig, filePackageJson },
     optionalContent: { dirNodeModules, dirGit },
   };
 }

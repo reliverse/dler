@@ -13,16 +13,15 @@ import { unifiedBuild } from "~/app/build/providers/build";
 import { CONCURRENCY_DEFAULT, PROJECT_ROOT, validExtensions } from "~/app/config/constants";
 import type {
   BundlerName,
-  DlerConfig,
   Esbuild,
   LibConfig,
   NpmOutExt,
-  PerfTimer,
+  ReliverseConfig,
   Sourcemap,
-  transpileFormat,
-  transpileTarget,
-  UnifiedBuildConfig,
-} from "~/app/types/mod";
+  TranspileFormat,
+  TranspileTarget,
+} from "~/app/schema/mod";
+import type { PerfTimer, UnifiedBuildConfig } from "~/app/types/mod";
 import { getBunSourcemapOption, getUnifiedSourcemapOption } from "~/app/utils/utils-build";
 import { removeLogInternalCalls } from "~/app/utils/utils-clean";
 import { determineDistName } from "~/app/utils/utils-determine";
@@ -62,7 +61,7 @@ interface JsrBuildOptions {
 }
 
 /** Consolidated options for the main library build function */
-export type LibraryBuildOptions = DlerConfig & {
+export type LibraryBuildOptions = ReliverseConfig & {
   effectivePubRegistry: "npm" | "jsr" | "npm-jsr" | undefined;
   npm?: NpmBuildOptions;
   jsr?: JsrBuildOptions;
@@ -73,8 +72,8 @@ export type LibraryBuildOptions = DlerConfig & {
   libsList: Record<string, LibConfig>;
   timer: PerfTimer;
   libTranspileMinify: boolean;
-  transpileTarget: transpileTarget;
-  transpileFormat: transpileFormat;
+  transpileTarget: TranspileTarget;
+  transpileFormat: TranspileFormat;
   transpileSplitting: boolean;
   transpileSourcemap: Sourcemap;
   transpilePublicPath: string;
@@ -107,8 +106,8 @@ interface BundleExecutorParams {
   // Transpilation/bundler options relevant to the specific executor
   libDeclarations: boolean; // Primarily for unified
   libTranspileMinify: boolean;
-  transpileTarget: transpileTarget;
-  transpileFormat: transpileFormat;
+  transpileTarget: TranspileTarget;
+  transpileFormat: TranspileFormat;
   transpileSplitting: boolean;
   transpileSourcemap: Sourcemap;
   transpilePublicPath: string;
@@ -134,7 +133,7 @@ interface CommonStepsParams {
   isJsr: boolean;
   libName: string;
   libsList: Record<string, LibConfig>;
-  config: DlerConfig;
+  config: ReliverseConfig;
   unifiedBundlerOutExt: NpmOutExt;
   distJsrOutFilesExt: NpmOutExt;
   deleteFiles?: boolean;

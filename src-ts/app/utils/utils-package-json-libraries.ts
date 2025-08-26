@@ -3,7 +3,7 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { definePackageJSON, type PackageJson, readPackageJSON } from "pkg-types";
 
-import type { DlerConfig, LibConfig, NpmOutExt } from "~/app/types/mod";
+import type { LibConfig, NpmOutExt, ReliverseConfig } from "~/app/schema/mod";
 
 import { filterDeps } from "./utils-deps";
 
@@ -16,7 +16,7 @@ export async function library_createPackageJSON(
   jsrOutDir: string,
   effectivePubRegistry: "npm" | "jsr" | "npm-jsr" | undefined,
   libsList: Record<string, LibConfig>,
-  config: DlerConfig,
+  config: ReliverseConfig,
   unifiedBundlerOutExt: NpmOutExt,
 ): Promise<void> {
   relinka("verbose", `Creating package.json for library ${libName}`);
@@ -119,7 +119,7 @@ async function library_getlibPkgKeepDeps(
   outDirBin: string,
   isJsr: boolean,
   libConfig: LibConfig,
-  config: DlerConfig,
+  config: ReliverseConfig,
 ): Promise<Record<string, string>> {
   relinka("verbose", `Getting lib dependencies for: ${libName}`);
   if (!originalDeps) return {};
@@ -285,7 +285,7 @@ async function library_writeJsrPackageJSON(
   originalPkg: PackageJson,
   commonPkg: Partial<PackageJson>,
   libsList: Record<string, LibConfig>,
-  config: DlerConfig,
+  config: ReliverseConfig,
 ): Promise<void> {
   relinka("verbose", `Writing package.json for JSR lib: ${libName}`);
 
@@ -367,7 +367,7 @@ async function library_writeNpmLibPackageJSON(
   originalPkg: PackageJson,
   commonPkg: Partial<PackageJson>,
   libsList: Record<string, LibConfig>,
-  config: DlerConfig,
+  config: ReliverseConfig,
   unifiedBundlerOutExt: NpmOutExt,
 ): Promise<void> {
   relinka("verbose", `Writing package.json for NPM lib: ${libName}`);
@@ -434,7 +434,7 @@ async function library_createJsrConfig(
   libName: string,
   pkgJsonDir: string,
   libsList: Record<string, LibConfig>,
-  config: DlerConfig,
+  config: ReliverseConfig,
 ): Promise<void> {
   relinka("verbose", `Creating JSR config for lib: ${libName}`);
 

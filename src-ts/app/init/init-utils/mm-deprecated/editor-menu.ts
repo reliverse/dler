@@ -1,8 +1,7 @@
 import { re } from "@reliverse/relico";
 import { relinka } from "@reliverse/relinka";
-import { callCmd, inputPrompt, selectPrompt } from "@reliverse/rempts";
+import { inputPrompt, selectPrompt } from "@reliverse/rempts";
 import { useLanguine } from "~/app/add/add-local/i18n/languine";
-import { default as betterAuthCmd } from "~/app/better/auth/cmd";
 import { getProjectContent } from "~/app/config/content";
 import { envArgImpl } from "~/app/env/env-impl";
 import { manageDrizzleSchema } from "~/app/init/mm-deprecated/drizzle/manageDrizzleSchema";
@@ -18,7 +17,8 @@ import {
 import { checkGithubRepoOwnership } from "~/app/init/use-template/cp-modules/git-deploy-prompts/github";
 import { ensureDbInitialized } from "~/app/init/use-template/cp-modules/git-deploy-prompts/helpers/handlePkgJsonScripts";
 import { checkVercelDeployment } from "~/app/init/use-template/cp-modules/git-deploy-prompts/vercel/vercel-check";
-import type { DetectedProject, RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import type { DetectedProject } from "~/app/types/mod";
 import { experimental } from "~/app/utils/badgeNotifiers";
 import {
   convertDatabaseProvider,
@@ -57,7 +57,7 @@ export async function handleOpenProjectMenu(
   memory: ReliverseMemory,
   cwd: string,
   maskInput: boolean,
-  config: RseConfig,
+  config: ReliverseConfig,
 ): Promise<void> {
   const frontendUsername = await askUsernameFrontend(config, false);
   if (!frontendUsername) {
@@ -218,10 +218,12 @@ export async function handleOpenProjectMenu(
       relinka("log", `--config ${selectedProject.path}/src/lib/auth.ts`);
       relinka("log", `--output ${selectedProject.path}/src/db/schema/user/tables.ts`);
       // await handleBetterAuth(selectedProject.path);
-      await callCmd(betterAuthCmd, {
-        config: `${selectedProject.path}/src/lib/auth.ts`,
-        schema: `${selectedProject.path}/src/db/schema/user/tables.ts`,
-      });
+
+      // TODO: uncomment this
+      // await callCmd(betterAuthCmd, {
+      //   config: `${selectedProject.path}/src/lib/auth.ts`,
+      //   schema: `${selectedProject.path}/src/db/schema/user/tables.ts`,
+      // });
       break;
     }
 

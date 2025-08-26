@@ -7,14 +7,13 @@ import { unifiedBuild } from "~/app/build/providers/build";
 import { CONCURRENCY_DEFAULT, PROJECT_ROOT, validExtensions } from "~/app/config/constants";
 import type {
   BundlerName,
-  DlerConfig,
   NpmOutExt,
-  PerfTimer,
+  ReliverseConfig,
   Sourcemap,
-  transpileFormat,
-  transpileTarget,
-  UnifiedBuildConfig,
-} from "~/app/types/mod";
+  TranspileFormat,
+  TranspileTarget,
+} from "~/app/schema/mod";
+import type { PerfTimer, UnifiedBuildConfig } from "~/app/types/mod";
 import { getBunSourcemapOption, getUnifiedSourcemapOption } from "~/app/utils/utils-build";
 import { removeLogInternalCalls } from "~/app/utils/utils-clean";
 import { copyRootFile, deleteSpecificFiles } from "~/app/utils/utils-fs";
@@ -37,14 +36,14 @@ export async function regular_buildJsrDist(
   distJsrDirName: string,
   distJsrBuilder: BundlerName,
   coreEntryFile: string,
-  transpileTarget: transpileTarget,
-  transpileFormat: transpileFormat,
+  transpileTarget: TranspileTarget,
+  transpileFormat: TranspileFormat,
   transpileSplitting: boolean,
   transpileMinify: boolean,
   transpileSourcemap: Sourcemap,
   transpilePublicPath: string,
   unifiedBundlerOutExt: NpmOutExt,
-  config: DlerConfig,
+  config: ReliverseConfig,
   timer: PerfTimer,
   transpileStub: boolean,
   transpileWatch: boolean,
@@ -140,9 +139,9 @@ export async function regular_buildNpmDist(
   distNpmBuilder: BundlerName,
   coreEntryFile: string,
   unifiedBundlerOutExt: NpmOutExt,
-  config: DlerConfig,
-  transpileTarget: transpileTarget,
-  transpileFormat: transpileFormat,
+  config: ReliverseConfig,
+  transpileTarget: TranspileTarget,
+  transpileFormat: TranspileFormat,
   transpileSplitting: boolean,
   transpileMinify: boolean,
   transpileSourcemap: Sourcemap,
@@ -217,8 +216,8 @@ export async function regular_buildNpmDist(
 async function regular_bundleUsingBun(
   coreEntryFile: string,
   outDirBin: string,
-  transpileTarget: transpileTarget,
-  transpileFormat: transpileFormat,
+  transpileTarget: TranspileTarget,
+  transpileFormat: TranspileFormat,
   transpileSplitting: boolean,
   transpileMinify: boolean,
   transpileSourcemap: Sourcemap,
@@ -339,7 +338,7 @@ async function regular_bundleUsingUnified(
   coreEntrySrcDir: string,
   transpileStub: boolean,
   transpileWatch: boolean,
-  transpileTarget: transpileTarget,
+  transpileTarget: TranspileTarget,
   transpileMinify: boolean,
   transpileSourcemap: Sourcemap,
   timer: PerfTimer,
@@ -428,13 +427,13 @@ async function regular_bundleWithBuilder(
     singleFile: string; // single entry file (used if bun/unified)
     srcDir: string; // entire directory (used if builder=jsr)
     timer: PerfTimer;
-    transpileFormat: transpileFormat;
+    transpileFormat: TranspileFormat;
     transpileMinify: boolean;
     transpilePublicPath: string;
     transpileSourcemap: Sourcemap;
     transpileSplitting: boolean;
     transpileStub: boolean;
-    transpileTarget: transpileTarget;
+    transpileTarget: TranspileTarget;
     transpileWatch: boolean;
     unifiedBundlerOutExt: NpmOutExt;
   },
@@ -518,7 +517,7 @@ async function regular_performCommonBuildSteps({
   isJsr: boolean;
   outDirBin: string;
   outDirRoot: string;
-  config: DlerConfig;
+  config: ReliverseConfig;
   unifiedBundlerOutExt: NpmOutExt;
   coreDescription: string;
   coreBuildOutDir?: string;

@@ -30,4 +30,4 @@ async function main() {
   console.log("Not implemented yet");
 }
 
-await main();
+main();

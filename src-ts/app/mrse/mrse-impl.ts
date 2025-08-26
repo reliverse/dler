@@ -3,7 +3,7 @@ import fs, { ensuredir } from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { confirmPrompt } from "@reliverse/rempts";
 import { homeDir } from "~/app/config/constants";
-import { getOrCreateRseConfig } from "~/app/config/core-cfg";
+import { getOrCreateReliverseConfig } from "~/app/config/core-cfg";
 import { initGithubSDK } from "~/app/utils/instanceGithub";
 import { askUsernameFrontend } from "~/app/utils/prompts/askUsernameFrontend";
 import { getOrCreateReliverseMemory } from "~/app/utils/reliverseMemory";
@@ -131,7 +131,7 @@ export async function downloadFileFromGitHub(
 
     // Memory used for storing credentials
     const memory = await getOrCreateReliverseMemory();
-    const { config } = await getOrCreateRseConfig({
+    const { config } = await getOrCreateReliverseConfig({
       projectPath: process.cwd(),
       isDev: false,
       overrides: {},

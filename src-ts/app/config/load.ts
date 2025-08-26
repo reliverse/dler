@@ -2,8 +2,8 @@ import { resolve } from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { createJiti } from "jiti";
-import { defineConfig } from "~/app/config/default";
-import type { DlerConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import { defineConfig } from "~/app/schema/mod";
 
 const CONFIG_FILENAME = "reliverse.ts";
 
@@ -12,7 +12,7 @@ const CONFIG_FILENAME = "reliverse.ts";
  * Falls back to default configuration if the file is not found.
  * Uses jiti for seamless TypeScript and ESM support.
  */
-export async function getConfigDler(): Promise<DlerConfig> {
+export async function getConfigDler(): Promise<ReliverseConfig> {
   const cwd = process.cwd();
   const configPath = resolve(cwd, CONFIG_FILENAME);
 
@@ -32,11 +32,11 @@ export async function getConfigDler(): Promise<DlerConfig> {
         // Handle case where user exports a function
         const result = config();
         if (result && typeof result === "object") {
-          return defineConfig(result as Partial<DlerConfig>);
+          return defineConfig(result as Partial<ReliverseConfig>);
         }
       } else if (config && typeof config === "object") {
         // Handle case where user exports an object
-        return defineConfig(config as Partial<DlerConfig>);
+        return defineConfig(config as Partial<ReliverseConfig>);
       }
 
       throw new Error("Invalid config format");

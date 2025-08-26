@@ -6,7 +6,6 @@
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { tsconfigJson } from "~/app/config/constants";
-import { askRseConfigType } from "~/app/config/prompts";
 
 // Cache the result per project path so the prompt is only shown once.
 const configPathCache = new Map<string, { configPath: string; isTS: boolean }>();
@@ -18,10 +17,10 @@ const configPathCache = new Map<string, { configPath: string; isTS: boolean }>()
  * - Honors a custom tsconfig.json path if provided.
  * - Caches results by projectPath.
  */
-export async function getRseConfigPath(
+export async function getReliverseConfigPath(
   projectPath: string,
   isDev: boolean,
-  skipPrompt: boolean,
+  _skipPrompt: boolean,
   customTsconfigPath?: string,
 ): Promise<{ configPath: string; isTS: boolean }> {
   // Return cached if available
@@ -41,7 +40,7 @@ export async function getRseConfigPath(
   const rseTs = path.join(configDir, "reliverse.ts");
 
   // Check if these paths exist
-  const [tsconfigExists, jsoncExists, tsExists] = await Promise.all([
+  const [_tsconfigExists, _jsoncExists, tsExists] = await Promise.all([
     fs.pathExists(finalTsconfigPath),
     fs.pathExists(rseJsonc),
     fs.pathExists(rseTs),
@@ -58,14 +57,15 @@ export async function getRseConfigPath(
     result = { configPath: rseTs, isTS: true };
   }
   // If no config yet, user has a tsconfig, and skipPrompt is false, ask which type to create
-  else if (tsconfigExists && !jsoncExists && !skipPrompt) {
-    const choice = await askRseConfigType();
-    result =
-      choice === "ts" ? { configPath: rseTs, isTS: true } : { configPath: rseJsonc, isTS: false };
-  } else {
-    // Default to JSONC
-    result = { configPath: rseJsonc, isTS: false };
-  }
+  // else if (tsconfigExists && !jsoncExists && !skipPrompt) {
+  //   const choice = await askReliverseConfigType();
+  //   result =
+  //     choice === "ts" ? { configPath: rseTs, isTS: true } : { configPath: rseJsonc, isTS: false };
+  // } else {
+  //   // Default to JSONC
+  //   result = { configPath: rseJsonc, isTS: false };
+  // }
+  result = { configPath: rseTs, isTS: true };
 
   configPathCache.set(projectPath, result);
   return result;

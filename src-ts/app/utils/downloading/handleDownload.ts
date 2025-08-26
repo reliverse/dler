@@ -4,7 +4,7 @@ import { relinka } from "@reliverse/relinka";
 import { confirmPrompt, selectPrompt } from "@reliverse/rempts";
 import { ofetch } from "ofetch";
 import { cliHomeRepos, UNKNOWN_VALUE } from "~/app/config/constants";
-import type { RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
 import { type DownloadResult, downloadRepo } from "~/app/utils/downloading/downloadRepo";
 import {
   type CategoryFromSchema,
@@ -60,7 +60,7 @@ export async function handleDownload({
   selectedRepo: string;
   githubToken?: string | undefined;
   preserveGit?: boolean | undefined;
-  config?: RseConfig | undefined;
+  config?: ReliverseConfig | undefined;
   install?: boolean | undefined;
   isCustom?: boolean | undefined;
   isTemplateDownload: boolean;

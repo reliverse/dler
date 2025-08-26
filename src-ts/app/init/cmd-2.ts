@@ -2,7 +2,7 @@ import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { defineCommand } from "@reliverse/rempts";
-import { getOrCreateRseConfig } from "~/app/config/core-cfg";
+import { getOrCreateReliverseConfig } from "~/app/config/core-cfg";
 import { showManualBuilderMenu } from "~/app/init/init-utils/init-impl";
 import { initMinimalrseProject } from "~/app/init/init-utils/init-utils";
 import { askProjectName } from "~/app/utils/prompts/askProjectName";
@@ -33,7 +33,7 @@ export default defineCommand({
 
       // Retrieve project memory and configuration
       const memory = await getOrCreateReliverseMemory();
-      const { config } = await getOrCreateRseConfig({
+      const { config } = await getOrCreateReliverseConfig({
         projectPath: cwd,
         isDev,
         overrides: {},

@@ -1,5 +1,5 @@
 import { inputPrompt, selectPrompt } from "@reliverse/rempts";
-import type { RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
 import { experimental } from "~/app/utils/badgeNotifiers";
 import type { ReliverseMemory } from "~/app/utils/schemaMemory";
 
@@ -12,7 +12,11 @@ const RANDOM_HINTS = [
   "While chatting, use @relinter with paths to lint specific files or directories.",
 ];
 
-export async function aiMenu(config: RseConfig, isKeyEnsured: boolean, memory?: ReliverseMemory) {
+export async function aiMenu(
+  config: ReliverseConfig,
+  isKeyEnsured: boolean,
+  memory?: ReliverseMemory,
+) {
   if (!isKeyEnsured && memory === undefined) {
     throw new Error("Memory is undefined");
   }

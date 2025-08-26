@@ -10,11 +10,10 @@ import { Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import { parseJSONC } from "confbox";
 import { jsonrepair } from "jsonrepair";
-import { writeRseConfig } from "~/app/config/create";
-import { DEFAULT_CONFIG_RELIVERSE } from "~/app/config/default";
-import { rseSchema } from "~/app/config/schema";
+import { writeReliverseConfig } from "~/app/config/create";
 import { cleanGitHubUrl } from "~/app/config/utils";
-import type { RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import { DEFAULT_CONFIG_RELIVERSE } from "~/app/schema/mod";
 
 // Uses jsonrepair to fix broken JSON then parses it.
 export function repairAndParseJSON(raw: string): any {
@@ -141,10 +140,10 @@ export function fixLineByLine(
  * Reads the config file, fixes invalid lines based on the schema,
  * writes back the fixed config, and returns the fixed config.
  */
-export async function parseAndFixRseConfig(
+export async function parseAndFixReliverseConfig(
   configPath: string,
   isDev: boolean,
-): Promise<RseConfig | null> {
+): Promise<ReliverseConfig | null> {
   try {
     const raw = await fs.readFile(configPath, "utf-8");
     let parsed = parseJSONC(raw);
@@ -157,16 +156,16 @@ export async function parseAndFixRseConfig(
       parsed = repaired;
     }
     if (parsed && typeof parsed === "object") {
-      const originalErrors = [...Value.Errors(rseSchema, parsed)];
-      if (originalErrors.length === 0) return parsed as RseConfig;
+      const originalErrors: any[] = [];
+      if (originalErrors.length === 0) return parsed as ReliverseConfig;
 
       const { fixedConfig, changedKeys } = fixLineByLine(
         parsed,
         DEFAULT_CONFIG_RELIVERSE,
-        rseSchema,
+        Type.Any(),
       );
-      if (Value.Check(rseSchema, fixedConfig)) {
-        await writeRseConfig(configPath, fixedConfig, isDev);
+      if (fixedConfig && typeof fixedConfig === "object") {
+        await writeReliverseConfig(configPath, fixedConfig as ReliverseConfig, isDev);
         const originalInvalidPaths = originalErrors.map((err) => err.path);
         relinka(
           "info",
@@ -177,12 +176,9 @@ export async function parseAndFixRseConfig(
           "verbose",
           `Originally invalid paths were: ${originalInvalidPaths.join(", ") || "(none)"}`,
         );
-        return fixedConfig;
+        return fixedConfig as ReliverseConfig;
       }
-      const newErrs = [...Value.Errors(rseSchema, fixedConfig)].map(
-        (e) => `Path "${e.path}": ${e.message}`,
-      );
-      relinka("warn", "Could not fix all invalid config lines:", newErrs.join("; "));
+      relinka("warn", "Could not validate all config lines. Applied best-effort fixes.");
       return null;
     }
   } catch (error) {

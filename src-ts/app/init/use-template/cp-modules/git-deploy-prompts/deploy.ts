@@ -1,14 +1,15 @@
 import { re } from "@reliverse/relico";
 import { relinka } from "@reliverse/relinka";
 import { selectPrompt } from "@reliverse/rempts";
-import type { DeploymentService, RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import type { DeploymentService } from "~/app/types/mod";
 import type { InstanceGithub } from "~/app/utils/instanceGithub";
 import type { InstanceVercel } from "~/app/utils/instanceVercel";
 import type { ReliverseMemory } from "~/app/utils/schemaMemory";
 
 import { prepareVercelProjectCreation } from "./vercel/vercel-create";
 
-export async function selectDeploymentService(config: RseConfig): Promise<DeploymentService> {
+export async function selectDeploymentService(config: ReliverseConfig): Promise<DeploymentService> {
   if (config.projectDeployService !== undefined && config.projectDeployService !== "none") {
     const deployService = config.projectDeployService;
     relinka("verbose", `Using configured deployment service: ${deployService}`);
@@ -38,7 +39,7 @@ export async function deployProject(
   githubToken: string,
   skipPrompts: boolean,
   projectName: string,
-  config: RseConfig,
+  config: ReliverseConfig,
   projectPath: string,
   primaryDomain: string,
   memory: ReliverseMemory,

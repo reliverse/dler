@@ -24,7 +24,7 @@ export const CFG_DLER_TEMPLATE: Template = {
         },
         content: `// Should be **inlined** because it points to a *different* library (cfg→sdk):
 // @ts-expect-error this is a test mock file (💡 "Unused '@ts-expect-error' directive" is an expected error here after "bun libs:example")
-export { defineConfig } from "~/app/config/default";
+export { defineConfig } from "~/app/schema/mod";
 `,
         type: "text",
       },

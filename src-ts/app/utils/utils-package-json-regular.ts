@@ -3,7 +3,7 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { definePackageJSON, type PackageJson, readPackageJSON } from "pkg-types";
 import { cliDomainDocs } from "~/app/config/constants";
-import type { DlerConfig, NpmOutExt } from "~/app/types/mod";
+import type { NpmOutExt, ReliverseConfig } from "~/app/schema/mod";
 
 import { filterDeps } from "./utils-deps";
 
@@ -15,7 +15,7 @@ export async function regular_createPackageJSON(
   isJsr: boolean,
   coreIsCLI: { enabled: boolean; scripts: Record<string, string> },
   unifiedBundlerOutExt: NpmOutExt,
-  config: DlerConfig,
+  config: ReliverseConfig,
   coreDescription: string,
   coreBuildOutDir = "bin",
 ): Promise<void> {
@@ -207,7 +207,7 @@ async function regular_getPkgKeepDeps(
   originalDeps: Record<string, string> | undefined,
   outDirBin: string,
   isJsr: boolean,
-  config: DlerConfig,
+  config: ReliverseConfig,
 ): Promise<Record<string, string>> {
   if (!originalDeps) {
     return {};

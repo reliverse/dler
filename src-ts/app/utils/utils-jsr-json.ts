@@ -5,7 +5,7 @@ import pMap from "p-map";
 import { readPackageJSON } from "pkg-types";
 import { glob } from "tinyglobby";
 import { CONCURRENCY_DEFAULT, cliDomainDocs } from "~/app/config/constants";
-import type { DlerConfig, LibConfig } from "~/app/types/mod";
+import type { LibConfig, ReliverseConfig } from "~/app/schema/mod";
 
 /**
  * Generates a jsr.json configuration file for JSR distributions.
@@ -14,7 +14,7 @@ export async function createJsrJSON(
   outDirRoot: string,
   isLib: boolean,
   libsList: Record<string, LibConfig>,
-  config: DlerConfig,
+  config: ReliverseConfig,
   libName = "unknown-lib-name",
   pkgDescription = "unknown-lib-description",
 ): Promise<void> {

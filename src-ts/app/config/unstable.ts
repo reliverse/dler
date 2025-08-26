@@ -1,8 +1,6 @@
-import { Value } from "@sinclair/typebox/value";
 import { loadConfig, watchConfig } from "c12";
-import { DEFAULT_CONFIG_RELIVERSE } from "~/app/config/default";
-import { rseSchema } from "~/app/config/schema";
-import type { RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import { DEFAULT_CONFIG_RELIVERSE } from "~/app/schema/mod";
 
 /**
  * Loads the rse config using c12. Merges:
@@ -11,27 +9,20 @@ import type { RseConfig } from "~/app/types/mod";
  */
 export async function loadrse(
   projectPath: string,
-  //   overrides?: Partial<RseConfig>,
-): Promise<RseConfig> {
+  //   overrides?: Partial<ReliverseConfig>,
+): Promise<ReliverseConfig> {
   // c12 automatically detects supported file types (.ts, .js, .jsonc, etc.)
-  const { config } = await loadConfig<RseConfig>({
+  const { config } = await loadConfig<ReliverseConfig>({
     cwd: projectPath,
     name: "reliverse",
     configFile: "reliverse", // will look for files like `reliverse.{ts,jsonc}`
     rcFile: false,
     packageJson: false,
     dotenv: false, // disable loading .env
-    defaults: DEFAULT_CONFIG_RELIVERSE, // merged first
+    defaults: DEFAULT_CONFIG_RELIVERSE as ReliverseConfig, // merged first
     // overrides: overrides || {}, // highest priority
   });
 
-  // Basic TypeBox validation
-  if (!Value.Check(rseSchema, config)) {
-    const errors = [...Value.Errors(rseSchema, config)].map(
-      (err) => `Path "${err.path}": ${err.message}`,
-    );
-    throw new Error(`Invalid rse config:\n${errors.join("\n")}`);
-  }
   return config;
 }
 
@@ -40,17 +31,14 @@ export async function loadrse(
  */
 export async function watchrse(
   projectPath: string,
-  onUpdate: (newconfig: RseConfig) => void,
+  onUpdate: (newconfig: ReliverseConfig) => void,
 ): Promise<void> {
-  const watcher = await watchConfig<RseConfig>({
+  const watcher = await watchConfig<ReliverseConfig>({
     cwd: projectPath,
     name: "reliverse",
     onUpdate({ newConfig, getDiff }) {
-      if (!Value.Check(rseSchema, newConfig)) {
-        return;
-      }
       // Any changes are inspected via getDiff()
-      onUpdate(newConfig);
+      onUpdate(newConfig as unknown as ReliverseConfig);
       console.log("Diff:", getDiff());
     },
   });

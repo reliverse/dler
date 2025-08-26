@@ -692,7 +692,7 @@ export async function resolveAllCrossLibs(
 }
 
 // Load dler config to get libsList mapping
-async function loadDlerConfig(): Promise<{ libsList: Record<string, any> }> {
+async function loadReliverseConfig(): Promise<{ libsList: Record<string, any> }> {
   try {
     const jiti = createJiti(import.meta.url);
     const config = (await jiti.import("reliverse.ts", { default: true })) as any;
@@ -802,7 +802,7 @@ async function resolveCrossLibsViaPackage(
     }
 
     // Load dler config to get libsList mapping
-    const { libsList } = await loadDlerConfig();
+    const { libsList } = await loadReliverseConfig();
     const libDirToPackageMap = createLibDirToPackageMap(libsList);
 
     const files = await findSourceFiles(libBinDir, buildPreExtensions, buildTemplatesDir);

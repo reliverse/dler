@@ -6,15 +6,15 @@ import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "~/app/config/constants";
 import { library_publishLibrary } from "~/app/pub/pub-library";
 import type {
   BundlerName,
-  DlerConfig,
   Esbuild,
   LibConfig,
   NpmOutExt,
-  PerfTimer,
+  ReliverseConfig,
   Sourcemap,
-  transpileFormat,
-  transpileTarget,
-} from "~/app/types/mod";
+  TranspileFormat,
+  TranspileTarget,
+} from "~/app/schema/mod";
+import type { PerfTimer } from "~/app/types/mod";
 import { resumePerfTimer } from "~/app/utils/utils-perf";
 
 /**
@@ -23,7 +23,7 @@ import { resumePerfTimer } from "~/app/utils/utils-perf";
 export async function library_buildFlow(
   timer: PerfTimer,
   isDev: boolean,
-  config: DlerConfig,
+  config: ReliverseConfig,
 ): Promise<void> {
   relinka("verbose", "— — — library_buildFlow — — —");
 
@@ -63,7 +63,7 @@ export async function library_buildFlow(
 export async function library_pubFlow(
   timer: PerfTimer,
   isDev: boolean,
-  config: DlerConfig,
+  config: ReliverseConfig,
 ): Promise<void> {
   relinka("verbose", "— — — library_pubFlow — — —");
 
@@ -133,8 +133,8 @@ export async function libraries_build(
     "dist-libs": Record<string, { npm: string[]; jsr: string[] }>;
   },
   transpileEsbuild: Esbuild,
-  transpileTarget: transpileTarget,
-  transpileFormat: transpileFormat,
+  transpileTarget: TranspileTarget,
+  transpileFormat: TranspileFormat,
   transpileSplitting: boolean,
   transpileSourcemap: Sourcemap,
   transpilePublicPath: string,
@@ -142,7 +142,7 @@ export async function libraries_build(
   transpileStub: boolean,
   transpileWatch: boolean,
   distJsrOutFilesExt: NpmOutExt,
-  config: DlerConfig,
+  config: ReliverseConfig,
 ): Promise<void> {
   relinka("verbose", "Starting libraries_build");
 

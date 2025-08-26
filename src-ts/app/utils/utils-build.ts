@@ -2,7 +2,7 @@ import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 
-import type { DlerConfig, NpmOutExt, Sourcemap } from "~/app/types/mod";
+import type { NpmOutExt, ReliverseConfig, Sourcemap } from "~/app/schema/mod";
 
 // ============================
 // Bundling Functions
@@ -73,7 +73,7 @@ export async function renameEntryFile(
   originalEntryFileBasename: string,
   unifiedBundlerOutExt: NpmOutExt,
   distJsrOutFilesExt: NpmOutExt,
-  config: DlerConfig,
+  config: ReliverseConfig,
 ): Promise<{ updatedEntryFile: string }> {
   relinka(
     "verbose",

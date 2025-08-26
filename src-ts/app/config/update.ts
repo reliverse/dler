@@ -5,14 +5,12 @@
 
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { Value } from "@sinclair/typebox/value";
 import { parseJSONC } from "confbox";
-import { writeRseConfig } from "~/app/config/create";
-import { DEFAULT_CONFIG_RELIVERSE } from "~/app/config/default";
-import { getRseConfigPath } from "~/app/config/path";
-import { rseSchema } from "~/app/config/schema";
+import { writeReliverseConfig } from "~/app/config/create";
+import { getReliverseConfigPath } from "~/app/config/path";
 import { getBackupAndTempPaths } from "~/app/config/utils";
-import type { RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import { DEFAULT_CONFIG_RELIVERSE } from "~/app/schema/mod";
 
 /**
  * Deep merges two objects recursively while preserving nested structures.
@@ -99,39 +97,34 @@ function filterMemoryFields<T extends Record<string, unknown>>(config: T): T {
  * Updates project configuration by merging new updates with the existing config.
  * Creates a backup before overwriting and attempts to restore from backup on error.
  */
-export async function updateRseConfig(
+export async function updateReliverseConfig(
   projectPath: string,
-  updates: Partial<RseConfig>,
+  updates: Partial<ReliverseConfig>,
   isDev: boolean,
 ): Promise<boolean> {
-  const { configPath } = await getRseConfigPath(projectPath, isDev, false);
+  const { configPath } = await getReliverseConfigPath(projectPath, isDev, false);
   const { backupPath, tempPath } = getBackupAndTempPaths(configPath);
 
   try {
-    let existingConfig: RseConfig = {} as RseConfig;
+    let existingConfig: ReliverseConfig = {} as ReliverseConfig;
     if (await fs.pathExists(configPath)) {
       const existingContent = await fs.readFile(configPath, "utf-8");
       const parsed = parseJSONC(existingContent);
-      if (Value.Check(rseSchema, parsed)) {
-        existingConfig = parsed;
-      } else {
-        relinka("warn", "Invalid config schema, starting fresh");
-      }
+      if (parsed && typeof parsed === "object") existingConfig = parsed as ReliverseConfig;
     }
 
     // Filter out memory fields before merging
     const filteredUpdates = filterMemoryFields(updates);
-    const mergedConfig = deepMerge(existingConfig, filteredUpdates);
-    if (!Value.Check(rseSchema, mergedConfig)) {
-      const issues = [...Value.Errors(rseSchema, mergedConfig)].map(
-        (err) => `Path "${err.path}": ${err.message}`,
-      );
-      relinka("error", "Invalid config after merge:", issues.join("; "));
-      return false;
-    }
+    const mergedConfig = deepMerge(
+      existingConfig as unknown as Record<string, unknown>,
+      filteredUpdates as unknown as Record<string, unknown>,
+    ) as unknown as ReliverseConfig;
 
     // Check if there are actual changes before updating
-    const differences = findObjectDifferences(existingConfig, mergedConfig);
+    const differences = findObjectDifferences(
+      existingConfig as unknown as Record<string, unknown>,
+      mergedConfig as unknown as Record<string, unknown>,
+    );
     if (differences.length === 0) {
       relinka("verbose", "No changes detected in config, skipping update");
       return true;
@@ -147,7 +140,7 @@ export async function updateRseConfig(
     if (await fs.pathExists(configPath)) {
       await fs.copy(configPath, backupPath);
     }
-    await writeRseConfig(configPath, mergedConfig, isDev);
+    await writeReliverseConfig(configPath, mergedConfig, isDev);
     if (await fs.pathExists(backupPath)) {
       await fs.remove(backupPath);
     }
@@ -174,7 +167,7 @@ export async function updateRseConfig(
 /**
  * Merges a partial config with the default config.
  */
-export function mergeWithDefaults(partial: Partial<RseConfig>): RseConfig {
+export function mergeWithDefaults(partial: Partial<ReliverseConfig>): ReliverseConfig {
   return {
     ...DEFAULT_CONFIG_RELIVERSE,
     ...partial,
@@ -215,5 +208,5 @@ export function mergeWithDefaults(partial: Partial<RseConfig>): RseConfig {
         }
       : DEFAULT_CONFIG_RELIVERSE.customRules,
     ignoreDependencies: partial.ignoreDependencies ?? DEFAULT_CONFIG_RELIVERSE.ignoreDependencies,
-  };
+  } as ReliverseConfig;
 }

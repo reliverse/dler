@@ -36,7 +36,7 @@ async function createArchive(files: { name: string; data: Buffer }[]): Promise<B
 export async function archiveExistingRepoContent(
   repoUrl: string,
   projectPath: string,
-): Promise<{ success: boolean; externalRseConfig?: string }> {
+): Promise<{ success: boolean; externalReliverseConfig?: string }> {
   const tempDir = path.join(cliHomeTmp, Date.now().toString());
   try {
     // Create temp directory
@@ -165,7 +165,7 @@ export async function archiveExistingRepoContent(
 
     return {
       success: true,
-      ...(externalrseth && { externalRseConfig: externalrseth }),
+      ...(externalrseth && { externalReliverseConfig: externalrseth }),
     };
   } catch (error) {
     relinka(
@@ -189,11 +189,14 @@ export async function handleExistingRepoContent(
   repoOwner: string,
   repoName: string,
   projectPath: string,
-): Promise<{ success: boolean; externalRseConfig?: string }> {
+): Promise<{ success: boolean; externalReliverseConfig?: string }> {
   try {
     // Clone repo to temp dir and copy files
     const repoUrl = `https://oauth2:${memory.githubKey}@github.com/${repoOwner}/${repoName}.git`;
-    const { success, externalRseConfig } = await archiveExistingRepoContent(repoUrl, projectPath);
+    const { success, externalReliverseConfig } = await archiveExistingRepoContent(
+      repoUrl,
+      projectPath,
+    );
 
     if (!success) {
       throw new Error("Failed to retrieve repository git data");
@@ -202,7 +205,7 @@ export async function handleExistingRepoContent(
     relinka("success", "Retrieved repository git directory data");
     return {
       success: true,
-      ...(externalRseConfig && { externalRseConfig }),
+      ...(externalReliverseConfig && { externalReliverseConfig }),
     };
   } catch (error) {
     relinka(

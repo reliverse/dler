@@ -3,9 +3,9 @@ import { relinka } from "@reliverse/relinka";
 import { confirmPrompt } from "@reliverse/rempts";
 import { FALLBACK_ENV_EXAMPLE_URL } from "~/app/config/constants";
 import { generateProjectConfigs } from "~/app/config/gen-cfg";
-import { getRseConfigPath } from "~/app/config/path";
-import { updateRseConfig } from "~/app/config/update";
-import type { RseConfig } from "~/app/types/mod";
+import { getReliverseConfigPath } from "~/app/config/path";
+import { updateReliverseConfig } from "~/app/config/update";
+import type { ReliverseConfig } from "~/app/schema/mod";
 import { handleDownload } from "~/app/utils/downloading/handleDownload";
 import { isMrseProject } from "~/app/utils/mrseHelpers";
 import type { RepoOption } from "~/app/utils/projectRepository";
@@ -39,7 +39,7 @@ export async function createWebProject({
   selectedRepo: RepoOption;
   message: string;
   isDev: boolean;
-  config: RseConfig;
+  config: ReliverseConfig;
   memory: ReliverseMemory;
   cwd: string;
   skipPrompts: boolean;
@@ -86,7 +86,7 @@ export async function createWebProject({
   // -------------------------------------------------
   // 4) Replace placeholders in the template
   // -------------------------------------------------
-  const result = await getRseConfigPath(projectPath, isDev, skipPrompts);
+  const result = await getReliverseConfigPath(projectPath, isDev, skipPrompts);
   if (!result) {
     throw new Error("Failed to get rseg path.");
   }
@@ -185,7 +185,7 @@ export async function createWebProject({
 
   // If the user changed domain or deploy service, update rseg again
   if (deployService !== "vercel" || primaryDomain !== initialDomain) {
-    await updateRseConfig(
+    await updateReliverseConfig(
       projectPath,
       {
         projectDeployService: deployService,
@@ -228,7 +228,7 @@ export async function createMobileProject({
   selectedRepo: RepoOption;
   message: string;
   isDev: boolean;
-  config: RseConfig;
+  config: ReliverseConfig;
   memory: ReliverseMemory;
   cwd: string;
   skipPrompts: boolean;
@@ -267,7 +267,7 @@ export async function createMobileProject({
   // -------------------------------------------------
   // 3) Replace placeholders in the template
   // -------------------------------------------------
-  const result = await getRseConfigPath(projectPath, isDev, skipPrompts);
+  const result = await getReliverseConfigPath(projectPath, isDev, skipPrompts);
   if (!result) {
     throw new Error("Failed to get rseg path.");
   }

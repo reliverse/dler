@@ -5,7 +5,8 @@ import { library_buildFlow } from "~/app/build/library-flow";
 import { regular_buildFlow } from "~/app/build/regular-flow";
 import { PROJECT_ROOT } from "~/app/config/constants";
 import { getConfigDler } from "~/app/config/load";
-import type { DlerConfig, PerfTimer } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import type { PerfTimer } from "~/app/types/mod";
 import { createSpinner } from "~/app/utils/spinner";
 import { removeDistFolders } from "~/app/utils/utils-clean";
 import { handleDlerError } from "~/app/utils/utils-error-cwd";
@@ -25,7 +26,7 @@ import { dlerPreBuild } from "./prebuild";
 export async function dlerBuild(
   timer: PerfTimer,
   isDev: boolean,
-  config?: DlerConfig,
+  config?: ReliverseConfig,
   debugOnlyCopyNonBuildFiles?: boolean,
   debugDontCopyNonBuildFiles?: boolean,
   disableOwnSpinner?: boolean,

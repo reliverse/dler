@@ -12,7 +12,7 @@ import { execaCommand } from "execa";
 import { jsonrepair } from "jsonrepair";
 import { builders, loadFile, writeFile } from "magicast";
 import { UNKNOWN_VALUE } from "~/app/config/constants";
-import { generateRseConfig } from "~/app/config/create";
+import { generateReliverseConfig } from "~/app/config/create";
 import {
   downloadFileFromGitHub,
   ensureEnvCacheDir,
@@ -454,7 +454,7 @@ export const genCfg: GenCfg[] = [
         const skipInstallPrompt = !useJsonc && isDev;
 
         // Generate the actual config file
-        await generateRseConfig({
+        await generateReliverseConfig({
           projectName,
           frontendUsername: UNKNOWN_VALUE,
           deployService: "vercel",

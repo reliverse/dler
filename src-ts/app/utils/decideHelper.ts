@@ -1,6 +1,6 @@
 import { relinka } from "@reliverse/relinka";
 import { confirmPrompt } from "@reliverse/rempts";
-import type { RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
 
 /**
  * A string literal union for either 'gitBehavior' or 'deployBehavior'
@@ -13,7 +13,7 @@ type DecisionKey = "gitBehavior" | "deployBehavior";
  * - Whether skipPrompts is true
  */
 export async function decide(
-  config: RseConfig,
+  config: ReliverseConfig,
   behaviorKey: DecisionKey,
   title: string,
   content: string | undefined,

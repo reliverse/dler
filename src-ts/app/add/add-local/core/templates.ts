@@ -1,10 +1,10 @@
 import { relinka } from "@reliverse/relinka";
 import { ofetch } from "ofetch";
 import { UNKNOWN_VALUE } from "~/app/config/constants";
-import { getRseConfigPath } from "~/app/config/path";
-import { readRseConfig } from "~/app/config/read";
-import { updateRseConfig } from "~/app/config/update";
-import type { RseConfig } from "~/app/types/mod";
+import { getReliverseConfigPath } from "~/app/config/path";
+import { readReliverseConfig } from "~/app/config/read";
+import { updateReliverseConfig } from "~/app/config/update";
+import type { ReliverseConfig } from "~/app/schema/mod";
 import { REPO_TEMPLATES } from "~/app/utils/projectRepository";
 
 /**
@@ -31,7 +31,7 @@ export interface TemplateUpdateInfo {
  * @returns Object containing update info
  */
 export async function checkForTemplateUpdate(
-  projectConfig: RseConfig,
+  projectConfig: ReliverseConfig,
 ): Promise<TemplateUpdateInfo> {
   // If no template is specified or it has an unknown value, no updates to check
   if (!projectConfig.projectTemplate || projectConfig.projectTemplate === UNKNOWN_VALUE) {
@@ -116,7 +116,7 @@ export async function updateProjectTemplateDate(
 ): Promise<void> {
   try {
     // Update the projectTemplateDate field in the config
-    await updateRseConfig(projectPath, { projectTemplateDate: latestDate }, isDev);
+    await updateReliverseConfig(projectPath, { projectTemplateDate: latestDate }, isDev);
     relinka("success", `Updated project template date to ${latestDate}`);
   } catch (error) {
     relinka(
@@ -132,7 +132,7 @@ export async function updateProjectTemplateDate(
 export async function getTemplateUpdateInfo(
   cwd: string,
   isDev: boolean,
-  hasRseConfig: boolean,
+  hasReliverseConfig: boolean,
 ): Promise<{
   updateAvailable: boolean;
   updateInfo: TemplateUpdateInfo | null;
@@ -140,9 +140,9 @@ export async function getTemplateUpdateInfo(
   let updateInfo: TemplateUpdateInfo | null = null;
   let updateAvailable = false;
 
-  if (hasRseConfig) {
-    const { configPath } = await getRseConfigPath(cwd, isDev, false);
-    const projectConfig = await readRseConfig(configPath, isDev);
+  if (hasReliverseConfig) {
+    const { configPath } = await getReliverseConfigPath(cwd, isDev, false);
+    const projectConfig = await readReliverseConfig(configPath, isDev);
     if (projectConfig) {
       updateInfo = await checkForTemplateUpdate(projectConfig);
       updateAvailable = updateInfo.hasUpdate;

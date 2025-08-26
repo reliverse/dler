@@ -4,8 +4,8 @@ import { relinka } from "@reliverse/relinka";
 import { destr } from "destr";
 import { execaCommand } from "execa";
 import { CONFIG_CATEGORIES, UNKNOWN_VALUE } from "~/app/config/constants";
-import { generateRseConfig } from "~/app/config/create";
-import { getRseConfigPath } from "~/app/config/path";
+import { generateReliverseConfig } from "~/app/config/create";
+import { getReliverseConfigPath } from "~/app/config/path";
 import type { DeploymentService, VSCodeSettings } from "~/app/types/mod";
 
 // ------------------------------------------------------------------
@@ -125,13 +125,13 @@ export async function generateConfigFiles(
       isDev && frontendUsername === "blefnk" ? "reliverse" : frontendUsername;
 
     // Determine the active config file name.
-    const configInfo = await getRseConfigPath(projectPath, isDev, false);
+    const configInfo = await getReliverseConfigPath(projectPath, isDev, false);
     const mainConfigFileName = path.basename(configInfo.configPath);
 
     // The rseg generation
     const configGenerators: Record<string, () => Promise<boolean>> = {
       [mainConfigFileName]: async () => {
-        await generateRseConfig({
+        await generateReliverseConfig({
           projectName,
           frontendUsername:
             !finalFrontendUsername || finalFrontendUsername.trim() === ""

@@ -13,7 +13,8 @@ import { installDependencies } from "nypm";
 import open from "open";
 import os from "os";
 import { cliDomainDocs, homeDir, UNKNOWN_VALUE } from "~/app/config/constants";
-import type { Behavior, ProjectConfigReturn, RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import type { Behavior, ProjectConfigReturn } from "~/app/types/mod";
 import { experimental } from "~/app/utils/badgeNotifiers";
 import { setupI18nFiles } from "~/app/utils/downloading/downloadI18nFiles";
 import { isVSCodeInstalled } from "~/app/utils/handlers/isAppInstalled";
@@ -70,7 +71,7 @@ async function ensureUniqueProjectName(
 export async function initializeProjectConfig(
   projectName: string,
   _memory: ReliverseMemory,
-  config: RseConfig,
+  config: ReliverseConfig,
   skipPrompts: boolean,
   isDev: boolean,
   cwd: string,
@@ -118,7 +119,10 @@ export async function initializeProjectConfig(
  * Sets up i18n if needed and not already present.
  * Uses config.i18nBehavior to determine automatic behavior.
  */
-export async function setupI18nSupport(projectPath: string, config: RseConfig): Promise<boolean> {
+export async function setupI18nSupport(
+  projectPath: string,
+  config: ReliverseConfig,
+): Promise<boolean> {
   // Check if i18n folder already exists
   const i18nFolderExists =
     (await fs.pathExists(path.join(projectPath, "src-ts/app/[locale]"))) ||
@@ -180,7 +184,7 @@ export async function shouldInstallDependencies(
 /**
  * Installs dependencies and checks optional DB push script.
  */
-export async function handleDependencies(projectPath: string, config: RseConfig) {
+export async function handleDependencies(projectPath: string, config: ReliverseConfig) {
   const depsBehavior: Behavior = config?.depsBehavior ?? "prompt";
   const shouldInstallDeps = await shouldInstallDependencies(depsBehavior, true);
 

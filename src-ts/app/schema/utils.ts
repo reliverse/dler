@@ -1,13 +1,13 @@
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { generateReltypesContent } from "./reltypes-content";
+import { generateReltypesContent } from "./gen";
 
 // Timestamp when types were last updated
 // Update this constant when making changes to the type definitions
 // The file will be regenerated if the existing reltypes.ts has an older timestamp
 // Format: YYYY-MM-DD (ISO date format, easy to read and compare)
-const LAST_UPDATED = "2025-08-24";
+const LAST_UPDATED = "2025-08-26";
 
 export async function checkIfRegenerationNeeded(reltypesPath: string): Promise<boolean> {
   try {
@@ -19,13 +19,16 @@ export async function checkIfRegenerationNeeded(reltypesPath: string): Promise<b
       return true; // Empty file, regenerate
     }
 
-    // Extract date from comment like "// reliverse.ts types version is 2025-08-24"
-    const dateMatch = firstLine.match(/\/\/ reliverse\.ts types version is (.+)/);
+    // Extract ISO date from comment like "// reliverse.ts types version 2025-08-26"
+    const dateMatch = firstLine.match(/^\/\/ reliverse\.ts types version (\d{4}-\d{2}-\d{2})\b/);
     if (!dateMatch || !dateMatch[1]) {
       return true; // No timestamp found, regenerate
     }
 
     const fileDate = new Date(dateMatch[1]);
+    if (Number.isNaN(fileDate.getTime())) {
+      return true; // Invalid date, regenerate
+    }
     const lastUpdated = new Date(LAST_UPDATED);
 
     // Compare dates (ignoring time components)

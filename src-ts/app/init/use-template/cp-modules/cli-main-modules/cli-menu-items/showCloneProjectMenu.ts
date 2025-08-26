@@ -1,6 +1,6 @@
 import { relinka } from "@reliverse/relinka";
 import { confirmPrompt, inputPrompt, multiselectPrompt, selectPrompt } from "@reliverse/rempts";
-import type { RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
 import { getUserPkgManager } from "~/app/utils/dependencies/getUserPkgManager";
 import { handleDownload } from "~/app/utils/downloading/handleDownload";
 import { ensureGithubToken } from "~/app/utils/instanceGithub";
@@ -67,7 +67,7 @@ const REPO_OWNERS = {
  * Creates menu options for repositories based on the provided list,
  * owner, and configuration.
  */
-function createMenuOptions(repos: string[], owner: string, config: RseConfig): MenuOption[] {
+function createMenuOptions(repos: string[], owner: string, config: ReliverseConfig): MenuOption[] {
   const customRepos = (config.customUserFocusedRepos ?? [])
     .concat(config.customDevsFocusedRepos ?? [])
     .map(normalizeGitHubUrl)
@@ -115,7 +115,7 @@ async function promptForRepo({
   title: string;
   owner: string;
   options: { label: string; value: string }[];
-  config: RseConfig;
+  config: ReliverseConfig;
 }): Promise<RepoPromptResult | MultiRepoPromptResult> {
   if (config.multipleRepoCloneMode) {
     const selections = await multiselectPrompt({ title, options });
@@ -151,7 +151,7 @@ async function promptForRepo({
 async function downloadAndSetupRepo(
   owner: string,
   repoFullName: string,
-  config: RseConfig,
+  config: ReliverseConfig,
   memory: ReliverseMemory,
   isDev: boolean,
   cwd: string,
@@ -232,7 +232,7 @@ export async function showCloneProjectMenu({
 }: {
   isDev: boolean;
   cwd: string;
-  config: RseConfig;
+  config: ReliverseConfig;
   memory: ReliverseMemory;
 }) {
   if (isDev) {

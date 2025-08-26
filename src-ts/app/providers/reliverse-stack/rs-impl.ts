@@ -4,7 +4,7 @@ import { inputPrompt, multiselectPrompt, selectPrompt } from "@reliverse/rempts"
 import { endTitle, UNKNOWN_VALUE } from "~/app/config/constants";
 import { getRandomMessage, randomProjectFrameworkTitle } from "~/app/db/messages";
 import { createWebProject } from "~/app/init/use-template/cp-mod";
-import type { ProjectArchitecture, ProjectSubcategory, RseConfig } from "~/app/types/mod";
+import type { ProjectArchitecture, ProjectSubcategory, ReliverseConfig } from "~/app/schema/mod";
 import { experimental, recommended } from "~/app/utils/badgeNotifiers";
 import {
   type RepoOption,
@@ -209,7 +209,7 @@ export async function optionCreateVSCodeExtension(
   cwd: string,
   isDev: boolean,
   memory: ReliverseMemory,
-  config: RseConfig,
+  config: ReliverseConfig,
   skipPrompts: boolean,
 ) {
   const template = await selectPrompt({
@@ -250,7 +250,7 @@ export async function optionCreateBrowserExtension(
   cwd: string,
   isDev: boolean,
   memory: ReliverseMemory,
-  config: RseConfig,
+  config: ReliverseConfig,
   skipPrompts: boolean,
 ) {
   const template = (await selectPrompt({
@@ -295,9 +295,9 @@ export async function optionCreateWebProject(
   cwd: string,
   isDev: boolean,
   memory: ReliverseMemory,
-  config: RseConfig,
+  config: ReliverseConfig,
   isMultiConfig: boolean,
-  mrse: RseConfig[],
+  mrse: ReliverseConfig[],
   skipPrompts: boolean,
 ): Promise<void> {
   if (isMultiConfig) {

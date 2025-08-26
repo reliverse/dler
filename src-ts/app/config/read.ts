@@ -5,15 +5,14 @@
 
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { Value } from "@sinclair/typebox/value";
 import { parseJSONC } from "confbox";
 import { createJiti } from "jiti";
-import { writeRseConfig } from "~/app/config/create";
+import { writeReliverseConfig } from "~/app/config/create";
 import { repairAndParseJSON } from "~/app/config/repair";
-import { rseSchema } from "~/app/config/schema";
 import { mergeWithDefaults } from "~/app/config/update";
-import { getBackupAndTempPaths } from "~/app/config/utils";
-import type { IterableError, RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import { DEFAULT_CONFIG_RELIVERSE } from "~/app/schema/mod";
+import type { IterableError } from "~/app/types/mod";
 
 // Create jiti instance for TypeScript config loading
 const jiti = createJiti(import.meta.url);
@@ -22,7 +21,7 @@ const jiti = createJiti(import.meta.url);
  * Parses the config file and validates it against the schema.
  * Returns both the parsed object and any errors (if present).
  */
-async function parseRseConfig(configPath: string): Promise<{
+async function parseReliverseConfig(configPath: string): Promise<{
   parsed: unknown;
   errors: IterableError | null;
 } | null> {
@@ -38,21 +37,16 @@ async function parseRseConfig(configPath: string): Promise<{
       relinka("verbose", "Used tool: jsonrepair.");
     }
 
-    // Filter out fields that are not part of the rse config schema
-    const schemaProperties = Object.keys(rseSchema.properties);
+    // Filter out fields that are not part of the default config shape
+    const schemaProperties = Object.keys(
+      DEFAULT_CONFIG_RELIVERSE as unknown as Record<string, unknown>,
+    );
     const filteredParsed = Object.fromEntries(
       Object.entries(parsed as Record<string, unknown>).filter(([key]) =>
         schemaProperties.includes(key),
       ),
     );
-
-    const isValid = Value.Check(rseSchema, filteredParsed);
-    return isValid
-      ? { parsed: filteredParsed, errors: null }
-      : {
-          parsed: filteredParsed,
-          errors: Value.Errors(rseSchema, filteredParsed),
-        };
+    return { parsed: filteredParsed, errors: null };
   } catch {
     return null;
   }
@@ -62,15 +56,10 @@ async function parseRseConfig(configPath: string): Promise<{
  * Helper for TS config reading.
  * Uses jiti for TypeScript module loading.
  */
-export async function readRseTs(configPath: string): Promise<RseConfig | null> {
+export async function readRseTs(configPath: string): Promise<ReliverseConfig | null> {
   try {
-    const config: RseConfig = await jiti.import(configPath, { default: true });
-
-    if (Value.Check(rseSchema, config)) {
-      return config;
-    }
-    relinka("warn", "TS config does not match the schema.");
-    return null;
+    const config: ReliverseConfig = await jiti.import(configPath, { default: true });
+    return config;
   } catch (error) {
     relinka(
       "error",
@@ -85,34 +74,23 @@ export async function readRseTs(configPath: string): Promise<RseConfig | null> {
  * Reads and validates the config file.
  * If errors are detected, it attempts to merge missing or invalid fields with defaults.
  */
-export async function readRseConfig(configPath: string, isDev: boolean): Promise<RseConfig | null> {
+export async function readReliverseConfig(
+  configPath: string,
+  isDev: boolean,
+): Promise<ReliverseConfig | null> {
   if (configPath.endsWith(".ts")) {
     return await readRseTs(configPath);
   }
   if (!(await fs.pathExists(configPath))) return null;
-  const { backupPath } = getBackupAndTempPaths(configPath);
-  const parseResult = await parseRseConfig(configPath);
+  const parseResult = await parseReliverseConfig(configPath);
   if (!parseResult) return null;
-  if (!parseResult.errors) return parseResult.parsed as RseConfig;
+  if (!parseResult.errors) return parseResult.parsed as ReliverseConfig;
 
   const errors = [...parseResult.errors].map((err) => `Path "${err.path}": ${err.message}`);
   relinka("verbose", "Detected invalid fields in config:", errors.join("; "));
 
-  const merged = mergeWithDefaults(parseResult.parsed as Partial<RseConfig>);
-  if (Value.Check(rseSchema, merged)) {
-    await writeRseConfig(configPath, merged, isDev);
-    relinka("info", "Merged missing or invalid fields into config");
-    return merged;
-  }
-  if (await fs.pathExists(backupPath)) {
-    const backupResult = await parseRseConfig(backupPath);
-    if (backupResult && !backupResult.errors) {
-      await fs.copy(backupPath, configPath);
-      relinka("info", "Restored config from backup");
-      return backupResult.parsed as RseConfig;
-    }
-    relinka("warn", "Backup also invalid. Returning null.");
-    return null;
-  }
-  return null;
+  const merged = mergeWithDefaults(parseResult.parsed as Partial<ReliverseConfig>);
+  await writeReliverseConfig(configPath, merged, isDev);
+  relinka("info", "Merged missing or invalid fields into config");
+  return merged;
 }

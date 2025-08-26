@@ -4,12 +4,12 @@ import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { cliConfigJsonc, cliConfigTs, RSE_SCHEMA_DEV, UNKNOWN_VALUE } from "~/app/config/constants";
-import { createRseConfig } from "~/app/config/create";
-import { DEFAULT_CONFIG_RELIVERSE } from "~/app/config/default";
-import { getRseConfigPath } from "~/app/config/path";
-import { readRseConfig } from "~/app/config/read";
-import { parseAndFixRseConfig } from "~/app/config/repair";
-import type { RseConfig } from "~/app/types/mod";
+import { createReliverseConfig } from "~/app/config/create";
+import { getReliverseConfigPath } from "~/app/config/path";
+import { readReliverseConfig } from "~/app/config/read";
+import { parseAndFixReliverseConfig } from "~/app/config/repair";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import { DEFAULT_CONFIG_RELIVERSE } from "~/app/schema/mod";
 
 /* ------------------------------------------------------------------
  * The Core Logic: Handle or Verify Config + MULTI-CONFIG
@@ -20,7 +20,7 @@ import type { RseConfig } from "~/app/types/mod";
  * Retrieves or creates the main rseg (and any 'mrse' configs).
  * Allows an optional custom path to the TS config file.
  */
-export async function getOrCreateRseConfig({
+export async function getOrCreateReliverseConfig({
   projectPath,
   isDev,
   overrides,
@@ -28,12 +28,12 @@ export async function getOrCreateRseConfig({
 }: {
   projectPath: string;
   isDev: boolean;
-  overrides: Partial<RseConfig>;
+  overrides: Partial<ReliverseConfig>;
   customTsconfigPath?: string;
-}): Promise<{ config: RseConfig; mrse: RseConfig[] }> {
+}): Promise<{ config: ReliverseConfig; mrse: ReliverseConfig[] }> {
   const githubUsername = UNKNOWN_VALUE;
   const mrseFolderPath = path.join(projectPath, "mrse");
-  const results: RseConfig[] = [];
+  const results: ReliverseConfig[] = [];
 
   // Collect additional configs in "mrse" folder
   if (await fs.pathExists(mrseFolderPath)) {
@@ -42,9 +42,9 @@ export async function getOrCreateRseConfig({
     const configs = await Promise.all(
       rseFiles.map(async (file) => {
         const filePath = path.join(mrseFolderPath, file);
-        let foundConfig = await readRseConfig(filePath, isDev);
+        let foundConfig = await readReliverseConfig(filePath, isDev);
         if (!foundConfig) {
-          foundConfig = await parseAndFixRseConfig(filePath, isDev);
+          foundConfig = await parseAndFixReliverseConfig(filePath, isDev);
         }
         if (!foundConfig) {
           relinka("warn", `Skipping invalid config file: ${filePath}`);
@@ -52,25 +52,32 @@ export async function getOrCreateRseConfig({
         return foundConfig;
       }),
     );
-    results.push(...configs.filter((cfg: RseConfig | null): cfg is RseConfig => cfg !== null));
+    results.push(
+      ...configs.filter((cfg: ReliverseConfig | null): cfg is ReliverseConfig => cfg !== null),
+    );
   }
 
   // Retrieve the path to the main rseg
-  const { configPath } = await getRseConfigPath(projectPath, isDev, false, customTsconfigPath);
+  const { configPath } = await getReliverseConfigPath(
+    projectPath,
+    isDev,
+    false,
+    customTsconfigPath,
+  );
 
   // Ensure a config file exists
   if (!(await fs.pathExists(configPath))) {
-    await createRseConfig(projectPath, githubUsername, isDev, overrides);
+    await createReliverseConfig(projectPath, githubUsername, isDev, overrides);
   } else {
     // Check if the file is empty or has only "{}"
     const content = (await fs.readFile(configPath, "utf-8")).trim();
     if (!content || content === "{}") {
-      await createRseConfig(projectPath, githubUsername, isDev, overrides);
+      await createReliverseConfig(projectPath, githubUsername, isDev, overrides);
     } else {
       // If the existing config is invalid, attempt to fix it
-      const validConfig = await readRseConfig(configPath, isDev);
+      const validConfig = await readReliverseConfig(configPath, isDev);
       if (!validConfig) {
-        const fixed = await parseAndFixRseConfig(configPath, isDev);
+        const fixed = await parseAndFixReliverseConfig(configPath, isDev);
         if (!fixed) {
           relinka("warn", "Could not fix existing config. Using fallback defaults.");
         }
@@ -79,10 +86,14 @@ export async function getOrCreateRseConfig({
   }
 
   // Final read
-  const mainConfig = await readRseConfig(configPath, isDev);
+  const mainConfig = await readReliverseConfig(configPath, isDev);
   if (!mainConfig) {
     relinka("warn", "Using fallback default config due to validation failure.");
-    return { config: { ...DEFAULT_CONFIG_RELIVERSE }, mrse: results };
+    const fallbackConfig = { ...DEFAULT_CONFIG_RELIVERSE } as ReliverseConfig;
+    if (isDev) {
+      fallbackConfig.$schema = RSE_SCHEMA_DEV;
+    }
+    return { config: fallbackConfig, mrse: results };
   }
   if (isDev) {
     mainConfig.$schema = RSE_SCHEMA_DEV;

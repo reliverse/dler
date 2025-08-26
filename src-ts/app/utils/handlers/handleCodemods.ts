@@ -1,7 +1,8 @@
 import { relinka } from "@reliverse/relinka";
 import { confirmPrompt, multiselectPrompt } from "@reliverse/rempts";
 import { cliConfigJsonc } from "~/app/config/constants";
-import type { MonorepoType, RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import type { MonorepoType } from "~/app/types/mod";
 import { convertCjsToEsm } from "~/app/utils/codemods/convertCjsToEsm";
 import { convertTypeDefinitions } from "~/app/utils/codemods/convertDefinitions";
 import { convertImportStyle } from "~/app/utils/codemods/convertImportStyle";
@@ -12,7 +13,7 @@ import { convertToMonorepo } from "~/app/utils/codemods/convertToMonorepo";
 import { replaceImportSymbol } from "~/app/utils/codemods/replaceImportSymbol";
 import { replaceWithModern } from "~/app/utils/codemods/replaceWithModern";
 
-export async function handleCodemods(rules: RseConfig, cwd: string) {
+export async function handleCodemods(rules: ReliverseConfig, cwd: string) {
   if (!rules.codeStyle || !rules.preferredLibraries) {
     relinka("error", `Missing required configuration in ${cliConfigJsonc}`);
     return;

@@ -1,7 +1,8 @@
 import { setBumpDisabledValueTo } from "@reliverse/bleump";
 import { relinka } from "@reliverse/relinka";
 import prettyMilliseconds from "pretty-ms";
-import type { LibConfig, PerfTimer } from "~/app/types/mod";
+import type { LibConfig } from "~/app/schema/mod";
+import type { PerfTimer } from "~/app/types/mod";
 
 import { removeDistFolders } from "~/app/utils/utils-clean";
 import { getElapsedPerfTime } from "~/app/utils/utils-perf";

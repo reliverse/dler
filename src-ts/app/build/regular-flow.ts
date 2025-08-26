@@ -1,7 +1,8 @@
 import { relinka } from "@reliverse/relinka";
 import pAll from "p-all";
 import { CONCURRENCY_DEFAULT } from "~/app/config/constants";
-import type { DlerConfig, PerfTimer } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import type { PerfTimer } from "~/app/types/mod";
 import { regular_pubToJsr, regular_pubToNpm } from "../pub/pub-regular";
 import { regular_buildJsrDist, regular_buildNpmDist } from "./build-regular";
 
@@ -11,7 +12,7 @@ import { regular_buildJsrDist, regular_buildNpmDist } from "./build-regular";
 export async function regular_buildFlow(
   timer: PerfTimer,
   isDev: boolean,
-  config: DlerConfig,
+  config: ReliverseConfig,
 ): Promise<void> {
   relinka("verbose", "— — — regular_buildFlow — — —");
 
@@ -133,7 +134,7 @@ export async function regular_buildFlow(
 export async function regular_pubFlow(
   timer: PerfTimer,
   isDev: boolean,
-  config: DlerConfig,
+  config: ReliverseConfig,
 ): Promise<void> {
   relinka("verbose", "— — — regular_pubFlow — — —");
 

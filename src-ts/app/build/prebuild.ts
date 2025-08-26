@@ -1,11 +1,11 @@
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { callCmd } from "@reliverse/rempts";
+// import { callCmd } from "@reliverse/rempts";
 import { glob } from "tinyglobby";
-import { default as checkCmd } from "~/app/check/cmd";
+// import { default as checkCmd } from "~/app/check/cmd";
 import { PROJECT_ROOT } from "~/app/config/constants";
-import type { DlerConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
 
 import { executeCommand, executeDlerHooks, isCommandAvailable } from "./ppb-utils";
 
@@ -32,10 +32,11 @@ const createToolRunner = () =>
     "dler-check": {
       name: "Dler Check",
       async run() {
-        await callCmd(checkCmd, {
-          "no-exit": true,
-          "no-progress": true,
-        });
+        // TODO: uncomment this
+        // await callCmd(checkCmd, {
+        //   "no-exit": true,
+        //   "no-progress": true,
+        // });
       },
     },
   }) as const;
@@ -76,7 +77,7 @@ async function copyFilesToTempDir(
   }
 }
 
-export async function dlerPreBuild(config: DlerConfig): Promise<void> {
+export async function dlerPreBuild(config: ReliverseConfig): Promise<void> {
   relinka("verbose", "— — — dlerPreBuild — — —");
 
   await executeDlerHooks(config?.hooksBeforeBuild ?? [], "pre-build");

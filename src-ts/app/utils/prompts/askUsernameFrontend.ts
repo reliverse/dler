@@ -1,12 +1,12 @@
 import { re } from "@reliverse/relico";
 import { deleteLastLine, inputPrompt } from "@reliverse/rempts";
 import { DEFAULT_CLI_USERNAME } from "~/app/config/constants";
-import { updateRseConfig } from "~/app/config/update";
-import type { RseConfig } from "~/app/types/mod";
+import { updateReliverseConfig } from "~/app/config/update";
+import type { ReliverseConfig } from "~/app/schema/mod";
 
 // TODO: make it reliverse memory-based again instead of rse config-based
 export async function askUsernameFrontend(
-  config: RseConfig,
+  config: ReliverseConfig,
   shouldAskIfExists: boolean,
 ): Promise<string | null> {
   if (!shouldAskIfExists && config.projectAuthor && config.projectAuthor !== "")
@@ -39,12 +39,12 @@ export async function askUsernameFrontend(
     if (hasPreviousName) {
       return previousName;
     }
-    await updateRseConfig(process.cwd(), { projectAuthor: DEFAULT_CLI_USERNAME }, false);
+    await updateReliverseConfig(process.cwd(), { projectAuthor: DEFAULT_CLI_USERNAME }, false);
     deleteLastLine();
     return DEFAULT_CLI_USERNAME;
   }
 
   // User provided a new name, save it to memory
-  await updateRseConfig(process.cwd(), { projectAuthor: trimmedInput }, false);
+  await updateReliverseConfig(process.cwd(), { projectAuthor: trimmedInput }, false);
   return trimmedInput;
 }

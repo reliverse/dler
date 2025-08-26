@@ -2,7 +2,7 @@ import { getConfigDler } from "~/app/config/load";
 import type { CheckIssue, CheckResult } from "~/app/types/mod";
 
 // check "dler-config-health" rule
-export async function checkDlerConfigHealth(): Promise<CheckResult> {
+export async function checkReliverseConfigHealth(): Promise<CheckResult> {
   const startTime = Date.now();
   const issues: CheckIssue[] = [];
 

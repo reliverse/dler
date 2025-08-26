@@ -9,7 +9,7 @@ import { getRandomValues } from "uncrypto";
 import { db } from "~/app/db/client";
 import { decrypt, encrypt } from "~/app/db/config";
 import { userDataTable } from "~/app/db/schema";
-import type { RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
 
 import { type KeyType, KNOWN_SERVICES } from "./cef-keys";
 
@@ -304,7 +304,7 @@ export async function promptAndSetMissingValues(
   missingKeys: string[],
   envPath: string,
   maskInput: boolean,
-  config: RseConfig,
+  config: ReliverseConfig,
   wasEnvCopied = false,
   isMrse = false,
   projectPath = "",
@@ -440,7 +440,7 @@ async function processService(
   missingKeys: string[],
   envPath: string,
   maskInput: boolean,
-  config: RseConfig,
+  config: ReliverseConfig,
 ): Promise<void> {
   const service = KNOWN_SERVICES[serviceKey];
   if (!service) return;

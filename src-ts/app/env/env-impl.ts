@@ -1,7 +1,7 @@
 import { relinka } from "@reliverse/relinka";
 import { confirmPrompt } from "@reliverse/rempts";
 import { FALLBACK_ENV_EXAMPLE_URL } from "~/app/config/constants";
-import { getOrCreateRseConfig } from "~/app/config/core-cfg";
+import { getOrCreateReliverseConfig } from "~/app/config/core-cfg";
 import { composeEnvFile } from "~/app/init/use-template/cp-modules/compose-env-file/cef-mod";
 import { getCurrentWorkingDirectory } from "~/app/utils/terminalHelpers";
 
@@ -11,7 +11,7 @@ export async function envArgImpl(isDev: boolean, pathToProject?: string) {
     const projectPath = pathToProject ?? getCurrentWorkingDirectory();
 
     // Get rseg
-    const { config } = await getOrCreateRseConfig({
+    const { config } = await getOrCreateReliverseConfig({
       projectPath,
       isDev,
       overrides: {},

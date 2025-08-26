@@ -24,7 +24,7 @@ export async function getBiomeConfig(projectPath: string): Promise<BiomeConfigRe
         indentWidth: config.formatter?.indentWidth ?? 2,
         quoteMark: config.javascript?.formatter?.quoteStyle ?? "double",
         semicolons: config.javascript?.formatter?.semicolons === "always",
-        trailingComma: config.javascript?.formatter?.trailingComma === "all",
+        trailingCommas: config.javascript?.formatter?.trailingCommas === "all",
       };
       return cachedBiomeConfig;
     }

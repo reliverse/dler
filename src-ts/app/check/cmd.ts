@@ -3,7 +3,7 @@ import { re } from "@reliverse/relico";
 import { relinka } from "@reliverse/relinka";
 import { defineArgs, defineCommand, multiselectPrompt, selectPrompt } from "@reliverse/rempts";
 import { ensureReliverseConfig } from "~/app/config/prepare";
-import { checkDlerConfigHealth } from "~/app/rules/reliverse/dler-config-health/dler-config-health";
+import { checkReliverseConfigHealth } from "~/app/rules/reliverse/dler-config-health/dler-config-health";
 import { checkFileExtensions } from "~/app/rules/reliverse/file-extensions/file-extensions";
 import { analyzeDependencies } from "~/app/rules/reliverse/missing-deps/analyzer";
 import { checkMissingDependencies } from "~/app/rules/reliverse/missing-deps/deps-mod";
@@ -260,7 +260,7 @@ export default defineCommand({
         }
 
         if (checks.includes("dler-config-health")) {
-          const result = await checkDlerConfigHealth();
+          const result = await checkReliverseConfigHealth();
           displayCheckResults("dler configuration health", directory, result);
           if (!result.success && !args["no-exit"]) {
             process.exit(1);

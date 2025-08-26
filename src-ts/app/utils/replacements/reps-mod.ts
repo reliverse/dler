@@ -4,7 +4,8 @@ import { relinka } from "@reliverse/relinka";
 import { destr } from "destr";
 import { readPackageJSON } from "pkg-types";
 import { glob } from "tinyglobby";
-import type { ProjectConfigReturn, RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import type { ProjectConfigReturn } from "~/app/types/mod";
 import type { RepoOption } from "~/app/utils/projectRepository";
 
 import { extractRepoInfo, replaceStringsInFiles } from "./reps-impl";
@@ -153,11 +154,11 @@ export async function handleReplacements(
 
   // Try to read external rseg (jsonc/ts)
   // if it exists and we're using an existing repo
-  let externalConfig: RseConfig | undefined;
+  let externalConfig: ReliverseConfig | undefined;
   if (existingRepo && externalrseth && (await fs.pathExists(externalrseth))) {
     try {
       const externalConfigContent = await fs.readFile(externalrseth, "utf-8");
-      const parsed = destr<RseConfig>(externalConfigContent);
+      const parsed = destr<ReliverseConfig>(externalConfigContent);
       if (parsed && typeof parsed === "object") {
         externalConfig = parsed;
         relinka(

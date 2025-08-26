@@ -6,7 +6,8 @@ import { deleteLastLine, inputPrompt, selectPrompt } from "@reliverse/rempts";
 import type { SimpleGit } from "simple-git";
 import { simpleGit } from "simple-git";
 import { cliName } from "~/app/config/constants";
-import type { GitModParams, RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import type { GitModParams } from "~/app/types/mod";
 import { getEffectiveDir } from "~/app/utils/getEffectiveDir";
 import type { InstanceGithub } from "~/app/utils/instanceGithub";
 import type { RepoOption } from "~/app/utils/projectRepository";
@@ -58,7 +59,7 @@ async function removeGitDir(effectiveDir: string): Promise<boolean> {
 export async function initializeGitRepo(
   git: SimpleGit,
   alreadyGit: boolean,
-  config: RseConfig,
+  config: ReliverseConfig,
   isTemplateDownload: boolean,
 ): Promise<void> {
   // Skip initializing repo if this is a template download.
@@ -138,7 +139,7 @@ export async function initGitDir(
   params: GitModParams & {
     allowReInit: boolean;
     createCommit: boolean;
-    config: RseConfig;
+    config: ReliverseConfig;
     isTemplateDownload: boolean;
   },
 ): Promise<boolean> {
@@ -213,7 +214,7 @@ export async function initGitDir(
 export async function createCommit(
   params: GitModParams & {
     message?: string;
-    config: RseConfig;
+    config: ReliverseConfig;
     isTemplateDownload: boolean;
   },
 ): Promise<boolean> {
@@ -303,7 +304,7 @@ export async function handleGithubRepo(
   params: GitModParams & {
     skipPrompts: boolean;
     memory: ReliverseMemory;
-    config: RseConfig;
+    config: ReliverseConfig;
     maskInput: boolean;
     selectedTemplate: RepoOption;
     isTemplateDownload: boolean;

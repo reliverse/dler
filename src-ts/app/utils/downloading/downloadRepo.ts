@@ -11,9 +11,9 @@ import { simpleGit } from "simple-git";
 import { extract } from "tar";
 import { promisify } from "util";
 import { cliConfigJsonc, cliConfigTs, cliHomeRepos } from "~/app/config/constants";
-import { getRseConfigPath } from "~/app/config/path";
+import { getReliverseConfigPath } from "~/app/config/path";
 import { initGitDir } from "~/app/init/use-template/cp-modules/git-deploy-prompts/git";
-import type { RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
 
 const execAsync = promisify(exec);
 
@@ -32,7 +32,7 @@ interface DownloadRepoOptions {
   force?: boolean;
   forceClean?: boolean;
   preserveGit?: boolean;
-  config?: RseConfig | undefined;
+  config?: ReliverseConfig | undefined;
   returnTime?: boolean;
   returnSize?: boolean;
   returnConcurrency?: boolean;
@@ -289,11 +289,11 @@ export async function downloadRepo({
   // Handle rse config file (backup or delete)
   const parentDir = dirname(projectPath);
   try {
-    await getRseConfigPath(parentDir, isDev, true);
+    await getReliverseConfigPath(parentDir, isDev, true);
   } catch (_error) {
     // Ignore errors
   }
-  const { configPath: projectConfigPath } = await getRseConfigPath(projectPath, isDev, true);
+  const { configPath: projectConfigPath } = await getReliverseConfigPath(projectPath, isDev, true);
   const hasConfig = await fs.pathExists(projectConfigPath);
   if (hasConfig) {
     const choice = await selectPrompt({

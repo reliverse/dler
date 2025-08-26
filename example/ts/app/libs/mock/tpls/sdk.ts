@@ -17,7 +17,7 @@ export const SDK_DLER_TEMPLATE: Template = {
 `,
         type: "text",
       },
-      "app/config/default.ts": {
+      "app/schema/mod.ts": {
         metadata: {
           updatedAt: "2025-06-06T14:37:51.163Z",
           updatedHash: "4281af2ed1",
@@ -40,7 +40,7 @@ export function defineConfig(name: string) {
         content: `// Should be rewritten to a local (“./…”) import because this file
 // belongs to the SDK library itself (sdk→sdk):
 // @ts-expect-error this is a test mock file (💡 "Unused '@ts-expect-error' directive" is an expected error here (after "bun libs:example"))
-export { defineConfig } from "~/app/config/default";
+export { defineConfig } from "~/app/schema/mod";
 `,
         type: "text",
       },

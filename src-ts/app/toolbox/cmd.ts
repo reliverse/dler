@@ -1,5 +1,5 @@
 import { defineCommand } from "@reliverse/rempts";
-import { getOrCreateRseConfig } from "~/app/config/core-cfg";
+import { getOrCreateReliverseConfig } from "~/app/config/core-cfg";
 import { showDevToolsMenu } from "~/app/toolbox/toolbox-impl";
 import { getOrCreateReliverseMemory } from "~/app/utils/reliverseMemory";
 import { getCurrentWorkingDirectory } from "~/app/utils/terminalHelpers";
@@ -19,7 +19,7 @@ export default defineCommand({
   run: async ({ args }) => {
     const isDev = args.dev;
     const cwd = getCurrentWorkingDirectory();
-    const { config } = await getOrCreateRseConfig({
+    const { config } = await getOrCreateReliverseConfig({
       projectPath: cwd,
       isDev,
       overrides: {},

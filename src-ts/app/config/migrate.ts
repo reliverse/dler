@@ -1,14 +1,18 @@
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { parseJSONC } from "confbox";
-import { updateRseConfig } from "~/app/config/update";
-import type { RseConfig } from "~/app/types/mod";
+import { updateReliverseConfig } from "~/app/config/update";
+import type { ReliverseConfig } from "~/app/schema/mod";
 
 /**
  * Migrates an external rseg file into the current project config.
  * Only migrates fields that exist in the current schema.
  */
-export async function migrateRseConfig(externalrseth: string, projectPath: string, isDev: boolean) {
+export async function migrateReliverseConfig(
+  externalrseth: string,
+  projectPath: string,
+  isDev: boolean,
+) {
   try {
     const content = await fs.readFile(externalrseth, "utf-8");
     const parsed = parseJSONC(content);
@@ -17,11 +21,11 @@ export async function migrateRseConfig(externalrseth: string, projectPath: strin
       throw new Error("Invalid JSONC format in external config file");
     }
 
-    const tempConfig = parsed as Partial<RseConfig>;
+    const tempConfig = parsed as Partial<ReliverseConfig>;
     const migratedFields: string[] = [];
-    const validConfig: Partial<Record<keyof RseConfig, unknown>> = {};
+    const validConfig: Partial<Record<keyof ReliverseConfig, unknown>> = {};
 
-    const keysToMigrate: (keyof RseConfig)[] = [
+    const keysToMigrate: (keyof ReliverseConfig)[] = [
       "projectDescription",
       "version",
       "projectLicense",
@@ -55,7 +59,11 @@ export async function migrateRseConfig(externalrseth: string, projectPath: strin
       }
     }
 
-    const success = await updateRseConfig(projectPath, validConfig as Partial<RseConfig>, isDev);
+    const success = await updateReliverseConfig(
+      projectPath,
+      validConfig as Partial<ReliverseConfig>,
+      isDev,
+    );
 
     if (success) {
       relinka("success", "Successfully migrated config");

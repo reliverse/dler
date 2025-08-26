@@ -2,7 +2,7 @@ import { relinka } from "@reliverse/relinka";
 import { readPackageJSON } from "pkg-types";
 import { glob } from "tinyglobby";
 
-import type { DlerConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
 
 import { readFileSafe } from "./utils-fs";
 import { extractPackageName } from "./utils-misc";
@@ -15,7 +15,7 @@ export async function filterDeps(
   clearUnused: boolean,
   outDirBin: string,
   isJsr: boolean,
-  config: DlerConfig,
+  config: ReliverseConfig,
   libName?: string,
 ): Promise<Record<string, string>> {
   relinka("verbose", `Filtering dependencies (clearUnused=${clearUnused})`);

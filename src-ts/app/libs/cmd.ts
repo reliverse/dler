@@ -4,7 +4,7 @@ import { relinka } from "@reliverse/relinka";
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { createJiti } from "jiti";
 
-import type { DlerConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
 
 // `dler libs --init my-lib-1 @org/my-lib-2`
 
@@ -66,11 +66,11 @@ export default defineCommand({
 
     // Read dler config
     const dlerConfigPath = path.resolve("reliverse.ts");
-    let dlerConfig: DlerConfig | undefined;
+    let dlerConfig: ReliverseConfig | undefined;
 
     try {
       const jiti = createJiti(import.meta.url);
-      dlerConfig = await jiti.import<DlerConfig>(dlerConfigPath, {
+      dlerConfig = await jiti.import<ReliverseConfig>(dlerConfigPath, {
         default: true,
       });
     } catch {

@@ -3,7 +3,7 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import pMap from "p-map";
 import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "~/app/config/constants";
-import type { LibConfig } from "~/app/types/mod";
+import type { LibConfig } from "~/app/schema/mod";
 
 /**
  * Recursively removes any existing distribution folders.

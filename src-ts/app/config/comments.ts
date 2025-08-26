@@ -5,12 +5,12 @@
 
 import MagicString from "magic-string";
 import { cliDomainDocs } from "~/app/config/constants";
-import type { RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
 
 export function injectSectionComments(fileContent: string): string {
   const ms = new MagicString(fileContent);
   const comment = (text: string) => (text ? `// ${text}` : "");
-  const commentSections: Partial<Record<keyof RseConfig, string[]>> = {
+  const commentSections: Partial<Record<keyof ReliverseConfig, string[]>> = {
     $schema: [
       comment(`RSE CONFIG (${cliDomainDocs})`),
       comment("Restart the CLI to apply your config changes"),

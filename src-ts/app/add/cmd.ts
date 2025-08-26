@@ -1,6 +1,6 @@
 import { relinka } from "@reliverse/relinka";
 import { defineCommand } from "@reliverse/rempts";
-import { getOrCreateRseConfig } from "~/app/config/core-cfg";
+import { getOrCreateReliverseConfig } from "~/app/config/core-cfg";
 import { showManualBuilderMenu } from "~/app/init/init-utils/init-impl";
 import { getOrCreateReliverseMemory } from "~/app/utils/reliverseMemory";
 import { getCurrentWorkingDirectory } from "~/app/utils/terminalHelpers";
@@ -38,7 +38,7 @@ export default defineCommand({
     }
 
     const cwd = getCurrentWorkingDirectory();
-    const { config } = await getOrCreateRseConfig({
+    const { config } = await getOrCreateReliverseConfig({
       projectPath: cwd,
       isDev,
       overrides: {},

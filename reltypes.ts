@@ -1,95 +1,27 @@
-// !! AFTER EDITING THIS FILE, UPDATE LAST_UPDATED IN cfg-reltypes-utils.ts FILE !!
+// reliverse.ts types version 2025-08-26 (this file is generated, don't edit it)
 
-export function generateReltypesContent({ lastUpdated }: { lastUpdated: string }): string {
-  return `// reliverse.ts types version is ${lastUpdated}
-
-/**
- * Defines the configuration for building and publishing packages. This includes: versioning,
- * build settings, publishing options, libraries-dler-plugin built-in plugin, and more.
- * It customizes the build and publish pipeline for both NPM and JSR registries.
- */
 export interface ReliverseConfig {
-  $schema: string;
-  projectName: string;
-  projectAuthor: string;
-  projectDescription: string;
-  version: string;
-  projectLicense: string;
-
-  // ==========================================================================
-  // Project configuration
-  // ==========================================================================
-  projectState?: string;
+  $schema?: string;
+  projectName?: UnknownLiteral | (string & {});
+  projectAuthor?: UnknownLiteral | (string & {});
+  projectDescription?: string;
+  version?: string;
+  projectLicense?: string;
   projectRepository?: string;
   projectDomain?: string;
-  projectCategory?: string;
-  projectSubcategory?: string;
-  projectTemplate?: string;
+  projectGitService?: ProjectGitService;
+  projectDeployService?: ProjectDeployService;
+  projectPackageManager?: ProjectPackageManager;
+  projectState?: ProjectState;
+  projectCategory?: ProjectCategory;
+  projectSubcategory?: ProjectSubcategory;
+  projectFramework?: ProjectFramework;
+  projectTemplate?: ProjectTemplate;
   projectTemplateDate?: string;
-  projectArchitecture?: string;
-  repoPrivacy?: string;
-  projectGitService?: string;
-  projectDeployService?: string;
-  repoBranch?: string;
-
-  // Primary tech stack/framework
-  projectFramework?: string;
-  projectPackageManager?: string;
-  projectRuntime?: string;
-  preferredLibraries?: {
-    stateManagement?: string;
-    formManagement?: string;
-    styling?: string;
-    uiComponents?: string;
-    testing?: string;
-    authentication?: string;
-    databaseLibrary?: string;
-    databaseProvider?: string;
-    api?: string;
-    linting?: string;
-    formatting?: string;
-    payment?: string;
-    analytics?: string;
-    monitoring?: string;
-    logging?: string;
-    forms?: string;
-    notifications?: string;
-    search?: string;
-    uploads?: string;
-    validation?: string;
-    documentation?: string;
-    icons?: string;
-    mail?: string;
-    cache?: string;
-    storage?: string;
-    cdn?: string;
-    cms?: string;
-    i18n?: string;
-    seo?: string;
-    motion?: string;
-    charts?: string;
-    dates?: string;
-    markdown?: string;
-    security?: string;
-    routing?: string;
-  };
-  monorepo?: {
-    type?: string;
-    packages?: string[];
-    sharedPackages?: string[];
-  };
-
-  // List dependencies to exclude from checks
-  ignoreDependencies?: string[];
-
-  // Provide custom rules for Reliverse AI
-  customRules?: Record<string, any>;
-
-  // Project features
   features?: {
     i18n?: boolean;
     analytics?: boolean;
-    themeMode?: string;
+    themeMode?: ThemeMode;
     authentication?: boolean;
     api?: boolean;
     database?: boolean;
@@ -101,24 +33,58 @@ export interface ReliverseConfig {
     language?: string[];
     themes?: string[];
   };
-
-  // Code style preferences
+  preferredLibraries?: {
+    stateManagement?: PreferredStateManagement;
+    formManagement?: PreferredForm;
+    styling?: PreferredStyling;
+    uiComponents?: PreferredUI;
+    testing?: PreferredTesting;
+    authentication?: PreferredAuth;
+    databaseLibrary?: PreferredDBLib;
+    databaseProvider?: PreferredDBProvider;
+    api?: PreferredAPI;
+    linting?: PreferredLint;
+    formatting?: PreferredFormat;
+    payment?: PreferredPayment;
+    analytics?: PreferredAnalytics;
+    monitoring?: PreferredMonitoring;
+    logging?: PreferredLogging;
+    forms?: PreferredForms;
+    notifications?: PreferredNotifications;
+    search?: PreferredSearch;
+    uploads?: PreferredUploads;
+    validation?: PreferredValidation;
+    documentation?: PreferredDocs;
+    icons?: PreferredIcons;
+    mail?: PreferredMail;
+    cache?: PreferredCache;
+    storage?: PreferredStorage;
+    cdn?: PreferredCDN;
+    cms?: PreferredCMS;
+    i18n?: PreferredI18n;
+    seo?: PreferredSEO;
+    motion?: PreferredMotion;
+    charts?: PreferredCharts;
+    dates?: PreferredDates;
+    markdown?: PreferredMarkdown;
+    security?: PreferredSecurity;
+    routing?: PreferredRouting;
+  };
   codeStyle?: {
-    dontRemoveComments?: boolean;
-    shouldAddComments?: boolean;
-    typeOrInterface?: string;
-    importOrRequire?: string;
-    quoteMark?: string;
-    semicolons?: boolean;
     lineWidth?: number;
-    indentStyle?: string;
     indentSize?: number;
-    importSymbol?: string;
-    trailingComma?: string;
+    indentStyle?: "space" | "tab";
+    quoteMark?: "single" | "double";
+    semicolons?: boolean;
+    trailingCommas?: "none" | "es5" | "all";
     bracketSpacing?: boolean;
-    arrowParens?: string;
+    arrowParens?: "always" | "avoid";
     tabWidth?: number;
     jsToTs?: boolean;
+    dontRemoveComments?: boolean;
+    shouldAddComments?: boolean;
+    typeOrInterface?: "type" | "interface" | "mixed";
+    importOrRequire?: "import" | "require" | "mixed";
     cjsToEsm?: boolean;
     modernize?: {
       replaceFs?: boolean;
@@ -128,39 +94,39 @@ export interface ReliverseConfig {
       replaceConsole?: boolean;
       replaceEvents?: boolean;
     };
+    importSymbol?: string;
   };
-
-  // Settings for cloning an existing repo
+  monorepo?: {
+    type?: "none" | "turborepo" | "nx" | "pnpm" | "bun";
+    packages?: string[];
+    sharedPackages?: string[];
+  };
+  ignoreDependencies?: string[];
+  customRules?: Record<string, unknown>;
   multipleRepoCloneMode?: boolean;
   customUserFocusedRepos?: string[];
   customDevsFocusedRepos?: string[];
   hideRepoSuggestions?: boolean;
   customReposOnNewProject?: boolean;
-
-  // Set to false to disable opening the browser during env composing
   envComposerOpenBrowser?: boolean;
-
-  // Enable auto-answering for prompts to skip manual confirmations.
+  repoBranch?: string;
+  repoPrivacy?: RepoPrivacy;
+  projectArchitecture?: ProjectArchitecture;
+  projectRuntime?: ProjectRuntime;
   skipPromptsUseAutoBehavior?: boolean;
-
-  // Prompt behavior for deployment
-  deployBehavior?: string;
-  depsBehavior?: string;
-  gitBehavior?: string;
-  i18nBehavior?: string;
-  scriptsBehavior?: string;
-
-  // Behavior for existing GitHub repos during project creation
-  existingRepoBehavior?: string;
-
-  // Behavior for Reliverse AI chat and agent mode
-  relinterConfirm?: string;
+  deployBehavior?: "prompt" | "autoYes" | "autoNo";
+  depsBehavior?: "prompt" | "autoYes" | "autoNo";
+  gitBehavior?: "prompt" | "autoYes" | "autoNo";
+  i18nBehavior?: "prompt" | "autoYes" | "autoNo";
+  scriptsBehavior?: "prompt" | "autoYes" | "autoNo";
+  existingRepoBehavior?: "prompt" | "autoYes" | "autoYesSkipCommit" | "autoNo";
+  relinterConfirm?: RelinterConfirm;
 
   // ==========================================================================
   // Bump configuration
   // ==========================================================================
   /**
-   * When \`true\`, disables version bumping.
+   * When `true`, disables version bumping.
    * Useful when retrying a failed publish with an already bumped version.
    *
    * @default false
@@ -184,13 +150,13 @@ export interface ReliverseConfig {
 
   /**
    * Specifies how the version number should be incremented:
-   * - \`patch\`: Increments the patch version for backwards-compatible bug fixes (1.2.3 → 1.2.4)
-   * - \`minor\`: Increments the minor version for new backwards-compatible features (1.2.3 → 1.3.0)
-   * - \`major\`: Increments the major version for breaking changes (1.2.3 → 2.0.0)
-   * - \`auto\`: Automatically determine the appropriate bump type
-   * - \`manual\`: Set a specific version (requires bumpSet to be set)
+   * - `patch`: Increments the patch version for backwards-compatible bug fixes (1.2.3 → 1.2.4)
+   * - `minor`: Increments the minor version for new backwards-compatible features (1.2.3 → 1.3.0)
+   * - `major`: Increments the major version for breaking changes (1.2.3 → 2.0.0)
+   * - `auto`: Automatically determine the appropriate bump type
+   * - `manual`: Set a specific version (requires bumpSet to be set)
    *
-   * Please note: \`dler\` infers the version from the \`package.json\` file.
+   * Please note: `dler` infers the version from the `package.json` file.
    *
    * @default "patch"
    */
@@ -209,7 +175,7 @@ export interface ReliverseConfig {
   // ==========================================================================
 
   /**
-   * When \`true\`, stops after building and retains distribution folders.
+   * When `true`, stops after building and retains distribution folders.
    * Useful for development or inspecting the build output.
    *
    * @default true
@@ -218,16 +184,16 @@ export interface ReliverseConfig {
 
   /**
    * Specifies which package registries to publish to:
-   * - \`npm\`: Publish only to the NPM commonPubRegistry.
-   * - \`jsr\`: Publish only to the JSR commonPubRegistry.
-   * - \`npm-jsr\`: Publish to both NPM and JSR registries.
+   * - `npm`: Publish only to the NPM commonPubRegistry.
+   * - `jsr`: Publish only to the JSR commonPubRegistry.
+   * - `npm-jsr`: Publish to both NPM and JSR registries.
    *
    * @default "npm"
    */
   commonPubRegistry: "jsr" | "npm" | "npm-jsr";
 
   /**
-   * When \`true\`, enables detailed logs during the build and publish process.
+   * When `true`, enables detailed logs during the build and publish process.
    * Useful for debugging or understanding the build flow.
    *
    * @default false
@@ -235,8 +201,8 @@ export interface ReliverseConfig {
   commonVerbose: boolean;
 
   /**
-   * When \`true\`, displays detailed build and publish logs.
-   * When \`false\`, only shows spinner with status messages during build and publish.
+   * When `true`, displays detailed build and publish logs.
+   * When `false`, only shows spinner with status messages during build and publish.
    *
    * @default true
    */
@@ -247,11 +213,11 @@ export interface ReliverseConfig {
   // ==========================================================================
 
   /**
-   * When \`true\`, generates TypeScript declaration files (.d.ts) for NPM packages.
+   * When `true`, generates TypeScript declaration files (.d.ts) for NPM packages.
    * Essential for providing type intranspileFormation to TypeScript users.
    *
-   * To reduce bundle size you can set this to \`false\` if your main project
-   * is planned to be used only as a global CLI tool (e.g. \`bunx dler\`).
+   * To reduce bundle size you can set this to `false` if your main project
+   * is planned to be used only as a global CLI tool (e.g. `bunx dler`).
    *
    * @default true
    */
@@ -268,7 +234,7 @@ export interface ReliverseConfig {
   /**
    * Base directory containing the source entry files.
    * All paths are resolved relative to this directory.
-   * Set to \`"."\` if entry files are in the project root.
+   * Set to `"."` if entry files are in the project root.
    *
    * @default "src"
    */
@@ -284,7 +250,7 @@ export interface ReliverseConfig {
 
   /**
    * Configuration for CLI functionality:
-   * - enabled: When \`true\`, indicates that the package has CLI capabilities
+   * - enabled: When `true`, indicates that the package has CLI capabilities
    * - scripts: Map of CLI script names to their entry file paths
    *   The key will be used as the command name in package.json's bin field
    *   The value should be the path to the executable script (e.g. "cli.ts")
@@ -312,7 +278,7 @@ export interface ReliverseConfig {
    * When provided, this description will be used in the dist's package.json.
    * If not provided, the description from the original package.json will be used.
    *
-   * @default \`package.json\`'s "description"
+   * @default `package.json`'s "description"
    */
   coreDescription: string;
 
@@ -321,10 +287,10 @@ export interface ReliverseConfig {
   // ==========================================================================
 
   /**
-   * When \`true\`, allows JSR publishing even with uncommitted changes.
+   * When `true`, allows JSR publishing even with uncommitted changes.
    * Use with caution, as it may lead to inconsistent published versions.
    *
-   * It is \`true\` by default to make it easier for new \`dler\` users to publish their projects.
+   * It is `true` by default to make it easier for new `dler` users to publish their projects.
    *
    * @default true
    */
@@ -347,7 +313,7 @@ export interface ReliverseConfig {
   distJsrDirName: string;
 
   /**
-   * When \`true\`, simulates the publishing process without actually publishing.
+   * When `true`, simulates the publishing process without actually publishing.
    * Useful for testing the build and publish pipeline without side effects.
    *
    * @default false
@@ -355,7 +321,7 @@ export interface ReliverseConfig {
   distJsrDryRun: boolean;
 
   /**
-   * When \`true\`, fails the build if warnings are detected.
+   * When `true`, fails the build if warnings are detected.
    * Use with caution, as it may lead to inconsistent published versions.
    *
    * @default false
@@ -363,7 +329,7 @@ export interface ReliverseConfig {
   distJsrFailOnWarn: boolean;
 
   /**
-   * When \`true\`, generates a \`jsconfig.json\` file for JSR's dist.
+   * When `true`, generates a `jsconfig.json` file for JSR's dist.
    *
    * @default false
    */
@@ -377,7 +343,7 @@ export interface ReliverseConfig {
   distJsrOutFilesExt: NpmOutExt;
 
   /**
-   * When \`true\`, enables JSR to process complex types, which may impact performance.
+   * When `true`, enables JSR to process complex types, which may impact performance.
    * Enable this only if you cannot simplify or explicitly define exported types.
    *
    * JSR requires exported functions, classes, variables, and type aliases to have
@@ -388,7 +354,7 @@ export interface ReliverseConfig {
    * If "slow types" are present, type checking performance may degrade, and some
    * features may not work as expected.
    *
-   * It is \`true\` by default to make it easier for new \`dler\` users to publish their projects.
+   * It is `true` by default to make it easier for new `dler` users to publish their projects.
    *
    * @see https://jsr.io/docs/about-slow-types
    * @default true
@@ -417,7 +383,7 @@ export interface ReliverseConfig {
   /**
    * Specifies the file extension for output files in NPM packages.
    * Determines the extension of compiled files in the NPM distribution.
-   * We strongly recommend using \`"js"\` with the \`"esm"\` transpileFormat.
+   * We strongly recommend using `"js"` with the `"esm"` transpileFormat.
    *
    * @default "js"
    */
@@ -430,9 +396,9 @@ export interface ReliverseConfig {
   /**
    * !! EXPERIMENTAL !!
    * Controls which parts of the project are built and published:
-   * - \`main-project-only\`: Builds/publishes only the main package.
-   * - \`main-and-libs\`: Builds/publishes both the main package and libraries.
-   * - \`libs-only\`: Builds/publishes only the libraries.
+   * - `main-project-only`: Builds/publishes only the main package.
+   * - `main-and-libs`: Builds/publishes both the main package and libraries.
+   * - `libs-only`: Builds/publishes only the libraries.
    *
    * @default "main-project-only"
    */
@@ -471,14 +437,14 @@ export interface ReliverseConfig {
   // ==========================================================================
 
   /**
-   * The name of the log file. dler uses \`@reliverse/relinka\` for logging.
+   * The name of the log file. dler uses `@reliverse/relinka` for logging.
    *
    * @default ".logs/relinka.log"
    */
   logsFileName: string;
 
   /**
-   * When \`true\`, cleans up the log file from previous runs.
+   * When `true`, cleans up the log file from previous runs.
    *
    * @default false
    */
@@ -498,10 +464,10 @@ export interface ReliverseConfig {
    * - Add patterns (starting with +): Inject deps into specific dists even if original package.json doesn't have them
    *
    * Structure (dist-specific patterns are merged with global):
-   * - \`global\`: Patterns that are always applied to all builds
-   * - \`dist-npm\`: NPM-specific patterns
-   * - \`dist-jsr\`: JSR-specific patterns
-   * - \`dist-libs\`: Library-specific patterns
+   * - `global`: Patterns that are always applied to all builds
+   * - `dist-npm`: NPM-specific patterns
+   * - `dist-jsr`: JSR-specific patterns
+   * - `dist-libs`: Library-specific patterns
    *   Each library can have separate NPM and JSR patterns
    *
    * @example
@@ -561,7 +527,7 @@ export interface ReliverseConfig {
    * These hooks will be called in sequence before any build steps.
    *
    * If you are a dler plugin developer, tell your users to
-   * call your plugin's \`beforeBuild\`-related function here.
+   * call your plugin's `beforeBuild`-related function here.
    *
    * @example
    * hooksBeforeBuild: [
@@ -583,7 +549,7 @@ export interface ReliverseConfig {
    * These hooks will be called in sequence after all build steps.
    *
    * If you are a dler plugin developer, tell your users to
-   * call your plugin's \`afterBuild\`-related function here.
+   * call your plugin's `afterBuild`-related function here.
    *
    * @example
    * hooksAfterBuild: [
@@ -601,7 +567,7 @@ export interface ReliverseConfig {
   hooksAfterBuild: (() => Promise<void>)[];
 
   /**
-   * When \`true\`, cleans up the temporary directories after the build process completes.
+   * When `true`, cleans up the temporary directories after the build process completes.
    *
    * @default true
    */
@@ -614,7 +580,7 @@ export interface ReliverseConfig {
   // ==========================================================================
 
   /**
-   * When \`true\`, fails the build if warnings are detected.
+   * When `true`, fails the build if warnings are detected.
    * Use with caution, as it may lead to inconsistent published versions.
    *
    * @default false
@@ -630,16 +596,16 @@ export interface ReliverseConfig {
 
   /**
    * Output module transpileFormat for built files:
-   * - \`esm\`: ECMAScript modules (import/export)
-   * - \`cjs\`: CommonJS modules (require/exports)
-   * - \`iife\`: Immediately Invoked Function Expression (for browsers)
+   * - `esm`: ECMAScript modules (import/export)
+   * - `cjs`: CommonJS modules (require/exports)
+   * - `iife`: Immediately Invoked Function Expression (for browsers)
    *
    * @default "esm"
    */
   transpileFormat: transpileFormat;
 
   /**
-   * When \`true\`, minifies the output to reduce bundle size.
+   * When `true`, minifies the output to reduce bundle size.
    * Recommended for production builds but may increase build time.
    *
    * @default true
@@ -656,18 +622,18 @@ export interface ReliverseConfig {
 
   /**
    * Controls source map generation for debugging (experimental):
-   * - \`true/false\`: Enable/disable source maps.
-   * - \`"inline"\`: Include source maps within output files.
-   * - \`"none"\`: Do not generate source maps.
-   * - \`"linked"\`: Generate separate source map files with links.
-   * - \`"external"\`: Generate separate source map files.
+   * - `true/false`: Enable/disable source maps.
+   * - `"inline"`: Include source maps within output files.
+   * - `"none"`: Do not generate source maps.
+   * - `"linked"`: Generate separate source map files with links.
+   * - `"external"`: Generate separate source map files.
    *
    * @default false
    */
   transpileSourcemap: Sourcemap;
 
   /**
-   * When \`true\`, enables code transpileSplitting for improved load-time performance.
+   * When `true`, enables code transpileSplitting for improved load-time performance.
    * Useful for large applications but may not be needed for small projects.
    *
    * @default false
@@ -683,13 +649,13 @@ export interface ReliverseConfig {
 
   /**
    * Defines the transpileTarget runtime environment:
-   * - \`node\`: Optimized for Node.js.
-   * - \`bun\`: Optimized for Bun.
-   * - \`browser\`: Optimized for web browsers.
+   * - `node`: Optimized for Node.js.
+   * - `bun`: Optimized for Bun.
+   * - `browser`: Optimized for web browsers.
    *
    * @default "node"
    */
-  transpileTarget: transpileTarget;
+  transpileTarget: TranspileTarget;
 
   /**
    * Watch the src dir and rebuild on change (experimental).
@@ -706,10 +672,10 @@ export interface ReliverseConfig {
    * - dist-jsr,dist-libs/jsr: ["jsr.json"]
    *
    * Structure:
-   * - \`global\`: Files to include in all distributions
-   * - \`dist-jsr\`: Files specific to JSR distribution
-   * - \`dist-npm\`: Files specific to NPM distribution
-   * - \`dist-libs\`: Library-specific files for each distribution type
+   * - `global`: Files to include in all distributions
+   * - `dist-jsr`: Files specific to JSR distribution
+   * - `dist-npm`: Files specific to NPM distribution
+   * - `dist-libs`: Library-specific files for each distribution type
    *
    * Useful for including additional files like configuration or documentation.
    * Pro tip: set jsr.jsonc to generate jsr.jsonc instead of jsr.json config.
@@ -769,7 +735,95 @@ export interface ReliverseConfig {
    *
    * @default See DEFAULT_RELINKA_CONFIG in defaults
    */
-  relinka: RelinkaConfig;
+  relinka: {
+    /**
+     * Configuration options for the Relinka logger.
+     * All properties are optional to allow for partial configuration.
+     * Defaults will be applied during initialization.
+     */
+    /**
+     * Enables verbose (aka debug) mode for detailed logging.
+     *
+     * `true` here works only for end-users of CLIs/libs when theirs developers
+     * has been awaited for user's config via `@reliverse/relinka`'s `await relinkaConfig;`
+     */
+    verbose?: boolean;
+
+    /**
+     * Configuration for directory-related settings.
+     * - `maxLogFiles`: The maximum number of log files to keep before cleanup.
+     */
+    dirs?: RelinkaDirsConfig;
+
+    /**
+     * Disables color output in the console.
+     */
+    disableColors?: boolean;
+
+    /**
+     * Configuration for log file output.
+     */
+    logFile?: {
+      /**
+       * Path to the log file.
+       */
+      outputPath?: string;
+      /**
+       * How to handle date in the filename.
+       * - `disable`: No date prefix/suffix
+       * - `append-before`: Add date before the filename (e.g., "2024-01-15-log.txt")
+       * - `append-after`: Add date after the filename (e.g., "log-2024-01-15.txt")
+       */
+      nameWithDate?: "disable" | "append-before" | "append-after";
+      /**
+       * If true, clears the log file when relinkaConfig is executed with supportFreshLogFile: true.
+       * This is useful for starting with a clean log file on each run.
+       */
+      freshLogFile?: boolean;
+    };
+
+    /**
+     * If true, logs will be saved to a file.
+     */
+    saveLogsToFile?: boolean;
+
+    /**
+     * Configuration for timestamp in log messages.
+     */
+    timestamp?: {
+      /**
+       * If true, timestamps will be added to log messages.
+       */
+      enabled: boolean;
+      /**
+       * The format for timestamps. Default is YYYY-MM-DD HH:mm:ss.SSS
+       */
+      format?: string;
+    };
+
+    /**
+     * Allows to customize the log levels.
+     */
+    levels?: LogLevelsConfig;
+
+    /**
+     * Controls how often the log cleanup runs (in milliseconds)
+     * Default: 10000 (10 seconds)
+     */
+    cleanupInterval?: number;
+
+    /**
+     * Maximum size of the log write buffer before flushing to disk (in bytes)
+     * Default: 4096 (4KB)
+     */
+    bufferSize?: number;
+
+    /**
+     * Maximum time to hold logs in buffer before flushing to disk (in milliseconds)
+     * Default: 5000 (5 seconds)
+     */
+    maxBufferAge?: number;
+  };
 
   // ==========================================================================
   // Remdn Configuration
@@ -807,6 +861,53 @@ export interface ReliverseConfig {
   };
 }
 
+/** Configuration for directory-related settings. */
+export interface RelinkaDirsConfig {
+  maxLogFiles?: number;
+}
+
+/** Log level types used by the logger. */
+export type LogLevel =
+  | "error"
+  | "fatal"
+  | "info"
+  | "success"
+  | "verbose"
+  | "warn"
+  | "log"
+  | "internal"
+  | "null"
+  | "step"
+  | "box"
+  | "message";
+
+/** Configuration for a single log level. */
+export interface LogLevelConfig {
+  /**
+   * Symbol to display for this log level.
+   * @see https://symbl.cc
+   */
+  symbol: string;
+
+  /**
+   * Fallback symbol to use if Unicode is not supported.
+   */
+  fallbackSymbol: string;
+
+  /**
+   * Color to use for this log level.
+   */
+  color: string;
+
+  /**
+   * Number of spaces after the symbol/fallback
+   */
+  spacing?: number;
+}
+
+/** Configuration for all log levels. */
+export type LogLevelsConfig = Partial<Record<LogLevel, LogLevelConfig>>;
+
 export type BumpMode = "patch" | "minor" | "major" | "auto" | "manual";
 
 /**
@@ -828,7 +929,7 @@ export type NpmOutExt = "cjs" | "cts" | "js" | "mjs" | "mts" | "ts";
  */
 export interface LibConfig {
   /**
-   * When \`true\`, generates TypeScript declaration files (.d.ts) for NPM packages.
+   * When `true`, generates TypeScript declaration files (.d.ts) for NPM packages.
    */
   libDeclarations: boolean;
 
@@ -839,7 +940,7 @@ export interface LibConfig {
    * @example "Utility functions for data manipulation"
    * @example "Core configuration module for the framework"
    *
-   * @default \`package.json\`'s "description"
+   * @default `package.json`'s "description"
    */
   libDescription: string;
 
@@ -854,7 +955,7 @@ export interface LibConfig {
    * The path to the library's main entry file.
    * This file serves as the primary entry point for imports.
    * The path should be relative to the project root.
-   * The full path to the library's main file is derived by joining \`libsDirDist\` with \`main\`.
+   * The full path to the library's main file is derived by joining `libsDirDist` with `main`.
    *
    * @example "my-lib-1/mod.ts"
    * @example "my-lib-2/ml2-mod.ts"
@@ -864,19 +965,19 @@ export interface LibConfig {
 
   /**
    * Dependencies to include in the dist's package.json.
-   * The final output may vary based on \`filterDepsPatterns\`.
+   * The final output may vary based on `filterDepsPatterns`.
    * Defines how dependencies are handled during publishing:
-   * - \`string[]\`: Includes only the specified dependencies.
-   * - \`true\`: Includes all dependencies from the main package.json.
-   * - \`false\` or \`undefined\`: Automatically determines dependencies based on imports.
+   * - `string[]`: Includes only the specified dependencies.
+   * - `true`: Includes all dependencies from the main package.json.
+   * - `false` or `undefined`: Automatically determines dependencies based on imports.
    *
    * @example ["@reliverse/pathkit", "@reliverse/relifso"] - Only will include these specific dependencies.
-   * @example true - Include all \`dependencies\` from the main package.json.
+   * @example true - Include all `dependencies` from the main package.json.
    */
   libPkgKeepDeps: boolean | string[];
 
   /**
-   * When \`true\`, minifies the output to reduce bundle size.
+   * When `true`, minifies the output to reduce bundle size.
    * Recommended for production builds but may increase build time.
    *
    * @default true
@@ -902,7 +1003,7 @@ export interface LibConfig {
    * Optional version override for the library.
    * If not provided, falls back to the version from the main package.json.
    *
-   * @default \`package.json\`'s "version"
+   * @default `package.json`'s "version"
    */
   version?: string;
 }
@@ -933,159 +1034,150 @@ export type Sourcemap = "external" | "inline" | "linked" | "none" | boolean;
  * - bun: Optimized for Bun.
  * - browser: Optimized for web browsers.
  */
-export type transpileTarget = "browser" | "bun" | "node";
+export type TranspileTarget = "browser" | "bun" | "node";
 
-/** Configuration for directory-related settings. */
-export type RelinkaDirsConfig = {
-  maxLogFiles?: number;
-};
-
-/** Log level types used by the logger. */
-export type LogLevel =
-  | "error"
-  | "fatal"
-  | "info"
-  | "success"
-  | "verbose"
-  | "warn"
-  | "log"
-  | "internal"
-  | "null"
-  | "step"
-  | "box"
-  | "message";
-
-/** Configuration for a single log level. */
-export type LogLevelConfig = {
-  /**
-   * Symbol to display for this log level.
-   * @see https://symbl.cc
-   */
-  symbol: string;
-
-  /**
-   * Fallback symbol to use if Unicode is not supported.
-   */
-  fallbackSymbol: string;
-
-  /**
-   * Color to use for this log level.
-   */
-  color: string;
-
-  /**
-   * Number of spaces after the symbol/fallback
-   */
-  spacing?: number;
-};
-
-/** Configuration for all log levels. */
-export type LogLevelsConfig = Partial<Record<LogLevel, LogLevelConfig>>;
-
-/**
- * Configuration options for the Relinka logger.
- * All properties are optional to allow for partial configuration.
- * Defaults will be applied during initialization.
- */
-export type RelinkaConfig = {
-  /**
-   * Enables verbose (aka debug) mode for detailed logging.
-   *
-   * \`true\` here works only for end-users of CLIs/libs when theirs developers
-   * has been awaited for user's config via \`@reliverse/relinka\`'s \`await relinkaConfig;\`
-   */
-  verbose?: boolean;
-
-  /**
-   * Configuration for directory-related settings.
-   * - \`maxLogFiles\`: The maximum number of log files to keep before cleanup.
-   */
-  dirs?: RelinkaDirsConfig;
-
-  /**
-   * Disables color output in the console.
-   */
-  disableColors?: boolean;
-
-  /**
-   * Configuration for log file output.
-   */
-  logFile?: {
-    /**
-     * Path to the log file.
-     */
-    outputPath?: string;
-    /**
-     * How to handle date in the filename.
-     * - \`disable\`: No date prefix/suffix
-     * - \`append-before\`: Add date before the filename (e.g., "2024-01-15-log.txt")
-     * - \`append-after\`: Add date after the filename (e.g., "log-2024-01-15.txt")
-     */
-    nameWithDate?: "disable" | "append-before" | "append-after";
-    /**
-     * If true, clears the log file when relinkaConfig is executed with supportFreshLogFile: true.
-     * This is useful for starting with a clean log file on each run.
-     */
-    freshLogFile?: boolean;
-  };
-
-  /**
-   * If true, logs will be saved to a file.
-   */
-  saveLogsToFile?: boolean;
-
-  /**
-   * Configuration for timestamp in log messages.
-   */
-  timestamp?: {
-    /**
-     * If true, timestamps will be added to log messages.
-     */
-    enabled: boolean;
-    /**
-     * The format for timestamps. Default is YYYY-MM-DD HH:mm:ss.SSS
-     */
-    format?: string;
-  };
-
-  /**
-   * Allows to customize the log levels.
-   */
-  levels?: LogLevelsConfig;
-
-  /**
-   * Controls how often the log cleanup runs (in milliseconds)
-   * Default: 10000 (10 seconds)
-   */
-  cleanupInterval?: number;
-
-  /**
-   * Maximum size of the log write buffer before flushing to disk (in bytes)
-   * Default: 4096 (4KB)
-   */
-  bufferSize?: number;
-
-  /**
-   * Maximum time to hold logs in buffer before flushing to disk (in milliseconds)
-   * Default: 5000 (5 seconds)
-   */
-  maxBufferAge?: number;
-};
+export type UnknownLiteral = "unknown";
+export type ProjectState = "creating" | "created";
+export type ProjectCategory =
+  | UnknownLiteral
+  | "website"
+  | "vscode"
+  | "browser"
+  | "cli"
+  | "library"
+  | "mobile";
+export type ProjectSubcategory = UnknownLiteral | "e-commerce" | "tool";
+export type ProjectFramework =
+  | UnknownLiteral
+  | "nextjs"
+  | "vite"
+  | "svelte"
+  | "remix"
+  | "astro"
+  | "nuxt"
+  | "solid"
+  | "qwik"
+  | "vue"
+  | "wxt"
+  | "lynx"
+  | "react-native"
+  | "expo"
+  | "capacitor"
+  | "ionic"
+  | "electron"
+  | "tauri"
+  | "neutralino"
+  | "rempts"
+  | "citty"
+  | "commander"
+  | "cac"
+  | "meow"
+  | "yargs"
+  | "vscode"
+  | "webextension"
+  | "browser-extension"
+  | "npm-jsr";
+export type ProjectTemplate =
+  | UnknownLiteral
+  | "blefnk/relivator-nextjs-template"
+  | "blefnk/relivator-docker-template"
+  | "blefnk/next-react-ts-src-minimal"
+  | "blefnk/all-in-one-nextjs-template"
+  | "blefnk/create-t3-app"
+  | "blefnk/create-next-app"
+  | "blefnk/astro-starlight-template"
+  | "blefnk/versator-nextjs-template"
+  | "blefnk/relivator-lynxjs-template"
+  | "blefnk/relivator-react-native-template"
+  | "reliverse/template-browser-extension"
+  | "microsoft/vscode-extension-samples"
+  | "microsoft/vscode-extension-template"
+  | "rsetarter-template"
+  | "blefnk/deno-cli-tutorial";
+export type RepoPrivacy = UnknownLiteral | "public" | "private";
+export type ProjectArchitecture = UnknownLiteral | "fullstack" | "separated";
+export type ProjectRuntime = "node" | "deno" | "bun";
+export type ProjectPackageManager = "npm" | "pnpm" | "yarn" | "bun";
+export type ProjectGitService = "github" | "gitlab" | "bitbucket" | "none";
+export type ProjectDeployService = "vercel" | "netlify" | "railway" | "deno" | "none";
+export type ThemeMode = "light" | "dark" | "dark-light";
+export type PreferredStateManagement = "zustand" | "jotai" | "redux-toolkit" | UnknownLiteral;
+export type PreferredForm = "react-hook-form" | "formik" | UnknownLiteral;
+export type PreferredStyling =
+  | "tailwind"
+  | "styled-components"
+  | "css-modules"
+  | "sass"
+  | UnknownLiteral;
+export type PreferredUI = "shadcn-ui" | "chakra-ui" | "material-ui" | UnknownLiteral;
+export type PreferredTesting =
+  | "bun"
+  | "vitest"
+  | "jest"
+  | "playwright"
+  | "cypress"
+  | UnknownLiteral;
+export type PreferredAuth =
+  | "better-auth"
+  | "clerk"
+  | "next-auth"
+  | "supabase-auth"
+  | "auth0"
+  | UnknownLiteral;
+export type PreferredDBLib = "drizzle" | "prisma" | "supabase" | UnknownLiteral;
+export type PreferredDBProvider = "pg" | "mysql" | "sqlite" | "mongodb" | UnknownLiteral;
+export type PreferredAPI = "hono" | "trpc" | "graphql" | "rest" | UnknownLiteral;
+export type PreferredLint = "eslint" | UnknownLiteral;
+export type PreferredFormat = "biome" | UnknownLiteral;
+export type PreferredPayment = "stripe" | UnknownLiteral;
+export type PreferredAnalytics = "vercel" | UnknownLiteral;
+export type PreferredMonitoring = "sentry" | UnknownLiteral;
+export type PreferredLogging = "axiom" | UnknownLiteral;
+export type PreferredForms = "react-hook-form" | UnknownLiteral;
+export type PreferredNotifications = "sonner" | UnknownLiteral;
+export type PreferredSearch = "algolia" | UnknownLiteral;
+export type PreferredUploads = "uploadthing" | UnknownLiteral;
+export type PreferredValidation = "zod" | "typebox" | "valibot" | UnknownLiteral;
+export type PreferredDocs = "starlight" | "nextra" | UnknownLiteral;
+export type PreferredIcons = "lucide" | UnknownLiteral;
+export type PreferredMail = "resend" | UnknownLiteral;
+export type PreferredCache = "redis" | UnknownLiteral;
+export type PreferredStorage = "cloudflare" | UnknownLiteral;
+export type PreferredCDN = "cloudflare" | UnknownLiteral;
+export type PreferredCMS = "contentlayer" | UnknownLiteral;
+export type PreferredI18n = "next-intl" | UnknownLiteral;
+export type PreferredSEO = "next-seo" | UnknownLiteral;
+export type PreferredMotion = "framer" | UnknownLiteral;
+export type PreferredCharts = "recharts" | UnknownLiteral;
+export type PreferredDates = "dayjs" | UnknownLiteral;
+export type PreferredMarkdown = "mdx" | UnknownLiteral;
+export type PreferredSecurity = "auth" | UnknownLiteral;
+export type PreferredRouting = "next" | "react-router" | "tanstack-router" | UnknownLiteral;
+export type RelinterConfirm = "promptOnce" | "promptEachFile" | "autoYes";
 
 /**
  * Default configuration for the build and publish logic.
  */
 export const DEFAULT_CONFIG_RELIVERSE: ReliverseConfig = {
+  // RSE CONFIG (https://docs.reliverse.org/cli)
+  // Restart the CLI to apply your config changes
   $schema: "./schema.json",
-  projectName: "",
-  projectAuthor: "",
-  projectDescription: "",
-  version: "",
-  projectLicense: "",
+
+  // General project information
+  projectName: "@reliverse/dler",
+  projectAuthor: "reliverse",
+  projectDescription:
+    "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
+  version: "1.7.114",
+  projectLicense: "MIT",
+
+  // Bump version
   bumpDisable: false,
   bumpFilter: ["package.json", "reliverse.ts"],
   bumpMode: "patch",
   bumpSet: "",
+
+  // Build & Publishing
   commonPubPause: true,
   commonPubRegistry: "npm",
   commonVerbose: false,
@@ -1116,7 +1208,7 @@ export const DEFAULT_CONFIG_RELIVERSE: ReliverseConfig = {
 
   // Dependency filtering
   filterDepsPatterns: {
-    global: ["@types", "biome", "eslint", "knip", "prettier", "@reliverse/rse"],
+    global: ["@types", "biome", "eslint", "knip", "prettier", "typescript", "@reliverse/dler"],
     "dist-npm": [],
     "dist-jsr": [],
     "dist-libs": {},
@@ -1242,6 +1334,160 @@ export const DEFAULT_CONFIG_RELIVERSE: ReliverseConfig = {
     },
   },
 
+  // Project configuration
+  projectState: "creating",
+  projectRepository: "https://github.com/reliverse/rse",
+  projectDomain: "https://docs.reliverse.org/cli",
+  projectCategory: "unknown",
+  projectSubcategory: "unknown",
+  projectTemplate: "unknown",
+  projectTemplateDate: "unknown",
+  projectArchitecture: "unknown",
+  repoPrivacy: "unknown",
+  projectGitService: "github",
+  projectDeployService: "vercel",
+  repoBranch: "main",
+
+  // Primary tech stack/framework
+  projectFramework: "rempts",
+  projectPackageManager: "bun",
+  projectRuntime: "bun",
+  preferredLibraries: {
+    stateManagement: "unknown",
+    formManagement: "unknown",
+    styling: "unknown",
+    uiComponents: "unknown",
+    testing: "unknown",
+    authentication: "unknown",
+    databaseLibrary: "drizzle",
+    databaseProvider: "sqlite",
+    api: "trpc",
+    linting: "unknown",
+    formatting: "unknown",
+    payment: "unknown",
+    analytics: "unknown",
+    monitoring: "unknown",
+    logging: "unknown",
+    forms: "unknown",
+    notifications: "unknown",
+    search: "unknown",
+    uploads: "unknown",
+    validation: "zod",
+    documentation: "unknown",
+    icons: "unknown",
+    mail: "unknown",
+    cache: "unknown",
+    storage: "unknown",
+    cdn: "unknown",
+    cms: "unknown",
+    i18n: "unknown",
+    seo: "unknown",
+    motion: "unknown",
+    charts: "unknown",
+    dates: "unknown",
+    markdown: "unknown",
+    security: "unknown",
+    routing: "unknown",
+  },
+  monorepo: {
+    type: "none",
+    packages: [],
+    sharedPackages: [],
+  },
+
+  // List dependencies to exclude from checks
+  ignoreDependencies: [],
+
+  // Provide custom rules for Reliverse AI
+  // You can use any json type here in {}
+  customRules: {},
+
+  // Project features
+  features: {
+    i18n: false,
+    analytics: false,
+    themeMode: "dark-light",
+    authentication: true,
+    api: true,
+    database: true,
+    testing: false,
+    docker: false,
+    ci: false,
+    commands: [
+      "pub",
+      "example",
+      "db",
+      "latest",
+      "check",
+      "dev:cli",
+      "dev:add",
+      "dev:ai",
+      "dev:clone",
+      "dev:cmod",
+    ],
+    webview: ["react-native"],
+    language: ["typescript"],
+    themes: ["default", "eslint", "biome", "sonner", "uploadthing", "zod", "typebox", "lucide"],
+  },
+
+  // Code style preferences
+  codeStyle: {
+    dontRemoveComments: true,
+    shouldAddComments: true,
+    typeOrInterface: "type",
+    importOrRequire: "import",
+    quoteMark: "double",
+    semicolons: true,
+    lineWidth: 80,
+    indentStyle: "space",
+    indentSize: 2,
+    importSymbol: "~",
+    trailingCommas: "all",
+    bracketSpacing: true,
+    arrowParens: "always",
+    tabWidth: 2,
+    jsToTs: false,
+    cjsToEsm: false,
+    modernize: {
+      replaceFs: false,
+      replacePath: false,
+      replaceHttp: false,
+      replaceProcess: false,
+      replaceConsole: false,
+      replaceEvents: false,
+    },
+  },
+
+  // Settings for cloning an existing repo
+  multipleRepoCloneMode: false,
+  customUserFocusedRepos: [],
+  customDevsFocusedRepos: [],
+  hideRepoSuggestions: false,
+  customReposOnNewProject: false,
+
+  // Set to false to disable opening the browser during env composing
+  envComposerOpenBrowser: true,
+
+  // Enable auto-answering for prompts to skip manual confirmations.
+  // Make sure you have unknown values configured above.
+  skipPromptsUseAutoBehavior: false,
+
+  // Prompt behavior for deployment
+  // Options: prompt | autoYes | autoNo
+  deployBehavior: "prompt",
+  depsBehavior: "prompt",
+  gitBehavior: "prompt",
+  i18nBehavior: "prompt",
+  scriptsBehavior: "prompt",
+
+  // Behavior for existing GitHub repos during project creation
+  // Options: prompt | autoYes | autoYesSkipCommit | autoNo
+  existingRepoBehavior: "prompt",
+
+  // Behavior for Reliverse AI chat and agent mode
+  // Options: promptOnce | promptEachFile | autoYes
+  relinterConfirm: "promptOnce",
+
   // Remdn Configuration
   remdn: {
     title: "Directory Comparison",
@@ -1261,5 +1507,3 @@ export const DEFAULT_CONFIG_RELIVERSE: ReliverseConfig = {
 export const defineConfig = (userConfig: Partial<ReliverseConfig> = {}) => {
   return { ...DEFAULT_CONFIG_RELIVERSE, ...userConfig };
 };
-`;
-}

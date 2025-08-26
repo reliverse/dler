@@ -11,10 +11,10 @@ rse auth better-auth generate
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { callCmd, defineArgs, defineCommand } from "@reliverse/rempts";
+import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { execaCommand } from "execa";
 import MagicString from "magic-string";
-import { default as betterAuthGenerateCmd } from "~/app/better/auth/generate/cmd";
+// import { default as betterAuthGenerateCmd } from "~/app/better/auth/generate/cmd";
 import { configPath, schemaPath } from "./consts";
 
 const notice = `/**
@@ -57,10 +57,11 @@ export default defineCommand({
       process.exit(1);
     }
 
-    await callCmd(betterAuthGenerateCmd, {
-      config: configPath,
-      output: schemaPath,
-    });
+    // TODO: uncomment this
+    // await callCmd(betterAuthGenerateCmd, {
+    //   config: configPath,
+    //   output: schemaPath,
+    // });
 
     const filePath = path.resolve(schemaPath);
     const originalContent = await fs.readFile(filePath, "utf8");

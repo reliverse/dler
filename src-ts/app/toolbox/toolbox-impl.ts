@@ -5,7 +5,8 @@ import { confirmPrompt, selectPrompt } from "@reliverse/rempts";
 import { FALLBACK_ENV_EXAMPLE_URL } from "~/app/config/constants";
 import { composeEnvFile } from "~/app/init/use-template/cp-modules/compose-env-file/cef-mod";
 import { promptGitDeploy } from "~/app/init/use-template/cp-modules/git-deploy-prompts/gdp-mod";
-import type { ParamsOmitReli, RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
+import type { ParamsOmitReli } from "~/app/types/mod";
 import { experimental } from "~/app/utils/badgeNotifiers";
 import { downloadRepo } from "~/app/utils/downloading/downloadRepo";
 import type { RepoOption } from "~/app/utils/projectRepository";
@@ -30,7 +31,7 @@ export async function rmTestsRuntime(cwd: string) {
 
 export async function downloadRepoOption(
   template: RepoOption,
-  config: RseConfig,
+  config: ReliverseConfig,
   memory: ReliverseMemory,
   isDev: boolean,
   cwd: string,

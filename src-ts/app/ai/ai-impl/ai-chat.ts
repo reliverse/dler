@@ -2,7 +2,7 @@ import { re } from "@reliverse/relico";
 import { inputPrompt, msg } from "@reliverse/rempts";
 import type { CoreMessage } from "ai";
 import { streamText } from "ai";
-import type { RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
 
 import { EXIT_KEYWORDS, MODEL } from "./ai-const";
 import { agentRelinter } from "./relinter/relinter";
@@ -21,7 +21,7 @@ const messages: CoreMessage[] = [];
 /**
  * Initiates a loop to capture user input and provide AI responses.
  */
-export async function aiChat(config: RseConfig): Promise<void> {
+export async function aiChat(config: ReliverseConfig): Promise<void> {
   while (true) {
     const userInput = await getUserInput();
     const parsedInput = parseUserInput(userInput);
@@ -95,7 +95,10 @@ function looksLikePath(token: string): boolean {
 /**
  * Directs the flow if @relinter is detected, calling the relinter agent with all paths.
  */
-async function handleRelinterFlow(config: RseConfig, parsedInput: ParsedUserInput): Promise<void> {
+async function handleRelinterFlow(
+  config: ReliverseConfig,
+  parsedInput: ParsedUserInput,
+): Promise<void> {
   const { hasRelinter, paths, task } = parsedInput;
   if (!hasRelinter) return;
 

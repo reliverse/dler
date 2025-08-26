@@ -1,4 +1,4 @@
-import type { RseConfig } from "~/app/types/mod";
+import type { ReliverseConfig } from "~/app/schema/mod";
 
 import type { ReliverseMemory } from "~/app/utils/schemaMemory";
 
@@ -9,7 +9,7 @@ export type CircularTrigger = (typeof CIRCULAR_TRIGGERS)[number];
 export type AiSdkAgent = (typeof AGENT_NAMES)[number];
 
 export interface AIAgentOptions {
-  config: RseConfig;
+  config: ReliverseConfig;
   agent: AiSdkAgent;
   isKeyEnsured: boolean;
   memory?: ReliverseMemory;

@@ -18,7 +18,7 @@
 import { relinka } from "@reliverse/relinka";
 import { confirmPrompt, defineCommand, inputPrompt, selectPrompt } from "@reliverse/rempts";
 import { execaCommand } from "execa";
-import { getOrCreateRseConfig } from "~/app/config/core-cfg";
+import { getOrCreateReliverseConfig } from "~/app/config/core-cfg";
 
 import { getCurrentWorkingDirectory } from "~/app/utils/terminalHelpers";
 
@@ -136,7 +136,7 @@ export default defineCommand({
     } = args;
 
     const cwd = getCurrentWorkingDirectory();
-    const { config } = await getOrCreateRseConfig({
+    const { config } = await getOrCreateReliverseConfig({
       projectPath: cwd,
       isDev,
       overrides: {},
