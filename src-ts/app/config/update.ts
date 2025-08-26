@@ -8,7 +8,7 @@ import { relinka } from "@reliverse/relinka";
 import { Value } from "@sinclair/typebox/value";
 import { parseJSONC } from "confbox";
 import { writeRseConfig } from "~/app/config/create";
-import { DEFAULT_CONFIG_RSE } from "~/app/config/default-cfg";
+import { DEFAULT_CONFIG_RELIVERSE } from "~/app/config/default";
 import { getRseConfigPath } from "~/app/config/path";
 import { rseSchema } from "~/app/config/schema";
 import { getBackupAndTempPaths } from "~/app/config/utils";
@@ -176,32 +176,44 @@ export async function updateRseConfig(
  */
 export function mergeWithDefaults(partial: Partial<RseConfig>): RseConfig {
   return {
-    ...DEFAULT_CONFIG_RSE,
+    ...DEFAULT_CONFIG_RELIVERSE,
     ...partial,
-    features: {
-      ...DEFAULT_CONFIG_RSE.features,
-      ...(partial.features ?? {}),
-    },
-    codeStyle: {
-      ...(DEFAULT_CONFIG_RSE.codeStyle ?? {}),
-      ...(partial.codeStyle ?? {}),
-      modernize: {
-        ...(DEFAULT_CONFIG_RSE.codeStyle?.modernize ?? {}),
-        ...(partial.codeStyle?.modernize ?? {}),
-      },
-    },
-    preferredLibraries: {
-      ...DEFAULT_CONFIG_RSE.preferredLibraries,
-      ...(partial.preferredLibraries ?? {}),
-    },
-    monorepo: {
-      ...DEFAULT_CONFIG_RSE.monorepo,
-      ...(partial.monorepo ?? {}),
-    },
-    customRules: {
-      ...DEFAULT_CONFIG_RSE.customRules,
-      ...(partial.customRules ?? {}),
-    },
-    ignoreDependencies: partial.ignoreDependencies ?? DEFAULT_CONFIG_RSE.ignoreDependencies,
+    features: partial.features
+      ? {
+          ...DEFAULT_CONFIG_RELIVERSE.features,
+          ...partial.features,
+        }
+      : DEFAULT_CONFIG_RELIVERSE.features,
+    codeStyle: partial.codeStyle
+      ? {
+          ...(DEFAULT_CONFIG_RELIVERSE.codeStyle ?? {}),
+          ...partial.codeStyle,
+          modernize: partial.codeStyle.modernize
+            ? {
+                ...(DEFAULT_CONFIG_RELIVERSE.codeStyle?.modernize ?? {}),
+                ...partial.codeStyle.modernize,
+              }
+            : DEFAULT_CONFIG_RELIVERSE.codeStyle?.modernize,
+        }
+      : DEFAULT_CONFIG_RELIVERSE.codeStyle,
+    preferredLibraries: partial.preferredLibraries
+      ? {
+          ...DEFAULT_CONFIG_RELIVERSE.preferredLibraries,
+          ...partial.preferredLibraries,
+        }
+      : DEFAULT_CONFIG_RELIVERSE.preferredLibraries,
+    monorepo: partial.monorepo
+      ? {
+          ...DEFAULT_CONFIG_RELIVERSE.monorepo,
+          ...partial.monorepo,
+        }
+      : DEFAULT_CONFIG_RELIVERSE.monorepo,
+    customRules: partial.customRules
+      ? {
+          ...DEFAULT_CONFIG_RELIVERSE.customRules,
+          ...partial.customRules,
+        }
+      : DEFAULT_CONFIG_RELIVERSE.customRules,
+    ignoreDependencies: partial.ignoreDependencies ?? DEFAULT_CONFIG_RELIVERSE.ignoreDependencies,
   };
 }

@@ -10,7 +10,7 @@ import { safeDestr } from "destr";
 import { type PackageJson, readPackageJSON } from "pkg-types";
 import { getBiomeConfig } from "~/app/config/biome";
 import { cliDomainDocs, DEFAULT_DOMAIN, rseName, UNKNOWN_VALUE } from "~/app/config/constants";
-import { DEFAULT_CONFIG_RSE } from "~/app/config/default-cfg";
+import { DEFAULT_CONFIG_RELIVERSE } from "~/app/config/default";
 import { detectFeatures, detectProjectFramework, getPackageJsonSafe } from "~/app/config/detect";
 import type { RseConfig } from "~/app/types/mod";
 
@@ -55,7 +55,7 @@ export async function getDefaultRseConfig(
   const detectedProjectFramework = await detectProjectFramework(projectPath);
 
   return {
-    ...DEFAULT_CONFIG_RSE,
+    ...DEFAULT_CONFIG_RELIVERSE,
     projectName: effectiveProjectName,
     projectAuthor: effectiveAuthorName,
     projectDescription: packageData.description ?? UNKNOWN_VALUE,
@@ -76,7 +76,7 @@ export async function getDefaultRseConfig(
       ? runtimeInfo?.name
       : "node") as "node" | "deno" | "bun",
     codeStyle: {
-      ...DEFAULT_CONFIG_RSE.codeStyle,
+      ...DEFAULT_CONFIG_RELIVERSE.codeStyle,
       lineWidth: biomeConfig?.lineWidth ?? 80,
       indentSize: biomeConfig?.indentWidth ?? 2,
       tabWidth: biomeConfig?.indentWidth ?? 2,
@@ -102,12 +102,12 @@ export async function generateDefaultRulesForProject(
   const rules = await getDefaultRseConfig(projectPath, isDev);
   if (!projectCategory) {
     rules.features = {
-      ...DEFAULT_CONFIG_RSE.features,
+      ...DEFAULT_CONFIG_RELIVERSE.features,
       language: ["typescript"],
       themes: ["default"],
     };
     rules.preferredLibraries = {
-      ...DEFAULT_CONFIG_RSE.preferredLibraries,
+      ...DEFAULT_CONFIG_RELIVERSE.preferredLibraries,
       databaseLibrary: "drizzle",
       authentication: "better-auth",
     };
@@ -194,7 +194,7 @@ export async function generateDefaultRulesForProject(
 
   // If no preferredLibraries object, create one
   if (!rules.preferredLibraries) {
-    rules.preferredLibraries = { ...DEFAULT_CONFIG_RSE.preferredLibraries };
+    rules.preferredLibraries = { ...DEFAULT_CONFIG_RELIVERSE.preferredLibraries };
   }
 
   // Set specific libraries based on detection

@@ -1,4 +1,5 @@
 import path from "@reliverse/pathkit";
+import { re } from "@reliverse/relico";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { multiselectPrompt } from "@reliverse/rempts";
@@ -20,8 +21,17 @@ import {
   runInstallCommand,
   runInstallCommandWithFilter,
   type UpdateResult,
+  type UpgradeResult,
   updatePackageJsonFile,
   updateWorkspacePackages,
+  upgradeBun,
+  upgradeDlerGlobal,
+  upgradeDlerLocal,
+  upgradeGit,
+  upgradeNode,
+  upgradeNpm,
+  upgradePnpm,
+  upgradeYarn,
 } from "./utils";
 
 interface UpdateArgs {
@@ -375,4 +385,124 @@ export async function handleInstallation(
     relinka("warn", `Install failed: ${error instanceof Error ? error.message : String(error)}`);
     relinka("log", `Run '${packageManager.command} install' manually to apply the changes`);
   }
+}
+
+export async function handleToolUpgrades(args: any): Promise<void> {
+  // Define all tools and their upgrade functions
+  const toolUpgradeFunctions = [
+    { name: "dler (local)", fn: upgradeDlerLocal },
+    { name: "dler (global)", fn: upgradeDlerGlobal },
+    { name: "git", fn: upgradeGit },
+    { name: "node.js", fn: upgradeNode },
+    { name: "npm", fn: upgradeNpm },
+    { name: "bun", fn: upgradeBun },
+    { name: "yarn", fn: upgradeYarn },
+    { name: "pnpm", fn: upgradePnpm },
+  ];
+
+  let results: UpgradeResult[] = [];
+
+  if (args["upgrade-interactive"]) {
+    // Check all tools first to see what's available
+    const preliminaryResults = await Promise.all(
+      toolUpgradeFunctions.map(async ({ fn }) => await fn()),
+    );
+
+    // Filter out tools that are not found
+    const availableTools = toolUpgradeFunctions
+      .map((tool, index) => ({
+        ...tool,
+        result: preliminaryResults[index],
+      }))
+      .filter(({ result }) => result && result.status !== "not-found");
+
+    if (availableTools.length === 0) {
+      relinka("warn", "No tools available for upgrade");
+      return;
+    }
+
+    // Show interactive selection
+    const selectedTools = await multiselectPrompt({
+      title: "Select tools to upgrade",
+      displayInstructions: true,
+      options: [
+        { label: "Exit", value: "exit" },
+        ...availableTools.map(({ name, result }) => {
+          const isUpToDate = result && result.status === "up-to-date";
+          const hasErrors = result && result.status === "error";
+          const canUpgrade = result && result.status === "upgraded";
+
+          let label = name;
+          if (isUpToDate) {
+            label += " (up-to-date)";
+          } else if (hasErrors) {
+            label += " (has errors)";
+          } else if (canUpgrade) {
+            label += " (can be upgraded)";
+          }
+
+          return {
+            label: isUpToDate || hasErrors ? re.gray(label) : label,
+            value: name,
+            disabled: isUpToDate || hasErrors,
+            hint: hasErrors ? result.message : undefined,
+          };
+        }),
+      ],
+    });
+
+    if (selectedTools.length === 0 || selectedTools.includes("exit")) {
+      relinka("info", "Exiting upgrade process");
+      return;
+    }
+
+    // Filter out "exit" from selected tools
+    const actualSelectedTools = selectedTools.filter((tool) => tool !== "exit");
+
+    // Execute upgrades for selected tools
+    relinka("info", `Upgrading ${actualSelectedTools.length} selected tools...`);
+
+    for (const toolName of actualSelectedTools) {
+      const tool = availableTools.find((t) => t.name === toolName);
+      if (tool) {
+        const result = await tool.fn();
+        results.push(result);
+      }
+    }
+  } else {
+    // Non-interactive mode - upgrade all tools
+    results = await Promise.all(toolUpgradeFunctions.map(async ({ fn }) => await fn()));
+  }
+
+  // Report results
+  const upgraded = results.filter((r) => r.status === "upgraded");
+  const upToDate = results.filter((r) => r.status === "up-to-date");
+  const notFound = results.filter((r) => r.status === "not-found");
+  const errors = results.filter((r) => r.status === "error");
+
+  if (upgraded.length > 0) {
+    relinka("success", `Upgraded ${upgraded.length} tools:`);
+    upgraded.forEach((r) =>
+      relinka("verbose", `  ✓ ${r.tool}${r.message ? ` - ${r.message}` : ""}`),
+    );
+  }
+
+  if (upToDate.length > 0) {
+    relinka("info", `${upToDate.length} tools already up-to-date:`);
+    upToDate.forEach((r) =>
+      relinka("verbose", `  • ${r.tool}${r.message ? ` - ${r.message}` : ""}`),
+    );
+  }
+
+  if (notFound.length > 0) {
+    relinka("warn", `${notFound.length} tools not installed (skipped):`);
+    notFound.forEach((r) => relinka("verbose", `  - ${r.tool}`));
+  }
+
+  if (errors.length > 0) {
+    relinka("error", `${errors.length} tools had errors:`);
+    errors.forEach((r) => relinka("verbose", `  ✗ ${r.tool}${r.message ? ` - ${r.message}` : ""}`));
+  }
+
+  relinka("success", "Upgrade check completed!");
 }

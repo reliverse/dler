@@ -1,3 +1,4 @@
+// @ts-expect-error TEMP
 import { defineConfig } from "./reltypes";
 
 // TODO: divide different parts of dler into the plugins
@@ -13,9 +14,9 @@ import { defineConfig } from "./reltypes";
 // }
 
 /**
- * Reliverse Bundler Configuration
- * Hover over a field to see more details
- * @see https://github.com/reliverse/dler
+ * @reliverse/* libraries & rse configuration
+ * Hover over the fields to learn more details
+ * @see https://docs.reliverse.org/libraries
  */
 export default defineConfig({
   // RSE CONFIG (https://docs.reliverse.org/cli)
@@ -27,7 +28,7 @@ export default defineConfig({
   projectAuthor: "reliverse",
   projectDescription:
     "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
-  version: "1.7.111",
+  version: "1.7.114",
   projectLicense: "MIT",
 
   // Bump configuration
@@ -229,46 +230,8 @@ export default defineConfig({
   libsDirDist: "dist-libs",
   libsDirSrc: "src/libs",
   libsList: {
-    "@reliverse/dler-sdk": {
-      libDeclarations: true,
-      libDescription:
-        "@reliverse/dler-sdk without cli. @reliverse/dler-sdk allows you to create new plugins for @reliverse/dler CLI, and even extend your own CLI functionality (you may also try @reliverse/rse-sdk for this case).",
-      libDirName: "sdk",
-      libMainFile: "sdk/sdk-mod.ts",
-      // TODO: [dler] eliminate libPkgKeepDeps
-      // in favor of filterDepsPatterns param
-      libPkgKeepDeps: true,
-      libTranspileMinify: true,
-      libPubPause: false,
-      libPubRegistry: "npm-jsr",
-    },
-    "~/app/types/mod": {
-      libDeclarations: true,
-      libDescription: "config typescript definitions for @reliverse/dler",
-      libDirName: "cfg",
-      libMainFile: "cfg/cfg-mod.ts",
-      libPkgKeepDeps: false,
-      libTranspileMinify: true,
-      libPubPause: false,
-      libPubRegistry: "npm-jsr",
-    },
-    "@reliverse/get": {
-      libDeclarations: true,
-      libDescription: "get binaries for @reliverse/dler and other dev tools",
-      libDirName: "get",
-      libMainFile: "get/get-mod.ts",
-      libPkgKeepDeps: [
-        "@reliverse/pathkit",
-        "@reliverse/relifso",
-        "@reliverse/relinka",
-        "@reliverse/rempts",
-        "lookpath",
-        "execa",
-      ],
-      libTranspileMinify: true,
-      libPubPause: false,
-      libPubRegistry: "npm-jsr",
-    },
+    // TODO: [dler] eliminate libPkgKeepDeps
+    // in favor of filterDepsPatterns param
   },
 
   // Specifies what resources to send to npm and jsr registries.
@@ -280,20 +243,7 @@ export default defineConfig({
     global: ["package.json", "README.md", "LICENSE", "LICENSES"],
     "dist-jsr": [],
     "dist-npm": [],
-    "dist-libs": {
-      "@reliverse/dler-sdk": {
-        jsr: [],
-        npm: [],
-      },
-      "~/app/types/mod": {
-        jsr: [],
-        npm: [],
-      },
-      "@reliverse/get": {
-        jsr: [],
-        npm: [],
-      },
-    },
+    "dist-libs": {},
   },
 
   // Files with these extensions will be built
@@ -306,34 +256,10 @@ export default defineConfig({
   // Dependency filtering
   // Global is always applied
   filterDepsPatterns: {
-    global: [
-      "@types",
-      "biome",
-      "knip",
-      "eslint",
-      "prettier",
-      "typescript",
-      "@reliverse/rse",
-      "@reliverse/dler",
-      "!@reliverse/rse-sdk",
-      "!@reliverse/dler-sdk",
-    ],
+    global: ["@types", "biome", "knip", "eslint", "prettier", "@reliverse/rse"],
     "dist-npm": [],
     "dist-jsr": ["+bun"],
-    "dist-libs": {
-      "@reliverse/dler-sdk": {
-        jsr: ["+bun"],
-        npm: [],
-      },
-      "~/app/types/mod": {
-        jsr: [],
-        npm: [],
-      },
-      "@reliverse/get": {
-        jsr: [],
-        npm: [],
-      },
-    },
+    "dist-libs": {},
   },
 
   // Code quality tools

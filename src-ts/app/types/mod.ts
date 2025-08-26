@@ -40,7 +40,6 @@ export type {
   CircularTrigger,
 } from "~/app/ai/ai-impl/ai-types";
 export type { LintSuggestion } from "~/app/ai/ai-impl/relinter/relinter";
-export type { MainMenuChoice } from "~/app/init/use-template/cp-modules/cli-main-modules/cli-menu-items/getMainMenuOptions";
 export type {
   KeyType,
   KnownService,
@@ -953,96 +952,6 @@ export interface LogLevelConfig {
 export type LogLevelsConfig = Partial<Record<LogLevel, LogLevelConfig>>;
 
 /**
- * Configuration options for the Relinka logger.
- * All properties are optional to allow for partial configuration.
- * Defaults will be applied during initialization.
- */
-export interface RelinkaConfig {
-  /**
-   * Enables verbose (aka debug) mode for detailed logging.
-   *
-   * `true` here works only for end-users of CLIs/libs when theirs developers
-   * has been awaited for user's config via `@reliverse/relinka`'s `await relinkaConfig;`
-   */
-  verbose?: boolean;
-
-  /**
-   * Configuration for directory-related settings.
-   * - `maxLogFiles`: The maximum number of log files to keep before cleanup.
-   */
-  dirs?: RelinkaDirsConfig;
-
-  /**
-   * Disables color output in the console.
-   */
-  disableColors?: boolean;
-
-  /**
-   * Configuration for log file output.
-   */
-  logFile?: {
-    /**
-     * Path to the log file.
-     */
-    outputPath?: string;
-    /**
-     * How to handle date in the filename.
-     * - `disable`: No date prefix/suffix
-     * - `append-before`: Add date before the filename (e.g., "2024-01-15-log.txt")
-     * - `append-after`: Add date after the filename (e.g., "log-2024-01-15.txt")
-     */
-    nameWithDate?: "disable" | "append-before" | "append-after";
-    /**
-     * If true, clears the log file when relinkaConfig is executed with supportFreshLogFile: true.
-     * This is useful for starting with a clean log file on each run.
-     */
-    freshLogFile?: boolean;
-  };
-
-  /**
-   * If true, logs will be saved to a file.
-   */
-  saveLogsToFile?: boolean;
-
-  /**
-   * Configuration for timestamp in log messages.
-   */
-  timestamp?: {
-    /**
-     * If true, timestamps will be added to log messages.
-     */
-    enabled: boolean;
-    /**
-     * The format for timestamps. Default is YYYY-MM-DD HH:mm:ss.SSS
-     */
-    format?: string;
-  };
-
-  /**
-   * Allows to customize the log levels.
-   */
-  levels?: LogLevelsConfig;
-
-  /**
-   * Controls how often the log cleanup runs (in milliseconds)
-   * Default: 10000 (10 seconds)
-   */
-  cleanupInterval?: number;
-
-  /**
-   * Maximum size of the log write buffer before flushing to disk (in bytes)
-   * Default: 4096 (4KB)
-   */
-  bufferSize?: number;
-
-  /**
-   * Maximum time to hold logs in buffer before flushing to disk (in milliseconds)
-   * Default: 5000 (5 seconds)
-   */
-  maxBufferAge?: number;
-}
-
-/**
  * Defines the configuration for building and publishing packages. This includes: versioning,
  * build settings, publishing options, libraries-dler-plugin built-in plugin, and more.
  * It customizes the build and publish pipeline for both NPM and JSR registries.
@@ -1661,7 +1570,281 @@ export interface DlerConfig {
    *
    * @default See DEFAULT_RELINKA_CONFIG in defaults
    */
-  relinka: RelinkaConfig;
+  relinka: {
+    /**
+     * Configuration options for the Relinka logger.
+     * All properties are optional to allow for partial configuration.
+     * Defaults will be applied during initialization.
+     */
+    /**
+     * Enables verbose (aka debug) mode for detailed logging.
+     *
+     * `true` here works only for end-users of CLIs/libs when theirs developers
+     * has been awaited for user's config via `@reliverse/relinka`'s `await relinkaConfig;`
+     */
+    verbose?: boolean;
+
+    /**
+     * Configuration for directory-related settings.
+     * - `maxLogFiles`: The maximum number of log files to keep before cleanup.
+     */
+    dirs?: RelinkaDirsConfig;
+
+    /**
+     * Disables color output in the console.
+     */
+    disableColors?: boolean;
+
+    /**
+     * Configuration for log file output.
+     */
+    logFile?: {
+      /**
+       * Path to the log file.
+       */
+      outputPath?: string;
+      /**
+       * How to handle date in the filename.
+       * - `disable`: No date prefix/suffix
+       * - `append-before`: Add date before the filename (e.g., "2024-01-15-log.txt")
+       * - `append-after`: Add date after the filename (e.g., "log-2024-01-15.txt")
+       */
+      nameWithDate?: "disable" | "append-before" | "append-after";
+      /**
+       * If true, clears the log file when relinkaConfig is executed with supportFreshLogFile: true.
+       * This is useful for starting with a clean log file on each run.
+       */
+      freshLogFile?: boolean;
+    };
+
+    /**
+     * If true, logs will be saved to a file.
+     */
+    saveLogsToFile?: boolean;
+
+    /**
+     * Configuration for timestamp in log messages.
+     */
+    timestamp?: {
+      /**
+       * If true, timestamps will be added to log messages.
+       */
+      enabled: boolean;
+      /**
+       * The format for timestamps. Default is YYYY-MM-DD HH:mm:ss.SSS
+       */
+      format?: string;
+    };
+
+    /**
+     * Allows to customize the log levels.
+     */
+    levels?: LogLevelsConfig;
+
+    /**
+     * Controls how often the log cleanup runs (in milliseconds)
+     * Default: 10000 (10 seconds)
+     */
+    cleanupInterval?: number;
+
+    /**
+     * Maximum size of the log write buffer before flushing to disk (in bytes)
+     * Default: 4096 (4KB)
+     */
+    bufferSize?: number;
+
+    /**
+     * Maximum time to hold logs in buffer before flushing to disk (in milliseconds)
+     * Default: 5000 (5 seconds)
+     */
+    maxBufferAge?: number;
+  };
+
+  // ==========================================================================
+  // Rse CLI Configuration
+  // ==========================================================================
+
+  $schema: string;
+  projectName: string;
+  projectAuthor: string;
+  projectDescription: string;
+  version: string;
+  projectLicense: string;
+
+  // ==========================================================================
+  // Project configuration
+  // ==========================================================================
+  projectState?: string;
+  projectRepository?: string;
+  projectDomain?: string;
+  projectCategory?: string;
+  projectSubcategory?: string;
+  projectTemplate?: string;
+  projectTemplateDate?: string;
+  projectArchitecture?: string;
+  repoPrivacy?: string;
+  projectGitService?: string;
+  projectDeployService?: string;
+  repoBranch?: string;
+
+  // Primary tech stack/framework
+  projectFramework?: string;
+  projectPackageManager?: string;
+  projectRuntime?: string;
+  preferredLibraries?: {
+    stateManagement?: string;
+    formManagement?: string;
+    styling?: string;
+    uiComponents?: string;
+    testing?: string;
+    authentication?: string;
+    databaseLibrary?: string;
+    databaseProvider?: string;
+    api?: string;
+    linting?: string;
+    formatting?: string;
+    payment?: string;
+    analytics?: string;
+    monitoring?: string;
+    logging?: string;
+    forms?: string;
+    notifications?: string;
+    search?: string;
+    uploads?: string;
+    validation?: string;
+    documentation?: string;
+    icons?: string;
+    mail?: string;
+    cache?: string;
+    storage?: string;
+    cdn?: string;
+    cms?: string;
+    i18n?: string;
+    seo?: string;
+    motion?: string;
+    charts?: string;
+    dates?: string;
+    markdown?: string;
+    security?: string;
+    routing?: string;
+  };
+  monorepo?: {
+    type?: string;
+    packages?: string[];
+    sharedPackages?: string[];
+  };
+
+  // List dependencies to exclude from checks
+  ignoreDependencies?: string[];
+
+  // Provide custom rules for Reliverse AI
+  customRules?: Record<string, any>;
+
+  // Project features
+  features?: {
+    i18n?: boolean;
+    analytics?: boolean;
+    themeMode?: "light" | "dark" | "dark-light";
+    authentication?: boolean;
+    api?: boolean;
+    database?: boolean;
+    testing?: boolean;
+    docker?: boolean;
+    ci?: boolean;
+    commands?: string[];
+    webview?: string[];
+    language?: string[];
+    themes?: string[];
+  };
+
+  // Code style preferences
+  codeStyle?: {
+    dontRemoveComments?: boolean;
+    shouldAddComments?: boolean;
+    typeOrInterface?: "type" | "interface" | "mixed";
+    importOrRequire?: "import" | "require" | "mixed";
+    quoteMark?: "single" | "double";
+    semicolons?: boolean;
+    lineWidth?: number;
+    indentStyle?: "space" | "tab";
+    indentSize?: number;
+    importSymbol?: string;
+    trailingComma?: "none" | "es5" | "all";
+    bracketSpacing?: boolean;
+    arrowParens?: "always" | "avoid";
+    tabWidth?: number;
+    jsToTs?: boolean;
+    cjsToEsm?: boolean;
+    modernize?: {
+      replaceFs?: boolean;
+      replacePath?: boolean;
+      replaceHttp?: boolean;
+      replaceProcess?: boolean;
+      replaceConsole?: boolean;
+      replaceEvents?: boolean;
+    };
+  };
+
+  // Settings for cloning an existing repo
+  multipleRepoCloneMode?: boolean;
+  customUserFocusedRepos?: string[];
+  customDevsFocusedRepos?: string[];
+  hideRepoSuggestions?: boolean;
+  customReposOnNewProject?: boolean;
+
+  // Set to false to disable opening the browser during env composing
+  envComposerOpenBrowser?: boolean;
+
+  // Enable auto-answering for prompts to skip manual confirmations.
+  skipPromptsUseAutoBehavior?: boolean;
+
+  // Prompt behavior for deployment
+  deployBehavior?: string;
+  depsBehavior?: string;
+  gitBehavior?: string;
+  i18nBehavior?: string;
+  scriptsBehavior?: string;
+
+  // Behavior for existing GitHub repos during project creation
+  existingRepoBehavior?: string;
+
+  // Behavior for Reliverse AI chat and agent mode
+  relinterConfirm?: string;
+
+  // ==========================================================================
+  // Remdn Configuration
+  // ==========================================================================
+
+  /**
+   * Configuration for the remdn command which generates directory comparison documentation.
+   * Controls how files are compared and documented across different distribution directories.
+   */
+  remdn?: {
+    /**
+     * Title for the generated documentation.
+     * @default "Directory Comparison"
+     */
+    title?: string;
+
+    /**
+     * Output path for the generated HTML file.
+     * @default "docs/files.html"
+     */
+    output?: string;
+
+    /**
+     * Configuration for directories to compare.
+     * Each key represents a directory path, and its value contains directory-specific settings.
+     */
+    dirs?: Record<string, Record<string, never>>;
+
+    /**
+     * Extension mapping for file comparison.
+     * Maps source file extensions to their corresponding extensions in different distribution directories.
+     * Format: [<main>, <dist-npm/bin | dist-libs's * npm/bin>, <dist-jsr | dist-libs's * jsr/bin>]
+     */
+    "ext-map"?: Record<string, string[]>;
+  };
 }
 
 export type BumpMode = "patch" | "minor" | "major" | "auto" | "manual";
@@ -1828,96 +2011,6 @@ export interface LogLevelConfig {
 }
 
 /**
- * Configuration options for the Relinka logger.
- * All properties are optional to allow for partial configuration.
- * Defaults will be applied during initialization.
- */
-export interface RelinkaConfig {
-  /**
-   * Enables verbose (aka debug) mode for detailed logging.
-   *
-   * `true` here works only for end-users of CLIs/libs when theirs developers
-   * has been awaited for user's config via `@reliverse/relinka`'s `await relinkaConfig;`
-   */
-  verbose?: boolean;
-
-  /**
-   * Configuration for directory-related settings.
-   * - `maxLogFiles`: The maximum number of log files to keep before cleanup.
-   */
-  dirs?: RelinkaDirsConfig;
-
-  /**
-   * Disables color output in the console.
-   */
-  disableColors?: boolean;
-
-  /**
-   * Configuration for log file output.
-   */
-  logFile?: {
-    /**
-     * Path to the log file.
-     */
-    outputPath?: string;
-    /**
-     * How to handle date in the filename.
-     * - `disable`: No date prefix/suffix
-     * - `append-before`: Add date before the filename (e.g., "2024-01-15-log.txt")
-     * - `append-after`: Add date after the filename (e.g., "log-2024-01-15.txt")
-     */
-    nameWithDate?: "disable" | "append-before" | "append-after";
-    /**
-     * If true, clears the log file when relinkaConfig is executed with supportFreshLogFile: true.
-     * This is useful for starting with a clean log file on each run.
-     */
-    freshLogFile?: boolean;
-  };
-
-  /**
-   * If true, logs will be saved to a file.
-   */
-  saveLogsToFile?: boolean;
-
-  /**
-   * Configuration for timestamp in log messages.
-   */
-  timestamp?: {
-    /**
-     * If true, timestamps will be added to log messages.
-     */
-    enabled: boolean;
-    /**
-     * The format for timestamps. Default is YYYY-MM-DD HH:mm:ss.SSS
-     */
-    format?: string;
-  };
-
-  /**
-   * Allows to customize the log levels.
-   */
-  levels?: LogLevelsConfig;
-
-  /**
-   * Controls how often the log cleanup runs (in milliseconds)
-   * Default: 10000 (10 seconds)
-   */
-  cleanupInterval?: number;
-
-  /**
-   * Maximum size of the log write buffer before flushing to disk (in bytes)
-   * Default: 4096 (4KB)
-   */
-  bufferSize?: number;
-
-  /**
-   * Maximum time to hold logs in buffer before flushing to disk (in milliseconds)
-   * Default: 5000 (5 seconds)
-   */
-  maxBufferAge?: number;
-}
-
-/**
  * Defines the configuration for building and publishing packages. This includes: versioning,
  * build settings, publishing options, libraries-dler-plugin built-in plugin, and more.
  * It customizes the build and publish pipeline for both NPM and JSR registries.
@@ -2536,7 +2629,95 @@ export interface DlerConfig {
    *
    * @default See DEFAULT_RELINKA_CONFIG in defaults
    */
-  relinka: RelinkaConfig;
+  relinka: {
+    /**
+     * Configuration options for the Relinka logger.
+     * All properties are optional to allow for partial configuration.
+     * Defaults will be applied during initialization.
+     */
+    /**
+     * Enables verbose (aka debug) mode for detailed logging.
+     *
+     * `true` here works only for end-users of CLIs/libs when theirs developers
+     * has been awaited for user's config via `@reliverse/relinka`'s `await relinkaConfig;`
+     */
+    verbose?: boolean;
+
+    /**
+     * Configuration for directory-related settings.
+     * - `maxLogFiles`: The maximum number of log files to keep before cleanup.
+     */
+    dirs?: RelinkaDirsConfig;
+
+    /**
+     * Disables color output in the console.
+     */
+    disableColors?: boolean;
+
+    /**
+     * Configuration for log file output.
+     */
+    logFile?: {
+      /**
+       * Path to the log file.
+       */
+      outputPath?: string;
+      /**
+       * How to handle date in the filename.
+       * - `disable`: No date prefix/suffix
+       * - `append-before`: Add date before the filename (e.g., "2024-01-15-log.txt")
+       * - `append-after`: Add date after the filename (e.g., "log-2024-01-15.txt")
+       */
+      nameWithDate?: "disable" | "append-before" | "append-after";
+      /**
+       * If true, clears the log file when relinkaConfig is executed with supportFreshLogFile: true.
+       * This is useful for starting with a clean log file on each run.
+       */
+      freshLogFile?: boolean;
+    };
+
+    /**
+     * If true, logs will be saved to a file.
+     */
+    saveLogsToFile?: boolean;
+
+    /**
+     * Configuration for timestamp in log messages.
+     */
+    timestamp?: {
+      /**
+       * If true, timestamps will be added to log messages.
+       */
+      enabled: boolean;
+      /**
+       * The format for timestamps. Default is YYYY-MM-DD HH:mm:ss.SSS
+       */
+      format?: string;
+    };
+
+    /**
+     * Allows to customize the log levels.
+     */
+    levels?: LogLevelsConfig;
+
+    /**
+     * Controls how often the log cleanup runs (in milliseconds)
+     * Default: 10000 (10 seconds)
+     */
+    cleanupInterval?: number;
+
+    /**
+     * Maximum size of the log write buffer before flushing to disk (in bytes)
+     * Default: 4096 (4KB)
+     */
+    bufferSize?: number;
+
+    /**
+     * Maximum time to hold logs in buffer before flushing to disk (in milliseconds)
+     * Default: 5000 (5 seconds)
+     */
+    maxBufferAge?: number;
+  };
 }
 
 /**
@@ -2627,11 +2808,26 @@ export interface LibConfig {
 /**
  * Default configuration for the build and publish logic.
  */
-export const DEFAULT_CONFIG_DLER: DlerConfig = {
+export const DEFAULT_CONFIG_RELIVERSE: DlerConfig = {
+  // RSE CONFIG (https://docs.reliverse.org/cli)
+  // Restart the CLI to apply your config changes
+  $schema: "./schema.json",
+
+  // General project information
+  projectName: "@reliverse/dler",
+  projectAuthor: "reliverse",
+  projectDescription:
+    "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
+  version: "1.7.114",
+  projectLicense: "MIT",
+
+  // Bump version
   bumpDisable: false,
   bumpFilter: ["package.json", "reliverse.ts"],
   bumpMode: "patch",
   bumpSet: "",
+
+  // Build & Publishing
   commonPubPause: true,
   commonPubRegistry: "npm",
   commonVerbose: false,
@@ -2787,8 +2983,177 @@ export const DEFAULT_CONFIG_DLER: DlerConfig = {
       },
     },
   },
+
+  // Project configuration
+  projectState: "creating",
+  projectRepository: "https://github.com/reliverse/rse",
+  projectDomain: "https://docs.reliverse.org/cli",
+  projectCategory: "unknown",
+  projectSubcategory: "unknown",
+  projectTemplate: "unknown",
+  projectTemplateDate: "unknown",
+  projectArchitecture: "unknown",
+  repoPrivacy: "unknown",
+  projectGitService: "github",
+  projectDeployService: "vercel",
+  repoBranch: "main",
+
+  // Primary tech stack/framework
+  projectFramework: "rempts",
+  projectPackageManager: "bun",
+  projectRuntime: "bun",
+  preferredLibraries: {
+    stateManagement: "unknown",
+    formManagement: "unknown",
+    styling: "unknown",
+    uiComponents: "unknown",
+    testing: "unknown",
+    authentication: "unknown",
+    databaseLibrary: "drizzle",
+    databaseProvider: "sqlite",
+    api: "trpc",
+    linting: "unknown",
+    formatting: "unknown",
+    payment: "unknown",
+    analytics: "unknown",
+    monitoring: "unknown",
+    logging: "unknown",
+    forms: "unknown",
+    notifications: "unknown",
+    search: "unknown",
+    uploads: "unknown",
+    validation: "zod",
+    documentation: "unknown",
+    icons: "unknown",
+    mail: "unknown",
+    cache: "unknown",
+    storage: "unknown",
+    cdn: "unknown",
+    cms: "unknown",
+    i18n: "unknown",
+    seo: "unknown",
+    motion: "unknown",
+    charts: "unknown",
+    dates: "unknown",
+    markdown: "unknown",
+    security: "unknown",
+    routing: "unknown",
+  },
+  monorepo: {
+    type: "none",
+    packages: [],
+    sharedPackages: [],
+  },
+
+  // List dependencies to exclude from checks
+  ignoreDependencies: [],
+
+  // Provide custom rules for Reliverse AI
+  // You can use any json type here in {}
+  customRules: {},
+
+  // Project features
+  features: {
+    i18n: false,
+    analytics: false,
+    themeMode: "dark-light",
+    authentication: true,
+    api: true,
+    database: true,
+    testing: false,
+    docker: false,
+    ci: false,
+    commands: [
+      "pub",
+      "example",
+      "db",
+      "latest",
+      "check",
+      "dev:cli",
+      "dev:add",
+      "dev:ai",
+      "dev:clone",
+      "dev:cmod",
+    ],
+    webview: ["react-native"],
+    language: ["typescript"],
+    themes: ["default", "eslint", "biome", "sonner", "uploadthing", "zod", "typebox", "lucide"],
+  },
+
+  // Code style preferences
+  codeStyle: {
+    dontRemoveComments: true,
+    shouldAddComments: true,
+    typeOrInterface: "type",
+    importOrRequire: "import",
+    quoteMark: "double",
+    semicolons: true,
+    lineWidth: 80,
+    indentStyle: "space",
+    indentSize: 2,
+    importSymbol: "~",
+    trailingComma: "all",
+    bracketSpacing: true,
+    arrowParens: "always",
+    tabWidth: 2,
+    jsToTs: false,
+    cjsToEsm: false,
+    modernize: {
+      replaceFs: false,
+      replacePath: false,
+      replaceHttp: false,
+      replaceProcess: false,
+      replaceConsole: false,
+      replaceEvents: false,
+    },
+  },
+
+  // Settings for cloning an existing repo
+  multipleRepoCloneMode: false,
+  customUserFocusedRepos: [],
+  customDevsFocusedRepos: [],
+  hideRepoSuggestions: false,
+  customReposOnNewProject: false,
+
+  // Set to false to disable opening the browser during env composing
+  envComposerOpenBrowser: true,
+
+  // Enable auto-answering for prompts to skip manual confirmations.
+  // Make sure you have unknown values configured above.
+  skipPromptsUseAutoBehavior: false,
+
+  // Prompt behavior for deployment
+  // Options: prompt | autoYes | autoNo
+  deployBehavior: "prompt",
+  depsBehavior: "prompt",
+  gitBehavior: "prompt",
+  i18nBehavior: "prompt",
+  scriptsBehavior: "prompt",
+
+  // Behavior for existing GitHub repos during project creation
+  // Options: prompt | autoYes | autoYesSkipCommit | autoNo
+  existingRepoBehavior: "prompt",
+
+  // Behavior for Reliverse AI chat and agent mode
+  // Options: promptOnce | promptEachFile | autoYes
+  relinterConfirm: "promptOnce",
+
+  // Remdn Configuration
+  remdn: {
+    title: "Directory Comparison",
+    output: "docs/files.html",
+    dirs: {
+      src: {},
+      "dist-npm/bin": {},
+      "dist-jsr/bin": {},
+      "dist-libs/sdk/npm/bin": {},
+    },
+    "ext-map": {
+      ts: ["ts", "js-d.ts", "ts"], // [<main>, <dist-npm/bin | dist-libs's * npm/bin>, <dist-jsr | dist-libs's * jsr/bin>]
+    },
+  },
 };
 
 export const defineConfig = (userConfig: Partial<DlerConfig> = {}) => {
-  return { ...DEFAULT_CONFIG_DLER, ...userConfig };
+  return { ...DEFAULT_CONFIG_RELIVERSE, ...userConfig };
 };

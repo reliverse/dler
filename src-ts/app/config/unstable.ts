@@ -1,6 +1,6 @@
 import { Value } from "@sinclair/typebox/value";
 import { loadConfig, watchConfig } from "c12";
-import { DEFAULT_CONFIG_RSE } from "~/app/config/default-cfg";
+import { DEFAULT_CONFIG_RELIVERSE } from "~/app/config/default";
 import { rseSchema } from "~/app/config/schema";
 import type { RseConfig } from "~/app/types/mod";
 
@@ -21,7 +21,7 @@ export async function loadrse(
     rcFile: false,
     packageJson: false,
     dotenv: false, // disable loading .env
-    defaults: DEFAULT_CONFIG_RSE, // merged first
+    defaults: DEFAULT_CONFIG_RELIVERSE, // merged first
     // overrides: overrides || {}, // highest priority
   });
 

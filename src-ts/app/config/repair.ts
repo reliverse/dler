@@ -11,7 +11,7 @@ import { Value } from "@sinclair/typebox/value";
 import { parseJSONC } from "confbox";
 import { jsonrepair } from "jsonrepair";
 import { writeRseConfig } from "~/app/config/create";
-import { DEFAULT_CONFIG_RSE } from "~/app/config/default-cfg";
+import { DEFAULT_CONFIG_RELIVERSE } from "~/app/config/default";
 import { rseSchema } from "~/app/config/schema";
 import { cleanGitHubUrl } from "~/app/config/utils";
 import type { RseConfig } from "~/app/types/mod";
@@ -160,7 +160,11 @@ export async function parseAndFixRseConfig(
       const originalErrors = [...Value.Errors(rseSchema, parsed)];
       if (originalErrors.length === 0) return parsed as RseConfig;
 
-      const { fixedConfig, changedKeys } = fixLineByLine(parsed, DEFAULT_CONFIG_RSE, rseSchema);
+      const { fixedConfig, changedKeys } = fixLineByLine(
+        parsed,
+        DEFAULT_CONFIG_RELIVERSE,
+        rseSchema,
+      );
       if (Value.Check(rseSchema, fixedConfig)) {
         await writeRseConfig(configPath, fixedConfig, isDev);
         const originalInvalidPaths = originalErrors.map((err) => err.path);

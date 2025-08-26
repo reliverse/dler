@@ -5,9 +5,12 @@
       "name": "@reliverse/dler",
       "dependencies": {
         "@ai-sdk/openai": "^2.0.20",
+        "@babel/preset-react": "^7.27.1",
+        "@babel/preset-typescript": "^7.27.1",
         "@hookform/resolvers": "^5.2.1",
         "@libsql/client": "^0.15.12",
         "@mendable/firecrawl-js": "^3.2.0",
+        "@mrleebo/prisma-ast": "^0.13.0",
         "@octokit/plugin-rest-endpoint-methods": "^16.0.0",
         "@octokit/request-error": "^7.0.0",
         "@octokit/rest": "^22.0.0",
@@ -20,7 +23,7 @@
         "@reliverse/relico": "^1.3.7",
         "@reliverse/relifso": "^1.4.5",
         "@reliverse/relinka": "^1.5.9",
-        "@reliverse/rempts": "^1.7.53",
+        "@reliverse/rempts": "^1.7.54",
         "@reliverse/runtime": "^1.0.3",
         "@rollup/plugin-alias": "^5.1.1",
         "@rollup/plugin-commonjs": "^28.0.6",
@@ -31,6 +34,9 @@
         "@sinclair/typebox": "^0.34.40",
         "@uploadcare/upload-client": "^6.17.0",
         "@vercel/sdk": "^1.10.6",
+        "@volar/typescript": "^2.4.23",
+        "@vue/language-core": "^3.0.6",
+        "@vue/language-core2.0": "npm:@vue/language-core@2.0.29",
         "ai": "^5.0.23",
         "async-listen": "^3.1.0",
         "autoprefixer": "^10.4.21",
@@ -45,6 +51,7 @@
         "defu": "^6.1.4",
         "destr": "^2.0.5",
         "detect-package-manager": "^3.0.2",
+        "drizzle-kit": "^0.31.4",
         "drizzle-orm": "^0.44.5",
         "enquirer": "^2.4.1",
         "esbuild": "^0.25.9",
@@ -66,6 +73,7 @@
         "magic-string": "^0.30.18",
         "magicast": "^0.3.5",
         "mlly": "^1.8.0",
+        "mysql2": "^3.14.3",
         "nanoid": "^5.1.5",
         "nypm": "^0.6.1",
         "octokit": "^5.0.3",
@@ -79,6 +87,7 @@
         "pkg-types": "^2.3.0",
         "postcss": "^8.5.6",
         "postcss-nested": "^7.0.2",
+        "postgres": "^3.4.7",
         "posthog-node": "^5.7.0",
         "pretty-bytes": "^7.0.1",
         "pretty-ms": "^9.2.0",
@@ -91,6 +100,7 @@
         "registry-url": "^7.2.0",
         "rollup": "^4.48.1",
         "rollup-plugin-dts": "^6.2.3",
+        "sass": "^1.90.0",
         "scule": "^1.3.0",
         "semver": "^7.7.2",
         "shebang-command": "^2.0.0",
@@ -106,15 +116,15 @@
         "uncrypto": "^0.1.3",
         "untyped": "^2.0.0",
         "uploadthing": "^7.7.4",
+        "vue": "^3.5.20",
+        "vue-sfc-transformer": "^0.1.16",
+        "vue-tsc": "^3.0.6",
+        "vue-tsc1": "npm:vue-tsc@1.8.27",
+        "vue-tsc2.0": "npm:vue-tsc@2.0.29",
         "zod": "^4.1.1",
       },
       "devDependencies": {
-        "@babel/preset-react": "^7.27.1",
-        "@babel/preset-typescript": "^7.27.1",
         "@biomejs/biome": "^2.2.2",
-        "@mrleebo/prisma-ast": "^0.13.0",
-        "@planetscale/database": "^1.19.0",
-        "@prisma/client": "^6.14.0",
         "@total-typescript/ts-reset": "^0.6.1",
         "@types/better-sqlite3": "^7.6.13",
         "@types/bun": "^1.2.20",
@@ -125,20 +135,8 @@
         "@types/semver": "^7.7.0",
         "@types/shebang-command": "^1.2.2",
         "@types/tar-stream": "^3.1.4",
-        "@volar/typescript": "^2.4.23",
-        "@vue/language-core": "^3.0.6",
-        "@vue/language-core2.0": "npm:@vue/language-core@2.0.29",
-        "drizzle-kit": "^0.31.4",
-        "mysql2": "^3.14.3",
-        "postgres": "^3.4.7",
-        "sass": "^1.90.0",
         "typescript": "^5.9.2",
         "ultracite": "^5.2.5",
-        "vue": "^3.5.20",
-        "vue-sfc-transformer": "^0.1.16",
-        "vue-tsc": "^3.0.6",
-        "vue-tsc1": "npm:vue-tsc@1.8.27",
-        "vue-tsc2.0": "npm:vue-tsc@2.0.29",
       },
     },
   },
@@ -615,7 +613,7 @@
 
     "@reliverse/rematch": ["@reliverse/rematch@1.1.0", "", {}, "sha512-HkJIa1on7jqwPvwzxgfoUOX1p3mJHIHErI57vU+K0J0+olj3xfzh//+LX8LoQcEY0GFvS2V7LJ0ICFAsdK53NQ=="],
 
-    "@reliverse/rempts": ["@reliverse/rempts@1.7.53", "", { "dependencies": { "@figliolia/chalk-animation": "^1.0.4", "@reliverse/relico": "^1.3.7", "@reliverse/relinka": "^1.5.9", "@reliverse/runtime": "^1.0.3", "ansi-escapes": "^7.0.0", "cli-spinners": "^3.2.0", "figlet": "^1.8.2", "gradient-string": "^3.0.0", "log-update": "^6.1.0", "ora": "^8.2.0", "pkg-types": "^2.3.0", "sisteransi": "^1.0.5", "terminal-size": "^4.0.0", "ts-regex-builder": "^1.8.2", "wrap-ansi": "^9.0.0" } }, "sha512-3OZAYYCEU/4/jT7Hc7DtBH71B1h0BQL3nwis7jYpY7yZ60iYYt9m6vZjV7oxi6Lqj4aMG0mSUwSKVgp/nLKIgg=="],
+    "@reliverse/rempts": ["@reliverse/rempts@1.7.54", "", { "dependencies": { "@figliolia/chalk-animation": "^1.0.4", "@reliverse/relico": "^1.3.7", "@reliverse/relinka": "^1.5.9", "@reliverse/runtime": "^1.0.3", "ansi-escapes": "^7.0.0", "cli-spinners": "^3.2.0", "figlet": "^1.8.2", "gradient-string": "^3.0.0", "log-update": "^6.1.0", "ora": "^8.2.0", "pkg-types": "^2.3.0", "sisteransi": "^1.0.5", "terminal-size": "^4.0.0", "ts-regex-builder": "^1.8.2", "wrap-ansi": "^9.0.0" } }, "sha512-95zmfMBkoDwfQ1CNyIIiye6Bzj7wAtHU0dbyuJrYBEdkxca4ypCl8LHHjmIJU5FtoqlhTaqYMZ0AX6U3BEA0lw=="],
 
     "@reliverse/runtime": ["@reliverse/runtime@1.0.3", "", { "dependencies": { "execa": "^9.5.2", "fs-extra": "^11.3.0", "pathe": "^2.0.3" } }, "sha512-do7B1EvugTVgrm6umeKgSjK4DBlmAL6T1ij29JVqIjf0okWoONRKVuHLreASwZuVcXcXNNMJ8Wyngzv2rPjqDg=="],
 
@@ -963,7 +961,7 @@
 
     "destr": ["destr@2.0.5", "", {}, "sha512-ugFTXCtDZunbzasqBxrK93Ik/DRYsO6S/fedkWEMKqt04xZ4csmnmwGDBAb07QWNaGMAmnTIemsYZCksjATwsA=="],
 
-    "detect-libc": ["detect-libc@1.0.3", "", { "bin": { "detect-libc": "./bin/detect-libc.js" } }, "sha512-pGjwhsmsp4kL2RTz08wcOlGN83otlqHeD/Z5T8GXZB+/YcpQ/dgo+lbU8ZsGxV0HIvqqxo9l7mqYwyYMD9bKDg=="],
+    "detect-libc": ["detect-libc@2.0.2", "", {}, "sha512-UX6sGumvvqSaXgdKGUsgZWqcUyIXZ/vZTrlRT/iobiKhGL0zL4d3osHj3uqllWJK+i+sixDS/3COVEOFbupFyw=="],
 
     "detect-node-es": ["detect-node-es@1.1.0", "", {}, "sha512-ypdmJU/TbBby2Dxibuv7ZLW3Bs1QEmM7nHjEANfohJLvE0XVujisn1qPJcZxg+qDucsr+bP6fLD1rPS3AhJ7EQ=="],
 
@@ -1731,6 +1729,8 @@
 
     "@mendable/firecrawl-js/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 
+    "@parcel/watcher/detect-libc": ["detect-libc@1.0.3", "", { "bin": { "detect-libc": "./bin/detect-libc.js" } }, "sha512-pGjwhsmsp4kL2RTz08wcOlGN83otlqHeD/Z5T8GXZB+/YcpQ/dgo+lbU8ZsGxV0HIvqqxo9l7mqYwyYMD9bKDg=="],
+
     "@pnpm/network.ca-file/graceful-fs": ["graceful-fs@4.2.10", "", {}, "sha512-9ByhssR2fPVsNZj478qUUbKfmL0+t5BDVyjShtyZZLiK7ZDAArFFfopyOTj0M05wE2tJPisA4iTnnXl2YoPvOA=="],
 
     "@reliverse/bleump/@reliverse/relinka": ["@reliverse/relinka@1.5.8", "", { "dependencies": { "@reliverse/pathkit": "^1.3.4", "@reliverse/relico": "^1.3.6", "@reliverse/relifso": "^1.4.5", "c12": "^3.2.0" } }, "sha512-VTNrAExMiZu6QhgCmu4xZYdOgATcanJ53NXZ8O03qOFe1FpfilS3wX58vcIY9VR17XHT8JfFB7W0lvil0dTDbg=="],
@@ -1792,8 +1792,6 @@
     "fix-dts-default-cjs-exports/rollup": ["rollup@4.46.2", "", { "dependencies": { "@types/estree": "1.0.8" }, "optionalDependencies": { "@rollup/rollup-android-arm-eabi": "4.46.2", "@rollup/rollup-android-arm64": "4.46.2", "@rollup/rollup-darwin-arm64": "4.46.2", "@rollup/rollup-darwin-x64": "4.46.2", "@rollup/rollup-freebsd-arm64": "4.46.2", "@rollup/rollup-freebsd-x64": "4.46.2", "@rollup/rollup-linux-arm-gnueabihf": "4.46.2", "@rollup/rollup-linux-arm-musleabihf": "4.46.2", "@rollup/rollup-linux-arm64-gnu": "4.46.2", "@rollup/rollup-linux-arm64-musl": "4.46.2", "@rollup/rollup-linux-loongarch64-gnu": "4.46.2", "@rollup/rollup-linux-ppc64-gnu": "4.46.2", "@rollup/rollup-linux-riscv64-gnu": "4.46.2", "@rollup/rollup-linux-riscv64-musl": "4.46.2", "@rollup/rollup-linux-s390x-gnu": "4.46.2", "@rollup/rollup-linux-x64-gnu": "4.46.2", "@rollup/rollup-linux-x64-musl": "4.46.2", "@rollup/rollup-win32-arm64-msvc": "4.46.2", "@rollup/rollup-win32-ia32-msvc": "4.46.2", "@rollup/rollup-win32-x64-msvc": "4.46.2", "fsevents": "~2.3.2" }, "bin": { "rollup": "dist/bin/rollup" } }, "sha512-WMmLFI+Boh6xbop+OAGo9cQ3OgX9MIg7xOQjn+pTCwOkk+FNDAeAemXkJ3HzDJrVXleLOFVa1ipuc1AmEx1Dwg=="],
 
     "globby/@sindresorhus/merge-streams": ["@sindresorhus/merge-streams@2.3.0", "", {}, "sha512-LtoMMhxAlorcGhmFYI+LhPgbPZCkgP6ra1YL604EeF6U98pLlQ3iWIGMdWSC+vWmPBWBNgmDBAhnAobLROJmwg=="],
-
-    "libsql/detect-libc": ["detect-libc@2.0.2", "", {}, "sha512-UX6sGumvvqSaXgdKGUsgZWqcUyIXZ/vZTrlRT/iobiKhGL0zL4d3osHj3uqllWJK+i+sixDS/3COVEOFbupFyw=="],
 
     "log-symbols/is-unicode-supported": ["is-unicode-supported@1.3.0", "", {}, "sha512-43r2mRvz+8JRIKnWJ+3j8JtjRKZ6GmjzfaE/qiBJnikNnYv/6bagRJ1kUhNk8R5EX/GkobD+r+sfxCPJsiKBLQ=="],
 

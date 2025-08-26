@@ -5,7 +5,7 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { cliConfigJsonc, cliConfigTs, RSE_SCHEMA_DEV, UNKNOWN_VALUE } from "~/app/config/constants";
 import { createRseConfig } from "~/app/config/create";
-import { DEFAULT_CONFIG_RSE } from "~/app/config/default-cfg";
+import { DEFAULT_CONFIG_RELIVERSE } from "~/app/config/default";
 import { getRseConfigPath } from "~/app/config/path";
 import { readRseConfig } from "~/app/config/read";
 import { parseAndFixRseConfig } from "~/app/config/repair";
@@ -82,7 +82,7 @@ export async function getOrCreateRseConfig({
   const mainConfig = await readRseConfig(configPath, isDev);
   if (!mainConfig) {
     relinka("warn", "Using fallback default config due to validation failure.");
-    return { config: { ...DEFAULT_CONFIG_RSE }, mrse: results };
+    return { config: { ...DEFAULT_CONFIG_RELIVERSE }, mrse: results };
   }
   if (isDev) {
     mainConfig.$schema = RSE_SCHEMA_DEV;

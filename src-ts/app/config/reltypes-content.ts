@@ -1116,7 +1116,7 @@ export const DEFAULT_CONFIG_RELIVERSE: ReliverseConfig = {
 
   // Dependency filtering
   filterDepsPatterns: {
-    global: ["@types", "biome", "eslint", "knip", "prettier", "typescript", "@reliverse/dler"],
+    global: ["@types", "biome", "eslint", "knip", "prettier", "@reliverse/rse"],
     "dist-npm": [],
     "dist-jsr": [],
     "dist-libs": {},

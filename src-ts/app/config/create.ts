@@ -47,7 +47,7 @@ import {
   UNKNOWN_VALUE,
 } from "~/app/config/constants";
 import { generateDefaultRulesForProject, getDefaultRseConfig } from "~/app/config/def-utils";
-import { DEFAULT_CONFIG_RSE } from "~/app/config/default-cfg";
+import { DEFAULT_CONFIG_RELIVERSE } from "~/app/config/default";
 import { detectFeatures, getPackageJson } from "~/app/config/detect";
 import { getRseConfigPath } from "~/app/config/path";
 import { readRseConfig } from "~/app/config/read";
@@ -378,7 +378,7 @@ export async function generateRseConfig({
 
   // Final merge: default config, existing config, newly derived config, then user overrides
   const effectiveConfig = {
-    ...DEFAULT_CONFIG_RSE,
+    ...DEFAULT_CONFIG_RELIVERSE,
     ...existingContent,
     ...defaultConfig,
     ...overrides,

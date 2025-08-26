@@ -1,9 +1,9 @@
 import path from "@reliverse/pathkit";
-import fs from "@reliverse/relifso";
+import fs, { ensuredir } from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { readPackageJSON } from "pkg-types";
 
-import { DEFAULT_CONFIG_DLER } from "~/app/config/default";
+import { DEFAULT_CONFIG_RELIVERSE } from "~/app/config/default";
 import { cliConfigJsonc, cliConfigTs, rseOrg, UNKNOWN_STRING } from "./constants";
 import { ensureReltypesFile } from "./reltypes-utils";
 
@@ -77,13 +77,17 @@ export async function ensureReliverseConfig(
 }
 
 export async function prepareReliverseEnvironment(
+  cwd: string,
   isDev: boolean,
   configKind: ConfigKind = DEFAULT_CONFIG_KIND,
 ) {
+  // 0. Ensure cwd exists
+  if (!(await fs.pathExists(cwd))) {
+    await ensuredir(cwd);
+  }
+
   // 1. Ensure reliverse config exists
   await ensureReliverseConfig(isDev, configKind);
-
-  const cwd = process.cwd();
 
   // 2. Handle .gitignore if .git directory exists
   const gitDir = path.resolve(cwd, ".git");
@@ -248,19 +252,19 @@ function getLibsObject(isDev: boolean) {
 // Generate JSONC config file content
 function generateJsoncConfig(isDev: boolean, pkgDescription?: string): string {
   const schemaUrl = `${rseOrg}/schema.json`;
-  const verboseValue = getValue(isDev, true, DEFAULT_CONFIG_DLER.commonVerbose);
-  const registryValue = getValue(isDev, "npm-jsr", DEFAULT_CONFIG_DLER.commonPubRegistry);
-  const pausePublishValue = getValue(isDev, false, DEFAULT_CONFIG_DLER.commonPubPause);
+  const verboseValue = getValue(isDev, true, DEFAULT_CONFIG_RELIVERSE.commonVerbose);
+  const registryValue = getValue(isDev, "npm-jsr", DEFAULT_CONFIG_RELIVERSE.commonPubRegistry);
+  const pausePublishValue = getValue(isDev, false, DEFAULT_CONFIG_RELIVERSE.commonPubPause);
   const coreDescriptionValue = getValue(
     isDev,
     "reliverse (prev. dler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
-    pkgDescription || DEFAULT_CONFIG_DLER.coreDescription,
+    pkgDescription || DEFAULT_CONFIG_RELIVERSE.coreDescription,
   );
-  const libsActModeValue = getValue(isDev, "main-and-libs", DEFAULT_CONFIG_DLER.libsActMode);
+  const libsActModeValue = getValue(isDev, "main-and-libs", DEFAULT_CONFIG_RELIVERSE.libsActMode);
 
-  return `// reliverse.jsonc - Reliverse Bundler Configuration
-// Hover over a field to see more details
-// @see https://github.com/reliverse/reliverse
+  return `// @reliverse/* libraries & rse configuration
+// Hover over the fields to learn more details
+// @see https://docs.reliverse.org/libraries
 // Schema: ${schemaUrl}
 {
   "$schema": "${schemaUrl}",
@@ -387,52 +391,52 @@ function generateJsoncConfig(isDev: boolean, pkgDescription?: string): string {
   "relinterConfirm": ${UNKNOWN_STRING},
   
   // Bump configuration
-  "bumpDisable": ${DEFAULT_CONFIG_DLER.bumpDisable},
+  "bumpDisable": ${DEFAULT_CONFIG_RELIVERSE.bumpDisable},
   "bumpFilter": ${JSON.stringify(getBumpFilter(isDev))},
-  "bumpMode": "${DEFAULT_CONFIG_DLER.bumpMode}",
-  "bumpSet": "${DEFAULT_CONFIG_DLER.bumpSet}",
+  "bumpMode": "${DEFAULT_CONFIG_RELIVERSE.bumpMode}",
+  "bumpSet": "${DEFAULT_CONFIG_RELIVERSE.bumpSet}",
   
   // Common configuration
   "commonPubPause": ${pausePublishValue},
   "commonPubRegistry": "${registryValue}",
   "commonVerbose": ${verboseValue},
-  "displayBuildPubLogs": ${DEFAULT_CONFIG_DLER.displayBuildPubLogs},
+  "displayBuildPubLogs": ${DEFAULT_CONFIG_RELIVERSE.displayBuildPubLogs},
   
   // Core configuration
-  "coreBuildOutDir": "${DEFAULT_CONFIG_DLER.coreBuildOutDir}",
-  "coreDeclarations": ${DEFAULT_CONFIG_DLER.coreDeclarations},
+  "coreBuildOutDir": "${DEFAULT_CONFIG_RELIVERSE.coreBuildOutDir}",
+  "coreDeclarations": ${DEFAULT_CONFIG_RELIVERSE.coreDeclarations},
   "coreDescription": ${JSON.stringify(coreDescriptionValue)},
-  "coreEntryFile": "${DEFAULT_CONFIG_DLER.coreEntryFile}",
-  "coreEntrySrcDir": "${DEFAULT_CONFIG_DLER.coreEntrySrcDir}",
+  "coreEntryFile": "${DEFAULT_CONFIG_RELIVERSE.coreEntryFile}",
+  "coreEntrySrcDir": "${DEFAULT_CONFIG_RELIVERSE.coreEntrySrcDir}",
   "coreIsCLI": {
     "enabled": false,
     "scripts": {}
   },
   
   // JSR-only config
-  "distJsrAllowDirty": ${DEFAULT_CONFIG_DLER.distJsrAllowDirty},
-  "distJsrBuilder": "${DEFAULT_CONFIG_DLER.distJsrBuilder}",
-  "distJsrDirName": "${DEFAULT_CONFIG_DLER.distJsrDirName}",
-  "distJsrDryRun": ${DEFAULT_CONFIG_DLER.distJsrDryRun},
-  "distJsrFailOnWarn": ${DEFAULT_CONFIG_DLER.distJsrFailOnWarn},
-  "distJsrGenTsconfig": ${DEFAULT_CONFIG_DLER.distJsrGenTsconfig},
-  "distJsrOutFilesExt": "${DEFAULT_CONFIG_DLER.distJsrOutFilesExt}",
-  "distJsrSlowTypes": ${DEFAULT_CONFIG_DLER.distJsrSlowTypes},
+  "distJsrAllowDirty": ${DEFAULT_CONFIG_RELIVERSE.distJsrAllowDirty},
+  "distJsrBuilder": "${DEFAULT_CONFIG_RELIVERSE.distJsrBuilder}",
+  "distJsrDirName": "${DEFAULT_CONFIG_RELIVERSE.distJsrDirName}",
+  "distJsrDryRun": ${DEFAULT_CONFIG_RELIVERSE.distJsrDryRun},
+  "distJsrFailOnWarn": ${DEFAULT_CONFIG_RELIVERSE.distJsrFailOnWarn},
+  "distJsrGenTsconfig": ${DEFAULT_CONFIG_RELIVERSE.distJsrGenTsconfig},
+  "distJsrOutFilesExt": "${DEFAULT_CONFIG_RELIVERSE.distJsrOutFilesExt}",
+  "distJsrSlowTypes": ${DEFAULT_CONFIG_RELIVERSE.distJsrSlowTypes},
   
   // NPM-only config
-  "distNpmBuilder": "${DEFAULT_CONFIG_DLER.distNpmBuilder}",
-  "distNpmDirName": "${DEFAULT_CONFIG_DLER.distNpmDirName}",
-  "distNpmOutFilesExt": "${DEFAULT_CONFIG_DLER.distNpmOutFilesExt}",
+  "distNpmBuilder": "${DEFAULT_CONFIG_RELIVERSE.distNpmBuilder}",
+  "distNpmDirName": "${DEFAULT_CONFIG_RELIVERSE.distNpmDirName}",
+  "distNpmOutFilesExt": "${DEFAULT_CONFIG_RELIVERSE.distNpmOutFilesExt}",
   
   // Libraries Reliverse Plugin
   "libsActMode": "${libsActModeValue}",
-  "libsDirDist": "${DEFAULT_CONFIG_DLER.libsDirDist}",
-  "libsDirSrc": "${DEFAULT_CONFIG_DLER.libsDirSrc}",
+  "libsDirDist": "${DEFAULT_CONFIG_RELIVERSE.libsDirDist}",
+  "libsDirSrc": "${DEFAULT_CONFIG_RELIVERSE.libsDirSrc}",
   "libsList": ${JSON.stringify(getLibsObject(isDev), null, 2)},
   
   // Logger setup
-  "logsFileName": "${DEFAULT_CONFIG_DLER.logsFileName}",
-  "logsFreshFile": ${DEFAULT_CONFIG_DLER.logsFreshFile},
+  "logsFileName": "${DEFAULT_CONFIG_RELIVERSE.logsFileName}",
+  "logsFreshFile": ${DEFAULT_CONFIG_RELIVERSE.logsFreshFile},
   
   // Dependency filtering
   "filterDepsPatterns": ${JSON.stringify(getFilterDepsPatterns(isDev), null, 2)},
@@ -451,16 +455,16 @@ function generateJsoncConfig(isDev: boolean, pkgDescription?: string): string {
   },
   
   // Build setup
-  "transpileFailOnWarn": ${DEFAULT_CONFIG_DLER.transpileFailOnWarn},
-  "transpileEsbuild": "${DEFAULT_CONFIG_DLER.transpileEsbuild}",
-  "transpileFormat": "${DEFAULT_CONFIG_DLER.transpileFormat}",
-  "transpileMinify": ${DEFAULT_CONFIG_DLER.transpileMinify},
-  "transpilePublicPath": "${DEFAULT_CONFIG_DLER.transpilePublicPath}",
-  "transpileSourcemap": "${DEFAULT_CONFIG_DLER.transpileSourcemap}",
-  "transpileSplitting": ${DEFAULT_CONFIG_DLER.transpileSplitting},
-  "transpileStub": ${DEFAULT_CONFIG_DLER.transpileStub},
-  "transpileTarget": "${DEFAULT_CONFIG_DLER.transpileTarget}",
-  "transpileWatch": ${DEFAULT_CONFIG_DLER.transpileWatch},
+  "transpileFailOnWarn": ${DEFAULT_CONFIG_RELIVERSE.transpileFailOnWarn},
+  "transpileEsbuild": "${DEFAULT_CONFIG_RELIVERSE.transpileEsbuild}",
+  "transpileFormat": "${DEFAULT_CONFIG_RELIVERSE.transpileFormat}",
+  "transpileMinify": ${DEFAULT_CONFIG_RELIVERSE.transpileMinify},
+  "transpilePublicPath": "${DEFAULT_CONFIG_RELIVERSE.transpilePublicPath}",
+  "transpileSourcemap": "${DEFAULT_CONFIG_RELIVERSE.transpileSourcemap}",
+  "transpileSplitting": ${DEFAULT_CONFIG_RELIVERSE.transpileSplitting},
+  "transpileStub": ${DEFAULT_CONFIG_RELIVERSE.transpileStub},
+  "transpileTarget": "${DEFAULT_CONFIG_RELIVERSE.transpileTarget}",
+  "transpileWatch": ${DEFAULT_CONFIG_RELIVERSE.transpileWatch},
   
   // Publish artifacts configuration
   "publishArtifacts": ${JSON.stringify(getPublishArtifacts(isDev), null, 2)},
@@ -571,16 +575,16 @@ function generateConfig(
   configKind: ConfigKind = "ts",
 ): string {
   const importdefineConfigStatement = `import { defineConfig } from "./reltypes";`;
-  const verboseValue = getValue(isDev, true, DEFAULT_CONFIG_DLER.commonVerbose);
+  const verboseValue = getValue(isDev, true, DEFAULT_CONFIG_RELIVERSE.commonVerbose);
   const coreIsCLI = getCoreIsCLI(isDev);
-  const registryValue = getValue(isDev, "npm-jsr", DEFAULT_CONFIG_DLER.commonPubRegistry);
-  const pausePublishValue = getValue(isDev, false, DEFAULT_CONFIG_DLER.commonPubPause);
+  const registryValue = getValue(isDev, "npm-jsr", DEFAULT_CONFIG_RELIVERSE.commonPubRegistry);
+  const pausePublishValue = getValue(isDev, false, DEFAULT_CONFIG_RELIVERSE.commonPubPause);
   const coreDescriptionValue = getValue(
     isDev,
     "reliverse (prev. dler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
-    pkgDescription || DEFAULT_CONFIG_DLER.coreDescription,
+    pkgDescription || DEFAULT_CONFIG_RELIVERSE.coreDescription,
   );
-  const libsActModeValue = getValue(isDev, "main-and-libs", DEFAULT_CONFIG_DLER.libsActMode);
+  const libsActModeValue = getValue(isDev, "main-and-libs", DEFAULT_CONFIG_RELIVERSE.libsActMode);
 
   // ===================================================
   // Config template based on configKind
@@ -595,9 +599,9 @@ function generateConfig(
     importdefineConfigStatement,
     "",
     "/**",
-    " * Reliverse Bundler Configuration",
-    " * Hover over a field to see more details",
-    " * @see https://github.com/reliverse/reliverse",
+    " * @reliverse/* libraries & rse configuration",
+    " * Hover over the fields to learn more details",
+    " * @see https://docs.reliverse.org/libraries",
     " */",
     "export default defineConfig({",
     "  // Project configuration",
@@ -722,52 +726,52 @@ function generateConfig(
     `  relinterConfirm: ${UNKNOWN_STRING},`,
     "",
     "  // Bump configuration",
-    "  bumpDisable: " + DEFAULT_CONFIG_DLER.bumpDisable + ",",
+    "  bumpDisable: " + DEFAULT_CONFIG_RELIVERSE.bumpDisable + ",",
     "  bumpFilter: " + getBumpFilter(isDev) + ",",
-    '  bumpMode: "' + DEFAULT_CONFIG_DLER.bumpMode + '",',
-    '  bumpSet: "' + DEFAULT_CONFIG_DLER.bumpSet + '",',
+    '  bumpMode: "' + DEFAULT_CONFIG_RELIVERSE.bumpMode + '",',
+    '  bumpSet: "' + DEFAULT_CONFIG_RELIVERSE.bumpSet + '",',
     "",
     "  // Common configuration",
     "  commonPubPause: " + pausePublishValue + ",",
     '  commonPubRegistry: "' + registryValue + '",',
     "  commonVerbose: " + verboseValue + ",",
-    "  displayBuildPubLogs: " + DEFAULT_CONFIG_DLER.displayBuildPubLogs + ",",
+    "  displayBuildPubLogs: " + DEFAULT_CONFIG_RELIVERSE.displayBuildPubLogs + ",",
     "",
     "  // Core configuration",
-    '  coreBuildOutDir: "' + DEFAULT_CONFIG_DLER.coreBuildOutDir + '",',
-    "  coreDeclarations: " + DEFAULT_CONFIG_DLER.coreDeclarations + ",",
+    '  coreBuildOutDir: "' + DEFAULT_CONFIG_RELIVERSE.coreBuildOutDir + '",',
+    "  coreDeclarations: " + DEFAULT_CONFIG_RELIVERSE.coreDeclarations + ",",
     "  coreDescription: " + JSON.stringify(coreDescriptionValue) + ",",
-    '  coreEntryFile: "' + DEFAULT_CONFIG_DLER.coreEntryFile + '",',
-    '  coreEntrySrcDir: "' + DEFAULT_CONFIG_DLER.coreEntrySrcDir + '",',
+    '  coreEntryFile: "' + DEFAULT_CONFIG_RELIVERSE.coreEntryFile + '",',
+    '  coreEntrySrcDir: "' + DEFAULT_CONFIG_RELIVERSE.coreEntrySrcDir + '",',
     "  " + coreIsCLI,
     "",
     "  // JSR-only config",
-    "  distJsrAllowDirty: " + DEFAULT_CONFIG_DLER.distJsrAllowDirty + ",",
-    '  distJsrBuilder: "' + DEFAULT_CONFIG_DLER.distJsrBuilder + '",',
-    '  distJsrDirName: "' + DEFAULT_CONFIG_DLER.distJsrDirName + '",',
-    "  distJsrDryRun: " + DEFAULT_CONFIG_DLER.distJsrDryRun + ",",
-    "  distJsrFailOnWarn: " + DEFAULT_CONFIG_DLER.distJsrFailOnWarn + ",",
-    "  distJsrGenTsconfig: " + DEFAULT_CONFIG_DLER.distJsrGenTsconfig + ",",
-    '  distJsrOutFilesExt: "' + DEFAULT_CONFIG_DLER.distJsrOutFilesExt + '",',
-    "  distJsrSlowTypes: " + DEFAULT_CONFIG_DLER.distJsrSlowTypes + ",",
+    "  distJsrAllowDirty: " + DEFAULT_CONFIG_RELIVERSE.distJsrAllowDirty + ",",
+    '  distJsrBuilder: "' + DEFAULT_CONFIG_RELIVERSE.distJsrBuilder + '",',
+    '  distJsrDirName: "' + DEFAULT_CONFIG_RELIVERSE.distJsrDirName + '",',
+    "  distJsrDryRun: " + DEFAULT_CONFIG_RELIVERSE.distJsrDryRun + ",",
+    "  distJsrFailOnWarn: " + DEFAULT_CONFIG_RELIVERSE.distJsrFailOnWarn + ",",
+    "  distJsrGenTsconfig: " + DEFAULT_CONFIG_RELIVERSE.distJsrGenTsconfig + ",",
+    '  distJsrOutFilesExt: "' + DEFAULT_CONFIG_RELIVERSE.distJsrOutFilesExt + '",',
+    "  distJsrSlowTypes: " + DEFAULT_CONFIG_RELIVERSE.distJsrSlowTypes + ",",
     "",
     "  // NPM-only config",
-    '  distNpmBuilder: "' + DEFAULT_CONFIG_DLER.distNpmBuilder + '",',
-    '  distNpmDirName: "' + DEFAULT_CONFIG_DLER.distNpmDirName + '",',
-    '  distNpmOutFilesExt: "' + DEFAULT_CONFIG_DLER.distNpmOutFilesExt + '",',
+    '  distNpmBuilder: "' + DEFAULT_CONFIG_RELIVERSE.distNpmBuilder + '",',
+    '  distNpmDirName: "' + DEFAULT_CONFIG_RELIVERSE.distNpmDirName + '",',
+    '  distNpmOutFilesExt: "' + DEFAULT_CONFIG_RELIVERSE.distNpmOutFilesExt + '",',
     "",
     "  // Libraries Reliverse Plugin",
     "  // Publish specific dirs as separate packages",
     "  // This feature is experimental at the moment",
     "  // Please commit your changes before using it",
     '  libsActMode: "' + libsActModeValue + '",',
-    '  libsDirDist: "' + DEFAULT_CONFIG_DLER.libsDirDist + '",',
-    '  libsDirSrc: "' + DEFAULT_CONFIG_DLER.libsDirSrc + '",',
+    '  libsDirDist: "' + DEFAULT_CONFIG_RELIVERSE.libsDirDist + '",',
+    '  libsDirSrc: "' + DEFAULT_CONFIG_RELIVERSE.libsDirSrc + '",',
     "  libsList: " + JSON.stringify(getLibsObject(isDev), null, 2) + ",",
     "",
     "  // @reliverse/relinka logger setup",
-    '  logsFileName: "' + DEFAULT_CONFIG_DLER.logsFileName + '",',
-    "  logsFreshFile: " + DEFAULT_CONFIG_DLER.logsFreshFile + ",",
+    '  logsFileName: "' + DEFAULT_CONFIG_RELIVERSE.logsFileName + '",',
+    "  logsFreshFile: " + DEFAULT_CONFIG_RELIVERSE.logsFreshFile + ",",
     "",
     "  // Dependency filtering",
     "  // Global is always applied",
@@ -799,13 +803,13 @@ function generateConfig(
     "  // transpileAlias: {},",
     "  // transpileClean: true,",
     "  // transpileEntries: [],",
-    '  transpileEsbuild: "' + DEFAULT_CONFIG_DLER.transpileEsbuild + '",',
+    '  transpileEsbuild: "' + DEFAULT_CONFIG_RELIVERSE.transpileEsbuild + '",',
     "  // transpileExternals: [],",
-    "  transpileFailOnWarn: " + DEFAULT_CONFIG_DLER.transpileFailOnWarn + ",",
-    '  transpileFormat: "' + DEFAULT_CONFIG_DLER.transpileFormat + '",',
-    "  transpileMinify: " + DEFAULT_CONFIG_DLER.transpileMinify + ",",
+    "  transpileFailOnWarn: " + DEFAULT_CONFIG_RELIVERSE.transpileFailOnWarn + ",",
+    '  transpileFormat: "' + DEFAULT_CONFIG_RELIVERSE.transpileFormat + '",',
+    "  transpileMinify: " + DEFAULT_CONFIG_RELIVERSE.transpileMinify + ",",
     "  // transpileParallel: false,",
-    '  transpilePublicPath: "' + DEFAULT_CONFIG_DLER.transpilePublicPath + '",',
+    '  transpilePublicPath: "' + DEFAULT_CONFIG_RELIVERSE.transpilePublicPath + '",',
     "  // transpileReplace: {},",
     "  // transpileRollup: {",
     "  //   alias: {},",
@@ -817,12 +821,12 @@ function generateConfig(
     "  //   resolve: {},",
     "  // },",
     "  // transpileShowOutLog: false,",
-    '  transpileSourcemap: "' + DEFAULT_CONFIG_DLER.transpileSourcemap + '",',
-    "  transpileSplitting: " + DEFAULT_CONFIG_DLER.transpileSplitting + ",",
-    "  transpileStub: " + DEFAULT_CONFIG_DLER.transpileStub + ",",
+    '  transpileSourcemap: "' + DEFAULT_CONFIG_RELIVERSE.transpileSourcemap + '",',
+    "  transpileSplitting: " + DEFAULT_CONFIG_RELIVERSE.transpileSplitting + ",",
+    "  transpileStub: " + DEFAULT_CONFIG_RELIVERSE.transpileStub + ",",
     "  // transpileStubOptions: { jiti: {} },",
-    '  transpileTarget: "' + DEFAULT_CONFIG_DLER.transpileTarget + '",',
-    "  transpileWatch: " + DEFAULT_CONFIG_DLER.transpileWatch + ",",
+    '  transpileTarget: "' + DEFAULT_CONFIG_RELIVERSE.transpileTarget + '",',
+    "  transpileWatch: " + DEFAULT_CONFIG_RELIVERSE.transpileWatch + ",",
     "  // transpileWatchOptions: undefined,",
     "",
     "  // Specifies what resources to send to npm and jsr registries.",

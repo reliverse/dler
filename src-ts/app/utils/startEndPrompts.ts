@@ -1,22 +1,52 @@
 import { relinka } from "@reliverse/relinka";
-import { readPackageJSON } from "pkg-types";
+import { endPrompt, startPrompt } from "@reliverse/rempts";
+import { isBun, isBunPM, isBunRuntime } from "@reliverse/runtime";
+import { readPackageJSON as readPkgJSON } from "pkg-types";
 
-// Get package information from package.json
-const pkgInfo: { name: string; version: string } = {
-  name: "unknown",
-  version: "0.0.0",
+import { cliVersion, dlerName } from "~/app/config/constants";
+
+export async function readPackageJSON(): Promise<{ name?: string; version?: string }> {
+  try {
+    const pkg = await readPkgJSON();
+    return { name: pkg.name, version: pkg.version };
+  } catch (error) {
+    relinka("warn", "Could not read package.json, using default values");
+    return {};
+  }
+}
+
+export const getPkgName = async () => {
+  const pkg = await readPackageJSON();
+  return pkg.name || "unknown";
 };
 
-// Initialize package info
-readPackageJSON()
-  .then((pkg) => {
-    pkgInfo.name = pkg.name || "unknown";
-    pkgInfo.version = pkg.version || "0.0.0";
-  })
-  .catch(() => {
-    // Keep default values if package.json cannot be read
-    relinka("warn", "Could not read package.json, using default values");
+export const getPkgVersion = async () => {
+  const pkg = await readPackageJSON();
+  return pkg.version || "0.0.0";
+};
+
+export async function showStartPrompt(isDev: boolean, showRuntimeInfo: boolean) {
+  await startPrompt({
+    titleColor: "inverse",
+    clearConsole: true,
+    packageName: dlerName,
+    packageVersion: cliVersion,
+    isDev,
   });
 
-export const getPkgName = () => pkgInfo.name;
-export const getPkgVersion = () => pkgInfo.version;
+  if (showRuntimeInfo) {
+    console.log("isBunRuntime:", isBunRuntime());
+    console.log("isBunPM:", await isBunPM());
+    console.log("isBun:", isBun);
+  }
+}
+
+export async function showEndPrompt() {
+  await endPrompt({
+    title: "│  ❤️  Please consider supporting rse development: https://github.com/sponsors/blefnk",
+    titleAnimation: "glitch",
+    titleColor: "dim",
+    titleTypography: "bold",
+    titleAnimationDelay: 800,
+  });
+}
