@@ -1,21 +1,17 @@
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { confirmPrompt, selectPrompt } from "@reliverse/rempts";
+import { confirmPrompt } from "@reliverse/rempts";
 import { FALLBACK_ENV_EXAMPLE_URL } from "~/app/config/constants";
 import { composeEnvFile } from "~/app/init/use-template/cp-modules/compose-env-file/cef-mod";
 import { promptGitDeploy } from "~/app/init/use-template/cp-modules/git-deploy-prompts/gdp-mod";
 import type { ReliverseConfig } from "~/app/schema/mod";
-import type { ParamsOmitReli } from "~/app/types/mod";
-import { experimental } from "~/app/utils/badgeNotifiers";
 import { downloadRepo } from "~/app/utils/downloading/downloadRepo";
 import type { RepoOption } from "~/app/utils/projectRepository";
 import { askProjectName } from "~/app/utils/prompts/askProjectName";
 import { askUsernameFrontend } from "~/app/utils/prompts/askUsernameFrontend";
 import type { ReliverseMemory } from "~/app/utils/schemaMemory";
 import { cd, pwd, rm } from "~/app/utils/terminalHelpers";
-
-import { openVercelTools } from "./toolbox-vercel";
 
 export async function rmTestsRuntime(cwd: string) {
   const TestsRuntimePath = path.join(cwd, "tests-runtime");
@@ -95,60 +91,5 @@ export async function downloadRepoOption(
     relinka("info", "Skipping deploy process...");
   } else {
     relinka("success", `Project deployed successfully to ${primaryDomain}`);
-  }
-}
-
-export async function showDevToolsMenu(params: ParamsOmitReli) {
-  const { cwd, isDev, memory, config, skipPrompts } = params;
-  const TestsRuntimePath = path.join(cwd, "tests-runtime");
-  const TestsRuntimeExists = await fs.pathExists(TestsRuntimePath);
-
-  const toolsOptions = {
-    rmTestsRuntime: "rm-tests-runtime",
-    downloadTemplate: "download-template",
-    openVercelTools: "open-vercel-tools",
-    exit: "exit",
-  } as const;
-
-  const option = await selectPrompt({
-    title: "Dev tools menu",
-    options: [
-      ...(isDev && TestsRuntimeExists
-        ? [
-            {
-              label: "remove tests-runtime dir",
-              value: toolsOptions.rmTestsRuntime,
-            },
-          ]
-        : []),
-      ...(isDev
-        ? [
-            {
-              label: "downloadRepo + cd(tests-runtime) + composeEnvFile + promptGitDeploy",
-              value: toolsOptions.downloadTemplate,
-            },
-          ]
-        : []),
-      {
-        label: `Open Vercel devtools ${experimental}`,
-        value: toolsOptions.openVercelTools,
-      },
-      { label: "👈 Exit", value: toolsOptions.exit },
-    ],
-  });
-
-  if (option === toolsOptions.rmTestsRuntime) {
-    await rmTestsRuntime(cwd);
-  } else if (option === toolsOptions.downloadTemplate) {
-    await downloadRepoOption(
-      "blefnk/relivator-nextjs-template",
-      config,
-      memory,
-      isDev,
-      cwd,
-      skipPrompts,
-    );
-  } else if (option === toolsOptions.openVercelTools) {
-    await openVercelTools(memory);
   }
 }

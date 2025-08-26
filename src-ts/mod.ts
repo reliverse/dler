@@ -764,7 +764,6 @@ export { getAllSourceFiles, splitLargeFileByLines, splitLargeFunctions } from ".
 export {
   downloadRepoOption,
   rmTestsRuntime,
-  showDevToolsMenu,
 } from "./app/toolbox/toolbox-impl";
 export { openVercelTools } from "./app/toolbox/toolbox-vercel";
 export type {

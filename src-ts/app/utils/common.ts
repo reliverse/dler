@@ -3,10 +3,20 @@ import { prepareReliverseEnvironment } from "../config/prepare";
 import type { CommonArgs } from "../types/mod";
 import { showEndPrompt, showStartPrompt } from "./startEndPrompts";
 
-export async function commonStartActions({ strCwd, isCI, isDev }: CommonArgs) {
-  if (!isCI) {
-    // TODO: support clearConsole=false
-    await showStartPrompt(isDev, false);
+export async function commonStartActions({
+  strCwd,
+  isCI,
+  isDev,
+  showRuntimeInfo,
+  clearConsole,
+  withStartPrompt,
+}: CommonArgs & {
+  showRuntimeInfo: boolean;
+  clearConsole: boolean;
+  withStartPrompt: boolean;
+}) {
+  if (!isCI && withStartPrompt) {
+    await showStartPrompt(isDev, showRuntimeInfo, clearConsole);
   }
 
   if (isDev) {
@@ -30,7 +40,9 @@ export async function commonStartActions({ strCwd, isCI, isDev }: CommonArgs) {
   await prepareReliverseEnvironment(strCwd, isDev, "ts");
 }
 
-export async function commonEndActions() {
-  await showEndPrompt();
+export async function commonEndActions({ withEndPrompt }: { withEndPrompt: boolean }) {
+  if (withEndPrompt) {
+    await showEndPrompt();
+  }
   process.exit(0);
 }

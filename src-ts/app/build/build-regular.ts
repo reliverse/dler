@@ -38,7 +38,6 @@ export async function regular_buildJsrDist(
   coreEntryFile: string,
   transpileTarget: TranspileTarget,
   transpileFormat: TranspileFormat,
-  transpileSplitting: boolean,
   transpileMinify: boolean,
   transpileSourcemap: Sourcemap,
   transpilePublicPath: string,
@@ -73,7 +72,6 @@ export async function regular_buildJsrDist(
       transpileMinify,
       transpilePublicPath,
       transpileSourcemap,
-      transpileSplitting,
       transpileStub,
       transpileTarget,
       transpileWatch,
@@ -142,7 +140,6 @@ export async function regular_buildNpmDist(
   config: ReliverseConfig,
   transpileTarget: TranspileTarget,
   transpileFormat: TranspileFormat,
-  transpileSplitting: boolean,
   transpileMinify: boolean,
   transpileSourcemap: Sourcemap,
   transpilePublicPath: string,
@@ -174,7 +171,6 @@ export async function regular_buildNpmDist(
       transpileMinify,
       transpilePublicPath,
       transpileSourcemap,
-      transpileSplitting,
       transpileStub,
       transpileTarget,
       transpileWatch,
@@ -218,7 +214,6 @@ async function regular_bundleUsingBun(
   outDirBin: string,
   transpileTarget: TranspileTarget,
   transpileFormat: TranspileFormat,
-  transpileSplitting: boolean,
   transpileMinify: boolean,
   transpileSourcemap: Sourcemap,
   transpilePublicPath: string,
@@ -253,7 +248,6 @@ async function regular_bundleUsingBun(
       outdir: outDirBin,
       publicPath: transpilePublicPath || "/",
       sourcemap: getBunSourcemapOption(transpileSourcemap),
-      splitting: transpileSplitting,
       target: transpileTarget,
       throw: true,
     });
@@ -431,7 +425,6 @@ async function regular_bundleWithBuilder(
     transpileMinify: boolean;
     transpilePublicPath: string;
     transpileSourcemap: Sourcemap;
-    transpileSplitting: boolean;
     transpileStub: boolean;
     transpileTarget: TranspileTarget;
     transpileWatch: boolean;
@@ -449,7 +442,6 @@ async function regular_bundleWithBuilder(
     transpileMinify,
     transpilePublicPath,
     transpileSourcemap,
-    transpileSplitting,
     transpileStub,
     transpileTarget,
     transpileWatch,
@@ -469,7 +461,6 @@ async function regular_bundleWithBuilder(
       outDir,
       transpileTarget,
       transpileFormat,
-      transpileSplitting,
       transpileMinify,
       transpileSourcemap,
       transpilePublicPath,

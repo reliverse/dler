@@ -74,7 +74,6 @@ export type LibraryBuildOptions = ReliverseConfig & {
   libTranspileMinify: boolean;
   transpileTarget: TranspileTarget;
   transpileFormat: TranspileFormat;
-  transpileSplitting: boolean;
   transpileSourcemap: Sourcemap;
   transpilePublicPath: string;
   transpileEsbuild: Esbuild;
@@ -108,7 +107,6 @@ interface BundleExecutorParams {
   libTranspileMinify: boolean;
   transpileTarget: TranspileTarget;
   transpileFormat: TranspileFormat;
-  transpileSplitting: boolean;
   transpileSourcemap: Sourcemap;
   transpilePublicPath: string;
   transpileEsbuild: Esbuild; // For unified
@@ -399,7 +397,6 @@ async function library_buildDistributionTarget(
     libTranspileMinify,
     transpileTarget,
     transpileFormat,
-    transpileSplitting,
     transpileSourcemap,
     transpilePublicPath,
     transpileEsbuild,
@@ -432,7 +429,6 @@ async function library_buildDistributionTarget(
     libTranspileMinify,
     transpileTarget,
     transpileFormat,
-    transpileSplitting,
     transpileSourcemap,
     transpilePublicPath,
     transpileEsbuild,
@@ -496,7 +492,6 @@ async function library_bundleWithBuilder(params: BundleRequestParams): Promise<v
         libTranspileMinify: executorParams.libTranspileMinify,
         transpileTarget: executorParams.transpileTarget,
         transpileFormat: executorParams.transpileFormat,
-        transpileSplitting: executorParams.transpileSplitting,
         transpileSourcemap: executorParams.transpileSourcemap,
         transpilePublicPath: executorParams.transpilePublicPath,
       });
@@ -581,7 +576,6 @@ async function library_bundleUsingBun(
     | "libTranspileMinify"
     | "transpileTarget"
     | "transpileFormat"
-    | "transpileSplitting"
     | "transpileSourcemap"
     | "transpilePublicPath"
   >,
@@ -591,7 +585,6 @@ async function library_bundleUsingBun(
     libTranspileMinify,
     transpileTarget,
     transpileFormat,
-    transpileSplitting,
     transpileSourcemap,
     transpilePublicPath,
   } = options;
@@ -612,7 +605,6 @@ async function library_bundleUsingBun(
       outdir: outDirBin,
       target: transpileTarget,
       format: transpileFormat,
-      splitting: transpileSplitting,
       minify: libTranspileMinify,
       sourcemap: getBunSourcemapOption(transpileSourcemap),
       publicPath: transpilePublicPath,

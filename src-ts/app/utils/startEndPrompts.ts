@@ -25,10 +25,14 @@ export const getPkgVersion = async () => {
   return pkg.version || "0.0.0";
 };
 
-export async function showStartPrompt(isDev: boolean, showRuntimeInfo: boolean) {
+export async function showStartPrompt(
+  isDev: boolean,
+  showRuntimeInfo: boolean,
+  clearConsole: boolean,
+) {
   await startPrompt({
     titleColor: "inverse",
-    clearConsole: true,
+    clearConsole,
     packageName: dlerName,
     packageVersion: cliVersion,
     isDev,

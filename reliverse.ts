@@ -1,4 +1,3 @@
-// @ts-expect-error TEMP
 import { defineConfig } from "./reltypes";
 
 // TODO: divide different parts of dler into the plugins
@@ -28,7 +27,7 @@ export default defineConfig({
   projectAuthor: "reliverse",
   projectDescription:
     "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
-  version: "1.7.117",
+  version: "1.7.120",
   projectLicense: "MIT",
 
   // Bump configuration
@@ -48,7 +47,7 @@ export default defineConfig({
     "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
   coreEntryFile: "mod.ts",
   coreEntrySrcDir: "src-ts",
-  coreIsCLI: { enabled: true, scripts: { dler: "dler.ts" } },
+  coreIsCLI: { enabled: false, scripts: {} },
 
   // Logs
   displayBuildPubLogs: false,
@@ -176,7 +175,7 @@ export default defineConfig({
     indentStyle: "space",
     indentSize: 2,
     importSymbol: "~",
-    trailingComma: "all",
+    trailingCommas: "all",
     bracketSpacing: true,
     arrowParens: "always",
     tabWidth: 2,
@@ -221,6 +220,22 @@ export default defineConfig({
   // Behavior for Reliverse AI chat and agent mode
   // Options: promptOnce | promptEachFile | autoYes
   relinterConfirm: "promptOnce",
+
+  // Binary Build Configuration
+  binaryBuildEnabled: false,
+  binaryBuildInputFile: undefined,
+  binaryBuildTargets: "all",
+  binaryBuildOutDir: "dist",
+  binaryBuildMinify: true,
+  binaryBuildSourcemap: true,
+  binaryBuildBytecode: false,
+  binaryBuildClean: true,
+  binaryBuildWindowsIcon: undefined,
+  binaryBuildWindowsHideConsole: false,
+  binaryBuildAssetNaming: "[name]-[hash].[ext]",
+  binaryBuildParallel: true,
+  binaryBuildExternal: ["c12", "terminal-kit"],
+  binaryBuildNoCompile: false,
 
   // Libraries Dler Plugin
   // Publish specific dirs as separate packages

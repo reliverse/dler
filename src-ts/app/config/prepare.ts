@@ -428,6 +428,22 @@ function generateJsoncConfig(isDev: boolean, pkgDescription?: string): string {
   "distNpmDirName": "${DEFAULT_CONFIG_RELIVERSE.distNpmDirName}",
   "distNpmOutFilesExt": "${DEFAULT_CONFIG_RELIVERSE.distNpmOutFilesExt}",
   
+  // Binary Build Configuration
+  "binaryBuildEnabled": ${DEFAULT_CONFIG_RELIVERSE.binaryBuildEnabled},
+  "binaryBuildInputFile": ${DEFAULT_CONFIG_RELIVERSE.binaryBuildInputFile ? `"${DEFAULT_CONFIG_RELIVERSE.binaryBuildInputFile}"` : "undefined"},
+  "binaryBuildTargets": "${DEFAULT_CONFIG_RELIVERSE.binaryBuildTargets}",
+  "binaryBuildOutDir": "${DEFAULT_CONFIG_RELIVERSE.binaryBuildOutDir}",
+  "binaryBuildMinify": ${DEFAULT_CONFIG_RELIVERSE.binaryBuildMinify},
+  "binaryBuildSourcemap": ${DEFAULT_CONFIG_RELIVERSE.binaryBuildSourcemap},
+  "binaryBuildBytecode": ${DEFAULT_CONFIG_RELIVERSE.binaryBuildBytecode},
+  "binaryBuildClean": ${DEFAULT_CONFIG_RELIVERSE.binaryBuildClean},
+  "binaryBuildWindowsIcon": ${DEFAULT_CONFIG_RELIVERSE.binaryBuildWindowsIcon ? `"${DEFAULT_CONFIG_RELIVERSE.binaryBuildWindowsIcon}"` : "undefined"},
+  "binaryBuildWindowsHideConsole": ${DEFAULT_CONFIG_RELIVERSE.binaryBuildWindowsHideConsole},
+  "binaryBuildAssetNaming": "${DEFAULT_CONFIG_RELIVERSE.binaryBuildAssetNaming}",
+  "binaryBuildParallel": ${DEFAULT_CONFIG_RELIVERSE.binaryBuildParallel},
+  "binaryBuildExternal": ${JSON.stringify(DEFAULT_CONFIG_RELIVERSE.binaryBuildExternal)},
+  "binaryBuildNoCompile": ${DEFAULT_CONFIG_RELIVERSE.binaryBuildNoCompile},
+  
   // Libraries Reliverse Plugin
   "libsActMode": "${libsActModeValue}",
   "libsDirDist": "${DEFAULT_CONFIG_RELIVERSE.libsDirDist}",
@@ -759,6 +775,34 @@ function generateConfig(
     '  distNpmBuilder: "' + DEFAULT_CONFIG_RELIVERSE.distNpmBuilder + '",',
     '  distNpmDirName: "' + DEFAULT_CONFIG_RELIVERSE.distNpmDirName + '",',
     '  distNpmOutFilesExt: "' + DEFAULT_CONFIG_RELIVERSE.distNpmOutFilesExt + '",',
+    "",
+    "  // Binary Build Configuration",
+    "  binaryBuildEnabled: " + DEFAULT_CONFIG_RELIVERSE.binaryBuildEnabled + ",",
+    "  binaryBuildInputFile: " +
+      (DEFAULT_CONFIG_RELIVERSE.binaryBuildInputFile
+        ? `"${DEFAULT_CONFIG_RELIVERSE.binaryBuildInputFile}"`
+        : "undefined") +
+      ",",
+    "  binaryBuildTargets: " + JSON.stringify(DEFAULT_CONFIG_RELIVERSE.binaryBuildTargets) + ",",
+    '  binaryBuildOutDir: "' + DEFAULT_CONFIG_RELIVERSE.binaryBuildOutDir + '",',
+    "  binaryBuildMinify: " + DEFAULT_CONFIG_RELIVERSE.binaryBuildMinify + ",",
+    "  binaryBuildSourcemap: " + DEFAULT_CONFIG_RELIVERSE.binaryBuildSourcemap + ",",
+    "  binaryBuildBytecode: " + DEFAULT_CONFIG_RELIVERSE.binaryBuildBytecode + ",",
+    "  binaryBuildClean: " + DEFAULT_CONFIG_RELIVERSE.binaryBuildClean + ",",
+    "  binaryBuildWindowsIcon: " +
+      (DEFAULT_CONFIG_RELIVERSE.binaryBuildWindowsIcon
+        ? `"${DEFAULT_CONFIG_RELIVERSE.binaryBuildWindowsIcon}"`
+        : "undefined") +
+      ",",
+    "  binaryBuildWindowsHideConsole: " +
+      DEFAULT_CONFIG_RELIVERSE.binaryBuildWindowsHideConsole +
+      ",",
+    "  binaryBuildAssetNaming: " +
+      JSON.stringify(DEFAULT_CONFIG_RELIVERSE.binaryBuildAssetNaming) +
+      ",",
+    "  binaryBuildParallel: " + DEFAULT_CONFIG_RELIVERSE.binaryBuildParallel + ",",
+    "  binaryBuildExternal: " + JSON.stringify(DEFAULT_CONFIG_RELIVERSE.binaryBuildExternal) + ",",
+    "  binaryBuildNoCompile: " + DEFAULT_CONFIG_RELIVERSE.binaryBuildNoCompile + ",",
     "",
     "  // Libraries Reliverse Plugin",
     "  // Publish specific dirs as separate packages",

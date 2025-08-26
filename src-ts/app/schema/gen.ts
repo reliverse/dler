@@ -392,6 +392,115 @@ export interface ReliverseConfig {
    */
   distNpmOutFilesExt: NpmOutExt;
 
+    // ==========================================================================
+  // Binary Build Configuration
+  // ==========================================================================
+
+  /**
+   * When \`true\`, enables binary build functionality to create standalone executables.
+   * 
+   * @default false
+   */
+  binaryBuildEnabled: boolean;
+
+  /**
+   * Input TypeScript file to bundle for binary builds.
+   * If not specified, will use the coreEntryFile from the coreEntrySrcDir.
+   * 
+   * @default undefined (uses coreEntryFile)
+   */
+  binaryBuildInputFile?: string;
+
+  /**
+   * Comma-separated list of targets to build for binary builds.
+   * Use 'all' for all targets, 'list' to show available targets.
+   * Target format is {prefix}-{platform}-{arch} where prefix is extracted from input filename.
+   * Platforms: linux, windows, darwin (macOS)
+   * Architectures: x64, arm64
+   * Examples: dler-linux-x64, dler-windows-arm64, dler-darwin-x64
+   * 
+   * @default "all"
+   */
+  binaryBuildTargets: string;
+
+  /**
+   * Output directory for built binary executables.
+   * 
+   * @default "dist"
+   */
+  binaryBuildOutDir: string;
+
+  /**
+   * When \`true\`, minifies the binary output.
+   * 
+   * @default true
+   */
+  binaryBuildMinify: boolean;
+
+  /**
+   * When \`true\`, generates source maps for binary builds.
+   * 
+   * @default true
+   */
+  binaryBuildSourcemap: boolean;
+
+  /**
+   * When \`true\`, enables bytecode compilation for faster startup (Bun v1.1.30+).
+   * 
+   * @default false
+   */
+  binaryBuildBytecode: boolean;
+
+  /**
+   * When \`true\`, cleans output directory before building binaries.
+   * 
+   * @default true
+   */
+  binaryBuildClean: boolean;
+
+  /**
+   * Path to Windows .ico file for executable icon.
+   * 
+   * @default undefined
+   */
+  binaryBuildWindowsIcon?: string;
+
+  /**
+   * When \`true\`, hides console window on Windows.
+   * 
+   * @default false
+   */
+  binaryBuildWindowsHideConsole: boolean;
+
+  /**
+   * Asset naming pattern for binary builds.
+   * 
+   * @default "[name]-[hash].[ext]"
+   */
+  binaryBuildAssetNaming: string;
+
+  /**
+   * When \`true\`, builds binary targets in parallel.
+   * 
+   * @default true
+   */
+  binaryBuildParallel: boolean;
+
+  /**
+   * External dependencies to exclude from binary bundle.
+   * 
+   * @default ["c12", "terminal-kit"]
+   */
+  binaryBuildExternal: string[];
+
+  /**
+   * When \`true\`, creates a bundled script instead of standalone executable.
+   * Useful for debugging terminal issues.
+   * 
+   * @default false
+   */
+  binaryBuildNoCompile: boolean;
+
   // ==========================================================================
   // Libraries Dler Plugin
   // ==========================================================================
@@ -1202,6 +1311,20 @@ export const DEFAULT_CONFIG_RELIVERSE: ReliverseConfig = {
   distNpmBuilder: "mkdist",
   distNpmDirName: "dist-npm",
   distNpmOutFilesExt: "js",
+  binaryBuildEnabled: false,
+  binaryBuildInputFile: undefined,
+  binaryBuildTargets: "all",
+  binaryBuildOutDir: "dist",
+  binaryBuildMinify: true,
+  binaryBuildSourcemap: true,
+  binaryBuildBytecode: false,
+  binaryBuildClean: true,
+  binaryBuildWindowsIcon: undefined,
+  binaryBuildWindowsHideConsole: false,
+  binaryBuildAssetNaming: "[name]-[hash].[ext]",
+  binaryBuildParallel: true,
+  binaryBuildExternal: ["c12", "terminal-kit"],
+  binaryBuildNoCompile: false,
   libsActMode: "main-project-only",
   libsDirDist: "dist-libs",
   libsDirSrc: "src/libs",
@@ -1401,7 +1524,7 @@ export const DEFAULT_CONFIG_RELIVERSE: ReliverseConfig = {
   // List dependencies to exclude from checks
   ignoreDependencies: [],
 
-  // Provide custom rules for Reliverse AI
+  // Provide custom rules for Rse AI
   // You can use any json type here in {}
   customRules: {},
 
@@ -1487,7 +1610,7 @@ export const DEFAULT_CONFIG_RELIVERSE: ReliverseConfig = {
   // Options: prompt | autoYes | autoYesSkipCommit | autoNo
   existingRepoBehavior: "prompt",
 
-  // Behavior for Reliverse AI chat and agent mode
+  // Behavior for Rse AI chat and agent mode
   // Options: promptOnce | promptEachFile | autoYes
   relinterConfirm: "promptOnce",
 

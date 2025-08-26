@@ -318,7 +318,7 @@ async function main() {
     const targetsArg = prefixedTargets.join(",");
     console.log(`🎯 Bun targets: ${targetsArg}`);
 
-    await $`bun dler build binary --input ${inputFile} --targets=${targetsArg}`;
+    await $`bun dler build --binary-enabled --binary-input ${inputFile} --binary-targets=${targetsArg}`;
 
     console.log("🎉 Release build completed successfully!");
     console.log("📦 Rust binaries: dlerust-{platform}-{arch} for all supported targets");

@@ -29,7 +29,7 @@ export function injectSectionComments(fileContent: string): string {
     ],
     ignoreDependencies: [comment("List dependencies to exclude from checks")],
     customRules: [
-      comment("Provide custom rules for Reliverse AI"),
+      comment("Provide custom rules for Rse AI"),
       comment("You can use any json type here in {}"),
     ],
     deployBehavior: [
@@ -41,7 +41,7 @@ export function injectSectionComments(fileContent: string): string {
       comment("Options: prompt | autoYes | autoYesSkipCommit | autoNo"),
     ],
     relinterConfirm: [
-      comment("Behavior for Reliverse AI chat and agent mode"),
+      comment("Behavior for Rse AI chat and agent mode"),
       comment("Options: promptOnce | promptEachFile | autoYes"),
     ],
   };

@@ -1,6 +1,7 @@
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
+import { binary_buildFlow } from "~/app/build/binary-flow";
 import { library_buildFlow } from "~/app/build/library-flow";
 import { regular_buildFlow } from "~/app/build/regular-flow";
 import { PROJECT_ROOT } from "~/app/config/constants";
@@ -93,6 +94,7 @@ export async function dlerBuild(
 
     await regular_buildFlow(timer, isDev, tempConfig);
     await library_buildFlow(timer, isDev, tempConfig);
+    await binary_buildFlow(timer, isDev, tempConfig);
 
     // Run post checks/tools/hooks and copy non-build files
     await dlerPostBuild(isDev, debugDontCopyNonBuildFiles);
