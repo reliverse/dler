@@ -4,7 +4,7 @@ import { mkdir, readFile } from "node:fs/promises";
 import { join, resolve } from "@reliverse/pathkit";
 import { callCmd } from "@reliverse/rempts";
 
-// import { getMigrateCmd } from "~/app/cmds";
+// import { getMigrateCmd } from "~/impl/cmds";
 
 interface TsConfig {
   compilerOptions: {

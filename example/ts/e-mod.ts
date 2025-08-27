@@ -1,3 +1,8 @@
-import { defineCommand, runMain } from "@reliverse/rempts";
+import { resolveAllCrossLibs } from "~/impl/utils/resolve-cross-libs";
 
-await runMain(defineCommand({}));
+async function main() {
+  await resolveAllCrossLibs("package", "~", ["npm", "jsr"], ["ts", "js"], "templates");
+  process.exit(0);
+}
+
+await main();
