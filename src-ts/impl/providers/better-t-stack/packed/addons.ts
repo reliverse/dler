@@ -126,7 +126,7 @@ export const DLER_TPL_ADDONS: Template = {
         type: "binary",
         binaryHash: "dee83fc2fb",
       },
-      "addons/pwa/apps/web/next/src-ts/app/manifest.ts.hbs": {
+      "addons/pwa/apps/web/next/src-ts/impl/manifest.ts.hbs": {
         metadata: {
           updatedAt: "2025-06-17T06:06:35.000Z",
           updatedHash: "6f8734ebe6",

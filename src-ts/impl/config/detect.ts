@@ -273,7 +273,7 @@ export async function detectFeatures(
   const hasGraphql = "graphql" in deps || "apollo-server" in deps;
   const hasRest =
     (await fs.pathExists(path.join(projectPath, "src/api"))) ||
-    (await fs.pathExists(path.join(projectPath, "src-ts/app/api")));
+    (await fs.pathExists(path.join(projectPath, "src-ts/impl/api")));
 
   // Linting and formatting
   const hasEslint = "eslint" in deps;

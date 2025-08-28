@@ -57,8 +57,8 @@ export async function unifiedBuild(
   transpileStub = false,
 ): Promise<void> {
   shouldStopAtStep(1);
-  // relinka("info", "Step 1: Starting unified build process");
-  relinka("info", "Starting unified build process...");
+  // relinka("verbose", "Step 1: Starting unified build process");
+  relinka("verbose", "Starting unified build process...");
   relinka("verbose", `Processing build for source directory: ${inputSourceDir}`);
   relinka(
     "verbose",
@@ -130,7 +130,7 @@ async function _build(
   // Start timing the build process
   const timer = createPerfTimer();
 
-  relinka("info", "Resolving build configuration...");
+  relinka("verbose", "Resolving build configuration...");
 
   // Resolve preset
   const preset = await resolvePreset(
@@ -227,7 +227,7 @@ async function _build(
   // Create shared jiti instance for context
   const jiti = createJiti(options.rootDir, { interopDefault: true });
 
-  relinka("info", "Initializing build context...");
+  relinka("verbose", "Initializing build context...");
 
   // Build context
   const ctx: BuildContext = {
@@ -255,7 +255,7 @@ async function _build(
   // Allow prepare and extending context
   await ctx.hooks.callHook("build:prepare", ctx);
 
-  relinka("info", "Processing build entries...");
+  relinka("verbose", "Processing build entries...");
 
   // Normalize entries
   options.entries = options.entries.map((entry) =>
@@ -319,7 +319,7 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
 
   // Clean dist dirs
   if (options.clean) {
-    relinka("info", "Cleaning output directories...");
+    relinka("verbose", "Cleaning output directories...");
     for (const dir of new Set(
       options.entries
         .map((e) => e.outDir)
@@ -363,10 +363,10 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
   });
 
   if (activeTasks.length === 0) {
-    relinka("info", "No build tasks to execute");
+    relinka("verbose", "No build tasks to execute");
   } else {
     if (options.parallel) {
-      relinka("info", `Running ${activeTasks.length} build tasks in parallel...`);
+      relinka("verbose", `Running ${activeTasks.length} build tasks in parallel...`);
       await Promise.all(
         activeTasks.map(async ({ task }) => {
           await task(ctx);
@@ -374,7 +374,7 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
       );
     } else {
       for (const { task, name } of activeTasks) {
-        relinka("info", `Running ${name}...`);
+        relinka("verbose", `Running ${name}...`);
         await task(ctx);
       }
     }
@@ -386,10 +386,10 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
     return;
   }
 
-  relinka("info", "Finalizing build output...");
+  relinka("verbose", "Finalizing build output...");
 
   // Done info
-  relinka("success", `Build succeeded for ${options.name}`);
+  relinka("verbose", `Build succeeded for ${options.name}`);
 
   // Find all dist files and add missing entries as chunks
   const outFiles = await glob(["**"], { cwd: options.outDir });
@@ -454,10 +454,10 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
     });
 
     const totalSize = ctx.buildEntries.reduce((a, e) => a + (e.bytes || 0), 0);
-    relinka("info", `Build complete! ${prettyBytes(totalSize)} in ${transpileFormattedTime}`);
+    relinka("verbose", `Build complete! ${prettyBytes(totalSize)} in ${transpileFormattedTime}`);
 
     relinka(
-      "info",
+      "verbose",
       `Σ Total dist size: ${prettyBytes(totalSize)} (build time: ${transpileFormattedTime})`,
     );
   }
@@ -485,6 +485,6 @@ ${options.entries.map((entry) => `  ${dumpObject(entry)}`).join("\n  ")}
       process.exit(1);
     }
     shouldStopAtStep(15);
-    relinka("info", `Build complete (with ${ctx.warnings.size} warnings)`); // Step 15
+    relinka("verbose", `Build complete (with ${ctx.warnings.size} warnings)`); // Step 15
   }
 }

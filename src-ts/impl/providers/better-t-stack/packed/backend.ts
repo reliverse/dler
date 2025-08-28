@@ -142,7 +142,7 @@ export const DLER_TPL_BACKEND: Template = {
         content: `{\n  "name": "server",\n  "version": "0.1.0",\n  "private": true,\n  "scripts": {\n    "dev": "next dev --turbopack",\n    "build": "next build",\n    "start": "next start"\n  },\n  "dependencies": {\n    "next": "15.3.0",\n    "dotenv": "^16.5.0"\n  },\n{{#if (eq dbSetup 'supabase')}}\n  "trustedDependencies": [\n    "supabase"\n   ],\n{{/if}}\n  "devDependencies": {\n    "@types/node": "^20",\n    "@types/react": "^19",\n    "typescript": "^5"\n  }\n}\n`,
         type: "text",
       },
-      "backend/server/next/src-ts/app/route.ts": {
+      "backend/server/next/src-ts/impl/route.ts": {
         metadata: {
           updatedAt: "2025-06-17T06:06:35.000Z",
           updatedHash: "e40f5d7501",

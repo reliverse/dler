@@ -539,7 +539,7 @@ compilerOptions = "tsconfig.json"
 const generateDockerfile = (analysis: ProjectAnalysis): string => {
   return `# Use Bun's official image
 FROM oven/bun:1 as base
-WORKDIR /usr/src-ts/app
+WORKDIR /usr/src/app
 
 # Install dependencies
 COPY package.json bun.lock* ./
@@ -769,7 +769,7 @@ export async function migrateAnythingToBun({
     }
 
     if (!config.dryRun) {
-      relinka("verbose", "\n🎉 Your project has been migrated to Bun!");
+      relinka("verbose", "\n✅ Your project has been migrated to Bun!");
       relinka("verbose", "Run 'bun install' to get started.");
     }
   } catch (error) {

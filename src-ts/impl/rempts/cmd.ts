@@ -7,7 +7,7 @@ import type { ReliverseConfig } from "~/impl/schema/mod";
 
 export async function handleReliverseConfig() {
   const dlerConfigPath = path.resolve("reliverse.ts");
-  let cmdsRoot = "src-ts/app";
+  let cmdsRoot = "src/app";
   let cliFilePath = "";
 
   try {
@@ -18,7 +18,7 @@ export async function handleReliverseConfig() {
     const coreIsCLI = dlerConfig?.coreIsCLI;
     if (!coreIsCLI?.enabled || !coreIsCLI?.scripts) {
       cliFilePath = await ensureCliFile("src/cli.ts");
-      cmdsRoot = "src-ts/app";
+      cmdsRoot = "src/app";
     } else {
       const firstScript = Object.values(coreIsCLI.scripts)[0] as string;
       const scriptPath = path.resolve(firstScript);
@@ -33,16 +33,16 @@ export async function handleReliverseConfig() {
           }
         } else {
           relinka("warn", `${scriptPath} doesn't use @reliverse/rempts`);
-          cmdsRoot = "src-ts/app";
+          cmdsRoot = "src/app";
         }
       } else {
         cliFilePath = await ensureCliFile(scriptPath);
-        cmdsRoot = "src-ts/app";
+        cmdsRoot = "src/app";
       }
     }
   } catch {
     cliFilePath = await ensureCliFile("src/cli.ts");
-    cmdsRoot = "src-ts/app";
+    cmdsRoot = "src/app";
   }
 
   return { cmdsRoot: path.resolve(cmdsRoot), cliFile: cliFilePath };
@@ -86,7 +86,7 @@ export async function generateCommandArgsMap(cmdDirs: string[]): Promise<string>
     "// Argument types for each command based on their defineArgs\ninterface CommandArgsMap {\n";
 
   for (const dir of cmdDirs) {
-    const cmdPath = path.join("src-ts/app", dir, "cmd.ts");
+    const cmdPath = path.join("src/app", dir, "cmd.ts");
 
     try {
       if (await fs.pathExists(cmdPath)) {
@@ -319,7 +319,7 @@ const cliTemplate = `import { defineCommand, runMain } from "@reliverse/rempts";
 await runMain(
   defineCommand({
     // empty object activates file-based
-    // commands in the src-ts/app directory
+    // commands in the src/app directory
   }),
 );
 `;

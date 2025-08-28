@@ -2,7 +2,7 @@ import path from "node:path";
 import { re } from "@reliverse/relico";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { cancel, isCancel, select, spinner, text } from "@reliverse/rempts";
+import { cancel, createSpinner, isCancel, select, text } from "@reliverse/rempts";
 import { execa } from "execa";
 import {
   addEnvVariablesToFile,
@@ -51,7 +51,7 @@ async function executeNeonCommand(
   commandArgsString: string,
   spinnerText?: string,
 ) {
-  const s = spinner({
+  const s = createSpinner({
     text: spinnerText ?? `Running ${packageManager} command...`,
   });
   try {
@@ -59,10 +59,11 @@ async function executeNeonCommand(
 
     if (spinnerText) s.start(spinnerText);
     const result = await execa(fullCommand, { shell: true });
-    if (spinnerText) s.stop(re.green(spinnerText.replace("...", "").replace("ing ", "ed ").trim()));
+    if (spinnerText)
+      s.succeed(re.green(spinnerText.replace("...", "").replace("ing ", "ed ").trim()));
     return result;
   } catch (error) {
-    if (s) s.stop(re.red(`Failed: ${spinnerText || "Command execution"}`));
+    if (s) s.fail(re.red(`Failed: ${spinnerText || "Command execution"}`));
     throw error;
   }
 }
@@ -125,7 +126,7 @@ async function writeEnvFile(projectDir: string, config?: NeonConfig) {
 
 async function setupWithNeonDb(projectDir: string, packageManager: PackageManager) {
   try {
-    const s = spinner({
+    const s = createSpinner({
       text: "Creating Neon database using neondb...",
     });
     s.start("Creating Neon database using neondb...");
@@ -140,7 +141,7 @@ async function setupWithNeonDb(projectDir: string, packageManager: PackageManage
       cwd: serverDir,
     });
 
-    s.stop(re.green("Neon database created successfully!"));
+    s.succeed(re.green("Neon database created successfully!"));
 
     return true;
   } catch (error) {
@@ -220,7 +221,7 @@ export async function setupNeonPostgres(config: ProjectConfig): Promise<void> {
         throw new Error("Failed to create project - couldn't get connection information");
       }
 
-      const finalSpinner = spinner({
+      const finalSpinner = createSpinner({
         text: "Configuring database connection",
       });
       finalSpinner.start("Configuring database connection");
@@ -228,7 +229,7 @@ export async function setupNeonPostgres(config: ProjectConfig): Promise<void> {
       await fs.ensureDir(path.join(projectDir, "apps/server"));
       await writeEnvFile(projectDir, neonConfig);
 
-      finalSpinner.stop("Neon database configured!");
+      finalSpinner.succeed("Neon database configured!");
     }
   } catch (error) {
     if (error instanceof Error) {

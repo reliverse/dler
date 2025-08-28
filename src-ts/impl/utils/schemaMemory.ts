@@ -1,23 +1,19 @@
-import { type Static, Type } from "@sinclair/typebox";
+export interface EncryptedDataMemoryShape {
+  code: string;
+  key: string;
+  githubKey?: string;
+  vercelKey?: string;
+  openaiKey?: string;
+}
 
-const encryptedDataSchema = Type.Object({
-  code: Type.String(),
-  key: Type.String(),
-  githubKey: Type.Optional(Type.String()),
-  vercelKey: Type.Optional(Type.String()),
-  openaiKey: Type.Optional(Type.String()),
-});
+export interface UserDataMemoryShape {
+  name?: string;
+  email?: string;
+  githubUsername?: string;
+  vercelTeamId?: string;
+  vercelTeamSlug?: string;
+}
 
-const userDataSchema = Type.Object({
-  name: Type.Optional(Type.String()),
-  email: Type.Optional(Type.String()),
-  githubUsername: Type.Optional(Type.String()),
-  vercelTeamId: Type.Optional(Type.String()),
-  vercelTeamSlug: Type.Optional(Type.String()),
-});
-
-export const memorySchema = Type.Composite([encryptedDataSchema, userDataSchema]);
-
-export type ReliverseMemory = Static<typeof memorySchema>;
-export type EncryptedDataMemory = keyof Static<typeof encryptedDataSchema>;
-export type UserDataMemory = keyof Static<typeof userDataSchema>;
+export type ReliverseMemory = EncryptedDataMemoryShape & UserDataMemoryShape;
+export type EncryptedDataMemory = keyof EncryptedDataMemoryShape;
+export type UserDataMemory = keyof UserDataMemoryShape;

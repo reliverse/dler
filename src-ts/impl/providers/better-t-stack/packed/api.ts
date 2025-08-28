@@ -30,7 +30,7 @@ export const DLER_TPL_API: Template = {
         content: `import { ORPCError, os } from "@orpc/server";\nimport type { Context } from "./context";\n\nexport const o = os.$context<Context>();\n\nexport const publicProcedure = o;\n\n{{#if auth}}\nconst requireAuth = o.middleware(async ({ context, next }) => {\n  if (!context.session?.user) {\n    throw new ORPCError("UNAUTHORIZED");\n  }\n  return next({\n    context: {\n      session: context.session,\n    },\n  });\n});\n\nexport const protectedProcedure = publicProcedure.use(requireAuth);\n{{/if}}\n`,
         type: "text",
       },
-      "api/orpc/server/next/src-ts/app/rpc/[...all]/route.ts.hbs": {
+      "api/orpc/server/next/src-ts/impl/rpc/[...all]/route.ts.hbs": {
         metadata: {
           updatedAt: "2025-06-17T06:06:35.000Z",
           updatedHash: "cdf4279672",
@@ -94,7 +94,7 @@ export const DLER_TPL_API: Template = {
         content: `import { initTRPC, TRPCError } from "@trpc/server";\nimport type { Context } from "./context";\n\nexport const t = initTRPC.context<Context>().create();\n\nexport const router = t.router;\n\nexport const publicProcedure = t.procedure;\n\n{{#if auth}}\nexport const protectedProcedure = t.procedure.use(({ ctx, next }) => {\n  if (!ctx.session) {\n    throw new TRPCError({\n      code: "UNAUTHORIZED",\n      message: "Authentication required",\n      cause: "No session",\n    });\n  }\n  return next({\n    ctx: {\n      ...ctx,\n      session: ctx.session,\n    },\n  });\n});\n{{/if}}\n`,
         type: "text",
       },
-      "api/trpc/server/next/src-ts/app/trpc/[trpc]/route.ts": {
+      "api/trpc/server/next/src-ts/impl/trpc/[trpc]/route.ts": {
         metadata: {
           updatedAt: "2025-06-17T06:06:35.000Z",
           updatedHash: "1316017eae",

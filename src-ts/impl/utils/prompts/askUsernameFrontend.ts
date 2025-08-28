@@ -1,5 +1,5 @@
 import { re } from "@reliverse/relico";
-import { deleteLastLine, inputPrompt } from "@reliverse/rempts";
+import { inputPrompt } from "@reliverse/rempts";
 import { DEFAULT_CLI_USERNAME } from "~/impl/config/constants";
 import { updateReliverseConfig } from "~/impl/config/update";
 import type { ReliverseConfig } from "~/impl/schema/mod";
@@ -40,7 +40,7 @@ export async function askUsernameFrontend(
       return previousName;
     }
     await updateReliverseConfig(process.cwd(), { projectAuthor: DEFAULT_CLI_USERNAME }, false);
-    deleteLastLine();
+    // deleteLastLine();
     return DEFAULT_CLI_USERNAME;
   }
 

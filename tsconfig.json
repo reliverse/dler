@@ -27,6 +27,6 @@
     "exactOptionalPropertyTypes": false,
     "noPropertyAccessFromIndexSignature": false
   },
-  "include": ["example/ts/**/*.ts", "src-ts/**/*.ts"],
+  "include": ["example/ts/**/*.ts", "src-ts/**/*.ts", "release.ts"],
   "exclude": ["node_modules", "dist*"]
 }

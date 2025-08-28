@@ -1,7 +1,7 @@
 import path from "node:path";
 import { re } from "@reliverse/relico";
 import { relinka } from "@reliverse/relinka";
-import { spinner } from "@reliverse/rempts";
+import { createSpinner } from "@reliverse/rempts";
 import { execa } from "execa";
 
 import type { ProjectConfig } from "~/impl/providers/better-t-stack/types";
@@ -10,7 +10,7 @@ import { getPackageExecutionCommand } from "~/impl/providers/better-t-stack/util
 
 export async function setupStarlight(config: ProjectConfig): Promise<void> {
   const { packageManager, projectDir } = config;
-  const s = spinner({
+  const s = createSpinner({
     text: "Setting up Starlight docs...",
   });
 
@@ -41,9 +41,9 @@ export async function setupStarlight(config: ProjectConfig): Promise<void> {
       shell: true,
     });
 
-    s.stop("Starlight docs setup successfully!");
+    s.succeed("Starlight docs setup successfully!");
   } catch (error) {
-    s.stop(re.red("Failed to set up Starlight docs"));
+    s.fail(re.red("Failed to set up Starlight docs"));
     if (error instanceof Error) {
       relinka("error", error.message);
     }

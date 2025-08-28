@@ -5,9 +5,6 @@
 
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import type { TSchema } from "@sinclair/typebox";
-import { Type } from "@sinclair/typebox";
-import { Value } from "@sinclair/typebox/value";
 import { parseJSONC } from "confbox";
 import { jsonrepair } from "jsonrepair";
 import { writeReliverseConfig } from "~/impl/config/create";
@@ -25,28 +22,8 @@ export function repairAndParseJSON(raw: string): any {
   }
 }
 
-/**
- * Creates a schema for a single property so that it can be validated in isolation.
- */
-function createSinglePropertySchema(key: string, subSchema: TSchema): TSchema {
-  return Type.Object({ [key]: subSchema } as Record<string, TSchema>, {
-    additionalProperties: false,
-    required: [key],
-  });
-}
-
-/**
- * Validates a single property against its schema.
- */
-function fixSingleProperty(
-  schema: TSchema,
-  propName: string,
-  userValue: unknown,
-  defaultValue: unknown,
-): unknown {
-  const singlePropertySchema = createSinglePropertySchema(propName, schema);
-  const testObject = { [propName]: userValue };
-  return Value.Check(singlePropertySchema, testObject) ? userValue : defaultValue;
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 /**
@@ -56,41 +33,30 @@ function fixSingleProperty(
 export function fixLineByLine(
   userConfig: unknown,
   defaultConfig: unknown,
-  schema: TSchema,
 ): { fixedConfig: unknown; changedKeys: string[] } {
-  const isObjectSchema = (schema as any).type === "object" && (schema as any).properties;
-
-  if (!isObjectSchema || typeof userConfig !== "object" || userConfig === null) {
-    const isValid = Value.Check(schema, userConfig);
+  if (!isPlainObject(defaultConfig)) {
     return {
-      fixedConfig: isValid ? userConfig : defaultConfig,
-      changedKeys: isValid ? [] : ["<entire_object>"],
+      fixedConfig: userConfig === undefined ? defaultConfig : userConfig,
+      changedKeys: userConfig === undefined ? ["<entire_object>"] : [],
     };
   }
 
-  const properties = (schema as any).properties as Record<string, TSchema>;
-  const result: Record<string, unknown> = { ...((defaultConfig as any) ?? {}) };
+  const result: Record<string, unknown> = { ...(defaultConfig as Record<string, unknown>) };
   const changedKeys: string[] = [];
   const missingKeys: string[] = [];
 
-  for (const propName of Object.keys(properties)) {
-    const subSchema = properties[propName];
-    const userValue = (userConfig as any)[propName];
-    const defaultValue = (defaultConfig as any)[propName];
+  const userObj = isPlainObject(userConfig) ? (userConfig as Record<string, unknown>) : {};
 
-    if (!subSchema) {
-      result[propName] = defaultValue;
-      changedKeys.push(propName);
-      continue;
-    }
+  for (const propName of Object.keys(defaultConfig as Record<string, unknown>)) {
+    const userValue = userObj[propName];
+    const defaultValue = (defaultConfig as Record<string, unknown>)[propName];
 
-    if (userValue === undefined && !(propName in userConfig)) {
+    if (!(propName in userObj)) {
       missingKeys.push(propName);
       result[propName] = defaultValue;
       continue;
     }
 
-    // Special handling for GitHub URL arrays
     if (propName === "customUserFocusedRepos" || propName === "customDevsFocusedRepos") {
       if (Array.isArray(userValue)) {
         result[propName] = userValue.map((url) => cleanGitHubUrl(String(url)));
@@ -98,34 +64,15 @@ export function fixLineByLine(
       }
     }
 
-    const isValidStructure = Value.Check(createSinglePropertySchema(propName, subSchema), {
-      [propName]: userValue,
-    });
-    if (!isValidStructure) {
+    if (isPlainObject(defaultValue)) {
+      const { fixedConfig, changedKeys: nested } = fixLineByLine(userValue, defaultValue);
+      result[propName] = fixedConfig;
+      if (nested.length > 0) changedKeys.push(...nested.map((n) => `${propName}.${n}`));
+    } else if (userValue === undefined) {
       result[propName] = defaultValue;
       changedKeys.push(propName);
-    } else if (
-      subSchema &&
-      typeof subSchema === "object" &&
-      "type" in subSchema &&
-      subSchema.type === "object"
-    ) {
-      const { fixedConfig, changedKeys: nestedChanges } = fixLineByLine(
-        userValue,
-        defaultValue,
-        subSchema,
-      );
-      result[propName] = fixedConfig;
-      if (nestedChanges.length > 0) {
-        changedKeys.push(...nestedChanges.map((nc) => `${propName}.${nc}`));
-      }
     } else {
-      const originalValue = userValue;
-      const validatedValue = fixSingleProperty(subSchema, propName, userValue, defaultValue);
-      result[propName] = validatedValue;
-      if (originalValue !== undefined && validatedValue !== originalValue) {
-        changedKeys.push(propName);
-      }
+      result[propName] = userValue;
     }
   }
 
@@ -159,11 +106,7 @@ export async function parseAndFixReliverseConfig(
       const originalErrors: any[] = [];
       if (originalErrors.length === 0) return parsed as ReliverseConfig;
 
-      const { fixedConfig, changedKeys } = fixLineByLine(
-        parsed,
-        DEFAULT_CONFIG_RELIVERSE,
-        Type.Any(),
-      );
+      const { fixedConfig, changedKeys } = fixLineByLine(parsed, DEFAULT_CONFIG_RELIVERSE);
       if (fixedConfig && typeof fixedConfig === "object") {
         await writeReliverseConfig(configPath, fixedConfig as ReliverseConfig, isDev);
         const originalInvalidPaths = originalErrors.map((err) => err.path);

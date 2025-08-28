@@ -112,7 +112,33 @@ export async function writeReliverseConfig(
       const objectLiteralWithComments = injectSectionComments(objectLiteral);
 
       // Produce TypeScript config file content
-      const fileContent = `import { defineConfig } from "./reltypes";
+      // Choose import source: prefer package if present; special-case monorepo self
+      let defineImport = "./reltypes";
+      try {
+        const pkgPath = path.join(path.dirname(configPath), "package.json");
+        if (await fs.pathExists(pkgPath)) {
+          const pkgRaw = await fs.readFile(pkgPath, "utf8");
+          const pkg = JSON.parse(pkgRaw) as {
+            name?: string;
+            dependencies?: Record<string, string>;
+            devDependencies?: Record<string, string>;
+          };
+          // If this workspace itself is @reliverse/dler, import from source
+          if (pkg.name === "@reliverse/dler") {
+            defineImport = "./src-ts/mod.ts";
+          } else {
+            const hasDler = Boolean(
+              (pkg.dependencies && pkg.dependencies["@reliverse/dler"]) ||
+                (pkg.devDependencies && pkg.devDependencies["@reliverse/dler"]),
+            );
+            if (hasDler) defineImport = "@reliverse/dler";
+          }
+        }
+      } catch {
+        // ignore and keep local import
+      }
+
+      const fileContent = `import { defineConfig } from "${defineImport}";
 
 export default defineConfig(${objectLiteralWithComments});
 `;

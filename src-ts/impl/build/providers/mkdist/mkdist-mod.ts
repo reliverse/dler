@@ -110,7 +110,7 @@ export async function mkdistBuild(ctx: BuildContext): Promise<void> {
     );
   } else {
     relinka(
-      "success",
+      "verbose",
       `Successfully processed ${entries.length} entries. ${totalWrittenFiles} files written.`,
     );
   }

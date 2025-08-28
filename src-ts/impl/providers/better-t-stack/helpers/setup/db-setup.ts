@@ -2,7 +2,7 @@ import path from "node:path";
 import { re } from "@reliverse/relico";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { spinner } from "@reliverse/rempts";
+import { createSpinner } from "@reliverse/rempts";
 import { setupMongoDBAtlas } from "~/impl/providers/better-t-stack/helpers/database-providers/mongodb-atlas-setup";
 import { setupNeonPostgres } from "~/impl/providers/better-t-stack/helpers/database-providers/neon-setup";
 import { setupPrismaPostgres } from "~/impl/providers/better-t-stack/helpers/database-providers/prisma-postgres-setup";
@@ -25,7 +25,7 @@ export async function setupDatabase(config: ProjectConfig): Promise<void> {
     return;
   }
 
-  const s = spinner({
+  const s = createSpinner({
     text: "Setting up database...",
   });
   const serverDir = path.join(projectDir, "apps/server");
@@ -83,7 +83,7 @@ export async function setupDatabase(config: ProjectConfig): Promise<void> {
       await setupMongoDBAtlas(config);
     }
   } catch (error) {
-    s.stop(re.red("Failed to set up database"));
+    s.fail(re.red("Failed to set up database"));
     if (error instanceof Error) {
       relinka("error", re.red(error.message));
     }

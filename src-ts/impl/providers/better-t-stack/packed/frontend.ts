@@ -685,7 +685,7 @@ export const DLER_TPL_FRONTEND: Template = {
         content: `const config = {\n  plugins: ["@tailwindcss/postcss"],\n};\n\nexport default config;\n`,
         type: "text",
       },
-      "frontend/react/next/src-ts/app/favicon.ico": {
+      "frontend/react/next/src/app/favicon.ico": {
         metadata: {
           updatedAt: "2025-06-17T06:06:35.000Z",
           updatedHash: "9ecfcc8f0e",
@@ -694,7 +694,7 @@ export const DLER_TPL_FRONTEND: Template = {
         type: "binary",
         binaryHash: "9ecfcc8f0e",
       },
-      "frontend/react/next/src-ts/app/layout.tsx.hbs": {
+      "frontend/react/next/src/app/layout.tsx.hbs": {
         metadata: {
           updatedAt: "2025-06-17T06:06:35.000Z",
           updatedHash: "2b199051ab",
@@ -702,7 +702,7 @@ export const DLER_TPL_FRONTEND: Template = {
         content: `import type { Metadata } from "next";\nimport { Geist, Geist_Mono } from "next/font/google";\nimport "../index.css";\nimport Providers from "@/components/providers";\nimport Header from "@/components/header";\n\nconst geistSans = Geist({\n  variable: "--font-geist-sans",\n  subsets: ["latin"],\n});\n\nconst geistMono = Geist_Mono({\n  variable: "--font-geist-mono",\n  subsets: ["latin"],\n});\n\nexport const metadata: Metadata = {\n  title: "{{projectName}}",\n  description: "{{projectName}}",\n};\n\nexport default function RootLayout({\n  children,\n}: Readonly<{\n  children: React.ReactNode;\n}>) {\n  return (\n    <html lang="en" suppressHydrationWarning>\n      <body\n        className={\`\${geistSans.variable} \${geistMono.variable} antialiased\`}\n      >\n        <Providers>\n          <div className="grid grid-rows-[auto_1fr] h-svh">\n            <Header />\n            {children}\n          </div>\n        </Providers>\n      </body>\n    </html>\n  );\n}\n`,
         type: "text",
       },
-      "frontend/react/next/src-ts/app/page.tsx.hbs": {
+      "frontend/react/next/src/app/page.tsx.hbs": {
         metadata: {
           updatedAt: "2025-06-17T06:06:35.000Z",
           updatedHash: "78e7e7eea2",
@@ -1367,7 +1367,7 @@ export const DLER_TPL_FRONTEND: Template = {
         } satisfies PackageJson,
         type: "json",
       },
-      "frontend/svelte/src-ts/app.css": {
+      "frontend/svelte/src/app.css": {
         metadata: {
           updatedAt: "2025-06-17T06:06:35.000Z",
           updatedHash: "2b911b4424",
@@ -1375,7 +1375,7 @@ export const DLER_TPL_FRONTEND: Template = {
         content: `@import 'tailwindcss';\n\nbody {\n    @apply bg-neutral-950 text-neutral-100;\n}\n`,
         type: "text",
       },
-      "frontend/svelte/src-ts/app.d.ts": {
+      "frontend/svelte/src/app.d.ts": {
         metadata: {
           updatedAt: "2025-06-17T06:06:35.000Z",
           updatedHash: "2f59b5d092",
@@ -1383,7 +1383,7 @@ export const DLER_TPL_FRONTEND: Template = {
         content: `// See https://svelte.dev/docs/kit/types#app.d.ts\n// for information about these interfaces\ndeclare global {\n	namespace App {\n		// interface Error {}\n		// interface Locals {}\n		// interface PageData {}\n		// interface PageState {}\n		// interface Platform {}\n	}\n}\n\nexport {};\n`,
         type: "text",
       },
-      "frontend/svelte/src-ts/app.html": {
+      "frontend/svelte/src/app.html": {
         metadata: {
           updatedAt: "2025-06-17T06:06:35.000Z",
           updatedHash: "f980132c60",

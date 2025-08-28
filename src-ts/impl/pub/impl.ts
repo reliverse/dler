@@ -1,4 +1,7 @@
 import { bumpHandler, isBumpDisabled, setBumpDisabledValueTo } from "@reliverse/bleump";
+import { relinka } from "@reliverse/relinka";
+import { createMultiStepSpinner } from "@reliverse/rempts";
+import prettyMilliseconds from "pretty-ms";
 import { dlerBuild } from "~/impl/build/impl";
 import { library_pubFlow } from "~/impl/build/library-flow";
 import { regular_pubFlow } from "~/impl/build/regular-flow";
@@ -6,22 +9,22 @@ import { getConfigDler } from "~/impl/config/load";
 import type { ReliverseConfig } from "~/impl/schema/mod";
 import type { PerfTimer } from "~/impl/types/mod";
 import { finalizeBuild, finalizePub } from "~/impl/utils/finalize";
-import { createSpinner } from "~/impl/utils/spinner";
 import { handleDlerError } from "~/impl/utils/utils-error-cwd";
+import { getElapsedPerfTime } from "../utils/utils-perf";
 
 // ==========================
-// dler pub
+// rse publish
 // ==========================
 
 /**
- * Main entry point for the dler build and publish process.
+ * Main entry point for the rse build and publish process.
  * Handles building and publishing for both main project and libraries.
- * @see `src-ts/app/build/impl.ts` for build main function implementation.
+ * @see `src-ts/impl/build/impl.ts` for build main function implementation.
  */
 export async function dlerPub(timer: PerfTimer, isDev: boolean, config?: ReliverseConfig) {
   let effectiveConfig = config;
   let shouldShowSpinner = false;
-  let spinner: ReturnType<typeof createSpinner> | null = null;
+  let multiStepSpinner: ReturnType<typeof createMultiStepSpinner> | null = null;
 
   try {
     if (!effectiveConfig) {
@@ -30,9 +33,24 @@ export async function dlerPub(timer: PerfTimer, isDev: boolean, config?: Reliver
       effectiveConfig = await getConfigDler();
     }
 
-    // Start spinner if displayBuildPubLogs is false
+    // Start multi-step spinner if displayBuildPubLogs is false
     shouldShowSpinner = effectiveConfig.displayBuildPubLogs === false;
-    spinner = shouldShowSpinner ? createSpinner("Building and publishing...").start() : null;
+
+    const pubSteps = effectiveConfig.commonPubPause
+      ? ["Loading configuration", "Version bumping", "Building project", "Finalizing"]
+      : [
+          "Loading configuration",
+          "Version bumping",
+          "Building project",
+          "Publishing",
+          "Finalizing",
+        ];
+
+    multiStepSpinner = shouldShowSpinner
+      ? createMultiStepSpinner("Build and Publish Process", pubSteps, { color: "cyan" })
+      : null;
+
+    if (multiStepSpinner) multiStepSpinner.nextStep(); // Move to version bumping
 
     // Handle version bumping if enabled
     const bumpIsDisabled = await isBumpDisabled();
@@ -50,6 +68,9 @@ export async function dlerPub(timer: PerfTimer, isDev: boolean, config?: Reliver
       }
     }
 
+    // Move to building step
+    if (multiStepSpinner) multiStepSpinner.nextStep();
+
     // Build step (disable build's own spinner since pub is handling it)
     const { effectiveConfig: buildConfig } = await dlerBuild(
       timer,
@@ -60,35 +81,83 @@ export async function dlerPub(timer: PerfTimer, isDev: boolean, config?: Reliver
       shouldShowSpinner, // disable build's spinner if pub is showing one
     );
 
+    // Move to next step based on whether we're publishing
+    if (multiStepSpinner) multiStepSpinner.nextStep();
+
     if (effectiveConfig.commonPubPause) {
       // Finalize build
-      await finalizeBuild(timer, effectiveConfig.commonPubPause, "pub");
-      // Stop spinner with success message for build-only
-      if (shouldShowSpinner && spinner) {
-        spinner.succeed("Build completed successfully!");
+      await finalizeBuild(shouldShowSpinner, timer, effectiveConfig.commonPubPause, "pub");
+      // Complete multi-step spinner for build-only
+      if (multiStepSpinner) {
+        multiStepSpinner.complete("Build completed successfully");
       }
     } else {
       // Publish step
       await regular_pubFlow(timer, isDev, buildConfig);
       await library_pubFlow(timer, isDev, buildConfig);
 
+      // Move to finalizing step
+      if (multiStepSpinner) multiStepSpinner.nextStep();
+
       // Finalize publish
       await finalizePub(
-        timer,
         buildConfig.libsList,
         buildConfig.distNpmDirName,
         buildConfig.distJsrDirName,
         buildConfig.libsDirDist,
       );
-      // Stop spinner with success message for build+publish
-      if (shouldShowSpinner && spinner) {
-        spinner.succeed("Build and publish completed successfully!");
+
+      // Complete multi-step spinner for build+publish
+      const elapsedTime = getElapsedPerfTime(timer);
+      const formattedPerfTime = prettyMilliseconds(elapsedTime, { verbose: true });
+      const packageName = buildConfig.projectName ?? "The project";
+      const versionLabelMain = buildConfig.version ? ` v${buildConfig.version}` : "";
+      const publishedLibNames = (() => {
+        const includeLibs =
+          buildConfig.libsActMode === "libs-only" || buildConfig.libsActMode === "main-and-libs";
+        if (!includeLibs || buildConfig.commonPubPause) return [] as string[];
+        const entries = Object.entries(buildConfig.libsList ?? {});
+        const names = [] as string[];
+        for (const [libName, libCfg] of entries) {
+          if (!libCfg?.libPubPause) {
+            const libVersionLabel = libCfg?.version ? ` v${libCfg.version}` : versionLabelMain;
+            names.push(`${libName}${libVersionLabel}`);
+          }
+        }
+        return names;
+      })();
+      const displayName =
+        publishedLibNames.length > 0
+          ? publishedLibNames.join(", ")
+          : `${packageName}${versionLabelMain}`;
+      const publishTargetLabel = (() => {
+        switch (buildConfig.commonPubRegistry) {
+          case "npm":
+            return "to NPM";
+          case "jsr":
+            return "to JSR";
+          case "npm-jsr":
+            return "to NPM and JSR";
+          default:
+            return "to NPM and JSR";
+        }
+      })();
+      if (multiStepSpinner) {
+        multiStepSpinner.complete(
+          `${displayName} publish ${publishTargetLabel} completed successfully in ${formattedPerfTime}`,
+        );
+      } else {
+        relinka(
+          "success",
+          `✅ ${displayName} publish ${publishTargetLabel} completed successfully in ${formattedPerfTime}`,
+        );
       }
     }
   } catch (error) {
-    // Stop spinner with error message if it was running
-    if (shouldShowSpinner && spinner) {
-      spinner.fail("Build and publish failed!");
+    // Stop multi-step spinner with error message if it was running
+    if (multiStepSpinner) {
+      const currentStep = multiStepSpinner.getCurrentStep();
+      multiStepSpinner.error(error as Error, currentStep);
     }
     handleDlerError(error);
   }

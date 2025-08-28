@@ -1,6 +1,6 @@
 import { re } from "@reliverse/relico";
 import { pathExists } from "@reliverse/relifso";
-import { confirmPrompt, useSpinner } from "@reliverse/rempts";
+import { confirmPrompt, createSpinner } from "@reliverse/rempts";
 import { logger } from "better-auth";
 import { getAdapter, getMigrations } from "better-auth/db";
 import path from "path";
@@ -63,7 +63,7 @@ export async function migrateAction(opts: MigrateActionOpts) {
     process.exit(1);
   }
 
-  const spinner = useSpinner({ text: "preparing migration..." }).start();
+  const spinner = createSpinner({ text: "preparing migration..." }).start();
 
   const { toBeAdded, toBeCreated, runMigrations } = await getMigrations(config);
 
@@ -101,9 +101,10 @@ export async function migrateAction(opts: MigrateActionOpts) {
     process.exit(0);
   }
 
-  spinner?.start("migrating...");
+  spinner?.start();
+  spinner.text = "migrating...";
   await runMigrations();
-  spinner.stop();
+  spinner.succeed("Migration completed!");
   logger.info("🚀 migration was completed successfully!");
   process.exit(0);
 }

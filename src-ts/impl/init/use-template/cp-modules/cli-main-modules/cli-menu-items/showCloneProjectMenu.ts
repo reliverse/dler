@@ -218,7 +218,7 @@ async function downloadAndSetupRepo(
     cache: false,
   });
 
-  relinka("success", `🎉 ${source} was downloaded to ${dir}`);
+  relinka("success", `✅ ${source} was downloaded to ${dir}`);
 }
 
 /**

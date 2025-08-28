@@ -1,6 +1,7 @@
 import { join } from "@reliverse/pathkit";
 import { existsSync, mkdir } from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
+import { createMultiStepSpinner } from "@reliverse/rempts";
 import {
   buildForTarget,
   cleanOutputDir,
@@ -152,20 +153,44 @@ export async function binary_buildFlow(
           );
         }
       } else {
-        relinka("success", `🎉 Build completed! All executables available in: ${options.outdir}`);
+        relinka("success", `✅ Build completed! All executables available in: ${options.outdir}`);
       }
     } else {
       relinka("info", "Building targets sequentially...");
+
+      // Use multi-step spinner for sequential builds
+      const shouldShowSpinner = config.displayBuildPubLogs === false;
+      let sequentialSpinner: ReturnType<typeof createMultiStepSpinner> | null = null;
+
+      if (shouldShowSpinner) {
+        sequentialSpinner = createMultiStepSpinner(
+          "Binary Build Process",
+          targets.map((target) => `Building ${target}`),
+          { color: "yellow" },
+        );
+      }
       let sequentialSuccessCount = 0;
       let sequentialFailureCount = 0;
 
-      for (const target of targets) {
+      for (const [index, target] of targets.entries()) {
         try {
           await buildForTarget(target, inputFile, options);
           sequentialSuccessCount++;
+
+          if (sequentialSpinner && index < targets.length - 1) {
+            sequentialSpinner.nextStep();
+          }
         } catch (error) {
+          if (sequentialSpinner) {
+            sequentialSpinner.error(error as Error, index);
+            return; // Exit early on error
+          }
           sequentialFailureCount++;
         }
+      }
+
+      if (sequentialSpinner && sequentialSuccessCount > 0) {
+        sequentialSpinner.complete(`Built ${sequentialSuccessCount} targets successfully`);
       }
 
       if (sequentialFailureCount > 0) {
@@ -177,8 +202,9 @@ export async function binary_buildFlow(
             `⚠️  Build completed with ${sequentialFailureCount} failure(s). ${sequentialSuccessCount} executable(s) available in: ${options.outdir}`,
           );
         }
-      } else {
-        relinka("success", `🎉 Build completed! All executables available in: ${options.outdir}`);
+      } else if (!sequentialSpinner) {
+        // Only show success if spinner didn't already handle it
+        relinka("success", `✅ Build completed! All executables available in: ${options.outdir}`);
       }
     }
 

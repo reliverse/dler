@@ -1,6 +1,6 @@
 import { re } from "@reliverse/relico";
 import { relinka } from "@reliverse/relinka";
-import { spinner } from "@reliverse/rempts";
+import { createSpinner } from "@reliverse/rempts";
 import { $ } from "execa";
 
 import type { Addons, PackageManager } from "~/impl/providers/better-t-stack/types";
@@ -13,7 +13,7 @@ export async function installDependencies({
   packageManager: PackageManager;
   addons?: Addons[];
 }) {
-  const s = spinner({
+  const s = createSpinner({
     text: `Running ${packageManager} install...`,
   });
 
@@ -25,9 +25,9 @@ export async function installDependencies({
       stderr: "inherit",
     })`${packageManager} install`;
 
-    s.stop("Dependencies installed successfully");
+    s.succeed("Dependencies installed successfully");
   } catch (error) {
-    s.stop(re.red("Failed to install dependencies"));
+    s.fail(re.red("Failed to install dependencies"));
     if (error instanceof Error) {
       relinka("error", re.red(`Installation error: ${error.message}`));
     }

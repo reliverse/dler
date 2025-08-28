@@ -2,7 +2,7 @@ import path from "node:path";
 import { re } from "@reliverse/relico";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { cancel, inputPrompt, isCancel, spinner } from "@reliverse/rempts";
+import { cancel, createSpinner, inputPrompt, isCancel } from "@reliverse/rempts";
 import { execa } from "execa";
 import {
   addEnvVariablesToFile,
@@ -16,17 +16,18 @@ interface MongoDBConfig {
 }
 
 async function checkAtlasCLI(): Promise<boolean> {
-  const s = spinner({
+  const s = createSpinner({
     text: "Checking for MongoDB Atlas CLI...",
   });
   s.start("Checking for MongoDB Atlas CLI...");
 
   try {
     const exists = await commandExists("atlas");
-    s.stop(exists ? "MongoDB Atlas CLI found" : re.yellow("MongoDB Atlas CLI not found"));
+    if (exists) s.succeed("MongoDB Atlas CLI found");
+    else s.fail(re.yellow("MongoDB Atlas CLI not found"));
     return exists;
   } catch (_error) {
-    s.stop(re.red("Error checking MongoDB Atlas CLI"));
+    s.fail(re.red("Error checking MongoDB Atlas CLI"));
     return false;
   }
 }
@@ -123,7 +124,7 @@ ${re.green("MongoDB Atlas Manual Setup Instructions:")}
 
 export async function setupMongoDBAtlas(config: ProjectConfig) {
   const { projectDir } = config;
-  const mainSpinner = spinner({
+  const mainSpinner = createSpinner({
     text: "Setting up MongoDB Atlas...",
   });
   mainSpinner.start("Setting up MongoDB Atlas...");
@@ -132,7 +133,7 @@ export async function setupMongoDBAtlas(config: ProjectConfig) {
   try {
     await fs.ensureDir(serverDir);
 
-    mainSpinner.stop("MongoDB Atlas setup ready");
+    mainSpinner.succeed("MongoDB Atlas setup ready");
 
     const config = await initMongoDBAtlas(serverDir);
 
@@ -145,7 +146,7 @@ export async function setupMongoDBAtlas(config: ProjectConfig) {
       displayManualSetupInstructions();
     }
   } catch (error) {
-    mainSpinner.stop(re.red("MongoDB Atlas setup failed"));
+    mainSpinner.fail(re.red("MongoDB Atlas setup failed"));
     relinka(
       "error",
       re.red(

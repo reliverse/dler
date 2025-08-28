@@ -2,7 +2,6 @@ import path from "@reliverse/pathkit";
 import { re } from "@reliverse/relico";
 import fs, { ensuredir, setHiddenAttribute } from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { Value } from "@sinclair/typebox/value";
 import { parseJSONC } from "confbox";
 import { ofetch } from "ofetch";
 import { cliHomeRepos } from "~/impl/config/constants";
@@ -12,9 +11,9 @@ import { experimental, recommended } from "~/impl/utils/badgeNotifiers";
 import {
   DEFAULT_REPOS_CONFIG,
   generateReposJsonSchema,
+  isReposConfig,
   type RepoInfo,
   type ReposConfig,
-  reposSchema,
   shouldRegenerateSchema,
 } from "./schemaTemplate";
 
@@ -146,7 +145,7 @@ async function readReposConfig(): Promise<ReposConfig> {
   try {
     const content = await fs.readFile(configPath, "utf-8");
     const parsed = parseJSONC(content);
-    if (Value.Check(reposSchema, parsed)) {
+    if (isReposConfig(parsed)) {
       return parsed;
     }
   } catch (error) {

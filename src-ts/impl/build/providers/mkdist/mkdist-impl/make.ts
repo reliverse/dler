@@ -260,7 +260,7 @@ export async function mkdist(options: MkdistOptions /* istanbul ignore next */ =
       relinka("error", `... and ${errors.length - 5} more errors`);
     }
   } else {
-    relinka("success", "Build completed successfully!");
+    relinka("verbose", "Build completed successfully!");
   }
 
   return {

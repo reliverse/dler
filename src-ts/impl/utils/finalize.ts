@@ -17,10 +17,10 @@ function providePublishGuidance(usedMode: "build" | "pub", commonPubPause: boole
       "info",
       usedMode === "pub"
         ? "💡 To enable publishing: set commonPubPause=false in your config"
-        : "💡 To publish: set commonPubPause=false, then run 'dler pub'",
+        : "💡 To publish: set commonPubPause=false, then run: rse publish",
     );
   } else {
-    relinka("info", "💡 To publish: run 'dler pub'");
+    relinka("info", "For publishing to NPM/JSR, use: rse publish");
   }
 }
 
@@ -28,20 +28,20 @@ function providePublishGuidance(usedMode: "build" | "pub", commonPubPause: boole
  * Finalizes the build process and reports completion.
  */
 export async function finalizeBuild(
+  shouldShowSpinner: boolean,
   timer: PerfTimer,
   commonPubPause: boolean,
   usedMode: "build" | "pub",
 ): Promise<void> {
-  const elapsedTime = getElapsedPerfTime(timer);
-  const formattedPerfTime = prettyMilliseconds(elapsedTime, { verbose: true });
+  if (!shouldShowSpinner) {
+    const elapsedTime = getElapsedPerfTime(timer);
+    const formattedPerfTime = prettyMilliseconds(elapsedTime, { verbose: true });
+    // Print separator for better visual separation
+    console.log("\n" + "=".repeat(60));
+    // Report build completion with timing
+    relinka("verbose", `✅ Build completed successfully in ${formattedPerfTime}`);
+  }
 
-  // Print separator for better visual separation
-  console.log("\n" + "=".repeat(60));
-
-  // Report build completion with timing
-  relinka("success", `🎉 Build completed successfully in ${formattedPerfTime}`);
-
-  // Provide publish guidance
   providePublishGuidance(usedMode, commonPubPause);
 }
 
@@ -49,15 +49,11 @@ export async function finalizeBuild(
  * Finalizes the publish process, cleans up, and reports completion.
  */
 export async function finalizePub(
-  timer: PerfTimer,
   libsList: Record<string, LibConfig>,
   distNpmDirName: string,
   distJsrDirName: string,
   libsDirDist: string,
 ): Promise<void> {
-  const elapsedTime = getElapsedPerfTime(timer);
-  const formattedPerfTime = prettyMilliseconds(elapsedTime, { verbose: true });
-
   // Delete dist folders
   await removeDistFolders(distNpmDirName, distJsrDirName, libsDirDist, libsList);
 
@@ -67,7 +63,4 @@ export async function finalizePub(
   } catch {
     throw new Error("[reliverse.ts] Failed to set bumpDisable to false");
   }
-
-  // Report success
-  relinka("success", `🎉 Build and publish completed successfully in ${formattedPerfTime}`);
 }

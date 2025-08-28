@@ -505,7 +505,7 @@ export async function promptGitDeploy({
           githubUsername,
         );
         if (deployResult.deployService !== "none") {
-          relinka("success", "Git, GitHub, and deployment completed successfully! 🎉");
+          relinka("success", "Git, GitHub, and deployment completed successfully! ✅");
           return deployResult;
         }
         deployRetryCount++;

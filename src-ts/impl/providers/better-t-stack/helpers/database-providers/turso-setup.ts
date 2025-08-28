@@ -2,7 +2,7 @@ import os from "node:os";
 import path from "node:path";
 import { re } from "@reliverse/relico";
 import { relinka } from "@reliverse/relinka";
-import { cancel, confirm, isCancel, select, spinner, text } from "@reliverse/rempts";
+import { cancel, confirm, createSpinner, isCancel, select, text } from "@reliverse/rempts";
 import { $ } from "execa";
 import {
   addEnvVariablesToFile,
@@ -37,21 +37,21 @@ async function isTursoLoggedIn() {
 }
 
 async function loginToTurso() {
-  const s = spinner({
+  const s = createSpinner({
     text: "Logging in to Turso...",
   });
   try {
     s.start("Logging in to Turso...");
     await $`turso auth login`;
-    s.stop("Logged into Turso");
+    s.succeed("Logged into Turso");
     return true;
   } catch (_error) {
-    s.stop(re.red("Failed to log in to Turso"));
+    s.fail(re.red("Failed to log in to Turso"));
   }
 }
 
 async function installTursoCLI(isMac: boolean) {
-  const s = spinner({
+  const s = createSpinner({
     text: "Installing Turso CLI...",
   });
   try {
@@ -64,20 +64,20 @@ async function installTursoCLI(isMac: boolean) {
       await $`bash -c '${installScript}'`;
     }
 
-    s.stop("Turso CLI installed");
+    s.succeed("Turso CLI installed");
     return true;
   } catch (error) {
     if (error instanceof Error && error.message.includes("User force closed")) {
-      s.stop("Turso CLI installation cancelled");
+      s.succeed("Turso CLI installation cancelled");
       relinka("warn", re.yellow("Turso CLI installation cancelled by user"));
       throw new Error("Installation cancelled");
     }
-    s.stop(re.red("Failed to install Turso CLI"));
+    s.fail(re.red("Failed to install Turso CLI"));
   }
 }
 
 async function getTursoGroups(): Promise<TursoGroup[]> {
-  const s = spinner({
+  const s = createSpinner({
     text: "Fetching Turso groups...",
   });
   try {
@@ -86,7 +86,7 @@ async function getTursoGroups(): Promise<TursoGroup[]> {
     const lines = stdout.trim().split("\n");
 
     if (lines.length <= 1) {
-      s.stop("No Turso groups found");
+      s.succeed("No Turso groups found");
       return [];
     }
 
@@ -99,10 +99,10 @@ async function getTursoGroups(): Promise<TursoGroup[]> {
       })
       .filter((group): group is TursoGroup => group !== null);
 
-    s.stop(`Found ${groups.length} Turso groups`);
+    s.succeed(`Found ${groups.length} Turso groups`);
     return groups;
   } catch (error) {
-    s.stop(re.red("Error fetching Turso groups"));
+    s.fail(re.red("Error fetching Turso groups"));
     console.error("Error fetching Turso groups:", error);
     return [];
   }
@@ -139,7 +139,7 @@ async function selectTursoGroup(): Promise<string | null> {
 }
 
 async function createTursoDatabase(dbName: string, groupName: string | null) {
-  const s = spinner({
+  const s = createSpinner({
     text: "Creating Turso database...",
   });
 
@@ -152,9 +152,9 @@ async function createTursoDatabase(dbName: string, groupName: string | null) {
       await $`turso db create ${dbName}`;
     }
 
-    s.stop(`Turso database "${dbName}" created`);
+    s.succeed(`Turso database "${dbName}" created`);
   } catch (error) {
-    s.stop(re.red(`Failed to create database "${dbName}"`));
+    s.fail(re.red(`Failed to create database "${dbName}"`));
     if (error instanceof Error && error.message.includes("already exists")) {
       throw new Error("DATABASE_EXISTS");
     }
@@ -165,14 +165,14 @@ async function createTursoDatabase(dbName: string, groupName: string | null) {
     const { stdout: dbUrl } = await $`turso db show ${dbName} --url`;
     const { stdout: authToken } = await $`turso db tokens create ${dbName}`;
 
-    s.stop("Database connection details retrieved");
+    s.succeed("Database connection details retrieved");
 
     return {
       dbUrl: dbUrl.trim(),
       authToken: authToken.trim(),
     };
   } catch (_error) {
-    s.stop(re.red("Failed to retrieve database connection details"));
+    s.fail(re.red("Failed to retrieve database connection details"));
   }
 }
 
@@ -210,7 +210,7 @@ DATABASE_AUTH_TOKEN=your_auth_token`,
 
 export async function setupTurso(config: ProjectConfig): Promise<void> {
   const { projectDir } = config;
-  const setupSpinner = spinner({
+  const setupSpinner = createSpinner({
     text: "Checking Turso CLI availability...",
   });
   setupSpinner.start("Checking Turso CLI availability...");
@@ -221,14 +221,14 @@ export async function setupTurso(config: ProjectConfig): Promise<void> {
     const isWindows = platform === "win32";
 
     if (isWindows) {
-      setupSpinner.stop(re.yellow("Turso setup not supported on Windows"));
+      setupSpinner.succeed(re.yellow("Turso setup not supported on Windows"));
       relinka("warn", re.yellow("Automatic Turso setup is not supported on Windows."));
       await writeEnvFile(projectDir);
       displayManualSetupInstructions();
       return;
     }
 
-    setupSpinner.stop("Turso CLI availability checked");
+    setupSpinner.succeed("Turso CLI availability checked");
 
     const isCliInstalled = await isTursoInstalled();
 
@@ -300,7 +300,7 @@ types.d.ts(118, 5): 'title' is declared here.
 
     relinka("success", "Turso database setup completed successfully!");
   } catch (error) {
-    setupSpinner.stop(re.red("Turso CLI availability check failed"));
+    setupSpinner.fail(re.red("Turso CLI availability check failed"));
     relinka(
       "error",
       re.red(`Error during Turso setup: ${error instanceof Error ? error.message : String(error)}`),

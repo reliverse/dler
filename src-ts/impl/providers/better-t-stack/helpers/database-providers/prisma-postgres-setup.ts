@@ -2,7 +2,7 @@ import path from "node:path";
 import { re } from "@reliverse/relico";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { cancel, isCancel, password, spinner } from "@reliverse/rempts";
+import { cancel, createSpinner, isCancel, password } from "@reliverse/rempts";
 import { execa } from "execa";
 import {
   addEnvVariablesToFile,
@@ -20,7 +20,7 @@ async function initPrismaDatabase(
   serverDir: string,
   packageManager: PackageManager,
 ): Promise<PrismaConfig | null> {
-  const s = spinner({
+  const s = createSpinner({
     text: "Initializing Prisma PostgreSQL...",
   });
   try {
@@ -29,7 +29,7 @@ async function initPrismaDatabase(
     const prismaDir = path.join(serverDir, "prisma");
     await fs.ensureDir(prismaDir);
 
-    s.stop("Prisma PostgreSQL initialized. Follow the prompts below:");
+    s.succeed("Prisma PostgreSQL initialized. Follow the prompts below:");
 
     const prismaInitCommand = getPackageExecutionCommand(packageManager, "prisma init --db");
 
@@ -65,7 +65,7 @@ async function initPrismaDatabase(
       databaseUrl: databaseUrl as string,
     };
   } catch (error) {
-    s.stop(re.red("Prisma PostgreSQL initialization failed"));
+    s.fail(re.red("Prisma PostgreSQL initialization failed"));
     if (error instanceof Error) {
       relinka("error", error.message);
     }
@@ -149,7 +149,7 @@ import type { ProjectConfig } from "~/impl/providers/better-t-stack/types";
 export async function setupPrismaPostgres(config: ProjectConfig) {
   const { packageManager, projectDir } = config;
   const serverDir = path.join(projectDir, "apps/server");
-  const s = spinner({
+  const s = createSpinner({
     text: "Setting up Prisma PostgreSQL...",
   });
   s.start("Setting up Prisma PostgreSQL...");
@@ -157,7 +157,7 @@ export async function setupPrismaPostgres(config: ProjectConfig) {
   try {
     await fs.ensureDir(serverDir);
 
-    s.stop("Prisma PostgreSQL setup ready");
+    s.succeed("Prisma PostgreSQL setup ready");
 
     const config = await initPrismaDatabase(serverDir, packageManager);
 
@@ -172,16 +172,16 @@ export async function setupPrismaPostgres(config: ProjectConfig) {
         ),
       );
     } else {
-      const fallbackSpinner = spinner({
+      const fallbackSpinner = createSpinner({
         text: "Setting up fallback configuration...",
       });
       fallbackSpinner.start("Setting up fallback configuration...");
       await writeEnvFile(projectDir);
-      fallbackSpinner.stop("Fallback configuration ready");
+      fallbackSpinner.succeed("Fallback configuration ready");
       displayManualSetupInstructions();
     }
   } catch (error) {
-    s.stop(re.red("Prisma PostgreSQL setup failed"));
+    s.fail(re.red("Prisma PostgreSQL setup failed"));
     relinka(
       "error",
       re.red(

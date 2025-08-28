@@ -123,10 +123,10 @@ export async function generateDefaultRulesForProject(
   const hasPrismaFile = await fs.pathExists(path.join(projectPath, "prisma/schema.prisma"));
   const hasDrizzleFile = await fs.pathExists(path.join(projectPath, "drizzle.config.ts"));
   const hasNextAuthDir = await fs.pathExists(
-    path.join(projectPath, "src-ts/app/api/auth/[...nextauth]"),
+    path.join(projectPath, "src-ts/impl/api/auth/[...nextauth]"),
   );
   const hasBetterAuthFile = await fs.pathExists(
-    path.join(projectPath, "src-ts/app/api/auth/[...all]/route.ts"),
+    path.join(projectPath, "src-ts/impl/api/auth/[...all]/route.ts"),
   );
   const hasShadcnUi = await fs.pathExists(path.join(projectPath, "components/ui"));
 
@@ -176,7 +176,7 @@ export async function generateDefaultRulesForProject(
   const hasGraphql = "graphql" in deps || "apollo-server" in deps;
   const hasRest =
     (await fs.pathExists(path.join(projectPath, "src/api"))) ||
-    (await fs.pathExists(path.join(projectPath, "src-ts/app/api")));
+    (await fs.pathExists(path.join(projectPath, "src-ts/impl/api")));
 
   // Database providers
   const hasPg = "pg" in deps || "@neondatabase/serverless" in deps;

@@ -76,7 +76,7 @@ export async function createInitialVercelDeployment(
 ): Promise<{ url: string; id: string }> {
   if (!githubToken) {
     throw new Error(
-      "GitHub token not found in rse's memory. Please restart the CLI and try again. Notify the @reliverse/rse developers if the problem persists.",
+      "GitHub token not found in rse's memory. Please restart the CLI and try again. Notify the Reliverse developers if the problem persists.",
     );
   }
 

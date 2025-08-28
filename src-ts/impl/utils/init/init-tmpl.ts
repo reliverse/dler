@@ -55,8 +55,8 @@ Feel free to tweak the structure to your liking.
 This project is just a starting point. You can add:
 
 - 🧙‍♂️ Your own components and UI
-- 📦 APIs, auth, i18n, analytics, whatever you need
-- 🤖 AI integrations using [Reliverse CLI](https://www.npmjs.com/package/@reliverse/rse)
+- 📦 APIs, auth, i18n, analytics, etc.
+- 🤖 Whatever you need
 
 ## 🫶 Credits
 

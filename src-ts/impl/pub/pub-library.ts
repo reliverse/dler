@@ -1,6 +1,10 @@
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { execaCommand } from "execa";
+
+// import { $ } from "bun";
+// const isBun = typeof Bun !== "undefined";
+
 import pAll from "p-all";
 import { CONCURRENCY_DEFAULT } from "~/impl/config/constants";
 import type { PerfTimer } from "~/impl/types/mod";
@@ -22,6 +26,7 @@ export async function library_publishLibrary(
   distJsrSlowTypes: boolean,
   isDev: boolean,
   timer: PerfTimer,
+  shouldShowSpinner = false,
 ): Promise<void> {
   switch (effectivePubRegistry) {
     case "jsr":
@@ -36,18 +41,36 @@ export async function library_publishLibrary(
         libName,
         isDev,
         timer,
+        shouldShowSpinner,
       );
       break;
     case "npm":
       relinka("verbose", `Publishing lib ${libName} to NPM only...`);
       relinka("null", "");
-      await library_pubToNpm(npmOutDir, distJsrDryRun, distJsrFailOnWarn, libName, isDev, timer);
+      await library_pubToNpm(
+        npmOutDir,
+        distJsrDryRun,
+        distJsrFailOnWarn,
+        libName,
+        isDev,
+        timer,
+        shouldShowSpinner,
+      );
       break;
     case "npm-jsr": {
       relinka("verbose", `Publishing lib ${libName} to both NPM and JSR...`);
       relinka("null", "");
       const publishTasks = [
-        () => library_pubToNpm(npmOutDir, distJsrDryRun, distJsrFailOnWarn, libName, isDev, timer),
+        () =>
+          library_pubToNpm(
+            npmOutDir,
+            distJsrDryRun,
+            distJsrFailOnWarn,
+            libName,
+            isDev,
+            timer,
+            shouldShowSpinner,
+          ),
         () =>
           library_pubToJsr(
             jsrOutDir,
@@ -58,6 +81,7 @@ export async function library_publishLibrary(
             libName,
             isDev,
             timer,
+            shouldShowSpinner,
           ),
       ];
       await pAll(publishTasks, { concurrency: CONCURRENCY_DEFAULT });
@@ -83,6 +107,7 @@ async function library_pubToJsr(
   libName: string,
   isDev: boolean,
   timer: PerfTimer,
+  shouldShowSpinner = false,
 ): Promise<void> {
   relinka("verbose", `Starting library_pubToJsr for lib: ${libName}`);
   let bunDirCreated = false;
@@ -111,10 +136,28 @@ async function library_pubToJsr(
         distJsrFailOnWarn ? "--fail-on-warn" : "",
         distJsrAllowDirty ? "--allow-dirty" : "",
         distJsrSlowTypes ? "--allow-slow-types" : "",
+        shouldShowSpinner ? "--silent" : "",
       ]
         .filter(Boolean)
         .join(" ");
-      await execaCommand(command, { stdio: "inherit" });
+
+      /* if (isBun) {
+        // Use Bun's $ shell with conditional quiet mode
+        if (shouldShowSpinner) {
+          await $`${command}`.quiet();
+        } else {
+          await $`${command}`;
+        }
+      } else {
+        // Use execa with conditional stdio
+        await execaCommand(command, {
+          stdio: shouldShowSpinner ? "ignore" : "inherit",
+        });
+      } */
+      await execaCommand(command, {
+        stdio: shouldShowSpinner ? "ignore" : "inherit",
+      });
+
       relinka("null", "");
       relinka(
         "log",
@@ -149,6 +192,7 @@ async function library_pubToNpm(
   libName: string,
   _isDev: boolean,
   timer: PerfTimer,
+  shouldShowSpinner = false,
 ): Promise<void> {
   relinka("verbose", `Starting library_pubToNpm for lib: ${libName}`);
   try {
@@ -156,8 +200,31 @@ async function library_pubToNpm(
     await withWorkingDirectory(libOutDir, async () => {
       relinka("verbose", `Publishing lib ${libName} to NPM from ${libOutDir}`);
       relinka("null", "");
-      const command = ["bun publish", distJsrDryRun ? "--dry-run" : ""].filter(Boolean).join(" ");
-      await execaCommand(command, { stdio: "inherit" });
+      const command = [
+        "bun publish",
+        distJsrDryRun ? "--dry-run" : "",
+        shouldShowSpinner ? "--silent" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      /* if (isBun) {
+        // Use Bun's $ shell with conditional quiet mode
+        if (shouldShowSpinner) {
+          await $`${command}`.quiet();
+        } else {
+          await $`${command}`;
+        }
+      } else {
+        // Use execa with conditional stdio
+        await execaCommand(command, {
+          stdio: shouldShowSpinner ? "ignore" : "inherit",
+        });
+      } */
+      await execaCommand(command, {
+        stdio: shouldShowSpinner ? "ignore" : "inherit",
+      });
+
       relinka("null", "");
       relinka(
         "log",

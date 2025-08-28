@@ -1,3 +1,4 @@
+import { relinka } from "@reliverse/relinka";
 import { $ } from "bun";
 import fs from "fs";
 
@@ -81,24 +82,24 @@ const CURRENT_BUILD_MODE: (typeof BUILD_MODE)[keyof typeof BUILD_MODE] =
 
 // Build functions for different modes
 async function buildFullFeaturedOnly(targets: BuildTarget[], distDir: string): Promise<void> {
-  console.log("🔨 Building with full cross-compilation (no fallback)...");
+  relinka.log("🔨 Building with full cross-compilation (no fallback)...");
 
   for (const target of targets) {
     if (!target.enabled) {
-      console.log(`⏭️ Skipping disabled target: ${target.description}`);
+      relinka.log(`⏭️ Skipping disabled target: ${target.description}`);
       continue;
     }
 
     const targetTriple = getTargetTriple(target.platform, target.arch);
-    console.log(`🔨 Building for ${target.description} (${targetTriple})...`);
+    relinka.log(`🔨 Building for ${target.description} (${targetTriple})...`);
 
     try {
       // Check if we're on Windows and trying to cross-compile to non-Windows targets
       if (process.platform === "win32" && target.platform !== "windows") {
-        console.log(
+        relinka.log(
           `⚠️ Cross-compilation from Windows to ${target.platform} may require Docker or WSL2`,
         );
-        console.log(`💡 Consider using 'copy_only' mode or running from WSL2/Linux`);
+        relinka.log(`💡 Consider using 'copy_only' mode or running from WSL2/Linux`);
         throw new Error(
           `Cross-compilation from Windows to ${target.platform} not supported in this environment`,
         );
@@ -111,19 +112,19 @@ async function buildFullFeaturedOnly(targets: BuildTarget[], distDir: string): P
         const finalName = `dlerust-${target.platform}-${target.arch}${target.ext}`;
         const distPath = `${distDir}/${finalName}`;
         fs.copyFileSync(targetFile, distPath);
-        console.log(`✅ Built for ${target.description}: ${distPath}`);
+        relinka.success(`Built for ${target.description}: ${distPath}`);
       } else {
         throw new Error(`Binary not found for ${target.description} at ${targetFile}`);
       }
     } catch (error) {
-      console.error(`❌ Build failed for ${target.description}: ${error}`);
+      relinka.error(`❌ Build failed for ${target.description}: ${error}`);
       throw error; // Re-throw to fail the entire build
     }
   }
 }
 
 async function buildCopyOnly(targets: BuildTarget[], distDir: string): Promise<void> {
-  console.log("🔨 Building for current platform only and copying...");
+  relinka.log("🔨 Building for current platform only and copying...");
 
   // Build for current platform
   await $`cargo build --release`;
@@ -134,7 +135,7 @@ async function buildCopyOnly(targets: BuildTarget[], distDir: string): Promise<v
   if (fs.existsSync(currentTargetFile)) {
     for (const target of targets) {
       if (!target.enabled) {
-        console.log(`⏭️ Skipping disabled target: ${target.description}`);
+        relinka.log(`⏭️ Skipping disabled target: ${target.description}`);
         continue;
       }
 
@@ -143,7 +144,7 @@ async function buildCopyOnly(targets: BuildTarget[], distDir: string): Promise<v
 
       // Copy the current binary to all target names
       fs.copyFileSync(currentTargetFile, distPath);
-      console.log(`✅ Copied current binary to: ${target.description}: ${distPath}`);
+      relinka.success(`Copied current binary to: ${target.description}: ${distPath}`);
     }
   } else {
     throw new Error(`Current platform binary not found at: ${currentTargetFile}`);
@@ -151,26 +152,26 @@ async function buildCopyOnly(targets: BuildTarget[], distDir: string): Promise<v
 }
 
 async function buildWithFallback(targets: BuildTarget[], distDir: string): Promise<void> {
-  console.log("🔨 Building with cross-compilation and fallback...");
+  relinka.log("🔨 Building with cross-compilation and fallback...");
 
   let crossCompilationSuccess = false;
 
   for (const target of targets) {
     if (!target.enabled) {
-      console.log(`⏭️ Skipping disabled target: ${target.description}`);
+      relinka.log(`⏭️ Skipping disabled target: ${target.description}`);
       continue;
     }
 
     const targetTriple = getTargetTriple(target.platform, target.arch);
-    console.log(`🔨 Attempting to build for ${target.description} (${targetTriple})...`);
+    relinka.log(`🔨 Attempting to build for ${target.description} (${targetTriple})...`);
 
     try {
       // Check if we're on Windows and trying to cross-compile to non-Windows targets
       if (process.platform === "win32" && target.platform !== "windows") {
-        console.log(
+        relinka.log(
           `⚠️ Cross-compilation from Windows to ${target.platform} may require Docker or WSL2`,
         );
-        console.log(`💡 Skipping ${target.platform} target on Windows, will fallback to copy mode`);
+        relinka.log(`💡 Skipping ${target.platform} target on Windows, will fallback to copy mode`);
         continue;
       }
 
@@ -181,31 +182,31 @@ async function buildWithFallback(targets: BuildTarget[], distDir: string): Promi
         const finalName = `dlerust-${target.platform}-${target.arch}${target.ext}`;
         const distPath = `${distDir}/${finalName}`;
         fs.copyFileSync(targetFile, distPath);
-        console.log(`✅ Built for ${target.description}: ${distPath}`);
+        relinka.success(`Built for ${target.description}: ${distPath}`);
         crossCompilationSuccess = true;
       } else {
-        console.warn(`⚠️ Binary not found for ${target.description} at ${targetFile}`);
+        relinka.warn(`⚠️ Binary not found for ${target.description} at ${targetFile}`);
       }
     } catch (error) {
       if (target.platform === "windows") {
-        console.warn(`⚠️ Windows build failed for ${target.description}: ${error}`);
-        console.warn(`💡 Make sure Visual Studio Build Tools are installed with C++ workload`);
-        console.warn(`💡 Installation options:`);
-        console.warn(`   1. Fastest: winget install Microsoft.VisualStudio.2022.BuildTools`);
-        console.warn(
+        relinka.warn(`⚠️ Windows build failed for ${target.description}: ${error}`);
+        relinka.warn(`💡 Make sure Visual Studio Build Tools are installed with C++ workload`);
+        relinka.warn(`💡 Installation options:`);
+        relinka.warn(`   1. Fastest: winget install Microsoft.VisualStudio.2022.BuildTools`);
+        relinka.warn(
           `   2. Manual: https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022`,
         );
-        console.warn(`   3. Run 'build-with-vs.ps1' to set up the environment properly`);
+        relinka.warn(`   3. Run 'build-with-vs.ps1' to set up the environment properly`);
       } else {
-        console.warn(`⚠️ Cross-compilation failed for ${target.description}: ${error}`);
-        console.warn(`💡 This requires cross-compilation toolchains (gcc, clang, etc.)`);
+        relinka.warn(`⚠️ Cross-compilation failed for ${target.description}: ${error}`);
+        relinka.warn(`💡 This requires cross-compilation toolchains (gcc, clang, etc.)`);
       }
     }
   }
 
   // If cross-compilation failed, fall back to building for current platform and copying
   if (!crossCompilationSuccess) {
-    console.log("🔄 Cross-compilation failed, falling back to current platform build...");
+    relinka.log("🔄 Cross-compilation failed, falling back to current platform build...");
     await buildCopyOnly(targets, distDir);
   }
 }
@@ -248,24 +249,24 @@ function getBunTargets(targets: BuildTarget[]): string[] {
  */
 async function main() {
   try {
-    console.log("🚀 Starting release build...");
+    relinka.log("🚀 Starting release build...");
 
     // Build Rust binaries for all targets using cross-compilation with 'cross' tool
-    console.log("🔨 Building Rust binaries for all targets using 'cross' tool...");
+    relinka.log("🔨 Building Rust binaries for all targets using 'cross' tool...");
 
     // Get enabled targets from configuration
     const enabledTargets = BUILD_TARGETS.filter((target) => target.enabled);
-    console.log(`🎯 Building for ${enabledTargets.length}/${BUILD_TARGETS.length} enabled targets`);
+    relinka.log(`🎯 Building for ${enabledTargets.length}/${BUILD_TARGETS.length} enabled targets`);
 
     // Log which targets are enabled/disabled
     BUILD_TARGETS.forEach((target) => {
       const status = target.enabled ? "✅" : "❌";
-      console.log(`   ${status} ${target.description}`);
+      relinka.log(`   ${status} ${target.description}`);
     });
 
     // Show target mapping
     if (enabledTargets.length > 0) {
-      console.log("🔄 Target mapping:");
+      relinka.log("🔄 Target mapping:");
       const inputFile = "src-ts/dler.ts";
       const prefix =
         inputFile
@@ -277,7 +278,7 @@ async function main() {
         const rustTarget = getTargetTriple(target.platform, target.arch);
         const bunTarget = getBunTargets([target])[0];
         const prefixedBunTarget = `${prefix}-${bunTarget}`;
-        console.log(`   ${target.description} → Rust: ${rustTarget}, Bun: ${prefixedBunTarget}`);
+        relinka.log(`   ${target.description} → Rust: ${rustTarget}, Bun: ${prefixedBunTarget}`);
       });
     }
 
@@ -304,7 +305,7 @@ async function main() {
     }
 
     // Build TypeScript binary with Bun for enabled targets
-    console.log("🔨 Building TypeScript binary with Bun for enabled targets...");
+    relinka.log("🔨 Building TypeScript binary with Bun for enabled targets...");
 
     // Convert BUILD_TARGETS to bun target format and add prefix
     const bunTargets = getBunTargets(enabledTargets);
@@ -316,14 +317,14 @@ async function main() {
         ?.replace(/\.[^/.]+$/, "") || "dler";
     const prefixedTargets = bunTargets.map((target) => `${prefix}-${target}`);
     const targetsArg = prefixedTargets.join(",");
-    console.log(`🎯 Bun targets: ${targetsArg}`);
+    relinka.log(`🎯 Bun targets: ${targetsArg}`);
 
-    await $`bun dler build --binary-enabled --binary-input ${inputFile} --binary-targets=${targetsArg}`;
+    await $`bun rse build --binary-enabled --binary-input ${inputFile} --binary-targets=${targetsArg}`;
 
-    console.log("🎉 Release build completed successfully!");
-    console.log("📦 Rust binaries: dlerust-{platform}-{arch} for all supported targets");
+    relinka.success("Release build completed successfully!");
+    relinka.log("📦 Rust binaries: dlerust-{platform}-{arch} for all supported targets");
   } catch (error) {
-    console.error("❌ Release build failed:", error);
+    relinka.error("❌ Release build failed:", error);
     process.exit(1);
   }
 }

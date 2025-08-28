@@ -1,7 +1,12 @@
 import path, { dirname } from "@reliverse/pathkit";
 import fs, { ensuredir, rmEnsureDir, setHiddenAttribute } from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { selectPrompt } from "@reliverse/rempts";
+import {
+  createFileProgressSpinner,
+  createTransferSpinner,
+  selectPrompt,
+  withEnhancedSpinner,
+} from "@reliverse/rempts";
 import { exec } from "child_process";
 import https from "https";
 import { HttpsProxyAgent } from "https-proxy-agent";
@@ -200,14 +205,17 @@ async function getCommitHash(repoUrl: string, ref: string): Promise<string> {
 }
 
 /**
- * Helper: Downloads a tarball from a URL to a destination file.
+ * Helper: Downloads a tarball from a URL to a destination file with progress tracking.
  * Supports proxy from process.env.https_proxy.
  */
-function downloadTarball(url: string, dest: string): Promise<void> {
+function downloadTarball(url: string, dest: string, showProgress = false): Promise<void> {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
     const proxy = process.env.https_proxy;
     const options = proxy ? { agent: new HttpsProxyAgent(proxy) } : {};
+
+    let transferSpinner: ReturnType<typeof createTransferSpinner> | null = null;
+
     https
       .get(url, options, (response) => {
         if (response.statusCode && response.statusCode >= 400) {
@@ -218,12 +226,39 @@ function downloadTarball(url: string, dest: string): Promise<void> {
           );
           return;
         }
+
+        const totalBytes = parseInt(response.headers["content-length"] || "0", 10);
+        let downloadedBytes = 0;
+
+        if (showProgress && totalBytes > 0) {
+          transferSpinner = createTransferSpinner("Downloading repository", {
+            totalBytes,
+            showRate: true,
+            color: "blue",
+          });
+        }
+
+        response.on("data", (chunk: Buffer) => {
+          downloadedBytes += chunk.length;
+          if (transferSpinner) {
+            transferSpinner.updateBytes(downloadedBytes, path.basename(dest));
+          }
+        });
+
         response.pipe(file);
         file.on("finish", () => {
-          file.close(() => resolve());
+          file.close(() => {
+            if (transferSpinner) {
+              transferSpinner.complete("Repository downloaded", totalBytes);
+            }
+            resolve();
+          });
         });
       })
       .on("error", (err) => {
+        if (transferSpinner) {
+          transferSpinner.error(err);
+        }
         fs.unlink(dest).catch((unlinkErr) => console.error("Failed to unlink:", unlinkErr));
         reject(err);
       });
@@ -369,10 +404,22 @@ export async function downloadRepo({
         tarUrl = `${repoInfo.gitUrl.replace(".git", "")}/archive/${commitHash}.tar.gz`;
       }
       relinka("verbose", `Downloading tarball from ${tarUrl}`);
-      await downloadTarball(tarUrl, tarballFile);
+      await downloadTarball(tarUrl, tarballFile, true); // Enable progress tracking
     }
+
+    // Extract with progress tracking
+    const extractSpinner = createFileProgressSpinner("Extracting repository", {
+      color: "yellow",
+    });
+
+    // Get tarball size for progress tracking
+    const tarballStats = await fs.stat(tarballFile);
+    extractSpinner.updateProgress(tarballStats.size, path.basename(tarballFile));
+
     relinka("verbose", `Extracting tarball to ${projectPath}`);
     await extractTarball(tarballFile, projectPath, repoInfo.subdir);
+
+    extractSpinner.complete("Repository extracted successfully");
     const durationSeconds = (Date.now() - startTime) / 1000;
     const result: DownloadResult = { source: repoURL, dir: projectPath };
     if (returnTime) result.time = durationSeconds;
@@ -478,13 +525,29 @@ export async function downloadRepo({
     });
   }
 
-  // 9) Install dependencies if requested
+  // 9) Install dependencies if requested with enhanced spinner
   if (install) {
-    relinka("info", "Installing dependencies...");
-    await installDependencies({
-      cwd: projectPath,
-      silent: false,
-    });
+    await withEnhancedSpinner(
+      {
+        text: "Installing dependencies",
+        showTiming: true,
+        successText: "Dependencies installed successfully",
+        failText: "Failed to install dependencies",
+        color: "green",
+      },
+      async (spinner) => {
+        spinner.updateText("Analyzing package.json");
+        await new Promise((resolve) => setTimeout(resolve, 200)); // Brief delay for demo
+
+        spinner.updateText("Downloading packages");
+        await installDependencies({
+          cwd: projectPath,
+          silent: true, // Use spinner instead of npm logs
+        });
+
+        return "installation complete";
+      },
+    );
   }
 
   relinka("verbose", "Repository downloaded successfully!");

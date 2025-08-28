@@ -45,12 +45,10 @@ export async function ensureReliverseConfig(
       `${configKind === "ts" ? "TypeScript" : "JSONC"} config was created at ${configPath}`,
     );
     relinka("verbose", "Edit this file to customize build and publish settings");
-    if (!isDev) {
-      relinka("verbose", "Please note: commonPubPause is set to true by default");
-      relinka("verbose", "When you're ready, run `rse pub` to build and publish");
-    } else {
-      relinka("verbose", "When you're ready, run `bun pub` to build and publish");
-    }
+
+    relinka("log", "If you plan to publish with Rse, please note:");
+    relinka("log", "commonPubPause is set to true in the config by default");
+    relinka("log", "Set it to false, then run `rse publish` for NPM/JSR publishing");
 
     // Generate mod.ts with types/reliverse.schema.ts
     // TODO: finish implementation of this function
@@ -102,7 +100,8 @@ export async function prepareReliverseEnvironment(
   //   await ensureTsconfigIncludes(tsconfigPath);
   // }
 
-  // 4. Generate reltypes.ts if it doesn't exist (only for TypeScript configs)
+  // 4. Generate reltypes.ts conditionally. If package.json exists and contains
+  //    @reliverse/dler, we skip reltypes.ts generation.
   if (configKind === "ts") {
     await ensureReltypesFile(cwd);
   }
@@ -1003,7 +1002,7 @@ function getBumpFilter(isDev: boolean): string {
     ? `[
     "package.json",
     "reliverse.ts",
-    "src-ts/app/config/info.ts",
+    "src-ts/impl/config/info.ts",
   ]`
     : `["package.json", "reliverse.ts"]`;
 }
@@ -1040,9 +1039,6 @@ function getFilterDepsPatterns(isDev: boolean): string {
       "prettier",
       "typescript",
       "@reliverse/rse",
-      "@reliverse/reliverse",
-      "!@reliverse/rse-sdk",
-      "!@reliverse/reliverse-sdk",
     ],
     "dist-npm": [],
     "dist-jsr": ["+bun"],
@@ -1062,9 +1058,6 @@ function getFilterDepsPatterns(isDev: boolean): string {
       "prettier",
       "typescript",
       "@reliverse/rse",
-      "@reliverse/reliverse",
-      "!@reliverse/rse-sdk",
-      "!@reliverse/reliverse-sdk",
     ],
     "dist-npm": [],
     "dist-jsr": [],

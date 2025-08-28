@@ -113,9 +113,9 @@ export async function regular_buildJsrDist(
       const transpileFormattedDuration = prettyMilliseconds(duration, {
         verbose: true,
       });
-      relinka("success", `JSR distribution built in ${transpileFormattedDuration}`);
+      relinka("verbose", `JSR distribution built in ${transpileFormattedDuration}`);
     } else {
-      relinka("success", "JSR distribution built successfully");
+      relinka("verbose", "JSR distribution built successfully");
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -195,9 +195,9 @@ export async function regular_buildNpmDist(
       const transpileFormattedDuration = prettyMilliseconds(duration, {
         verbose: true,
       });
-      relinka("success", `NPM distribution built in ${transpileFormattedDuration}`);
+      relinka("verbose", `NPM distribution built in ${transpileFormattedDuration}`);
     } else {
-      relinka("success", "NPM distribution built successfully");
+      relinka("verbose", "NPM distribution built successfully");
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -258,7 +258,7 @@ async function regular_bundleUsingBun(
       verbose: true,
     });
     relinka(
-      "success",
+      "verbose",
       `Regular bun build completed in ${transpileFormattedDuration} with ${buildResult.outputs.length} output file(s).`,
     );
 
@@ -309,7 +309,7 @@ async function regular_bundleUsingJsr(src: string, dest: string): Promise<void> 
     // ).length;
 
     relinka(
-      "success",
+      "verbose",
       `Completed regular bundling via 'jsr' builder`,
       // `${successCount} files processed, ${changedCount} modified`,
     );
@@ -399,7 +399,7 @@ async function regular_bundleUsingUnified(
       verbose: true,
     });
     relinka(
-      "success",
+      "verbose",
       `Regular bundle completed in ${transpileFormattedDuration} using ${builder} builder`,
     );
   } catch (error) {
@@ -524,7 +524,7 @@ async function regular_performCommonBuildSteps({
   // });
   // Convert any "~/..." alias imports to relative
   relinka(
-    "info",
+    "verbose",
     `[${isJsr ? "dist-jsr" : "dist-npm"}] Performing alias path conversion in ${outDirBin}`,
   );
   await convertImportsAliasToRelative({
@@ -533,7 +533,10 @@ async function regular_performCommonBuildSteps({
     pathExtFilter: "js-ts-none",
   });
   if (isJsr) {
-    relinka("info", `[dist-jsr] Performing paths ext conversion in ${outDirBin} (from js to ts)`);
+    relinka(
+      "verbose",
+      `[dist-jsr] Performing paths ext conversion in ${outDirBin} (from js to ts)`,
+    );
     await convertImportsExt({
       targetDir: outDirBin,
       extFrom: "js",

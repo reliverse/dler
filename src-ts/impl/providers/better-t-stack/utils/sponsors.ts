@@ -1,5 +1,5 @@
 import { re } from "@reliverse/relico";
-import { log, outro, spinner } from "@reliverse/rempts";
+import { createSpinner, log, outro } from "@reliverse/rempts";
 
 export interface SponsorEntry {
   readonly sponsor: {
@@ -18,19 +18,19 @@ export interface SponsorEntry {
 export const SPONSORS_JSON_URL = "https://sponsors.amanv.dev/sponsors.json";
 
 export async function fetchSponsors(url: string = SPONSORS_JSON_URL): Promise<SponsorEntry[]> {
-  const s = spinner({
+  const s = createSpinner({
     text: "Fetching sponsors…",
   });
   s.start("Fetching sponsors…");
 
   const response = await fetch(url);
   if (!response.ok) {
-    s.stop(re.red(`Failed to fetch sponsors: ${response.statusText}`));
+    s.fail(re.red(`Failed to fetch sponsors: ${response.statusText}`));
     throw new Error(`Failed to fetch sponsors: ${response.statusText}`);
   }
 
   const sponsors = (await response.json()) as SponsorEntry[];
-  s.stop("Sponsors fetched successfully!");
+  s.succeed("Sponsors fetched successfully!");
   return sponsors;
 }
 

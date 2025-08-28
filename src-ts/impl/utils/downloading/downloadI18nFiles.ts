@@ -7,8 +7,8 @@ import { relinka } from "@reliverse/relinka";
  */
 async function isI18nAlreadySetup(projectPath: string): Promise<boolean> {
   const checkPaths = [
-    "src-ts/app/[locale]",
-    "src-ts/app/[lang]",
+    "src-ts/impl/[locale]",
+    "src-ts/impl/[lang]",
     "src/i18n",
     "src/locales",
     "src/translations",
@@ -37,7 +37,7 @@ export async function setupI18nFiles(projectPath: string): Promise<void> {
     await ensuredir(projectPath);
 
     // Generate i18n layout file
-    const layoutPath = path.join(projectPath, "src-ts/app/layout.tsx");
+    const layoutPath = path.join(projectPath, "src-ts/impl/layout.tsx");
     if (!(await fs.pathExists(layoutPath))) {
       await ensuredir(path.dirname(layoutPath));
       const layoutContent = `
@@ -75,7 +75,7 @@ export function generateStaticParams() {
     }
 
     // Generate i18n page file
-    const pagePath = path.join(projectPath, "src-ts/app/page.tsx");
+    const pagePath = path.join(projectPath, "src-ts/impl/page.tsx");
     if (!(await fs.pathExists(pagePath))) {
       const pageContent = `
 import { useTranslation } from "~/impl/utils/i18n";

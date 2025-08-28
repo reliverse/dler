@@ -1,72 +1,57 @@
-import { type Static, Type } from "@sinclair/typebox";
+export type KeyType = "string" | "email" | "password" | "number" | "boolean" | "database";
 
-export const keyTypeSchema = Type.Union([
-  Type.Literal("string"),
-  Type.Literal("email"),
-  Type.Literal("password"),
-  Type.Literal("number"),
-  Type.Literal("boolean"),
-  Type.Literal("database"),
-]);
+export type KeyVar =
+  | "NEXT_PUBLIC_APP_URL"
+  | "DATABASE_URL"
+  | "AUTH_SECRET"
+  | "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
+  | "CLERK_SECRET_KEY"
+  | "CLERK_ENCRYPTION_KEY"
+  | "UPLOADTHING_TOKEN"
+  | "UPLOADTHING_SECRET"
+  | "RESEND_API_KEY"
+  | "EMAIL_FROM_ADDRESS"
+  | "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"
+  | "STRIPE_API_KEY"
+  | "STRIPE_WEBHOOK_SECRET"
+  | "STRIPE_PRO_MONTHLY_PRICE_ID";
 
-export const keyVarsSchema = Type.Union([
-  Type.Literal("NEXT_PUBLIC_APP_URL"),
-  Type.Literal("DATABASE_URL"),
-  Type.Literal("AUTH_SECRET"),
-  Type.Literal("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),
-  Type.Literal("CLERK_SECRET_KEY"),
-  Type.Literal("CLERK_ENCRYPTION_KEY"),
-  Type.Literal("UPLOADTHING_TOKEN"),
-  Type.Literal("UPLOADTHING_SECRET"),
-  Type.Literal("RESEND_API_KEY"),
-  Type.Literal("EMAIL_FROM_ADDRESS"),
-  Type.Literal("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"),
-  Type.Literal("STRIPE_API_KEY"),
-  Type.Literal("STRIPE_WEBHOOK_SECRET"),
-  Type.Literal("STRIPE_PRO_MONTHLY_PRICE_ID"),
-]);
+export type DefaultValue =
+  | "http://localhost:3000"
+  | "onboarding@resend.dev"
+  | "pk_test_"
+  | "postgresql://postgres:postgres@localhost:5432/myapp"
+  | "price_"
+  | "re_"
+  | "generate-64-chars"
+  | "replace-me-with-token-from-dashboard"
+  | "sk_live_"
+  | "sk_test_"
+  | "ut_app_"
+  | "whsec_";
 
-export const defaultValues = Type.Union([
-  Type.Literal("http://localhost:3000"),
-  Type.Literal("onboarding@resend.dev"),
-  Type.Literal("pk_test_"),
-  Type.Literal("postgresql://postgres:postgres@localhost:5432/myapp"),
-  Type.Literal("price_"),
-  Type.Literal("re_"),
-  Type.Literal("generate-64-chars"),
-  Type.Literal("replace-me-with-token-from-dashboard"),
-  Type.Literal("sk_live_"),
-  Type.Literal("sk_test_"),
-  Type.Literal("ut_app_"),
-  Type.Literal("whsec_"),
-]);
+export interface ServiceKey {
+  key: KeyVar;
+  type: KeyType;
+  instruction: string;
+  defaultValue: DefaultValue;
+  optional?: boolean;
+}
 
-export const serviceKeySchema = Type.Object({
-  key: keyVarsSchema,
-  type: keyTypeSchema,
-  instruction: Type.String(),
-  defaultValue: defaultValues,
-  optional: Type.Boolean({ default: false }),
-});
+export type DashboardUrl =
+  | "none"
+  | "https://clerk.com"
+  | "https://neon.tech"
+  | "https://dashboard.stripe.com"
+  | "https://uploadthing.com/dashboard"
+  | "https://resend.com/api-keys"
+  | "https://dashboard.stripe.com/test/apikeys";
 
-export const dashboards = Type.Union([
-  Type.Literal("none"),
-  Type.Literal("https://clerk.com"),
-  Type.Literal("https://neon.tech"),
-  Type.Literal("https://dashboard.stripe.com"),
-  Type.Literal("https://uploadthing.com/dashboard"),
-  Type.Literal("https://resend.com/api-keys"),
-  Type.Literal("https://dashboard.stripe.com/test/apikeys"),
-]);
-
-export const knownServiceSchema = Type.Object({
-  name: Type.String(),
-  dashboardUrl: dashboards,
-  keys: Type.Array(serviceKeySchema),
-});
-
-export type KeyType = Static<typeof keyTypeSchema>;
-export type KnownService = Static<typeof knownServiceSchema>;
+export interface KnownService {
+  name: string;
+  dashboardUrl: DashboardUrl;
+  keys: ServiceKey[];
+}
 
 export const KNOWN_SERVICES: Record<string, KnownService> = {
   GENERAL: {

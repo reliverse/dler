@@ -1,4 +1,5 @@
 import { relinka } from "@reliverse/relinka";
+import { createSpinnerGroup } from "@reliverse/rempts";
 import pAll from "p-all";
 import { CONCURRENCY_DEFAULT } from "~/impl/config/constants";
 import type { ReliverseConfig } from "~/impl/schema/mod";
@@ -71,49 +72,87 @@ export async function regular_buildFlow(
     case "npm-jsr": {
       relinka("verbose", "Initializing build process for main project to both NPM and JSR...");
 
+      // Use spinner group for concurrent NPM + JSR builds
+      const shouldShowSpinner = config.displayBuildPubLogs === false;
+      let buildSpinnerGroup: ReturnType<typeof createSpinnerGroup> | null = null;
+
+      if (shouldShowSpinner) {
+        buildSpinnerGroup = createSpinnerGroup({
+          items: ["Building for NPM", "Building for JSR"],
+          concurrent: true,
+          color: "cyan",
+        });
+
+        for (const spinner of buildSpinnerGroup.spinners) {
+          spinner.start();
+        }
+      }
+
       const buildTasks = [
-        () =>
-          regular_buildJsrDist(
-            isDev,
-            true,
-            config.coreIsCLI,
-            config.coreEntrySrcDir,
-            config.distJsrDirName,
-            config.distJsrBuilder,
-            config.coreEntryFile,
-            config.transpileTarget,
-            config.transpileFormat,
-            config.transpileMinify,
-            config.transpileSourcemap,
-            config.transpilePublicPath,
-            config.distNpmOutFilesExt,
-            config,
-            timer,
-            config.transpileStub,
-            config.transpileWatch,
-            config.distJsrGenTsconfig,
-            config.coreDeclarations,
-          ),
-        () =>
-          regular_buildNpmDist(
-            isDev,
-            config.coreIsCLI,
-            config.coreEntrySrcDir,
-            config.distNpmDirName,
-            config.distNpmBuilder,
-            config.coreEntryFile,
-            config.distNpmOutFilesExt,
-            config,
-            config.transpileTarget,
-            config.transpileFormat,
-            config.transpileMinify,
-            config.transpileSourcemap,
-            config.transpilePublicPath,
-            config.transpileStub,
-            config.transpileWatch,
-            timer,
-            config.coreDeclarations,
-          ),
+        async () => {
+          try {
+            await regular_buildJsrDist(
+              isDev,
+              true,
+              config.coreIsCLI,
+              config.coreEntrySrcDir,
+              config.distJsrDirName,
+              config.distJsrBuilder,
+              config.coreEntryFile,
+              config.transpileTarget,
+              config.transpileFormat,
+              config.transpileMinify,
+              config.transpileSourcemap,
+              config.transpilePublicPath,
+              config.distNpmOutFilesExt,
+              config,
+              timer,
+              config.transpileStub,
+              config.transpileWatch,
+              config.distJsrGenTsconfig,
+              config.coreDeclarations,
+            );
+            if (buildSpinnerGroup?.spinners[1]) {
+              buildSpinnerGroup.spinners[1].succeed("JSR build completed");
+            }
+          } catch (error) {
+            if (buildSpinnerGroup?.spinners[1]) {
+              buildSpinnerGroup.spinners[1].fail("JSR build failed");
+            }
+            throw error;
+          }
+        },
+        async () => {
+          try {
+            await regular_buildNpmDist(
+              isDev,
+              config.coreIsCLI,
+              config.coreEntrySrcDir,
+              config.distNpmDirName,
+              config.distNpmBuilder,
+              config.coreEntryFile,
+              config.distNpmOutFilesExt,
+              config,
+              config.transpileTarget,
+              config.transpileFormat,
+              config.transpileMinify,
+              config.transpileSourcemap,
+              config.transpilePublicPath,
+              config.transpileStub,
+              config.transpileWatch,
+              timer,
+              config.coreDeclarations,
+            );
+            if (buildSpinnerGroup?.spinners[0]) {
+              buildSpinnerGroup.spinners[0].succeed("NPM build completed");
+            }
+          } catch (error) {
+            if (buildSpinnerGroup?.spinners[0]) {
+              buildSpinnerGroup.spinners[0].fail("NPM build failed");
+            }
+            throw error;
+          }
+        },
       ];
       await pAll(buildTasks, { concurrency: CONCURRENCY_DEFAULT });
       break;
@@ -139,6 +178,8 @@ export async function regular_pubFlow(
     return;
   }
 
+  const shouldShowSpinner = config.displayBuildPubLogs === false;
+
   switch (config.commonPubRegistry) {
     case "jsr":
       relinka("verbose", "Publishing main project to JSR...");
@@ -151,6 +192,7 @@ export async function regular_pubFlow(
         config.distJsrAllowDirty,
         config.distJsrSlowTypes,
         timer,
+        shouldShowSpinner,
       );
       break;
     case "npm":
@@ -161,30 +203,71 @@ export async function regular_pubFlow(
         config.commonPubPause,
         config.distNpmDirName,
         timer,
+        shouldShowSpinner,
       );
       break;
     case "npm-jsr": {
       relinka("verbose", "Publishing main project to both NPM and JSR...");
+
+      // Use spinner group for concurrent NPM + JSR publishing
+      let pubSpinnerGroup: ReturnType<typeof createSpinnerGroup> | null = null;
+
+      if (shouldShowSpinner) {
+        pubSpinnerGroup = createSpinnerGroup({
+          items: ["Publishing to NPM", "Publishing to JSR"],
+          concurrent: true,
+          color: "magenta",
+        });
+
+        for (const spinner of pubSpinnerGroup.spinners) {
+          spinner.start();
+        }
+      }
+
       const publishTasks = [
-        () =>
-          regular_pubToJsr(
-            config.distJsrDryRun,
-            config.distJsrFailOnWarn,
-            isDev,
-            config.commonPubPause,
-            config.distJsrDirName,
-            config.distJsrAllowDirty,
-            config.distJsrSlowTypes,
-            timer,
-          ),
-        () =>
-          regular_pubToNpm(
-            config.distJsrDryRun,
-            isDev,
-            config.commonPubPause,
-            config.distNpmDirName,
-            timer,
-          ),
+        async () => {
+          try {
+            await regular_pubToJsr(
+              config.distJsrDryRun,
+              config.distJsrFailOnWarn,
+              isDev,
+              config.commonPubPause,
+              config.distJsrDirName,
+              config.distJsrAllowDirty,
+              config.distJsrSlowTypes,
+              timer,
+              shouldShowSpinner,
+            );
+            if (pubSpinnerGroup?.spinners[1]) {
+              pubSpinnerGroup.spinners[1].succeed("JSR publish completed");
+            }
+          } catch (error) {
+            if (pubSpinnerGroup?.spinners[1]) {
+              pubSpinnerGroup.spinners[1].fail("JSR publish failed");
+            }
+            throw error;
+          }
+        },
+        async () => {
+          try {
+            await regular_pubToNpm(
+              config.distJsrDryRun,
+              isDev,
+              config.commonPubPause,
+              config.distNpmDirName,
+              timer,
+              shouldShowSpinner,
+            );
+            if (pubSpinnerGroup?.spinners[0]) {
+              pubSpinnerGroup.spinners[0].succeed("NPM publish completed");
+            }
+          } catch (error) {
+            if (pubSpinnerGroup?.spinners[0]) {
+              pubSpinnerGroup.spinners[0].fail("NPM publish failed");
+            }
+            throw error;
+          }
+        },
       ];
       await pAll(publishTasks, { concurrency: CONCURRENCY_DEFAULT });
       break;

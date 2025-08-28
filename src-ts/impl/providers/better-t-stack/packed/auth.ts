@@ -134,7 +134,7 @@ export const DLER_TPL_AUTH: Template = {
         content: `model User {\n  id            String    @id @map("_id")\n  name          String\n  email         String\n  emailVerified Boolean\n  image         String?\n  createdAt     DateTime\n  updatedAt     DateTime\n  sessions      Session[]\n  accounts      Account[]\n\n  @@unique([email])\n  @@map("user")\n}\n\nmodel Session {\n  id        String   @id @map("_id")\n  expiresAt DateTime\n  token     String\n  createdAt DateTime\n  updatedAt DateTime\n  ipAddress String?\n  userAgent String?\n  userId    String\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@unique([token])\n  @@map("session")\n}\n\nmodel Account {\n  id                    String    @id @map("_id")\n  accountId             String\n  providerId            String\n  userId                String\n  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)\n  accessToken           String?\n  refreshToken          String?\n  idToken               String?\n  accessTokenExpiresAt  DateTime?\n  refreshTokenExpiresAt DateTime?\n  scope                 String?\n  password              String?\n  createdAt             DateTime\n  updatedAt             DateTime\n\n  @@map("account")\n}\n\nmodel Verification {\n  id         String    @id @map("_id")\n  identifier String\n  value      String\n  expiresAt  DateTime\n  createdAt  DateTime?\n  updatedAt  DateTime?\n\n  @@map("verification")\n}\n`,
         type: "text",
       },
-      "auth/server/next/src-ts/app/api/auth/[...all]/route.ts": {
+      "auth/server/next/src-ts/impl/api/auth/[...all]/route.ts": {
         metadata: {
           updatedAt: "2025-06-17T06:06:35.000Z",
           updatedHash: "1eeae5d0e3",
@@ -206,7 +206,7 @@ export const DLER_TPL_AUTH: Template = {
         content: `import { createAuthClient } from "better-auth/react";\n\nexport const authClient = createAuthClient({\n  baseURL:\n    {{#if (includes frontend "next")}}\n      process.env.NEXT_PUBLIC_SERVER_URL,\n    {{else}}\n      import.meta.env.VITE_SERVER_URL,\n    {{/if}}\n});\n`,
         type: "text",
       },
-      "auth/web/react/next/src-ts/app/dashboard/page.tsx.hbs": {
+      "auth/web/react/next/src-ts/impl/dashboard/page.tsx.hbs": {
         metadata: {
           updatedAt: "2025-06-17T06:06:35.000Z",
           updatedHash: "354fab95c7",
@@ -214,7 +214,7 @@ export const DLER_TPL_AUTH: Template = {
         content: `"use client"\nimport { authClient } from "@/lib/auth-client";\n{{#if (eq api "orpc")}}\nimport { useQuery } from "@tanstack/react-query";\nimport { orpc } from "@/utils/orpc";\n{{/if}}\n{{#if (eq api "trpc")}}\nimport { useQuery } from "@tanstack/react-query";\nimport { trpc } from "@/utils/trpc";\n{{/if}}\nimport { useRouter } from "next/navigation";\nimport { useEffect } from "react";\n\nexport default function Dashboard() {\n  const router = useRouter();\n  const { data: session, isPending } = authClient.useSession();\n\n  {{#if (eq api "orpc")}}\n  const privateData = useQuery(orpc.privateData.queryOptions());\n  {{/if}}\n  {{#if (eq api "trpc")}}\n  const privateData = useQuery(trpc.privateData.queryOptions());\n  {{/if}}\n\n  useEffect(() => {\n    if (!session && !isPending) {\n      router.push("/login");\n    }\n  }, [session, isPending]);\n\n  if (isPending) {\n    return <div>Loading...</div>;\n  }\n\n  return (\n    <div>\n      <h1>Dashboard</h1>\n      <p>Welcome {session?.user.name}</p>\n      {{#if (eq api "orpc")}}\n      <p>privateData: {privateData.data?.message}</p>\n      {{/if}}\n      {{#if (eq api "trpc")}}\n      <p>privateData: {privateData.data?.message}</p>\n      {{/if}}\n    </div>\n  );\n}\n`,
         type: "text",
       },
-      "auth/web/react/next/src-ts/app/login/page.tsx": {
+      "auth/web/react/next/src-ts/impl/login/page.tsx": {
         metadata: {
           updatedAt: "2025-06-17T06:06:35.000Z",
           updatedHash: "bdd103cc10",

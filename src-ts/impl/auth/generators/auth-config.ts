@@ -1,6 +1,5 @@
-import { type spinner as clackSpinner } from "@reliverse/rempts";
+import type { SimpleSpinner } from "@reliverse/rempts";
 import { logger } from "better-auth";
-
 import type { SupportedDatabases, SupportedPlugin } from "../impl/init";
 import type { AuthConfigImport } from "../impl/types";
 
@@ -33,7 +32,7 @@ export async function generateAuthConfig({
 }: {
   format: Format;
   current_user_config: string;
-  spinner: ReturnType<typeof clackSpinner>;
+  spinner: SimpleSpinner;
   plugins: SupportedPlugin[];
   database: SupportedDatabases | null;
 }): Promise<{
@@ -513,7 +512,7 @@ export async function generateAuthConfig({
       // console.log(new_user_config);
       // console.log(`--------- UPDATE END ---------`);
     } catch (error: any) {
-      spinner.stop(`Something went wrong while generating/updating your new auth config file.`, 1);
+      spinner.fail(`Something went wrong while generating/updating your new auth config file.`);
       logger.error(error.message);
       process.exit(1);
     }
@@ -529,7 +528,7 @@ export async function generateAuthConfig({
       total_dependencies.push(...dependencies);
       total_envs.push(...envs);
     } catch (error: any) {
-      spinner.stop(`Something went wrong while generating/updating your new auth config file.`, 1);
+      spinner.fail(`Something went wrong while generating/updating your new auth config file.`);
       logger.error(error.message);
       process.exit(1);
     }

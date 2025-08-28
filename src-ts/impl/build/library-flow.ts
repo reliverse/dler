@@ -1,5 +1,6 @@
 import path from "@reliverse/pathkit";
 import { relinka } from "@reliverse/relinka";
+import { createSpinnerGroup } from "@reliverse/rempts";
 import pAll from "p-all";
 import { library_buildLibrary } from "~/impl/build/build-library";
 import { CONCURRENCY_DEFAULT, PROJECT_ROOT } from "~/impl/config/constants";
@@ -83,6 +84,7 @@ export async function library_pubFlow(
     config.commonPubRegistry,
     config.distJsrAllowDirty,
     config.distJsrSlowTypes,
+    config.displayBuildPubLogs === false,
   );
 }
 
@@ -153,9 +155,28 @@ export async function libraries_build(
 
   const libsEntries = Object.entries(libsList);
 
+  // Create spinner group for parallel library builds
+  const shouldShowSpinner = config.displayBuildPubLogs === false;
+  let spinnerGroup: ReturnType<typeof createSpinnerGroup> | null = null;
+
+  if (shouldShowSpinner) {
+    const libraryNames = libsEntries.map(([libName]) => `Building ${libName}`);
+    spinnerGroup = createSpinnerGroup({
+      items: libraryNames,
+      concurrent: true,
+      color: "green",
+    });
+
+    // Start all library build spinners
+    for (const spinner of spinnerGroup.spinners) {
+      spinner.start();
+    }
+  }
+
   // Create a set of build tasks and run them in parallel (concurrency limited)
-  const tasks = libsEntries.map(([libName, libConfig]) => {
+  const tasks = libsEntries.map(([libName, libConfig], index) => {
     return async () => {
+      const librarySpinner = spinnerGroup?.spinners[index];
       try {
         if (!libConfig.libMainFile) {
           throw new Error(`Library ${libName} is missing "libMainFile" property.`);
@@ -223,7 +244,18 @@ export async function libraries_build(
           transpileStub,
           transpileWatch,
         });
+
+        // Mark this library build as complete
+        if (librarySpinner) {
+          librarySpinner.succeed(`${libName} built successfully`);
+        }
       } catch (error) {
+        // Mark this library build as failed
+        if (librarySpinner) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          librarySpinner.fail(`${libName} build failed: ${errorMessage}`);
+        }
+
         relinka(
           "error",
           `Failed to build library ${libName}: ${
@@ -260,6 +292,7 @@ export async function libraries_publish(
   commonPubRegistry: "jsr" | "npm" | "npm-jsr",
   distJsrAllowDirty: boolean,
   distJsrSlowTypes: boolean,
+  shouldShowSpinner = false,
 ): Promise<void> {
   relinka("verbose", "Starting libraries_publish");
 
@@ -270,9 +303,32 @@ export async function libraries_publish(
 
   const libsEntries = Object.entries(libsList);
 
+  // Create transfer spinner group for parallel library publishes
+  let publishSpinnerGroup: ReturnType<typeof createSpinnerGroup> | null = null;
+
+  if (!commonPubPause) {
+    const libraryNames = libsEntries
+      .filter(([, libConfig]) => !libConfig.libPubPause)
+      .map(([libName]) => `Publishing ${libName} to ${commonPubRegistry}`);
+
+    if (libraryNames.length > 0) {
+      publishSpinnerGroup = createSpinnerGroup({
+        items: libraryNames,
+        concurrent: true,
+        color: "magenta",
+      });
+
+      // Start all library publish spinners
+      for (const spinner of publishSpinnerGroup.spinners) {
+        spinner.start();
+      }
+    }
+  }
+
   // Create a set of publish tasks and run them in parallel (concurrency limited)
-  const tasks = libsEntries.map(([libName, libConfig]) => {
+  const tasks = libsEntries.map(([libName, libConfig], index) => {
     return async () => {
+      const publishSpinner = publishSpinnerGroup?.spinners[index];
       try {
         // Determine top-level folder name for dist output
         const folderName = extractFolderName(libName, libConfig);
@@ -295,11 +351,26 @@ export async function libraries_publish(
             distJsrSlowTypes,
             isDev,
             timer,
+            shouldShowSpinner,
           );
+
+          // Mark this library publish as complete
+          if (publishSpinner) {
+            publishSpinner.succeed(`${libName} published to ${effectivePubRegistry} successfully`);
+          }
         } else if (libConfig.libPubPause && !commonPubPause) {
           relinka("verbose", `Publishing is paused for lib ${libName} (libPubPause: true)`);
+          if (publishSpinner) {
+            publishSpinner.info(`${libName} publish paused by configuration`);
+          }
         }
       } catch (error) {
+        // Mark this library publish as failed
+        if (publishSpinner) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          publishSpinner.fail(`${libName} publish failed: ${errorMessage}`);
+        }
+
         relinka(
           "error",
           `Failed to publish library ${libName}: ${

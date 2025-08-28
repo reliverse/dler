@@ -125,8 +125,8 @@ export async function setupI18nSupport(
 ): Promise<boolean> {
   // Check if i18n folder already exists
   const i18nFolderExists =
-    (await fs.pathExists(path.join(projectPath, "src-ts/app/[locale]"))) ||
-    (await fs.pathExists(path.join(projectPath, "src-ts/app/[lang]")));
+    (await fs.pathExists(path.join(projectPath, "src-ts/impl/[locale]"))) ||
+    (await fs.pathExists(path.join(projectPath, "src-ts/impl/[lang]")));
 
   if (i18nFolderExists) {
     relinka("verbose", "i18n is already enabled in the template. No changes needed.");
@@ -289,7 +289,7 @@ export async function showSuccessAndNextSteps(
     }
   }
 
-  relinka("info", `🎉 Template '${selectedRepo}' was installed at ${effectiveProjectPath}`);
+  relinka("info", `✅ Template '${selectedRepo}' was installed at ${effectiveProjectPath}`);
 
   const vscodeInstalled = isVSCodeInstalled();
 

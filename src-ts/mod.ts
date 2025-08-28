@@ -1,5 +1,3 @@
-// AUTO-GENERATED AGGREGATOR START (via `dler agg`)
-
 export {
   executeChain,
   globalInstallInteractiveMode,
@@ -408,18 +406,14 @@ export {
   saveLastEnvFilePath,
 } from "./impl/init/use-template/cp-modules/compose-env-file/cef-impl";
 export type {
+  DashboardUrl,
+  DefaultValue,
   KeyType,
+  KeyVar,
   KnownService,
+  ServiceKey,
 } from "./impl/init/use-template/cp-modules/compose-env-file/cef-keys";
-export {
-  dashboards,
-  defaultValues,
-  KNOWN_SERVICES,
-  keyTypeSchema,
-  keyVarsSchema,
-  knownServiceSchema,
-  serviceKeySchema,
-} from "./impl/init/use-template/cp-modules/compose-env-file/cef-keys";
+export { KNOWN_SERVICES } from "./impl/init/use-template/cp-modules/compose-env-file/cef-keys";
 export { composeEnvFile } from "./impl/init/use-template/cp-modules/compose-env-file/cef-mod";
 export {
   deployProject,
@@ -1238,30 +1232,27 @@ export type { Hardcoded, UrlPatterns } from "./impl/utils/replacements/reps-keys
 export {
   CommonPatterns,
   HardcodedStrings,
-  hardcodedSchema,
-  urlPatternsSchema,
 } from "./impl/utils/replacements/reps-keys";
 export { handleReplacements } from "./impl/utils/replacements/reps-mod";
 export { resolveAllCrossLibs } from "./impl/utils/resolve-cross-libs";
 export type {
   EncryptedDataMemory,
+  EncryptedDataMemoryShape,
   ReliverseMemory,
   UserDataMemory,
+  UserDataMemoryShape,
 } from "./impl/utils/schemaMemory";
-export { memorySchema } from "./impl/utils/schemaMemory";
 export type { RepoInfo, ReposConfig } from "./impl/utils/schemaTemplate";
 export {
   DEFAULT_REPOS_CONFIG,
   generateReposJsonSchema,
-  repoInfoSchema,
-  reposSchema,
+  isReposConfig,
   shouldRegenerateSchema,
 } from "./impl/utils/schemaTemplate";
-export { createSpinner, SimpleSpinner } from "./impl/utils/spinner";
 export {
   getPkgName,
   getPkgVersion,
-  readPackageJSON,
+  readLocalPackageJSON,
   showEndPrompt,
   showStartPrompt,
 } from "./impl/utils/startEndPrompts";
@@ -1325,4 +1316,3 @@ export {
   validateTemplate,
 } from "./impl/utils/utils-security";
 export { createProjectTSConfig, createTSConfig } from "./impl/utils/utils-tsconfig";
-// AUTO-GENERATED AGGREGATOR END

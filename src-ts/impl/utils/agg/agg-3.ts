@@ -288,7 +288,7 @@ export function printUsage(isDev?: boolean) {
   if (isDev) {
     relinka(
       "log",
-      "bun dev:tools agg --input src-ts/app --out src-ts/mod.ts --recursive --named --strip src-ts/app",
+      "bun dev:tools agg --input src-ts/impl --out src-ts/mod.ts --recursive --named --strip src-ts/impl",
     );
   } else {
     relinka(

@@ -2,7 +2,7 @@ import path from "node:path";
 import { re } from "@reliverse/relico";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { spinner } from "@reliverse/rempts";
+import { createSpinner } from "@reliverse/rempts";
 import { execa } from "execa";
 
 import type { ProjectConfig } from "~/impl/providers/better-t-stack/types";
@@ -20,7 +20,7 @@ interface PackageJson {
 
 export async function setupTauri(config: ProjectConfig): Promise<void> {
   const { packageManager, frontend, projectDir } = config;
-  const s = spinner({
+  const s = createSpinner({
     text: "Setting up Tauri desktop app support...",
   });
   const clientPackageDir = path.join(projectDir, "apps/web");
@@ -96,9 +96,9 @@ export async function setupTauri(config: ProjectConfig): Promise<void> {
       shell: true,
     });
 
-    s.stop("Tauri desktop app support configured successfully!");
+    s.succeed("Tauri desktop app support configured successfully!");
   } catch (error) {
-    s.stop(re.red("Failed to set up Tauri"));
+    s.fail(re.red("Failed to set up Tauri"));
     if (error instanceof Error) {
       relinka("error", error.message);
     }

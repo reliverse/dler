@@ -69,7 +69,7 @@ export const formatOutput = (result: DependencyResult, options: FinderOptions): 
     output += re.gray("To install, run:\n");
     output += re.cyan(`npm install ${result.missingDependencies.join(" ")}\n\n`);
   } else {
-    output += re.greenBright("No missing dependencies found! 🎉\n\n");
+    output += re.greenBright("No missing dependencies found! ✅\n\n");
   }
 
   // Show built-in modules if enabled

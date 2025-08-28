@@ -73,7 +73,7 @@ export async function prepareVercelProjectCreation(
 ): Promise<boolean> {
   if (!vercelToken) {
     throw new Error(
-      "Vercel token not found in rse's memory. Please restart the CLI and try again. Notify the @reliverse/rse developers if the problem persists.",
+      "Vercel token not found in rse's memory. Please restart the CLI and try again. Notify the Reliverse developers if the problem persists.",
     );
   }
 

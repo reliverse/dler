@@ -365,7 +365,7 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
   } = authClient;`,
       },
       {
-        path: "src-ts/app/auth/sign-in/page.tsx",
+        path: "src-ts/impl/auth/sign-in/page.tsx",
         content: `"use client";
   
   import { useState } from "react";
@@ -456,7 +456,7 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
   }`,
       },
       {
-        path: "src-ts/app/auth/error/page.tsx",
+        path: "src-ts/impl/auth/error/page.tsx",
         content: `"use client";
   
   import { useSearchParams } from "next/navigation";

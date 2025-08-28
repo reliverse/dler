@@ -13,7 +13,7 @@ import {
 } from "./manageDrizzleSchemaUtils";
 
 export async function manageDrizzleSchema(cwd: string, isDev: boolean) {
-  const singleSchemaDir = isDev ? path.join(cwd, "src-ts/app/db") : path.join(cwd, "src/db");
+  const singleSchemaDir = isDev ? path.join(cwd, "src-ts/impl/db") : path.join(cwd, "src/db");
   const multiSchemaDir = path.join(singleSchemaDir, "schema");
 
   // Check if Drizzle is configured

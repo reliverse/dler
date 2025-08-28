@@ -2,7 +2,7 @@ import path from "@reliverse/pathkit";
 import { re } from "@reliverse/relico";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { deleteLastLine, inputPrompt, selectPrompt } from "@reliverse/rempts";
+import { inputPrompt, selectPrompt } from "@reliverse/rempts";
 import type { SimpleGit } from "simple-git";
 import { simpleGit } from "simple-git";
 import { cliName } from "~/impl/config/constants";
@@ -70,7 +70,7 @@ export async function initializeGitRepo(
 
   if (!alreadyGit) {
     await git.init();
-    deleteLastLine();
+    // deleteLastLine();
     relinka("success", "Git repository initialized");
 
     // Rename branch if necessary.
@@ -163,7 +163,7 @@ export async function initGitDir(
     );
 
     if (alreadyGit && params.allowReInit) {
-      deleteLastLine(); // Clear previous log line
+      // deleteLastLine(); // Clear previous log line
       relinka("verbose", "Reinitializing existing git repository...");
       if (!(await removeGitDir(effectiveDir))) return false;
       const git: SimpleGit = simpleGit({ baseDir: effectiveDir });

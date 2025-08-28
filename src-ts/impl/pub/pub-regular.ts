@@ -6,6 +6,10 @@ import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { execaCommand } from "execa";
+
+// import { $ } from "bun";
+// const isBun = typeof Bun !== "undefined";
+
 import { PROJECT_ROOT } from "~/impl/config/constants";
 import type { PerfTimer } from "~/impl/types/mod";
 import { withWorkingDirectory } from "~/impl/utils/utils-error-cwd";
@@ -24,6 +28,7 @@ export async function regular_pubToJsr(
   distJsrAllowDirty: boolean,
   distJsrSlowTypes: boolean,
   timer: PerfTimer,
+  shouldShowSpinner = false,
 ): Promise<void> {
   try {
     if (!commonPubPause) {
@@ -56,11 +61,29 @@ export async function regular_pubToJsr(
           distJsrFailOnWarn ? "--fail-on-warn" : "",
           distJsrAllowDirty ? "--allow-dirty" : "",
           distJsrSlowTypes ? "--allow-slow-types" : "",
+          shouldShowSpinner ? "--silent" : "",
         ]
           .filter(Boolean)
           .join(" ");
         relinka("verbose", `Running publish command: ${command}`);
-        await execaCommand(command, { stdio: "inherit" });
+
+        /* if (isBun) {
+          // Use Bun's $ shell with conditional quiet mode
+          if (shouldShowSpinner) {
+            await $`${command}`.quiet();
+          } else {
+            await $`${command}`;
+          }
+        } else {
+          // Use execa with conditional stdio
+          await execaCommand(command, {
+            stdio: shouldShowSpinner ? "ignore" : "inherit",
+          });
+        } */
+        await execaCommand(command, {
+          stdio: shouldShowSpinner ? "ignore" : "inherit",
+        });
+
         relinka("null", "");
         relinka(
           "verbose",
@@ -96,6 +119,7 @@ export async function regular_pubToNpm(
   commonPubPause: boolean,
   distNpmDirName: string,
   timer: PerfTimer,
+  shouldShowSpinner = false,
 ): Promise<void> {
   try {
     if (!commonPubPause) {
@@ -106,9 +130,32 @@ export async function regular_pubToNpm(
       if (timer) pausePerfTimer(timer);
 
       await withWorkingDirectory(distNpmDirNameResolved, async () => {
-        const command = ["bun publish", distJsrDryRun ? "--dry-run" : ""].filter(Boolean).join(" ");
+        const command = [
+          "bun publish",
+          distJsrDryRun ? "--dry-run" : "",
+          shouldShowSpinner ? "--silent" : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
         relinka("verbose", `Running publish command: ${command}`);
-        await execaCommand(command, { stdio: "inherit" });
+
+        /* if (isBun) {
+          // Use Bun's $ shell with conditional quiet mode
+          if (shouldShowSpinner) {
+            await $`${command}`.quiet();
+          } else {
+            await $`${command}`;
+          }
+        } else {
+          // Use execa with conditional stdio
+          await execaCommand(command, {
+            stdio: shouldShowSpinner ? "ignore" : "inherit",
+          });
+        } */
+        await execaCommand(command, {
+          stdio: shouldShowSpinner ? "ignore" : "inherit",
+        });
+
         relinka("null", "");
         relinka(
           "verbose",

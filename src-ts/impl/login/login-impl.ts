@@ -1,7 +1,7 @@
 import { setTimeout } from "node:timers";
 import { re } from "@reliverse/relico";
 import { relinka } from "@reliverse/relinka";
-import { useSpinner } from "@reliverse/rempts";
+import { createSpinner } from "@reliverse/rempts";
 import { listen } from "async-listen";
 import http from "http";
 import { customAlphabet } from "nanoid";
@@ -30,7 +30,7 @@ const nanoid = customAlphabet("123456789QAZWSXEDCRFVTGBYHNUJMIKOLP", 5);
 export async function auth({ isDev, useLocalhost }: { isDev: boolean; useLocalhost: boolean }) {
   relinka("info", "Let's authenticate you...");
 
-  const spinner = useSpinner({
+  const spinner = createSpinner({
     text: "Waiting for user confirmation...",
   }).start();
 
@@ -143,9 +143,7 @@ export async function auth({ isDev, useLocalhost }: { isDev: boolean; useLocalho
       );
     }
 
-    spinner.setText(
-      ` Please visit it and confirm there if you see the same code: ${re.bold(code)}`,
-    );
+    spinner.text = ` Please visit it and confirm there if you see the same code: ${re.bold(code)}`;
 
     // Set up a 5-minute timeout
     const authTimeout = setTimeout(
@@ -180,14 +178,14 @@ export async function auth({ isDev, useLocalhost }: { isDev: boolean; useLocalho
         relinka("verbose", "Local server closed after successful authentication.");
       });
 
-      spinner.stop();
+      spinner.succeed("Authenticated!");
       relinka("log", cliDomainDocs);
       return;
     } catch (error) {
       clearTimeout(authTimeout);
       if (error instanceof UserCancellationError) {
         // User cancelled scenario: let's end gracefully
-        spinner.setText("Login cancelled. See you next time 👋");
+        spinner.text = "Login cancelled. See you next time 👋";
         server.close(() => {
           relinka("verbose", "Local server closed due to user cancellation.");
           process.exit(0);
@@ -196,12 +194,12 @@ export async function auth({ isDev, useLocalhost }: { isDev: boolean; useLocalho
         server.close(() => {
           relinka("verbose", "Local server closed due to authentication failure.");
         });
-        spinner.stop();
+        spinner.fail("Authentication failed");
         throw error;
       }
     }
   } catch (error) {
-    spinner.stop();
+    spinner.fail("Authentication failed");
     relinka("error", "Authentication failed!");
     throw error;
   }
