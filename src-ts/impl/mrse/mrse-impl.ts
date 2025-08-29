@@ -3,7 +3,7 @@ import fs, { ensuredir } from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { confirmPrompt } from "@reliverse/rempts";
 import { homeDir } from "~/impl/config/constants";
-import { getOrCreateReliverseConfig } from "~/impl/config/core-cfg";
+import { getOrCreateReliverseConfig } from "~/impl/config/core";
 import { initGithubSDK } from "~/impl/utils/instanceGithub";
 import { askUsernameFrontend } from "~/impl/utils/prompts/askUsernameFrontend";
 import { getOrCreateReliverseMemory } from "~/impl/utils/reliverseMemory";

@@ -135,14 +135,14 @@ export default defineCommand({
 
     const isCI = Boolean(ci);
     const isDev = Boolean(dev);
-    const strCwd = String(cwd);
+    const cwdStr = String(cwd);
     const isDebugOnlyCopyNonBuildFiles = Boolean(debugOnlyCopyNonBuildFiles);
     const isDebugDontCopyNonBuildFiles = Boolean(debugDontCopyNonBuildFiles);
 
     await commonStartActions({
       isCI,
       isDev,
-      strCwd,
+      cwdStr,
       showRuntimeInfo: false,
       clearConsole: false,
       withStartPrompt: true,
@@ -204,13 +204,14 @@ export default defineCommand({
       config.binaryBuildNoCompile = Boolean(binaryNoCompile);
     }
 
-    await dlerBuild(
+    await dlerBuild({
+      flow: "build",
       timer,
       isDev,
       config,
-      isDebugOnlyCopyNonBuildFiles,
-      isDebugDontCopyNonBuildFiles,
-    );
+      debugOnlyCopyNonBuildFiles: isDebugOnlyCopyNonBuildFiles,
+      debugDontCopyNonBuildFiles: isDebugDontCopyNonBuildFiles,
+    });
     const shouldShowSpinner = config.displayBuildPubLogs === false && !noSpinner;
     await finalizeBuild(shouldShowSpinner, timer, false, "build");
 

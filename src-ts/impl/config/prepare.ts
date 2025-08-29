@@ -27,18 +27,24 @@ export async function ensureReliverseConfig(
 
   // If it doesn't exist, create it.
   try {
-    // Read package.json description using pkg-types
+    // Read package.json details using pkg-types
     let pkgDescription: string | undefined;
+    let hasDlerDep = false;
     try {
       const pkg = await readPackageJSON();
       if (pkg && typeof pkg.description === "string" && pkg.description.trim()) {
         pkgDescription = pkg.description.trim();
       }
+      const deps = (pkg as { dependencies?: Record<string, string> }).dependencies;
+      const devDeps = (pkg as { devDependencies?: Record<string, string> }).devDependencies;
+      hasDlerDep = Boolean(
+        (deps && "@reliverse/dler" in deps) || (devDeps && "@reliverse/dler" in devDeps),
+      );
     } catch {
       // ignore, fallback to default
     }
     // Generate and write the config file
-    const configContent = generateConfig(isDev, pkgDescription, configKind);
+    const configContent = generateConfig(isDev, pkgDescription, configKind, hasDlerDep);
     await fs.outputFile(configPath, configContent, { encoding: "utf8" });
     relinka(
       "success",
@@ -49,22 +55,6 @@ export async function ensureReliverseConfig(
     relinka("log", "If you plan to publish with Rse, please note:");
     relinka("log", "commonPubPause is set to true in the config by default");
     relinka("log", "Set it to false, then run `rse publish` for NPM/JSR publishing");
-
-    // Generate mod.ts with types/reliverse.schema.ts
-    // TODO: finish implementation of this function
-    /*
-    Currently in non-reliverse projects output is:
-    ```ts
-    ensureConfigMod {
-      tool: "reliverse",
-      mode: "copy-internal",
-      isDev: false,
-    }
-    ✖   Failed to copy internal schema: Internal schema file not found: bin/libs/cfg/cfg-reliverse.ts
-    ✖   Error creating configuration file: Internal schema file not found: bin/libs/cfg/cfg-reliverse.ts
-    ```
-    */
-    // await ensureConfigMod({ tool: "reliverse", mode: "copy-internal", isDev });
   } catch (error: unknown) {
     relinka(
       "error",
@@ -101,7 +91,7 @@ export async function prepareReliverseEnvironment(
   // }
 
   // 4. Generate reltypes.ts conditionally. If package.json exists and contains
-  //    @reliverse/dler, we skip reltypes.ts generation.
+  //    @reliverse/dler or is named @reliverse/dler, we skip reltypes.ts generation.
   if (configKind === "ts") {
     await ensureReltypesFile(cwd);
   }
@@ -192,67 +182,14 @@ async function ensureGitignoreEntries(cwd: string) {
   }
 }
 
-// async function ensureTsconfigIncludes(tsconfigPath: string) {
-//   try {
-//     const tsconfigContent = await fs.readFile(tsconfigPath, "utf8");
-//     const tsconfig = JSON.parse(tsconfigContent) as {
-//       include?: string[];
-//       [key: string]: unknown;
-//     };
-
-//     if (!tsconfig.include) {
-//       tsconfig.include = [];
-//     }
-
-//     const requiredInclude = "reliverse.ts";
-//     const hasConfigInclude = tsconfig.include.includes(requiredInclude);
-
-//     if (!hasConfigInclude) {
-//       tsconfig.include.push(requiredInclude);
-//       await fs.writeFile(tsconfigPath, JSON.stringify(tsconfig, null, 2), "utf8");
-//       relinka("success", `Added "reliverse.ts" to tsconfig.json includes`);
-//     }
-//   } catch (error) {
-//     relinka(
-//       "warn",
-//       `Could not update tsconfig.json: ${error instanceof Error ? error.message : String(error)}`,
-//     );
-//   }
-// }
-
-// Helper function to get libs object configuration
-function getLibsObject(isDev: boolean) {
-  return isDev
-    ? {
-        "@reliverse/reliverse-sdk": {
-          libDeclarations: true,
-          libDescription: "@reliverse/reliverse without cli",
-          libDirName: "sdk",
-          libMainFile: "sdk/sdk-mod.ts",
-          libPkgKeepDeps: true,
-          libTranspileMinify: true,
-          libPubPause: false,
-          libPubRegistry: "npm-jsr",
-        },
-        "~/app/types/mod": {
-          libDeclarations: true,
-          libDescription: "config for @reliverse/reliverse",
-          libDirName: "cfg",
-          libMainFile: "cfg/cfg-mod.ts",
-          libPkgKeepDeps: true,
-          libTranspileMinify: true,
-          libPubPause: false,
-          libPubRegistry: "npm-jsr",
-        },
-      }
-    : {};
+function getCoreEntrySrcDir(isDev: boolean): string {
+  return isDev ? "src-ts" : "src";
 }
 
 // Generate JSONC config file content
 function generateJsoncConfig(isDev: boolean, pkgDescription?: string): string {
   const schemaUrl = `${rseOrg}/schema.json`;
   const verboseValue = getValue(isDev, true, DEFAULT_CONFIG_RELIVERSE.commonVerbose);
-  const registryValue = getValue(isDev, "npm-jsr", DEFAULT_CONFIG_RELIVERSE.commonPubRegistry);
   const pausePublishValue = getValue(isDev, false, DEFAULT_CONFIG_RELIVERSE.commonPubPause);
   const coreDescriptionValue = getValue(
     isDev,
@@ -397,7 +334,7 @@ function generateJsoncConfig(isDev: boolean, pkgDescription?: string): string {
   
   // Common configuration
   "commonPubPause": ${pausePublishValue},
-  "commonPubRegistry": "${registryValue}",
+  "commonPubRegistry": ${DEFAULT_CONFIG_RELIVERSE.commonPubRegistry},
   "commonVerbose": ${verboseValue},
   "displayBuildPubLogs": ${DEFAULT_CONFIG_RELIVERSE.displayBuildPubLogs},
   
@@ -406,7 +343,7 @@ function generateJsoncConfig(isDev: boolean, pkgDescription?: string): string {
   "coreDeclarations": ${DEFAULT_CONFIG_RELIVERSE.coreDeclarations},
   "coreDescription": ${JSON.stringify(coreDescriptionValue)},
   "coreEntryFile": "${DEFAULT_CONFIG_RELIVERSE.coreEntryFile}",
-  "coreEntrySrcDir": "${DEFAULT_CONFIG_RELIVERSE.coreEntrySrcDir}",
+  "coreEntrySrcDir": "${getCoreEntrySrcDir(isDev)}",
   "coreIsCLI": {
     "enabled": false,
     "scripts": {}
@@ -447,7 +384,7 @@ function generateJsoncConfig(isDev: boolean, pkgDescription?: string): string {
   "libsActMode": "${libsActModeValue}",
   "libsDirDist": "${DEFAULT_CONFIG_RELIVERSE.libsDirDist}",
   "libsDirSrc": "${DEFAULT_CONFIG_RELIVERSE.libsDirSrc}",
-  "libsList": ${JSON.stringify(getLibsObject(isDev), null, 2)},
+  "libsList": {},
   
   // Logger setup
   "logsFileName": "${DEFAULT_CONFIG_RELIVERSE.logsFileName}",
@@ -588,18 +525,19 @@ function generateConfig(
   isDev: boolean,
   pkgDescription?: string,
   configKind: ConfigKind = "ts",
+  usePackageImport = false,
 ): string {
-  const importdefineConfigStatement = `import { defineConfig } from "./reltypes";`;
+  const importdefineConfigStatement = usePackageImport
+    ? `import { defineConfig } from "@reliverse/dler";`
+    : `import { defineConfig } from "./reltypes";`;
   const verboseValue = getValue(isDev, true, DEFAULT_CONFIG_RELIVERSE.commonVerbose);
   const coreIsCLI = getCoreIsCLI(isDev);
-  const registryValue = getValue(isDev, "npm-jsr", DEFAULT_CONFIG_RELIVERSE.commonPubRegistry);
   const pausePublishValue = getValue(isDev, false, DEFAULT_CONFIG_RELIVERSE.commonPubPause);
   const coreDescriptionValue = getValue(
     isDev,
     "reliverse (prev. dler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
     pkgDescription || DEFAULT_CONFIG_RELIVERSE.coreDescription,
   );
-  const libsActModeValue = getValue(isDev, "main-and-libs", DEFAULT_CONFIG_RELIVERSE.libsActMode);
 
   // ===================================================
   // Config template based on configKind
@@ -748,7 +686,7 @@ function generateConfig(
     "",
     "  // Common configuration",
     "  commonPubPause: " + pausePublishValue + ",",
-    '  commonPubRegistry: "' + registryValue + '",',
+    "  commonPubRegistry: " + DEFAULT_CONFIG_RELIVERSE.commonPubRegistry + ",",
     "  commonVerbose: " + verboseValue + ",",
     "  displayBuildPubLogs: " + DEFAULT_CONFIG_RELIVERSE.displayBuildPubLogs + ",",
     "",
@@ -807,10 +745,10 @@ function generateConfig(
     "  // Publish specific dirs as separate packages",
     "  // This feature is experimental at the moment",
     "  // Please commit your changes before using it",
-    '  libsActMode: "' + libsActModeValue + '",',
+    '  libsActMode: "main-project-only",',
     '  libsDirDist: "' + DEFAULT_CONFIG_RELIVERSE.libsDirDist + '",',
     '  libsDirSrc: "' + DEFAULT_CONFIG_RELIVERSE.libsDirSrc + '",',
-    "  libsList: " + JSON.stringify(getLibsObject(isDev), null, 2) + ",",
+    "  libsList: {},",
     "",
     "  // @reliverse/relinka logger setup",
     '  logsFileName: "' + DEFAULT_CONFIG_RELIVERSE.logsFileName + '",',
@@ -985,11 +923,8 @@ function generateConfig(
 
 function getCoreIsCLI(isDev: boolean): string {
   return isDev
-    ? `coreIsCLI: { enabled: true, scripts: { reliverse: "reliverse.ts" } },`
-    : `// coreIsCLI: {
-  // enabled: false,
-  // scripts: { mycli: "mycli.ts" },
-  // },`;
+    ? `coreIsCLI: { enabled: true, scripts: { rse: "rse.ts" } },`
+    : `coreIsCLI: { enabled: false, scripts: {} },`;
 }
 
 // Helper to choose a value based on the environment
@@ -1002,7 +937,7 @@ function getBumpFilter(isDev: boolean): string {
     ? `[
     "package.json",
     "reliverse.ts",
-    "src-ts/impl/config/info.ts",
+    "src-ts/rse.ts",
   ]`
     : `["package.json", "reliverse.ts"]`;
 }
@@ -1013,12 +948,7 @@ function getPublishArtifacts(isDev: boolean): string {
     global: ["package.json", "README.md", "LICENSE", "LICENSES"],
     "dist-jsr": [],
     "dist-npm": [],
-    "dist-libs": {
-      "@reliverse/reliverse-sdk": {
-        jsr: [],
-        npm: [],
-      },
-    },
+    "dist-libs": {},
   }`
     : `{
     global: ["package.json", "README.md", "LICENSE"],

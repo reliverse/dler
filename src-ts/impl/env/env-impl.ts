@@ -1,7 +1,7 @@
 import { relinka } from "@reliverse/relinka";
 import { confirmPrompt } from "@reliverse/rempts";
 import { FALLBACK_ENV_EXAMPLE_URL } from "~/impl/config/constants";
-import { getOrCreateReliverseConfig } from "~/impl/config/core-cfg";
+import { getOrCreateReliverseConfig } from "~/impl/config/core";
 import { composeEnvFile } from "~/impl/init/use-template/cp-modules/compose-env-file/cef-mod";
 import { getCurrentWorkingDirectory } from "~/impl/utils/terminalHelpers";
 

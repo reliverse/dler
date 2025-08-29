@@ -1,5 +1,8 @@
 // usage example: bun src-ts/dler.ts update --dryRun --withInstall
 
+import { relinka } from "@reliverse/relinka";
+import { defineArgs, defineCommand } from "@reliverse/rempts";
+import { readPackageJSON } from "pkg-types";
 import {
   checkPackageUpdates,
   commonEndActions,
@@ -20,10 +23,7 @@ import {
   updateRootPackageJson,
   validatePackageJson,
   validateUpdateArgs,
-} from "@reliverse/dler";
-import { relinka } from "@reliverse/relinka";
-import { defineArgs, defineCommand } from "@reliverse/rempts";
-import { readPackageJSON } from "pkg-types";
+} from "~/mod";
 
 // By default tool recursively updates all dependencies to their latest available versions including catalogs.
 // Finds and updates ALL package.json files in the directory tree by default.
@@ -165,7 +165,7 @@ export default defineCommand({
     } = args;
     const isCI = Boolean(ci);
     const isDev = Boolean(dev);
-    const strCwd = String(cwd);
+    const cwdStr = String(cwd);
     const isGlobal = Boolean(global);
     const isInteractive = Boolean(interactive);
     const isUpgradeTools = Boolean(upgradeTools);
@@ -177,9 +177,9 @@ export default defineCommand({
     const numConcurrency = Number(concurrency);
     const isDryRun = Boolean(dryRun);
     await commonStartActions({
+      cwdStr,
       isCI,
       isDev,
-      strCwd,
       showRuntimeInfo: false,
       clearConsole: false,
       withStartPrompt: false,

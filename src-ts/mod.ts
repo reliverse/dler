@@ -271,8 +271,7 @@ export {
 } from "./impl/config/constants";
 export type { RequiredProjectContent } from "./impl/config/content";
 export { getProjectContent } from "./impl/config/content";
-export { ensureConfigMod } from "./impl/config/core";
-export { getOrCreateReliverseConfig } from "./impl/config/core-cfg";
+export { getOrCreateReliverseConfig } from "./impl/config/core";
 export {
   createReliverseConfig,
   generateReliverseConfig,
@@ -833,19 +832,68 @@ export type {
   LogLevelConfig,
   LogLevelsConfig,
   NpmOutExt,
+  PreferredAnalytics,
+  PreferredAPI,
+  PreferredAuth,
+  PreferredCache,
+  PreferredCDN,
+  PreferredCharts,
+  PreferredCMS,
+  PreferredDates,
+  PreferredDBLib,
+  PreferredDBProvider,
+  PreferredDocs,
+  PreferredForm,
+  PreferredFormat,
+  PreferredForms,
+  PreferredI18n,
+  PreferredIcons,
+  PreferredLint,
+  PreferredLogging,
+  PreferredMail,
+  PreferredMarkdown,
+  PreferredMonitoring,
+  PreferredMotion,
+  PreferredNotifications,
+  PreferredPayment,
+  PreferredRouting,
+  PreferredSEO,
+  PreferredSearch,
+  PreferredSecurity,
+  PreferredStateManagement,
+  PreferredStorage,
+  PreferredStyling,
+  PreferredTesting,
+  PreferredUI,
+  PreferredUploads,
+  PreferredValidation,
   ProjectArchitecture,
   ProjectCategory,
+  ProjectDeployService,
   ProjectFramework,
+  ProjectGitService,
+  ProjectPackageManager,
+  ProjectRuntime,
+  ProjectState,
   ProjectSubcategory,
+  ProjectTemplate,
   RelinkaDirsConfig,
   RelinterConfirm,
   ReliverseConfig,
+  RepoPrivacy,
   Sourcemap,
+  ThemeMode,
   TranspileFormat,
   TranspileTarget,
+  UnknownLiteral,
 } from "./impl/schema/mod";
 export { DEFAULT_CONFIG_RELIVERSE, defineConfig } from "./impl/schema/mod";
-export { checkIfRegenerationNeeded, ensureReltypesFile } from "./impl/schema/utils";
+export type { JsonSchemaDocument, SchemaFactory } from "./impl/schema/utils";
+export {
+  checkIfRegenerationNeeded,
+  ensureReltypesFile,
+  generateSchemaFile,
+} from "./impl/schema/utils";
 export { getAllSourceFiles, splitLargeFileByLines, splitLargeFunctions } from "./impl/split/impl";
 export {
   downloadRepoOption,
@@ -886,6 +934,7 @@ export {
 } from "./impl/transform/transform-impl-mod";
 export type {
   AppParams,
+  ArgTypeShared,
   BaseBuildEntry,
   BaseConfig,
   Behavior,
@@ -900,6 +949,7 @@ export type {
   CheckIssue,
   CheckResult,
   ColumnType,
+  CommonCliArgs,
   CopyBuildEntry,
   CopyHooks,
   CreateLoaderOptions,

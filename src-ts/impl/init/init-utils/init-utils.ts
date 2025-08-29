@@ -24,7 +24,7 @@ import { getOrCreateReliverseMemory } from "~/impl/utils/reliverseMemory";
 import { findTsconfigUp } from "~/impl/utils/tsconfigHelpers";
 import { createTSConfig } from "~/impl/utils/utils-tsconfig";
 import { getProjectContent, type RequiredProjectContent } from "../../config/content";
-import { getOrCreateReliverseConfig } from "../../config/core-cfg";
+import { getOrCreateReliverseConfig } from "../../config/core";
 import { detectProjectsWithReliverseConfig } from "../../config/detect";
 import type { ProjectFramework } from "../../schema/mod";
 

@@ -41,17 +41,19 @@ export async function checkIfRegenerationNeeded(reltypesPath: string): Promise<b
 export async function ensureReltypesFile(cwd: string) {
   const reltypesPath = path.resolve(cwd, "reltypes.ts");
 
-  // If package.json exists and has @reliverse/dler, skip generating reltypes.ts
+  // If package.json exists and has @reliverse/dler or is named @reliverse/dler, skip generating reltypes.ts
   try {
     const pkgJsonPath = path.resolve(cwd, "package.json");
     if (await fs.pathExists(pkgJsonPath)) {
       const raw = await fs.readFile(pkgJsonPath, "utf8");
       const pkg = JSON.parse(raw) as {
+        name?: string;
         dependencies?: Record<string, string>;
         devDependencies?: Record<string, string>;
       };
       const hasDler = Boolean(
-        (pkg.dependencies && pkg.dependencies["@reliverse/dler"]) ||
+        pkg.name === "@reliverse/dler" ||
+          (pkg.dependencies && pkg.dependencies["@reliverse/dler"]) ||
           (pkg.devDependencies && pkg.devDependencies["@reliverse/dler"]),
       );
       if (hasDler) {

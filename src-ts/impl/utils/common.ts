@@ -1,16 +1,16 @@
 import { relinka } from "@reliverse/relinka";
 import { prepareReliverseEnvironment } from "../config/prepare";
-import type { CommonArgs } from "../types/mod";
+import type { CommonCliArgs } from "../types/mod";
 import { showEndPrompt, showStartPrompt } from "./startEndPrompts";
 
 export async function commonStartActions({
-  strCwd,
+  cwdStr,
   isCI,
   isDev,
   showRuntimeInfo,
   clearConsole,
   withStartPrompt,
-}: CommonArgs & {
+}: CommonCliArgs & {
   showRuntimeInfo: boolean;
   clearConsole: boolean;
   withStartPrompt: boolean;
@@ -37,7 +37,7 @@ export async function commonStartActions({
     process.exit(0);
   }
 
-  await prepareReliverseEnvironment(strCwd, isDev, "ts");
+  await prepareReliverseEnvironment(cwdStr, isDev, "ts");
 }
 
 export async function commonEndActions({ withEndPrompt }: { withEndPrompt: boolean }) {

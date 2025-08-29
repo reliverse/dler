@@ -1,7 +1,6 @@
 import { bumpHandler, isBumpDisabled, setBumpDisabledValueTo } from "@reliverse/bleump";
 import { relinka } from "@reliverse/relinka";
 import { createMultiStepSpinner } from "@reliverse/rempts";
-import prettyMilliseconds from "pretty-ms";
 import { dlerBuild } from "~/impl/build/impl";
 import { library_pubFlow } from "~/impl/build/library-flow";
 import { regular_pubFlow } from "~/impl/build/regular-flow";
@@ -10,7 +9,7 @@ import type { ReliverseConfig } from "~/impl/schema/mod";
 import type { PerfTimer } from "~/impl/types/mod";
 import { finalizeBuild, finalizePub } from "~/impl/utils/finalize";
 import { handleDlerError } from "~/impl/utils/utils-error-cwd";
-import { getElapsedPerfTime } from "../utils/utils-perf";
+import { createCompletionTexts } from "../utils/finish-text";
 
 // ==========================
 // rse publish
@@ -72,14 +71,15 @@ export async function dlerPub(timer: PerfTimer, isDev: boolean, config?: Reliver
     if (multiStepSpinner) multiStepSpinner.nextStep();
 
     // Build step (disable build's own spinner since pub is handling it)
-    const { effectiveConfig: buildConfig } = await dlerBuild(
+    const { effectiveConfig: buildConfig } = await dlerBuild({
+      flow: "pub",
       timer,
       isDev,
-      effectiveConfig,
-      undefined,
-      undefined,
-      shouldShowSpinner, // disable build's spinner if pub is showing one
-    );
+      config: effectiveConfig,
+      debugOnlyCopyNonBuildFiles: false,
+      debugDontCopyNonBuildFiles: false,
+      disableOwnSpinner: true, // disable build's spinner if pub is showing one
+    });
 
     // Move to next step based on whether we're publishing
     if (multiStepSpinner) multiStepSpinner.nextStep();
@@ -87,9 +87,12 @@ export async function dlerPub(timer: PerfTimer, isDev: boolean, config?: Reliver
     if (effectiveConfig.commonPubPause) {
       // Finalize build
       await finalizeBuild(shouldShowSpinner, timer, effectiveConfig.commonPubPause, "pub");
-      // Complete multi-step spinner for build-only
+      // Complete multi-step spinner for build-only with detailed message
+      const buildTexts = await createCompletionTexts(buildConfig, timer, "build");
       if (multiStepSpinner) {
-        multiStepSpinner.complete("Build completed successfully");
+        multiStepSpinner.complete(buildTexts.plain);
+      } else {
+        relinka("success", buildTexts.withEmoji);
       }
     } else {
       // Publish step
@@ -108,49 +111,11 @@ export async function dlerPub(timer: PerfTimer, isDev: boolean, config?: Reliver
       );
 
       // Complete multi-step spinner for build+publish
-      const elapsedTime = getElapsedPerfTime(timer);
-      const formattedPerfTime = prettyMilliseconds(elapsedTime, { verbose: true });
-      const packageName = buildConfig.projectName ?? "The project";
-      const versionLabelMain = buildConfig.version ? ` v${buildConfig.version}` : "";
-      const publishedLibNames = (() => {
-        const includeLibs =
-          buildConfig.libsActMode === "libs-only" || buildConfig.libsActMode === "main-and-libs";
-        if (!includeLibs || buildConfig.commonPubPause) return [] as string[];
-        const entries = Object.entries(buildConfig.libsList ?? {});
-        const names = [] as string[];
-        for (const [libName, libCfg] of entries) {
-          if (!libCfg?.libPubPause) {
-            const libVersionLabel = libCfg?.version ? ` v${libCfg.version}` : versionLabelMain;
-            names.push(`${libName}${libVersionLabel}`);
-          }
-        }
-        return names;
-      })();
-      const displayName =
-        publishedLibNames.length > 0
-          ? publishedLibNames.join(", ")
-          : `${packageName}${versionLabelMain}`;
-      const publishTargetLabel = (() => {
-        switch (buildConfig.commonPubRegistry) {
-          case "npm":
-            return "to NPM";
-          case "jsr":
-            return "to JSR";
-          case "npm-jsr":
-            return "to NPM and JSR";
-          default:
-            return "to NPM and JSR";
-        }
-      })();
+      const publishTexts = await createCompletionTexts(buildConfig, timer, "publish");
       if (multiStepSpinner) {
-        multiStepSpinner.complete(
-          `${displayName} publish ${publishTargetLabel} completed successfully in ${formattedPerfTime}`,
-        );
+        multiStepSpinner.complete(publishTexts.plain);
       } else {
-        relinka(
-          "success",
-          `✅ ${displayName} publish ${publishTargetLabel} completed successfully in ${formattedPerfTime}`,
-        );
+        relinka("success", publishTexts.withEmoji);
       }
     }
   } catch (error) {

@@ -29,68 +29,12 @@ import type { Schema } from "untyped";
 import type { ReliverseMemory } from "~/impl/utils/schemaMemory";
 import type { ReliverseConfig } from "../schema/mod";
 
-export type { TemplateUpdateInfo } from "~/impl/add/add-local/core/templates";
-export type { ShowMenuResult } from "~/impl/add/add-local/core/types";
-export type {
-  RuleRepo,
-  UnghRepoResponse,
-} from "~/impl/add/add-rule/add-rule-types";
-export type {
-  AIAgentOptions,
-  AiSdkAgent,
-  CircularTrigger,
-} from "~/impl/ai/ai-impl/ai-types";
-export type { LintSuggestion } from "~/impl/ai/ai-impl/relinter/relinter";
-export type {
-  KeyType,
-  KnownService,
-} from "~/impl/init/use-template/cp-modules/compose-env-file/cef-keys";
-export type { ConfigurationOptions } from "~/impl/init/use-template/cp-modules/git-deploy-prompts/vercel/vercel-config";
-export type { VercelTeam } from "~/impl/init/use-template/cp-modules/git-deploy-prompts/vercel/vercel-team";
-export type {
-  DeploymentLog,
-  DeploymentLogType,
-  DeploymentOptions,
-  EnvVar,
-  VercelDeploymentConfig,
-  VercelFramework,
-} from "~/impl/init/use-template/cp-modules/git-deploy-prompts/vercel/vercel-types";
-export type { GenCfg, GenCfgJsonc } from "~/impl/mrse/mrse-impl";
-export type { UploadFile } from "~/impl/upload/providers/providers-mod";
-export type { UploadedUCFile } from "~/impl/upload/providers/uploadcare";
-export type { UploadedFile } from "~/impl/upload/providers/uploadthing";
-export type {
-  DetectionSource,
-  DetectOptions,
-  PackageManager,
-  PkgManagerInfo,
-} from "~/impl/utils/dependencies/getUserPkgManager";
-export type { DownloadResult } from "~/impl/utils/downloading/downloadRepo";
-export type { ScriptStatus } from "~/impl/utils/handlers/promptPackageJsonScripts";
-export type { InstanceGithub } from "~/impl/utils/instanceGithub";
-export type { InstanceVercel } from "~/impl/utils/instanceVercel";
-export type {
-  CategoryFromSchema,
-  CloneOrTemplateRepo,
-  RepoFromSchema,
-  RepoOption,
-} from "~/impl/utils/projectRepository";
-export type { ReplaceConfig } from "~/impl/utils/replacements/reps-impl";
-export type { Hardcoded, UrlPatterns } from "~/impl/utils/replacements/reps-keys";
-export { handleReplacements } from "~/impl/utils/replacements/reps-mod";
-export type {
-  EncryptedDataMemory,
-  ReliverseMemory,
-  UserDataMemory,
-} from "~/impl/utils/schemaMemory";
-export type { RepoInfo, ReposConfig } from "~/impl/utils/schemaTemplate";
-
 export type ArgTypeShared = string | number | boolean | string[] | undefined;
 
-export interface CommonArgs {
+export interface CommonCliArgs {
   isCI: boolean;
   isDev: boolean;
-  strCwd: string;
+  cwdStr: string;
 }
 
 export type IterableError = Iterable<{

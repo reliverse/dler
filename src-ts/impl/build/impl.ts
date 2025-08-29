@@ -11,7 +11,7 @@ import type { ReliverseConfig } from "~/impl/schema/mod";
 import type { PerfTimer } from "~/impl/types/mod";
 import { removeDistFolders } from "~/impl/utils/utils-clean";
 import { handleDlerError } from "~/impl/utils/utils-error-cwd";
-
+import { createCompletionTexts } from "../utils/finish-text";
 import { dlerPostBuild, wrapper_CopyNonBuildFiles } from "./postbuild";
 import { dlerPreBuild } from "./prebuild";
 
@@ -24,14 +24,23 @@ import { dlerPreBuild } from "./prebuild";
  * Handles building for both main project and libraries.
  * @see `src-ts/impl/pub/impl.ts` for pub main function implementation.
  */
-export async function dlerBuild(
-  timer: PerfTimer,
-  isDev: boolean,
-  config?: ReliverseConfig,
-  debugOnlyCopyNonBuildFiles?: boolean,
-  debugDontCopyNonBuildFiles?: boolean,
-  disableOwnSpinner?: boolean,
-) {
+export async function dlerBuild({
+  flow,
+  timer,
+  isDev,
+  config,
+  debugOnlyCopyNonBuildFiles,
+  debugDontCopyNonBuildFiles,
+  disableOwnSpinner,
+}: {
+  flow: "build" | "pub";
+  timer: PerfTimer;
+  isDev: boolean;
+  config?: ReliverseConfig;
+  debugOnlyCopyNonBuildFiles?: boolean;
+  debugDontCopyNonBuildFiles?: boolean;
+  disableOwnSpinner?: boolean;
+}) {
   let effectiveConfig = config;
   let shouldShowSpinner = false;
   let multiStepSpinner: ReturnType<typeof createMultiStepSpinner> | null = null;
@@ -135,8 +144,13 @@ export async function dlerBuild(
     }
 
     // Complete multi-step spinner with success message
-    if (multiStepSpinner) {
-      multiStepSpinner.complete("Build completed successfully");
+    if (flow === "build") {
+      const { plain, withEmoji } = await createCompletionTexts(effectiveConfig, timer, "build");
+      if (multiStepSpinner) {
+        multiStepSpinner.complete(plain);
+      } else {
+        relinka("success", withEmoji);
+      }
     }
 
     return { timer, effectiveConfig };

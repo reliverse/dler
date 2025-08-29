@@ -1,4 +1,4 @@
-import { defineConfig } from "./reltypes";
+import { defineConfig } from "./src-ts/mod";
 
 // TODO: divide different parts of dler into the plugins
 
@@ -27,7 +27,7 @@ export default defineConfig({
   projectAuthor: "reliverse",
   projectDescription:
     "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
-  version: "1.7.129",
+  version: "1.7.134",
   projectLicense: "MIT",
 
   // Bump configuration

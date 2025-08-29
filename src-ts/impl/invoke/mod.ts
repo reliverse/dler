@@ -18,7 +18,7 @@
 import { relinka } from "@reliverse/relinka";
 import { confirmPrompt, defineCommand, inputPrompt, selectPrompt } from "@reliverse/rempts";
 import { execaCommand } from "execa";
-import { getOrCreateReliverseConfig } from "~/impl/config/core-cfg";
+import { getOrCreateReliverseConfig } from "~/impl/config/core";
 import { getCurrentWorkingDirectory } from "~/impl/utils/terminalHelpers";
 
 interface InvokeOptions {

@@ -1,18 +1,13 @@
 import path from "@reliverse/pathkit";
-import { glob } from "@reliverse/reglob";
 import fs from "@reliverse/relifso";
-import { relinka } from "@reliverse/relinka";
 import { withEnhancedSpinner } from "@reliverse/rempts";
 import MagicString, { Bundle } from "magic-string";
 import pMap from "p-map";
-import { isBinaryExt } from "~/impl/utils/binary";
 import {
-  checkFileSize,
   checkPermissions,
   handleCtxError,
   sanitizeInput,
   validateContent,
-  validateFileExists,
   validateFileType,
   validateMergeOperation,
   validatePath,
@@ -46,93 +41,6 @@ export const parseCSV = (s: string) =>
     .filter(Boolean);
 
 export const unescape = (s: string) => s.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
-
-export const maybePrompt = async <T>(
-  interactive: boolean,
-  value: T | undefined,
-  promptFn: () => Promise<T>,
-): Promise<T | undefined> => {
-  if (!interactive || value !== undefined) return value;
-  return promptFn();
-};
-
-export const collectFiles = async (
-  include: string[],
-  extraIgnore: string[],
-  recursive: boolean,
-  sortBy: "name" | "path" | "mtime" | "none",
-  depth: number,
-): Promise<string[]> => {
-  try {
-    // Normalize glob patterns to handle directory paths without glob characters
-    const normalizedInclude = include.map(normalizeGlobPattern);
-
-    const files = await glob(normalizedInclude, {
-      ignore: [...DEFAULT_IGNORES, ...extraIgnore.map(sanitizeInput)],
-      absolute: true,
-      onlyFiles: true,
-      deep: recursive ? undefined : 1,
-    });
-
-    // Validate each file and filter out binary files
-    const validFiles: string[] = [];
-    let binaryFilesDetected = false;
-
-    for (const file of files) {
-      await validateFileExists(file, "merge");
-      await checkFileSize(file);
-      await checkPermissions(file, "read");
-
-      // Skip binary files
-      if (await isBinaryExt(file)) {
-        binaryFilesDetected = true;
-        continue;
-      }
-
-      validFiles.push(file);
-    }
-
-    if (binaryFilesDetected) {
-      relinka("info", "Binary files were detected and skipped");
-    }
-
-    // Deduplicate files
-    let filtered = [...new Set(validFiles)];
-
-    // Group files by their directory structure based on depth
-    if (depth > 0) {
-      const fileGroups = new Map<string, string[]>();
-      for (const file of filtered) {
-        const relPath = path.relative(process.cwd(), file);
-        const parts = relPath.split(path.sep);
-        const groupKey = parts.slice(0, depth).join(path.sep);
-
-        if (!fileGroups.has(groupKey)) {
-          fileGroups.set(groupKey, []);
-        }
-        const group = fileGroups.get(groupKey);
-        if (group) {
-          group.push(file);
-        }
-      }
-      filtered = Array.from(fileGroups.values()).flat();
-    }
-
-    if (sortBy === "name") {
-      filtered.sort((a, b) => path.basename(a).localeCompare(path.basename(b)));
-    } else if (sortBy === "path") {
-      filtered.sort();
-    } else if (sortBy === "mtime") {
-      filtered = await pMap(filtered, async (f) => ({ f, mtime: (await fs.stat(f)).mtimeMs }), {
-        concurrency: 8,
-      }).then((arr) => arr.sort((a, b) => a.mtime - b.mtime).map((x) => x.f));
-    }
-    return filtered;
-  } catch (error) {
-    handleCtxError(error, "collectFiles");
-    return []; // Return empty array on error
-  }
-};
 
 export const writeResult = async (
   sections: string[],
