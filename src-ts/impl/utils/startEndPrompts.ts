@@ -60,7 +60,7 @@ export async function showStartPrompt(
 
 export async function showEndPrompt() {
   await endPrompt({
-    title: "│  ❤️  Please consider supporting rse development: https://github.com/sponsors/blefnk",
+    title: "Please consider supporting Reliverse development: https://github.com/sponsors/blefnk",
     titleAnimation: "glitch",
     titleColor: "dim",
     titleTypography: "bold",

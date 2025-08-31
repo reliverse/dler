@@ -1,7 +1,7 @@
 {
   "name": "@reliverse/dler",
   "author": "reliverse",
-  "version": "1.7.141",
+  "version": "1.7.143",
   "type": "module",
   "license": "MIT",
   "description": "The TypeScript framework for building JavaScript NPM libraries. @reliverse/dler is a flexible, unified, and fully automated bundler for typescript and javascript projects, as well as an npm and jsr publishing tool. dler is not only a bundler, it also tries to serve as the most powerful codemod toolkit for js/ts.",
@@ -27,8 +27,8 @@
     "libs:unpack": "bun cli pack examples/ts/app/libs/mock/mock-mod.ts --output dist-libs --unpack",
     "stack:pack": "bun cli pack pack-input --output pack-output/better-t-stack",
     "stack:unpack": "bun cli pack pack-output/better-t-stack/better-t-stack-mod.ts --output unpacked-output/better-t-stack --unpack",
-    "latest": "bun cli update && bun install",
-    "check": "bun tsc --noEmit && bun biome check --fix --unsafe"
+    "check": "bun tsc --noEmit && bun biome check --fix --unsafe",
+    "latest": "bun cli update && bun install"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.23",
@@ -47,7 +47,7 @@
     "@reliverse/bleump": "^1.2.0",
     "@reliverse/pathkit": "^1.3.4",
     "@reliverse/reglob": "^1.0.0",
-    "@reliverse/relico": "^1.3.9",
+    "@reliverse/relico": "^1.4.0",
     "@reliverse/relifso": "^1.4.5",
     "@reliverse/relinka": "^1.6.1",
     "@reliverse/rematch": "^1.1.0",

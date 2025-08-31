@@ -25,52 +25,52 @@ cd to `example/ts/monorepo` and then you can use the update command.
 
 ```bash
 # Update ALL dependencies across ALL package.json files found
-bun update
+bun latest
 
 # Preview changes without applying them  
-bun update --dryRun
+bun latest --dryRun
 
 # Update and automatically run install
-bun update --withInstall
+bun latest --withInstall
 ```
 
 ### Pattern-Based Updates
 
 ```bash
 # Update only TypeScript types across all packages
-bun update --name "@types/*"
+bun latest --name "@types/*"
 
 # Update React ecosystem packages
-bun update --name "react*" --name "@react*"
+bun latest --name "react*" --name "@react*"
 
 # Update ESLint and TypeScript ESLint packages
-bun update --name "eslint*" --name "@typescript-eslint/*"
+bun latest --name "eslint*" --name "@typescript-eslint/*"
 
 # Update build tools (esbuild, webpack, vite, etc.)
-bun update --name "*build*" --name "*webpack*" --name "vite"
+bun latest --name "*build*" --name "*webpack*" --name "vite"
 ```
 
 ### Exclusion Patterns
 
 ```bash
 # Update everything EXCEPT ESLint packages
-bun update --ignore "eslint*" --ignore "@typescript-eslint/*"
+bun latest --ignore "eslint*" --ignore "@typescript-eslint/*"
 
 # Update everything EXCEPT types and linting tools
-bun update --ignore "@types/*" --ignore "eslint*" --ignore "prettier"
+bun latest --ignore "@types/*" --ignore "eslint*" --ignore "prettier"
 
 # Complex ignore patterns using brace expansion
-bun update --ignore "{eslint,prettier,@typescript-eslint/*}"
+bun latest --ignore "{eslint,prettier,@typescript-eslint/*}"
 ```
 
 ### Advanced Usage
 
 ```bash
 # Update with automatic install
-bun update --withInstall
+bun latest --withInstall
 
 # Disable major version updates (be more conservative)
-bun update --no-allowMajor
+bun latest --no-allowMajor
 
 # Update only specific files in a large monorepo
 cd packages/ui && bun ../../../cli.ts update
@@ -82,22 +82,22 @@ The root `package.json` includes useful update scripts:
 
 ```bash
 # Standard update
-bun update
+bun latest
 
 # Update with install
-bun update:install
+bun latest:install
 
 # Update only TypeScript types
-bun update:types
+bun latest:types
 
 # Update React ecosystem
-bun update:react
+bun latest:react
 
 # Update everything except ESLint
-bun update:no-eslint
+bun latest:no-eslint
 
 # Preview mode
-bun update:dry
+bun latest:dry
 ```
 
 ## What Gets Updated

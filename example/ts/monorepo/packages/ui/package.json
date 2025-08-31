@@ -16,21 +16,21 @@
     "lint": "eslint src/**/*.{ts,tsx}"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "@radix-ui/react-button": "^0.1.0",
-    "@radix-ui/react-dialog": "^1.1.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-dialog": "^1.1.15",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1"
   },
   "devDependencies": {
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "typescript": "^5.6.3",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "typescript": "^5.9.2",
     "@reliverse/bleump": "^1.2.0"
   },
   "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
   }
 }

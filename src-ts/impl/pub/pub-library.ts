@@ -131,7 +131,7 @@ async function library_pubToJsr(
       relinka("verbose", `Publishing lib ${libName} to JSR from ${libOutDir}`);
       relinka("null", "");
       const command = [
-        "bun x jsr publish",
+        "bunx jsr publish",
         distJsrDryRun ? "--dry-run" : "",
         distJsrFailOnWarn ? "--fail-on-warn" : "",
         distJsrAllowDirty ? "--allow-dirty" : "",

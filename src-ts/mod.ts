@@ -1023,7 +1023,7 @@ export {
   applyVersionUpdate,
   checkPackageUpdate,
   collectTargetDependencies,
-  displayUpdateResults,
+  displayStructuredUpdateResults,
   fetchVersionFromRegistry,
   getLatestVersion,
   getPmOptions,

@@ -20,7 +20,7 @@
         "@reliverse/bleump": "^1.2.0",
         "@reliverse/pathkit": "^1.3.4",
         "@reliverse/reglob": "^1.0.0",
-        "@reliverse/relico": "^1.3.9",
+        "@reliverse/relico": "^1.4.0",
         "@reliverse/relifso": "^1.4.5",
         "@reliverse/relinka": "^1.6.1",
         "@reliverse/rematch": "^1.1.0",
@@ -566,7 +566,7 @@
 
     "@reliverse/reglob": ["@reliverse/reglob@1.0.0", "", { "dependencies": { "@reliverse/rematch": "^1.1.0", "fdir": "^6.4.4" } }, "sha512-LvpzxRrNuQatkCzpJRhkAm/vOpfIO2ImJ8dt3BO46VUCD4pYIO+20M+5zugKoprvs4IS4b1i8d/t6hN9PgglnA=="],
 
-    "@reliverse/relico": ["@reliverse/relico@1.3.9", "", {}, "sha512-SRuEpS/i6OaNY1iIy2/LFpqSoaG3Ci/+esX19e301f9YsODCtvnUnd6I5fklidy5KR2zzE1rUunmPUu4sdAE8Q=="],
+    "@reliverse/relico": ["@reliverse/relico@1.4.0", "", {}, "sha512-4uW5R5Bd0QG2btNouy/Uv9Qb0bbj80O/nZZscPX2nty/OBxtAP6pV677rCqCbmv/h9wUofPowyKdOYTozz4xPA=="],
 
     "@reliverse/relifso": ["@reliverse/relifso@1.4.5", "", {}, "sha512-hedYoWhSfZjvzZGimWVrWI1LTJh6Ulrr+6axdky7ohn+5Gkl3HYSQdYOs3oqCHlhQPDavOTCfCyJZOIbOuaUsw=="],
 
@@ -1653,6 +1653,10 @@
     "@parcel/watcher/detect-libc": ["detect-libc@1.0.3", "", { "bin": { "detect-libc": "./bin/detect-libc.js" } }, "sha512-pGjwhsmsp4kL2RTz08wcOlGN83otlqHeD/Z5T8GXZB+/YcpQ/dgo+lbU8ZsGxV0HIvqqxo9l7mqYwyYMD9bKDg=="],
 
     "@pnpm/network.ca-file/graceful-fs": ["graceful-fs@4.2.10", "", {}, "sha512-9ByhssR2fPVsNZj478qUUbKfmL0+t5BDVyjShtyZZLiK7ZDAArFFfopyOTj0M05wE2tJPisA4iTnnXl2YoPvOA=="],
+
+    "@reliverse/relinka/@reliverse/relico": ["@reliverse/relico@1.3.9", "", {}, "sha512-SRuEpS/i6OaNY1iIy2/LFpqSoaG3Ci/+esX19e301f9YsODCtvnUnd6I5fklidy5KR2zzE1rUunmPUu4sdAE8Q=="],
+
+    "@reliverse/rempts/@reliverse/relico": ["@reliverse/relico@1.3.9", "", {}, "sha512-SRuEpS/i6OaNY1iIy2/LFpqSoaG3Ci/+esX19e301f9YsODCtvnUnd6I5fklidy5KR2zzE1rUunmPUu4sdAE8Q=="],
 
     "@ts-morph/common/minimatch": ["minimatch@10.0.3", "", { "dependencies": { "@isaacs/brace-expansion": "^5.0.0" } }, "sha512-IPZ167aShDZZUMdRk66cyQAW3qr0WzbHkPdMYa8bzZhlHhO3jALbKdxcaak7W9FfT2rZNpQuUu4Od7ILEpXSaw=="],
 

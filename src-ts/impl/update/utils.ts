@@ -2,6 +2,7 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import rematch from "@reliverse/rematch";
 import { $ } from "bun";
+import path from "path";
 import semver from "semver";
 import {
   getAllPkgManagers,
@@ -390,6 +391,24 @@ export function prepareDependenciesForUpdate(
     }
   }
 
+  // Filter out dependencies in ignored fields
+  const ignoreFields = args.ignoreFields || [];
+  if (ignoreFields.length > 0) {
+    filteredDeps = filteredDeps.filter((dep) => {
+      const locations = allDepsMap[dep]?.locations || new Set<string>();
+      // Check if any of the dependency's locations should be ignored
+      return !Array.from(locations).some((location) => ignoreFields.includes(location));
+    });
+
+    const ignoredFieldsCount = depsToUpdate.length - filteredDeps.length;
+    if (ignoredFieldsCount > 0) {
+      relinka(
+        "verbose",
+        `Ignored ${ignoredFieldsCount} dependencies in ignored fields: ${ignoreFields.join(", ")}`,
+      );
+    }
+  }
+
   // Filter out aliases, workspace, catalog and other non-semver specs
   // By default, include all semver-compatible dependencies (both prefixed and exact)
   return filteredDeps.filter((dep) => {
@@ -409,6 +428,7 @@ export async function updatePackageJsonFile(
   dependencies: Record<string, DependencyInfo>,
   updatesToApply: UpdateResult[],
   savePrefix: string,
+  fieldsToIgnore: string[] = [],
 ): Promise<number> {
   if (updatesToApply.length === 0) return 0;
 
@@ -420,9 +440,34 @@ export async function updatePackageJsonFile(
     const updatedPackageJson = { ...packageJson };
 
     for (const update of updatesToApply) {
-      const prefix = savePrefix === "none" ? "" : savePrefix;
-      const newVersion = `${prefix}${update.latestVersion}`;
       const locations = dependencies[update.package]?.locations || new Set<string>();
+
+      // Check if any of the dependency's locations should be ignored
+      const shouldIgnore = Array.from(locations).some((location) =>
+        fieldsToIgnore.includes(location),
+      );
+
+      if (shouldIgnore) {
+        continue; // Skip this update
+      }
+
+      // Determine the version prefix based on dependency type
+      let newVersion: string;
+      if (locations.has("peerDependencies")) {
+        // For peerDependencies, preserve the >= prefix if it exists
+        const currentVersion = dependencies[update.package]?.versionSpec || "";
+        if (currentVersion.startsWith(">=")) {
+          newVersion = `>=${update.latestVersion}`;
+        } else {
+          newVersion =
+            savePrefix === "none" ? update.latestVersion : `${savePrefix}${update.latestVersion}`;
+        }
+      } else {
+        // For other dependency types, use the standard prefix
+        newVersion =
+          savePrefix === "none" ? update.latestVersion : `${savePrefix}${update.latestVersion}`;
+      }
+
       applyVersionUpdate(updatedPackageJson, update.package, newVersion, locations);
     }
 
@@ -439,49 +484,146 @@ export async function updatePackageJsonFile(
 }
 
 /**
- * Display update results in a formatted way
+ * Display update results in a structured, file-by-file format
  */
-export function displayUpdateResults(results: UpdateResult[]): void {
+export function displayStructuredUpdateResults(
+  results: UpdateResult[],
+  packageJsonFiles: string[],
+  fileDepsMap: Map<string, Record<string, any>>,
+  showDetails = false,
+): void {
   const toUpdate = results.filter((r) => r.updated && !r.error);
   const errors = results.filter((r) => r.error);
   const upToDate = results.filter((r) => !r.updated && !r.error && r.semverCompatible);
 
-  // Show errors
+  // Show errors first
   if (errors.length > 0) {
     relinka("warn", `Failed to check ${errors.length} dependencies:`);
     for (const error of errors) {
       relinka("warn", `  ${error.package} (${error.location}): ${error.error}`);
     }
+    relinka("log", ""); // Empty line for spacing
   }
 
-  // Show up-to-date packages
-  if (upToDate.length > 0) {
-    relinka("log", `${upToDate.length} deps are already up to date`);
-  }
-
-  // Show available updates
-  if (toUpdate.length === 0) {
-    relinka("verbose", `All ${upToDate.length} deps are already up to date`);
+  // If not showing details, just show simplified success info
+  if (!showDetails) {
+    if (toUpdate.length === 0) {
+      relinka("log", `All ${upToDate.length} dependencies are already up to date`);
+    } else {
+      relinka(
+        "log",
+        `${toUpdate.length} dependencies can be updated across ${packageJsonFiles.length} package.json files`,
+      );
+    }
     return;
   }
 
-  relinka("log", `${toUpdate.length} deps can be updated:`);
-
-  // Group by location for better display
-  const byLocation = new Map<string, UpdateResult[]>();
-  for (const update of toUpdate) {
-    const location = update.location || "unknown";
-    if (!byLocation.has(location)) {
-      byLocation.set(location, []);
+  // Group results by package.json file
+  const resultsByFile = new Map<string, UpdateResult[]>();
+  for (const result of results) {
+    // Find which package.json file this dependency belongs to
+    let filePath = "unknown";
+    for (const [pkgPath, deps] of fileDepsMap.entries()) {
+      if (deps[result.package]) {
+        filePath = pkgPath;
+        break;
+      }
     }
-    byLocation.get(location)!.push(update);
+
+    if (!resultsByFile.has(filePath)) {
+      resultsByFile.set(filePath, []);
+    }
+    const fileResults = resultsByFile.get(filePath);
+    if (fileResults) {
+      fileResults.push(result);
+    }
   }
 
-  for (const [location, updates] of byLocation.entries()) {
-    relinka("log", `  ${location}:`);
-    for (const update of updates) {
-      relinka("log", `    ${update.package}: ${update.currentVersion} → ${update.latestVersion}`);
+  // Display results organized by file
+  for (const [filePath, fileResults] of resultsByFile.entries()) {
+    // Show relative path from user's cwd
+    const relativePath =
+      filePath !== "unknown" ? path.relative(process.cwd(), filePath) : "unknown";
+    relinka("info", `${relativePath}`);
+
+    // Group by dependency category
+    const byCategory = new Map<string, UpdateResult[]>();
+    for (const result of fileResults) {
+      const category = result.location || "unknown";
+      if (!byCategory.has(category)) {
+        byCategory.set(category, []);
+      }
+      byCategory.get(category)!.push(result);
     }
+
+    // Show up-to-date dependencies
+    const upToDateInFile = fileResults.filter((r) => !r.updated && !r.error && r.semverCompatible);
+    if (upToDateInFile.length > 0) {
+      relinka("log", `  * ${upToDateInFile.length} deps are already up to date`);
+    }
+
+    // Show available updates
+    const toUpdateInFile = fileResults.filter((r) => r.updated && !r.error);
+    if (toUpdateInFile.length > 0) {
+      relinka("log", `  * ${toUpdateInFile.length} deps can be updated:`);
+
+      // Sort categories for consistent display
+      const sortedCategories = Array.from(byCategory.entries()).sort(([a], [b]) => {
+        // Order: catalog, dependencies, devDependencies, peerDependencies, optionalDependencies
+        const order = {
+          catalog: 0,
+          dependencies: 1,
+          devDependencies: 2,
+          peerDependencies: 3,
+          optionalDependencies: 4,
+        };
+        const aOrder = order[a as keyof typeof order] ?? 999;
+        const bOrder = order[b as keyof typeof order] ?? 999;
+        return aOrder - bOrder;
+      });
+
+      for (const [category, updates] of sortedCategories) {
+        const categoryUpdates = updates.filter((r) => r.updated && !r.error);
+        if (categoryUpdates.length > 0) {
+          // Format category name for display
+          let displayCategory = category;
+          if (category.startsWith("catalogs.")) {
+            displayCategory = `workspaces.${category}`;
+          } else if (category === "catalog") {
+            displayCategory = "workspaces.catalog";
+          }
+
+          relinka("log", `    - ${displayCategory}:`);
+          for (const update of categoryUpdates) {
+            relinka(
+              "log",
+              `      ${update.package}: ${update.currentVersion} → ${update.latestVersion}`,
+            );
+          }
+        }
+      }
+    }
+
+    // Show errors for this file
+    const errorsInFile = fileResults.filter((r) => r.error);
+    if (errorsInFile.length > 0) {
+      relinka("warn", `  * ${errorsInFile.length} deps failed to check:`);
+      for (const error of errorsInFile) {
+        relinka("warn", `    ${error.package}: ${error.error}`);
+      }
+    }
+
+    relinka("log", ""); // Empty line between files
+  }
+
+  // Summary
+  if (toUpdate.length === 0) {
+    relinka("log", `All ${upToDate.length} dependencies are already up to date`);
+  } else {
+    relinka(
+      "success",
+      `Summary: ${toUpdate.length} dependencies can be updated across ${packageJsonFiles.length} package.json files`,
+    );
   }
 }
 

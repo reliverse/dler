@@ -13,7 +13,7 @@ import {
   checkPackageUpdates,
   commonEndActions,
   commonStartActions,
-  displayUpdateResults,
+  displayStructuredUpdateResults,
   getCurrentWorkingDirectory,
   handleInstallation,
   prepareAllUpdateCandidates,
@@ -54,22 +54,33 @@ export default defineCommand({
       type: "boolean",
       description: "Preview updates without making changes",
     },
-    withInstall: {
+    install: {
       type: "boolean",
       description: "Run install after updating",
-      alias: "with-i",
+      alias: "i",
     },
     allowMajor: {
       type: "boolean",
       description: "Allow major version updates (default: true)",
       default: true,
     },
+    details: {
+      type: "boolean",
+      description: "Show detailed dependency information (default: false)",
+      alias: "d",
+    },
+    ignoreFields: {
+      type: "array",
+      description: "Dependency fields to ignore (e.g., 'peerDependencies,catalog')",
+    },
   }),
   run: async ({ args }) => {
-    const { ci, cwd, dryRun, withInstall } = args;
+    const { ci, cwd, dryRun, install, details, ignoreFields } = args;
     const isCI = Boolean(ci);
     const cwdStr = String(cwd);
     const isDryRun = Boolean(dryRun);
+    const showDetails = Boolean(details);
+    const fieldsToIgnore = Array.isArray(ignoreFields) ? ignoreFields : [];
 
     await commonStartActions({
       isCI,
@@ -85,7 +96,8 @@ export default defineCommand({
       await validatePackageJson();
 
       // Prepare update candidates
-      const { candidates, allDepsMap, packageJsonFiles } = await prepareAllUpdateCandidates(args);
+      const { candidates, allDepsMap, packageJsonFiles, fileDepsMap } =
+        await prepareAllUpdateCandidates(args);
       if (candidates.length === 0) {
         relinka("log", "No dependencies to update");
         return;
@@ -94,8 +106,10 @@ export default defineCommand({
       // Check package updates
       const results = await checkPackageUpdates(candidates, allDepsMap, args);
 
-      // Display results
-      displayUpdateResults(results);
+      // Display results in structured format
+      // When details=true: Shows file-by-file breakdown with dependency categories and versions
+      // When details=false: Shows simplified summary only
+      displayStructuredUpdateResults(results, packageJsonFiles, fileDepsMap, showDetails);
 
       const toUpdate = results.filter((r) => r.updated && !r.error);
       if (toUpdate.length === 0) {
@@ -109,7 +123,12 @@ export default defineCommand({
       }
 
       // Update package.json files
-      const totalUpdated = await updateAllPackageJsonFiles(packageJsonFiles, toUpdate, "^");
+      const totalUpdated = await updateAllPackageJsonFiles(
+        packageJsonFiles,
+        toUpdate,
+        "^",
+        fieldsToIgnore,
+      );
 
       // Display simple summary
       if (packageJsonFiles.length > 1) {
@@ -122,12 +141,12 @@ export default defineCommand({
       }
 
       // Handle installation
-      if (withInstall) {
+      if (install) {
         await handleInstallation();
       } else {
         relinka(
           "log",
-          "Run 'bun install' to apply the changes (use --withInstall to do this automatically)",
+          "Run 'bun install' to apply the changes (use --install to do this automatically)",
         );
       }
     } catch (error) {

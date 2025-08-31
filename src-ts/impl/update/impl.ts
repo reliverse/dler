@@ -21,9 +21,10 @@ interface UpdateArgs {
   name?: string[];
   ignore?: string[];
   dryRun?: boolean;
-  withInstall?: boolean;
+  install?: boolean;
   allowMajor?: boolean;
   concurrency?: number;
+  ignoreFields?: string[];
 }
 
 export async function validatePackageJson(): Promise<string> {
@@ -41,6 +42,7 @@ export async function prepareAllUpdateCandidates(args: UpdateArgs): Promise<{
   candidates: string[];
   allDepsMap: Record<string, any>;
   packageJsonFiles: string[];
+  fileDepsMap: Map<string, Record<string, any>>;
 }> {
   // Find ALL package.json files in the project using tinyglobby
   const packageJsonFiles = await glob("**/package.json", {
@@ -62,7 +64,7 @@ export async function prepareAllUpdateCandidates(args: UpdateArgs): Promise<{
 
   if (packageJsonFiles.length === 0) {
     relinka("warn", "No package.json files found");
-    return { candidates: [], allDepsMap: {}, packageJsonFiles: [] };
+    return { candidates: [], allDepsMap: {}, packageJsonFiles: [], fileDepsMap: new Map() };
   }
 
   relinka("verbose", `Found ${packageJsonFiles.length} package.json files`);
@@ -70,12 +72,16 @@ export async function prepareAllUpdateCandidates(args: UpdateArgs): Promise<{
   // Collect dependencies from all package.json files
   const allDepsMap: Record<string, any> = {};
   const allCandidates = new Set<string>();
+  const fileDepsMap = new Map<string, Record<string, any>>();
 
   for (const packageJsonPath of packageJsonFiles) {
     try {
       const packageJson = JSON.parse(await fs.readFile(packageJsonPath, "utf8"));
       const { map } = collectTargetDependencies(packageJson);
       const candidates = prepareDependenciesForUpdate(map, args);
+
+      // Store file-specific dependencies
+      fileDepsMap.set(packageJsonPath, map);
 
       // Merge dependencies and candidates
       for (const [dep, info] of Object.entries(map)) {
@@ -106,11 +112,11 @@ export async function prepareAllUpdateCandidates(args: UpdateArgs): Promise<{
 
   if (candidates.length === 0) {
     relinka("warn", "No dependencies to update");
-    return { candidates: [], allDepsMap: {}, packageJsonFiles };
+    return { candidates: [], allDepsMap: {}, packageJsonFiles, fileDepsMap };
   }
 
   relinka("verbose", `Processing ${packageJsonFiles.length} package.json files`);
-  return { candidates, allDepsMap, packageJsonFiles };
+  return { candidates, allDepsMap, packageJsonFiles, fileDepsMap };
 }
 
 export async function checkPackageUpdates(
@@ -136,7 +142,7 @@ export async function checkPackageUpdates(
           updated: false,
           error: "Current version not found",
           semverCompatible: false,
-          location: Array.from(depInfo?.locations || ["unknown"]).join(", "),
+          location: "unknown",
         };
       }
 
@@ -150,6 +156,7 @@ export async function updateAllPackageJsonFiles(
   packageJsonFiles: string[],
   toUpdate: UpdateResult[],
   savePrefix: string,
+  fieldsToIgnore: string[] = [],
 ): Promise<number> {
   if (packageJsonFiles.length === 0 || toUpdate.length === 0) {
     return 0;
@@ -172,6 +179,7 @@ export async function updateAllPackageJsonFiles(
           fileDepsMap,
           fileSpecificUpdates,
           savePrefix,
+          fieldsToIgnore,
         );
         totalUpdated += updated;
 
