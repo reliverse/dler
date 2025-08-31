@@ -1,0 +1,35 @@
+{
+  "name": "@example/monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "tools/*"
+  ],
+  "scripts": {
+    "update": "bun ../cli.ts update",
+    "update:install": "bun update --withInstall",
+    "update:types": "bun update --name '@types/*'",
+    "update:react": "bun update --name 'react*' --name '@react*'",
+    "update:no-eslint": "bun update --ignore 'eslint*' --ignore '@typescript-eslint/*'",
+    "update:dry": "bun update --dryRun",
+    "build": "bun run build --filter='./packages/*'",
+    "dev": "bun run dev --filter='./apps/*'",
+    "lint": "eslint .",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.8.7",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
+    "eslint": "^9.15.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3",
+    "@reliverse/relico": "^1.3.9"
+  },
+  "dependencies": {
+    "turbo": "^2.3.0"
+  }
+}

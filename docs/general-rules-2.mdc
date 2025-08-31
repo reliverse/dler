@@ -8,4 +8,3 @@ alwaysApply: false
 
 - the current project is a cli tool which allows users bootstrap web apps and npm libraries
 - never define classes (unless you work on creating custom thrown error)
-

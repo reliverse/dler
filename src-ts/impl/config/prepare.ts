@@ -334,7 +334,7 @@ function generateJsoncConfig(isDev: boolean, pkgDescription?: string): string {
   
   // Common configuration
   "commonPubPause": ${pausePublishValue},
-  "commonPubRegistry": ${DEFAULT_CONFIG_RELIVERSE.commonPubRegistry},
+  "commonPubRegistry": "npm",
   "commonVerbose": ${verboseValue},
   "displayBuildPubLogs": ${DEFAULT_CONFIG_RELIVERSE.displayBuildPubLogs},
   
@@ -686,7 +686,7 @@ function generateConfig(
     "",
     "  // Common configuration",
     "  commonPubPause: " + pausePublishValue + ",",
-    "  commonPubRegistry: " + DEFAULT_CONFIG_RELIVERSE.commonPubRegistry + ",",
+    `  commonPubRegistry: "npm",`,
     "  commonVerbose: " + verboseValue + ",",
     "  displayBuildPubLogs: " + DEFAULT_CONFIG_RELIVERSE.displayBuildPubLogs + ",",
     "",

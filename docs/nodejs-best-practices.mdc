@@ -1111,15 +1111,13 @@ Essential packages for building production-ready CLIs:
 ```json
 {
   "dependencies": {
-    "commander": "^11.0.0",
-    "chalk": "^5.0.0",
-    "enquirer": "^2.3.6",
-    "ora": "^7.0.1",
-    "conf": "^10.0.3"
+    "@reliverse/rempts": "^1.7.60",
+    "@reliverse/relico": "^1.4.0",
+    "conf": "^14.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "typescript": "^5.0.0"
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2"
   }
 }
 ```

@@ -10,7 +10,7 @@ Visit [docs.reliverse.org/libraries/dler](https://docs.reliverse.org/libraries/d
 
 ## Stand With Ukraine
 
-- 💙 Please help fund drones, medkits, and victory. [Donate now](https://u24.gov.ua), it matters.
+- 💙 Please help fund drones, medkits, and victory. [Donate now](https://u24.gov.ua), please, it matters.
 - 💛 Every dollar helps stop [russia's war crimes](https://war.ukraine.ua/russia-war-crimes) and saves lives.
 
 ## Stand With Reliverse
