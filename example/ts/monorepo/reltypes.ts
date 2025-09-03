@@ -917,7 +917,7 @@ export interface ReliverseConfig {
 
     /**
      * Controls how often the log cleanup runs (in milliseconds)
-     * Default: 10000 (10 seconds)
+     * Default: 10_000 (10 seconds)
      */
     cleanupInterval?: number;
 
@@ -1287,7 +1287,7 @@ export const DEFAULT_CONFIG_RELIVERSE: ReliverseConfig = {
   bumpSet: "",
 
   // Build & Publishing
-  commonPubPause: true,
+  commonPubPause: false,
   commonPubRegistry: "npm",
   commonVerbose: false,
   displayBuildPubLogs: true,

@@ -134,7 +134,7 @@ export default defineConfig({
   bumpSet: "",
 
   // Common configuration
-  commonPubPause: true,
+  commonPubPause: false,
   commonPubRegistry: "npm",
   commonVerbose: false,
   displayBuildPubLogs: true,
@@ -288,7 +288,7 @@ export default defineConfig({
       enabled: false,
       format: "HH:mm:ss",
     },
-    cleanupInterval: 10000,
+    cleanupInterval: 10_000,
     bufferSize: 4096,
     maxBufferAge: 5000,
     levels: {

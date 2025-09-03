@@ -50,11 +50,7 @@ export async function ensureReliverseConfig(
       "success",
       `${configKind === "ts" ? "TypeScript" : "JSONC"} config was created at ${configPath}`,
     );
-    relinka("verbose", "Edit this file to customize build and publish settings");
-
-    relinka("log", "If you plan to publish with Rse, please note:");
-    relinka("log", "commonPubPause is set to true in the config by default");
-    relinka("log", "Set it to false, then run `rse publish` for NPM/JSR publishing");
+    relinka("verbose", "Edit this file to customize different project settings");
   } catch (error: unknown) {
     relinka(
       "error",
@@ -442,7 +438,7 @@ function generateJsoncConfig(isDev: boolean, pkgDescription?: string): string {
       "enabled": false,
       "format": "HH:mm:ss"
     },
-    "cleanupInterval": 10000,
+    "cleanupInterval": 10_000,
     "bufferSize": 4096,
     "maxBufferAge": 5000,
     "levels": {
@@ -841,7 +837,7 @@ function generateConfig(
     "      enabled: false,",
     '      format: "HH:mm:ss",',
     "    },",
-    "    cleanupInterval: 10000,",
+    "    cleanupInterval: 10_000,",
     "    bufferSize: 4096,",
     "    maxBufferAge: 5000,",
     "    levels: {",
