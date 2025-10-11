@@ -1,0 +1,20 @@
+{
+  "name": "pkg-a",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "echo 'Building pkg-a'"
+  },
+  "dependencies": {
+    "pkg-b": "workspace:*"
+  },
+  "dlerust": {
+    "cache": true,
+    "outDir": "dist",
+    "include": [
+      "src/**/*"
+    ],
+    "exclude": [
+      "**/*.test.*"
+    ]
+  }
+}

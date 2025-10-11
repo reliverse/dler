@@ -1,0 +1,10 @@
+{
+  "name": "test-monorepo",
+  "version": "1.0.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "echo 'Building root'"
+  }
+}

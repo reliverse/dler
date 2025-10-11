@@ -1,0 +1,17 @@
+{
+  "name": "pkg-b",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "echo 'Building pkg-b'"
+  },
+  "dlerust": {
+    "cache": true,
+    "outDir": "dist",
+    "include": [
+      "src/**/*"
+    ],
+    "exclude": [
+      "**/*.test.*"
+    ]
+  }
+}

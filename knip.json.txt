@@ -4,7 +4,7 @@
     "**/*.{ts,js}"
   ],
   "entry": [
-    "src-ts/impl/**/*.ts",
+    "src/impl/**/*.ts",
     ".{config,tests}/**/*.ts",
     "*.{config,cfg}.{ts,js}",
     "src/mod.ts",
@@ -17,8 +17,8 @@
     "dist-jsr",
     "dist-npm",
     "dist-libs",
-    "src-ts/impl/**/*.ts",
-    "src-ts/libs/cfg/types.ts"
+    "src/impl/**/*.ts",
+    "src/libs/cfg/types.ts"
   ],
   "ignoreDependencies": [
     "octokit",

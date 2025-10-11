@@ -1289,8 +1289,8 @@ export const DEFAULT_CONFIG_RELIVERSE: ReliverseConfig = {
   // Build & Publishing
   commonPubPause: false,
   commonPubRegistry: "npm",
-  commonVerbose: false,
-  displayBuildPubLogs: true,
+  commonVerbose: true,
+  displayBuildPubLogs: false,
   coreDeclarations: true,
   coreDescription: "",
   coreEntryFile: "mod.ts",
@@ -1627,6 +1627,7 @@ export const DEFAULT_CONFIG_RELIVERSE: ReliverseConfig = {
   },
 };
 
-export const defineConfig = (userConfig: Partial<ReliverseConfig> = {}) => {
-  return { ...DEFAULT_CONFIG_RELIVERSE, ...userConfig };
-};
+export const defineConfig = (userConfig: Partial<ReliverseConfig> = {}) => ({
+  ...DEFAULT_CONFIG_RELIVERSE,
+  ...userConfig,
+});

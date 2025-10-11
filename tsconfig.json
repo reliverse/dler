@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "paths": {
-      "~/*": ["./src-ts/*"],
-      "@/*": ["./example/ts/*"]
+      "~/*": ["./src/*"],
+      "@/*": ["./example/*"]
     },
     "lib": ["ESNext"],
     "baseUrl": ".",
@@ -27,11 +27,6 @@
     "exactOptionalPropertyTypes": false,
     "noPropertyAccessFromIndexSignature": false
   },
-  "include": [
-    "example/ts/**/*.ts",
-    "src-ts/**/*.ts",
-    "release.ts",
-    "reliverse.ts"
-  ],
+  "include": ["example/**/*.ts", "src/**/*.ts", "release.ts", "reliverse.ts"],
   "exclude": ["node_modules", "dist*"]
 }

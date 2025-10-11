@@ -1,4 +1,4 @@
-import { defineConfig } from "./src-ts/mod";
+import { defineConfig } from "./src/mod";
 
 // TODO: divide different parts of dler into the plugins
 
@@ -27,12 +27,12 @@ export default defineConfig({
   projectAuthor: "reliverse",
   projectDescription:
     "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
-  version: "1.7.144",
+  version: "1.7.150",
   projectLicense: "MIT",
 
   // Bump configuration
   bumpDisable: false,
-  bumpFilter: ["package.json", "reliverse.ts", "src-ts/impl/config/constants.ts", "src-ts/dler.ts"],
+  bumpFilter: ["package.json", "reliverse.ts", "src/impl/config/constants.ts", "src/dler.ts"],
   bumpMode: "patch",
 
   // Common configuration
@@ -46,7 +46,7 @@ export default defineConfig({
   coreDescription:
     "dler (prev. relidler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
   coreEntryFile: "mod.ts",
-  coreEntrySrcDir: "src-ts",
+  coreEntrySrcDir: "src",
   coreIsCLI: { enabled: false, scripts: {} },
 
   // Logs
