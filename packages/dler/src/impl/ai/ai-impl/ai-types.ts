@@ -9,9 +9,9 @@ export type CircularTrigger = (typeof CIRCULAR_TRIGGERS)[number];
 export type AiSdkAgent = (typeof AGENT_NAMES)[number];
 
 export interface AIAgentOptions {
-  config: ReliverseConfig;
-  agent: AiSdkAgent;
-  isKeyEnsured: boolean;
-  memory?: ReliverseMemory;
-  target?: string;
+	config: ReliverseConfig;
+	agent: AiSdkAgent;
+	isKeyEnsured: boolean;
+	memory?: ReliverseMemory;
+	target?: string;
 }

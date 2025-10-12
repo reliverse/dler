@@ -2,67 +2,67 @@ import { re } from "@reliverse/relico";
 import { cancel, isCancel, multiselect } from "@reliverse/rempts";
 import { DEFAULT_CONFIG } from "~/impl/providers/better-t-stack/constants";
 import type {
-  API,
-  Backend,
-  Database,
-  Examples,
-  Frontend,
+	API,
+	Backend,
+	Database,
+	Examples,
+	Frontend,
 } from "~/impl/providers/better-t-stack/types";
 
 export async function getExamplesChoice(
-  examples?: Examples[],
-  database?: Database,
-  frontends?: Frontend[],
-  backend?: Backend,
-  api?: API,
+	examples?: Examples[],
+	database?: Database,
+	frontends?: Frontend[],
+	backend?: Backend,
+	api?: API,
 ): Promise<Examples[]> {
-  if (api === "none") {
-    return [];
-  }
-  if (examples !== undefined) return examples;
+	if (api === "none") {
+		return [];
+	}
+	if (examples !== undefined) return examples;
 
-  if (backend === "convex") {
-    return ["todo"];
-  }
+	if (backend === "convex") {
+		return ["todo"];
+	}
 
-  if (backend === "none") {
-    return [];
-  }
+	if (backend === "none") {
+		return [];
+	}
 
-  if (database === "none") return [];
+	if (database === "none") return [];
 
-  const noFrontendSelected = !frontends || frontends.length === 0;
+	const noFrontendSelected = !frontends || frontends.length === 0;
 
-  if (noFrontendSelected) return [];
+	if (noFrontendSelected) return [];
 
-  let response: Examples[] | symbol = [];
-  const options: { value: Examples; label: string; hint: string }[] = [
-    {
-      value: "todo" as const,
-      label: "Todo App",
-      hint: "A simple CRUD example app",
-    },
-  ];
+	let response: Examples[] | symbol = [];
+	const options: { value: Examples; label: string; hint: string }[] = [
+		{
+			value: "todo" as const,
+			label: "Todo App",
+			hint: "A simple CRUD example app",
+		},
+	];
 
-  if (backend !== "elysia" && !frontends?.includes("solid")) {
-    options.push({
-      value: "ai" as const,
-      label: "AI Chat",
-      hint: "A simple AI chat interface using AI SDK",
-    });
-  }
+	if (backend !== "elysia" && !frontends?.includes("solid")) {
+		options.push({
+			value: "ai" as const,
+			label: "AI Chat",
+			hint: "A simple AI chat interface using AI SDK",
+		});
+	}
 
-  response = await multiselect<Examples>({
-    message: "Include examples",
-    options: options,
-    required: false,
-    initialValues: DEFAULT_CONFIG.examples,
-  });
+	response = await multiselect<Examples>({
+		message: "Include examples",
+		options: options,
+		required: false,
+		initialValues: DEFAULT_CONFIG.examples,
+	});
 
-  if (isCancel(response)) {
-    cancel(re.red("Operation cancelled"));
-    process.exit(0);
-  }
+	if (isCancel(response)) {
+		cancel(re.red("Operation cancelled"));
+		process.exit(0);
+	}
 
-  return response;
+	return response;
 }

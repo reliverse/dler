@@ -7,10 +7,10 @@ import pMap from "p-map";
 
 import { getMaxHeightSize } from "~/impl/utils/microHelpers";
 import {
-  DEFAULT_BRANCH,
-  getRepoCacheDir,
-  RULE_FILE_EXTENSION,
-  RULES_REPOS,
+	DEFAULT_BRANCH,
+	getRepoCacheDir,
+	RULE_FILE_EXTENSION,
+	RULES_REPOS,
 } from "./add-rule-const";
 import type { UnghRepoResponse } from "./add-rule-types";
 
@@ -27,9 +27,9 @@ import type { UnghRepoResponse } from "./add-rule-types";
  * @returns The cleaned content.
  */
 function cleanTsContent(content: string): string {
-  content = content.replace(/^.*?content:\s*/s, "");
-  content = content.replace(/,\s*author:\s*\{[\s\S]*$/s, "");
-  return content.trim();
+	content = content.replace(/^.*?content:\s*/s, "");
+	content = content.replace(/,\s*author:\s*\{[\s\S]*$/s, "");
+	return content.trim();
 }
 
 /**
@@ -41,25 +41,25 @@ function cleanTsContent(content: string): string {
  * @returns The converted markdown content.
  */
 export function convertTsToMdc(content: string, filePath: string): string {
-  let cleaned = content.replace(/export\s+const\s+\w+\s*=\s*/, "");
-  cleaned = cleaned.replace(/;\s*$/, "");
-  cleaned = cleaned.replace(/import\s+.*?from\s+['"].*?['"];?\s*/g, "");
-  cleaned = cleaned.replace(/export\s+default\s+/, "");
-  cleaned = cleaned.replace(/`/g, "");
-  cleaned = cleaned.trim();
+	let cleaned = content.replace(/export\s+const\s+\w+\s*=\s*/, "");
+	cleaned = cleaned.replace(/;\s*$/, "");
+	cleaned = cleaned.replace(/import\s+.*?from\s+['"].*?['"];?\s*/g, "");
+	cleaned = cleaned.replace(/export\s+default\s+/, "");
+	cleaned = cleaned.replace(/`/g, "");
+	cleaned = cleaned.trim();
 
-  cleaned = cleanTsContent(cleaned);
+	cleaned = cleanTsContent(cleaned);
 
-  const frontmatter = [
-    "---",
-    `description: ${path.basename(filePath, ".ts")}`,
-    "glob: []",
-    "alwaysApply: false",
-    "---",
-    "",
-  ].join("\n");
+	const frontmatter = [
+		"---",
+		`description: ${path.basename(filePath, ".ts")}`,
+		"glob: []",
+		"alwaysApply: false",
+		"---",
+		"",
+	].join("\n");
 
-  return frontmatter + cleaned;
+	return frontmatter + cleaned;
 }
 
 /**
@@ -68,8 +68,8 @@ export function convertTsToMdc(content: string, filePath: string): string {
  * @returns Boolean indicating if the directory exists.
  */
 export async function hasCursorRulesDir(cwd: string): Promise<boolean> {
-  const rulesDir = path.join(cwd, ".cursor", "rules");
-  return fs.pathExists(rulesDir);
+	const rulesDir = path.join(cwd, ".cursor", "rules");
+	return fs.pathExists(rulesDir);
 }
 
 /**
@@ -78,10 +78,10 @@ export async function hasCursorRulesDir(cwd: string): Promise<boolean> {
  * @returns Boolean indicating if at least one .mdc file exists.
  */
 export async function hasInstalledRules(cwd: string): Promise<boolean> {
-  const rulesDir = path.join(cwd, ".cursor", "rules");
-  if (!(await fs.pathExists(rulesDir))) return false;
-  const files = await fs.readdir(rulesDir);
-  return files.some((file) => file.endsWith(RULE_FILE_EXTENSION));
+	const rulesDir = path.join(cwd, ".cursor", "rules");
+	if (!(await fs.pathExists(rulesDir))) return false;
+	const files = await fs.readdir(rulesDir);
+	return files.some((file) => file.endsWith(RULE_FILE_EXTENSION));
 }
 
 /**
@@ -90,33 +90,33 @@ export async function hasInstalledRules(cwd: string): Promise<boolean> {
  * @returns Boolean indicating if an update is available.
  */
 export async function checkRulesRepoUpdate(repoId: string): Promise<boolean> {
-  const [owner, repoName] = repoId.split("/");
-  if (!owner || !repoName) return false;
+	const [owner, repoName] = repoId.split("/");
+	if (!owner || !repoName) return false;
 
-  const repoCacheDir = getRepoCacheDir(owner);
-  const versionFilePath = path.join(repoCacheDir, ".last_updated");
+	const repoCacheDir = getRepoCacheDir(owner);
+	const versionFilePath = path.join(repoCacheDir, ".last_updated");
 
-  if (!(await fs.pathExists(repoCacheDir))) {
-    return true;
-  }
+	if (!(await fs.pathExists(repoCacheDir))) {
+		return true;
+	}
 
-  let currentDate: string | null = null;
-  if (await fs.pathExists(versionFilePath)) {
-    currentDate = await fs.readFile(versionFilePath, "utf-8");
-  } else {
-    return true;
-  }
+	let currentDate: string | null = null;
+	if (await fs.pathExists(versionFilePath)) {
+		currentDate = await fs.readFile(versionFilePath, "utf-8");
+	} else {
+		return true;
+	}
 
-  try {
-    const url = `https://ungh.cc/repos/${owner}/${repoName}`;
-    const data = await ofetch<UnghRepoResponse>(url);
-    const latestDate = data.repo?.pushedAt ?? null;
-    if (!latestDate) return false;
-    return new Date(currentDate) < new Date(latestDate);
-  } catch (error) {
-    console.error("Failed to check for updates:", error);
-    return false;
-  }
+	try {
+		const url = `https://ungh.cc/repos/${owner}/${repoName}`;
+		const data = await ofetch<UnghRepoResponse>(url);
+		const latestDate = data.repo?.pushedAt ?? null;
+		if (!latestDate) return false;
+		return new Date(currentDate) < new Date(latestDate);
+	} catch (error) {
+		console.error("Failed to check for updates:", error);
+		return false;
+	}
 }
 
 /**
@@ -125,21 +125,21 @@ export async function checkRulesRepoUpdate(repoId: string): Promise<boolean> {
  * @returns Boolean indicating if any updates are available.
  */
 export async function checkForRuleUpdates(isDev: boolean): Promise<boolean> {
-  let hasUpdates = false;
-  for (const repo of RULES_REPOS) {
-    const [owner] = repo.id.split("/");
-    if (!owner) continue;
-    if (!(await fs.pathExists(getRepoCacheDir(owner)))) continue;
+	let hasUpdates = false;
+	for (const repo of RULES_REPOS) {
+		const [owner] = repo.id.split("/");
+		if (!owner) continue;
+		if (!(await fs.pathExists(getRepoCacheDir(owner)))) continue;
 
-    const hasRepoUpdate = await checkRulesRepoUpdate(repo.id);
-    if (hasRepoUpdate) {
-      hasUpdates = true;
-      if (isDev) {
-        relinka("info", `Updates available for ${repo.id}`);
-      }
-    }
-  }
-  return hasUpdates;
+		const hasRepoUpdate = await checkRulesRepoUpdate(repo.id);
+		if (hasRepoUpdate) {
+			hasUpdates = true;
+			if (isDev) {
+				relinka("info", `Updates available for ${repo.id}`);
+			}
+		}
+	}
+	return hasUpdates;
 }
 
 /**
@@ -148,28 +148,30 @@ export async function checkForRuleUpdates(isDev: boolean): Promise<boolean> {
  * @returns Array of cached rule file names.
  */
 async function getCachedRuleFiles(owner: string): Promise<string[]> {
-  relinka("verbose", `Getting cached rule files for owner: ${owner}`);
-  const repoCacheDir = getRepoCacheDir(owner);
-  if (!(await fs.pathExists(repoCacheDir))) {
-    relinka("verbose", `Cache directory does not exist: ${repoCacheDir}`);
-    return [];
-  }
+	relinka("verbose", `Getting cached rule files for owner: ${owner}`);
+	const repoCacheDir = getRepoCacheDir(owner);
+	if (!(await fs.pathExists(repoCacheDir))) {
+		relinka("verbose", `Cache directory does not exist: ${repoCacheDir}`);
+		return [];
+	}
 
-  try {
-    const files = await fs.readdir(repoCacheDir, { recursive: true });
-    const filteredFiles = (files as string[]).filter(
-      (file) =>
-        typeof file === "string" && file.endsWith(RULE_FILE_EXTENSION) && !file.startsWith("."),
-    );
-    relinka(
-      "success",
-      `Found ${filteredFiles.length} rule files (${RULE_FILE_EXTENSION}) in cache`,
-    );
-    return filteredFiles;
-  } catch (error) {
-    relinka("error", `Failed to read cached rules: ${error}`);
-    return [];
-  }
+	try {
+		const files = await fs.readdir(repoCacheDir, { recursive: true });
+		const filteredFiles = (files as string[]).filter(
+			(file) =>
+				typeof file === "string" &&
+				file.endsWith(RULE_FILE_EXTENSION) &&
+				!file.startsWith("."),
+		);
+		relinka(
+			"success",
+			`Found ${filteredFiles.length} rule files (${RULE_FILE_EXTENSION}) in cache`,
+		);
+		return filteredFiles;
+	} catch (error) {
+		relinka("error", `Failed to read cached rules: ${error}`);
+		return [];
+	}
 }
 
 /**
@@ -182,186 +184,202 @@ async function getCachedRuleFiles(owner: string): Promise<string[]> {
  * @param isDev - Flag indicating development mode.
  * @returns Array of file names (cached filenames) that will be installed.
  */
-export async function downloadRules(repoId: string, isDev: boolean): Promise<string[]> {
-  relinka("verbose", `Development mode: ${isDev}`);
-  relinka("verbose", `Starting download process for repository: ${repoId}`);
-  const [owner, repoName] = repoId.split("/");
-  if (!owner || !repoName) {
-    relinka("error", "Invalid repository ID format");
-    return [];
-  }
-  const repo = RULES_REPOS.find((r) => r.id === repoId);
-  if (!repo) {
-    relinka("error", "Repository not found in configuration");
-    return [];
-  }
+export async function downloadRules(
+	repoId: string,
+	isDev: boolean,
+): Promise<string[]> {
+	relinka("verbose", `Development mode: ${isDev}`);
+	relinka("verbose", `Starting download process for repository: ${repoId}`);
+	const [owner, repoName] = repoId.split("/");
+	if (!owner || !repoName) {
+		relinka("error", "Invalid repository ID format");
+		return [];
+	}
+	const repo = RULES_REPOS.find((r) => r.id === repoId);
+	if (!repo) {
+		relinka("error", "Repository not found in configuration");
+		return [];
+	}
 
-  const branch = repo.branch || DEFAULT_BRANCH;
-  const repoCacheDir = getRepoCacheDir(owner);
-  // Ensure the cache directory exists.
-  await ensuredir(repoCacheDir);
-  relinka("verbose", `Cache directory: ${repoCacheDir}`);
+	const branch = repo.branch || DEFAULT_BRANCH;
+	const repoCacheDir = getRepoCacheDir(owner);
+	// Ensure the cache directory exists.
+	await ensuredir(repoCacheDir);
+	relinka("verbose", `Cache directory: ${repoCacheDir}`);
 
-  const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/git/trees/${branch}?recursive=1`;
-  let availableFiles: { path: string; type: string }[] = [];
+	const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/git/trees/${branch}?recursive=1`;
+	let availableFiles: { path: string; type: string }[] = [];
 
-  try {
-    const repoData = await ofetch<{
-      tree: { path: string; type: string; url: string }[];
-    }>(apiUrl, {
-      retry: 3,
-      retryDelay: 1000,
-      onResponseError: (error) => {
-        if (error.response?.status === 404) {
-          throw new Error(`Repository or branch not found: ${repoId}#${branch}`);
-        }
-        if (error.response?.status === 403) {
-          throw new Error("GitHub API rate limit exceeded. Please try again later.");
-        }
-        throw new Error(
-          `Failed to fetch repository: ${error.response?.statusText || "Unknown error"}`,
-        );
-      },
-    });
+	try {
+		const repoData = await ofetch<{
+			tree: { path: string; type: string; url: string }[];
+		}>(apiUrl, {
+			retry: 3,
+			retryDelay: 1000,
+			onResponseError: (error) => {
+				if (error.response?.status === 404) {
+					throw new Error(
+						`Repository or branch not found: ${repoId}#${branch}`,
+					);
+				}
+				if (error.response?.status === 403) {
+					throw new Error(
+						"GitHub API rate limit exceeded. Please try again later.",
+					);
+				}
+				throw new Error(
+					`Failed to fetch repository: ${error.response?.statusText || "Unknown error"}`,
+				);
+			},
+		});
 
-    if (repo.isCommunity) {
-      const communityPath = repo.communityPath;
-      if (!communityPath) {
-        relinka("error", "Community path not defined for repository");
-        return [];
-      }
-      availableFiles = repoData.tree.filter(
-        (item) =>
-          item.type === "blob" &&
-          item.path.endsWith(".ts") &&
-          item.path.startsWith(communityPath) &&
-          !item.path.split("/").some((part) => part.startsWith(".")),
-      );
-    } else {
-      availableFiles = repoData.tree.filter(
-        (item) =>
-          item.type === "blob" &&
-          item.path.endsWith(".md") &&
-          item.path.toLowerCase() !== "readme.md" &&
-          !item.path.split("/").some((part) => part.startsWith(".")),
-      );
-    }
+		if (repo.isCommunity) {
+			const communityPath = repo.communityPath;
+			if (!communityPath) {
+				relinka("error", "Community path not defined for repository");
+				return [];
+			}
+			availableFiles = repoData.tree.filter(
+				(item) =>
+					item.type === "blob" &&
+					item.path.endsWith(".ts") &&
+					item.path.startsWith(communityPath) &&
+					!item.path.split("/").some((part) => part.startsWith(".")),
+			);
+		} else {
+			availableFiles = repoData.tree.filter(
+				(item) =>
+					item.type === "blob" &&
+					item.path.endsWith(".md") &&
+					item.path.toLowerCase() !== "readme.md" &&
+					!item.path.split("/").some((part) => part.startsWith(".")),
+			);
+		}
 
-    if (availableFiles.length === 0) {
-      relinka("error", "No rule files found in repository");
-      return [];
-    }
+		if (availableFiles.length === 0) {
+			relinka("error", "No rule files found in repository");
+			return [];
+		}
 
-    const maxItems = getMaxHeightSize();
-    const totalFiles = availableFiles.length;
-    availableFiles = availableFiles.slice(0, maxItems);
+		const maxItems = getMaxHeightSize();
+		const totalFiles = availableFiles.length;
+		availableFiles = availableFiles.slice(0, maxItems);
 
-    // Get currently cached files.
-    const cachedFiles = await getCachedRuleFiles(owner);
+		// Get currently cached files.
+		const cachedFiles = await getCachedRuleFiles(owner);
 
-    // Build multiselect options.
-    const options = availableFiles.map((file, index) => {
-      const baseName = path.basename(file.path);
-      let expectedCacheFile: string;
-      if (repo.isCommunity) {
-        expectedCacheFile = `${path.basename(file.path, ".ts")}${RULE_FILE_EXTENSION}`;
-      } else {
-        expectedCacheFile = `${path.basename(file.path, ".md")}${RULE_FILE_EXTENSION}`;
-      }
-      const isCached = cachedFiles.includes(expectedCacheFile);
-      return {
-        value: file.path,
-        label: `${index + 1}. ${baseName}`,
-        hint: isCached ? "cached" : undefined,
-      };
-    });
+		// Build multiselect options.
+		const options = availableFiles.map((file, index) => {
+			const baseName = path.basename(file.path);
+			let expectedCacheFile: string;
+			if (repo.isCommunity) {
+				expectedCacheFile = `${path.basename(file.path, ".ts")}${RULE_FILE_EXTENSION}`;
+			} else {
+				expectedCacheFile = `${path.basename(file.path, ".md")}${RULE_FILE_EXTENSION}`;
+			}
+			const isCached = cachedFiles.includes(expectedCacheFile);
+			return {
+				value: file.path,
+				label: `${index + 1}. ${baseName}`,
+				hint: isCached ? "cached" : undefined,
+			};
+		});
 
-    // Always display the multiselect prompt.
-    const selectedFiles = await multiselectPrompt<string>({
-      title: `Select rules to download from ${repoId} (${Math.min(
-        totalFiles,
-        maxItems,
-      )} of ${totalFiles} available)`,
-      content: `If you don't see all rules, try increasing your terminal height (current: ${maxItems})`,
-      options,
-    });
+		// Always display the multiselect prompt.
+		const selectedFiles = await multiselectPrompt<string>({
+			title: `Select rules to download from ${repoId} (${Math.min(
+				totalFiles,
+				maxItems,
+			)} of ${totalFiles} available)`,
+			content: `If you don't see all rules, try increasing your terminal height (current: ${maxItems})`,
+			options,
+		});
 
-    if (selectedFiles.length === 0) {
-      relinka("error", "No rules selected for download");
-      return [];
-    }
+		if (selectedFiles.length === 0) {
+			relinka("error", "No rules selected for download");
+			return [];
+		}
 
-    const downloadedFiles: string[] = [];
-    const total = selectedFiles.length;
+		const downloadedFiles: string[] = [];
+		const total = selectedFiles.length;
 
-    await pMap(
-      selectedFiles,
-      async (filePath: string) => {
-        let expectedCacheFile: string;
-        if (repo.isCommunity) {
-          expectedCacheFile = `${path.basename(filePath, ".ts")}${RULE_FILE_EXTENSION}`;
-        } else {
-          expectedCacheFile = `${path.basename(filePath, ".md")}${RULE_FILE_EXTENSION}`;
-        }
-        const cacheFilePath = path.join(repoCacheDir, expectedCacheFile);
+		await pMap(
+			selectedFiles,
+			async (filePath: string) => {
+				let expectedCacheFile: string;
+				if (repo.isCommunity) {
+					expectedCacheFile = `${path.basename(filePath, ".ts")}${RULE_FILE_EXTENSION}`;
+				} else {
+					expectedCacheFile = `${path.basename(filePath, ".md")}${RULE_FILE_EXTENSION}`;
+				}
+				const cacheFilePath = path.join(repoCacheDir, expectedCacheFile);
 
-        // If file is already cached, log and reuse it.
-        if (await fs.pathExists(cacheFilePath)) {
-          relinka("verbose", `[Cached] ${filePath} is already in cache.`);
-          downloadedFiles.push(expectedCacheFile);
-          return;
-        }
+				// If file is already cached, log and reuse it.
+				if (await fs.pathExists(cacheFilePath)) {
+					relinka("verbose", `[Cached] ${filePath} is already in cache.`);
+					downloadedFiles.push(expectedCacheFile);
+					return;
+				}
 
-        try {
-          const contentUrl = `https://raw.githubusercontent.com/${owner}/${repoName}/${branch}/${filePath}`;
-          const content = await ofetch<string>(contentUrl, {
-            responseType: "text" as any,
-            retry: 2,
-            retryDelay: 500,
-          });
+				try {
+					const contentUrl = `https://raw.githubusercontent.com/${owner}/${repoName}/${branch}/${filePath}`;
+					const content = await ofetch<string>(contentUrl, {
+						responseType: "text" as any,
+						retry: 2,
+						retryDelay: 500,
+					});
 
-          if (repo.isCommunity) {
-            const mdContent = convertTsToMdc(content, filePath);
-            await fs.writeFile(cacheFilePath, mdContent);
-          } else {
-            await fs.writeFile(cacheFilePath, content);
-          }
-          downloadedFiles.push(expectedCacheFile);
-          relinka("verbose", `[${downloadedFiles.length}/${total}] Processed ${filePath}`);
-        } catch (error) {
-          relinka("error", `Failed to process ${filePath}: ${error}`);
-        }
-      },
-      { concurrency: 5 },
-    );
+					if (repo.isCommunity) {
+						const mdContent = convertTsToMdc(content, filePath);
+						await fs.writeFile(cacheFilePath, mdContent);
+					} else {
+						await fs.writeFile(cacheFilePath, content);
+					}
+					downloadedFiles.push(expectedCacheFile);
+					relinka(
+						"verbose",
+						`[${downloadedFiles.length}/${total}] Processed ${filePath}`,
+					);
+				} catch (error) {
+					relinka("error", `Failed to process ${filePath}: ${error}`);
+				}
+			},
+			{ concurrency: 5 },
+		);
 
-    if (downloadedFiles.length === 0) {
-      relinka("error", "Failed to download any rule files");
-      return [];
-    }
+		if (downloadedFiles.length === 0) {
+			relinka("error", "Failed to download any rule files");
+			return [];
+		}
 
-    const metadata = {
-      repoId,
-      branch,
-      downloadedAt: new Date().toISOString(),
-      totalFiles: downloadedFiles.length,
-      tags: repo.tags || [],
-      isOfficial: repo.isOfficial || false,
-      isCommunity: repo.isCommunity || false,
-    };
+		const metadata = {
+			repoId,
+			branch,
+			downloadedAt: new Date().toISOString(),
+			totalFiles: downloadedFiles.length,
+			tags: repo.tags || [],
+			isOfficial: repo.isOfficial || false,
+			isCommunity: repo.isCommunity || false,
+		};
 
-    await fs.writeFile(
-      path.join(repoCacheDir, ".metadata.json"),
-      JSON.stringify(metadata, null, 2),
-    );
-    await fs.writeFile(path.join(repoCacheDir, ".last_updated"), new Date().toISOString());
+		await fs.writeFile(
+			path.join(repoCacheDir, ".metadata.json"),
+			JSON.stringify(metadata, null, 2),
+		);
+		await fs.writeFile(
+			path.join(repoCacheDir, ".last_updated"),
+			new Date().toISOString(),
+		);
 
-    relinka("verbose", `Processed ${downloadedFiles.length}/${total} rule file(s) successfully`);
-    return downloadedFiles;
-  } catch (error) {
-    relinka("error", `Failed to download rules: ${error}`);
-    return [];
-  }
+		relinka(
+			"verbose",
+			`Processed ${downloadedFiles.length}/${total} rule file(s) successfully`,
+		);
+		return downloadedFiles;
+	} catch (error) {
+		relinka("error", `Failed to download rules: ${error}`);
+		return [];
+	}
 }
 
 /**
@@ -373,43 +391,50 @@ export async function downloadRules(repoId: string, isDev: boolean): Promise<str
  * @param owner - Repository owner.
  * @param cwd - Current working directory.
  */
-export async function installRules(files: string[], owner: string, cwd: string): Promise<void> {
-  relinka("verbose", `Installing ${files.length} rule(s) from owner: ${owner}`);
-  const repoCacheDir = getRepoCacheDir(owner);
-  const cursorRulesDir = path.join(cwd, ".cursor", "rules");
+export async function installRules(
+	files: string[],
+	owner: string,
+	cwd: string,
+): Promise<void> {
+	relinka("verbose", `Installing ${files.length} rule(s) from owner: ${owner}`);
+	const repoCacheDir = getRepoCacheDir(owner);
+	const cursorRulesDir = path.join(cwd, ".cursor", "rules");
 
-  await ensuredir(cursorRulesDir);
-  relinka("verbose", `Source directory: ${repoCacheDir}`);
-  relinka("verbose", `Target directory: ${cursorRulesDir}`);
+	await ensuredir(cursorRulesDir);
+	relinka("verbose", `Source directory: ${repoCacheDir}`);
+	relinka("verbose", `Target directory: ${cursorRulesDir}`);
 
-  let installedCount = 0;
-  let skippedCount = 0;
+	let installedCount = 0;
+	let skippedCount = 0;
 
-  for (const file of files) {
-    const sourceFile = path.join(repoCacheDir, file);
-    const baseFileName = path.basename(file, path.extname(file));
-    const targetFileName = `${baseFileName}${RULE_FILE_EXTENSION}`;
-    const targetFile = path.join(cursorRulesDir, targetFileName);
+	for (const file of files) {
+		const sourceFile = path.join(repoCacheDir, file);
+		const baseFileName = path.basename(file, path.extname(file));
+		const targetFileName = `${baseFileName}${RULE_FILE_EXTENSION}`;
+		const targetFile = path.join(cursorRulesDir, targetFileName);
 
-    relinka("verbose", `Copying file: ${file} -> ${targetFile}`);
-    try {
-      // Overwrite any existing file without prompting.
-      await fs.copy(sourceFile, targetFile, { overwrite: true });
-      installedCount++;
-      relinka("success", `Installed ${targetFileName}`);
-    } catch (error) {
-      relinka("error", `Failed to install ${file}: ${error}`);
-      skippedCount++;
-    }
-  }
+		relinka("verbose", `Copying file: ${file} -> ${targetFile}`);
+		try {
+			// Overwrite any existing file without prompting.
+			await fs.copy(sourceFile, targetFile, { overwrite: true });
+			installedCount++;
+			relinka("success", `Installed ${targetFileName}`);
+		} catch (error) {
+			relinka("error", `Failed to install ${file}: ${error}`);
+			skippedCount++;
+		}
+	}
 
-  if (files.length > 5) {
-    relinka("success", `Installed ${installedCount} rule file(s)`);
-  }
-  if (skippedCount > 0) {
-    relinka("verbose", `Skipped ${skippedCount} rule file(s)`);
-  }
-  relinka("verbose", `Total installed: ${installedCount}, skipped: ${skippedCount}`);
+	if (files.length > 5) {
+		relinka("success", `Installed ${installedCount} rule file(s)`);
+	}
+	if (skippedCount > 0) {
+		relinka("verbose", `Skipped ${skippedCount} rule file(s)`);
+	}
+	relinka(
+		"verbose",
+		`Total installed: ${installedCount}, skipped: ${skippedCount}`,
+	);
 }
 
 /**
@@ -418,42 +443,48 @@ export async function installRules(files: string[], owner: string, cwd: string):
  * @param cwd - Current working directory.
  * @param isDev - Flag indicating development mode.
  */
-export async function handleRuleUpdates(cwd: string, isDev: boolean): Promise<void> {
-  relinka("verbose", `Checking for rule updates in workspace: ${cwd}`);
-  const hasUpdates = await checkForRuleUpdates(isDev);
-  if (!hasUpdates) {
-    relinka("success", "No updates available for installed rules");
-    return;
-  }
+export async function handleRuleUpdates(
+	cwd: string,
+	isDev: boolean,
+): Promise<void> {
+	relinka("verbose", `Checking for rule updates in workspace: ${cwd}`);
+	const hasUpdates = await checkForRuleUpdates(isDev);
+	if (!hasUpdates) {
+		relinka("success", "No updates available for installed rules");
+		return;
+	}
 
-  relinka("verbose", "Updates available for installed rules");
-  const shouldUpdate = await confirmPrompt({
-    title: "Updates available for installed rules. Download now?",
-  });
-  if (!shouldUpdate) {
-    relinka("verbose", "User chose not to update rules");
-    return;
-  }
+	relinka("verbose", "Updates available for installed rules");
+	const shouldUpdate = await confirmPrompt({
+		title: "Updates available for installed rules. Download now?",
+	});
+	if (!shouldUpdate) {
+		relinka("verbose", "User chose not to update rules");
+		return;
+	}
 
-  relinka("verbose", "Starting rule update process");
-  for (const repo of RULES_REPOS) {
-    const [owner] = repo.id.split("/");
-    if (!owner) continue;
-    if (!(await fs.pathExists(getRepoCacheDir(owner)))) continue;
+	relinka("verbose", "Starting rule update process");
+	for (const repo of RULES_REPOS) {
+		const [owner] = repo.id.split("/");
+		if (!owner) continue;
+		if (!(await fs.pathExists(getRepoCacheDir(owner)))) continue;
 
-    relinka("info", `Updating rules for repository: ${repo.id}`);
-    const repoId = repo.id;
-    const hasRepoUpdate = await checkRulesRepoUpdate(repoId);
-    if (hasRepoUpdate) {
-      relinka("info", `Updates available for ${repoId}, downloading...`);
-      const files = await downloadRules(repoId, isDev);
-      if (files.length > 0 && (await hasCursorRulesDir(cwd))) {
-        relinka("info", `Installing downloaded rules into ${cwd}/.cursor/rules`);
-        await installRules(files, owner, cwd);
-      }
-    } else {
-      relinka("info", `No updates available for ${repo.id}`);
-    }
-  }
-  relinka("success", "Rule updates completed");
+		relinka("info", `Updating rules for repository: ${repo.id}`);
+		const repoId = repo.id;
+		const hasRepoUpdate = await checkRulesRepoUpdate(repoId);
+		if (hasRepoUpdate) {
+			relinka("info", `Updates available for ${repoId}, downloading...`);
+			const files = await downloadRules(repoId, isDev);
+			if (files.length > 0 && (await hasCursorRulesDir(cwd))) {
+				relinka(
+					"info",
+					`Installing downloaded rules into ${cwd}/.cursor/rules`,
+				);
+				await installRules(files, owner, cwd);
+			}
+		} else {
+			relinka("info", `No updates available for ${repo.id}`);
+		}
+	}
+	relinka("success", "Rule updates completed");
 }

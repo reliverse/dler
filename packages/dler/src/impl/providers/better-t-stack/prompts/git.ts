@@ -4,17 +4,17 @@ import { cancel, confirm, isCancel } from "@reliverse/rempts";
 import { DEFAULT_CONFIG } from "~/impl/providers/better-t-stack/constants";
 
 export async function getGitChoice(git?: boolean): Promise<boolean> {
-  if (git !== undefined) return git;
+	if (git !== undefined) return git;
 
-  const response = await confirm({
-    message: "Initialize git repository?",
-    initialValue: DEFAULT_CONFIG.git,
-  });
+	const response = await confirm({
+		message: "Initialize git repository?",
+		initialValue: DEFAULT_CONFIG.git,
+	});
 
-  if (isCancel(response)) {
-    cancel(re.red("Operation cancelled"));
-    process.exit(0);
-  }
+	if (isCancel(response)) {
+		cancel(re.red("Operation cancelled"));
+		process.exit(0);
+	}
 
-  return response;
+	return response;
 }

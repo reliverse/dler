@@ -3,7 +3,7 @@ export {
 	globalInstallInteractiveMode,
 	invokeSingleCommand,
 	showInvokeHelp,
-} from "./impl/add/add-global/install-impl";
+} from "~/impl/add/add-global/install-impl";
 export { useORPC } from "./impl/add/add-local/api/orpc";
 export { useTRPC } from "./impl/add/add-local/api/trpc";
 export { useBetterAuth } from "./impl/add/add-local/auth/better-auth";

@@ -21,7 +21,7 @@ import {
 import { relinka } from "@reliverse/relinka";
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 import path from "path";
-import { type CmdName, msgs } from "~/const";
+import { type CmdName, msgs } from "~/@examples/cli/const";
 
 // Updates ALL dependencies (prod/dev/peer/optional/catalog) to their latest versions across ALL package.json files found in the project
 export default defineCommand({

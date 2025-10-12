@@ -5,33 +5,38 @@ import { cliConfigJsonc, cliConfigTs } from "~/impl/config/constants";
 
 // Define a type that matches the boolean-based structure of requiredContent
 export interface RequiredProjectContent {
-  fileReliverseConfig: boolean;
-  filePackageJson: boolean;
+	fileReliverseConfig: boolean;
+	filePackageJson: boolean;
 }
 
 /**
  * Gets information about the project content, separating required and optional elements.
  */
 export async function getProjectContent(projectPath: string): Promise<{
-  requiredContent: RequiredProjectContent;
-  optionalContent: {
-    dirNodeModules: boolean;
-    dirGit: boolean;
-  };
+	requiredContent: RequiredProjectContent;
+	optionalContent: {
+		dirNodeModules: boolean;
+		dirGit: boolean;
+	};
 }> {
-  const configJSONC = path.join(projectPath, cliConfigJsonc);
-  const configTS = path.join(projectPath, cliConfigTs);
+	const configJSONC = path.join(projectPath, cliConfigJsonc);
+	const configTS = path.join(projectPath, cliConfigTs);
 
-  const fileReliverseConfig = (await fs.pathExists(configJSONC)) || (await fs.pathExists(configTS));
+	const fileReliverseConfig =
+		(await fs.pathExists(configJSONC)) || (await fs.pathExists(configTS));
 
-  const filePackageJson = await fs.pathExists(path.join(projectPath, "package.json"));
+	const filePackageJson = await fs.pathExists(
+		path.join(projectPath, "package.json"),
+	);
 
-  const dirNodeModules = await fs.pathExists(path.join(projectPath, "node_modules"));
+	const dirNodeModules = await fs.pathExists(
+		path.join(projectPath, "node_modules"),
+	);
 
-  const dirGit = await fs.pathExists(path.join(projectPath, ".git"));
+	const dirGit = await fs.pathExists(path.join(projectPath, ".git"));
 
-  return {
-    requiredContent: { fileReliverseConfig, filePackageJson },
-    optionalContent: { dirNodeModules, dirGit },
-  };
+	return {
+		requiredContent: { fileReliverseConfig, filePackageJson },
+		optionalContent: { dirNodeModules, dirGit },
+	};
 }

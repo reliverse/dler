@@ -6,41 +6,44 @@ import { relinka } from "@reliverse/relinka";
  * Checks if i18n is already set up in the project
  */
 async function isI18nAlreadySetup(projectPath: string): Promise<boolean> {
-  const checkPaths = [
-    "src/impl/[locale]",
-    "src/impl/[lang]",
-    "src/i18n",
-    "src/locales",
-    "src/translations",
-    "src/config/i18n.ts",
-    "src/utils/i18n.ts",
-  ];
+	const checkPaths = [
+		"src/impl/[locale]",
+		"src/impl/[lang]",
+		"src/i18n",
+		"src/locales",
+		"src/translations",
+		"src/config/i18n.ts",
+		"src/utils/i18n.ts",
+	];
 
-  for (const checkPath of checkPaths) {
-    if (await fs.pathExists(path.join(projectPath, checkPath))) {
-      return true;
-    }
-  }
+	for (const checkPath of checkPaths) {
+		if (await fs.pathExists(path.join(projectPath, checkPath))) {
+			return true;
+		}
+	}
 
-  return false;
+	return false;
 }
 
 export async function setupI18nFiles(projectPath: string): Promise<void> {
-  try {
-    // Check if i18n is already set up
-    if (await isI18nAlreadySetup(projectPath)) {
-      relinka("info", "i18n is already set up in this project, skipping setup.");
-      return;
-    }
+	try {
+		// Check if i18n is already set up
+		if (await isI18nAlreadySetup(projectPath)) {
+			relinka(
+				"info",
+				"i18n is already set up in this project, skipping setup.",
+			);
+			return;
+		}
 
-    // Ensure target directory exists
-    await ensuredir(projectPath);
+		// Ensure target directory exists
+		await ensuredir(projectPath);
 
-    // Generate i18n layout file
-    const layoutPath = path.join(projectPath, "src/impl/layout.tsx");
-    if (!(await fs.pathExists(layoutPath))) {
-      await ensuredir(path.dirname(layoutPath));
-      const layoutContent = `
+		// Generate i18n layout file
+		const layoutPath = path.join(projectPath, "src/impl/layout.tsx");
+		if (!(await fs.pathExists(layoutPath))) {
+			await ensuredir(path.dirname(layoutPath));
+			const layoutContent = `
 import { dir } from "i18next";
 import { languages } from "~/config/i18n";
 import { useTranslation } from "~/impl/utils/i18n";
@@ -70,14 +73,14 @@ export default function RootLayout({
 export function generateStaticParams() {
   return languages.map((lang) => ({ lang }));
 }`;
-      await fs.writeFile(layoutPath, layoutContent);
-      relinka("success", "Generated i18n layout file");
-    }
+			await fs.writeFile(layoutPath, layoutContent);
+			relinka("success", "Generated i18n layout file");
+		}
 
-    // Generate i18n page file
-    const pagePath = path.join(projectPath, "src/impl/page.tsx");
-    if (!(await fs.pathExists(pagePath))) {
-      const pageContent = `
+		// Generate i18n page file
+		const pagePath = path.join(projectPath, "src/impl/page.tsx");
+		if (!(await fs.pathExists(pagePath))) {
+			const pageContent = `
 import { useTranslation } from "~/impl/utils/i18n";
 
 export default async function Home() {
@@ -89,15 +92,15 @@ export default async function Home() {
     </main>
   );
 }`;
-      await fs.writeFile(pagePath, pageContent);
-      relinka("success", "Generated i18n page file");
-    }
+			await fs.writeFile(pagePath, pageContent);
+			relinka("success", "Generated i18n page file");
+		}
 
-    // Generate i18n config
-    const i18nConfigPath = path.join(projectPath, "src/config/i18n.ts");
-    if (!(await fs.pathExists(i18nConfigPath))) {
-      await ensuredir(path.dirname(i18nConfigPath));
-      const i18nConfigContent = `
+		// Generate i18n config
+		const i18nConfigPath = path.join(projectPath, "src/config/i18n.ts");
+		if (!(await fs.pathExists(i18nConfigPath))) {
+			await ensuredir(path.dirname(i18nConfigPath));
+			const i18nConfigContent = `
 export const languages = ["en", "es", "fr"];
 export const defaultLanguage = "en";
 
@@ -106,16 +109,16 @@ export const languageNames = {
   es: "Español",
   fr: "Français",
 } as const;`;
-      await fs.writeFile(i18nConfigPath, i18nConfigContent);
-      relinka("success", "Generated i18n configuration");
-    }
+			await fs.writeFile(i18nConfigPath, i18nConfigContent);
+			relinka("success", "Generated i18n configuration");
+		}
 
-    relinka("success", "Internationalization was successfully integrated.");
-  } catch (error) {
-    relinka(
-      "error",
-      `Error during i18n setup: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    throw error;
-  }
+		relinka("success", "Internationalization was successfully integrated.");
+	} catch (error) {
+		relinka(
+			"error",
+			`Error during i18n setup: ${error instanceof Error ? error.message : String(error)}`,
+		);
+		throw error;
+	}
 }

@@ -1,9 +1,16 @@
 {
-	"name": "cli-dler-example",
+	"name": "@examples/cli",
 	"author": "reliverse",
 	"version": "1.7.153",
 	"main": "./src/mod.ts",
-	"types": "./src/mod.ts",
+	"module": "./src/mod.ts",
+	"exports": {
+		".": "./src/mod.ts"
+	},
+	"files": [
+		"bin",
+		"package.json"
+	],
 	"private": true,
 	"type": "module",
 	"license": "MIT",
@@ -139,7 +146,6 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@reliverse/tsconfig": "workspace:*",
 		"@types/bun": "catalog:",
 		"@biomejs/biome": "catalog:",
 		"@total-typescript/ts-reset": "catalog:",
@@ -152,7 +158,7 @@
 		"@types/shebang-command": "catalog:",
 		"@types/tar-stream": "catalog:",
 		"ultracite": "catalog:",
-		"@typescript/native-preview": "catalog:"
+		"typescript": "^5.9.3"
 	},
 	"keywords": [
 		"rse",

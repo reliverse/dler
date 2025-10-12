@@ -12,21 +12,21 @@ import type { ProjectConfig } from "~/impl/providers/better-t-stack/types";
  * @param context Data to be passed to the Handlebars template.
  */
 export async function processTemplate(
-  srcPath: string,
-  destPath: string,
-  context: ProjectConfig,
+	srcPath: string,
+	destPath: string,
+	context: ProjectConfig,
 ): Promise<void> {
-  try {
-    const templateContent = await fs.readFile(srcPath, "utf-8");
-    const template = handlebars.compile(templateContent);
-    const processedContent = template(context);
+	try {
+		const templateContent = await fs.readFile(srcPath, "utf-8");
+		const template = handlebars.compile(templateContent);
+		const processedContent = template(context);
 
-    await fs.ensureDir(path.dirname(destPath));
-    await fs.writeFile(destPath, processedContent);
-  } catch (error) {
-    relinka("error", `Error processing template ${srcPath}:`, error);
-    throw new Error(`Failed to process template ${srcPath}`);
-  }
+		await fs.ensureDir(path.dirname(destPath));
+		await fs.writeFile(destPath, processedContent);
+	} catch (error) {
+		relinka("error", `Error processing template ${srcPath}:`, error);
+		throw new Error(`Failed to process template ${srcPath}`);
+	}
 }
 
 handlebars.registerHelper("eq", (a, b) => a === b);
@@ -34,6 +34,6 @@ handlebars.registerHelper("and", (a, b) => a && b);
 handlebars.registerHelper("or", (a, b) => a || b);
 
 handlebars.registerHelper(
-  "includes",
-  (array, value) => Array.isArray(array) && array.includes(value),
+	"includes",
+	(array, value) => Array.isArray(array) && array.includes(value),
 );

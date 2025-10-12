@@ -9,7 +9,8 @@ import { updateReliverseMemory } from "./reliverseMemory";
 import type { ReliverseMemory } from "./schemaMemory";
 
 // A custom Octokit with REST endpoint methods.
-export const OctokitWithRest: typeof Octokit = Octokit.plugin(restEndpointMethods);
+export const OctokitWithRest: typeof Octokit =
+	Octokit.plugin(restEndpointMethods);
 // Our user agent string with the CLI version.
 export const octokitUserAgent = `rse/${cliVersion}`;
 // Type alias for OctokitWithRest.
@@ -22,37 +23,41 @@ export type InstanceGithub = InstanceType<typeof OctokitWithRest>;
  * @returns An instance of OctokitWithRest.
  */
 function initOctokitSDK(githubKey: string): InstanceGithub {
-  return new OctokitWithRest({
-    auth: githubKey.trim(),
-    userAgent: octokitUserAgent,
-    throttle: {
-      onRateLimit: (
-        _retryAfter: number,
-        options: {
-          method: string;
-          url: string;
-          request: { retryCount: number };
-        },
-        octokit: InstanceGithub,
-      ) => {
-        octokit.log.warn(`Request quota exhausted for ${options.method} ${options.url}`);
-        // Retry once if no previous retries have been made.
-        return options.request.retryCount === 0;
-      },
-      onSecondaryRateLimit: (
-        _retryAfter: number,
-        options: {
-          method: string;
-          url: string;
-          request: { retryCount: number };
-        },
-        octokit: InstanceGithub,
-      ) => {
-        octokit.log.warn(`Secondary rate limit encountered for ${options.method} ${options.url}`);
-        return options.request.retryCount === 0;
-      },
-    },
-  });
+	return new OctokitWithRest({
+		auth: githubKey.trim(),
+		userAgent: octokitUserAgent,
+		throttle: {
+			onRateLimit: (
+				_retryAfter: number,
+				options: {
+					method: string;
+					url: string;
+					request: { retryCount: number };
+				},
+				octokit: InstanceGithub,
+			) => {
+				octokit.log.warn(
+					`Request quota exhausted for ${options.method} ${options.url}`,
+				);
+				// Retry once if no previous retries have been made.
+				return options.request.retryCount === 0;
+			},
+			onSecondaryRateLimit: (
+				_retryAfter: number,
+				options: {
+					method: string;
+					url: string;
+					request: { retryCount: number };
+				},
+				octokit: InstanceGithub,
+			) => {
+				octokit.log.warn(
+					`Secondary rate limit encountered for ${options.method} ${options.url}`,
+				);
+				return options.request.retryCount === 0;
+			},
+		},
+	});
 }
 
 /**
@@ -67,34 +72,40 @@ function initOctokitSDK(githubKey: string): InstanceGithub {
  * @returns The valid GitHub token.
  */
 export async function ensureGithubToken(
-  memory: ReliverseMemory,
-  maskInput: "prompt" | boolean,
+	memory: ReliverseMemory,
+	maskInput: "prompt" | boolean,
 ): Promise<string> {
-  // If token exists in memory, validate it.
-  if (memory.githubKey) {
-    try {
-      const octokit = initOctokitSDK(memory.githubKey);
-      await octokit.rest.users.getAuthenticated();
-      return memory.githubKey.trim();
-    } catch (error) {
-      relinka("warn", "Existing GitHub token is invalid. Please provide a new one.");
-      relinka("verbose", error instanceof Error ? error.message : String(error));
-    }
-  }
+	// If token exists in memory, validate it.
+	if (memory.githubKey) {
+		try {
+			const octokit = initOctokitSDK(memory.githubKey);
+			await octokit.rest.users.getAuthenticated();
+			return memory.githubKey.trim();
+		} catch (error) {
+			relinka(
+				"warn",
+				"Existing GitHub token is invalid. Please provide a new one.",
+			);
+			relinka(
+				"verbose",
+				error instanceof Error ? error.message : String(error),
+			);
+		}
+	}
 
-  // Prompt the user for a new GitHub token.
-  const token = await inputPrompt({
-    title:
-      "Please enter your GitHub personal access token.\n(It will be securely stored on your machine):",
-    content:
-      "Create one at https://github.com/settings/tokens/new\n" +
-      "Ensure you select the `repo` scope, then click `Generate token`.",
-    mode: maskInput ? "password" : "plain",
-  });
+	// Prompt the user for a new GitHub token.
+	const token = await inputPrompt({
+		title:
+			"Please enter your GitHub personal access token.\n(It will be securely stored on your machine):",
+		content:
+			"Create one at https://github.com/settings/tokens/new\n" +
+			"Ensure you select the `repo` scope, then click `Generate token`.",
+		mode: maskInput ? "password" : "plain",
+	});
 
-  // Save the new token persistently.
-  await updateReliverseMemory({ githubKey: token });
-  return token;
+	// Save the new token persistently.
+	await updateReliverseMemory({ githubKey: token });
+	return token;
 }
 
 /**
@@ -108,12 +119,12 @@ export async function ensureGithubToken(
  * @returns A tuple containing the GitHub token and works as the wrapper for the Octokit instance.
  */
 export async function initGithubSDK(
-  memory: ReliverseMemory,
-  frontendUsername: string,
-  maskInput: "prompt" | boolean,
+	memory: ReliverseMemory,
+	frontendUsername: string,
+	maskInput: "prompt" | boolean,
 ): Promise<[string, InstanceGithub, string]> {
-  const githubUsername = await askUsernameGithub(memory, frontendUsername);
-  const githubToken = await ensureGithubToken(memory, maskInput);
-  const githubInstance = initOctokitSDK(githubToken);
-  return [githubToken, githubInstance, githubUsername];
+	const githubUsername = await askUsernameGithub(memory, frontendUsername);
+	const githubToken = await ensureGithubToken(memory, maskInput);
+	const githubInstance = initOctokitSDK(githubToken);
+	return [githubToken, githubInstance, githubUsername];
 }

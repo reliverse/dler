@@ -2,7 +2,14 @@
 	"name": "@reliverse/filetype-dler-plugin",
 	"version": "1.7.153",
 	"main": "./src/mod.ts",
-	"types": "./src/mod.ts",
+	"module": "./src/mod.ts",
+	"exports": {
+		".": "./src/mod.ts"
+	},
+	"files": [
+		"bin",
+		"package.json"
+	],
 	"description": "Dler plugin for filetype detection",
 	"type": "module",
 	"scripts": {
@@ -29,7 +36,6 @@
 	},
 	"devDependencies": {
 		"@types/bun": "catalog:",
-		"@reliverse/tsconfig": "workspace:*",
-		"@typescript/native-preview": "catalog:"
+		"typescript": "^5.9.3"
 	}
 }

@@ -1,10 +1,32 @@
 {
-	"extends": "@reliverse/tsconfig/base.json",
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"display": "Default",
 	"compilerOptions": {
-		"baseUrl": "../..",
+		"lib": [
+			"ESNext"
+		],
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleDetection": "force",
+		"allowJs": true,
+		"moduleResolution": "bundler",
+		"verbatimModuleSyntax": true,
+		"noEmit": true,
+		"strict": true,
+		"skipLibCheck": true,
+		"resolveJsonModule": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"noPropertyAccessFromIndexSignature": false,
+		"exactOptionalPropertyTypes": false,
+		"noImplicitReturns": false,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+		"baseUrl": ".",
 		"paths": {
 			"~/*": [
-				"./plugins/migrate-dler-plugin/src/*"
+				"./src/*"
 			]
 		}
 	},

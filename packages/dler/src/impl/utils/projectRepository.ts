@@ -9,12 +9,12 @@ import type { VSCodeRepoOption } from "~/impl/providers/reliverse-stack/rs-impl"
 import type { ProjectCategory, ProjectTemplate } from "~/impl/schema/mod";
 import { experimental, recommended } from "~/impl/utils/badgeNotifiers";
 import {
-  DEFAULT_REPOS_CONFIG,
-  generateReposJsonSchema,
-  isReposConfig,
-  type RepoInfo,
-  type ReposConfig,
-  shouldRegenerateSchema,
+	DEFAULT_REPOS_CONFIG,
+	generateReposJsonSchema,
+	isReposConfig,
+	type RepoInfo,
+	type ReposConfig,
+	shouldRegenerateSchema,
 } from "./schemaTemplate";
 
 // ================================================
@@ -28,11 +28,11 @@ export type RepoFromSchema = NonNullable<ProjectTemplate>;
 export type CategoryFromSchema = NonNullable<ProjectCategory>;
 
 export interface CloneOrTemplateRepo {
-  id: RepoFromSchema;
-  author: string;
-  name: string;
-  description: string;
-  category: CategoryFromSchema;
+	id: RepoFromSchema;
+	author: string;
+	name: string;
+	description: string;
+	category: CategoryFromSchema;
 }
 
 export type RepoOption = CloneOrTemplateRepo["id"] | "unknown";
@@ -42,83 +42,84 @@ export type RepoOption = CloneOrTemplateRepo["id"] | "unknown";
 // ================================================
 
 export const REPO_TEMPLATES: CloneOrTemplateRepo[] = [
-  {
-    id: "blefnk/relivator-nextjs-template",
-    author: "blefnk",
-    name: "relivator",
-    description: "Full-featured e-commerce template with auth, payments, etc.",
-    category: "website",
-  },
-  {
-    id: "blefnk/next-react-ts-src-minimal",
-    author: "blefnk",
-    name: "next-react-ts-src-minimal",
-    description: "Essentials only: minimal Next.js with TypeScript template",
-    category: "website",
-  },
-  {
-    id: "blefnk/all-in-one-nextjs-template",
-    author: "blefnk",
-    name: "all-in-one-nextjs-template",
-    description: "Comprehensive Next.js eCommerce template with multiple features",
-    category: "website",
-  },
-  {
-    id: "blefnk/create-t3-app",
-    author: "blefnk",
-    name: "create-t3-app",
-    description: "Type-safe Next.js template with tRPC, Drizzle, and Tailwind",
-    category: "website",
-  },
-  {
-    id: "blefnk/create-next-app",
-    author: "blefnk",
-    name: "create-next-app",
-    description: "Basic Next.js starter template",
-    category: "website",
-  },
-  {
-    id: "blefnk/astro-starlight-template",
-    author: "blefnk",
-    name: "astro-starlight-template",
-    description: "Documentation site template using Astro and Starlight",
-    category: "website",
-  },
-  {
-    id: "blefnk/versator-nextjs-template",
-    author: "blefnk",
-    name: "versator",
-    description: "Versatile Next.js template for various use cases",
-    category: "website",
-  },
-  {
-    id: "microsoft/vscode-extension-samples",
-    author: "microsoft",
-    name: "vscode-extension-samples",
-    description: "Official VS Code extension samples",
-    category: "vscode",
-  },
-  {
-    id: "microsoft/vscode-extension-template",
-    author: "microsoft",
-    name: "vscode-extension-template",
-    description: "Basic VS Code extension template",
-    category: "vscode",
-  },
-  {
-    id: "reliverse/template-browser-extension",
-    author: "reliverse",
-    name: "template-browser-extension",
-    description: "Browser extension starter template",
-    category: "browser",
-  },
-  {
-    id: "blefnk/relivator-docker-template",
-    author: "blefnk",
-    name: "relivator-docker-template",
-    description: "Relivator template with Docker",
-    category: "website",
-  },
+	{
+		id: "blefnk/relivator-nextjs-template",
+		author: "blefnk",
+		name: "relivator",
+		description: "Full-featured e-commerce template with auth, payments, etc.",
+		category: "website",
+	},
+	{
+		id: "blefnk/next-react-ts-src-minimal",
+		author: "blefnk",
+		name: "next-react-ts-src-minimal",
+		description: "Essentials only: minimal Next.js with TypeScript template",
+		category: "website",
+	},
+	{
+		id: "blefnk/all-in-one-nextjs-template",
+		author: "blefnk",
+		name: "all-in-one-nextjs-template",
+		description:
+			"Comprehensive Next.js eCommerce template with multiple features",
+		category: "website",
+	},
+	{
+		id: "blefnk/create-t3-app",
+		author: "blefnk",
+		name: "create-t3-app",
+		description: "Type-safe Next.js template with tRPC, Drizzle, and Tailwind",
+		category: "website",
+	},
+	{
+		id: "blefnk/create-next-app",
+		author: "blefnk",
+		name: "create-next-app",
+		description: "Basic Next.js starter template",
+		category: "website",
+	},
+	{
+		id: "blefnk/astro-starlight-template",
+		author: "blefnk",
+		name: "astro-starlight-template",
+		description: "Documentation site template using Astro and Starlight",
+		category: "website",
+	},
+	{
+		id: "blefnk/versator-nextjs-template",
+		author: "blefnk",
+		name: "versator",
+		description: "Versatile Next.js template for various use cases",
+		category: "website",
+	},
+	{
+		id: "microsoft/vscode-extension-samples",
+		author: "microsoft",
+		name: "vscode-extension-samples",
+		description: "Official VS Code extension samples",
+		category: "vscode",
+	},
+	{
+		id: "microsoft/vscode-extension-template",
+		author: "microsoft",
+		name: "vscode-extension-template",
+		description: "Basic VS Code extension template",
+		category: "vscode",
+	},
+	{
+		id: "reliverse/template-browser-extension",
+		author: "reliverse",
+		name: "template-browser-extension",
+		description: "Browser extension starter template",
+		category: "browser",
+	},
+	{
+		id: "blefnk/relivator-docker-template",
+		author: "blefnk",
+		name: "relivator-docker-template",
+		description: "Relivator template with Docker",
+		category: "website",
+	},
 ];
 
 // ================================================
@@ -126,42 +127,42 @@ export const REPO_TEMPLATES: CloneOrTemplateRepo[] = [
 // ================================================
 
 async function getReposConfigPath(): Promise<string> {
-  await ensuredir(cliHomeRepos);
+	await ensuredir(cliHomeRepos);
 
-  // Regenerate schema if required.
-  if (await shouldRegenerateSchema()) {
-    await generateReposJsonSchema();
-  }
+	// Regenerate schema if required.
+	if (await shouldRegenerateSchema()) {
+		await generateReposJsonSchema();
+	}
 
-  return path.join(cliHomeRepos, "repos.json");
+	return path.join(cliHomeRepos, "repos.json");
 }
 
 async function readReposConfig(): Promise<ReposConfig> {
-  const configPath = await getReposConfigPath();
-  if (!(await fs.pathExists(configPath))) {
-    return DEFAULT_REPOS_CONFIG;
-  }
+	const configPath = await getReposConfigPath();
+	if (!(await fs.pathExists(configPath))) {
+		return DEFAULT_REPOS_CONFIG;
+	}
 
-  try {
-    const content = await fs.readFile(configPath, "utf-8");
-    const parsed = parseJSONC(content);
-    if (isReposConfig(parsed)) {
-      return parsed;
-    }
-  } catch (error) {
-    relinka("warn", "Failed to parse repos.json:", String(error));
-  }
-  return DEFAULT_REPOS_CONFIG;
+	try {
+		const content = await fs.readFile(configPath, "utf-8");
+		const parsed = parseJSONC(content);
+		if (isReposConfig(parsed)) {
+			return parsed;
+		}
+	} catch (error) {
+		relinka("warn", "Failed to parse repos.json:", String(error));
+	}
+	return DEFAULT_REPOS_CONFIG;
 }
 
 async function writeReposConfig(config: ReposConfig): Promise<void> {
-  const configPath = await getReposConfigPath();
-  await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+	const configPath = await getReposConfigPath();
+	await fs.writeFile(configPath, JSON.stringify(config, null, 2));
 }
 
 export async function getRepoInfo(repoId: string): Promise<RepoInfo | null> {
-  const config = await readReposConfig();
-  return config.repos.find((t) => t.id === repoId) ?? null;
+	const config = await readReposConfig();
+	return config.repos.find((t) => t.id === repoId) ?? null;
 }
 
 // ================================================
@@ -169,30 +170,30 @@ export async function getRepoInfo(repoId: string): Promise<RepoInfo | null> {
 // ================================================
 
 interface UnghRepoResponse {
-  repo: {
-    stars: number;
-    forks: number;
-    watchers: number;
-    createdAt: string;
-    updatedAt: string;
-    pushedAt: string;
-    defaultBranch: string;
-  };
+	repo: {
+		stars: number;
+		forks: number;
+		watchers: number;
+		createdAt: string;
+		updatedAt: string;
+		pushedAt: string;
+		defaultBranch: string;
+	};
 }
 
 async function fetchRepoData(
-  owner: string,
-  name: string,
+	owner: string,
+	name: string,
 ): Promise<UnghRepoResponse["repo"] | null> {
-  const url = `https://ungh.cc/repos/${owner}/${name}`;
-  try {
-    // ofetch with generic will automatically parse json using destr
-    const data = await ofetch<UnghRepoResponse>(url);
-    return data.repo;
-  } catch (error) {
-    relinka("warn", "Failed to fetch repo info from ungh:", String(error));
-    return null;
-  }
+	const url = `https://ungh.cc/repos/${owner}/${name}`;
+	try {
+		// ofetch with generic will automatically parse json using destr
+		const data = await ofetch<UnghRepoResponse>(url);
+		return data.repo;
+	} catch (error) {
+		relinka("warn", "Failed to fetch repo info from ungh:", String(error));
+		return null;
+	}
 }
 
 // ================================================
@@ -200,68 +201,68 @@ async function fetchRepoData(
 // ================================================
 
 export async function saveRepoToDevice(
-  repo: CloneOrTemplateRepo,
-  projectPath: string,
+	repo: CloneOrTemplateRepo,
+	projectPath: string,
 ): Promise<void> {
-  try {
-    // Build destination path
-    const repoSavePath = path.join(cliHomeRepos, repo.author, repo.name);
-    await ensuredir(path.dirname(repoSavePath));
-    await fs.copy(projectPath, repoSavePath);
+	try {
+		// Build destination path
+		const repoSavePath = path.join(cliHomeRepos, repo.author, repo.name);
+		await ensuredir(path.dirname(repoSavePath));
+		await fs.copy(projectPath, repoSavePath);
 
-    // Set the .git folder hidden on Windows
-    const gitFolderPath = path.join(repoSavePath, ".git");
-    await setHiddenAttribute(gitFolderPath);
+		// Set the .git folder hidden on Windows
+		const gitFolderPath = path.join(repoSavePath, ".git");
+		await setHiddenAttribute(gitFolderPath);
 
-    // Validate repo ID format
-    const [owner, repoName] = repo.id.split("/");
-    if (!owner || !repoName) {
-      throw new Error(`Invalid repo ID format: ${repo.id}`);
-    }
-    const repoData = await fetchRepoData(owner, repoName);
+		// Validate repo ID format
+		const [owner, repoName] = repo.id.split("/");
+		if (!owner || !repoName) {
+			throw new Error(`Invalid repo ID format: ${repo.id}`);
+		}
+		const repoData = await fetchRepoData(owner, repoName);
 
-    // Construct repository info object
-    const repoInfo: RepoInfo = {
-      id: repo.id,
-      author: repo.author,
-      name: repo.name,
-      description: repo.description,
-      category: repo.category,
-      lastUpdated: new Date().toISOString(),
-      localPath: repoSavePath,
-      github: repoData
-        ? {
-            stars: repoData.stars,
-            forks: repoData.forks,
-            watchers: repoData.watchers,
-            createdAt: repoData.createdAt,
-            updatedAt: repoData.updatedAt,
-            pushedAt: repoData.pushedAt,
-            defaultBranch: repoData.defaultBranch,
-          }
-        : {
-            stars: 0,
-            forks: 0,
-            watchers: 0,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            pushedAt: new Date().toISOString(),
-            defaultBranch: "main",
-          },
-    };
+		// Construct repository info object
+		const repoInfo: RepoInfo = {
+			id: repo.id,
+			author: repo.author,
+			name: repo.name,
+			description: repo.description,
+			category: repo.category,
+			lastUpdated: new Date().toISOString(),
+			localPath: repoSavePath,
+			github: repoData
+				? {
+						stars: repoData.stars,
+						forks: repoData.forks,
+						watchers: repoData.watchers,
+						createdAt: repoData.createdAt,
+						updatedAt: repoData.updatedAt,
+						pushedAt: repoData.pushedAt,
+						defaultBranch: repoData.defaultBranch,
+					}
+				: {
+						stars: 0,
+						forks: 0,
+						watchers: 0,
+						createdAt: new Date().toISOString(),
+						updatedAt: new Date().toISOString(),
+						pushedAt: new Date().toISOString(),
+						defaultBranch: "main",
+					},
+		};
 
-    const config = await readReposConfig();
-    const existingIndex = config.repos.findIndex((t) => t.id === repo.id);
-    if (existingIndex >= 0) {
-      config.repos[existingIndex] = repoInfo;
-    } else {
-      config.repos.push(repoInfo);
-    }
-    await writeReposConfig(config);
-  } catch (error) {
-    relinka("error", "Failed to save repo:", String(error));
-    throw error;
-  }
+		const config = await readReposConfig();
+		const existingIndex = config.repos.findIndex((t) => t.id === repo.id);
+		if (existingIndex >= 0) {
+			config.repos[existingIndex] = repoInfo;
+		} else {
+			config.repos.push(repoInfo);
+		}
+		await writeReposConfig(config);
+	} catch (error) {
+		relinka("error", "Failed to save repo:", String(error));
+		throw error;
+	}
 }
 
 // ================================================
@@ -269,53 +270,53 @@ export async function saveRepoToDevice(
 // ================================================
 
 export const TEMP_FULLSTACK_WEBSITE_TEMPLATE_OPTIONS = {
-  "blefnk/relivator-nextjs-template": {
-    label: `Relivator ${recommended}`,
-    value: "blefnk/relivator-nextjs-template",
-    hint: re.dim("Full-featured template with BetterAuth, Polar, and more"),
-  },
-  "blefnk/versator-nextjs-template": {
-    label: `Versator ${experimental}`,
-    value: "blefnk/versator-nextjs-template",
-    hint: re.dim("Versatile template with Clerk, Stripe, and more"),
-  },
-  "blefnk/next-react-ts-src-minimal": {
-    label: `Next.js Only ${experimental}`,
-    value: "blefnk/next-react-ts-src-minimal",
-    hint: re.dim("Essentials only: minimal Next.js with TypeScript"),
-  },
+	"blefnk/relivator-nextjs-template": {
+		label: `Relivator ${recommended}`,
+		value: "blefnk/relivator-nextjs-template",
+		hint: re.dim("Full-featured template with BetterAuth, Polar, and more"),
+	},
+	"blefnk/versator-nextjs-template": {
+		label: `Versator ${experimental}`,
+		value: "blefnk/versator-nextjs-template",
+		hint: re.dim("Versatile template with Clerk, Stripe, and more"),
+	},
+	"blefnk/next-react-ts-src-minimal": {
+		label: `Next.js Only ${experimental}`,
+		value: "blefnk/next-react-ts-src-minimal",
+		hint: re.dim("Essentials only: minimal Next.js with TypeScript"),
+	},
 } as const satisfies Partial<
-  Record<RepoOption, { label: string; value: RepoOption; hint: string }>
+	Record<RepoOption, { label: string; value: RepoOption; hint: string }>
 >;
 
 export const TEMP_SEPARATED_WEBSITE_TEMPLATE_OPTIONS = {
-  "blefnk/relivator-docker-repo": {
-    label: `${experimental} Relivator Docker Repo`,
-    value: "blefnk/relivator-docker-repo",
-    hint: re.dim("Separated frontend and backend"),
-  },
+	"blefnk/relivator-docker-repo": {
+		label: `${experimental} Relivator Docker Repo`,
+		value: "blefnk/relivator-docker-repo",
+		hint: re.dim("Separated frontend and backend"),
+	},
 };
 
 export const TEMP_VSCODE_TEMPLATE_OPTIONS = {
-  "microsoft/vscode-extension-samples": {
-    label: "VS Code Extension Sample",
-    value: "microsoft/vscode-extension-samples",
-    hint: re.dim("Official VS Code extension samples"),
-  },
-  "microsoft/vscode-extension-template": {
-    label: "VS Code Extension Template",
-    value: "microsoft/vscode-extension-template",
-    hint: re.dim("Basic VS Code extension template"),
-  },
+	"microsoft/vscode-extension-samples": {
+		label: "VS Code Extension Sample",
+		value: "microsoft/vscode-extension-samples",
+		hint: re.dim("Official VS Code extension samples"),
+	},
+	"microsoft/vscode-extension-template": {
+		label: "VS Code Extension Template",
+		value: "microsoft/vscode-extension-template",
+		hint: re.dim("Basic VS Code extension template"),
+	},
 } as const satisfies Record<
-  Exclude<VSCodeRepoOption, "unknown">,
-  { label: string; value: VSCodeRepoOption; hint: string }
+	Exclude<VSCodeRepoOption, "unknown">,
+	{ label: string; value: VSCodeRepoOption; hint: string }
 >;
 
 export const TEMP_BROWSER_TEMPLATE_OPTIONS = {
-  "rsebrowser-extension": {
-    label: "Browser Extension Repo",
-    value: "rsebrowser-extension",
-    hint: re.dim("Browser extension starter repo"),
-  },
+	"rsebrowser-extension": {
+		label: "Browser Extension Repo",
+		value: "rsebrowser-extension",
+		hint: re.dim("Browser extension starter repo"),
+	},
 };

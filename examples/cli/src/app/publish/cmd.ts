@@ -101,16 +101,20 @@ export default defineCommand({
 						? workspacePackages.filter((pkg) => {
 								const includeMatch =
 									config.monorepoWorkspaces?.includePatterns.length === 0 ||
-									config.monorepoWorkspaces?.includePatterns.some((pattern) => {
-										const regex = new RegExp(pattern.replace(/\*/g, ".*"));
-										return regex.test(pkg.name) || regex.test(pkg.path);
-									});
+									config.monorepoWorkspaces?.includePatterns.some(
+										(pattern: string) => {
+											const regex = new RegExp(pattern.replace(/\*/g, ".*"));
+											return regex.test(pkg.name) || regex.test(pkg.path);
+										},
+									);
 
 								const excludeMatch =
-									config.monorepoWorkspaces?.excludePatterns.some((pattern) => {
-										const regex = new RegExp(pattern.replace(/\*/g, ".*"));
-										return regex.test(pkg.name) || regex.test(pkg.path);
-									});
+									config.monorepoWorkspaces?.excludePatterns.some(
+										(pattern: string) => {
+											const regex = new RegExp(pattern.replace(/\*/g, ".*"));
+											return regex.test(pkg.name) || regex.test(pkg.path);
+										},
+									);
 
 								return includeMatch && !excludeMatch;
 							})

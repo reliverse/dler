@@ -7,11 +7,13 @@ import type { ParamsOmitReli } from "~/impl/types/mod";
 /**
  * Sets up the dev environment if the isDev flag is true.
  */
-export async function setupDevModeIfNeeded(params: ParamsOmitReli): Promise<void> {
-  if (params.isDev) {
-    const newCwd = path.join(params.cwd, "tests-runtime");
-    await ensuredir(newCwd);
-    params.cwd = newCwd;
-    relinka("verbose", `Dev mode: using tests-runtime => ${newCwd}`);
-  }
+export async function setupDevModeIfNeeded(
+	params: ParamsOmitReli,
+): Promise<void> {
+	if (params.isDev) {
+		const newCwd = path.join(params.cwd, "tests-runtime");
+		await ensuredir(newCwd);
+		params.cwd = newCwd;
+		relinka("verbose", `Dev mode: using tests-runtime => ${newCwd}`);
+	}
 }

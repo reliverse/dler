@@ -12,80 +12,80 @@ import type { ProjectConfig } from "~/impl/providers/better-t-stack/types";
 import { addPackageDependency } from "~/impl/providers/better-t-stack/utils/add-package-deps";
 
 export async function setupDatabase(config: ProjectConfig): Promise<void> {
-  const { database, orm, dbSetup, backend, projectDir } = config;
+	const { database, orm, dbSetup, backend, projectDir } = config;
 
-  if (backend === "convex" || database === "none") {
-    if (backend !== "convex") {
-      const serverDir = path.join(projectDir, "apps/server");
-      const serverDbDir = path.join(serverDir, "src/db");
-      if (await fs.pathExists(serverDbDir)) {
-        await fs.remove(serverDbDir);
-      }
-    }
-    return;
-  }
+	if (backend === "convex" || database === "none") {
+		if (backend !== "convex") {
+			const serverDir = path.join(projectDir, "apps/server");
+			const serverDbDir = path.join(serverDir, "src/db");
+			if (await fs.pathExists(serverDbDir)) {
+				await fs.remove(serverDbDir);
+			}
+		}
+		return;
+	}
 
-  const s = createSpinner({
-    text: "Setting up database...",
-  });
-  const serverDir = path.join(projectDir, "apps/server");
+	const s = createSpinner({
+		text: "Setting up database...",
+	});
+	const serverDir = path.join(projectDir, "apps/server");
 
-  if (!(await fs.pathExists(serverDir))) {
-    return;
-  }
+	if (!(await fs.pathExists(serverDir))) {
+		return;
+	}
 
-  try {
-    if (orm === "prisma") {
-      await addPackageDependency({
-        dependencies: ["@prisma/client"],
-        devDependencies: ["prisma"],
-        projectDir: serverDir,
-      });
-    } else if (orm === "drizzle") {
-      if (database === "sqlite") {
-        await addPackageDependency({
-          dependencies: ["drizzle-orm", "@libsql/client"],
-          devDependencies: ["drizzle-kit"],
-          projectDir: serverDir,
-        });
-      } else if (database === "postgres") {
-        await addPackageDependency({
-          dependencies: ["drizzle-orm", "pg"],
-          devDependencies: ["drizzle-kit", "@types/pg"],
-          projectDir: serverDir,
-        });
-      } else if (database === "mysql") {
-        await addPackageDependency({
-          dependencies: ["drizzle-orm", "mysql2"],
-          devDependencies: ["drizzle-kit"],
-          projectDir: serverDir,
-        });
-      }
-    } else if (orm === "mongoose") {
-      await addPackageDependency({
-        dependencies: ["mongoose"],
-        devDependencies: [],
-        projectDir: serverDir,
-      });
-    }
+	try {
+		if (orm === "prisma") {
+			await addPackageDependency({
+				dependencies: ["@prisma/client"],
+				devDependencies: ["prisma"],
+				projectDir: serverDir,
+			});
+		} else if (orm === "drizzle") {
+			if (database === "sqlite") {
+				await addPackageDependency({
+					dependencies: ["drizzle-orm", "@libsql/client"],
+					devDependencies: ["drizzle-kit"],
+					projectDir: serverDir,
+				});
+			} else if (database === "postgres") {
+				await addPackageDependency({
+					dependencies: ["drizzle-orm", "pg"],
+					devDependencies: ["drizzle-kit", "@types/pg"],
+					projectDir: serverDir,
+				});
+			} else if (database === "mysql") {
+				await addPackageDependency({
+					dependencies: ["drizzle-orm", "mysql2"],
+					devDependencies: ["drizzle-kit"],
+					projectDir: serverDir,
+				});
+			}
+		} else if (orm === "mongoose") {
+			await addPackageDependency({
+				dependencies: ["mongoose"],
+				devDependencies: [],
+				projectDir: serverDir,
+			});
+		}
 
-    if (database === "sqlite" && dbSetup === "turso") {
-      await setupTurso(config);
-    } else if (database === "postgres") {
-      if (orm === "prisma" && dbSetup === "prisma-postgres") {
-        await setupPrismaPostgres(config);
-      } else if (dbSetup === "neon") {
-        await setupNeonPostgres(config);
-      } else if (dbSetup === "supabase") {
-        await setupSupabase(config);
-      }
-    } else if (database === "mongodb" && dbSetup === "mongodb-atlas") {
-      await setupMongoDBAtlas(config);
-    }
-  } catch (error) {
-    s.fail(re.red("Failed to set up database"));
-    if (error instanceof Error) {
-      relinka("error", re.red(error.message));
-    }
-  }
+		if (database === "sqlite" && dbSetup === "turso") {
+			await setupTurso(config);
+		} else if (database === "postgres") {
+			if (orm === "prisma" && dbSetup === "prisma-postgres") {
+				await setupPrismaPostgres(config);
+			} else if (dbSetup === "neon") {
+				await setupNeonPostgres(config);
+			} else if (dbSetup === "supabase") {
+				await setupSupabase(config);
+			}
+		} else if (database === "mongodb" && dbSetup === "mongodb-atlas") {
+			await setupMongoDBAtlas(config);
+		}
+	} catch (error) {
+		s.fail(re.red("Failed to set up database"));
+		if (error instanceof Error) {
+			relinka("error", re.red(error.message));
+		}
+	}
 }

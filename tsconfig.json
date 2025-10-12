@@ -1,32 +1,35 @@
 {
-    "extends": "./packages/tsconfig/base.json",
-    "compilerOptions": {
-        "baseUrl": ".",
-        "paths": {
-            "~/*": [
-                "./packages/dler/src/*",
-                "./examples/cli/src/*",
-                "./plugins/filetype-dler-plugin/src/*",
-                "./plugins/migrate-dler-plugin/src/*",
-                "./plugins/pack-dler-plugin/src/*"
-            ]
-        }
-    },
-    "include": [
-        "packages/dler/src/**/*.ts",
-        "packages/dler/src/**/*.json",
-        "examples/cli/src/**/*.ts",
-        "examples/cli/src/**/*.json",
-        "plugins/filetype-dler-plugin/src/**/*.ts",
-        "plugins/filetype-dler-plugin/src/**/*.json",
-        "plugins/migrate-dler-plugin/src/**/*.ts",
-        "plugins/migrate-dler-plugin/src/**/*.json",
-        "plugins/pack-dler-plugin/src/**/*.ts",
-        "plugins/pack-dler-plugin/src/**/*.json"
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": false,
+    "lib": [
+      "esnext"
     ],
-    "exclude": [
-        "node_modules",
-        "**/dist",
-        "**/build"
+    "types": [
+      "bun-types"
     ]
+  },
+  "include": [
+    "examples/**/*",
+    "packages/**/*",
+    "plugins/**/*",
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

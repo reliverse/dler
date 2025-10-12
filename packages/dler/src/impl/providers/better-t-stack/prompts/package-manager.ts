@@ -6,34 +6,34 @@ import type { PackageManager } from "~/impl/providers/better-t-stack/types";
 import { getUserPkgManager } from "~/impl/providers/better-t-stack/utils/get-package-manager";
 
 export async function getPackageManagerChoice(
-  packageManager?: PackageManager,
+	packageManager?: PackageManager,
 ): Promise<PackageManager> {
-  if (packageManager !== undefined) return packageManager;
+	if (packageManager !== undefined) return packageManager;
 
-  const detectedPackageManager = getUserPkgManager();
+	const detectedPackageManager = getUserPkgManager();
 
-  const response = await select<PackageManager>({
-    message: "Choose package manager",
-    options: [
-      { value: "npm", label: "npm", hint: "Node Package Manager" },
-      {
-        value: "pnpm",
-        label: "pnpm",
-        hint: "Fast, disk space efficient package manager",
-      },
-      {
-        value: "bun",
-        label: "bun",
-        hint: "All-in-one JavaScript runtime & toolkit",
-      },
-    ],
-    initialValue: detectedPackageManager,
-  });
+	const response = await select<PackageManager>({
+		message: "Choose package manager",
+		options: [
+			{ value: "npm", label: "npm", hint: "Node Package Manager" },
+			{
+				value: "pnpm",
+				label: "pnpm",
+				hint: "Fast, disk space efficient package manager",
+			},
+			{
+				value: "bun",
+				label: "bun",
+				hint: "All-in-one JavaScript runtime & toolkit",
+			},
+		],
+		initialValue: detectedPackageManager,
+	});
 
-  if (isCancel(response)) {
-    cancel(re.red("Operation cancelled"));
-    process.exit(0);
-  }
+	if (isCancel(response)) {
+		cancel(re.red("Operation cancelled"));
+		process.exit(0);
+	}
 
-  return response;
+	return response;
 }

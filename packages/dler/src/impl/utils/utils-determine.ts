@@ -11,53 +11,58 @@ import type { LibConfig } from "~/impl/schema/mod";
  *   - For library builds with libDirName: "dist-libs/{libDirName}/jsr" or "dist-libs/{libDirName}/npm"
  */
 export function determineDistName(
-  filePath: string,
-  isJsr: "" | boolean,
-  libsList?: Record<string, LibConfig>,
+	filePath: string,
+	isJsr: "" | boolean,
+	libsList?: Record<string, LibConfig>,
 ): string {
-  // If isJsr is an empty string, return "root"
-  if (isJsr === "") {
-    return "root";
-  }
+	// If isJsr is an empty string, return "root"
+	if (isJsr === "") {
+		return "root";
+	}
 
-  // First determine the base distribution type based on isJsr flag
-  const baseDistName = isJsr ? "dist-jsr" : "dist-npm";
+	// First determine the base distribution type based on isJsr flag
+	const baseDistName = isJsr ? "dist-jsr" : "dist-npm";
 
-  // Check if this is a library path by looking for "/libs/" or "\libs\" in the path
-  const isLibraryPath = filePath.includes("/libs/") || filePath.includes("\\libs\\");
+	// Check if this is a library path by looking for "/libs/" or "\libs\" in the path
+	const isLibraryPath =
+		filePath.includes("/libs/") || filePath.includes("\\libs\\");
 
-  if (!isLibraryPath) {
-    // For non-library paths, just return the base distribution name
-    return baseDistName;
-  }
+	if (!isLibraryPath) {
+		// For non-library paths, just return the base distribution name
+		return baseDistName;
+	}
 
-  // For library paths, extract the library name
-  const libPathRegex = /[/\\]libs[/\\]([^/\\]+)/;
-  const libPathResult = libPathRegex.exec(filePath);
-  const extractedLibName = libPathResult?.[1];
+	// For library paths, extract the library name
+	const libPathRegex = /[/\\]libs[/\\]([^/\\]+)/;
+	const libPathResult = libPathRegex.exec(filePath);
+	const extractedLibName = libPathResult?.[1];
 
-  if (!extractedLibName) {
-    // If we couldn't extract a library name for some reason, fall back to the base name
-    return baseDistName;
-  }
+	if (!extractedLibName) {
+		// If we couldn't extract a library name for some reason, fall back to the base name
+		return baseDistName;
+	}
 
-  // If we have access to libs config, check for libDirName
-  if (libsList) {
-    // Try to find the library config by matching the extracted library name
-    for (const [libName, libConfig] of Object.entries(libsList)) {
-      // For scoped packages like @reliverse/dler-sdk, extract the part after /
-      const simplifiedLibName = libName.startsWith("@") ? libName.split("/")[1] : libName;
+	// If we have access to libs config, check for libDirName
+	if (libsList) {
+		// Try to find the library config by matching the extracted library name
+		for (const [libName, libConfig] of Object.entries(libsList)) {
+			// For scoped packages like @reliverse/dler-sdk, extract the part after /
+			const simplifiedLibName = libName.startsWith("@")
+				? libName.split("/")[1]
+				: libName;
 
-      // Check if this library matches our extracted name
-      if (simplifiedLibName === extractedLibName && libConfig.libDirName) {
-        // Use libDirName if available
-        return isJsr
-          ? `dist-libs/${libConfig.libDirName}/jsr`
-          : `dist-libs/${libConfig.libDirName}/npm`;
-      }
-    }
-  }
+			// Check if this library matches our extracted name
+			if (simplifiedLibName === extractedLibName && libConfig.libDirName) {
+				// Use libDirName if available
+				return isJsr
+					? `dist-libs/${libConfig.libDirName}/jsr`
+					: `dist-libs/${libConfig.libDirName}/npm`;
+			}
+		}
+	}
 
-  // Return the default library distribution path based on the extracted name
-  return isJsr ? `dist-libs/${extractedLibName}/jsr` : `dist-libs/${extractedLibName}/npm`;
+	// Return the default library distribution path based on the extracted name
+	return isJsr
+		? `dist-libs/${extractedLibName}/jsr`
+		: `dist-libs/${extractedLibName}/npm`;
 }
