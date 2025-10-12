@@ -1,0 +1,21 @@
+{
+	"extends": "@reliverse/tsconfig/base.json",
+	"compilerOptions": {
+		"baseUrl": "../..",
+		"paths": {
+			"~/*": [
+				"./plugins/pack-dler-plugin/src/*"
+			],
+			"@reliverse/filetype-dler-plugin": [
+				"./plugins/filetype-dler-plugin/src/mod.ts"
+			]
+		}
+	},
+	"include": [
+		"src/**/*.ts",
+		"src/**/*.json"
+	],
+	"exclude": [
+		"node_modules"
+	]
+}

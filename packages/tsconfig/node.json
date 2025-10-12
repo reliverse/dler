@@ -1,0 +1,10 @@
+{
+	"extends": "./base.json",
+	"compilerOptions": {
+		"types": ["node", "bun"],
+		"moduleResolution": "bundler",
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true
+	}
+}

@@ -1,32 +1,32 @@
 {
-  "compilerOptions": {
-    "paths": {
-      "~/*": ["./src/*"],
-      "@/*": ["./example/*"]
+    "extends": "./packages/tsconfig/base.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "~/*": [
+                "./packages/dler/src/*",
+                "./examples/cli/src/*",
+                "./plugins/filetype-dler-plugin/src/*",
+                "./plugins/migrate-dler-plugin/src/*",
+                "./plugins/pack-dler-plugin/src/*"
+            ]
+        }
     },
-    "lib": ["ESNext"],
-    "baseUrl": ".",
-    "target": "ESNext",
-    "module": "preserve",
-    "allowJs": true,
-    "noEmit": true,
-    "strict": true,
-    "moduleDetection": "force",
-    "moduleResolution": "bundler",
-    "verbatimModuleSyntax": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noUnusedParameters": true,
-    "noUnusedLocals": true,
-    "strictNullChecks": true,
-    "exactOptionalPropertyTypes": false,
-    "noPropertyAccessFromIndexSignature": false
-  },
-  "include": ["example/**/*.ts", "src/**/*.ts", "release.ts", "reliverse.ts"],
-  "exclude": ["node_modules", "dist*"]
+    "include": [
+        "packages/dler/src/**/*.ts",
+        "packages/dler/src/**/*.json",
+        "examples/cli/src/**/*.ts",
+        "examples/cli/src/**/*.json",
+        "plugins/filetype-dler-plugin/src/**/*.ts",
+        "plugins/filetype-dler-plugin/src/**/*.json",
+        "plugins/migrate-dler-plugin/src/**/*.ts",
+        "plugins/migrate-dler-plugin/src/**/*.json",
+        "plugins/pack-dler-plugin/src/**/*.ts",
+        "plugins/pack-dler-plugin/src/**/*.json"
+    ],
+    "exclude": [
+        "node_modules",
+        "**/dist",
+        "**/build"
+    ]
 }

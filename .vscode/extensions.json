@@ -1,7 +1,8 @@
 {
   "recommendations": [
-    "aaron-bond.better-comments",
+    "typescriptteam.native-preview",
     "biomejs.biome",
+    "aaron-bond.better-comments",
     "chunsen.bracket-select",
     "davidanson.vscode-markdownlint",
     "fabiospampinato.vscode-open-multiple-files",

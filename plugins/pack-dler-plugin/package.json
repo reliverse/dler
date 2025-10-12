@@ -1,0 +1,37 @@
+{
+	"name": "@reliverse/pack-dler-plugin",
+	"author": "reliverse",
+	"version": "1.7.153",
+	"main": "./src/mod.ts",
+	"types": "./src/mod.ts",
+	"description": "Dler plugin for packing templates",
+	"license": "MIT",
+	"type": "module",
+	"keywords": [
+		"dler",
+		"plugin",
+		"pack"
+	],
+	"scripts": {
+		"typecheck": "tsc --noEmit -p tsconfig.json",
+		"format": "biome check --write --unsafe",
+		"check": "bun typecheck && bun format"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/reliverse/dler",
+		"directory": "packages/pack-dler-plugin"
+	},
+	"dependencies": {
+		"@reliverse/filetype-dler-plugin": "workspace:*",
+		"@reliverse/pathkit": "catalog:",
+		"@reliverse/relinka": "catalog:",
+		"jiti": "catalog:",
+		"strip-json-comments": "catalog:"
+	},
+	"devDependencies": {
+		"@types/bun": "catalog:",
+		"@reliverse/tsconfig": "workspace:*",
+		"@typescript/native-preview": "catalog:"
+	}
+}
