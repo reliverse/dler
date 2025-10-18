@@ -4,17 +4,17 @@ import { cancel, confirm, isCancel } from "@reliverse/rempts";
 import { DEFAULT_CONFIG } from "~/impl/providers/better-t-stack/constants";
 
 export async function getinstallChoice(install?: boolean): Promise<boolean> {
-	if (install !== undefined) return install;
+  if (install !== undefined) return install;
 
-	const response = await confirm({
-		message: "Install dependencies?",
-		initialValue: DEFAULT_CONFIG.install,
-	});
+  const response = await confirm({
+    message: "Install dependencies?",
+    initialValue: DEFAULT_CONFIG.install,
+  });
 
-	if (isCancel(response)) {
-		cancel(re.red("Operation cancelled"));
-		process.exit(0);
-	}
+  if (isCancel(response)) {
+    cancel(re.red("Operation cancelled"));
+    process.exit(0);
+  }
 
-	return response;
+  return response;
 }

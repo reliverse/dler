@@ -268,7 +268,7 @@ export async function replaceDependenciesWithCatalogRefs(
 		if (replacedCount > 0) {
 			await fs.writeFile(
 				packageJsonPath,
-				JSON.stringify(packageJson, null, 2) + "\n",
+				`${JSON.stringify(packageJson, null, 2)}\n`,
 				"utf8",
 			);
 		}
@@ -332,7 +332,7 @@ export async function restoreCatalogReferences(
 		if (restoredCount > 0) {
 			await fs.writeFile(
 				packageJsonPath,
-				JSON.stringify(packageJson, null, 2) + "\n",
+				`${JSON.stringify(packageJson, null, 2)}\n`,
 				"utf8",
 			);
 		}
@@ -373,7 +373,7 @@ export async function updateRootWithCatalog(
 
 		await fs.writeFile(
 			rootPackageJsonPath,
-			JSON.stringify(packageJson, null, 2) + "\n",
+			`${JSON.stringify(packageJson, null, 2)}\n`,
 			"utf8",
 		);
 	} catch (error) {
@@ -420,7 +420,7 @@ export async function removeCatalogFromRoot(
 
 		await fs.writeFile(
 			rootPackageJsonPath,
-			JSON.stringify(packageJson, null, 2) + "\n",
+			`${JSON.stringify(packageJson, null, 2)}\n`,
 			"utf8",
 		);
 	} catch (error) {
@@ -562,7 +562,7 @@ export async function migrateToCatalog(
 		if (!workspaceResults.has(dep.packageJsonPath)) {
 			workspaceResults.set(dep.packageJsonPath, []);
 		}
-		workspaceResults.get(dep.packageJsonPath)!.push(dep);
+		workspaceResults.get(dep.packageJsonPath)?.push(dep);
 	}
 
 	// Process each workspace package
@@ -809,7 +809,7 @@ export function displayMigrationResults(results: MigrationResult[]): void {
 	const byAction = results.reduce(
 		(acc, result) => {
 			if (!acc[result.action]) acc[result.action] = [];
-			acc[result.action]!.push(result);
+			acc[result.action]?.push(result);
 			return acc;
 		},
 		{} as Record<string, MigrationResult[]>,

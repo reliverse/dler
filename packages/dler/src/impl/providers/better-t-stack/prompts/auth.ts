@@ -4,27 +4,27 @@ import { DEFAULT_CONFIG } from "~/impl/providers/better-t-stack/constants";
 import type { Backend } from "~/impl/providers/better-t-stack/types";
 
 export async function getAuthChoice(
-	auth: boolean | undefined,
-	hasDatabase: boolean,
-	backend?: Backend,
+  auth: boolean | undefined,
+  hasDatabase: boolean,
+  backend?: Backend,
 ): Promise<boolean> {
-	if (backend === "convex") {
-		return false;
-	}
+  if (backend === "convex") {
+    return false;
+  }
 
-	if (!hasDatabase) return false;
+  if (!hasDatabase) return false;
 
-	if (auth !== undefined) return auth;
+  if (auth !== undefined) return auth;
 
-	const response = await confirm({
-		message: "Add authentication with Better-Auth?",
-		initialValue: DEFAULT_CONFIG.auth,
-	});
+  const response = await confirm({
+    message: "Add authentication with Better-Auth?",
+    initialValue: DEFAULT_CONFIG.auth,
+  });
 
-	if (isCancel(response)) {
-		cancel(re.red("Operation cancelled"));
-		process.exit(0);
-	}
+  if (isCancel(response)) {
+    cancel(re.red("Operation cancelled"));
+    process.exit(0);
+  }
 
-	return response;
+  return response;
 }

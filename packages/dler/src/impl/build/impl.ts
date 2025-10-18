@@ -51,6 +51,7 @@ export async function dlerBuild({
 	depsOnly,
 	showGraph,
 	cleanCacheFlag,
+	cwd,
 }: {
 	flow: "build" | "pub";
 	timer: PerfTimer;
@@ -64,6 +65,7 @@ export async function dlerBuild({
 	depsOnly?: boolean;
 	showGraph?: boolean;
 	cleanCacheFlag?: boolean;
+	cwd?: string;
 }) {
 	let effectiveConfig = config;
 	let shouldShowSpinner = false;
@@ -149,9 +151,20 @@ export async function dlerBuild({
 		}
 
 		// Check if main project source directory exists
+		const projectRoot = cwd || PROJECT_ROOT;
 		const mainSrcDir = path.join(
-			PROJECT_ROOT,
+			projectRoot,
 			effectiveConfig.commonEntrySrcDir,
+		);
+		relinka("verbose", `Project root: ${projectRoot}`);
+		relinka(
+			"verbose",
+			`CommonEntrySrcDir: ${effectiveConfig.commonEntrySrcDir}`,
+		);
+		relinka("verbose", `Main source directory: ${mainSrcDir}`);
+		relinka(
+			"verbose",
+			`Config loaded from: ${config ? "provided" : "default"}`,
 		);
 		const mainSrcExists = await fs.pathExists(mainSrcDir);
 
@@ -182,15 +195,13 @@ export async function dlerBuild({
 					projectDescription:
 						"Dler plugin for code migration and modernization codemods",
 					projectLicense: "MIT",
-					commonEntrySrcDir: path.join(
-						pkg.path,
-						effectiveConfig.commonEntrySrcDir,
-					), // Use config's commonEntrySrcDir
+					commonEntrySrcDir: path.join(pkg.path, "src"), // Use "src" directory in workspace package
 					commonEntryFile: "mod.ts", // Default entry file for workspace packages
-					// Override dist directories to be package-specific
-					distNpmDirName: path.join("dist-workspace", pkg.name, "npm"),
-					distJsrDirName: path.join("dist-workspace", pkg.name, "jsr"),
-					libsDirDist: path.join("dist-workspace", pkg.name, "libs"),
+					// Always write directly into the package directory for workspaces
+					distNpmDirName: pkg.path,
+					distJsrDirName: pkg.path,
+					libsDirDist: pkg.path,
+					isWorkspacePackage: true,
 					// Get CLI config for this package, fallback to main project config
 					commonIsCLI: {
 						[pkg.name]: effectiveConfig.commonIsCLI[pkg.name] ||
@@ -248,8 +259,8 @@ export async function dlerBuild({
 				// Check for workspace-specific README.md and LICENSE files
 				const workspaceReadmePath = path.join(pkg.path, "README.md");
 				const workspaceLicensePath = path.join(pkg.path, "LICENSE");
-				const rootReadmePath = path.join(PROJECT_ROOT, "README.md");
-				const rootLicensePath = path.join(PROJECT_ROOT, "LICENSE");
+				const rootReadmePath = path.join(projectRoot, "README.md");
+				const rootLicensePath = path.join(projectRoot, "LICENSE");
 
 				// Use workspace README.md if it exists, otherwise use root README.md
 				if (await fs.pathExists(workspaceReadmePath)) {
@@ -400,7 +411,7 @@ export async function dlerBuild({
 
 		// Clean up previous run artifacts
 		if (effectiveConfig.logsFreshFile) {
-			await fs.remove(path.join(PROJECT_ROOT, effectiveConfig.logsFileName));
+			await fs.remove(path.join(projectRoot, effectiveConfig.logsFileName));
 		}
 		await removeDistFolders(
 			effectiveConfig.distNpmDirName,
@@ -470,7 +481,7 @@ export async function dlerBuild({
 
 		// Clean up temp directories
 		if (effectiveConfig.postBuildSettings?.deleteDistTmpAfterBuild) {
-			await fs.remove(path.join(PROJECT_ROOT, "dist-tmp"));
+			await fs.remove(path.join(projectRoot, "dist-tmp"));
 		}
 
 		// Complete multi-step spinner with success message

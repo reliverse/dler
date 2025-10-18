@@ -1,7 +1,7 @@
 {
 	"name": "@examples/cli",
 	"author": "reliverse",
-	"version": "1.7.153",
+	"version": "1.7.154",
 	"main": "./src/mod.ts",
 	"module": "./src/mod.ts",
 	"exports": {

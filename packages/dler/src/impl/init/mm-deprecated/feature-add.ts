@@ -5,22 +5,22 @@ import type { IntegrationConfig } from "~/impl/types/mod";
 
 // Integration configurations
 export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
-	drizzle: {
-		name: "Drizzle",
-		dependencies: ["drizzle-orm"],
-		devDependencies: ["drizzle-kit"],
-		files: [
-			{
-				path: "drizzle.config.ts",
-				content: `import type { Config } from "drizzle-kit";
+  drizzle: {
+    name: "Drizzle",
+    dependencies: ["drizzle-orm"],
+    devDependencies: ["drizzle-kit"],
+    files: [
+      {
+        path: "drizzle.config.ts",
+        content: `import type { Config } from "drizzle-kit";
   export default {
     schema: "./src/db/schema.ts",
     out: "./drizzle",
   } satisfies Config;`,
-			},
-			{
-				path: "src/db/schema.ts",
-				content: `import { sql } from "drizzle-orm";
+      },
+      {
+        path: "src/db/schema.ts",
+        content: `import { sql } from "drizzle-orm";
   import { sqliteTable, integer, text } from "drizzle-orm/sqlite";
   
   export const users = sqliteTable("users", {
@@ -31,24 +31,24 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
       .notNull()
       .default(sql\`CURRENT_TIMESTAMP\`),
   });`,
-			},
-		],
-		scripts: {
-			"db:push": "drizzle-kit push:sqlite",
-			"db:studio": "drizzle-kit studio",
-		},
-		envVars: {
-			DATABASE_URL: "file:./sqlite.db",
-		},
-	},
-	prisma: {
-		name: "Prisma",
-		dependencies: ["@prisma/client"],
-		devDependencies: ["prisma"],
-		files: [
-			{
-				path: "prisma/schema.prisma",
-				content: `datasource db {
+      },
+    ],
+    scripts: {
+      "db:push": "drizzle-kit push:sqlite",
+      "db:studio": "drizzle-kit studio",
+    },
+    envVars: {
+      DATABASE_URL: "file:./sqlite.db",
+    },
+  },
+  prisma: {
+    name: "Prisma",
+    dependencies: ["@prisma/client"],
+    devDependencies: ["prisma"],
+    files: [
+      {
+        path: "prisma/schema.prisma",
+        content: `datasource db {
     provider = "postgresql"
     url      = env("DATABASE_URL")
   }
@@ -63,25 +63,25 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
     name      String?
     createdAt DateTime @default(now())
   }`,
-			},
-		],
-		scripts: {
-			"db:push": "prisma db push",
-			"db:pull": "prisma db pull",
-			"db:generate": "prisma generate",
-			"db:studio": "prisma studio",
-		},
-		envVars: {
-			DATABASE_URL: "postgresql://user:password@localhost:5432/mydb",
-		},
-	},
-	stripe: {
-		name: "Stripe",
-		dependencies: ["stripe"],
-		files: [
-			{
-				path: "src/lib/stripe.ts",
-				content: `import Stripe from "stripe";
+      },
+    ],
+    scripts: {
+      "db:push": "prisma db push",
+      "db:pull": "prisma db pull",
+      "db:generate": "prisma generate",
+      "db:studio": "prisma studio",
+    },
+    envVars: {
+      DATABASE_URL: "postgresql://user:password@localhost:5432/mydb",
+    },
+  },
+  stripe: {
+    name: "Stripe",
+    dependencies: ["stripe"],
+    files: [
+      {
+        path: "src/lib/stripe.ts",
+        content: `import Stripe from "stripe";
   
   if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error("Missing STRIPE_SECRET_KEY");
@@ -91,22 +91,22 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
     apiVersion: "2024-11-20.acacia",
     typescript: true,
   });`,
-			},
-		],
-		envVars: {
-			STRIPE_SECRET_KEY: "your_stripe_secret_key",
-			STRIPE_WEBHOOK_SECRET: "your_stripe_webhook_secret",
-			STRIPE_PRICE_ID: "your_stripe_price_id",
-		},
-	},
-	"next-auth": {
-		name: "NextAuth.js",
-		dependencies: ["next-auth"],
-		devDependencies: ["@types/next-auth"],
-		files: [
-			{
-				path: "src/lib/auth.ts",
-				content: `import { NextAuthOptions } from "next-auth";
+      },
+    ],
+    envVars: {
+      STRIPE_SECRET_KEY: "your_stripe_secret_key",
+      STRIPE_WEBHOOK_SECRET: "your_stripe_webhook_secret",
+      STRIPE_PRICE_ID: "your_stripe_price_id",
+    },
+  },
+  "next-auth": {
+    name: "NextAuth.js",
+    dependencies: ["next-auth"],
+    devDependencies: ["@types/next-auth"],
+    files: [
+      {
+        path: "src/lib/auth.ts",
+        content: `import { NextAuthOptions } from "next-auth";
   import GithubProvider from "next-auth/providers/github";
   
   export const authOptions: NextAuthOptions = {
@@ -117,40 +117,40 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
       }),
     ],
   };`,
-			},
-		],
-		envVars: {
-			NEXTAUTH_SECRET: "your_nextauth_secret",
-			GITHUB_ID: "your_github_client_id",
-			GITHUB_SECRET: "your_github_client_secret",
-		},
-	},
-	resend: {
-		name: "Resend",
-		dependencies: ["resend"],
-		files: [
-			{
-				path: "src/lib/email.ts",
-				content: `import { Resend } from "resend";
+      },
+    ],
+    envVars: {
+      NEXTAUTH_SECRET: "your_nextauth_secret",
+      GITHUB_ID: "your_github_client_id",
+      GITHUB_SECRET: "your_github_client_secret",
+    },
+  },
+  resend: {
+    name: "Resend",
+    dependencies: ["resend"],
+    files: [
+      {
+        path: "src/lib/email.ts",
+        content: `import { Resend } from "resend";
   
   if (!process.env.RESEND_API_KEY) {
     throw new Error("Missing RESEND_API_KEY");
   }
   
   export const resend = new Resend(process.env.RESEND_API_KEY);`,
-			},
-		],
-		envVars: {
-			RESEND_API_KEY: "your_resend_api_key",
-		},
-	},
-	tailwind: {
-		name: "Tailwind CSS",
-		dependencies: ["tailwindcss", "postcss", "autoprefixer"],
-		files: [
-			{
-				path: "tailwind.config.js",
-				content: `/** @type {import('tailwindcss').Config} */
+      },
+    ],
+    envVars: {
+      RESEND_API_KEY: "your_resend_api_key",
+    },
+  },
+  tailwind: {
+    name: "Tailwind CSS",
+    dependencies: ["tailwindcss", "postcss", "autoprefixer"],
+    files: [
+      {
+        path: "tailwind.config.js",
+        content: `/** @type {import('tailwindcss').Config} */
   module.exports = {
     content: [
       "./src/**/*.{js,ts,jsx,tsx}",
@@ -160,63 +160,63 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
     },
     plugins: [],
   }`,
-			},
-			{
-				path: "postcss.config.js",
-				content: `module.exports = {
+      },
+      {
+        path: "postcss.config.js",
+        content: `module.exports = {
     plugins: {
       tailwindcss: {},
       autoprefixer: {},
     },
   }`,
-			},
-			{
-				path: "src/styles/globals.css",
-				content: `@tailwind base;
+      },
+      {
+        path: "src/styles/globals.css",
+        content: `@tailwind base;
   @tailwind components;
   @tailwind utilities;`,
-			},
-		],
-	},
-	"bun-test": {
-		name: "Bun Test",
-		dependencies: [],
-		devDependencies: ["bun-types"],
-		files: [
-			{
-				path: "src/__tests__/example.test.ts",
-				content: `import { expect, test, describe } from "bun:test";
+      },
+    ],
+  },
+  "bun-test": {
+    name: "Bun Test",
+    dependencies: [],
+    devDependencies: ["bun-types"],
+    files: [
+      {
+        path: "src/__tests__/example.test.ts",
+        content: `import { expect, test, describe } from "bun:test";
   
   describe("example", () => {
     test("should work", () => {
       expect(1 + 1).toBe(2);
     });
   });`,
-			},
-		],
-		scripts: {
-			test: "bun test",
-			"test:watch": "bun test --watch",
-		},
-	},
-	vitest: {
-		name: "Vitest",
-		dependencies: [],
-		devDependencies: ["vitest", "@vitest/ui"],
-		files: [
-			{
-				path: "src/__tests__/example.test.ts",
-				content: `import { expect, test, describe } from 'vitest';
+      },
+    ],
+    scripts: {
+      test: "bun test",
+      "test:watch": "bun test --watch",
+    },
+  },
+  vitest: {
+    name: "Vitest",
+    dependencies: [],
+    devDependencies: ["vitest", "@vitest/ui"],
+    files: [
+      {
+        path: "src/__tests__/example.test.ts",
+        content: `import { expect, test, describe } from 'vitest';
   
   describe('example', () => {
     test('should work', () => {
       expect(1 + 1).toBe(2);
     });
   });`,
-			},
-			{
-				path: "vitest.config.ts",
-				content: `import { defineConfig } from 'vitest/config';
+      },
+      {
+        path: "vitest.config.ts",
+        content: `import { defineConfig } from 'vitest/config';
   
   export default defineConfig({
     test: {
@@ -225,29 +225,29 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
       include: ['src/**/*.{test,spec}.{js,ts}'],
     },
   });`,
-			},
-		],
-		scripts: {
-			test: "vitest",
-			"test:ui": "vitest --ui",
-		},
-	},
-	jest: {
-		name: "Jest",
-		dependencies: [],
-		devDependencies: ["jest", "@types/jest", "ts-jest"],
-		files: [
-			{
-				path: "src/__tests__/example.test.ts",
-				content: `describe('example', () => {
+      },
+    ],
+    scripts: {
+      test: "vitest",
+      "test:ui": "vitest --ui",
+    },
+  },
+  jest: {
+    name: "Jest",
+    dependencies: [],
+    devDependencies: ["jest", "@types/jest", "ts-jest"],
+    files: [
+      {
+        path: "src/__tests__/example.test.ts",
+        content: `describe('example', () => {
     test('should work', () => {
       expect(1 + 1).toBe(2);
     });
   });`,
-			},
-			{
-				path: "jest.config.js",
-				content: `/** @type {import('ts-jest').JestConfigWithTsJest} */
+      },
+      {
+        path: "jest.config.js",
+        content: `/** @type {import('ts-jest').JestConfigWithTsJest} */
   module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
@@ -256,29 +256,29 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
       '^~/(.*)$': '<rootDir>/src/$1',
     },
   };`,
-			},
-		],
-		scripts: {
-			test: "jest",
-			"test:watch": "jest --watch",
-		},
-	},
-	"better-auth": {
-		name: "Better Auth",
-		dependencies: [
-			"better-auth",
-			"@better-fetch/fetch",
-			"better-auth/plugins/two-factor",
-			"better-auth/plugins/organizations",
-			"better-auth/plugins/rate-limit",
-			"better-auth/plugins/next-cookies",
-			"better-auth/plugins/social-auth",
-		],
-		devDependencies: ["@better-auth/cli"],
-		files: [
-			{
-				path: "src/lib/auth.ts",
-				content: `import { betterAuth } from "better-auth";
+      },
+    ],
+    scripts: {
+      test: "jest",
+      "test:watch": "jest --watch",
+    },
+  },
+  "better-auth": {
+    name: "Better Auth",
+    dependencies: [
+      "better-auth",
+      "@better-fetch/fetch",
+      "better-auth/plugins/two-factor",
+      "better-auth/plugins/organizations",
+      "better-auth/plugins/rate-limit",
+      "better-auth/plugins/next-cookies",
+      "better-auth/plugins/social-auth",
+    ],
+    devDependencies: ["@better-auth/cli"],
+    files: [
+      {
+        path: "src/lib/auth.ts",
+        content: `import { betterAuth } from "better-auth";
   import { drizzleAdapter } from "better-auth/adapters/drizzle";
   import { twoFactor } from "better-auth/plugins/two-factor";
   import { organizations } from "better-auth/plugins/organizations";
@@ -336,10 +336,10 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
       nextCookies(), // Make sure this is the last plugin
     ],
   });`,
-			},
-			{
-				path: "src/lib/auth-client.ts",
-				content: `import { createAuthClient } from "better-auth/react";
+      },
+      {
+        path: "src/lib/auth-client.ts",
+        content: `import { createAuthClient } from "better-auth/react";
   import { twoFactorClient } from "better-auth/plugins/two-factor/client";
   import { organizationsClient } from "better-auth/plugins/organizations/client";
   import { socialAuthClient } from "better-auth/plugins/social-auth/client";
@@ -363,10 +363,10 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
     organizations,
     social,
   } = authClient;`,
-			},
-			{
-				path: "src/impl/auth/sign-in/page.tsx",
-				content: `"use client";
+      },
+      {
+        path: "src/impl/auth/sign-in/page.tsx",
+        content: `"use client";
   
   import { useState } from "react";
   import { authClient } from "@/lib/auth-client";
@@ -454,10 +454,10 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
       </div>
     );
   }`,
-			},
-			{
-				path: "src/impl/auth/error/page.tsx",
-				content: `"use client";
+      },
+      {
+        path: "src/impl/auth/error/page.tsx",
+        content: `"use client";
   
   import { useSearchParams } from "next/navigation";
   
@@ -478,44 +478,44 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
       </div>
     );
   }`,
-			},
-		],
-		scripts: {
-			"db:generate": "better-auth-cli generate",
-			"db:migrate": "better-auth-cli migrate",
-		},
-		envVars: {
-			BETTER_AUTH_SECRET: "generate_a_secure_random_string",
-			BETTER_AUTH_URL: "http://localhost:3000",
-			NEXT_PUBLIC_APP_NAME: "Your App Name",
-			GITHUB_CLIENT_ID: "your_github_client_id",
-			GITHUB_CLIENT_SECRET: "your_github_client_secret",
-			GOOGLE_CLIENT_ID: "your_google_client_id",
-			GOOGLE_CLIENT_SECRET: "your_google_client_secret",
-			DISCORD_CLIENT_ID: "your_discord_client_id",
-			DISCORD_CLIENT_SECRET: "your_discord_client_secret",
-		},
-		postInstall: async (cwd: string) => {
-			// Run database migrations after installation
-			try {
-				await execa("npx", ["@better-auth/cli", "migrate"], { cwd });
-				relinka("success", "Better Auth database migrations completed");
-			} catch (error) {
-				relinka(
-					"error",
-					"Failed to run Better Auth migrations:",
-					error instanceof Error ? error.message : String(error),
-				);
-			}
-		},
-	},
-	"next-intl": {
-		name: "next-intl",
-		dependencies: ["next-intl"],
-		files: [
-			{
-				path: "src/i18n.ts",
-				content: `import {getRequestConfig} from 'next-intl/server';
+      },
+    ],
+    scripts: {
+      "db:generate": "better-auth-cli generate",
+      "db:migrate": "better-auth-cli migrate",
+    },
+    envVars: {
+      BETTER_AUTH_SECRET: "generate_a_secure_random_string",
+      BETTER_AUTH_URL: "http://localhost:3000",
+      NEXT_PUBLIC_APP_NAME: "Your App Name",
+      GITHUB_CLIENT_ID: "your_github_client_id",
+      GITHUB_CLIENT_SECRET: "your_github_client_secret",
+      GOOGLE_CLIENT_ID: "your_google_client_id",
+      GOOGLE_CLIENT_SECRET: "your_google_client_secret",
+      DISCORD_CLIENT_ID: "your_discord_client_id",
+      DISCORD_CLIENT_SECRET: "your_discord_client_secret",
+    },
+    postInstall: async (cwd: string) => {
+      // Run database migrations after installation
+      try {
+        await execa("npx", ["@better-auth/cli", "migrate"], { cwd });
+        relinka("success", "Better Auth database migrations completed");
+      } catch (error) {
+        relinka(
+          "error",
+          "Failed to run Better Auth migrations:",
+          error instanceof Error ? error.message : String(error),
+        );
+      }
+    },
+  },
+  "next-intl": {
+    name: "next-intl",
+    dependencies: ["next-intl"],
+    files: [
+      {
+        path: "src/i18n.ts",
+        content: `import {getRequestConfig} from 'next-intl/server';
   import {notFound} from 'next/navigation';
    
   // Can be imported from a shared config
@@ -529,10 +529,10 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
       messages: (await import(\`./messages/\${locale}.json\`)).default
     };
   });`,
-			},
-			{
-				path: "src/middleware.ts",
-				content: `import createMiddleware from 'next-intl/middleware';
+      },
+      {
+        path: "src/middleware.ts",
+        content: `import createMiddleware from 'next-intl/middleware';
    
   export default createMiddleware({
     // A list of all locales that are supported
@@ -546,50 +546,50 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
     // Match only internationalized pathnames
     matcher: ['/', '/(es|fr)/:path*']
   };`,
-			},
-			{
-				path: "src/messages/en.json",
-				content: `{
+      },
+      {
+        path: "src/messages/en.json",
+        content: `{
     "Index": {
       "title": "Hello world!"
     }
   }`,
-			},
-		],
-	},
+      },
+    ],
+  },
 
-	"next-international": {
-		name: "next-international",
-		dependencies: ["next-international"],
-		files: [
-			{
-				path: "src/i18n/index.ts",
-				content: `import {createI18n} from 'next-international'
+  "next-international": {
+    name: "next-international",
+    dependencies: ["next-international"],
+    files: [
+      {
+        path: "src/i18n/index.ts",
+        content: `import {createI18n} from 'next-international'
    
   export const {useI18n, useScopedI18n, I18nProvider, getLocaleProps} = createI18n({
     en: () => import('./en'),
     es: () => import('./es'),
     fr: () => import('./fr'),
   })`,
-			},
-			{
-				path: "src/i18n/en.ts",
-				content: `export default {
+      },
+      {
+        path: "src/i18n/en.ts",
+        content: `export default {
     hello: 'Hello',
     welcome: 'Welcome to our site',
   } as const`,
-			},
-		],
-	},
+      },
+    ],
+  },
 
-	lingui: {
-		name: "Lingui",
-		dependencies: ["@lingui/react"],
-		devDependencies: ["@lingui/cli", "@lingui/macro"],
-		files: [
-			{
-				path: "lingui.config.ts",
-				content: `import { defineConfig } from '@lingui/conf'
+  lingui: {
+    name: "Lingui",
+    dependencies: ["@lingui/react"],
+    devDependencies: ["@lingui/cli", "@lingui/macro"],
+    files: [
+      {
+        path: "lingui.config.ts",
+        content: `import { defineConfig } from '@lingui/conf'
   
   export default defineConfig({
     locales: ['en', 'es', 'fr'],
@@ -600,10 +600,10 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
     }],
     format: 'po',
   })`,
-			},
-			{
-				path: "src/i18n.ts",
-				content: `import { i18n } from '@lingui/core'
+      },
+      {
+        path: "src/i18n.ts",
+        content: `import { i18n } from '@lingui/core'
   import { en, es, fr } from 'make-plural/plurals'
   
   export const locales = {
@@ -624,11 +624,11 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
     i18n.load(locale, messages)
     i18n.activate(locale)
   }`,
-			},
-		],
-		scripts: {
-			"i18n:extract": "lingui extract",
-			"i18n:compile": "lingui compile",
-		},
-	},
+      },
+    ],
+    scripts: {
+      "i18n:extract": "lingui extract",
+      "i18n:compile": "lingui compile",
+    },
+  },
 };

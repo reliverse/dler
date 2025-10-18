@@ -124,6 +124,7 @@ export async function dlerPub(
 		enableCache?: boolean;
 		showGraph?: boolean;
 		cleanCacheFlag?: boolean;
+		cwd?: string;
 	},
 ) {
 	let effectiveConfig = config;
@@ -194,6 +195,7 @@ export async function dlerPub(
 			// Build and publish each package sequentially
 			for (const pkg of sortedPackages) {
 				relinka("info", `Processing package: ${pkg.name}`);
+				relinka("verbose", `Package path: ${pkg.path}`);
 
 				// Create a modified config for this package using root config as base
 				const packageConfig = {
@@ -206,10 +208,11 @@ export async function dlerPub(
 					projectLicense: "MIT",
 					commonEntrySrcDir: path.join(pkg.path, "src"), // Assume src dir in package
 					commonEntryFile: "mod.ts", // Default entry file for workspace packages
-					// Override dist directories to be package-specific
-					distNpmDirName: path.join("dist-workspace", pkg.name, "npm"),
-					distJsrDirName: path.join("dist-workspace", pkg.name, "jsr"),
-					libsDirDist: path.join("dist-workspace", pkg.name, "libs"),
+					// Always write directly into the package directory for workspaces
+					distNpmDirName: pkg.path,
+					distJsrDirName: pkg.path,
+					libsDirDist: pkg.path,
+					isWorkspacePackage: true,
 					// Get CLI config for this package, fallback to main project config
 					commonIsCLI: {
 						[pkg.name]: effectiveConfig.commonIsCLI[pkg.name] ||
@@ -229,6 +232,11 @@ export async function dlerPub(
 					corePackageJsonPath: pkg.packageJsonPath,
 				};
 
+				relinka(
+					"verbose",
+					`Package config commonEntrySrcDir: ${packageConfig.commonEntrySrcDir}`,
+				);
+
 				// Build this package first
 				await dlerBuild({
 					flow: "pub",
@@ -241,6 +249,7 @@ export async function dlerPub(
 					enableCache: options?.enableCache,
 					showGraph: false, // Already shown above if requested
 					cleanCacheFlag: false, // Already cleaned above if requested
+					cwd: options?.cwd,
 				});
 
 				// Copy the workspace package's package.json to the dist directory
@@ -447,6 +456,7 @@ export async function dlerPub(
 			debugOnlyCopyNonBuildFiles: false,
 			debugDontCopyNonBuildFiles: false,
 			disableOwnSpinner: true, // disable build's spinner if pub is showing one
+			cwd: options?.cwd,
 		});
 
 		const buildConfig = buildResult?.effectiveConfig || effectiveConfig;

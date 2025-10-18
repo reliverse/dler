@@ -2,6 +2,7 @@ import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { glob } from "glob";
+import micromatch from "micromatch";
 import { readPackageJson } from "../monorepo/monorepo-mod";
 
 export interface WorkspacePackage {
@@ -204,4 +205,78 @@ export function filterPackagesByPatterns(
   }
 
   return filtered;
+}
+
+/**
+ * Filters workspace packages based on package name patterns
+ * Supports glob patterns for package names
+ */
+export function filterPackagesByFilters(
+  packages: WorkspacePackage[],
+  filters: string[],
+): WorkspacePackage[] {
+  if (filters.length === 0) {
+    return packages;
+  }
+
+  const matchedPackages = new Set<WorkspacePackage>();
+  const unmatchedFilters: string[] = [];
+
+  for (const filter of filters) {
+    const trimmedFilter = filter.trim().replace(/^["']|["']$/g, ""); // Remove quotes
+    let hasMatches = false;
+
+    for (const pkg of packages) {
+      let isMatch = false;
+
+      // Match against package name using glob patterns
+      try {
+        isMatch = micromatch.isMatch(pkg.name, trimmedFilter);
+      } catch {
+        // Fallback to simple equality if micromatch fails
+        isMatch = pkg.name === trimmedFilter;
+      }
+
+      if (isMatch) {
+        matchedPackages.add(pkg);
+        hasMatches = true;
+      }
+    }
+
+    if (!hasMatches) {
+      unmatchedFilters.push(trimmedFilter);
+    }
+  }
+
+  // Warn about unmatched filters
+  if (unmatchedFilters.length > 0) {
+    relinka("warn", `No packages matched filter(s): ${unmatchedFilters.join(", ")}`);
+  }
+
+  const result = Array.from(matchedPackages);
+  relinka(
+    "verbose",
+    `Filtered to ${result.length} packages: ${result.map((p) => p.name).join(", ")}`,
+  );
+
+  return result;
+}
+
+/**
+ * Parses filter arguments from CLI input
+ * Supports both comma-separated strings and arrays
+ */
+export function parseFilterArgs(filterArg: string | string[] | undefined): string[] {
+  if (!filterArg) {
+    return [];
+  }
+
+  if (Array.isArray(filterArg)) {
+    return filterArg.flatMap((f) => f.split(",").map((s) => s.trim())).filter(Boolean);
+  }
+
+  return filterArg
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 }

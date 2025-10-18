@@ -4,9 +4,11 @@ import {
 	createPerfTimer,
 	detectWorkspaces,
 	dlerBuild,
+	filterPackagesByFilters,
 	finalizeBuild,
 	getConfigDler,
 	getCurrentWorkingDirectory,
+	parseFilterArgs,
 	promptWorkspacePackages,
 	showPackageSummary,
 } from "@reliverse/dler";
@@ -143,6 +145,12 @@ export default defineCommand({
 			type: "boolean",
 			description: "Clean the build cache before building",
 		},
+		// Filter args
+		filter: {
+			type: "array",
+			description:
+				"Filter packages by name (supports glob patterns, e.g., '@reliverse/*', 'my-package')",
+		},
 	}),
 	run: async ({ args }) => {
 		const {
@@ -172,6 +180,7 @@ export default defineCommand({
 			"deps-only": depsOnly,
 			graph,
 			"clean-cache": cleanCache,
+			filter,
 		} = args;
 
 		const isCI = Boolean(ci);
@@ -192,9 +201,13 @@ export default defineCommand({
 		const timer = createPerfTimer();
 		const config = await getConfigDler();
 
-		// Check for workspace packages if enabled
+		// Parse filter arguments
+		const filterArgs = parseFilterArgs(filter);
+		const hasFilters = filterArgs.length > 0;
+
+		// Check for workspace packages if enabled or if filters are provided
 		let workspacePackages = null;
-		if (config.monorepoWorkspaces?.enabled && !isCI) {
+		if ((config.monorepoWorkspaces?.enabled && !isCI) || hasFilters) {
 			workspacePackages = await detectWorkspaces(cwdStr);
 			relinka(
 				"verbose",
@@ -202,34 +215,53 @@ export default defineCommand({
 			);
 
 			if (workspacePackages && workspacePackages.length > 0) {
-				// Filter packages based on config patterns
-				const filteredPackages =
-					config.monorepoWorkspaces?.includePatterns.length > 0 ||
-					config.monorepoWorkspaces?.excludePatterns.length > 0
-						? workspacePackages.filter((pkg) => {
-								const includeMatch =
-									config.monorepoWorkspaces?.includePatterns.length === 0 ||
-									config.monorepoWorkspaces?.includePatterns.some(
-										(pattern: string) => {
-											const regex = new RegExp(pattern.replace(/\*/g, ".*"));
-											return regex.test(pkg.name) || regex.test(pkg.path);
-										},
-									);
+				let filteredPackages = workspacePackages;
 
-								const excludeMatch =
-									config.monorepoWorkspaces?.excludePatterns.some(
-										(pattern: string) => {
-											const regex = new RegExp(pattern.replace(/\*/g, ".*"));
-											return regex.test(pkg.name) || regex.test(pkg.path);
-										},
-									);
+				// Apply CLI filters if provided
+				if (hasFilters) {
+					filteredPackages = filterPackagesByFilters(
+						workspacePackages,
+						filterArgs,
+					);
+					if (filteredPackages.length === 0) {
+						relinka(
+							"info",
+							"No packages matched the provided filters. Exiting.",
+						);
+						await commonEndActions({ withEndPrompt: true });
+						return;
+					}
+				} else {
+					// Apply config patterns if no CLI filters
+					filteredPackages =
+						config.monorepoWorkspaces?.includePatterns.length > 0 ||
+						config.monorepoWorkspaces?.excludePatterns.length > 0
+							? workspacePackages.filter((pkg) => {
+									const includeMatch =
+										config.monorepoWorkspaces?.includePatterns.length === 0 ||
+										config.monorepoWorkspaces?.includePatterns.some(
+											(pattern: string) => {
+												const regex = new RegExp(pattern.replace(/\*/g, ".*"));
+												return regex.test(pkg.name) || regex.test(pkg.path);
+											},
+										);
 
-								return includeMatch && !excludeMatch;
-							})
-						: workspacePackages;
+									const excludeMatch =
+										config.monorepoWorkspaces?.excludePatterns.some(
+											(pattern: string) => {
+												const regex = new RegExp(pattern.replace(/\*/g, ".*"));
+												return regex.test(pkg.name) || regex.test(pkg.path);
+											},
+										);
+
+									return includeMatch && !excludeMatch;
+								})
+							: workspacePackages;
+				}
 
 				if (filteredPackages.length > 0) {
-					const skipPrompt = Boolean(all) || isCI;
+					// Skip prompts when filters are provided or when all flag is set
+					const skipPrompt = Boolean(all) || isCI || hasFilters;
 					const selectedPackages = await promptWorkspacePackages(
 						filteredPackages,
 						"build",
@@ -316,6 +348,7 @@ export default defineCommand({
 			depsOnly: Boolean(depsOnly),
 			showGraph: Boolean(graph),
 			cleanCacheFlag: Boolean(cleanCache),
+			cwd: cwdStr,
 		});
 		const shouldShowSpinner =
 			config.commonDisableSpinner === false && !noSpinner;

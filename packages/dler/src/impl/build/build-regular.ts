@@ -69,8 +69,11 @@ export async function regular_buildJsrDist(
 	const cliConfig = commonIsCLI[packageName] ||
 		commonIsCLI["."] ||
 		commonIsCLI["main"] || { enabled: false, scripts: {} };
-	const outDirRoot = path.join(process.cwd(), distJsrDirName);
-	const outDirBin = path.join(outDirRoot, config.commonBuildOutDir || "bin");
+    const outDirRoot = path.join(process.cwd(), distJsrDirName);
+    const jsrOutDirName = config.isWorkspacePackage
+        ? `${config.commonBuildOutDir || "bin"}-jsr`
+        : config.commonBuildOutDir || "bin";
+    const outDirBin = path.join(outDirRoot, jsrOutDirName);
 	const singleFile = path.join(
 		process.cwd(),
 		commonEntrySrcDir,
@@ -194,8 +197,8 @@ export async function regular_buildNpmDist(
 	const cliConfig = commonIsCLI[packageName] ||
 		commonIsCLI["."] ||
 		commonIsCLI["main"] || { enabled: false, scripts: {} };
-	const outDirRoot = path.join(process.cwd(), distNpmDirName);
-	const outDirBin = path.join(outDirRoot, config.commonBuildOutDir || "bin");
+    const outDirRoot = path.join(process.cwd(), distNpmDirName);
+    const outDirBin = path.join(outDirRoot, config.commonBuildOutDir || "bin");
 	const singleFile = path.join(
 		process.cwd(),
 		commonEntrySrcDir,
@@ -646,10 +649,11 @@ async function regular_performCommonBuildSteps({
 	);
 
 	// Copy some root files (README, LICENSE, etc.)
-	await copyRootFile(
-		outDirRoot,
-		config.publishArtifacts?.global || ["README.md", "LICENSE"],
-	);
+    await copyRootFile(
+        outDirRoot,
+        config.publishArtifacts?.global || ["README.md", "LICENSE"],
+        { skipIfExists: Boolean(config.isWorkspacePackage) },
+    );
 
 	// Copy a few more if it's JSR and it's a CLI
 	if (isJsr && commonIsCLI.enabled) {
@@ -660,7 +664,11 @@ async function regular_performCommonBuildSteps({
 			"drizzle.config.ts",
 			"schema.json",
 		];
-		await copyRootFile(outDirRoot, jsrFiles);
+        await copyRootFile(
+            outDirRoot,
+            jsrFiles,
+            { skipIfExists: Boolean(config.isWorkspacePackage) },
+        );
 	}
 
 	// Rename the main entry file

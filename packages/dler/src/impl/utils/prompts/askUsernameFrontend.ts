@@ -6,55 +6,45 @@ import type { ReliverseConfig } from "~/impl/schema/mod";
 
 // TODO: make it reliverse memory-based again instead of rse config-based
 export async function askUsernameFrontend(
-	config: ReliverseConfig,
-	shouldAskIfExists: boolean,
+  config: ReliverseConfig,
+  shouldAskIfExists: boolean,
 ): Promise<string | null> {
-	if (!shouldAskIfExists && config.projectAuthor && config.projectAuthor !== "")
-		return config.projectAuthor;
+  if (!shouldAskIfExists && config.projectAuthor && config.projectAuthor !== "")
+    return config.projectAuthor;
 
-	const previousName =
-		typeof config.projectAuthor === "string" ? config.projectAuthor : "";
-	const hasPreviousName = previousName !== "";
+  const previousName = typeof config.projectAuthor === "string" ? config.projectAuthor : "";
+  const hasPreviousName = previousName !== "";
 
-	// Determine placeholder and content based on previous config
-	const placeholder = hasPreviousName ? previousName : DEFAULT_CLI_USERNAME;
-	const content = hasPreviousName
-		? `Last used name: ${re.cyanBright(placeholder)} (just press <Enter> to use it again)`
-		: `You can press Enter to use the default name: ${re.cyanBright(DEFAULT_CLI_USERNAME)}`;
+  // Determine placeholder and content based on previous config
+  const placeholder = hasPreviousName ? previousName : DEFAULT_CLI_USERNAME;
+  const content = hasPreviousName
+    ? `Last used name: ${re.cyanBright(placeholder)} (just press <Enter> to use it again)`
+    : `You can press Enter to use the default name: ${re.cyanBright(DEFAULT_CLI_USERNAME)}`;
 
-	// Prompt the user for a name
-	const userInput = await inputPrompt({
-		title:
-			"Enter a name/username for the frontend (e.g. footer, contact page, etc.):",
-		content,
-		placeholder: hasPreviousName
-			? "No worries about @ symbol anywhere, I'll add it for you."
-			: `[Default: ${placeholder}] No worries about @ symbol anywhere, I'll add it for you.`,
-		defaultValue: hasPreviousName ? previousName : DEFAULT_CLI_USERNAME,
-	});
+  // Prompt the user for a name
+  const userInput = await inputPrompt({
+    title: "Enter a name/username for the frontend (e.g. footer, contact page, etc.):",
+    content,
+    placeholder: hasPreviousName
+      ? "No worries about @ symbol anywhere, I'll add it for you."
+      : `[Default: ${placeholder}] No worries about @ symbol anywhere, I'll add it for you.`,
+    defaultValue: hasPreviousName ? previousName : DEFAULT_CLI_USERNAME,
+  });
 
-	// If user presses Enter (empty input):
-	// - If there's a previous name, use it without saving to memory again
-	// - If no previous name, use DEFAULT_CLI_USERNAME and save it
-	const trimmedInput = userInput.trim();
-	if (trimmedInput === "") {
-		if (hasPreviousName) {
-			return previousName;
-		}
-		await updateReliverseConfig(
-			process.cwd(),
-			{ projectAuthor: DEFAULT_CLI_USERNAME },
-			false,
-		);
-		// deleteLastLine();
-		return DEFAULT_CLI_USERNAME;
-	}
+  // If user presses Enter (empty input):
+  // - If there's a previous name, use it without saving to memory again
+  // - If no previous name, use DEFAULT_CLI_USERNAME and save it
+  const trimmedInput = userInput.trim();
+  if (trimmedInput === "") {
+    if (hasPreviousName) {
+      return previousName;
+    }
+    await updateReliverseConfig(process.cwd(), { projectAuthor: DEFAULT_CLI_USERNAME }, false);
+    // deleteLastLine();
+    return DEFAULT_CLI_USERNAME;
+  }
 
-	// User provided a new name, save it to memory
-	await updateReliverseConfig(
-		process.cwd(),
-		{ projectAuthor: trimmedInput },
-		false,
-	);
-	return trimmedInput;
+  // User provided a new name, save it to memory
+  await updateReliverseConfig(process.cwd(), { projectAuthor: trimmedInput }, false);
+  return trimmedInput;
 }

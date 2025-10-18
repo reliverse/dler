@@ -19,14 +19,12 @@
     "lib": [
       "esnext"
     ],
-    "types": [
-      "bun-types"
-    ]
+    "outDir": "./bin"
   },
   "include": [
     "examples/**/*",
     "packages/**/*",
-    "plugins/**/*",
+    "plugins/**/*"
   ],
   "exclude": [
     "node_modules",

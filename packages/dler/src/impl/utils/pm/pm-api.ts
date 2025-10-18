@@ -5,10 +5,10 @@ import { readPackageJSON } from "pkg-types";
 import type { OperationOptions, PackageManagerName } from "./pm-types";
 
 import {
-	doesDependencyExist,
-	executeCommand,
-	getWorkspaceArgs,
-	resolveOperationOptions,
+  doesDependencyExist,
+  executeCommand,
+  getWorkspaceArgs,
+  resolveOperationOptions,
 } from "./pm-utils";
 
 /**
@@ -22,36 +22,32 @@ import {
  * @param options.filter - Filter workspaces to operate on (e.g., 'pkg-*', '!pkg-c').
  */
 export async function installDependencies(
-	options: Pick<
-		OperationOptions,
-		"cwd" | "silent" | "packageManager" | "filter"
-	> & {
-		frozenLockFile?: boolean;
-	} = {},
+  options: Pick<OperationOptions, "cwd" | "silent" | "packageManager" | "filter"> & {
+    frozenLockFile?: boolean;
+  } = {},
 ) {
-	const resolvedOptions = await resolveOperationOptions(options);
+  const resolvedOptions = await resolveOperationOptions(options);
 
-	const pmToFrozenLockfileInstallCommand: Record<PackageManagerName, string[]> =
-		{
-			npm: ["ci"],
-			yarn: ["install", "--immutable"],
-			bun: ["install", "--frozen-lockfile"],
-			pnpm: ["install", "--frozen-lockfile"],
-			deno: ["install", "--frozen"],
-		};
+  const pmToFrozenLockfileInstallCommand: Record<PackageManagerName, string[]> = {
+    npm: ["ci"],
+    yarn: ["install", "--immutable"],
+    bun: ["install", "--frozen-lockfile"],
+    pnpm: ["install", "--frozen-lockfile"],
+    deno: ["install", "--frozen"],
+  };
 
-	const commandArgs = options.frozenLockFile
-		? pmToFrozenLockfileInstallCommand[resolvedOptions.packageManager.name]
-		: ["install"];
+  const commandArgs = options.frozenLockFile
+    ? pmToFrozenLockfileInstallCommand[resolvedOptions.packageManager.name]
+    : ["install"];
 
-	// Add workspace filter arguments
-	const workspaceArgs = getWorkspaceArgs(resolvedOptions);
-	const finalArgs = [...commandArgs, ...workspaceArgs];
+  // Add workspace filter arguments
+  const workspaceArgs = getWorkspaceArgs(resolvedOptions);
+  const finalArgs = [...commandArgs, ...workspaceArgs];
 
-	await executeCommand(resolvedOptions.packageManager.command, finalArgs, {
-		cwd: resolvedOptions.cwd,
-		silent: resolvedOptions.silent,
-	});
+  await executeCommand(resolvedOptions.packageManager.command, finalArgs, {
+    cwd: resolvedOptions.cwd,
+    silent: resolvedOptions.silent,
+  });
 }
 
 /**
@@ -66,91 +62,85 @@ export async function installDependencies(
  * @param options.workspace - The name of the workspace to use.
  * @param options.global - Whether to run the command in global mode.
  */
-export async function addDependency(
-	name: string | string[],
-	options: OperationOptions = {},
-) {
-	const resolvedOptions = await resolveOperationOptions(options);
+export async function addDependency(name: string | string[], options: OperationOptions = {}) {
+  const resolvedOptions = await resolveOperationOptions(options);
 
-	const names = Array.isArray(name) ? name : [name];
+  const names = Array.isArray(name) ? name : [name];
 
-	if (resolvedOptions.packageManager.name === "deno") {
-		for (let i = 0; i < names.length; i++) {
-			if (!/^(npm|jsr|file):.+$/.test(names[i] || "")) {
-				names[i] = `npm:${names[i]}`;
-			}
-		}
-	}
+  if (resolvedOptions.packageManager.name === "deno") {
+    for (let i = 0; i < names.length; i++) {
+      if (!/^(npm|jsr|file):.+$/.test(names[i] || "")) {
+        names[i] = `npm:${names[i]}`;
+      }
+    }
+  }
 
-	// TOOD: we might filter for empty values too for more safety
-	if (names.length === 0) {
-		return;
-	}
+  // TOOD: we might filter for empty values too for more safety
+  if (names.length === 0) {
+    return;
+  }
 
-	const args = (
-		resolvedOptions.packageManager.name === "yarn"
-			? [
-					...getWorkspaceArgs(resolvedOptions),
-					// Global is not supported in berry: yarnpkg/berry#821
-					resolvedOptions.global &&
-					resolvedOptions.packageManager.majorVersion === "1"
-						? "global"
-						: "",
-					"add",
-					resolvedOptions.dev ? "-D" : "",
-					...names,
-				]
-			: [
-					resolvedOptions.packageManager.name === "npm" ? "install" : "add",
-					...getWorkspaceArgs(resolvedOptions),
-					resolvedOptions.dev ? "-D" : "",
-					resolvedOptions.global ? "-g" : "",
-					...names,
-				]
-	).filter(Boolean);
+  const args = (
+    resolvedOptions.packageManager.name === "yarn"
+      ? [
+          ...getWorkspaceArgs(resolvedOptions),
+          // Global is not supported in berry: yarnpkg/berry#821
+          resolvedOptions.global && resolvedOptions.packageManager.majorVersion === "1"
+            ? "global"
+            : "",
+          "add",
+          resolvedOptions.dev ? "-D" : "",
+          ...names,
+        ]
+      : [
+          resolvedOptions.packageManager.name === "npm" ? "install" : "add",
+          ...getWorkspaceArgs(resolvedOptions),
+          resolvedOptions.dev ? "-D" : "",
+          resolvedOptions.global ? "-g" : "",
+          ...names,
+        ]
+  ).filter(Boolean);
 
-	await executeCommand(resolvedOptions.packageManager.command, args, {
-		cwd: resolvedOptions.cwd,
-		silent: resolvedOptions.silent,
-	});
+  await executeCommand(resolvedOptions.packageManager.command, args, {
+    cwd: resolvedOptions.cwd,
+    silent: resolvedOptions.silent,
+  });
 
-	if (options.installPeerDependencies) {
-		const existingPkg = await readPackageJSON(resolvedOptions.cwd);
-		const peerDeps: string[] = [];
-		const peerDevDeps: string[] = [];
-		for (const _name of names) {
-			const pkgName = _name.match(/^(.[^@]+)/)?.[0];
-			const pkg = await readPackageJSON(pkgName, {
-				url: resolvedOptions.cwd,
-			}).catch(() => ({}) as Record<string, undefined>);
-			if (!pkg.peerDependencies || pkg.name !== pkgName) {
-				continue;
-			}
-			for (const [peerDependency, version] of Object.entries(
-				pkg.peerDependencies,
-			)) {
-				if (pkg.peerDependenciesMeta?.[peerDependency]?.optional) {
-					continue;
-				}
-				// TODO: refactor to getSpecifiedPackageInfo later on
-				if (
-					existingPkg.dependencies?.[peerDependency] ||
-					existingPkg.devDependencies?.[peerDependency]
-				) {
-					continue;
-				}
-				// TODO: Make sure peerDependency is not already installed in user project
-				const isDev = pkg.peerDependenciesMeta?.[peerDependency]?.dev;
-				(isDev ? peerDevDeps : peerDeps).push(`${peerDependency}@${version}`);
-			}
-		}
-		if (peerDeps.length > 0) {
-			await addDependency(peerDeps, { ...resolvedOptions });
-		}
-		if (peerDevDeps.length > 0) {
-			await addDevDependency(peerDevDeps, { ...resolvedOptions });
-		}
-	}
+  if (options.installPeerDependencies) {
+    const existingPkg = await readPackageJSON(resolvedOptions.cwd);
+    const peerDeps: string[] = [];
+    const peerDevDeps: string[] = [];
+    for (const _name of names) {
+      const pkgName = _name.match(/^(.[^@]+)/)?.[0];
+      const pkg = await readPackageJSON(pkgName, {
+        url: resolvedOptions.cwd,
+      }).catch(() => ({}) as Record<string, undefined>);
+      if (!pkg.peerDependencies || pkg.name !== pkgName) {
+        continue;
+      }
+      for (const [peerDependency, version] of Object.entries(pkg.peerDependencies)) {
+        if (pkg.peerDependenciesMeta?.[peerDependency]?.optional) {
+          continue;
+        }
+        // TODO: refactor to getSpecifiedPackageInfo later on
+        if (
+          existingPkg.dependencies?.[peerDependency] ||
+          existingPkg.devDependencies?.[peerDependency]
+        ) {
+          continue;
+        }
+        // TODO: Make sure peerDependency is not already installed in user project
+        const isDev = pkg.peerDependenciesMeta?.[peerDependency]?.dev;
+        (isDev ? peerDevDeps : peerDeps).push(`${peerDependency}@${version}`);
+      }
+    }
+    if (peerDeps.length > 0) {
+      await addDependency(peerDeps, { ...resolvedOptions });
+    }
+    if (peerDevDeps.length > 0) {
+      await addDevDependency(peerDevDeps, { ...resolvedOptions });
+    }
+  }
 }
 
 /**
@@ -166,10 +156,10 @@ export async function addDependency(
  *
  */
 export async function addDevDependency(
-	name: string | string[],
-	options: Omit<OperationOptions, "dev"> = {},
+  name: string | string[],
+  options: Omit<OperationOptions, "dev"> = {},
 ) {
-	await addDependency(name, { ...options, dev: true });
+  await addDependency(name, { ...options, dev: true });
 }
 
 /**
@@ -185,47 +175,41 @@ export async function addDevDependency(
  * @param options.global - Whether to run the command in global mode.
  * @param options.filter - Filter workspaces to operate on (e.g., 'pkg-*', '!pkg-c').
  */
-export async function removeDependency(
-	name: string | string[],
-	options: OperationOptions = {},
-) {
-	const resolvedOptions = await resolveOperationOptions(options);
+export async function removeDependency(name: string | string[], options: OperationOptions = {}) {
+  const resolvedOptions = await resolveOperationOptions(options);
 
-	const names = Array.isArray(name) ? name : [name];
+  const names = Array.isArray(name) ? name : [name];
 
-	if (names.length === 0) {
-		return;
-	}
+  if (names.length === 0) {
+    return;
+  }
 
-	const args = (
-		resolvedOptions.packageManager.name === "yarn"
-			? [
-					// Global is not supported in berry: yarnpkg/berry#821
-					resolvedOptions.global &&
-					resolvedOptions.packageManager.majorVersion === "1"
-						? "global"
-						: "",
-					...getWorkspaceArgs(resolvedOptions),
-					"remove",
-					resolvedOptions.dev ? "-D" : "",
-					resolvedOptions.global ? "-g" : "",
-					...names,
-				]
-			: [
-					resolvedOptions.packageManager.name === "npm"
-						? "uninstall"
-						: "remove",
-					...getWorkspaceArgs(resolvedOptions),
-					resolvedOptions.dev ? "-D" : "",
-					resolvedOptions.global ? "-g" : "",
-					...names,
-				]
-	).filter(Boolean);
+  const args = (
+    resolvedOptions.packageManager.name === "yarn"
+      ? [
+          // Global is not supported in berry: yarnpkg/berry#821
+          resolvedOptions.global && resolvedOptions.packageManager.majorVersion === "1"
+            ? "global"
+            : "",
+          ...getWorkspaceArgs(resolvedOptions),
+          "remove",
+          resolvedOptions.dev ? "-D" : "",
+          resolvedOptions.global ? "-g" : "",
+          ...names,
+        ]
+      : [
+          resolvedOptions.packageManager.name === "npm" ? "uninstall" : "remove",
+          ...getWorkspaceArgs(resolvedOptions),
+          resolvedOptions.dev ? "-D" : "",
+          resolvedOptions.global ? "-g" : "",
+          ...names,
+        ]
+  ).filter(Boolean);
 
-	await executeCommand(resolvedOptions.packageManager.command, args, {
-		cwd: resolvedOptions.cwd,
-		silent: resolvedOptions.silent,
-	});
+  await executeCommand(resolvedOptions.packageManager.command, args, {
+    cwd: resolvedOptions.cwd,
+    silent: resolvedOptions.silent,
+  });
 }
 
 /**
@@ -238,19 +222,19 @@ export async function removeDependency(
  * @param options.workspace - The name of the workspace to install dependency in (if not already installed).
  */
 export async function ensureDependencyInstalled(
-	name: string,
-	options: Pick<OperationOptions, "cwd" | "dev" | "workspace"> = {},
+  name: string,
+  options: Pick<OperationOptions, "cwd" | "dev" | "workspace"> = {},
 ) {
-	const resolvedOptions = await resolveOperationOptions(options);
+  const resolvedOptions = await resolveOperationOptions(options);
 
-	const dependencyExists = doesDependencyExist(name, resolvedOptions);
+  const dependencyExists = doesDependencyExist(name, resolvedOptions);
 
-	if (dependencyExists) {
-		return true;
-	}
+  if (dependencyExists) {
+    return true;
+  }
 
-	await addDependency(name, resolvedOptions);
-	return true;
+  await addDependency(name, resolvedOptions);
+  return true;
 }
 
 /**
@@ -263,60 +247,52 @@ export async function ensureDependencyInstalled(
  * @param options.recreateLockfile - Whether to recreate the lockfile instead of deduping.
  */
 export async function dedupeDependencies(
-	options: Pick<OperationOptions, "cwd" | "silent" | "packageManager"> & {
-		recreateLockfile?: boolean;
-	} = {},
+  options: Pick<OperationOptions, "cwd" | "silent" | "packageManager"> & {
+    recreateLockfile?: boolean;
+  } = {},
 ) {
-	const resolvedOptions = await resolveOperationOptions(options);
-	const isSupported = !["bun", "deno"].includes(
-		resolvedOptions.packageManager.name,
-	);
-	const recreateLockfile = options.recreateLockfile ?? !isSupported;
-	if (recreateLockfile) {
-		const lockfiles = Array.isArray(resolvedOptions.packageManager.lockFile)
-			? resolvedOptions.packageManager.lockFile
-			: [resolvedOptions.packageManager.lockFile];
-		for (const lockfile of lockfiles) {
-			if (lockfile)
-				fs.rmSync(resolve(resolvedOptions.cwd, lockfile), { force: true });
-		}
-		await installDependencies(resolvedOptions);
-		return;
-	}
-	if (isSupported) {
-		// https://classic.yarnpkg.com/en/docs/cli/dedupe
-		const isyarnv1 =
-			resolvedOptions.packageManager.name === "yarn" &&
-			resolvedOptions.packageManager.majorVersion === "1";
+  const resolvedOptions = await resolveOperationOptions(options);
+  const isSupported = !["bun", "deno"].includes(resolvedOptions.packageManager.name);
+  const recreateLockfile = options.recreateLockfile ?? !isSupported;
+  if (recreateLockfile) {
+    const lockfiles = Array.isArray(resolvedOptions.packageManager.lockFile)
+      ? resolvedOptions.packageManager.lockFile
+      : [resolvedOptions.packageManager.lockFile];
+    for (const lockfile of lockfiles) {
+      if (lockfile) fs.rmSync(resolve(resolvedOptions.cwd, lockfile), { force: true });
+    }
+    await installDependencies(resolvedOptions);
+    return;
+  }
+  if (isSupported) {
+    // https://classic.yarnpkg.com/en/docs/cli/dedupe
+    const isyarnv1 =
+      resolvedOptions.packageManager.name === "yarn" &&
+      resolvedOptions.packageManager.majorVersion === "1";
 
-		await executeCommand(
-			resolvedOptions.packageManager.command,
-			[isyarnv1 ? "install" : "dedupe"],
-			{
-				cwd: resolvedOptions.cwd,
-				silent: resolvedOptions.silent,
-			},
-		);
-		return;
-	}
-	throw new Error(
-		`Deduplication is not supported for ${resolvedOptions.packageManager.name}`,
-	);
+    await executeCommand(
+      resolvedOptions.packageManager.command,
+      [isyarnv1 ? "install" : "dedupe"],
+      {
+        cwd: resolvedOptions.cwd,
+        silent: resolvedOptions.silent,
+      },
+    );
+    return;
+  }
+  throw new Error(`Deduplication is not supported for ${resolvedOptions.packageManager.name}`);
 }
 
-export async function updateDependencies(
-	latest = true,
-	options: OperationOptions = {},
-) {
-	const resolvedOptions = await resolveOperationOptions(options);
-	await executeCommand(
-		resolvedOptions.packageManager.command,
-		latest ? ["update", "--latest"] : ["update"],
-		{
-			cwd: resolvedOptions.cwd,
-			silent: resolvedOptions.silent,
-		},
-	);
+export async function updateDependencies(latest = true, options: OperationOptions = {}) {
+  const resolvedOptions = await resolveOperationOptions(options);
+  await executeCommand(
+    resolvedOptions.packageManager.command,
+    latest ? ["update", "--latest"] : ["update"],
+    {
+      cwd: resolvedOptions.cwd,
+      silent: resolvedOptions.silent,
+    },
+  );
 }
 
 /**
@@ -329,18 +305,15 @@ export async function updateDependencies(
  * @param options.packageManager - The package manager info to use (auto-detected).
  */
 export async function runScript(
-	name: string,
-	options: Pick<OperationOptions, "cwd" | "silent" | "packageManager"> = {},
+  name: string,
+  options: Pick<OperationOptions, "cwd" | "silent" | "packageManager"> = {},
 ) {
-	const resolvedOptions = await resolveOperationOptions(options);
+  const resolvedOptions = await resolveOperationOptions(options);
 
-	const args = [
-		resolvedOptions.packageManager.name === "deno" ? "task" : "run",
-		name,
-	];
+  const args = [resolvedOptions.packageManager.name === "deno" ? "task" : "run", name];
 
-	await executeCommand(resolvedOptions.packageManager.command, args, {
-		cwd: resolvedOptions.cwd,
-		silent: resolvedOptions.silent,
-	});
+  await executeCommand(resolvedOptions.packageManager.command, args, {
+    cwd: resolvedOptions.cwd,
+    silent: resolvedOptions.silent,
+  });
 }

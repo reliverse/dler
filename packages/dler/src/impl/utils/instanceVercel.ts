@@ -10,30 +10,30 @@ export type InstanceVercel = VercelCore;
  * Prompts the user for a Vercel token if none is stored
  */
 export async function askVercelToken(
-	maskInput: boolean,
-	memory: ReliverseMemory,
+  maskInput: boolean,
+  memory: ReliverseMemory,
 ): Promise<string | undefined> {
-	if (!memory?.vercelKey) {
-		const token = await inputPrompt({
-			title:
-				"Please enter your Vercel personal access token.\n(It will be securely stored on your machine):",
-			content: "Create one at https://vercel.com/account/settings/tokens",
-			mode: maskInput ? "password" : "plain",
-			validate: (value: string) => {
-				if (!value?.trim()) return "Token is required";
-				return true;
-			},
-		});
+  if (!memory?.vercelKey) {
+    const token = await inputPrompt({
+      title:
+        "Please enter your Vercel personal access token.\n(It will be securely stored on your machine):",
+      content: "Create one at https://vercel.com/account/settings/tokens",
+      mode: maskInput ? "password" : "plain",
+      validate: (value: string) => {
+        if (!value?.trim()) return "Token is required";
+        return true;
+      },
+    });
 
-		if (!token) {
-			relinka("error", "No token provided");
-			return;
-		}
+    if (!token) {
+      relinka("error", "No token provided");
+      return;
+    }
 
-		return token;
-	}
+    return token;
+  }
 
-	return memory.vercelKey;
+  return memory.vercelKey;
 }
 
 /**
@@ -45,26 +45,26 @@ export async function askVercelToken(
  * This `@vercel/sdk` init returns `[token, vercel]`.
  */
 export async function initVercelSDK(
-	memory: ReliverseMemory,
-	maskInput: boolean,
+  memory: ReliverseMemory,
+  maskInput: boolean,
 ): Promise<[string, VercelCore] | undefined> {
-	let vercelToken = memory?.vercelKey;
+  let vercelToken = memory?.vercelKey;
 
-	if (!vercelToken) {
-		vercelToken = await askVercelToken(maskInput, memory);
-		if (!vercelToken) {
-			relinka("error", "No token provided");
-			return;
-		}
-	}
+  if (!vercelToken) {
+    vercelToken = await askVercelToken(maskInput, memory);
+    if (!vercelToken) {
+      relinka("error", "No token provided");
+      return;
+    }
+  }
 
-	const vercelInstance = new VercelCore({ bearerToken: vercelToken });
+  const vercelInstance = new VercelCore({ bearerToken: vercelToken });
 
-	// If the token wasn't previously saved, persist it now.
-	if (!memory.vercelKey) {
-		await saveVercelToken(vercelToken, memory, vercelInstance);
-		memory.vercelKey = vercelToken;
-	}
+  // If the token wasn't previously saved, persist it now.
+  if (!memory.vercelKey) {
+    await saveVercelToken(vercelToken, memory, vercelInstance);
+    memory.vercelKey = vercelToken;
+  }
 
-	return [vercelToken, vercelInstance];
+  return [vercelToken, vercelInstance];
 }

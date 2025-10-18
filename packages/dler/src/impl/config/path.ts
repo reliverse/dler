@@ -8,10 +8,7 @@ import fs from "@reliverse/relifso";
 import { tsconfigJson } from "~/impl/config/constants";
 
 // Cache the result per project path so the prompt is only shown once.
-const configPathCache = new Map<
-	string,
-	{ configPath: string; isTS: boolean }
->();
+const configPathCache = new Map<string, { configPath: string; isTS: boolean }>();
 
 /**
  * Determines the rse config file path and whether it's TS or JSONC.
@@ -21,55 +18,55 @@ const configPathCache = new Map<
  * - Caches results by projectPath.
  */
 export async function getReliverseConfigPath(
-	projectPath: string,
-	isDev: boolean,
-	_skipPrompt: boolean,
-	customTsconfigPath?: string,
+  projectPath: string,
+  isDev: boolean,
+  _skipPrompt: boolean,
+  customTsconfigPath?: string,
 ): Promise<{ configPath: string; isTS: boolean }> {
-	// Return cached if available
-	const cached = configPathCache.get(projectPath);
-	if (cached) {
-		return cached;
-	}
+  // Return cached if available
+  const cached = configPathCache.get(projectPath);
+  if (cached) {
+    return cached;
+  }
 
-	// Use the custom TS config path if provided, otherwise default to "tsconfig.json"
-	const finalTsconfigPath = customTsconfigPath
-		? path.resolve(customTsconfigPath)
-		: path.join(projectPath, tsconfigJson);
+  // Use the custom TS config path if provided, otherwise default to "tsconfig.json"
+  const finalTsconfigPath = customTsconfigPath
+    ? path.resolve(customTsconfigPath)
+    : path.join(projectPath, tsconfigJson);
 
-	// Identify potential config paths in .config directory
-	const configDir = path.join(projectPath, ".config");
-	const rseJsonc = path.join(configDir, "reliverse.jsonc");
-	const rseTs = path.join(configDir, "reliverse.ts");
+  // Identify potential config paths in .config directory
+  const configDir = path.join(projectPath, ".config");
+  const rseJsonc = path.join(configDir, "reliverse.jsonc");
+  const rseTs = path.join(configDir, "reliverse.ts");
 
-	// Check if these paths exist
-	const [_tsconfigExists, _jsoncExists, tsExists] = await Promise.all([
-		fs.pathExists(finalTsconfigPath),
-		fs.pathExists(rseJsonc),
-		fs.pathExists(rseTs),
-	]);
+  // Check if these paths exist
+  const [_tsconfigExists, _jsoncExists, tsExists] = await Promise.all([
+    fs.pathExists(finalTsconfigPath),
+    fs.pathExists(rseJsonc),
+    fs.pathExists(rseTs),
+  ]);
 
-	let result: { configPath: string; isTS: boolean };
+  let result: { configPath: string; isTS: boolean };
 
-	// Dev mode: always choose .ts config
-	if (isDev) {
-		result = { configPath: rseTs, isTS: true };
-	}
-	// If an existing .ts config is present
-	else if (tsExists) {
-		result = { configPath: rseTs, isTS: true };
-	}
-	// If no config yet, user has a tsconfig, and skipPrompt is false, ask which type to create
-	// else if (tsconfigExists && !jsoncExists && !skipPrompt) {
-	//   const choice = await askReliverseConfigType();
-	//   result =
-	//     choice === "ts" ? { configPath: rseTs, isTS: true } : { configPath: rseJsonc, isTS: false };
-	// } else {
-	//   // Default to JSONC
-	//   result = { configPath: rseJsonc, isTS: false };
-	// }
-	result = { configPath: rseTs, isTS: true };
+  // Dev mode: always choose .ts config
+  if (isDev) {
+    result = { configPath: rseTs, isTS: true };
+  }
+  // If an existing .ts config is present
+  else if (tsExists) {
+    result = { configPath: rseTs, isTS: true };
+  }
+  // If no config yet, user has a tsconfig, and skipPrompt is false, ask which type to create
+  // else if (tsconfigExists && !jsoncExists && !skipPrompt) {
+  //   const choice = await askReliverseConfigType();
+  //   result =
+  //     choice === "ts" ? { configPath: rseTs, isTS: true } : { configPath: rseJsonc, isTS: false };
+  // } else {
+  //   // Default to JSONC
+  //   result = { configPath: rseJsonc, isTS: false };
+  // }
+  result = { configPath: rseTs, isTS: true };
 
-	configPathCache.set(projectPath, result);
-	return result;
+  configPathCache.set(projectPath, result);
+  return result;
 }
