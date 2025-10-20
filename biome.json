@@ -1,4 +1,5 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "linter": { "enabled": false }
+  "extends": ["ultracite"],
+  "linter": { "enabled": true, "rules": { "recommended": true } }
 }

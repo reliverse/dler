@@ -1,5 +1,15 @@
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+// To see all of Zed's default settings without changing the
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
 {
-  "lsp": {
+  "autosave": {
+    "after_delay": {
+      "milliseconds": 1000
+    }
+  },
+  "lsp":  {
     "biome": {
       "settings": {
         "require_config_file": true
@@ -7,7 +17,7 @@
     }
   },
   "languages": {
-    "JavaScript": {
+    "JSON": {
       "formatter": [
         { "language_server": { "name": "biome" } },
         { "code_action": "source.organizeImports.biome" },
@@ -17,9 +27,7 @@
     "TypeScript": {
       "formatter": [
         { "language_server": { "name": "biome" } },
-
         { "code_action": "source.organizeImports.biome" },
-
         { "code_action": "source.fixAll.biome" }
       ]
     },

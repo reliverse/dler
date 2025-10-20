@@ -1,0 +1,50 @@
+{
+	"name": "@reliverse/migrate-dler-plugin",
+	"version": "1.7.154",
+	"main": "./src/mod.ts",
+	"module": "./src/mod.ts",
+	"exports": {
+		".": "./src/mod.ts"
+	},
+	"files": [
+		"bin",
+		"package.json"
+	],
+	"description": "Dler plugin for code migration and modernization codemods",
+	"type": "module",
+	"keywords": [
+		"dler",
+		"plugin",
+		"codemod",
+		"migration",
+		"ast",
+		"typescript"
+	],
+	"author": "reliverse",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/reliverse/rse",
+		"directory": "packages/migrate-dler-plugin"
+	},
+	"scripts": {
+		"typecheck": "tsc --noEmit -p tsconfig.json",
+		"format": "biome check --write --unsafe",
+		"check": "bun typecheck && bun format"
+	},
+	"dependencies": {
+		"@reliverse/pathkit": "catalog:",
+		"@reliverse/relifso": "catalog:",
+		"@reliverse/relinka": "catalog:",
+		"@reliverse/rempts": "catalog:",
+		"pkg-types": "catalog:",
+		"tinyglobby": "catalog:",
+		"ts-morph": "catalog:",
+		"semver": "catalog:"
+	},
+	"devDependencies": {
+		"@types/bun": "catalog:",
+		"typescript": "^5.9.3",
+		"@types/semver": "catalog:"
+	}
+}

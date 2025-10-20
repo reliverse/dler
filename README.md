@@ -22,6 +22,34 @@ await installDependencies({ cwd: ".", silent: true, packageManager: "bun" });
 
 Visit [docs.reliverse.org/libraries/dler](https://docs.reliverse.org/libraries/dler) to learn how to install and use `@reliverse/dler` library.
 
+## Contributing
+
+A Bun monorepo created with the monorepo bootstrapper.
+
+## Getting Started
+
+```bash
+bun install
+```
+
+## Workspaces
+
+This monorepo uses Bun workspaces to manage multiple packages.
+
+### Scripts
+
+Run scripts across all workspaces:
+
+```bash
+bun --filter '*' <script>
+```
+
+Run scripts for specific packages:
+
+```bash
+bun --filter <package-name> <script>
+```
+
 ## Stand With Ukraine
 
 - 💙 Please help fund drones, medkits, and victory. [Donate now](https://u24.gov.ua), please, it matters.

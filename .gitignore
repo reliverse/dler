@@ -1,10 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+out/
+*.tsbuildinfo
+
+# Environment
+.env
+.env*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Unsorted
 dist
 dist*
 _.log
 .cache
 .DS_Store
 .env
-.eslintcache
 .idea
 *.dll
 *.exe
@@ -18,7 +44,6 @@ Cargo.lock
 coverage
 logs
 node_modules
-out
 pack-input
 pack-output
 relinter-test-*.ts
@@ -26,4 +51,3 @@ relinter.json
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 start-runtime
 tests-runtime
-Thumbs.db
