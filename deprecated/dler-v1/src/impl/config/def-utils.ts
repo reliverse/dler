@@ -8,7 +8,7 @@ import fs from "@reliverse/relifso";
 import { getUserPkgManager, runtimeInfo } from "@reliverse/runtime";
 import { safeDestr } from "destr";
 import { type PackageJson, readPackageJSON } from "pkg-types";
-import { getBiomeConfig } from "~/impl/config/biome";
+import { getBiomeConfig } from "~/impl/config/biome-cfg";
 import { cliDomainDocs, DEFAULT_DOMAIN, rseName, UNKNOWN_VALUE } from "~/impl/config/constants";
 import { detectFeatures, detectProjectFramework, getPackageJsonSafe } from "~/impl/config/detect";
 import type { ReliverseConfig } from "~/impl/schema/mod";

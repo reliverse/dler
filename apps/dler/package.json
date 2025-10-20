@@ -22,8 +22,8 @@
     "typescript": "catalog:",
     "@types/bun": "catalog:"
   },
-	"keywords": [
-		"dler",
-		"build"
-	]
+  "keywords": [
+    "dler",
+    "build"
+  ]
 }

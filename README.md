@@ -1,4 +1,4 @@
-# Dler (prev. Reliverse Relidler)
+# 🧬 Dler
 
 > **@reliverse/dler** is an open-source framework which helps developers build TypeScript/JavaScript libraries and CLI tools easily. It provides ready-to-use primitives, so you don't have to write them from scratch.
 

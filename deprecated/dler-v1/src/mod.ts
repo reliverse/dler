@@ -41,7 +41,6 @@ export { useVercelAI } from "./impl/add/add-local/llm/vercel";
 export { useResendMail } from "./impl/add/add-local/mail/resend";
 export { usePolarPayments } from "./impl/add/add-local/pay/polar";
 export { useStripePayments } from "./impl/add/add-local/pay/stripe";
-export { useBiomeTool } from "./impl/add/add-local/tool/biome";
 export { useEslintTool } from "./impl/add/add-local/tool/eslint";
 export { useOxlintTool } from "./impl/add/add-local/tool/oxlint";
 export { use21stUI } from "./impl/add/add-local/ui/21st";
@@ -253,7 +252,7 @@ export {
 export { regular_buildFlow, regular_pubFlow } from "./impl/build/regular-flow";
 export { useFirecrawl } from "./impl/clone/firecrawl/firecrawl-mod";
 export { runCodemods } from "./impl/cmod/cmod-impl";
-export { getBiomeConfig } from "./impl/config/biome";
+export { getBiomeConfig } from "./impl/config/biome-cfg";
 export { injectSectionComments } from "./impl/config/comments";
 export {
   CONCURRENCY_DEFAULT,

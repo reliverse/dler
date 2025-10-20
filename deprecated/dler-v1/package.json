@@ -1,5 +1,5 @@
 {
-  "name": "@reliverse/dler-deprecated",
+  "name": "@reliverse/dler-v1",
   "author": "reliverse",
   "version": "1.7.154",
   "type": "module",
@@ -25,7 +25,6 @@
   },
   "dependencies": {
     "micromatch": "catalog:",
-    "@reliverse/filetype-dler-plugin": "workspace:*",
     "@ai-sdk/openai": "catalog:",
     "@babel/preset-react": "catalog:",
     "@babel/preset-typescript": "catalog:",
@@ -151,14 +150,14 @@
     "@types/better-sqlite3": "catalog:",
     "@types/bun": "catalog:",
     "@types/globby": "catalog:",
-    "@types/micromatch": "^4.0.9",
+    "@types/micromatch": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/semver": "catalog:",
     "@types/shebang-command": "catalog:",
     "@types/tar-stream": "catalog:",
-    "typescript": "^5.9.3",
+    "typescript": "catalog:",
     "ultracite": "catalog:"
   },
   "keywords": [

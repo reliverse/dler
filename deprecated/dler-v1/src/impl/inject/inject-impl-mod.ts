@@ -1,7 +1,6 @@
 // inject-impl-mod.ts (transform-impl-mod.ts → inject-impl-mod.ts → e-ms-inject.ts)
 
 import { promises as fs } from "node:fs";
-import { isBinaryExt } from "@reliverse/filetype-dler-plugin";
 import path from "@reliverse/pathkit";
 import {
   createTransformer,
@@ -10,6 +9,7 @@ import {
   remove,
   type StringTransformer,
 } from "~/impl/transform/transform-impl-mod";
+import { isBinaryExt } from "../filetype/mod";
 
 /* -------------------------------------------------------------------------- */
 /*  Types                                                                     */
