@@ -1,12 +1,8 @@
-import type { MonorepoConfig, PackageInfo } from "./types";
-import {
-  validateMonorepoName,
-  validatePackageName,
-  validateVersion,
-} from "./validators";
+import { askQuestion } from "@reliverse/dler-prompt";
 import { DEFAULT_LICENSE, DEFAULT_VERSION, WORKSPACES } from "./config";
+import type { MonorepoConfig, PackageInfo } from "./types";
 import { createFullPath, fileExists, getWorkspaceScope } from "./utils";
-import { askQuestion } from "@reliverse/dler-prompts";
+import { validateMonorepoName, validatePackageName, validateVersion } from "./validators";
 
 const writeLine = (text: string): void => {
   Bun.write(Bun.stdout, `${text}\n`);
@@ -20,7 +16,9 @@ export const promptMonorepoConfig = async (): Promise<MonorepoConfig> => {
   const rootPackageJsonPath = createFullPath(rootPath, "package.json");
   const hasRootPackageJson = await fileExists(rootPackageJsonPath);
   const existingRoot: Record<string, unknown> | null = hasRootPackageJson
-    ? await Bun.file(rootPackageJsonPath).json().catch(() => null)
+    ? await Bun.file(rootPackageJsonPath)
+        .json()
+        .catch(() => null)
     : null;
 
   let name = "";
@@ -44,9 +42,9 @@ export const promptMonorepoConfig = async (): Promise<MonorepoConfig> => {
   }
 
   const description =
-    (existingRoot && typeof existingRoot.description === "string"
+    existingRoot && typeof existingRoot.description === "string"
       ? (existingRoot.description as string)
-      : await askQuestion("Description", "A Bun monorepo project"));
+      : await askQuestion("Description", "A Bun monorepo project");
 
   let version = "";
   let isValidVersion = false;
@@ -69,13 +67,13 @@ export const promptMonorepoConfig = async (): Promise<MonorepoConfig> => {
   }
 
   const author =
-    (existingRoot && typeof (existingRoot as any).author === "string"
+    existingRoot && typeof (existingRoot as any).author === "string"
       ? ((existingRoot as any).author as string)
-      : await askQuestion("Author", ""));
+      : await askQuestion("Author", "");
   const license =
-    (existingRoot && typeof (existingRoot as any).license === "string"
+    existingRoot && typeof (existingRoot as any).license === "string"
       ? ((existingRoot as any).license as string)
-      : await askQuestion("License", DEFAULT_LICENSE));
+      : await askQuestion("License", DEFAULT_LICENSE);
 
   const packages = await promptPackages();
 
@@ -94,9 +92,7 @@ const promptPackages = async (): Promise<PackageInfo[]> => {
   const packages: PackageInfo[] = [];
 
   writeLine("\n📦 Package Configuration");
-  writeLine(
-    "Enter package names (one per prompt). Press Enter with empty input to finish.\n",
-  );
+  writeLine("Enter package names (one per prompt). Press Enter with empty input to finish.\n");
 
   let continueAdding = true;
   let packageIndex = 1;
@@ -118,10 +114,7 @@ const promptPackages = async (): Promise<PackageInfo[]> => {
       continue;
     }
 
-    const workspace = await askQuestion(
-      "Workspace directory",
-      WORKSPACES.PACKAGES,
-    );
+    const workspace = await askQuestion("Workspace directory", WORKSPACES.PACKAGES);
     const scope = getWorkspaceScope(workspace);
 
     packages.push({

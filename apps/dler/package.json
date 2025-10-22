@@ -7,18 +7,20 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/mod.ts",
-      "default": "./src/mod.ts"
+      "types": "./src/cli.ts",
+      "default": "./src/cli.ts"
     }
   },
   "scripts": {
-    "dev": "bun src/mod.ts"
+    "dler": "bun src/cli.ts"
   },
   "dependencies": {
-    "@reliverse/dler-prompts": "workspace:*"
+    "@reliverse/dler-launcher": "workspace:*",
+    "@reliverse/dler-prompt": "workspace:*"
   },
   "devDependencies": {
     "@reliverse/dler-tsconfig": "workspace:*",
+    "@total-typescript/ts-reset": "catalog:",
     "typescript": "catalog:",
     "@types/bun": "catalog:"
   },

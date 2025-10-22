@@ -32,6 +32,7 @@
     "rules": {
       "recommended": true,
       "suspicious": {
+        "noVar": "off",
         "useGetterReturn": "off",
         "noThenProperty": "off",
         "useGuardForIn": "off",
@@ -84,6 +85,7 @@
         "useKeyWithClickEvents": "off"
       },
       "style": {
+        "useReadonlyClassProperties": "off",
         "useGraphqlNamingConvention": "off",
         "useFilenamingConvention": "off",
         "useConsistentObjectDefinitions": "off",
@@ -168,21 +170,30 @@
         "useExhaustiveSwitchCases": "off",
         "noShadow": "off",
         "useSortedClasses": "off",
-        "useConsistentTypeDefinitions": "off"
+        "useConsistentTypeDefinitions": {
+          "level": "off",
+          "options": { "style": "interface" }
+        }
       }
     }
   },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
-    "lineWidth": 100
+    "indentWidth": 2,
+    "lineWidth": 80
   },
   "javascript": {
     "globals": ["Bun"],
     "formatter": {
+      "enabled": true,
+      "lineEnding": "lf",
       "jsxQuoteStyle": "double",
       "quoteProperties": "asNeeded",
       "trailingCommas": "all",
+      "lineWidth": 80,
+      "indentWidth": 2,
+      "indentStyle": "space",
       "semicolons": "always",
       "arrowParentheses": "always",
       "bracketSpacing": true,

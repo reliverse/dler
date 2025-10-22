@@ -18,8 +18,10 @@ The current codebase enforces strict type safety, accessibility standards, and c
 
 ## Rules
 
-### Package Manager
+### Terminal & Package Manager
 - Always use Bun as the package manager.
+- Always use `cd <absolute/path/to/directory>` to change the current working directory.
+- Never use `cd` without an absolute path.
 
 ### Code Complexity and Quality
 - Don't use consecutive spaces in regular expression literals.
@@ -39,7 +41,6 @@ The current codebase enforces strict type safety, accessibility standards, and c
 - Don't use unnecessary continue statements.
 - Don't export empty modules that don't change anything.
 - Don't use unnecessary escape sequences in regular expression literals.
-- Don't use unnecessary fragments.
 - Don't use unnecessary labels.
 - Don't use unnecessary nested block statements.
 - Don't rename imports, exports, and destructured assignments to the same name.
@@ -99,7 +100,7 @@ The current codebase enforces strict type safety, accessibility standards, and c
 - Don't use bitwise operators.
 - Don't use expressions where the operation doesn't change the value.
 - Make sure Promise-like statements are handled appropriately.
-- Don't use __dirname and __filename in the global scope.
+- Don't use `__dirname` and `__filename` in the global scope.
 - Prevent import cycles.
 - Don't use configured elements.
 - Don't hardcode sensitive data like API keys and tokens.

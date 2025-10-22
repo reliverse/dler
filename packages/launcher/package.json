@@ -1,5 +1,5 @@
 {
-  "name": "@reliverse/dler-match",
+  "name": "@reliverse/dler-launcher",
   "version": "2.0.0",
   "private": true,
   "type": "module",
@@ -10,7 +10,11 @@
     }
   },
   "scripts": {
-    "dev": "bun src/mod.ts"
+    "dev": "bun src/mod.ts",
+    "bench": "bun bench/performance.ts"
+  },
+  "dependencies": {
+    "@reliverse/dler-mapper": "workspace:*"
   },
   "devDependencies": {
     "@reliverse/dler-tsconfig": "workspace:*",
