@@ -22,6 +22,7 @@ const LOG_COLORS = {
   warn: re.yellow,
   info: re.blue,
   success: re.green,
+  debug: re.gray,
 } as const;
 
 const LOG_SYMBOLS = {
@@ -30,6 +31,7 @@ const LOG_SYMBOLS = {
   warn: "⚠  ",
   info: "■  ",
   success: "✓  ",
+  debug: "✱  ",
 } as const;
 
 type LogLevel = keyof typeof LOG_COLORS;
@@ -138,6 +140,7 @@ interface LoggerBase {
   warn: (...args: unknown[]) => void | Promise<void>;
   info: (...args: unknown[]) => void | Promise<void>;
   success: (...args: unknown[]) => void | Promise<void>;
+  debug: (...args: unknown[]) => void | Promise<void>;
   raw: (...args: unknown[]) => void | Promise<void>;
 }
 
@@ -147,6 +150,7 @@ interface LoggerAsync extends LoggerBase {
   warn: (...args: unknown[]) => Promise<void>;
   info: (...args: unknown[]) => Promise<void>;
   success: (...args: unknown[]) => Promise<void>;
+  debug: (...args: unknown[]) => Promise<void>;
   raw: (...args: unknown[]) => Promise<void>;
 }
 
@@ -156,6 +160,7 @@ interface Logger extends LoggerBase {
   warn: (...args: unknown[]) => void;
   info: (...args: unknown[]) => void;
   success: (...args: unknown[]) => void;
+  debug: (...args: unknown[]) => void;
   raw: (...args: unknown[]) => void;
 }
 
@@ -165,6 +170,7 @@ export const loggerAsync: LoggerAsync = {
   warn: createLogMethod("warn", true),
   info: createLogMethod("info", true),
   success: createLogMethod("success", true),
+  debug: createLogMethod("debug", true),
   raw: createRawMethod(true),
 };
 
@@ -174,5 +180,6 @@ export const logger: Logger = {
   warn: createLogMethod("warn", false),
   info: createLogMethod("info", false),
   success: createLogMethod("success", false),
+  debug: createLogMethod("debug", false),
   raw: createRawMethod(false),
 };

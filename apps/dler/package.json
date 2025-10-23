@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "c12": "catalog:",
     "@reliverse/dler-spinner": "workspace:*",
     "@reliverse/dler-logger": "workspace:*",
     "@reliverse/dler-matcher": "workspace:*",

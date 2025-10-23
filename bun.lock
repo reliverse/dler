@@ -20,6 +20,7 @@
         "@reliverse/dler-pkg-tsc": "workspace:*",
         "@reliverse/dler-prompt": "workspace:*",
         "@reliverse/dler-spinner": "workspace:*",
+        "c12": "catalog:",
       },
       "devDependencies": {
         "@reliverse/dler-tsconfig": "workspace:*",
@@ -164,6 +165,18 @@
         "@types/tar-stream": "catalog:",
         "typescript": "catalog:",
         "ultracite": "catalog:",
+      },
+    },
+    "examples/react-app": {
+      "name": "@reliverse/react-app-example",
+      "version": "1.0.0",
+      "dependencies": {
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+      },
+      "devDependencies": {
+        "@types/react": "^19.2.2",
+        "@types/react-dom": "^19.2.1",
       },
     },
     "packages/build": {
@@ -384,6 +397,7 @@
     "lucide-react": "^0.545.0",
     "magic-string": "^0.30.19",
     "magicast": "^0.3.5",
+    "minimatch": "^11.0.1",
     "mlly": "^1.8.0",
     "mysql2": "^3.15.2",
     "nanoid": "^5.1.6",
@@ -934,6 +948,8 @@
     "@reliverse/dler-v1": ["@reliverse/dler-v1@workspace:deprecated"],
 
     "@reliverse/pathkit": ["@reliverse/pathkit@1.3.4", "", { "dependencies": { "@reliverse/cfg": "^1.7.40" } }, "sha512-abjM65KY/TbVPQhfw4+9DGHKzm5Na72RkKpmtT1FgV11IqU8FNmfnrFYJyHkD8jewBQGNSgDrEpqTqr3yae3WQ=="],
+
+    "@reliverse/react-app-example": ["@reliverse/react-app-example@workspace:examples/react-app"],
 
     "@reliverse/reglob": ["@reliverse/reglob@1.0.0", "", { "dependencies": { "@reliverse/rematch": "^1.1.0", "fdir": "^6.4.4" } }, "sha512-LvpzxRrNuQatkCzpJRhkAm/vOpfIO2ImJ8dt3BO46VUCD4pYIO+20M+5zugKoprvs4IS4b1i8d/t6hN9PgglnA=="],
 

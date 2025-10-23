@@ -19,7 +19,7 @@ interface CacheData {
 }
 
 const CACHE_VERSION = "1.0.0";
-const CACHE_DIR = ".reliverse/dler/launcher/cache";
+const CACHE_DIR = ".reliverse/dler/cache/launcher";
 const CACHE_FILE = "metadata.json";
 
 const getCachePath = (): string => {

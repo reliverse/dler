@@ -8,11 +8,12 @@
   "scripts": {
     "dler": "bun apps/dler/src/cli.ts",
     "typecheck": "bun dler tsc",
-    "build": "bun dler build"
+    "build": "bun dler build --ignore '@reliverse/dler-v1'"
   },
   "workspaces": {
     "packages": [
       "apps/*",
+      "examples/*",
       "packages/*",
       "deprecated"
     ],
@@ -111,6 +112,7 @@
       "nypm": "^0.6.2",
       "octokit": "^5.0.3",
       "ofetch": "^1.4.1",
+      "minimatch": "^11.0.1",
       "open": "^10.2.0",
       "p-all": "^5.0.1",
       "p-limit": "^7.1.1",
