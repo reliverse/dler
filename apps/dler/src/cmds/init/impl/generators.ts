@@ -1,22 +1,18 @@
-import type { MonorepoConfig, PackageInfo } from "./types";
+import { writeJsonFile, writeTextFile } from "@reliverse/dler-helpers";
+import { logger } from "@reliverse/dler-logger";
 import {
   DEFAULT_CATALOG,
   ROOT_FILES,
   TSCONFIG_PRESETS,
   WORKSPACES,
 } from "./config";
+import type { MonorepoConfig, PackageInfo } from "./types";
 import {
   createFullPath,
   ensureDir,
   fileExists,
   getWorkspaceScope,
-  writeJsonFile,
-  writeTextFile,
 } from "./utils";
-
-const writeLine = (text: string): void => {
-  Bun.write(Bun.stdout, `${text}\n`);
-};
 
 export const generateRootPackageJson = async (
   config: MonorepoConfig,
@@ -25,7 +21,7 @@ export const generateRootPackageJson = async (
   const alreadyExists = await fileExists(packageJsonPath);
 
   if (alreadyExists) {
-    writeLine("📝 Updating existing root package.json...");
+    logger.info("📝 Updating existing root package.json...");
     const existingContent = await Bun.file(packageJsonPath).json();
 
     const workspaces = new Set<string>([
@@ -57,7 +53,7 @@ export const generateRootPackageJson = async (
 
     await writeJsonFile(packageJsonPath, updatedPackageJson);
   } else {
-    writeLine("📝 Creating root package.json...");
+    logger.info("📝 Creating root package.json...");
     const packageJson = {
       name: config.name,
       version: config.version,
@@ -102,7 +98,7 @@ const getWorkspacePatterns = (config: MonorepoConfig): string[] => {
 export const generateRootFiles = async (
   config: MonorepoConfig,
 ): Promise<void> => {
-  writeLine("📄 Creating root files...");
+  logger.info("📄 Creating root files...");
 
   const gitignorePath = createFullPath(config.rootPath, ".gitignore");
   if (!(await fileExists(gitignorePath))) {
@@ -118,7 +114,7 @@ export const generateRootFiles = async (
 export const generateTsconfigPackage = async (
   config: MonorepoConfig,
 ): Promise<void> => {
-  writeLine("📦 Creating tsconfig package...");
+  logger.info("📦 Creating tsconfig package...");
 
   const tsconfigPath = createFullPath(config.rootPath, WORKSPACES.TSCONFIG);
   await ensureDir(tsconfigPath);
@@ -150,7 +146,7 @@ export const generatePackage = async (
 ): Promise<void> => {
   const packagePath = createFullPath(config.rootPath, pkg.workspace, pkg.name);
 
-  writeLine(`📦 Creating package ${pkg.scope}${pkg.name}...`);
+  logger.info(`📦 Creating package ${pkg.scope}${pkg.name}...`);
 
   await ensureDir(packagePath);
 

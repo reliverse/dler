@@ -2,7 +2,7 @@ import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { glob } from "glob";
-import micromatch from "micromatch";
+import zeptomatch from "zeptomatch";
 import { readPackageJson } from "../monorepo/monorepo-mod";
 
 export interface WorkspacePackage {
@@ -26,7 +26,9 @@ export interface WorkspaceConfig {
 /**
  * Detects if the current directory has workspace configuration and returns publishable packages
  */
-export async function detectWorkspaces(cwd: string): Promise<WorkspacePackage[] | null> {
+export async function detectWorkspaces(
+  cwd: string,
+): Promise<WorkspacePackage[] | null> {
   const packageJsonPath = path.join(cwd, "package.json");
 
   if (!(await fs.pathExists(packageJsonPath))) {
@@ -44,7 +46,10 @@ export async function detectWorkspaces(cwd: string): Promise<WorkspacePackage[] 
       if (Array.isArray(packageJson.workspaces)) {
         // Array format: "workspaces": ["packages/*", "apps/*"]
         workspaceGlobs = packageJson.workspaces;
-      } else if (typeof packageJson.workspaces === "object" && packageJson.workspaces.packages) {
+      } else if (
+        typeof packageJson.workspaces === "object" &&
+        packageJson.workspaces.packages
+      ) {
         // Object format: "workspaces": { "packages": ["packages/*", "apps/*"] }
         workspaceGlobs = Array.isArray(packageJson.workspaces.packages)
           ? packageJson.workspaces.packages
@@ -56,7 +61,10 @@ export async function detectWorkspaces(cwd: string): Promise<WorkspacePackage[] 
       return null;
     }
 
-    relinka("verbose", `Found workspace configuration with patterns: ${workspaceGlobs.join(", ")}`);
+    relinka(
+      "verbose",
+      `Found workspace configuration with patterns: ${workspaceGlobs.join(", ")}`,
+    );
 
     // Expand workspace globs to find all package.json files
     const packageJsonPaths: string[] = [];
@@ -64,13 +72,18 @@ export async function detectWorkspaces(cwd: string): Promise<WorkspacePackage[] 
     for (const pattern of workspaceGlobs) {
       const searchPattern = path.join(cwd, pattern, "package.json");
       const matches = await glob(searchPattern, { cwd });
-      packageJsonPaths.push(...matches.map((match: string) => path.resolve(cwd, match)));
+      packageJsonPaths.push(
+        ...matches.map((match: string) => path.resolve(cwd, match)),
+      );
     }
 
     // Remove duplicates
     const uniquePackageJsonPaths = [...new Set(packageJsonPaths)];
 
-    relinka("verbose", `Found ${uniquePackageJsonPaths.length} package.json files in workspace`);
+    relinka(
+      "verbose",
+      `Found ${uniquePackageJsonPaths.length} package.json files in workspace`,
+    );
 
     // Read each package and filter publishable ones
     const packages: WorkspacePackage[] = [];
@@ -79,7 +92,10 @@ export async function detectWorkspaces(cwd: string): Promise<WorkspacePackage[] 
       const pkg = await readPackageJson(packageJsonPath);
 
       if (!pkg) {
-        relinka("verbose", `Skipping invalid package.json at ${packageJsonPath}`);
+        relinka(
+          "verbose",
+          `Skipping invalid package.json at ${packageJsonPath}`,
+        );
         continue;
       }
 
@@ -119,11 +135,17 @@ export async function detectWorkspaces(cwd: string): Promise<WorkspacePackage[] 
 
         relinka("verbose", `Added package: ${rawPkg.name} (${rawPkg.version})`);
       } catch (error) {
-        relinka("warn", `Failed to read package.json at ${packageJsonPath}: ${error}`);
+        relinka(
+          "warn",
+          `Failed to read package.json at ${packageJsonPath}: ${error}`,
+        );
       }
     }
 
-    relinka("verbose", `Found ${packages.length} publishable packages in workspace`);
+    relinka(
+      "verbose",
+      `Found ${packages.length} publishable packages in workspace`,
+    );
     return packages.length > 0 ? packages : null;
   } catch (error) {
     relinka("warn", `Failed to detect workspaces: ${error}`);
@@ -134,14 +156,19 @@ export async function detectWorkspaces(cwd: string): Promise<WorkspacePackage[] 
 /**
  * Sorts packages by their dependencies to ensure correct build/publish order
  */
-export function sortPackagesByDependencies(packages: WorkspacePackage[]): WorkspacePackage[] {
+export function sortPackagesByDependencies(
+  packages: WorkspacePackage[],
+): WorkspacePackage[] {
   const sorted: WorkspacePackage[] = [];
   const visited = new Set<string>();
   const visiting = new Set<string>();
 
   function visit(pkg: WorkspacePackage) {
     if (visiting.has(pkg.name)) {
-      relinka("warn", `Circular dependency detected involving package: ${pkg.name}`);
+      relinka(
+        "warn",
+        `Circular dependency detected involving package: ${pkg.name}`,
+      );
       return;
     }
 
@@ -169,7 +196,10 @@ export function sortPackagesByDependencies(packages: WorkspacePackage[]): Worksp
     visit(pkg);
   }
 
-  relinka("verbose", `Sorted packages by dependencies: ${sorted.map((p) => p.name).join(" -> ")}`);
+  relinka(
+    "verbose",
+    `Sorted packages by dependencies: ${sorted.map((p) => p.name).join(" -> ")}`,
+  );
   return sorted;
 }
 
@@ -231,9 +261,9 @@ export function filterPackagesByFilters(
 
       // Match against package name using glob patterns
       try {
-        isMatch = micromatch.isMatch(pkg.name, trimmedFilter);
+        isMatch = zeptomatch(trimmedFilter, pkg.name);
       } catch {
-        // Fallback to simple equality if micromatch fails
+        // Fallback to simple equality if zeptomatch fails
         isMatch = pkg.name === trimmedFilter;
       }
 
@@ -250,7 +280,10 @@ export function filterPackagesByFilters(
 
   // Warn about unmatched filters
   if (unmatchedFilters.length > 0) {
-    relinka("warn", `No packages matched filter(s): ${unmatchedFilters.join(", ")}`);
+    relinka(
+      "warn",
+      `No packages matched filter(s): ${unmatchedFilters.join(", ")}`,
+    );
   }
 
   const result = Array.from(matchedPackages);
@@ -266,13 +299,17 @@ export function filterPackagesByFilters(
  * Parses filter arguments from CLI input
  * Supports both comma-separated strings and arrays
  */
-export function parseFilterArgs(filterArg: string | string[] | undefined): string[] {
+export function parseFilterArgs(
+  filterArg: string | string[] | undefined,
+): string[] {
   if (!filterArg) {
     return [];
   }
 
   if (Array.isArray(filterArg)) {
-    return filterArg.flatMap((f) => f.split(",").map((s) => s.trim())).filter(Boolean);
+    return filterArg
+      .flatMap((f) => f.split(",").map((s) => s.trim()))
+      .filter(Boolean);
   }
 
   return filterArg

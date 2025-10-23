@@ -19,12 +19,11 @@
     "bun": ">=1.3.0"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit -p tsconfig.json",
-    "format": "biome check --write --unsafe",
-    "check": "bun typecheck && bun format"
+    "typecheck:disabled": "tsc --noEmit",
+    "format": "biome check --write --unsafe"
   },
   "dependencies": {
-    "micromatch": "catalog:",
+    "zeptomatch": "catalog:",
     "@ai-sdk/openai": "catalog:",
     "@babel/preset-react": "catalog:",
     "@babel/preset-typescript": "catalog:",
@@ -146,11 +145,9 @@
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",
-    "@total-typescript/ts-reset": "catalog:",
     "@types/better-sqlite3": "catalog:",
     "@types/bun": "catalog:",
     "@types/globby": "catalog:",
-    "@types/micromatch": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

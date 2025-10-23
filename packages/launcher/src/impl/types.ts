@@ -31,11 +31,10 @@ export type CmdArgsSchema = Record<string, CmdArgDefinition>;
 
 export interface CmdCfg {
   name: string;
-  description: string;
+  description?: string;
   version?: string;
   aliases?: string[];
   examples?: string[];
-  category?: string;
 }
 
 export interface CmdDefinition<T extends CmdArgsSchema = CmdArgsSchema> {
@@ -46,6 +45,7 @@ export interface CmdDefinition<T extends CmdArgsSchema = CmdArgsSchema> {
 
 export type CmdHandler<T extends CmdArgsSchema = CmdArgsSchema> = (
   args: ParsedArgs<T>,
+  parentArgs?: ParsedArgs<any>,
 ) => Promise<void> | void;
 
 // Enhanced type inference for parsed arguments
@@ -73,15 +73,26 @@ export type CmdRegistry = Map<string, CmdLoader>;
 
 export interface CmdMetadata {
   name: string;
-  description: string;
-  category?: string;
+  description?: string;
   aliases?: string[];
   version?: string;
   examples?: string[];
+}
+
+export interface CmdNode {
+  name: string;
+  path: string;
+  depth: number;
+  parent?: string;
+  children: Map<string, CmdNode>;
+  loader: CmdLoader;
+  metadata: () => Promise<CmdMetadata>;
 }
 
 export interface DiscoveryResult {
   registry: CmdRegistry;
   aliases: Map<string, string>;
   metadata: Map<string, () => Promise<CmdMetadata>>;
+  hierarchy: Map<string, CmdNode>;
+  rootCommands: Set<string>;
 }

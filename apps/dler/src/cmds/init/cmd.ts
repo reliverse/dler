@@ -5,6 +5,7 @@ import {
   defineCmdArgs,
   defineCmdCfg,
 } from "@reliverse/dler-launcher";
+import { logger } from "@reliverse/dler-logger";
 import { finalizePromptIO } from "@reliverse/dler-prompt";
 import { $ } from "bun";
 import {
@@ -14,41 +15,33 @@ import {
 } from "./impl/generators";
 import { promptMonorepoConfig } from "./impl/prompts";
 
-const writeLine = (text: string): void => {
-  Bun.write(Bun.stdout, `${text}\n`);
-};
-
-const writeError = (text: string): void => {
-  Bun.write(Bun.stderr, `${text}\n`);
-};
-
 const initCmd = async (): Promise<void> => {
   try {
     const config = await promptMonorepoConfig();
     await finalizePromptIO();
 
-    writeLine("\n🔨 Generating monorepo structure...\n");
+    logger.info("\n🔨 Generating monorepo structure...\n");
 
     await generateRootPackageJson(config);
     await generateRootFiles(config);
     await generateAllPackages(config);
 
-    writeLine("\n📦 Installing dependencies...\n");
+    logger.info("\n📦 Installing dependencies...\n");
 
     await $`bun install`.cwd(config.rootPath);
 
-    writeLine("\n✅ Monorepo created successfully!");
-    writeLine(`\n📁 Location: ${config.rootPath}`);
-    writeLine("\nTo get started:");
-    writeLine(`  cd ${config.rootPath}`);
-    writeLine("  bun --filter '*' dev\n");
+    logger.success("\n✅ Monorepo created successfully!");
+    logger.success(`\n📁 Location: ${config.rootPath}`);
+    logger.success("\nTo get started:");
+    logger.log(`  cd ${config.rootPath}`);
+    logger.log("  bun --filter '*' dev\n");
   } catch (error) {
-    writeError("\n❌ Error creating monorepo:");
+    logger.error("\n❌ Error creating monorepo:");
 
     if (error instanceof Error) {
-      writeError(error.message);
+      logger.error(error.message);
     } else {
-      writeError(String(error));
+      logger.error(String(error));
     }
 
     process.exit(1);

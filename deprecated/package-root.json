@@ -26,7 +26,6 @@
     "stack:pack": "bun cli pack pack-input --output pack-output/better-t-stack",
     "stack:unpack": "bun cli pack pack-output/better-t-stack/better-t-stack-mod.ts --output unpacked-output/better-t-stack --unpack",
     "latest": "bun cli update && bun install && bun check",
-    "typecheck": "bun --filter '*' typecheck",
     "check": "bun --filter '*' check"
   },
   "workspaces": {

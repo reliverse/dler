@@ -9,6 +9,12 @@ interface ParseResult {
   parsedArgs: Record<string, unknown>;
 }
 
+interface ChainParseResult {
+  cmdChain: string[];
+  parsedArgs: Record<string, unknown>[];
+  remainingArgs: string[];
+}
+
 interface SchemaMetadata {
   aliasMap: Map<string, string>;
   camelCaseCache: Map<string, string>;
@@ -164,4 +170,60 @@ export const parseArgs = (
   }
 
   return { cmdName, parsedArgs };
+};
+
+export const parseCommandChain = (
+  argv: string[],
+  schemas: CmdArgsSchema[],
+): ChainParseResult => {
+  const cmdChain: string[] = [];
+  const parsedArgs: Record<string, unknown>[] = [];
+  let remainingArgs = [...argv];
+
+  for (let i = 0; i < schemas.length; i++) {
+    const schema = schemas[i];
+    if (!schema) break;
+
+    // Find the next command in the chain
+    let cmdName = "";
+    let argsStartIndex = 0;
+
+    for (let j = 0; j < remainingArgs.length; j++) {
+      const arg = remainingArgs[j];
+      if (arg && !arg.startsWith("-")) {
+        cmdName = arg;
+        argsStartIndex = j + 1;
+        break;
+      }
+    }
+
+    if (!cmdName) {
+      throw new ArgumentValidationError("command", "No command provided");
+    }
+
+    cmdChain.push(cmdName);
+
+    // Extract args for this command
+    const commandArgs: string[] = [];
+    for (let j = argsStartIndex; j < remainingArgs.length; j++) {
+      const arg = remainingArgs[j];
+      if (!arg) continue;
+
+      if (!arg.startsWith("-")) {
+        // Found next command, stop here
+        remainingArgs = remainingArgs.slice(j);
+        break;
+      }
+      commandArgs.push(arg);
+    }
+
+    // Parse args for this command
+    const { parsedArgs: cmdParsedArgs } = parseArgs(
+      [cmdName, ...commandArgs],
+      schema,
+    );
+    parsedArgs.push(cmdParsedArgs);
+  }
+
+  return { cmdChain, parsedArgs, remainingArgs };
 };

@@ -11,10 +11,13 @@
   },
   "scripts": {
     "dev": "bun src/mod.ts",
-    "bench": "bun bench/performance.ts"
+    "bench": "bun bench/performance.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@reliverse/dler-mapper": "workspace:*"
+    "@reliverse/dler-logger": "workspace:*",
+    "@reliverse/dler-mapper": "workspace:*",
+    "@reliverse/dler-helpers": "workspace:*"
   },
   "devDependencies": {
     "@reliverse/dler-tsconfig": "workspace:*",

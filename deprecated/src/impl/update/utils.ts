@@ -1,9 +1,9 @@
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import rematch from "@reliverse/rematch";
 import { $ } from "bun";
 import path from "path";
 import semver from "semver";
+import zeptomatch from "zeptomatch";
 import {
   getAllPkgManagers,
   type PackageManager,
@@ -69,7 +69,10 @@ export function isNonSemverSpecifier(versionSpec: string): boolean {
  * Check if a version update is semver-compatible with the current version range
  * Note: Returns false for exact versions (handled separately in checkPackageUpdate)
  */
-export function isSemverCompatible(currentVersionRange: string, latestVersion: string): boolean {
+export function isSemverCompatible(
+  currentVersionRange: string,
+  latestVersion: string,
+): boolean {
   try {
     // Skip npm aliases entirely
     if (isNpmAlias(currentVersionRange)) {
@@ -82,7 +85,10 @@ export function isSemverCompatible(currentVersionRange: string, latestVersion: s
     }
 
     // If the current version range is exact (no prefix), be conservative
-    if (!currentVersionRange.startsWith("^") && !currentVersionRange.startsWith("~")) {
+    if (
+      !currentVersionRange.startsWith("^") &&
+      !currentVersionRange.startsWith("~")
+    ) {
       return false;
     }
 
@@ -239,7 +245,8 @@ export function applyVersionUpdate(
       const catalogName = (match[1] ?? "") as string;
       if (!catalogName) continue;
       ensureWorkspaces();
-      if (!(pkg as any).workspaces.catalogs) (pkg as any).workspaces.catalogs = {};
+      if (!(pkg as any).workspaces.catalogs)
+        (pkg as any).workspaces.catalogs = {};
       if (!(pkg as any).workspaces.catalogs[catalogName])
         (pkg as any).workspaces.catalogs[catalogName] = {};
       (pkg as any).workspaces.catalogs[catalogName][depName] = newVersion;
@@ -253,8 +260,12 @@ export function applyVersionUpdate(
 /**
  * Fallback function to fetch package version directly from npm registry
  */
-export async function fetchVersionFromRegistry(packageName: string): Promise<string> {
-  const response = await fetch(`https://registry.npmjs.org/${packageName}/latest`);
+export async function fetchVersionFromRegistry(
+  packageName: string,
+): Promise<string> {
+  const response = await fetch(
+    `https://registry.npmjs.org/${packageName}/latest`,
+  );
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
   }
@@ -273,7 +284,9 @@ export async function getLatestVersion(packageName: string): Promise<string> {
     try {
       return await fetchVersionFromRegistry(packageName);
     } catch (fallbackError) {
-      throw new Error(`Failed to get latest version for ${packageName}: ${error}`);
+      throw new Error(
+        `Failed to get latest version for ${packageName}: ${error}`,
+      );
     }
   }
 }
@@ -297,7 +310,8 @@ export async function checkPackageUpdate(
     const latest = await getLatestVersion(packageName);
     const cleanCurrent = versionSpec.replace(/^[\^~]/, "");
     let isCompatible = isSemverCompatible(versionSpec, latest);
-    const isExact = !versionSpec.startsWith("^") && !versionSpec.startsWith("~");
+    const isExact =
+      !versionSpec.startsWith("^") && !versionSpec.startsWith("~");
 
     // Allow updates to latest version: exact versions always, and major updates when enabled (default)
     if (isExact || (!isCompatible && options.allowMajor)) {
@@ -341,21 +355,23 @@ export function prepareDependenciesForUpdate(
     const namePatterns = args.name as string[];
     filteredDeps = depsToUpdate.filter((dep) => {
       return namePatterns.some((pattern) => {
-        // If pattern contains glob chars, use rematch; otherwise exact match
+        // If pattern contains glob chars, use zeptomatch; otherwise exact match
         if (
           pattern.includes("*") ||
           pattern.includes("?") ||
           pattern.includes("[") ||
           pattern.includes("{")
         ) {
-          return rematch(pattern, dep);
+          return zeptomatch(pattern, dep);
         }
         return dep === pattern;
       });
     });
 
     // Show helpful info about pattern matching
-    const exactMatches = filteredDeps.filter((dep) => namePatterns.includes(dep));
+    const exactMatches = filteredDeps.filter((dep) =>
+      namePatterns.includes(dep),
+    );
     const patternMatches = filteredDeps.length - exactMatches.length;
 
     if (patternMatches > 0) {
@@ -366,21 +382,24 @@ export function prepareDependenciesForUpdate(
     }
 
     if (filteredDeps.length === 0) {
-      relinka("warn", `No dependencies found matching patterns: ${namePatterns.join(", ")}`);
+      relinka(
+        "warn",
+        `No dependencies found matching patterns: ${namePatterns.join(", ")}`,
+      );
     }
   } else {
     // Update all dependencies, respecting ignore list (supports glob patterns)
     const ignoreList = args.ignore || [];
     filteredDeps = depsToUpdate.filter((dep) => {
       return !ignoreList.some((ignorePattern: string) => {
-        // If pattern contains glob chars, use rematch; otherwise exact match
+        // If pattern contains glob chars, use zeptomatch; otherwise exact match
         if (
           ignorePattern.includes("*") ||
           ignorePattern.includes("?") ||
           ignorePattern.includes("[") ||
           ignorePattern.includes("{")
         ) {
-          return rematch(ignorePattern, dep);
+          return zeptomatch(ignorePattern, dep);
         }
         return dep === ignorePattern;
       });
@@ -389,7 +408,10 @@ export function prepareDependenciesForUpdate(
     // Show info about ignored packages
     const ignoredCount = depsToUpdate.length - filteredDeps.length;
     if (ignoredCount > 0 && ignoreList.length > 0) {
-      relinka("verbose", `Ignored ${ignoredCount} dependencies matching ignore patterns`);
+      relinka(
+        "verbose",
+        `Ignored ${ignoredCount} dependencies matching ignore patterns`,
+      );
     }
   }
 
@@ -399,7 +421,9 @@ export function prepareDependenciesForUpdate(
     filteredDeps = filteredDeps.filter((dep) => {
       const locations = allDepsMap[dep]?.locations || new Set<string>();
       // Check if any of the dependency's locations should be ignored
-      return !Array.from(locations).some((location) => ignoreFields.includes(location));
+      return !Array.from(locations).some((location) =>
+        ignoreFields.includes(location),
+      );
     });
 
     const ignoredFieldsCount = depsToUpdate.length - filteredDeps.length;
@@ -435,10 +459,9 @@ export async function updatePackageJsonFile(
   if (updatesToApply.length === 0) return 0;
 
   try {
-    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, "utf8")) as Record<
-      string,
-      any
-    >;
+    const packageJson = JSON.parse(
+      await fs.readFile(packageJsonPath, "utf8"),
+    ) as Record<string, any>;
     const updatedPackageJson = { ...packageJson };
 
     for (const update of updatesToApply) {
@@ -465,18 +488,31 @@ export async function updatePackageJsonFile(
           newVersion = `>=${update.latestVersion}`;
         } else {
           newVersion =
-            savePrefix === "none" ? update.latestVersion : `${savePrefix}${update.latestVersion}`;
+            savePrefix === "none"
+              ? update.latestVersion
+              : `${savePrefix}${update.latestVersion}`;
         }
       } else {
         // For other dependency types, use the standard prefix
         newVersion =
-          savePrefix === "none" ? update.latestVersion : `${savePrefix}${update.latestVersion}`;
+          savePrefix === "none"
+            ? update.latestVersion
+            : `${savePrefix}${update.latestVersion}`;
       }
 
-      applyVersionUpdate(updatedPackageJson, update.package, newVersion, locations);
+      applyVersionUpdate(
+        updatedPackageJson,
+        update.package,
+        newVersion,
+        locations,
+      );
     }
 
-    await fs.writeFile(packageJsonPath, JSON.stringify(updatedPackageJson, null, 2) + "\n", "utf8");
+    await fs.writeFile(
+      packageJsonPath,
+      JSON.stringify(updatedPackageJson, null, 2) + "\n",
+      "utf8",
+    );
 
     return updatesToApply.length;
   } catch (error) {
@@ -499,7 +535,9 @@ export function displayStructuredUpdateResults(
 ): void {
   const toUpdate = results.filter((r) => r.updated && !r.error);
   const errors = results.filter((r) => r.error);
-  const upToDate = results.filter((r) => !r.updated && !r.error && r.semverCompatible);
+  const upToDate = results.filter(
+    (r) => !r.updated && !r.error && r.semverCompatible,
+  );
 
   // Show errors first
   if (errors.length > 0) {
@@ -513,7 +551,10 @@ export function displayStructuredUpdateResults(
   // If not showing details, just show simplified success info
   if (!showDetails) {
     if (toUpdate.length === 0) {
-      relinka("log", `All ${upToDate.length} dependencies are already up to date`);
+      relinka(
+        "log",
+        `All ${upToDate.length} dependencies are already up to date`,
+      );
     } else {
       relinka(
         "log",
@@ -548,7 +589,9 @@ export function displayStructuredUpdateResults(
   for (const [filePath, fileResults] of resultsByFile.entries()) {
     // Show relative path from user's cwd
     const relativePath =
-      filePath !== "unknown" ? path.relative(process.cwd(), filePath) : "unknown";
+      filePath !== "unknown"
+        ? path.relative(process.cwd(), filePath)
+        : "unknown";
     relinka("info", `${relativePath}`);
 
     // Group by dependency category
@@ -562,9 +605,14 @@ export function displayStructuredUpdateResults(
     }
 
     // Show up-to-date dependencies
-    const upToDateInFile = fileResults.filter((r) => !r.updated && !r.error && r.semverCompatible);
+    const upToDateInFile = fileResults.filter(
+      (r) => !r.updated && !r.error && r.semverCompatible,
+    );
     if (upToDateInFile.length > 0) {
-      relinka("log", `  * ${upToDateInFile.length} deps are already up to date`);
+      relinka(
+        "log",
+        `  * ${upToDateInFile.length} deps are already up to date`,
+      );
     }
 
     // Show available updates
@@ -573,19 +621,21 @@ export function displayStructuredUpdateResults(
       relinka("log", `  * ${toUpdateInFile.length} deps can be updated:`);
 
       // Sort categories for consistent display
-      const sortedCategories = Array.from(byCategory.entries()).sort(([a], [b]) => {
-        // Order: catalog, dependencies, devDependencies, peerDependencies, optionalDependencies
-        const order = {
-          catalog: 0,
-          dependencies: 1,
-          devDependencies: 2,
-          peerDependencies: 3,
-          optionalDependencies: 4,
-        };
-        const aOrder = order[a as keyof typeof order] ?? 999;
-        const bOrder = order[b as keyof typeof order] ?? 999;
-        return aOrder - bOrder;
-      });
+      const sortedCategories = Array.from(byCategory.entries()).sort(
+        ([a], [b]) => {
+          // Order: catalog, dependencies, devDependencies, peerDependencies, optionalDependencies
+          const order = {
+            catalog: 0,
+            dependencies: 1,
+            devDependencies: 2,
+            peerDependencies: 3,
+            optionalDependencies: 4,
+          };
+          const aOrder = order[a as keyof typeof order] ?? 999;
+          const bOrder = order[b as keyof typeof order] ?? 999;
+          return aOrder - bOrder;
+        },
+      );
 
       for (const [category, updates] of sortedCategories) {
         const categoryUpdates = updates.filter((r) => r.updated && !r.error);
@@ -623,7 +673,10 @@ export function displayStructuredUpdateResults(
 
   // Summary
   if (toUpdate.length === 0) {
-    relinka("log", `All ${upToDate.length} dependencies are already up to date`);
+    relinka(
+      "log",
+      `All ${upToDate.length} dependencies are already up to date`,
+    );
   } else {
     relinka(
       "success",
@@ -654,7 +707,10 @@ export async function runInstallCommand(packageManager: any): Promise<void> {
         throw new Error(`Unsupported package manager: ${packageManager.name}`);
     }
   } catch (error) {
-    relinka("warn", `Failed to run install command for ${packageManager.name}: ${error}`);
+    relinka(
+      "warn",
+      `Failed to run install command for ${packageManager.name}: ${error}`,
+    );
     throw error;
   }
 }
@@ -663,7 +719,9 @@ export async function getPmOptions() {
   const projectPath = getCurrentWorkingDirectory();
   const detectedPMs = await getAllPkgManagers(projectPath);
   // Get unique detected package managers with their sources
-  const detectedPMMap = new Map(detectedPMs.map((pm) => [pm.packageManager, pm.source]));
+  const detectedPMMap = new Map(
+    detectedPMs.map((pm) => [pm.packageManager, pm.source]),
+  );
   // Create options list
   const pmOptions = ["bun", "pnpm", "npm", "yarn"].map((pm) => {
     const option: { label: string; value: PackageManager; hint?: string } = {

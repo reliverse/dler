@@ -67,7 +67,7 @@ class PerformanceBenchmark {
       process.argv = ["node", "test", "--help"];
 
       try {
-        await runLauncher({ cmdsDir: "./test-cmds" });
+        await runLauncher(import.meta.url, { cmdsDir: "../test-cmds" });
       } finally {
         process.argv = originalArgv;
       }
@@ -82,7 +82,7 @@ class PerformanceBenchmark {
         process.argv = ["node", "test", "--help"];
 
         try {
-          await runLauncher({ cmdsDir: "./test-cmds" });
+          await runLauncher(import.meta.url, { cmdsDir: "../test-cmds" });
         } finally {
           process.argv = originalArgv;
         }
@@ -99,7 +99,7 @@ class PerformanceBenchmark {
         process.argv = ["node", "test", "test-command", "--verbose"];
 
         try {
-          await runLauncher({ cmdsDir: "./test-cmds" });
+          await runLauncher(import.meta.url, { cmdsDir: "../test-cmds" });
         } finally {
           process.argv = originalArgv;
         }
@@ -166,7 +166,7 @@ const createTestCommands = async (): Promise<void> => {
   const { mkdirSync, writeFileSync } = await import("node:fs");
   const { join } = await import("node:path");
 
-  const testCmdsDir = join(process.cwd(), "test-cmds");
+  const testCmdsDir = join(process.cwd(), "packages", "launcher", "test-cmds");
 
   try {
     mkdirSync(testCmdsDir, { recursive: true });
@@ -195,7 +195,6 @@ const args = defineCmdArgs({
 const cfg = defineCmdCfg({
   name: "test-command",
   description: "A test command for benchmarking",
-  category: "Testing",
   aliases: ["test"],
   examples: ["test-command --verbose", "test-command --count 5"],
 });
@@ -230,7 +229,6 @@ const args = defineCmdArgs({
 const cfg = defineCmdCfg({
   name: "another-command",
   description: "Another test command",
-  category: "Testing",
   version: "1.0.0",
 });
 
@@ -253,7 +251,6 @@ const args = defineCmdArgs({});
 const cfg = defineCmdCfg({
   name: "third-command",
   description: "A simple command with no arguments",
-  category: "Utilities",
 });
 
 export default defineCmd(async () => {
@@ -268,7 +265,8 @@ export default defineCmd(async () => {
 
 // Run benchmark if this file is executed directly
 if (import.meta.main) {
-  await createTestCommands();
+  // Skip creating test commands since they already exist
+  // await createTestCommands();
 
   const benchmark = new PerformanceBenchmark();
   await benchmark.benchmarkStartup();

@@ -18,11 +18,10 @@
     "size": "bun examples/benchmarks/bundle-size.ts",
     "bench": "bun examples/benchmarks/performance.ts",
     "bench:bun": "bun examples/benchmarks/performance.ts --isBun",
-    "check": "bun tsc --noEmit"
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@reliverse/dler-tsconfig": "workspace:*",
-    "@total-typescript/ts-reset": "catalog:",
     "typescript": "catalog:",
     "@types/bun": "catalog:"
   }

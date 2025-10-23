@@ -1,6 +1,4 @@
-export const write = (text: string): void => {
-  Bun.write(Bun.stdout, text);
-};
+import { logger } from "@reliverse/dler-logger";
 
 // We're maintaining a single stdin reader and buffer across all prompts to avoid
 // platform-specific issues with repeatedly creating readers (notably on Windows).
@@ -57,9 +55,9 @@ export const askQuestion = async (
   defaultValue?: string,
 ): Promise<string> => {
   if (defaultValue) {
-    write(`${question} (${defaultValue}): `);
+    logger.log(`${question} (${defaultValue}): `);
   } else {
-    write(`${question}: `);
+    logger.log(`${question}: `);
   }
 
   const answer = await readLine();

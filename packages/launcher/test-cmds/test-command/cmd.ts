@@ -17,7 +17,6 @@ const args = defineCmdArgs({
 const cfg = defineCmdCfg({
   name: "test-command",
   description: "A test command for benchmarking",
-  category: "Testing",
   aliases: ["test"],
   examples: ["test-command --verbose", "test-command --count 5"],
 });

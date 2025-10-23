@@ -11,7 +11,10 @@ export const defineCmd = <
   const Args extends CmdArgsSchema,
   const Cfg extends CmdCfg,
 >(
-  handler: (args: ParsedArgs<Args>) => Promise<void> | void,
+  handler: (
+    args: ParsedArgs<Args>,
+    parentArgs?: ParsedArgs<any>,
+  ) => Promise<void> | void,
   args: Args,
   cfg: Cfg,
 ): CmdDefinition<Args> => ({ handler, args, cfg });

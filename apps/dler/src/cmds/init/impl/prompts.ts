@@ -1,15 +1,16 @@
+import { logger } from "@reliverse/dler-logger";
 import { askQuestion } from "@reliverse/dler-prompt";
 import { DEFAULT_LICENSE, DEFAULT_VERSION, WORKSPACES } from "./config";
 import type { MonorepoConfig, PackageInfo } from "./types";
 import { createFullPath, fileExists, getWorkspaceScope } from "./utils";
-import { validateMonorepoName, validatePackageName, validateVersion } from "./validators";
-
-const writeLine = (text: string): void => {
-  Bun.write(Bun.stdout, `${text}\n`);
-};
+import {
+  validateMonorepoName,
+  validatePackageName,
+  validateVersion,
+} from "./validators";
 
 export const promptMonorepoConfig = async (): Promise<MonorepoConfig> => {
-  writeLine("🚀 Bun Monorepo Bootstrapper\n");
+  logger.info("🚀 Bun Monorepo Bootstrapper\n");
 
   // Try to read existing root package.json to avoid re-asking known values
   const rootPath = process.cwd();
@@ -33,7 +34,7 @@ export const promptMonorepoConfig = async (): Promise<MonorepoConfig> => {
       const validation = validateMonorepoName(name);
 
       if (!validation.valid) {
-        writeLine(`❌ ${validation.error}`);
+        logger.error(`❌ ${validation.error}`);
         continue;
       }
 
@@ -58,7 +59,7 @@ export const promptMonorepoConfig = async (): Promise<MonorepoConfig> => {
       const validation = validateVersion(version);
 
       if (!validation.valid) {
-        writeLine(`❌ ${validation.error}`);
+        logger.error(`❌ ${validation.error}`);
         continue;
       }
 
@@ -91,8 +92,10 @@ export const promptMonorepoConfig = async (): Promise<MonorepoConfig> => {
 const promptPackages = async (): Promise<PackageInfo[]> => {
   const packages: PackageInfo[] = [];
 
-  writeLine("\n📦 Package Configuration");
-  writeLine("Enter package names (one per prompt). Press Enter with empty input to finish.\n");
+  logger.info("\n📦 Package Configuration");
+  logger.info(
+    "Enter package names (one per prompt). Press Enter with empty input to finish.\n",
+  );
 
   let continueAdding = true;
   let packageIndex = 1;
@@ -110,11 +113,14 @@ const promptPackages = async (): Promise<PackageInfo[]> => {
     const validation = validatePackageName(packageName);
 
     if (!validation.valid) {
-      writeLine(`❌ ${validation.error}`);
+      logger.error(`❌ ${validation.error}`);
       continue;
     }
 
-    const workspace = await askQuestion("Workspace directory", WORKSPACES.PACKAGES);
+    const workspace = await askQuestion(
+      "Workspace directory",
+      WORKSPACES.PACKAGES,
+    );
     const scope = getWorkspaceScope(workspace);
 
     packages.push({
@@ -123,7 +129,7 @@ const promptPackages = async (): Promise<PackageInfo[]> => {
       scope,
     });
 
-    writeLine(`✅ Added ${scope}${packageName}\n`);
+    logger.success(`✅ Added ${scope}${packageName}\n`);
     packageIndex++;
   }
 

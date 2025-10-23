@@ -10,7 +10,11 @@
     }
   },
   "scripts": {
-    "dev": "bun src/mod.ts"
+    "dev": "bun src/mod.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@reliverse/dler-logger": "workspace:*"
   },
   "devDependencies": {
     "@reliverse/dler-tsconfig": "workspace:*",

@@ -14,6 +14,8 @@ const HELP_TEMPLATES = {
     `\n${name} - ${description}`,
   version: (version: string) => `Version: ${version}`,
   usage: (name: string) => `\nUsage:\n  ${name} [options]`,
+  usageWithSubCommands: (name: string) =>
+    `\nUsage:\n  ${name} [subcommand] [options]`,
   optionsHeader: `\nOptions:`,
   requiredNote: `\n* = required`,
   examplesHeader: `\nExamples:`,
@@ -65,7 +67,9 @@ const getArgHelp = (name: string, def: CmdArgsSchema[string]): string => {
   return cached;
 };
 
-export const generateCommandHelp = (definition: CmdDefinition): string => {
+export const generateCommandHelp = async (
+  definition: CmdDefinition,
+): Promise<string> => {
   const { cfg, args } = definition;
 
   // Create cache key based on command configuration
@@ -77,7 +81,10 @@ export const generateCommandHelp = (definition: CmdDefinition): string => {
   }
 
   const lines: string[] = [
-    HELP_TEMPLATES.commandHeader(cfg.name, cfg.description),
+    HELP_TEMPLATES.commandHeader(
+      cfg.name,
+      cfg.description || "No description available",
+    ),
   ];
 
   if (cfg.version) {
@@ -126,7 +133,8 @@ const formatCommandHelp = (name: string, metadata: CmdMetadata): string => {
 
   if (!cached) {
     const aliases = metadata.aliases ? ` (${metadata.aliases.join(", ")})` : "";
-    cached = `  ${name}${aliases}\n      ${metadata.description}`;
+    const description = metadata.description || "No description available";
+    cached = `  ${name}${aliases}\n      ${description}`;
     commandHelpCache.set(cacheKey, cached);
   }
 
@@ -146,8 +154,6 @@ export const generateGlobalHelp = async (
 
   const lines: string[] = [HELP_TEMPLATES.globalHeader];
 
-  const categorized = new Map<string, Array<[string, CmdMetadata]>>();
-
   // Load all metadata in parallel with controlled concurrency
   const metadataResults = await pMap(
     Array.from(registry.metadata.entries()),
@@ -158,24 +164,12 @@ export const generateGlobalHelp = async (
     { concurrency: 5 }, // Limit concurrency for metadata loading
   );
 
-  // Categorize the loaded metadata
-  for (const [name, metadata] of metadataResults) {
-    const category = metadata.category ?? "General";
-
-    if (!categorized.has(category)) {
-      categorized.set(category, []);
-    }
-
-    categorized.get(category)!.push([name, metadata]);
-  }
+  // Sort commands alphabetically by name
+  metadataResults.sort(([a], [b]) => a.localeCompare(b));
 
   // Build help text using cached formatting
-  for (const [category, commands] of categorized) {
-    lines.push(`${category}:`);
-    for (const [name, metadata] of commands) {
-      lines.push(formatCommandHelp(name, metadata));
-    }
-    lines.push("");
+  for (const [name, metadata] of metadataResults) {
+    lines.push(formatCommandHelp(name, metadata));
   }
 
   lines.push(HELP_TEMPLATES.helpFooter);

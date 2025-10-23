@@ -2,6 +2,8 @@
 
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { writeErrorLines } from "@reliverse/dler-helpers";
+import { logger } from "@reliverse/dler-logger";
 import { discoverCommands } from "./impl/discovery";
 import {
   CommandLoadError,
@@ -42,25 +44,6 @@ const getCallerDirectory = (importMetaUrl: string): string => {
   return dirname(fileURLToPath(importMetaUrl));
 };
 
-// Optimized output functions that batch writes
-const textEncoder = new TextEncoder();
-
-const writeLine = (text: string): void => {
-  const encoded = textEncoder.encode(`${text}\n`);
-  Bun.write(Bun.stdout, encoded);
-};
-
-const writeErrorLines = (lines: string[]): void => {
-  // Pre-allocate string buffer for better performance
-  const buffer = new Array(lines.length + 1);
-  for (let i = 0; i < lines.length; i++) {
-    buffer[i] = lines[i];
-  }
-  buffer[lines.length] = "";
-  const encoded = textEncoder.encode(buffer.join("\n"));
-  Bun.write(Bun.stderr, encoded);
-};
-
 export const runLauncher = async (
   importMetaUrl: string,
   options: LauncherOptions = {},
@@ -80,31 +63,128 @@ export const runLauncher = async (
 
     if (argv.length === 0 || argv[0] === "--help" || argv[0] === "-h") {
       // Use cached global help for faster display
-      writeLine(await generateGlobalHelp(registry));
+      logger.log(await generateGlobalHelp(registry));
       process.exit(0);
     }
 
-    const cmdNameOrAlias = argv[0]!;
-    const cmdName = resolveCommand(registry, cmdNameOrAlias);
+    // Check if this is a sub-command invocation
+    const isSubCommand = argv.length > 1 && !argv[1]!.startsWith("-");
 
-    const loader = registry.registry.get(cmdName);
-    if (!loader) {
-      throw new CommandNotFoundError(
-        cmdNameOrAlias,
-        Array.from(registry.registry.keys()),
+    if (isSubCommand) {
+      // Handle sub-command execution using folder-based discovery
+      const parentName = resolveCommand(registry, argv[0]!);
+      const subCommandName = resolveCommand(registry, argv[1]!);
+
+      // Check if both parent and sub-command exist in the hierarchy
+      const parentNode = registry.hierarchy.get(parentName);
+      const subCommandNode = registry.hierarchy.get(subCommandName);
+
+      if (!parentNode) {
+        throw new CommandNotFoundError(
+          argv[0]!,
+          Array.from(registry.registry.keys()),
+        );
+      }
+
+      if (!subCommandNode || subCommandNode.parent !== parentName) {
+        // Get available sub-commands for this parent
+        const availableSubCommands = Array.from(parentNode.children.keys());
+        throw new CommandNotFoundError(subCommandName, availableSubCommands);
+      }
+
+      // Load both parent and sub-command definitions
+      const parentDefinition = await parentNode.loader();
+      const subCommandDefinition = await subCommandNode.loader();
+
+      if (argv.includes("--help") || argv.includes("-h")) {
+        logger.log(await generateCommandHelp(subCommandDefinition));
+        process.exit(0);
+      }
+
+      // Separate parent and sub-command arguments
+      const subCommandIndex = argv.findIndex(
+        (arg, index) => index > 0 && !arg.startsWith("-"),
       );
+
+      // Filter parent args from the full argument list
+      const parentArgs: string[] = [];
+      const subCommandArgsFiltered: string[] = [];
+
+      for (let i = 1; i < argv.length; i++) {
+        const arg = argv[i]!;
+        if (i === subCommandIndex) {
+          // This is the sub-command name, skip it
+          continue;
+        }
+
+        // Check if this argument belongs to the parent command
+        const isParentArg = Object.keys(parentDefinition.args).some((key) => {
+          const def = parentDefinition.args[key];
+          if (!def) return false;
+          return (
+            arg === `--${key}` ||
+            arg === `-${key}` ||
+            (def.aliases && def.aliases.some((alias) => arg === `-${alias}`))
+          );
+        });
+
+        if (isParentArg) {
+          parentArgs.push(arg);
+          // If it's a flag with a value, add the next argument too
+          if (i + 1 < argv.length && !argv[i + 1]!.startsWith("-")) {
+            parentArgs.push(argv[i + 1]!);
+            i++; // Skip the next argument as it's the value
+          }
+        } else {
+          subCommandArgsFiltered.push(arg);
+        }
+      }
+
+      // Parse parent args (only if there are any)
+      let parentParsedArgs = {};
+      if (parentArgs.length > 0) {
+        const { parsedArgs } = parseArgs(
+          [parentName, ...parentArgs],
+          parentDefinition.args,
+        );
+        parentParsedArgs = parsedArgs;
+      }
+
+      // Parse sub-command args
+      const { parsedArgs: subCommandParsedArgs } = parseArgs(
+        [subCommandName, ...subCommandArgsFiltered],
+        subCommandDefinition.args,
+      );
+
+      // Execute sub-command with parent args
+      await subCommandDefinition.handler(
+        subCommandParsedArgs as never,
+        parentParsedArgs as never,
+      );
+    } else {
+      // Handle single command execution
+      const cmdNameOrAlias = argv[0]!;
+      const cmdName = resolveCommand(registry, cmdNameOrAlias);
+
+      const loader = registry.registry.get(cmdName);
+      if (!loader) {
+        throw new CommandNotFoundError(
+          cmdNameOrAlias,
+          Array.from(registry.registry.keys()),
+        );
+      }
+
+      const definition = await loader();
+
+      if (argv.includes("--help") || argv.includes("-h")) {
+        logger.log(await generateCommandHelp(definition));
+        process.exit(0);
+      }
+
+      const { parsedArgs } = parseArgs(argv, definition.args);
+
+      await definition.handler(parsedArgs as never);
     }
-
-    const definition = await loader();
-
-    if (argv.includes("--help") || argv.includes("-h")) {
-      writeLine(generateCommandHelp(definition));
-      process.exit(0);
-    }
-
-    const { parsedArgs } = parseArgs(argv, definition.args);
-
-    await definition.handler(parsedArgs as never);
   } catch (error) {
     if (error instanceof LauncherError) {
       if (onError) {

@@ -1,3 +1,5 @@
+import { relinka } from "@reliverse/relinka";
+import { defineArgs, defineCommand } from "@reliverse/rempts";
 import {
 	commonEndActions,
 	commonStartActions,
@@ -11,9 +13,7 @@ import {
 	parseFilterArgs,
 	promptWorkspacePackages,
 	showPackageSummary,
-} from "@reliverse/dler";
-import { relinka } from "@reliverse/relinka";
-import { defineArgs, defineCommand } from "@reliverse/rempts";
+} from "../../../mod";
 
 export default defineCommand({
 	meta: {
@@ -234,8 +234,8 @@ export default defineCommand({
 				} else {
 					// Apply config patterns if no CLI filters
 					filteredPackages =
-						config.monorepoWorkspaces?.includePatterns.length > 0 ||
-						config.monorepoWorkspaces?.excludePatterns.length > 0
+						(config.monorepoWorkspaces?.includePatterns?.length ?? 0) > 0 ||
+						(config.monorepoWorkspaces?.excludePatterns?.length ?? 0) > 0
 							? workspacePackages.filter((pkg) => {
 									const includeMatch =
 										config.monorepoWorkspaces?.includePatterns.length === 0 ||
