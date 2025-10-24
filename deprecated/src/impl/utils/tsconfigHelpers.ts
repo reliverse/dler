@@ -5,7 +5,9 @@ import fs from "@reliverse/relifso";
  * Searches upward from the given path for a tsconfig.json.
  * Returns the full path if found, otherwise undefined.
  */
-export async function findTsconfigUp(fromPath: string): Promise<string | undefined> {
+export async function findTsconfigUp(
+  fromPath: string,
+): Promise<string | undefined> {
   let currentDir = fromPath;
   const rootPath = path.parse(currentDir).root;
 

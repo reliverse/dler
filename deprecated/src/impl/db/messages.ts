@@ -85,14 +85,23 @@ export function getRandomMessage(
   kind: "welcome" | "initial" | "category" | "subcategory" | "details",
 ) {
   if (kind === "welcome") {
-    return randomWelcomeTitle[Math.floor(Math.random() * randomWelcomeTitle.length)] ?? "";
+    return (
+      randomWelcomeTitle[
+        Math.floor(Math.random() * randomWelcomeTitle.length)
+      ] ?? ""
+    );
   } else if (kind === "initial") {
-    return randomInitialMessage[Math.floor(Math.random() * randomInitialMessage.length)] ?? "";
+    return (
+      randomInitialMessage[
+        Math.floor(Math.random() * randomInitialMessage.length)
+      ] ?? ""
+    );
   }
   if (kind === "category") {
     return (
-      randomProjectCategoryTitle[Math.floor(Math.random() * randomProjectCategoryTitle.length)] ??
-      ""
+      randomProjectCategoryTitle[
+        Math.floor(Math.random() * randomProjectCategoryTitle.length)
+      ] ?? ""
     );
   }
   if (kind === "subcategory") {
@@ -104,7 +113,9 @@ export function getRandomMessage(
   }
   if (kind === "details") {
     return (
-      randomWebsiteDetailsTitle[Math.floor(Math.random() * randomWebsiteDetailsTitle.length)] ?? ""
+      randomWebsiteDetailsTitle[
+        Math.floor(Math.random() * randomWebsiteDetailsTitle.length)
+      ] ?? ""
     );
   }
   return "";

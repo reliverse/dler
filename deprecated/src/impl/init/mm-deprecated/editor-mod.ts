@@ -28,7 +28,11 @@ async function detectPackageManager(cwd: string): Promise<PackageManager> {
   return PackageManager.Npm;
 }
 
-async function installDependencies(cwd: string, dependencies: string[], isDev: boolean) {
+async function installDependencies(
+  cwd: string,
+  dependencies: string[],
+  isDev: boolean,
+) {
   const pm = await detectPackageManager(cwd);
   const installCmd = pm === PackageManager.Npm ? "install" : "add";
   const args = [installCmd, ...dependencies];
@@ -38,7 +42,10 @@ async function installDependencies(cwd: string, dependencies: string[], isDev: b
 
   try {
     await execa(pm, args, { cwd });
-    relinka("success", `Installed ${isDev ? "dev " : ""}dependencies with ${pm}`);
+    relinka(
+      "success",
+      `Installed ${isDev ? "dev " : ""}dependencies with ${pm}`,
+    );
   } catch (error) {
     relinka(
       "error",
@@ -103,7 +110,9 @@ async function updateEnvFile(cwd: string, envVars: Record<string, string>) {
 
   try {
     // Update or create .env
-    let envContent = (await fs.pathExists(envPath)) ? await fs.readFile(envPath, "utf-8") : "";
+    let envContent = (await fs.pathExists(envPath))
+      ? await fs.readFile(envPath, "utf-8")
+      : "";
     let envExampleContent = (await fs.pathExists(envExamplePath))
       ? await fs.readFile(envExamplePath, "utf-8")
       : "";
@@ -130,7 +139,11 @@ async function updateEnvFile(cwd: string, envVars: Record<string, string>) {
   }
 }
 
-export async function installIntegration(cwd: string, config: IntegrationConfig, isDev: boolean) {
+export async function installIntegration(
+  cwd: string,
+  config: IntegrationConfig,
+  isDev: boolean,
+) {
   try {
     relinka("info", `Installing ${config.name}...`);
 
@@ -241,7 +254,10 @@ export async function removeIntegration(cwd: string, config: RemovalConfig) {
     if (await fs.pathExists(envExamplePath)) {
       let envExampleContent = await fs.readFile(envExamplePath, "utf-8");
       config.envVars.forEach((key) => {
-        envExampleContent = envExampleContent.replace(new RegExp(`^${key}=.*$\\n?`, "m"), "");
+        envExampleContent = envExampleContent.replace(
+          new RegExp(`^${key}=.*$\\n?`, "m"),
+          "",
+        );
       });
       await fs.writeFile(envExamplePath, envExampleContent.trim());
     }

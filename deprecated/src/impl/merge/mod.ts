@@ -40,7 +40,8 @@ export const parseCSV = (s: string) =>
     .map((t) => sanitizeInput(t.trim()))
     .filter(Boolean);
 
-export const unescape = (s: string) => s.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
+export const unescape = (s: string) =>
+  s.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
 
 export const writeResult = async (
   sections: string[],

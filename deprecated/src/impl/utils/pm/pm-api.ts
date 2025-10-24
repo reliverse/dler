@@ -22,19 +22,23 @@ import {
  * @param options.filter - Filter workspaces to operate on (e.g., 'pkg-*', '!pkg-c').
  */
 export async function installDependencies(
-  options: Pick<OperationOptions, "cwd" | "silent" | "packageManager" | "filter"> & {
+  options: Pick<
+    OperationOptions,
+    "cwd" | "silent" | "packageManager" | "filter"
+  > & {
     frozenLockFile?: boolean;
   } = {},
 ) {
   const resolvedOptions = await resolveOperationOptions(options);
 
-  const pmToFrozenLockfileInstallCommand: Record<PackageManagerName, string[]> = {
-    npm: ["ci"],
-    yarn: ["install", "--immutable"],
-    bun: ["install", "--frozen-lockfile"],
-    pnpm: ["install", "--frozen-lockfile"],
-    deno: ["install", "--frozen"],
-  };
+  const pmToFrozenLockfileInstallCommand: Record<PackageManagerName, string[]> =
+    {
+      npm: ["ci"],
+      yarn: ["install", "--immutable"],
+      bun: ["install", "--frozen-lockfile"],
+      pnpm: ["install", "--frozen-lockfile"],
+      deno: ["install", "--frozen"],
+    };
 
   const commandArgs = options.frozenLockFile
     ? pmToFrozenLockfileInstallCommand[resolvedOptions.packageManager.name]
@@ -62,7 +66,10 @@ export async function installDependencies(
  * @param options.workspace - The name of the workspace to use.
  * @param options.global - Whether to run the command in global mode.
  */
-export async function addDependency(name: string | string[], options: OperationOptions = {}) {
+export async function addDependency(
+  name: string | string[],
+  options: OperationOptions = {},
+) {
   const resolvedOptions = await resolveOperationOptions(options);
 
   const names = Array.isArray(name) ? name : [name];
@@ -85,7 +92,8 @@ export async function addDependency(name: string | string[], options: OperationO
       ? [
           ...getWorkspaceArgs(resolvedOptions),
           // Global is not supported in berry: yarnpkg/berry#821
-          resolvedOptions.global && resolvedOptions.packageManager.majorVersion === "1"
+          resolvedOptions.global &&
+          resolvedOptions.packageManager.majorVersion === "1"
             ? "global"
             : "",
           "add",
@@ -118,7 +126,9 @@ export async function addDependency(name: string | string[], options: OperationO
       if (!pkg.peerDependencies || pkg.name !== pkgName) {
         continue;
       }
-      for (const [peerDependency, version] of Object.entries(pkg.peerDependencies)) {
+      for (const [peerDependency, version] of Object.entries(
+        pkg.peerDependencies,
+      )) {
         if (pkg.peerDependenciesMeta?.[peerDependency]?.optional) {
           continue;
         }
@@ -175,7 +185,10 @@ export async function addDevDependency(
  * @param options.global - Whether to run the command in global mode.
  * @param options.filter - Filter workspaces to operate on (e.g., 'pkg-*', '!pkg-c').
  */
-export async function removeDependency(name: string | string[], options: OperationOptions = {}) {
+export async function removeDependency(
+  name: string | string[],
+  options: OperationOptions = {},
+) {
   const resolvedOptions = await resolveOperationOptions(options);
 
   const names = Array.isArray(name) ? name : [name];
@@ -188,7 +201,8 @@ export async function removeDependency(name: string | string[], options: Operati
     resolvedOptions.packageManager.name === "yarn"
       ? [
           // Global is not supported in berry: yarnpkg/berry#821
-          resolvedOptions.global && resolvedOptions.packageManager.majorVersion === "1"
+          resolvedOptions.global &&
+          resolvedOptions.packageManager.majorVersion === "1"
             ? "global"
             : "",
           ...getWorkspaceArgs(resolvedOptions),
@@ -198,7 +212,9 @@ export async function removeDependency(name: string | string[], options: Operati
           ...names,
         ]
       : [
-          resolvedOptions.packageManager.name === "npm" ? "uninstall" : "remove",
+          resolvedOptions.packageManager.name === "npm"
+            ? "uninstall"
+            : "remove",
           ...getWorkspaceArgs(resolvedOptions),
           resolvedOptions.dev ? "-D" : "",
           resolvedOptions.global ? "-g" : "",
@@ -252,14 +268,17 @@ export async function dedupeDependencies(
   } = {},
 ) {
   const resolvedOptions = await resolveOperationOptions(options);
-  const isSupported = !["bun", "deno"].includes(resolvedOptions.packageManager.name);
+  const isSupported = !["bun", "deno"].includes(
+    resolvedOptions.packageManager.name,
+  );
   const recreateLockfile = options.recreateLockfile ?? !isSupported;
   if (recreateLockfile) {
     const lockfiles = Array.isArray(resolvedOptions.packageManager.lockFile)
       ? resolvedOptions.packageManager.lockFile
       : [resolvedOptions.packageManager.lockFile];
     for (const lockfile of lockfiles) {
-      if (lockfile) fs.rmSync(resolve(resolvedOptions.cwd, lockfile), { force: true });
+      if (lockfile)
+        fs.rmSync(resolve(resolvedOptions.cwd, lockfile), { force: true });
     }
     await installDependencies(resolvedOptions);
     return;
@@ -280,10 +299,15 @@ export async function dedupeDependencies(
     );
     return;
   }
-  throw new Error(`Deduplication is not supported for ${resolvedOptions.packageManager.name}`);
+  throw new Error(
+    `Deduplication is not supported for ${resolvedOptions.packageManager.name}`,
+  );
 }
 
-export async function updateDependencies(latest = true, options: OperationOptions = {}) {
+export async function updateDependencies(
+  latest = true,
+  options: OperationOptions = {},
+) {
   const resolvedOptions = await resolveOperationOptions(options);
   await executeCommand(
     resolvedOptions.packageManager.command,
@@ -310,7 +334,10 @@ export async function runScript(
 ) {
   const resolvedOptions = await resolveOperationOptions(options);
 
-  const args = [resolvedOptions.packageManager.name === "deno" ? "task" : "run", name];
+  const args = [
+    resolvedOptions.packageManager.name === "deno" ? "task" : "run",
+    name,
+  ];
 
   await executeCommand(resolvedOptions.packageManager.command, args, {
     cwd: resolvedOptions.cwd,

@@ -59,11 +59,17 @@ export async function convertToMonorepo(
   await fs.mkdir(path.join(projectPath, "packages"), { recursive: true });
 
   // Move current project to apps/web if it's not already in a monorepo structure
-  const packageJson = await readPackageJSON(path.join(projectPath, "package.json"));
+  const packageJson = await readPackageJSON(
+    path.join(projectPath, "package.json"),
+  );
   if (!packageJson.workspaces) {
-    await fs.move(path.join(projectPath, "src"), path.join(projectPath, "apps", "web", "src"), {
-      overwrite: true,
-    });
+    await fs.move(
+      path.join(projectPath, "src"),
+      path.join(projectPath, "apps", "web", "src"),
+      {
+        overwrite: true,
+      },
+    );
     await fs.move(
       path.join(projectPath, "package.json"),
       path.join(projectPath, "apps", "web", "package.json"),
@@ -80,9 +86,13 @@ export async function convertToMonorepo(
     ];
     for (const file of commonFiles) {
       if (await fs.pathExists(path.join(projectPath, file))) {
-        await fs.move(path.join(projectPath, file), path.join(projectPath, "apps", "web", file), {
-          overwrite: true,
-        });
+        await fs.move(
+          path.join(projectPath, file),
+          path.join(projectPath, "apps", "web", file),
+          {
+            overwrite: true,
+          },
+        );
       }
     }
   }
@@ -92,12 +102,20 @@ export async function convertToMonorepo(
     name: `${packageJson.name}-monorepo`,
     private: true,
     scripts: {
-      build: type === "turborepo" ? "turbo run build" : "bun run --cwd apps/web build",
-      dev: type === "turborepo" ? "turbo run dev" : "bun run --cwd apps/web dev",
-      lint: type === "turborepo" ? "turbo run lint" : "bun run --cwd apps/web lint",
+      build:
+        type === "turborepo"
+          ? "turbo run build"
+          : "bun run --cwd apps/web build",
+      dev:
+        type === "turborepo" ? "turbo run dev" : "bun run --cwd apps/web dev",
+      lint:
+        type === "turborepo" ? "turbo run lint" : "bun run --cwd apps/web lint",
     },
   };
-  await writePackageJSON(path.join(projectPath, "package.json"), rootPackageJson);
+  await writePackageJSON(
+    path.join(projectPath, "package.json"),
+    rootPackageJson,
+  );
 
   // Create monorepo config files
   const configs = MONOREPO_CONFIGS[type];

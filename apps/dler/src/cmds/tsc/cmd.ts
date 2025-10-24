@@ -14,6 +14,12 @@ const tscCmd = async (args: {
   concurrency?: number;
   stopOnError?: boolean;
   verbose?: boolean;
+  copyLogs?: boolean;
+  cache?: boolean;
+  incremental?: boolean;
+  autoConcurrency?: boolean;
+  skipUnchanged?: boolean;
+  buildMode?: boolean;
 }): Promise<void> => {
   try {
     // Check if running in Bun
@@ -26,6 +32,12 @@ const tscCmd = async (args: {
       concurrency: args.concurrency,
       stopOnError: args.stopOnError,
       verbose: args.verbose,
+      copyLogs: args.copyLogs,
+      cache: args.cache,
+      incremental: args.incremental,
+      autoConcurrency: args.autoConcurrency,
+      skipUnchanged: args.skipUnchanged,
+      buildMode: args.buildMode,
     });
 
     if (results.hasErrors) {
@@ -50,28 +62,50 @@ const tscCmdArgs = defineCmdArgs({
   ignore: {
     type: "string",
     description: "Package(s) to ignore (supports wildcards like @reliverse/*)",
-    required: false,
   },
   cwd: {
     type: "string",
     description: "Working directory (monorepo root)",
-    required: false,
   },
   concurrency: {
     type: "number",
-    description: "Number of packages to check concurrently (default: 5)",
-    required: false,
+    description:
+      "Number of packages to check concurrently (default: CPU cores)",
   },
   stopOnError: {
     type: "boolean",
     description:
       "Stop on first error instead of collecting all errors (default: false)",
-    required: false,
   },
   verbose: {
     type: "boolean",
     description: "Verbose mode (default: false)",
-    required: false,
+  },
+  copyLogs: {
+    type: "boolean",
+    description: "Copy failed package logs to clipboard (default: false)",
+  },
+  cache: {
+    type: "boolean",
+    description: "Enable caching for faster subsequent runs (default: true)",
+  },
+  incremental: {
+    type: "boolean",
+    description: "Use TypeScript incremental compilation (default: true)",
+  },
+  autoConcurrency: {
+    type: "boolean",
+    description:
+      "Auto-detect optimal concurrency based on CPU cores (default: false)",
+  },
+  skipUnchanged: {
+    type: "boolean",
+    description:
+      "Skip packages with no changes since last check (default: true)",
+  },
+  buildMode: {
+    type: "boolean",
+    description: "Use tsc --build for project references (default: false)",
   },
 });
 
@@ -91,6 +125,14 @@ const tscCmdCfg = defineCmdCfg({
     "dler tsc --verbose",
     "dler tsc --verbose --ignore @reliverse/*",
     "dler tsc --verbose --concurrency 2 --stopOnError",
+    "dler tsc --copy-logs",
+    "dler tsc --copy-logs --verbose",
+    "dler tsc --auto-concurrency",
+    "dler tsc --no-cache",
+    "dler tsc --no-incremental",
+    "dler tsc --build-mode",
+    "dler tsc --skip-unchanged",
+    "dler tsc --auto-concurrency --build-mode --verbose",
   ],
 });
 

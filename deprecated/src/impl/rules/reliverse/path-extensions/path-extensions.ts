@@ -3,9 +3,16 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 
 import type { AllowedFileExtensionsType } from "~/impl/rules/rules-consts";
-import { ALLOWED_IMPORT_EXTENSIONS, STRICT_IMPORT_EXTENSIONS } from "~/impl/rules/rules-consts";
+import {
+  ALLOWED_IMPORT_EXTENSIONS,
+  STRICT_IMPORT_EXTENSIONS,
+} from "~/impl/rules/rules-consts";
 import { getAllFiles, getLineNumber } from "~/impl/rules/rules-utils";
-import type { CheckIssue, CheckResult, RulesCheckOptions } from "~/impl/types/mod";
+import type {
+  CheckIssue,
+  CheckResult,
+  RulesCheckOptions,
+} from "~/impl/types/mod";
 
 // get allowed import path extensions (for import statements)
 function getAllowedImportExtensions(
@@ -19,7 +26,9 @@ function getAllowedImportExtensions(
 }
 
 // check import path extensions (what's written in import statements)
-export async function checkPathExtensions(options: RulesCheckOptions): Promise<CheckResult> {
+export async function checkPathExtensions(
+  options: RulesCheckOptions,
+): Promise<CheckResult> {
   const startTime = Date.now();
   const issues: CheckIssue[] = [];
   const { directory, strict, onProgress } = options;
@@ -67,7 +76,9 @@ export async function checkPathExtensions(options: RulesCheckOptions): Promise<C
               // special message for .ts imports in js environments
               const isTypeScriptImport = ext === ".ts";
               const isJsEnvironment =
-                directory === "src" || directory === "dist-npm" || directory === "dist-libs/npm";
+                directory === "src" ||
+                directory === "dist-npm" ||
+                directory === "dist-libs/npm";
 
               let message: string;
               if (isTypeScriptImport && isJsEnvironment) {

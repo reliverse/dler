@@ -47,7 +47,9 @@ export async function buildCommand(ctx: MonorepoContext): Promise<void> {
   const graph = await createGraph(monorepo);
   const activePackage = requireActivePackage(ctx, graph);
 
-  const dependencies = graph.getPackageDependenciesBuildOrder(activePackage.name);
+  const dependencies = graph.getPackageDependenciesBuildOrder(
+    activePackage.name,
+  );
   const packagesToBuild = [...dependencies, activePackage];
 
   await buildCachedPackages(ctx, monorepo, packagesToBuild);
@@ -65,7 +67,9 @@ export async function depsCommand(ctx: MonorepoContext): Promise<void> {
   const monorepo = await requireMonorepo(ctx);
   const graph = await createGraph(monorepo);
   const activePackage = requireActivePackage(ctx, graph);
-  const dependencies = graph.getPackageDependenciesBuildOrder(activePackage.name);
+  const dependencies = graph.getPackageDependenciesBuildOrder(
+    activePackage.name,
+  );
 
   await buildCachedPackages(ctx, monorepo, dependencies);
 }
@@ -131,8 +135,13 @@ async function requireMonorepo(ctx: MonorepoContext): Promise<Monorepo> {
  * Helper function to create a dependency graph
  */
 async function createGraph(monorepo: Monorepo): Promise<DependencyGraph> {
-  const packageJsonGlobs = monorepo.packageGlobs.map((glob) => `${glob}/package.json`);
-  const matches = await globby(packageJsonGlobs, { cwd: monorepo.root, absolute: true });
+  const packageJsonGlobs = monorepo.packageGlobs.map(
+    (glob) => `${glob}/package.json`,
+  );
+  const matches = await globby(packageJsonGlobs, {
+    cwd: monorepo.root,
+    absolute: true,
+  });
 
   const packages: Package[] = [];
   for (const packageJsonPath of matches) {
@@ -148,10 +157,16 @@ async function createGraph(monorepo: Monorepo): Promise<DependencyGraph> {
 /**
  * Helper function to require an active package or exit
  */
-function requireActivePackage(ctx: MonorepoContext, graph: DependencyGraph): Package {
+function requireActivePackage(
+  ctx: MonorepoContext,
+  graph: DependencyGraph,
+): Package {
   const activePackage = graph.findActivePackage();
   if (!activePackage) {
-    relinka("error", "Not inside a package directory, could not determine dependencies to build");
+    relinka(
+      "error",
+      "Not inside a package directory, could not determine dependencies to build",
+    );
     process.exit(1);
   }
 
@@ -244,6 +259,10 @@ async function execInDir(dir: string, args: string[]): Promise<void> {
 /**
  * Get the cache directory for a package
  */
-function getPackageCacheDir(monorepo: Monorepo, pkg: Package, packageHash: string): string {
+function getPackageCacheDir(
+  monorepo: Monorepo,
+  pkg: Package,
+  packageHash: string,
+): string {
   return `${monorepo.root}/.cache/${pkg.name}/${packageHash}`;
 }

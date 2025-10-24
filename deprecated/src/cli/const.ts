@@ -20,9 +20,11 @@ export const msgs = {
     publish: "Build and publish the project to the NPM or JSR registry",
     deploy: "Deploy the project to GitHub or/and Vercel",
     native: "Run or install Rse CLI native binaries (kinds: bun, web)",
-    update: "Update all dependencies, even catalog deps, to their latest available versions",
+    update:
+      "Update all dependencies, even catalog deps, to their latest available versions",
     agg: "Aggregate your project exports into a single file",
-    upgrade: "Upgrade your dev tools to the latest version (alias for `update --upgrade-tools`)",
+    upgrade:
+      "Upgrade your dev tools to the latest version (alias for `update --upgrade-tools`)",
   } as Record<CmdName, string>,
   info: {
     ci: "CI mode was activated. Proceeding with: default values -> reliverse.ts overrides -> flags overrides.",

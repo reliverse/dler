@@ -31,7 +31,10 @@ async function initPrismaDatabase(
 
     s.succeed("Prisma PostgreSQL initialized. Follow the prompts below:");
 
-    const prismaInitCommand = getPackageExecutionCommand(packageManager, "prisma init --db");
+    const prismaInitCommand = getPackageExecutionCommand(
+      packageManager,
+      "prisma init --db",
+    );
 
     await execa(prismaInitCommand, {
       cwd: serverDir,
@@ -81,7 +84,8 @@ async function writeEnvFile(projectDir: string, config?: PrismaConfig) {
       {
         key: "DATABASE_URL",
         value:
-          config?.databaseUrl ?? "postgresql://postgres:postgres@localhost:5432/mydb?schema=public",
+          config?.databaseUrl ??
+          "postgresql://postgres:postgres@localhost:5432/mydb?schema=public",
         condition: true,
       },
     ];
@@ -141,7 +145,10 @@ export default prisma;
     }
     return true;
   } catch (_error) {
-    relinka("warn", re.yellow("Could not add Prisma Accelerate extension automatically"));
+    relinka(
+      "warn",
+      re.yellow("Could not add Prisma Accelerate extension automatically"),
+    );
     return false;
   }
 }
@@ -166,7 +173,10 @@ export async function setupPrismaPostgres(config: ProjectConfig) {
     if (config) {
       await writeEnvFile(projectDir, config);
       await addPrismaAccelerateExtension(serverDir);
-      relinka("success", re.green("Prisma PostgreSQL database configured successfully!"));
+      relinka(
+        "success",
+        re.green("Prisma PostgreSQL database configured successfully!"),
+      );
       relinka(
         "info",
         re.cyan(

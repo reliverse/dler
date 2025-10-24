@@ -2,7 +2,14 @@ import os from "node:os";
 import path from "node:path";
 import { re } from "@reliverse/relico";
 import { relinka } from "@reliverse/relinka";
-import { cancel, confirm, createSpinner, isCancel, select, text } from "@reliverse/rempts";
+import {
+  cancel,
+  confirm,
+  createSpinner,
+  isCancel,
+  select,
+  text,
+} from "@reliverse/rempts";
 import { $ } from "execa";
 import {
   addEnvVariablesToFile,
@@ -61,7 +68,8 @@ async function installTursoCLI(isMac: boolean) {
     if (isMac) {
       await $`brew install tursodatabase/tap/turso`;
     } else {
-      const { stdout: installScript } = await $`curl -sSfL https://get.tur.so/install.sh`;
+      const { stdout: installScript } =
+        await $`curl -sSfL https://get.tur.so/install.sh`;
       await $`bash -c '${installScript}'`;
     }
 
@@ -118,7 +126,10 @@ async function selectTursoGroup(): Promise<string | null> {
   }
 
   if (groups.length === 1) {
-    relinka("info", `Using the only available group: ${re.blue(groups[0]?.name ?? "")}`);
+    relinka(
+      "info",
+      `Using the only available group: ${re.blue(groups[0]?.name ?? "")}`,
+    );
     return groups[0]?.name ?? null;
   }
 
@@ -146,7 +157,9 @@ async function createTursoDatabase(dbName: string, groupName: string | null) {
   });
 
   try {
-    s.start(`Creating Turso database "${dbName}"${groupName ? ` in group "${groupName}"` : ""}...`);
+    s.start(
+      `Creating Turso database "${dbName}"${groupName ? ` in group "${groupName}"` : ""}...`,
+    );
 
     if (groupName) {
       await $`turso db create ${dbName} --group ${groupName}`;
@@ -225,7 +238,10 @@ export async function setupTurso(config: ProjectConfig): Promise<void> {
 
     if (isWindows) {
       setupSpinner.succeed(re.yellow("Turso setup not supported on Windows"));
-      relinka("warn", re.yellow("Automatic Turso setup is not supported on Windows."));
+      relinka(
+        "warn",
+        re.yellow("Automatic Turso setup is not supported on Windows."),
+      );
       await writeEnvFile(projectDir);
       displayManualSetupInstructions();
       return;
@@ -293,7 +309,10 @@ types.d.ts(118, 5): 'title' is declared here.
         success = true;
       } catch (error) {
         if (error instanceof Error && error.message === "DATABASE_EXISTS") {
-          relinka("warn", re.yellow(`Database "${re.red(dbName)}" already exists`));
+          relinka(
+            "warn",
+            re.yellow(`Database "${re.red(dbName)}" already exists`),
+          );
           suggestedName = `${dbName}-${Math.floor(Math.random() * 1000)}`;
         } else {
           throw error;
@@ -306,7 +325,9 @@ types.d.ts(118, 5): 'title' is declared here.
     setupSpinner.fail(re.red("Turso CLI availability check failed"));
     relinka(
       "error",
-      re.red(`Error during Turso setup: ${error instanceof Error ? error.message : String(error)}`),
+      re.red(
+        `Error during Turso setup: ${error instanceof Error ? error.message : String(error)}`,
+      ),
     );
     await writeEnvFile(projectDir);
     displayManualSetupInstructions();

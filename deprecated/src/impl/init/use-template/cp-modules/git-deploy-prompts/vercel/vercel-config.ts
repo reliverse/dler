@@ -143,7 +143,9 @@ export async function getConfigurationOptions(): Promise<ConfigurationOptions> {
     defaultValue: ["env"],
   });
 
-  const selectedOptions = Array.isArray(result) ? (result as string[]) : ["env"];
+  const selectedOptions = Array.isArray(result)
+    ? (result as string[])
+    : ["env"];
   return {
     options: selectedOptions,
     useSharedEnvVars: selectedOptions.includes("shared_env"),

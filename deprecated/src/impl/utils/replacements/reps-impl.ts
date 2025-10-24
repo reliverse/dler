@@ -17,7 +17,9 @@ export function extractRepoInfo(templateUrl: string): {
 
   // Extract author and project name from the URL
   // Example: github:user/project or github:user/project.git
-  const match = /^github:(?:https?:\/\/github\.com\/)?([^/]+)\/([^/]+)/.exec(formattedTemplateUrl);
+  const match = /^github:(?:https?:\/\/github\.com\/)?([^/]+)\/([^/]+)/.exec(
+    formattedTemplateUrl,
+  );
 
   if (!match) {
     return { inputRepoAuthor: "", inputRepoName: "" };
@@ -60,7 +62,10 @@ function looksLikeBinary(buffer: Buffer, size: number): boolean {
 /**
  * Asynchronously checks if a file is "binary" by reading the first chunk.
  */
-async function isBinaryFile(filePath: string, chunkSize = 1000): Promise<boolean> {
+async function isBinaryFile(
+  filePath: string,
+  chunkSize = 1000,
+): Promise<boolean> {
   const fd = await fs.open(filePath, "r");
   try {
     const buffer = Buffer.alloc(chunkSize);
@@ -141,7 +146,9 @@ async function runWithConcurrency<T>(
           .catch((err) => {
             if (stopOnError) {
               isRejected = true;
-              return reject(err instanceof Error ? err : new Error(String(err)));
+              return reject(
+                err instanceof Error ? err : new Error(String(err)),
+              );
             } else {
               relinka("error", `Error processing item: ${String(err)}`);
             }
@@ -344,18 +351,28 @@ export async function replaceStringsInFiles(
   }
 
   // 3. Filter files by extension / name
-  const targetFiles = allFiles.filter((filePath) => shouldProcessFile(filePath));
+  const targetFiles = allFiles.filter((filePath) =>
+    shouldProcessFile(filePath),
+  );
 
   // 4. Process them with concurrency
   try {
-    await runWithConcurrency(targetFiles, maxConcurrency, replaceInFile, stopOnError);
+    await runWithConcurrency(
+      targetFiles,
+      maxConcurrency,
+      replaceInFile,
+      stopOnError,
+    );
   } catch (err) {
     errors.push(String(err));
   }
 
   // If any errors occurred, log them and throw
   if (errors.length > 0) {
-    relinka("error", `Some files could not be processed:\n${errors.join(", ")}`);
+    relinka(
+      "error",
+      `Some files could not be processed:\n${errors.join(", ")}`,
+    );
     throw new Error("Failed to replace strings in some files.");
   }
 }

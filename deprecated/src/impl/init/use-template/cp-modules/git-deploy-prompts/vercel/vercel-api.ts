@@ -39,11 +39,18 @@ export async function getVercelEnvVar(
 /**
  * Handles rate limit errors with retries.
  */
-export async function withRateLimit<T>(fn: () => Promise<T>, retries = MAX_RETRIES): Promise<T> {
+export async function withRateLimit<T>(
+  fn: () => Promise<T>,
+  retries = MAX_RETRIES,
+): Promise<T> {
   try {
     return await fn();
   } catch (error) {
-    if (error instanceof Error && error.message.includes("rate limit") && retries > 0) {
+    if (
+      error instanceof Error &&
+      error.message.includes("rate limit") &&
+      retries > 0
+    ) {
       relinka("info", `Rate limit hit, retrying in ${RETRY_DELAY / 1000}s...`);
       await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
       return withRateLimit(fn, retries - 1);

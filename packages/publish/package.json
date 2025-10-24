@@ -9,9 +9,12 @@
       "default": "./src/mod.ts"
     }
   },
-  "scripts": {
-    "dev": "bun src/mod.ts",
-    "typecheck": "tsc --noEmit"
+  "dependencies": {
+    "c12": "catalog:",
+    "@reliverse/dler-config": "workspace:*",
+    "@reliverse/dler-logger": "workspace:*",
+    "@reliverse/dler-bump": "workspace:*",
+    "@reliverse/dler-pkg-tsc": "workspace:*"
   },
   "devDependencies": {
     "@reliverse/dler-tsconfig": "workspace:*",

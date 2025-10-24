@@ -31,7 +31,10 @@ export async function setupStarlight(config: ProjectConfig): Promise<void> {
 
     const commandWithArgs = `create-astro@latest ${starlightArgsString}`;
 
-    const starlightInitCommand = getPackageExecutionCommand(packageManager, commandWithArgs);
+    const starlightInitCommand = getPackageExecutionCommand(
+      packageManager,
+      commandWithArgs,
+    );
 
     await execa(starlightInitCommand, {
       cwd: path.join(projectDir, "apps"),

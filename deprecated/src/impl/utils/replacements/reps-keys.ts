@@ -26,7 +26,8 @@ export const HardcodedStrings: Hardcoded = {
 } as const;
 
 export const CommonPatterns: UrlPatterns = {
-  githubUrl: (author: string, repo: string) => `https://github.com/${author}/${repo}`,
+  githubUrl: (author: string, repo: string) =>
+    `https://github.com/${author}/${repo}`,
   vercelUrl: (project: string) => `${project}.vercel.app`,
   packageName: (name: string) => `@${name}/app`,
 } as const;

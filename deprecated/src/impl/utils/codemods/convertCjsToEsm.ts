@@ -33,7 +33,10 @@ export async function convertCjsToEsm(projectPath: string) {
       // Convert module.exports = x to export default x
       .replace(/module\.exports\s*=\s*([^;\n]+)/g, "export default $1")
       // Convert module.exports.x = y to export const x = y
-      .replace(/module\.exports\.(\w+)\s*=\s*([^;\n]+)/g, "export const $1 = $2")
+      .replace(
+        /module\.exports\.(\w+)\s*=\s*([^;\n]+)/g,
+        "export const $1 = $2",
+      )
       // Convert exports.x = y to export const x = y
       .replace(/exports\.(\w+)\s*=\s*([^;\n]+)/g, "export const $1 = $2");
 

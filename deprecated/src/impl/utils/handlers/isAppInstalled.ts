@@ -9,7 +9,9 @@ export function isVSCodeInstalled(): boolean {
   const platform = os.platform() as Platform;
 
   const commonVSCodeInstallPaths = {
-    darwin: ["/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"],
+    darwin: [
+      "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code",
+    ],
     linux: ["/usr/bin/code", "/snap/bin/code"],
     win32: [
       `${homeDir}\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe`,
@@ -20,5 +22,7 @@ export function isVSCodeInstalled(): boolean {
 
   const pathsToCheck = commonVSCodeInstallPaths[platform] ?? [];
 
-  return pathsToCheck.some((vsCodePath: string) => fs.pathExistsSync(vsCodePath));
+  return pathsToCheck.some((vsCodePath: string) =>
+    fs.pathExistsSync(vsCodePath),
+  );
 }

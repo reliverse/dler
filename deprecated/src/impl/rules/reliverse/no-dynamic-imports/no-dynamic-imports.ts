@@ -14,7 +14,9 @@ interface CheckNoDynamicImportsOptions {
 function isDirectoryType(value: unknown): value is DirectoryType {
   return (
     typeof value === "string" &&
-    ["src", "dist-npm", "dist-jsr", "dist-libs/npm", "dist-libs/jsr"].includes(value)
+    ["src", "dist-npm", "dist-jsr", "dist-libs/npm", "dist-libs/jsr"].includes(
+      value,
+    )
   );
 }
 
@@ -45,7 +47,10 @@ export async function checkNoDynamicImports(
   }
 
   if (!(await validateDirectory(directory))) {
-    relinka("error", `Directory "${directory}" does not exist or is not accessible`);
+    relinka(
+      "error",
+      `Directory "${directory}" does not exist or is not accessible`,
+    );
     return {
       success: false,
       issues: [

@@ -1,4 +1,8 @@
-import { type ChildProcess, type SpawnOptions, spawn } from "node:child_process";
+import {
+  type ChildProcess,
+  type SpawnOptions,
+  spawn,
+} from "node:child_process";
 import { normalize as normalizePath } from "node:path";
 import { cwd as getCwd } from "node:process";
 import readline from "node:readline";
@@ -20,7 +24,11 @@ export interface PipeOptions extends Options {}
 export type KillSignal = Parameters<ChildProcess["kill"]>[0];
 
 export interface OutputApi extends AsyncIterable<string> {
-  pipe(command: string, args?: string[], options?: Partial<PipeOptions>): Result;
+  pipe(
+    command: string,
+    args?: string[],
+    options?: Partial<PipeOptions>,
+  ): Result;
   process: ChildProcess | undefined;
   kill(signal?: KillSignal): boolean;
 
@@ -42,7 +50,11 @@ export interface Options {
   throwOnError?: boolean;
 }
 
-export type XExec = (command: string, args?: string[], options?: Partial<Options>) => Result;
+export type XExec = (
+  command: string,
+  args?: string[],
+  options?: Partial<Options>,
+) => Result;
 
 const defaultOptions: Partial<Options> = {
   timeout: undefined,
@@ -114,7 +126,11 @@ export class ExecProcess implements Result {
     return;
   }
 
-  public constructor(command: string, args?: string[], options?: Partial<Options>) {
+  public constructor(
+    command: string,
+    args?: string[],
+    options?: Partial<Options>,
+  ) {
     this._options = {
       ...defaultOptions,
       ...options,
@@ -138,7 +154,11 @@ export class ExecProcess implements Result {
     return this._process?.killed === true;
   }
 
-  public pipe(command: string, args?: string[], options?: Partial<PipeOptions>): Result {
+  public pipe(
+    command: string,
+    args?: string[],
+    options?: Partial<PipeOptions>,
+  ): Result {
     return exec(command, args, {
       ...options,
       stdin: this,
@@ -179,7 +199,11 @@ export class ExecProcess implements Result {
       throw this._thrownError;
     }
 
-    if (this._options?.throwOnError && this.exitCode !== 0 && this.exitCode !== undefined) {
+    if (
+      this._options?.throwOnError &&
+      this.exitCode !== 0 &&
+      this.exitCode !== undefined
+    ) {
       throw new NonZeroExitError(this);
     }
   }
@@ -224,7 +248,11 @@ export class ExecProcess implements Result {
       exitCode: this.exitCode,
     };
 
-    if (this._options.throwOnError && this.exitCode !== 0 && this.exitCode !== undefined) {
+    if (
+      this._options.throwOnError &&
+      this.exitCode !== 0 &&
+      this.exitCode !== undefined
+    ) {
       throw new NonZeroExitError(this, result);
     }
 
@@ -270,10 +298,8 @@ export class ExecProcess implements Result {
 
     nodeOptions.env = computeEnv(cwd, nodeOptions.env);
 
-    const { command: normalisedCommand, args: normalisedArgs } = normaliseCommandAndArgs(
-      this._command,
-      this._args,
-    );
+    const { command: normalisedCommand, args: normalisedArgs } =
+      normaliseCommandAndArgs(this._command, this._args);
 
     const crossResult = _parse(normalisedCommand, normalisedArgs, nodeOptions);
 
@@ -287,7 +313,11 @@ export class ExecProcess implements Result {
     //   bunVersion: process.versions.bun,
     // });
 
-    const handle: ChildProcess = spawn(crossResult.command, crossResult.args, crossResult.options);
+    const handle: ChildProcess = spawn(
+      crossResult.command,
+      crossResult.args,
+      crossResult.options,
+    );
 
     if (handle.stderr) {
       this._streamErr = handle.stderr;

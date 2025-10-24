@@ -1118,7 +1118,13 @@ export type BumpMode = "patch" | "minor" | "major" | "auto" | "manual";
  * - rollup: A traditional bundler with an extensive plugin ecosystem
  * - untyped: Types and markdown generation from a config object
  */
-export type BundlerName = "bun" | "copy" | "jsr" | "mkdist" | "rollup" | "untyped";
+export type BundlerName =
+  | "bun"
+  | "copy"
+  | "jsr"
+  | "mkdist"
+  | "rollup"
+  | "untyped";
 
 export type NpmOutExt = "cjs" | "cts" | "js" | "mjs" | "mts" | "ts";
 
@@ -1298,9 +1304,18 @@ export type ProjectArchitecture = UnknownLiteral | "fullstack" | "separated";
 export type ProjectRuntime = "node" | "deno" | "bun";
 export type ProjectPackageManager = "npm" | "pnpm" | "yarn" | "bun";
 export type ProjectGitService = "github" | "gitlab" | "bitbucket" | "none";
-export type ProjectDeployService = "vercel" | "netlify" | "railway" | "deno" | "none";
+export type ProjectDeployService =
+  | "vercel"
+  | "netlify"
+  | "railway"
+  | "deno"
+  | "none";
 export type ThemeMode = "light" | "dark" | "dark-light";
-export type PreferredStateManagement = "zustand" | "jotai" | "redux-toolkit" | UnknownLiteral;
+export type PreferredStateManagement =
+  | "zustand"
+  | "jotai"
+  | "redux-toolkit"
+  | UnknownLiteral;
 export type PreferredForm = "react-hook-form" | "formik" | UnknownLiteral;
 export type PreferredStyling =
   | "tailwind"
@@ -1308,7 +1323,11 @@ export type PreferredStyling =
   | "css-modules"
   | "sass"
   | UnknownLiteral;
-export type PreferredUI = "shadcn-ui" | "chakra-ui" | "material-ui" | UnknownLiteral;
+export type PreferredUI =
+  | "shadcn-ui"
+  | "chakra-ui"
+  | "material-ui"
+  | UnknownLiteral;
 export type PreferredTesting =
   | "bun"
   | "vitest"
@@ -1324,8 +1343,18 @@ export type PreferredAuth =
   | "auth0"
   | UnknownLiteral;
 export type PreferredDBLib = "drizzle" | "prisma" | "supabase" | UnknownLiteral;
-export type PreferredDBProvider = "pg" | "mysql" | "sqlite" | "mongodb" | UnknownLiteral;
-export type PreferredAPI = "hono" | "trpc" | "graphql" | "rest" | UnknownLiteral;
+export type PreferredDBProvider =
+  | "pg"
+  | "mysql"
+  | "sqlite"
+  | "mongodb"
+  | UnknownLiteral;
+export type PreferredAPI =
+  | "hono"
+  | "trpc"
+  | "graphql"
+  | "rest"
+  | UnknownLiteral;
 export type PreferredLint = "eslint" | UnknownLiteral;
 export type PreferredFormat = "biome" | UnknownLiteral;
 export type PreferredPayment = "stripe" | UnknownLiteral;
@@ -1336,7 +1365,11 @@ export type PreferredForms = "react-hook-form" | UnknownLiteral;
 export type PreferredNotifications = "sonner" | UnknownLiteral;
 export type PreferredSearch = "algolia" | UnknownLiteral;
 export type PreferredUploads = "uploadthing" | UnknownLiteral;
-export type PreferredValidation = "zod" | "typebox" | "valibot" | UnknownLiteral;
+export type PreferredValidation =
+  | "zod"
+  | "typebox"
+  | "valibot"
+  | UnknownLiteral;
 export type PreferredDocs = "starlight" | "nextra" | UnknownLiteral;
 export type PreferredIcons = "lucide" | UnknownLiteral;
 export type PreferredMail = "resend" | UnknownLiteral;
@@ -1351,7 +1384,11 @@ export type PreferredCharts = "recharts" | UnknownLiteral;
 export type PreferredDates = "dayjs" | UnknownLiteral;
 export type PreferredMarkdown = "mdx" | UnknownLiteral;
 export type PreferredSecurity = "auth" | UnknownLiteral;
-export type PreferredRouting = "next" | "react-router" | "tanstack-router" | UnknownLiteral;
+export type PreferredRouting =
+  | "next"
+  | "react-router"
+  | "tanstack-router"
+  | UnknownLiteral;
 export type RelinterConfirm = "promptOnce" | "promptEachFile" | "autoYes";
 
 /**
@@ -1421,7 +1458,15 @@ export const DEFAULT_CONFIG_RELIVERSE: ReliverseConfig = {
 
   // Dependency filtering
   filterDepsPatterns: {
-    global: ["@types", "biome", "eslint", "knip", "prettier", "typescript", "@reliverse/dler"],
+    global: [
+      "@types",
+      "biome",
+      "eslint",
+      "knip",
+      "prettier",
+      "typescript",
+      "@reliverse/dler",
+    ],
     "dist-npm": [],
     "dist-jsr": [],
     "dist-libs": {},
@@ -1664,7 +1709,16 @@ export const DEFAULT_CONFIG_RELIVERSE: ReliverseConfig = {
     ],
     webview: ["react-native"],
     language: ["typescript"],
-    themes: ["default", "eslint", "biome", "sonner", "uploadthing", "zod", "typebox", "lucide"],
+    themes: [
+      "default",
+      "eslint",
+      "biome",
+      "sonner",
+      "uploadthing",
+      "zod",
+      "typebox",
+      "lucide",
+    ],
   },
 
   // Code style preferences

@@ -1,10 +1,21 @@
 import { re } from "@reliverse/relico";
 import { relinka } from "@reliverse/relinka";
-import { inputPrompt, multiselectPrompt, selectPrompt } from "@reliverse/rempts";
+import {
+  inputPrompt,
+  multiselectPrompt,
+  selectPrompt,
+} from "@reliverse/rempts";
 import { endTitle, UNKNOWN_VALUE } from "~/impl/config/constants";
-import { getRandomMessage, randomProjectFrameworkTitle } from "~/impl/db/messages";
+import {
+  getRandomMessage,
+  randomProjectFrameworkTitle,
+} from "~/impl/db/messages";
 import { createWebProject } from "~/impl/init/use-template/cp-mod";
-import type { ProjectArchitecture, ProjectSubcategory, ReliverseConfig } from "~/impl/schema/mod";
+import type {
+  ProjectArchitecture,
+  ProjectSubcategory,
+  ReliverseConfig,
+} from "~/impl/schema/mod";
 import { experimental, recommended } from "~/impl/utils/badgeNotifiers";
 import {
   type RepoOption,
@@ -26,7 +37,9 @@ export type VSCodeRepoOption =
 /**
  * Possible template options for browser extensions
  */
-export type BrowserRepoOption = "reliverse/template-browser-extension" | "unknown";
+export type BrowserRepoOption =
+  | "reliverse/template-browser-extension"
+  | "unknown";
 
 /**
  * Asks the user for extension config via prompts

@@ -4,7 +4,11 @@ import { relinka } from "@reliverse/relinka";
 import { confirmPrompt } from "@reliverse/rempts";
 import { generateText } from "ai";
 import { countTokens } from "gpt-tokenizer/model/gpt-4o-mini";
-import { CIRCULAR_TRIGGERS, MODEL, MODEL_NAME } from "~/impl/ai/ai-impl/ai-const";
+import {
+  CIRCULAR_TRIGGERS,
+  MODEL,
+  MODEL_NAME,
+} from "~/impl/ai/ai-impl/ai-const";
 import type { ReliverseConfig } from "~/impl/schema/mod";
 
 /**
@@ -48,7 +52,10 @@ export async function agentRelinter(
   task?: string,
 ): Promise<void> {
   try {
-    if (task && CIRCULAR_TRIGGERS.some((keyword) => task.toLowerCase().includes(keyword))) {
+    if (
+      task &&
+      CIRCULAR_TRIGGERS.some((keyword) => task.toLowerCase().includes(keyword))
+    ) {
       await handleCircularDependencies(targetPaths);
       return;
     }
@@ -59,7 +66,10 @@ export async function agentRelinter(
       return;
     }
 
-    relinka("info", `Found ${lintFiles.length} file(s). Sending them to rse AI (${MODEL_NAME})...`);
+    relinka(
+      "info",
+      `Found ${lintFiles.length} file(s). Sending them to rse AI (${MODEL_NAME})...`,
+    );
 
     let promptDecision: boolean | undefined;
     const confirmDecision = config.relinterConfirm;
@@ -69,7 +79,11 @@ export async function agentRelinter(
       promptDecision = false;
     }
 
-    const lintResults = await gatherLintSuggestions(lintFiles, task, promptDecision);
+    const lintResults = await gatherLintSuggestions(
+      lintFiles,
+      task,
+      promptDecision,
+    );
     await writeSuggestionsToFile(lintResults);
     relinka("info", "Lint suggestions written to relinter.json");
   } catch (err: any) {
@@ -98,7 +112,9 @@ async function collectAllLintableFiles(pathsList: string[]): Promise<string[]> {
 /**
  * Collects a list of recognized code files from a path.
  */
-export async function collectLintableFiles(dirOrFile: string): Promise<string[]> {
+export async function collectLintableFiles(
+  dirOrFile: string,
+): Promise<string[]> {
   const stats = await fs.stat(dirOrFile);
   if (stats.isFile()) {
     return isCodeFile(dirOrFile) ? [dirOrFile] : [];
@@ -186,7 +202,9 @@ function isCodeFile(filename: string): boolean {
 
   const ext = path.extname(filename).toLowerCase().replace(/^\./, "");
   const base = path.basename(filename).toLowerCase();
-  return recognizedExtensions.includes(ext) || recognizedExtensions.includes(base);
+  return (
+    recognizedExtensions.includes(ext) || recognizedExtensions.includes(base)
+  );
 }
 
 /**
@@ -219,7 +237,10 @@ export async function gatherLintSuggestions(
 /**
  * Splits file content into chunks of the specified size.
  */
-function chunkFile(code: string, size: number): { content: string; offset: number }[] {
+function chunkFile(
+  code: string,
+  size: number,
+): { content: string; offset: number }[] {
   const lines = code.split("\n");
   const chunks: { content: string; offset: number }[] = [];
 
@@ -326,14 +347,22 @@ Keep line numbers relative to the full file, offset is ${offset}.
 /**
  * Persists lint suggestions to a JSON file.
  */
-export async function writeSuggestionsToFile(suggestions: LintSuggestion[]): Promise<void> {
-  await fs.writeFile("relinter.json", JSON.stringify(suggestions, null, 2), "utf-8");
+export async function writeSuggestionsToFile(
+  suggestions: LintSuggestion[],
+): Promise<void> {
+  await fs.writeFile(
+    "relinter.json",
+    JSON.stringify(suggestions, null, 2),
+    "utf-8",
+  );
 }
 
 /**
  * Builds adjacency maps for all files, then detects circular dependencies.
  */
-async function handleCircularDependencies(targetPaths: string[]): Promise<void> {
+async function handleCircularDependencies(
+  targetPaths: string[],
+): Promise<void> {
   const lintFiles = await collectAllLintableFiles(targetPaths);
   if (lintFiles.length === 0) {
     relinka("info", "No recognized code files found in the specified paths.");
@@ -344,14 +373,17 @@ async function handleCircularDependencies(targetPaths: string[]): Promise<void> 
   for (const filePath of lintFiles) {
     adjacency[filePath] = [];
     const code = await fs.readFile(filePath, "utf-8");
-    const importRegex = /import\s+(?:(?:[\w*\s{},]+)\s+from\s+)?["']([^"']+)["']/g;
+    const importRegex =
+      /import\s+(?:(?:[\w*\s{},]+)\s+from\s+)?["']([^"']+)["']/g;
     let match: RegExpExecArray | null;
 
     while ((match = importRegex.exec(code)) !== null) {
       const imported = match[1];
       if (
         imported &&
-        (imported.startsWith("./") || imported.startsWith("../") || imported.startsWith("/"))
+        (imported.startsWith("./") ||
+          imported.startsWith("../") ||
+          imported.startsWith("/"))
       ) {
         const resolvedImport = path.resolve(path.dirname(filePath), imported);
         if (lintFiles.includes(resolvedImport)) {

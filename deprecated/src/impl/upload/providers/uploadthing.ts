@@ -14,7 +14,8 @@ export async function uploadToUploadthing(files: UploadedFile[]) {
 
   const utapi = new UTApi({ token: apiKey });
 
-  const results: { url: string; key: string; size: number; name: string }[] = [];
+  const results: { url: string; key: string; size: number; name: string }[] =
+    [];
   for (const file of files) {
     const blob = new Blob([file.data], { type: file.type }) as unknown as File;
     const fileEsque = Object.assign(blob, {

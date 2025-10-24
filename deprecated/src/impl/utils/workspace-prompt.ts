@@ -36,7 +36,10 @@ export async function promptWorkspacePackages(
         : "No workspace dependencies",
   }));
 
-  const title = command === "build" ? "Select packages to build" : "Select packages to publish";
+  const title =
+    command === "build"
+      ? "Select packages to build"
+      : "Select packages to publish";
 
   const content =
     command === "build"
@@ -73,7 +76,9 @@ export function showPackageSummary(
 ): void {
   const action = command === "build" ? "Building" : "Publishing";
 
-  console.log(`\n${re.cyan(`${action} ${packages.length} package(s) in dependency order:`)}`);
+  console.log(
+    `\n${re.cyan(`${action} ${packages.length} package(s) in dependency order:`)}`,
+  );
 
   packages.forEach((pkg, index) => {
     const deps =
@@ -81,7 +86,9 @@ export function showPackageSummary(
         ? ` ${re.dim(`(depends on: ${pkg.workspaceDependencies.join(", ")})`)}`
         : "";
 
-    console.log(`  ${index + 1}. ${re.green(pkg.name)} ${re.dim(`v${pkg.version}`)}${deps}`);
+    console.log(
+      `  ${index + 1}. ${re.green(pkg.name)} ${re.dim(`v${pkg.version}`)}${deps}`,
+    );
   });
 
   console.log(); // Empty line for spacing

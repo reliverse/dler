@@ -7,14 +7,21 @@ import path from "path";
 
 import type { SchemaGenerator } from "./types";
 
-export const generatePrismaSchema: SchemaGenerator = async ({ adapter, options, file }) => {
+export const generatePrismaSchema: SchemaGenerator = async ({
+  adapter,
+  options,
+  file,
+}) => {
   const provider = adapter.options?.provider || "postgresql";
   const tables = getAuthTables(options);
   const filePath = file || "./prisma/schema.prisma";
   const schemaPrismaExist = existsSync(path.join(process.cwd(), filePath));
   let schemaPrisma = "";
   if (schemaPrismaExist) {
-    schemaPrisma = await fs.readFile(path.join(process.cwd(), filePath), "utf-8");
+    schemaPrisma = await fs.readFile(
+      path.join(process.cwd(), filePath),
+      "utf-8",
+    );
   } else {
     schemaPrisma = getNewPrisma(provider);
   }
@@ -32,7 +39,9 @@ export const generatePrismaSchema: SchemaGenerator = async ({ adapter, options, 
         if (!manyToManyRelations.has(referencedModel)) {
           manyToManyRelations.set(referencedModel, new Set());
         }
-        manyToManyRelations.get(referencedModel)!.add(capitalizeFirstLetter(table));
+        manyToManyRelations
+          .get(referencedModel)!
+          .add(capitalizeFirstLetter(table));
       }
     }
   }
@@ -82,7 +91,11 @@ export const generatePrismaSchema: SchemaGenerator = async ({ adapter, options, 
       if (!prismaModel) {
         if (provider === "mongodb") {
           // Mongo DB doesn't support auto increment, so just use their normal _id.
-          builder.model(modelName).field("id", "String").attribute("id").attribute(`map("_id")`);
+          builder
+            .model(modelName)
+            .field("id", "String")
+            .attribute("id")
+            .attribute(`map("_id")`);
         } else {
           if (options.advanced?.database?.useNumberId) {
             builder
@@ -135,7 +148,8 @@ export const generatePrismaSchema: SchemaGenerator = async ({ adapter, options, 
           let action = "Cascade";
           if (attr.references.onDelete === "no action") action = "NoAction";
           else if (attr.references.onDelete === "set null") action = "SetNull";
-          else if (attr.references.onDelete === "set default") action = "SetDefault";
+          else if (attr.references.onDelete === "set default")
+            action = "SetDefault";
           else if (attr.references.onDelete === "restrict") action = "Restrict";
           builder
             .model(modelName)
@@ -147,7 +161,12 @@ export const generatePrismaSchema: SchemaGenerator = async ({ adapter, options, 
               `relation(fields: [${field}], references: [${attr.references.field}], onDelete: ${action})`,
             );
         }
-        if (!attr.unique && !attr.references && provider === "mysql" && attr.type === "string") {
+        if (
+          !attr.unique &&
+          !attr.references &&
+          provider === "mysql" &&
+          attr.type === "string"
+        ) {
           builder.model(modelName).field(field).attribute("db.Text");
         }
       }

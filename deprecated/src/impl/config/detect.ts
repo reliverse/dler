@@ -96,7 +96,10 @@ export async function detectProjectFramework(
   for (const [type, files] of Object.entries(PROJECT_FRAMEWORK_FILES)) {
     for (const file of files) {
       const [filePath = file] = file.split(":");
-      if (filePath !== "package.json" && (await fs.pathExists(path.join(projectPath, filePath)))) {
+      if (
+        filePath !== "package.json" &&
+        (await fs.pathExists(path.join(projectPath, filePath)))
+      ) {
         return type as ProjectFramework;
       }
     }
@@ -105,7 +108,9 @@ export async function detectProjectFramework(
   return null;
 }
 
-export async function getPackageJson(projectPath: string): Promise<PackageJson | null> {
+export async function getPackageJson(
+  projectPath: string,
+): Promise<PackageJson | null> {
   try {
     const packageJsonPath = path.join(projectPath, "package.json");
     if (!(await fs.pathExists(packageJsonPath))) return null;
@@ -123,7 +128,9 @@ export async function getPackageJson(projectPath: string): Promise<PackageJson |
   }
 }
 
-export async function getPackageJsonSafe(projectPath: string): Promise<PackageJson | null> {
+export async function getPackageJsonSafe(
+  projectPath: string,
+): Promise<PackageJson | null> {
   const packageJsonPath = path.join(projectPath, "package.json");
   if (!(await fs.pathExists(packageJsonPath))) return null;
   return await readPackageJSON(projectPath);
@@ -134,9 +141,14 @@ export async function detectProject(
   isDev: boolean,
 ): Promise<DetectedProject | null> {
   try {
-    const { requiredContent, optionalContent } = await getProjectContent(projectPath);
+    const { requiredContent, optionalContent } =
+      await getProjectContent(projectPath);
     if (!requiredContent.filePackageJson) return null;
-    const { configPath } = await getReliverseConfigPath(projectPath, isDev, false);
+    const { configPath } = await getReliverseConfigPath(
+      projectPath,
+      isDev,
+      false,
+    );
     if (!(await fs.pathExists(configPath))) return null;
     const config = await readReliverseConfig(configPath, isDev);
     if (!config) return null;
@@ -224,7 +236,8 @@ export async function detectFeatures(
   // Database providers
   const hasPg = "pg" in deps || "@neondatabase/serverless" in deps;
   const hasMysql = "mysql" in deps || "mysql2" in deps;
-  const hasSqlite = "sqlite" in deps || "sqlite3" in deps || "better-sqlite3" in deps;
+  const hasSqlite =
+    "sqlite" in deps || "sqlite3" in deps || "better-sqlite3" in deps;
   const hasMongo = "mongodb" in deps || "mongoose" in deps;
 
   // Analytics
@@ -248,11 +261,15 @@ export async function detectFeatures(
   const hasStyledComponents = "styled-components" in deps;
   const hasCssModules =
     packageJson?.dependencies &&
-    Object.keys(deps).some((key) => key.includes("css-loader") || key.includes("css-modules"));
+    Object.keys(deps).some(
+      (key) => key.includes("css-loader") || key.includes("css-modules"),
+    );
   const hasSass = "sass" in deps || "node-sass" in deps;
 
   // UI Components
-  const hasShadcnUi = await fs.pathExists(path.join(projectPath, "components/ui"));
+  const hasShadcnUi = await fs.pathExists(
+    path.join(projectPath, "components/ui"),
+  );
   const hasChakraUi = "@chakra-ui/react" in deps;
   const hasMaterialUi = "@mui/material" in deps;
 
@@ -260,7 +277,8 @@ export async function detectFeatures(
   const hasBunTest =
     packageJson?.scripts &&
     Object.values(packageJson.scripts).some(
-      (script) => script && typeof script === "string" && script.includes("bun test"),
+      (script) =>
+        script && typeof script === "string" && script.includes("bun test"),
     );
   const hasVitest = "vitest" in deps;
   const hasJest = "jest" in deps;
@@ -316,7 +334,8 @@ export async function detectFeatures(
   const hasRedis = "redis" in deps || "@upstash/redis" in deps;
 
   // Storage & CDN
-  const hasCloudflare = "cloudflare" in deps || "@cloudflare/workers-types" in deps;
+  const hasCloudflare =
+    "cloudflare" in deps || "@cloudflare/workers-types" in deps;
 
   // CMS
   const hasContentlayer = "contentlayer" in deps;
@@ -349,7 +368,10 @@ export async function detectFeatures(
 
   // Detect languages
   const languages: string[] = ["typescript"];
-  if ("python" in deps || (await fs.pathExists(path.join(projectPath, "requirements.txt")))) {
+  if (
+    "python" in deps ||
+    (await fs.pathExists(path.join(projectPath, "requirements.txt")))
+  ) {
     languages.push("python");
   }
 
@@ -522,22 +544,38 @@ export async function detectFeatures(
   const commands: string[] = [];
   if (packageJson?.scripts) {
     for (const [name] of Object.entries(packageJson.scripts)) {
-      if (name !== "start" && name !== "build" && name !== "dev" && name !== "test") {
+      if (
+        name !== "start" &&
+        name !== "build" &&
+        name !== "dev" &&
+        name !== "test"
+      ) {
         commands.push(name);
       }
     }
   }
 
   // Detect testing frameworks
-  const hasTestingFramework = !!(hasJest || hasVitest || hasPlaywright || hasCypress || hasBunTest);
+  const hasTestingFramework = !!(
+    hasJest ||
+    hasVitest ||
+    hasPlaywright ||
+    hasCypress ||
+    hasBunTest
+  );
 
   // Return the features object
   return {
     i18n: hasNextIntl || hasI18next || hasRosetta,
     analytics:
-      hasVercelAnalytics || hasSegmentAnalytics || hasGoogleAnalytics || hasPlausible || hasFathom,
+      hasVercelAnalytics ||
+      hasSegmentAnalytics ||
+      hasGoogleAnalytics ||
+      hasPlausible ||
+      hasFathom,
     themeMode: "dark-light",
-    authentication: hasNextAuth || hasClerk || hasBetterAuth || hasAuth0 || hasSupabase,
+    authentication:
+      hasNextAuth || hasClerk || hasBetterAuth || hasAuth0 || hasSupabase,
     api: hasHono || hasTrpc || hasGraphql || hasRest,
     database:
       hasPrisma ||

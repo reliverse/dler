@@ -7,13 +7,20 @@ import {
   addEnvVariablesToFile,
   type EnvVariable,
 } from "~/impl/providers/better-t-stack/helpers/project-generation/env-setup";
-import type { PackageManager, ProjectConfig } from "~/impl/providers/better-t-stack/types";
+import type {
+  PackageManager,
+  ProjectConfig,
+} from "~/impl/providers/better-t-stack/types";
 import { getPackageExecutionCommand } from "~/impl/providers/better-t-stack/utils/get-package-execution-command";
 
-async function writeSupabaseEnvFile(projectDir: string, databaseUrl: string): Promise<boolean> {
+async function writeSupabaseEnvFile(
+  projectDir: string,
+  databaseUrl: string,
+): Promise<boolean> {
   try {
     const envPath = path.join(projectDir, "apps/server", ".env");
-    const dbUrlToUse = databaseUrl || "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
+    const dbUrlToUse =
+      databaseUrl || "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
     const variables: EnvVariable[] = [
       {
         key: "DATABASE_URL",
@@ -52,7 +59,10 @@ async function initializeSupabase(
 ): Promise<boolean> {
   relinka("info", "Initializing Supabase project...");
   try {
-    const supabaseInitCommand = getPackageExecutionCommand(packageManager, "supabase init");
+    const supabaseInitCommand = getPackageExecutionCommand(
+      packageManager,
+      "supabase init",
+    );
     await execa(supabaseInitCommand, {
       cwd: serverDir,
       stdio: "inherit",
@@ -70,7 +80,9 @@ async function initializeSupabase(
     if (error instanceof Error && error.message.includes("ENOENT")) {
       relinka(
         "error",
-        re.red("Supabase CLI not found. Please install it globally or ensure it's in your PATH."),
+        re.red(
+          "Supabase CLI not found. Please install it globally or ensure it's in your PATH.",
+        ),
       );
       relinka("info", "You can install it using: npm install -g supabase");
     }
@@ -83,7 +95,10 @@ async function startSupabase(
   packageManager: PackageManager,
 ): Promise<string | null> {
   relinka("info", "Starting Supabase services (this may take a moment)...");
-  const supabaseStartCommand = getPackageExecutionCommand(packageManager, "supabase start");
+  const supabaseStartCommand = getPackageExecutionCommand(
+    packageManager,
+    "supabase start",
+  );
   try {
     const subprocess = execa(supabaseStartCommand, {
       cwd: serverDir,
@@ -116,7 +131,10 @@ async function startSupabase(
     if (execaError?.message) {
       relinka("error", `Error details: ${execaError.message}`);
       if (execaError.message.includes("Docker is not running")) {
-        relinka("error", re.red("Docker is not running. Please start Docker and try again."));
+        relinka(
+          "error",
+          re.red("Docker is not running. Please start Docker and try again."),
+        );
       }
     } else {
       relinka("error", String(error));
@@ -175,19 +193,31 @@ export async function setupSupabase(config: ProjectConfig) {
       } else {
         relinka(
           "error",
-          re.red("Supabase setup completed, but failed to update .env automatically."),
+          re.red(
+            "Supabase setup completed, but failed to update .env automatically.",
+          ),
         );
         displayManualSupabaseInstructions(supabaseOutput);
       }
     } else {
-      relinka("error", re.yellow("Supabase started, but could not extract DB URL automatically."));
+      relinka(
+        "error",
+        re.yellow(
+          "Supabase started, but could not extract DB URL automatically.",
+        ),
+      );
       displayManualSupabaseInstructions(supabaseOutput);
     }
   } catch (error) {
     if (error instanceof Error) {
       relinka("error", re.red(`Error during Supabase setup: ${error.message}`));
     } else {
-      relinka("error", re.red(`An unknown error occurred during Supabase setup: ${String(error)}`));
+      relinka(
+        "error",
+        re.red(
+          `An unknown error occurred during Supabase setup: ${String(error)}`,
+        ),
+      );
     }
     displayManualSupabaseInstructions();
   }

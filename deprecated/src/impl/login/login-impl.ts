@@ -10,7 +10,10 @@ import type { ParsedUrlQuery } from "querystring";
 import url from "url";
 import { cliDomainDocs, memoryPath } from "~/impl/config/constants";
 import { showAnykeyPrompt } from "~/impl/init/use-template/cp-modules/cli-main-modules/modules/showAnykeyPrompt";
-import { getOrCreateReliverseMemory, updateReliverseMemory } from "~/impl/utils/reliverseMemory";
+import {
+  getOrCreateReliverseMemory,
+  updateReliverseMemory,
+} from "~/impl/utils/reliverseMemory";
 import type { ReliverseMemory } from "~/impl/utils/schemaMemory";
 
 // import "dotenv/config";
@@ -27,7 +30,13 @@ class UserCancellationError extends Error {
 
 const nanoid = customAlphabet("123456789QAZWSXEDCRFVTGBYHNUJMIKOLP", 5);
 
-export async function auth({ isDev, useLocalhost }: { isDev: boolean; useLocalhost: boolean }) {
+export async function auth({
+  isDev,
+  useLocalhost,
+}: {
+  isDev: boolean;
+  useLocalhost: boolean;
+}) {
   relinka("info", "Let's authenticate you...");
 
   const spinner = createSpinner({
@@ -50,7 +59,9 @@ export async function auth({ isDev, useLocalhost }: { isDev: boolean; useLocalho
       relinka(
         "error",
         "Failed to start local server:",
-        listenError instanceof Error ? listenError.message : String(listenError),
+        listenError instanceof Error
+          ? listenError.message
+          : String(listenError),
       );
       throw listenError;
     }
@@ -62,7 +73,10 @@ export async function auth({ isDev, useLocalhost }: { isDev: boolean; useLocalho
 
         res.setHeader("Access-Control-Allow-Origin", "*");
         res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        res.setHeader(
+          "Access-Control-Allow-Headers",
+          "Content-Type, Authorization",
+        );
 
         if (req.method === "OPTIONS") {
           relinka("verbose", "Handling OPTIONS request");
@@ -71,7 +85,10 @@ export async function auth({ isDev, useLocalhost }: { isDev: boolean; useLocalho
         } else if (req.method === "GET") {
           const parsedUrl = url.parse(req.url ?? "", true);
           const queryParams = parsedUrl.query;
-          relinka("verbose", `Parsed query parameters: ${JSON.stringify(queryParams)}`);
+          relinka(
+            "verbose",
+            `Parsed query parameters: ${JSON.stringify(queryParams)}`,
+          );
 
           if (queryParams.cancelled) {
             relinka("verbose", "User cancelled the login process...");
@@ -80,11 +97,16 @@ export async function auth({ isDev, useLocalhost }: { isDev: boolean; useLocalho
               res.writeHead(200);
               res.end();
               server.close();
-              reject(new UserCancellationError("Login process cancelled by user."));
+              reject(
+                new UserCancellationError("Login process cancelled by user."),
+              );
             });
             return;
           } else {
-            relinka("verbose", `Received authentication data: ${JSON.stringify(queryParams)}`);
+            relinka(
+              "verbose",
+              `Received authentication data: ${JSON.stringify(queryParams)}`,
+            );
             res.writeHead(200);
             res.end();
             resolve(queryParams);
@@ -161,7 +183,10 @@ export async function auth({ isDev, useLocalhost }: { isDev: boolean; useLocalho
     try {
       const authData = await authPromise;
       clearTimeout(authTimeout);
-      relinka("verbose", `Authentication data received: ${JSON.stringify(authData)}`);
+      relinka(
+        "verbose",
+        `Authentication data received: ${JSON.stringify(authData)}`,
+      );
 
       if (authData.cancelled) {
         throw new UserCancellationError("Login process cancelled by user.");
@@ -174,8 +199,15 @@ export async function auth({ isDev, useLocalhost }: { isDev: boolean; useLocalho
       });
 
       server.close(() => {
-        relinka("verbose", "Wrote auth data to memory. To view it, type:", `code ${memoryPath}`);
-        relinka("verbose", "Local server closed after successful authentication.");
+        relinka(
+          "verbose",
+          "Wrote auth data to memory. To view it, type:",
+          `code ${memoryPath}`,
+        );
+        relinka(
+          "verbose",
+          "Local server closed after successful authentication.",
+        );
       });
 
       spinner.succeed("Authenticated!");
@@ -192,7 +224,10 @@ export async function auth({ isDev, useLocalhost }: { isDev: boolean; useLocalho
         });
       } else {
         server.close(() => {
-          relinka("verbose", "Local server closed due to authentication failure.");
+          relinka(
+            "verbose",
+            "Local server closed due to authentication failure.",
+          );
         });
         spinner.fail("Authentication failed");
         throw error;
@@ -205,9 +240,14 @@ export async function auth({ isDev, useLocalhost }: { isDev: boolean; useLocalho
   }
 }
 
-export async function authCheck(isDev: boolean, memory: ReliverseMemory, useLocalhost: boolean) {
+export async function authCheck(
+  isDev: boolean,
+  memory: ReliverseMemory,
+  useLocalhost: boolean,
+) {
   // Check for existing authentication in SQLite
-  const isAuthenticated = memory.code && memory.code !== "" && memory.key && memory.key !== "";
+  const isAuthenticated =
+    memory.code && memory.code !== "" && memory.key && memory.key !== "";
 
   if (!isAuthenticated) {
     await showAnykeyPrompt();

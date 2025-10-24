@@ -8,7 +8,9 @@ const isWin = process.platform === "win32";
 const isExecutableRegExp = /\.(?:com|exe)$/i;
 const isCmdShimRegExp = /node_modules[\\/].bin[\\/][^\\/]+\.cmd$/i;
 
-async function detectShebang(parsed: ExecParseResult): Promise<string | undefined> {
+async function detectShebang(
+  parsed: ExecParseResult,
+): Promise<string | undefined> {
   parsed.file = await resolveCommand(parsed);
   if (parsed.file) {
     const shebang = readShebang(parsed.file);
@@ -21,7 +23,9 @@ async function detectShebang(parsed: ExecParseResult): Promise<string | undefine
   return parsed.file;
 }
 
-async function parseNonShell(parsed: ExecParseResult): Promise<ExecParseResult> {
+async function parseNonShell(
+  parsed: ExecParseResult,
+): Promise<ExecParseResult> {
   if (!isWin) return parsed;
   const commandFile = await detectShebang(parsed);
   const needsShell = !isExecutableRegExp.test(commandFile ?? "");
@@ -29,7 +33,9 @@ async function parseNonShell(parsed: ExecParseResult): Promise<ExecParseResult> 
     const needsDoubleEscapeMetaChars = isCmdShimRegExp.test(commandFile ?? "");
     let cmd = path.normalize(parsed.command);
     cmd = escapeCommand(cmd);
-    const args = parsed.args.map((arg) => escapeArgument(arg, needsDoubleEscapeMetaChars));
+    const args = parsed.args.map((arg) =>
+      escapeArgument(arg, needsDoubleEscapeMetaChars),
+    );
     const shellCommand = [cmd].concat(args).join(" ");
     parsed.args = ["/d", "/s", "/c", `"${shellCommand}"`];
     parsed.command = process.env.comspec || "cmd.exe";

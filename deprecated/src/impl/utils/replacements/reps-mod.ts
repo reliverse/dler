@@ -124,7 +124,10 @@ function capitalizeWithDashes(str: string): string {
  * @param newValue - New string to replace with
  * @returns Record of case-sensitive string replacements
  */
-function createCaseVariations(oldValue: string, newValue: string): Record<string, string> {
+function createCaseVariations(
+  oldValue: string,
+  newValue: string,
+): Record<string, string> {
   return {
     [oldValue.toLowerCase()]: newValue.toLowerCase(),
     [capitalize(oldValue)]: capitalize(newValue),
@@ -184,19 +187,26 @@ export async function handleReplacements(
     [templateUrl]: config.primaryDomain,
     [`${inputRepoName}.vercel.app`]: `${config.projectName}.vercel.app`,
     ...createCaseVariations(inputRepoName, config.projectName),
-    ...createCaseVariations(HardcodedStrings.RelivatorShort, config.projectName),
+    ...createCaseVariations(
+      HardcodedStrings.RelivatorShort,
+      config.projectName,
+    ),
     ...createCaseVariations(inputRepoAuthor, config.frontendUsername),
-    ...createCaseVariations(HardcodedStrings.DefaultAuthor, config.frontendUsername),
-    [CommonPatterns.githubUrl(inputRepoAuthor, inputRepoName)]: CommonPatterns.githubUrl(
+    ...createCaseVariations(
+      HardcodedStrings.DefaultAuthor,
       config.frontendUsername,
-      config.projectName,
     ),
-    [CommonPatterns.githubUrl(HardcodedStrings.DefaultAuthor, HardcodedStrings.RelivatorLower)]:
+    [CommonPatterns.githubUrl(inputRepoAuthor, inputRepoName)]:
       CommonPatterns.githubUrl(config.frontendUsername, config.projectName),
-    [CommonPatterns.packageName(inputRepoName)]: CommonPatterns.packageName(config.projectName),
-    [CommonPatterns.packageName(HardcodedStrings.RelivatorLower)]: CommonPatterns.packageName(
+    [CommonPatterns.githubUrl(
+      HardcodedStrings.DefaultAuthor,
+      HardcodedStrings.RelivatorLower,
+    )]: CommonPatterns.githubUrl(config.frontendUsername, config.projectName),
+    [CommonPatterns.packageName(inputRepoName)]: CommonPatterns.packageName(
       config.projectName,
     ),
+    [CommonPatterns.packageName(HardcodedStrings.RelivatorLower)]:
+      CommonPatterns.packageName(config.projectName),
     [HardcodedStrings.RelivatorTitle]: config.projectDescription
       ? `${capitalizeWithDashes(config.projectName)} - ${config.projectDescription}`
       : `${capitalizeWithDashes(config.projectName)} - A modern web application for your business needs`,
@@ -206,18 +216,25 @@ export async function handleReplacements(
   };
 
   if (externalConfig) {
-    if (externalConfig.projectName && externalConfig.projectName !== config.projectName) {
+    if (
+      externalConfig.projectName &&
+      externalConfig.projectName !== config.projectName
+    ) {
       replacementsMap[externalConfig.projectName] = config.projectName;
-      replacementsMap[externalConfig.projectName.toLowerCase()] = config.projectName.toLowerCase();
-      replacementsMap[capitalize(externalConfig.projectName)] = capitalizeWithDashes(
-        config.projectName,
-      );
+      replacementsMap[externalConfig.projectName.toLowerCase()] =
+        config.projectName.toLowerCase();
+      replacementsMap[capitalize(externalConfig.projectName)] =
+        capitalizeWithDashes(config.projectName);
     }
-    if (externalConfig.projectAuthor && externalConfig.projectAuthor !== config.frontendUsername) {
+    if (
+      externalConfig.projectAuthor &&
+      externalConfig.projectAuthor !== config.frontendUsername
+    ) {
       replacementsMap[externalConfig.projectAuthor] = config.frontendUsername;
     }
     if (externalConfig.projectDescription) {
-      replacementsMap[externalConfig.projectDescription] = config.projectDescription ?? "";
+      replacementsMap[externalConfig.projectDescription] =
+        config.projectDescription ?? "";
     }
   }
 

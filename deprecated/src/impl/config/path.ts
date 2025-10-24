@@ -8,7 +8,10 @@ import fs from "@reliverse/relifso";
 import { tsconfigJson } from "~/impl/config/constants";
 
 // Cache the result per project path so the prompt is only shown once.
-const configPathCache = new Map<string, { configPath: string; isTS: boolean }>();
+const configPathCache = new Map<
+  string,
+  { configPath: string; isTS: boolean }
+>();
 
 /**
  * Determines the rse config file path and whether it's TS or JSONC.

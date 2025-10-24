@@ -47,11 +47,16 @@ export async function executeCommand(
 
   // Add validation to ensure args is an array
   if (!Array.isArray(args)) {
-    throw new Error(`executeCommand: args must be an array, got ${typeof args}: ${args}`);
+    throw new Error(
+      `executeCommand: args must be an array, got ${typeof args}: ${args}`,
+    );
   }
 
   const xArgs: [string, string[]] =
-    command === "npm" || command === "bun" || command === "deno" || !(await hasCorepack())
+    command === "npm" ||
+    command === "bun" ||
+    command === "deno" ||
+    !(await hasCorepack())
       ? [command, args]
       : ["corepack", [command, ...args]];
 
@@ -80,11 +85,17 @@ export async function executeCommand(
 
 type NonPartial<T> = { [P in keyof T]-?: T[P] };
 
-export const NO_PACKAGE_MANAGER_DETECTED_ERROR_MSG = "No package manager auto-detected.";
+export const NO_PACKAGE_MANAGER_DETECTED_ERROR_MSG =
+  "No package manager auto-detected.";
 
-export async function resolveOperationOptions(options: OperationOptions = {}): Promise<
+export async function resolveOperationOptions(
+  options: OperationOptions = {},
+): Promise<
   NonPartial<Pick<OperationOptions, "cwd" | "silent" | "dev" | "global">> &
-    Pick<OperationOptions, "workspace" | "filter" | "asCatalog" | "catalogName"> & {
+    Pick<
+      OperationOptions,
+      "workspace" | "filter" | "asCatalog" | "catalogName"
+    > & {
       packageManager: PackageManager;
     }
 > {
@@ -93,7 +104,8 @@ export async function resolveOperationOptions(options: OperationOptions = {}): P
   const packageManager =
     (typeof options.packageManager === "string"
       ? packageManagers.find((pm) => pm.name === options.packageManager)
-      : options.packageManager) || (await detectPackageManager(options.cwd || process.cwd()));
+      : options.packageManager) ||
+    (await detectPackageManager(options.cwd || process.cwd()));
 
   if (!packageManager) {
     throw new Error(NO_PACKAGE_MANAGER_DETECTED_ERROR_MSG);
@@ -146,7 +158,10 @@ export function getWorkspaceArgs(
   }
 
   if (options.packageManager.name === "yarn") {
-    if (!options.packageManager.majorVersion || options.packageManager.majorVersion === "1") {
+    if (
+      !options.packageManager.majorVersion ||
+      options.packageManager.majorVersion === "1"
+    ) {
       // Yarn classic
       return workspacePkg ? ["--cwd", workspacePkg] : ["-W"];
     } else {
@@ -160,9 +175,14 @@ export function getWorkspaceArgs(
 
 export function doesDependencyExist(
   name: string,
-  options: Pick<Awaited<ReturnType<typeof resolveOperationOptions>>, "cwd" | "workspace">,
+  options: Pick<
+    Awaited<ReturnType<typeof resolveOperationOptions>>,
+    "cwd" | "workspace"
+  >,
 ) {
-  const require = createRequire(options.cwd.endsWith("/") ? options.cwd : options.cwd + "/");
+  const require = createRequire(
+    options.cwd.endsWith("/") ? options.cwd : options.cwd + "/",
+  );
 
   try {
     const resolvedPath = require.resolve(name);

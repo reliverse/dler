@@ -1,4 +1,10 @@
-export type KeyType = "string" | "email" | "password" | "number" | "boolean" | "database";
+export type KeyType =
+  | "string"
+  | "email"
+  | "password"
+  | "number"
+  | "boolean"
+  | "database";
 
 export type KeyVar =
   | "NEXT_PUBLIC_APP_URL"
@@ -126,21 +132,24 @@ export const KNOWN_SERVICES: Record<string, KnownService> = {
       {
         key: "STRIPE_API_KEY",
         type: "string",
-        instruction: "- Developers > API keys > Secret key\n- Starts with 'sk_test_' or 'sk_live_'",
+        instruction:
+          "- Developers > API keys > Secret key\n- Starts with 'sk_test_' or 'sk_live_'",
         defaultValue: "sk_test_",
         optional: false,
       },
       {
         key: "STRIPE_WEBHOOK_SECRET",
         type: "string",
-        instruction: "Your Stripe webhook signing secret starting with 'whsec_'",
+        instruction:
+          "Your Stripe webhook signing secret starting with 'whsec_'",
         defaultValue: "whsec_",
         optional: true,
       },
       {
         key: "STRIPE_PRO_MONTHLY_PRICE_ID",
         type: "string",
-        instruction: "The price ID for your monthly pro plan starting with 'price_'",
+        instruction:
+          "The price ID for your monthly pro plan starting with 'price_'",
         defaultValue: "price_",
         optional: true,
       },
@@ -160,7 +169,8 @@ export const KNOWN_SERVICES: Record<string, KnownService> = {
       {
         key: "UPLOADTHING_SECRET",
         type: "string",
-        instruction: "Your Uploadthing secret key from the dashboard.\nStarts with 'sk_live_'",
+        instruction:
+          "Your Uploadthing secret key from the dashboard.\nStarts with 'sk_live_'",
         defaultValue: "sk_live_",
         optional: false,
       },

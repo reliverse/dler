@@ -55,7 +55,9 @@ async function handleProjectCategory(params: AppParams) {
         },
         { separator: true },
         {
-          label: re.italic(re.dim("More types of projects and frameworks coming soon 🦾")),
+          label: re.italic(
+            re.dim("More types of projects and frameworks coming soon 🦾"),
+          ),
           value: UNKNOWN_VALUE,
           disabled: true,
         },
@@ -65,11 +67,32 @@ async function handleProjectCategory(params: AppParams) {
   }
 
   if (projectCategory === "vscode") {
-    await optionCreateVSCodeExtension(params.projectName, cwd, isDev, memory, config, skipPrompts);
+    await optionCreateVSCodeExtension(
+      params.projectName,
+      cwd,
+      isDev,
+      memory,
+      config,
+      skipPrompts,
+    );
   } else if (projectCategory === "browser") {
-    await optionCreateBrowserExtension(params.projectName, cwd, isDev, memory, config, skipPrompts);
+    await optionCreateBrowserExtension(
+      params.projectName,
+      cwd,
+      isDev,
+      memory,
+      config,
+      skipPrompts,
+    );
   } else if (projectCategory === "mobile") {
-    await optionCreateMobileProject(params.projectName, cwd, isDev, memory, config, skipPrompts);
+    await optionCreateMobileProject(
+      params.projectName,
+      cwd,
+      isDev,
+      memory,
+      config,
+      skipPrompts,
+    );
   } else {
     // Default = "web"
     await optionCreateWebProject(
@@ -169,7 +192,17 @@ export async function showOpenProjectMenu(params: AppParams) {
 
   const searchPath = isDev ? path.join(cwd, "tests-runtime") : cwd;
   if (await fs.pathExists(searchPath)) {
-    const detectedProjects = await detectProjectsWithReliverseConfig(searchPath, isDev);
-    await handleOpenProjectMenu(detectedProjects, isDev, memory, cwd, true, config);
+    const detectedProjects = await detectProjectsWithReliverseConfig(
+      searchPath,
+      isDev,
+    );
+    await handleOpenProjectMenu(
+      detectedProjects,
+      isDev,
+      memory,
+      cwd,
+      true,
+      config,
+    );
   }
 }

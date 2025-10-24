@@ -7,8 +7,12 @@
   "type": "module",
   "scripts": {
     "dler": "bun apps/dler/src/cli.ts",
-    "typecheck": "bun dler tsc",
-    "build": "bun dler build --ignore '@reliverse/dler-v1'"
+    "clean": "bun dler clean --presets build --force",
+    "format": "bun biome check --write --unsafe",
+    "typecheck": "bun dler tsc --copy-logs",
+    "check": "bun format && bun typecheck",
+    "build": "bun dler build",
+    "perf": "bun dler perf --runs 10 --warmup 2 --target"
   },
   "workspaces": {
     "packages": [
@@ -18,6 +22,7 @@
       "deprecated"
     ],
     "catalog": {
+      "clipboardy": "^5.0.0",
       "cli-cursor": "^5.0.0",
       "cli-spinners": "^3.3.0",
       "is-interactive": "^2.0.0",
@@ -167,5 +172,9 @@
   "packageManager": "bun@1.3.0",
   "engines": {
     "bun": ">=1.3.0"
+  },
+  "dependencies": {
+    "lookpath": "^1.2.3",
+    "node-fetch-native": "^1.6.7"
   }
 }

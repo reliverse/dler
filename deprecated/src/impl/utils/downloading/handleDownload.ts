@@ -5,7 +5,10 @@ import { confirmPrompt, selectPrompt } from "@reliverse/rempts";
 import { ofetch } from "ofetch";
 import { cliHomeRepos, UNKNOWN_VALUE } from "~/impl/config/constants";
 import type { ReliverseConfig } from "~/impl/schema/mod";
-import { type DownloadResult, downloadRepo } from "~/impl/utils/downloading/downloadRepo";
+import {
+  type DownloadResult,
+  downloadRepo,
+} from "~/impl/utils/downloading/downloadRepo";
 import {
   type CategoryFromSchema,
   type CloneOrTemplateRepo,
@@ -21,7 +24,9 @@ interface UnghRepoResponse {
   };
 }
 
-async function checkRepoVersion(repo: CloneOrTemplateRepo): Promise<string | null> {
+async function checkRepoVersion(
+  repo: CloneOrTemplateRepo,
+): Promise<string | null> {
   const [owner, repoName] = repo.id.split("/");
   if (!owner || !repoName) return null;
 
@@ -81,7 +86,9 @@ export async function handleDownload({
     // For custom repos, create a minimal repo object
     const [author, name] = selectedRepo.split("/");
     if (!author || !name) {
-      throw new Error(`Invalid repo format: ${selectedRepo}. Expected format: owner/repo`);
+      throw new Error(
+        `Invalid repo format: ${selectedRepo}. Expected format: owner/repo`,
+      );
     }
     repo = {
       id: selectedRepo as RepoFromSchema, // We trust the user input for custom repos
@@ -181,7 +188,9 @@ export async function handleDownload({
       });
       projectPath = result.dir;
       if (result.time) {
-        const includesGit = preserveGit ? " (size includes the preserved .git folder)." : ".";
+        const includesGit = preserveGit
+          ? " (size includes the preserved .git folder)."
+          : ".";
         relinka(
           "success",
           `Successfully downloaded ${term} to ${projectPath}`,

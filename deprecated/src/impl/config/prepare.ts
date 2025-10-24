@@ -5,7 +5,12 @@ import { readPackageJSON } from "pkg-types";
 
 import { DEFAULT_CONFIG_RELIVERSE } from "~/impl/schema/mod";
 import { ensureReltypesFile } from "../schema/utils";
-import { cliConfigJsonc, cliConfigTs, rseOrg, UNKNOWN_STRING } from "./constants";
+import {
+  cliConfigJsonc,
+  cliConfigTs,
+  rseOrg,
+  UNKNOWN_STRING,
+} from "./constants";
 
 // Supported configuration file types
 export type ConfigKind = "ts" | "jsonc";
@@ -32,25 +37,40 @@ export async function ensureReliverseConfig(
     let hasDlerDep = false;
     try {
       const pkg = await readPackageJSON();
-      if (pkg && typeof pkg.description === "string" && pkg.description.trim()) {
+      if (
+        pkg &&
+        typeof pkg.description === "string" &&
+        pkg.description.trim()
+      ) {
         pkgDescription = pkg.description.trim();
       }
-      const deps = (pkg as { dependencies?: Record<string, string> }).dependencies;
-      const devDeps = (pkg as { devDependencies?: Record<string, string> }).devDependencies;
+      const deps = (pkg as { dependencies?: Record<string, string> })
+        .dependencies;
+      const devDeps = (pkg as { devDependencies?: Record<string, string> })
+        .devDependencies;
       hasDlerDep = Boolean(
-        (deps && "@reliverse/dler" in deps) || (devDeps && "@reliverse/dler" in devDeps),
+        (deps && "@reliverse/dler" in deps) ||
+          (devDeps && "@reliverse/dler" in devDeps),
       );
     } catch {
       // ignore, fallback to default
     }
     // Generate and write the config file
-    const configContent = generateConfig(isDev, pkgDescription, configKind, hasDlerDep);
+    const configContent = generateConfig(
+      isDev,
+      pkgDescription,
+      configKind,
+      hasDlerDep,
+    );
     await fs.outputFile(configPath, configContent, { encoding: "utf8" });
     relinka(
       "success",
       `${configKind === "ts" ? "TypeScript" : "JSONC"} config was created at ${configPath}`,
     );
-    relinka("verbose", "Edit this file to customize different project settings");
+    relinka(
+      "verbose",
+      "Edit this file to customize different project settings",
+    );
   } catch (error: unknown) {
     relinka(
       "error",
@@ -159,7 +179,8 @@ async function ensureGitignoreEntries(cwd: string) {
       const trimmedLine = line.trim();
       return (
         trimmedLine === entry ||
-        (entry === "dist*" && (trimmedLine === "dist*" || trimmedLine.startsWith("dist")))
+        (entry === "dist*" &&
+          (trimmedLine === "dist*" || trimmedLine.startsWith("dist")))
       );
     });
 
@@ -185,14 +206,26 @@ function getcommonEntrySrcDir(isDev: boolean): string {
 // Generate JSONC config file content
 function generateJsoncConfig(isDev: boolean, pkgDescription?: string): string {
   const schemaUrl = `${rseOrg}/schema.json`;
-  const verboseValue = getValue(isDev, true, DEFAULT_CONFIG_RELIVERSE.commonVerbose);
-  const pausePublishValue = getValue(isDev, false, DEFAULT_CONFIG_RELIVERSE.commonPubPause);
+  const verboseValue = getValue(
+    isDev,
+    true,
+    DEFAULT_CONFIG_RELIVERSE.commonVerbose,
+  );
+  const pausePublishValue = getValue(
+    isDev,
+    false,
+    DEFAULT_CONFIG_RELIVERSE.commonPubPause,
+  );
   const commonDescriptionValue = getValue(
     isDev,
     "reliverse (prev. dler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
     pkgDescription || DEFAULT_CONFIG_RELIVERSE.commonDescription,
   );
-  const libsActModeValue = getValue(isDev, "main-and-libs", DEFAULT_CONFIG_RELIVERSE.libsActMode);
+  const libsActModeValue = getValue(
+    isDev,
+    "main-and-libs",
+    DEFAULT_CONFIG_RELIVERSE.libsActMode,
+  );
 
   return `// @reliverse/* libraries & rse configuration
 // Hover over the fields to learn more details
@@ -526,9 +559,17 @@ function generateConfig(
   const importdefineConfigStatement = usePackageImport
     ? `import { defineConfig } from "@reliverse/dler";`
     : `import { defineConfig } from "./reltypes";`;
-  const verboseValue = getValue(isDev, true, DEFAULT_CONFIG_RELIVERSE.commonVerbose);
+  const verboseValue = getValue(
+    isDev,
+    true,
+    DEFAULT_CONFIG_RELIVERSE.commonVerbose,
+  );
   const commonIsCLI = getcommonIsCLI(isDev);
-  const pausePublishValue = getValue(isDev, false, DEFAULT_CONFIG_RELIVERSE.commonPubPause);
+  const pausePublishValue = getValue(
+    isDev,
+    false,
+    DEFAULT_CONFIG_RELIVERSE.commonPubPause,
+  );
   const commonDescriptionValue = getValue(
     isDev,
     "reliverse (prev. dler) is a flexible, unified, and fully automated bundler for TypeScript and JavaScript projects, as well as an NPM and JSR publishing tool.",
@@ -684,12 +725,20 @@ function generateConfig(
     "  commonPubPause: " + pausePublishValue + ",",
     `  commonPubRegistry: "npm",`,
     "  commonVerbose: " + verboseValue + ",",
-    "  commonDisableSpinner: " + DEFAULT_CONFIG_RELIVERSE.commonDisableSpinner + ",",
-    '  commonBuildOutDir: "' + DEFAULT_CONFIG_RELIVERSE.commonBuildOutDir + '",',
-    "  commonDeclarations: " + DEFAULT_CONFIG_RELIVERSE.commonDeclarations + ",",
+    "  commonDisableSpinner: " +
+      DEFAULT_CONFIG_RELIVERSE.commonDisableSpinner +
+      ",",
+    '  commonBuildOutDir: "' +
+      DEFAULT_CONFIG_RELIVERSE.commonBuildOutDir +
+      '",',
+    "  commonDeclarations: " +
+      DEFAULT_CONFIG_RELIVERSE.commonDeclarations +
+      ",",
     "  commonDescription: " + JSON.stringify(commonDescriptionValue) + ",",
     '  commonEntryFile: "' + DEFAULT_CONFIG_RELIVERSE.commonEntryFile + '",',
-    '  commonEntrySrcDir: "' + DEFAULT_CONFIG_RELIVERSE.commonEntrySrcDir + '",',
+    '  commonEntrySrcDir: "' +
+      DEFAULT_CONFIG_RELIVERSE.commonEntrySrcDir +
+      '",',
     "  " + commonIsCLI,
     "",
     "  // JSR-only config",
@@ -698,27 +747,43 @@ function generateConfig(
     '  distJsrDirName: "' + DEFAULT_CONFIG_RELIVERSE.distJsrDirName + '",',
     "  distJsrDryRun: " + DEFAULT_CONFIG_RELIVERSE.distJsrDryRun + ",",
     "  distJsrFailOnWarn: " + DEFAULT_CONFIG_RELIVERSE.distJsrFailOnWarn + ",",
-    "  distJsrGenTsconfig: " + DEFAULT_CONFIG_RELIVERSE.distJsrGenTsconfig + ",",
-    '  distJsrOutFilesExt: "' + DEFAULT_CONFIG_RELIVERSE.distJsrOutFilesExt + '",',
+    "  distJsrGenTsconfig: " +
+      DEFAULT_CONFIG_RELIVERSE.distJsrGenTsconfig +
+      ",",
+    '  distJsrOutFilesExt: "' +
+      DEFAULT_CONFIG_RELIVERSE.distJsrOutFilesExt +
+      '",',
     "  distJsrSlowTypes: " + DEFAULT_CONFIG_RELIVERSE.distJsrSlowTypes + ",",
     "",
     "  // NPM-only config",
     '  distNpmBuilder: "' + DEFAULT_CONFIG_RELIVERSE.distNpmBuilder + '",',
     '  distNpmDirName: "' + DEFAULT_CONFIG_RELIVERSE.distNpmDirName + '",',
-    '  distNpmOutFilesExt: "' + DEFAULT_CONFIG_RELIVERSE.distNpmOutFilesExt + '",',
+    '  distNpmOutFilesExt: "' +
+      DEFAULT_CONFIG_RELIVERSE.distNpmOutFilesExt +
+      '",',
     "",
     "  // Binary Build Configuration",
-    "  binaryBuildEnabled: " + DEFAULT_CONFIG_RELIVERSE.binaryBuildEnabled + ",",
+    "  binaryBuildEnabled: " +
+      DEFAULT_CONFIG_RELIVERSE.binaryBuildEnabled +
+      ",",
     "  binaryBuildInputFile: " +
       (DEFAULT_CONFIG_RELIVERSE.binaryBuildInputFile
         ? `"${DEFAULT_CONFIG_RELIVERSE.binaryBuildInputFile}"`
         : "undefined") +
       ",",
-    "  binaryBuildTargets: " + JSON.stringify(DEFAULT_CONFIG_RELIVERSE.binaryBuildTargets) + ",",
-    '  binaryBuildOutDir: "' + DEFAULT_CONFIG_RELIVERSE.binaryBuildOutDir + '",',
+    "  binaryBuildTargets: " +
+      JSON.stringify(DEFAULT_CONFIG_RELIVERSE.binaryBuildTargets) +
+      ",",
+    '  binaryBuildOutDir: "' +
+      DEFAULT_CONFIG_RELIVERSE.binaryBuildOutDir +
+      '",',
     "  binaryBuildMinify: " + DEFAULT_CONFIG_RELIVERSE.binaryBuildMinify + ",",
-    "  binaryBuildSourcemap: " + DEFAULT_CONFIG_RELIVERSE.binaryBuildSourcemap + ",",
-    "  binaryBuildBytecode: " + DEFAULT_CONFIG_RELIVERSE.binaryBuildBytecode + ",",
+    "  binaryBuildSourcemap: " +
+      DEFAULT_CONFIG_RELIVERSE.binaryBuildSourcemap +
+      ",",
+    "  binaryBuildBytecode: " +
+      DEFAULT_CONFIG_RELIVERSE.binaryBuildBytecode +
+      ",",
     "  binaryBuildClean: " + DEFAULT_CONFIG_RELIVERSE.binaryBuildClean + ",",
     "  binaryBuildWindowsIcon: " +
       (DEFAULT_CONFIG_RELIVERSE.binaryBuildWindowsIcon
@@ -731,9 +796,15 @@ function generateConfig(
     "  binaryBuildAssetNaming: " +
       JSON.stringify(DEFAULT_CONFIG_RELIVERSE.binaryBuildAssetNaming) +
       ",",
-    "  binaryBuildParallel: " + DEFAULT_CONFIG_RELIVERSE.binaryBuildParallel + ",",
-    "  binaryBuildExternal: " + JSON.stringify(DEFAULT_CONFIG_RELIVERSE.binaryBuildExternal) + ",",
-    "  binaryBuildNoCompile: " + DEFAULT_CONFIG_RELIVERSE.binaryBuildNoCompile + ",",
+    "  binaryBuildParallel: " +
+      DEFAULT_CONFIG_RELIVERSE.binaryBuildParallel +
+      ",",
+    "  binaryBuildExternal: " +
+      JSON.stringify(DEFAULT_CONFIG_RELIVERSE.binaryBuildExternal) +
+      ",",
+    "  binaryBuildNoCompile: " +
+      DEFAULT_CONFIG_RELIVERSE.binaryBuildNoCompile +
+      ",",
     "",
     "  // Libraries Reliverse Plugin",
     "  // Publish specific dirs as separate packages",
@@ -780,11 +851,15 @@ function generateConfig(
     "  // transpileEntries: [],",
     '  transpileEsbuild: "' + DEFAULT_CONFIG_RELIVERSE.transpileEsbuild + '",',
     "  // transpileExternals: [],",
-    "  transpileFailOnWarn: " + DEFAULT_CONFIG_RELIVERSE.transpileFailOnWarn + ",",
+    "  transpileFailOnWarn: " +
+      DEFAULT_CONFIG_RELIVERSE.transpileFailOnWarn +
+      ",",
     '  transpileFormat: "' + DEFAULT_CONFIG_RELIVERSE.transpileFormat + '",',
     "  transpileMinify: " + DEFAULT_CONFIG_RELIVERSE.transpileMinify + ",",
     "  // transpileParallel: false,",
-    '  transpilePublicPath: "' + DEFAULT_CONFIG_RELIVERSE.transpilePublicPath + '",',
+    '  transpilePublicPath: "' +
+      DEFAULT_CONFIG_RELIVERSE.transpilePublicPath +
+      '",',
     "  // transpileReplace: {},",
     "  // transpileRollup: {",
     "  //   alias: {},",
@@ -796,8 +871,12 @@ function generateConfig(
     "  //   resolve: {},",
     "  // },",
     "  // transpileShowOutLog: false,",
-    '  transpileSourcemap: "' + DEFAULT_CONFIG_RELIVERSE.transpileSourcemap + '",',
-    "  transpileSplitting: " + DEFAULT_CONFIG_RELIVERSE.transpileSplitting + ",",
+    '  transpileSourcemap: "' +
+      DEFAULT_CONFIG_RELIVERSE.transpileSourcemap +
+      '",',
+    "  transpileSplitting: " +
+      DEFAULT_CONFIG_RELIVERSE.transpileSplitting +
+      ",",
     "  transpileStub: " + DEFAULT_CONFIG_RELIVERSE.transpileStub + ",",
     "  // transpileStubOptions: { jiti: {} },",
     '  transpileTarget: "' + DEFAULT_CONFIG_RELIVERSE.transpileTarget + '",',

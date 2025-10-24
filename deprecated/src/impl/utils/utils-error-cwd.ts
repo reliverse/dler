@@ -37,7 +37,10 @@ export async function withWorkingDirectory<T>(
   const originalDir = process.cwd();
   try {
     process.chdir(transpileTargetDir);
-    relinka("verbose", `CWD (current working directory): ${originalDir} -> ${transpileTargetDir}`);
+    relinka(
+      "verbose",
+      `CWD (current working directory): ${originalDir} -> ${transpileTargetDir}`,
+    );
     const result = await fn();
     return result;
   } catch (error) {
@@ -46,7 +49,10 @@ export async function withWorkingDirectory<T>(
     throw error;
   } finally {
     process.chdir(originalDir);
-    relinka("verbose", `CWD (current working directory): ${transpileTargetDir} -> ${originalDir}`);
+    relinka(
+      "verbose",
+      `CWD (current working directory): ${transpileTargetDir} -> ${originalDir}`,
+    );
   }
 }
 

@@ -11,8 +11,8 @@
   },
   "scripts": {
     "dev": "bun src/mod.ts",
-    "bench": "bun bench/performance.ts",
-    "typecheck": "tsc --noEmit"
+    "start": "bun src/mod.ts",
+    "bench": "bun bench/performance.ts"
   },
   "dependencies": {
     "@reliverse/dler-logger": "workspace:*",

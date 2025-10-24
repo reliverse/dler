@@ -26,7 +26,10 @@ export async function updatePackageConfigurations(
   }
 }
 
-async function updateRootPackageJson(projectDir: string, options: ProjectConfig): Promise<void> {
+async function updateRootPackageJson(
+  projectDir: string,
+  options: ProjectConfig,
+): Promise<void> {
   const rootPackageJsonPath = path.join(projectDir, "package.json");
   if (!(await fs.pathExists(rootPackageJsonPath))) return;
 
@@ -101,11 +104,15 @@ async function updateRootPackageJson(projectDir: string, options: ProjectConfig)
       scripts["db:push"] = `pnpm --filter ${backendPackageName} db:push`;
       scripts["db:studio"] = `pnpm --filter ${backendPackageName} db:studio`;
       if (options.orm === "prisma") {
-        scripts["db:generate"] = `pnpm --filter ${backendPackageName} db:generate`;
-        scripts["db:migrate"] = `pnpm --filter ${backendPackageName} db:migrate`;
+        scripts["db:generate"] =
+          `pnpm --filter ${backendPackageName} db:generate`;
+        scripts["db:migrate"] =
+          `pnpm --filter ${backendPackageName} db:migrate`;
       } else if (options.orm === "drizzle") {
-        scripts["db:generate"] = `pnpm --filter ${backendPackageName} db:generate`;
-        scripts["db:migrate"] = `pnpm --filter ${backendPackageName} db:migrate`;
+        scripts["db:generate"] =
+          `pnpm --filter ${backendPackageName} db:generate`;
+        scripts["db:migrate"] =
+          `pnpm --filter ${backendPackageName} db:migrate`;
       }
     }
   } else if (options.packageManager === "npm") {
@@ -120,13 +127,18 @@ async function updateRootPackageJson(projectDir: string, options: ProjectConfig)
     }
     if (needsDbScripts) {
       scripts["db:push"] = `npm run db:push --workspace ${backendPackageName}`;
-      scripts["db:studio"] = `npm run db:studio --workspace ${backendPackageName}`;
+      scripts["db:studio"] =
+        `npm run db:studio --workspace ${backendPackageName}`;
       if (options.orm === "prisma") {
-        scripts["db:generate"] = `npm run db:generate --workspace ${backendPackageName}`;
-        scripts["db:migrate"] = `npm run db:migrate --workspace ${backendPackageName}`;
+        scripts["db:generate"] =
+          `npm run db:generate --workspace ${backendPackageName}`;
+        scripts["db:migrate"] =
+          `npm run db:migrate --workspace ${backendPackageName}`;
       } else if (options.orm === "drizzle") {
-        scripts["db:generate"] = `npm run db:generate --workspace ${backendPackageName}`;
-        scripts["db:migrate"] = `npm run db:migrate --workspace ${backendPackageName}`;
+        scripts["db:generate"] =
+          `npm run db:generate --workspace ${backendPackageName}`;
+        scripts["db:migrate"] =
+          `npm run db:migrate --workspace ${backendPackageName}`;
       }
     }
   } else if (options.packageManager === "bun") {
@@ -143,11 +155,15 @@ async function updateRootPackageJson(projectDir: string, options: ProjectConfig)
       scripts["db:push"] = `bun run --filter ${backendPackageName} db:push`;
       scripts["db:studio"] = `bun run --filter ${backendPackageName} db:studio`;
       if (options.orm === "prisma") {
-        scripts["db:generate"] = `bun run --filter ${backendPackageName} db:generate`;
-        scripts["db:migrate"] = `bun run --filter ${backendPackageName} db:migrate`;
+        scripts["db:generate"] =
+          `bun run --filter ${backendPackageName} db:generate`;
+        scripts["db:migrate"] =
+          `bun run --filter ${backendPackageName} db:migrate`;
       } else if (options.orm === "drizzle") {
-        scripts["db:generate"] = `bun run --filter ${backendPackageName} db:generate`;
-        scripts["db:migrate"] = `bun run --filter ${backendPackageName} db:migrate`;
+        scripts["db:generate"] =
+          `bun run --filter ${backendPackageName} db:generate`;
+        scripts["db:migrate"] =
+          `bun run --filter ${backendPackageName} db:migrate`;
       }
     }
   }
@@ -158,7 +174,9 @@ async function updateRootPackageJson(projectDir: string, options: ProjectConfig)
   if (options.addons.includes("husky")) {
     scripts.prepare = "husky";
     packageJson["lint-staged"] = {
-      "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": ["biome check --write ."],
+      "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+        "biome check --write .",
+      ],
     };
   }
 
@@ -180,7 +198,8 @@ async function updateRootPackageJson(projectDir: string, options: ProjectConfig)
     if (!workspaces.includes("packages/*")) {
       workspaces.push("packages/*");
     }
-    const needsAppsDir = options.frontend.length > 0 || options.addons.includes("starlight");
+    const needsAppsDir =
+      options.frontend.length > 0 || options.addons.includes("starlight");
     if (needsAppsDir && !workspaces.includes("apps/*")) {
       workspaces.push("apps/*");
     }
@@ -196,12 +215,20 @@ async function updateRootPackageJson(projectDir: string, options: ProjectConfig)
   await fs.writeJson(rootPackageJsonPath, packageJson, { spaces: 2 });
 }
 
-async function updateServerPackageJson(projectDir: string, options: ProjectConfig): Promise<void> {
-  const serverPackageJsonPath = path.join(projectDir, "apps/server/package.json");
+async function updateServerPackageJson(
+  projectDir: string,
+  options: ProjectConfig,
+): Promise<void> {
+  const serverPackageJsonPath = path.join(
+    projectDir,
+    "apps/server/package.json",
+  );
 
   if (!(await fs.pathExists(serverPackageJsonPath))) return;
 
-  const serverPackageJson = (await fs.readJson(serverPackageJsonPath)) as PackageJson;
+  const serverPackageJson = (await fs.readJson(
+    serverPackageJsonPath,
+  )) as PackageJson;
 
   if (!serverPackageJson.scripts) {
     serverPackageJson.scripts = {};
@@ -231,12 +258,20 @@ async function updateServerPackageJson(projectDir: string, options: ProjectConfi
   });
 }
 
-async function updateConvexPackageJson(projectDir: string, options: ProjectConfig): Promise<void> {
-  const convexPackageJsonPath = path.join(projectDir, "packages/backend/package.json");
+async function updateConvexPackageJson(
+  projectDir: string,
+  options: ProjectConfig,
+): Promise<void> {
+  const convexPackageJsonPath = path.join(
+    projectDir,
+    "packages/backend/package.json",
+  );
 
   if (!(await fs.pathExists(convexPackageJsonPath))) return;
 
-  const convexPackageJson = (await fs.readJson(convexPackageJsonPath)) as PackageJson;
+  const convexPackageJson = (await fs.readJson(
+    convexPackageJsonPath,
+  )) as PackageJson;
   convexPackageJson.name = `@${options.projectName}/backend`;
 
   if (!convexPackageJson.scripts) {
@@ -246,7 +281,10 @@ async function updateConvexPackageJson(projectDir: string, options: ProjectConfi
   await fs.writeJson(convexPackageJsonPath, convexPackageJson, { spaces: 2 });
 }
 
-export async function initializeGit(projectDir: string, useGit: boolean): Promise<void> {
+export async function initializeGit(
+  projectDir: string,
+  useGit: boolean,
+): Promise<void> {
   if (!useGit) return;
 
   const gitVersionResult = await $({

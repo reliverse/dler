@@ -178,7 +178,10 @@ export const supportedPlugins = [
 
 export type SupportedPlugin = (typeof supportedPlugins)[number];
 
-export async function formatWithBiome(code: string, _filepath: string): Promise<string> {
+export async function formatWithBiome(
+  code: string,
+  _filepath: string,
+): Promise<string> {
   const tempFile = path.join(process.cwd(), `.temp-${Date.now()}.ts`);
   try {
     await fs.writeFile(tempFile, code);
@@ -203,7 +206,13 @@ export const getDefaultAuthConfig = async ({ appName }: { appName?: string }) =>
     "auth.ts",
   );
 
-export type SupportedFrameworks = "vanilla" | "react" | "vue" | "svelte" | "solid" | "nextjs";
+export type SupportedFrameworks =
+  | "vanilla"
+  | "react"
+  | "vue"
+  | "svelte"
+  | "solid"
+  | "nextjs";
 
 export const getDefaultAuthClientConfig = async ({
   auth_config_path,
@@ -230,7 +239,9 @@ export const getDefaultAuthClientConfig = async ({
       for (const import_ of plugin.imports) {
         if (Array.isArray(import_.variables)) {
           for (const variable of import_.variables) {
-            const existingIndex = result.findIndex((x) => x.path === import_.path);
+            const existingIndex = result.findIndex(
+              (x) => x.path === import_.path,
+            );
             if (existingIndex !== -1) {
               const vars = result[existingIndex]!.variables;
               if (Array.isArray(vars)) {
@@ -246,7 +257,9 @@ export const getDefaultAuthClientConfig = async ({
             }
           }
         } else {
-          const existingIndex = result.findIndex((x) => x.path === import_.path);
+          const existingIndex = result.findIndex(
+            (x) => x.path === import_.path,
+          );
           if (existingIndex !== -1) {
             const vars = result[existingIndex]!.variables;
             if (Array.isArray(vars)) {
@@ -270,7 +283,10 @@ export const getDefaultAuthClientConfig = async ({
   for (const import_ of imports) {
     if (Array.isArray(import_.variables)) {
       importString += `import { ${import_.variables
-        .map((x) => `${x.asType ? "type " : ""}${x.name}${x.as ? ` as ${x.as}` : ""}`)
+        .map(
+          (x) =>
+            `${x.asType ? "type " : ""}${x.name}${x.as ? ` as ${x.as}` : ""}`,
+        )
         .join(", ")} } from "${import_.path}";\n`;
     } else {
       importString += `import ${import_.variables.asType ? "type " : ""}${
@@ -282,7 +298,11 @@ export const getDefaultAuthClientConfig = async ({
   const formattedCode = await formatWithBiome(
     [
       `import { createAuthClient } from "better-auth/${
-        framework === "nextjs" ? "react" : framework === "vanilla" ? "client" : framework
+        framework === "nextjs"
+          ? "react"
+          : framework === "vanilla"
+            ? "client"
+            : framework
       }";`,
       `import type { auth } from "${auth_config_path}";`,
       importString,
@@ -312,7 +332,9 @@ export const optionsSchema = z.object({
 
 export const outroText = `🥳 All Done, Happy Hacking!`;
 
-export async function getLatestNpmVersion(packageName: string): Promise<string> {
+export async function getLatestNpmVersion(
+  packageName: string,
+): Promise<string> {
   try {
     const response = await fetch(`https://registry.npmjs.org/${packageName}`);
 
@@ -396,7 +418,8 @@ export async function updateEnvs({
     const content = await fs.readFile(file, "utf8");
     const lines = content.split("\n");
     const newLines = envs.map(
-      (x) => `${isCommented ? "# " : ""}${x}=${getEnvDescription(x) ?? `"some_value"`}`,
+      (x) =>
+        `${isCommented ? "# " : ""}${x}=${getEnvDescription(x) ?? `"some_value"`}`,
     );
     newLines.push("");
     newLines.push(...lines);
@@ -423,7 +446,8 @@ export async function updateEnvs({
       return `"The URL of your database"`;
     }
     if (env === "BETTER_AUTH_SECRET") {
-      previouslyGeneratedSecret = previouslyGeneratedSecret ?? generateSecretHash();
+      previouslyGeneratedSecret =
+        previouslyGeneratedSecret ?? generateSecretHash();
       return `"${previouslyGeneratedSecret}"`;
     }
     if (env === "BETTER_AUTH_URL") {

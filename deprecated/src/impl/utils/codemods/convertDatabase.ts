@@ -74,7 +74,10 @@ function parseAttributeArgs(args: string): any {
   return args.replace(/['"]/g, "");
 }
 
-function convertPrismaToDrizzleType(field: PrismaField, dbType: string): string {
+function convertPrismaToDrizzleType(
+  field: PrismaField,
+  dbType: string,
+): string {
   const typeMap: Record<string, Record<string, string>> = {
     postgres: {
       Int: "integer",
@@ -115,7 +118,8 @@ function convertPrismaToDrizzleType(field: PrismaField, dbType: string): string 
 }
 
 function generateDrizzleSchema(models: PrismaModel[], dbType: string): string {
-  const tablePrefix = dbType === "postgres" ? "pg" : dbType === "mysql" ? "mysql" : "sqlite";
+  const tablePrefix =
+    dbType === "postgres" ? "pg" : dbType === "mysql" ? "mysql" : "sqlite";
   const imports = new Set<string>([`${tablePrefix}Table`]);
 
   const modelSchemas = models.map((model) => {
@@ -159,7 +163,10 @@ function generateDrizzleSchema(models: PrismaModel[], dbType: string): string {
   return `${importStatement}\n\n${modelSchemas.join("\n\n")}`;
 }
 
-export async function convertPrismaToDrizzle(cwd: string, targetDbType: string) {
+export async function convertPrismaToDrizzle(
+  cwd: string,
+  targetDbType: string,
+) {
   const prismaSchemaPath = path.join(cwd, "prisma/schema.prisma");
   if (!(await fs.pathExists(prismaSchemaPath))) {
     relinka("error", "No Prisma schema found");
@@ -260,7 +267,11 @@ export async function convertDatabaseProvider(
     }
 
     // Update database client code if it exists
-    const dbClientPaths = ["src/lib/db.ts", "src/db/client.ts", "src/database/index.ts"];
+    const dbClientPaths = [
+      "src/lib/db.ts",
+      "src/db/client.ts",
+      "src/database/index.ts",
+    ];
 
     for (const memoryPath of dbClientPaths) {
       const fullPath = path.join(cwd, memoryPath);
@@ -286,5 +297,8 @@ export async function convertDatabaseProvider(
   }
 
   await writePackageJSON(packageJsonPath, packageJson);
-  relinka("success", `Converted database provider from ${fromProvider} to ${toProvider}`);
+  relinka(
+    "success",
+    `Converted database provider from ${fromProvider} to ${toProvider}`,
+  );
 }

@@ -29,7 +29,9 @@ export async function getVercelProjectDomain(
     }
 
     // Filter valid domains and handle www subdomains
-    const validDomains = domains.filter((domain) => domain?.name).map((domain) => domain.name);
+    const validDomains = domains
+      .filter((domain) => domain?.name)
+      .map((domain) => domain.name);
 
     // Group domains by their base name (without www)
     const domainMap = new Map<string, string[]>();

@@ -72,7 +72,10 @@ export async function useAggregator({
     try {
       await fs.ensureDir(outDir);
     } catch (error) {
-      relinka("error", `Error: Cannot create output directory: ${outDir}\n${error}`);
+      relinka(
+        "error",
+        `Error: Cannot create output directory: ${outDir}\n${error}`,
+      );
       process.exit(1);
     }
 
@@ -82,7 +85,10 @@ export async function useAggregator({
       try {
         await fs.ensureDir(typesOutDir);
       } catch (error) {
-        relinka("error", `Error: Cannot create types output directory: ${typesOutDir}\n${error}`);
+        relinka(
+          "error",
+          `Error: Cannot create types output directory: ${typesOutDir}\n${error}`,
+        );
         process.exit(1);
       }
     }
@@ -100,7 +106,10 @@ export async function useAggregator({
     if (stripPrefix) {
       const stripSt = await fs.stat(stripPrefix).catch(() => null);
       if (!stripSt?.isDirectory()) {
-        relinka("error", `Error: --strip is not a valid directory: ${stripPrefix}`);
+        relinka(
+          "error",
+          `Error: --strip is not a valid directory: ${stripPrefix}`,
+        );
         process.exit(1);
       }
     }
@@ -167,7 +176,8 @@ export async function useAggregator({
     if (sortLines) {
       typeLines.sort();
       valueLines.sort();
-      if (verbose) relinka("verbose", "Sorted aggregator lines alphabetically.");
+      if (verbose)
+        relinka("verbose", "Sorted aggregator lines alphabetically.");
     }
 
     // Build the aggregator block content
@@ -198,7 +208,10 @@ export async function useAggregator({
       await fs.ensureFile(outFile);
       await fs.writeFile(outFile, aggregatorBlock, "utf8");
 
-      relinka("success", `Aggregator done: processed ${allLines.length} lines in: ${outFile}`);
+      relinka(
+        "success",
+        `Aggregator done: processed ${allLines.length} lines in: ${outFile}`,
+      );
     }
   } catch (error) {
     relinka("error", `Aggregator failed: ${error}`);

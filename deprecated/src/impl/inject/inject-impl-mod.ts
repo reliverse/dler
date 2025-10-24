@@ -83,7 +83,10 @@ const validateLineColumn = (
     } integer (${based})`;
   }
 
-  if (column !== undefined && (!Number.isInteger(column) || column < minValue)) {
+  if (
+    column !== undefined &&
+    (!Number.isInteger(column) || column < minValue)
+  ) {
     return `Column number must be a ${
       based === "0-based" ? "non-negative" : "positive"
     } integer when provided (${based})`;
@@ -95,7 +98,9 @@ const validateLineColumn = (
 /**
  * Validates injection positioning - ensures only one method is used
  */
-const validateInjectionPositioning = (injection: SingleInjection): string | null => {
+const validateInjectionPositioning = (
+  injection: SingleInjection,
+): string | null => {
   const positioningMethods = [
     injection.location ? "location" : null,
     injection.injectBefore ? "injectBefore" : null,
@@ -128,7 +133,11 @@ const getLineColumnPosition = (
   // Convert to 0-based indexing for internal calculations
   const zeroBasedLine = based === "0-based" ? line : line - 1;
   const zeroBasedColumn =
-    column !== undefined ? (based === "0-based" ? column : column - 1) : undefined;
+    column !== undefined
+      ? based === "0-based"
+        ? column
+        : column - 1
+      : undefined;
 
   if (zeroBasedLine >= lines.length || zeroBasedLine < 0) {
     const displayLine = based === "0-based" ? line : line;
@@ -191,7 +200,9 @@ const normalizeContent = (content: string | string[]): string => {
  */
 const normalizeTargetStrings = (
   target: string | string[],
-  arrayBeforeAfter: "array-means-multiline" | "append-to-each-element" = "array-means-multiline",
+  arrayBeforeAfter:
+    | "array-means-multiline"
+    | "append-to-each-element" = "array-means-multiline",
 ): string[] => {
   if (typeof target === "string") {
     return [target];
@@ -218,7 +229,8 @@ const findInjectionPositions = (
     let foundIndex = content.indexOf(target, searchStart);
 
     while (foundIndex !== -1) {
-      const position = mode === "before" ? foundIndex : foundIndex + target.length;
+      const position =
+        mode === "before" ? foundIndex : foundIndex + target.length;
       positions.push({ position, target });
 
       searchStart = foundIndex + target.length;
@@ -245,7 +257,10 @@ const getRemovalRange = (
   const startPosition = getLineColumnPosition(fileContent, line, column, based);
 
   // Check if the content at the position matches what we want to remove
-  const actualContent = fileContent.slice(startPosition, startPosition + contentToRemove.length);
+  const actualContent = fileContent.slice(
+    startPosition,
+    startPosition + contentToRemove.length,
+  );
 
   if (actualContent !== contentToRemove) {
     if (!strict) {
@@ -255,7 +270,11 @@ const getRemovalRange = (
 
     const displayLine = based === "0-based" ? line : line;
     const displayColumn =
-      column !== undefined ? (based === "0-based" ? column : column) : undefined;
+      column !== undefined
+        ? based === "0-based"
+          ? column
+          : column
+        : undefined;
     throw new Error(
       `Content mismatch at line ${displayLine}${
         displayColumn !== undefined ? `, column ${displayColumn}` : ""
@@ -308,7 +327,9 @@ const getBeforeAfterRemovalPositions = (
           );
         }
       } else if (strict) {
-        throw new Error(`Injected content not found ${mode} target "${target}"`);
+        throw new Error(
+          `Injected content not found ${mode} target "${target}"`,
+        );
       }
 
       searchStart = foundIndex + target.length;
@@ -415,21 +436,46 @@ export const injectAtLocation = async (
     // Validate positioning
     const positioningError = validateInjectionPositioning(injection);
     if (positioningError) {
-      return createResult(false, filePath, injection, undefined, positioningError, logCode);
+      return createResult(
+        false,
+        filePath,
+        injection,
+        undefined,
+        positioningError,
+        logCode,
+      );
     }
 
     // Validate line/column if using location-based injection
     if (location) {
-      const validationError = validateLineColumn(location.line, location.column, based);
+      const validationError = validateLineColumn(
+        location.line,
+        location.column,
+        based,
+      );
       if (validationError) {
-        return createResult(false, filePath, injection, undefined, validationError, logCode);
+        return createResult(
+          false,
+          filePath,
+          injection,
+          undefined,
+          validationError,
+          logCode,
+        );
       }
     }
 
     // Validate file
     const fileError = await validateFile(filePath);
     if (fileError) {
-      return createResult(false, filePath, injection, undefined, fileError, logCode);
+      return createResult(
+        false,
+        filePath,
+        injection,
+        undefined,
+        fileError,
+        logCode,
+      );
     }
 
     // Read and transform file
@@ -497,12 +543,20 @@ export const injectAtLocation = async (
             }
             return modifiedTransformer;
           }
-          const positions = findInjectionPositions(currentContent, targets, mode);
+          const positions = findInjectionPositions(
+            currentContent,
+            targets,
+            mode,
+          );
           matchesFound = positions.length;
 
           let modifiedTransformer = transformer;
           for (const { position } of positions) {
-            modifiedTransformer = insertAt(modifiedTransformer, position, normalizedContent);
+            modifiedTransformer = insertAt(
+              modifiedTransformer,
+              position,
+              normalizedContent,
+            );
           }
           return modifiedTransformer;
         }
@@ -554,7 +608,11 @@ export const injectAtLocation = async (
             based,
           );
 
-          transformedContent = insertAt(transformer, position, normalizedContent);
+          transformedContent = insertAt(
+            transformer,
+            position,
+            normalizedContent,
+          );
         }
       } else if (injectBefore || injectAfter) {
         const target = injectBefore || injectAfter;
@@ -580,10 +638,18 @@ export const injectAtLocation = async (
             }
           }
         } else {
-          const positions = findInjectionPositions(originalContent, targets, mode);
+          const positions = findInjectionPositions(
+            originalContent,
+            targets,
+            mode,
+          );
           transformedContent = transformer;
           for (const { position } of positions) {
-            transformedContent = insertAt(transformedContent, position, normalizedContent);
+            transformedContent = insertAt(
+              transformedContent,
+              position,
+              normalizedContent,
+            );
           }
         }
       } else {
@@ -599,7 +665,15 @@ export const injectAtLocation = async (
     }
 
     const transformer = createTransformer(result.code);
-    return createResult(true, filePath, injection, transformer, undefined, logCode, matchesFound);
+    return createResult(
+      true,
+      filePath,
+      injection,
+      transformer,
+      undefined,
+      logCode,
+      matchesFound,
+    );
   } catch (error) {
     return createResult(
       false,
@@ -650,13 +724,23 @@ export const injectMultiple = async (
       const fileError = await validateFile(filePath);
       if (fileError) {
         for (const injection of fileInjections) {
-          results.push(createResult(false, filePath, injection, undefined, fileError, logCode));
+          results.push(
+            createResult(
+              false,
+              filePath,
+              injection,
+              undefined,
+              fileError,
+              logCode,
+            ),
+          );
         }
         continue;
       }
 
       // Validate all injections for this file
-      const validationErrors: { injection: SingleInjection; error: string }[] = [];
+      const validationErrors: { injection: SingleInjection; error: string }[] =
+        [];
 
       for (const injection of fileInjections) {
         const positioningError = validateInjectionPositioning(injection);
@@ -679,7 +763,9 @@ export const injectMultiple = async (
 
       // Add validation errors to results
       for (const { injection, error } of validationErrors) {
-        results.push(createResult(false, filePath, injection, undefined, error, logCode));
+        results.push(
+          createResult(false, filePath, injection, undefined, error, logCode),
+        );
       }
 
       // Filter out invalid injections
@@ -783,7 +869,11 @@ export const injectMultiple = async (
       });
 
       // Apply all location-based injections
-      for (const { injection, originalPosition, normalizedContent } of allInjectionsWithPositions) {
+      for (const {
+        injection,
+        originalPosition,
+        normalizedContent,
+      } of allInjectionsWithPositions) {
         try {
           let matchesFound = 0;
 
@@ -797,13 +887,25 @@ export const injectMultiple = async (
               matchesFound = 1;
             }
           } else if (!revert) {
-            transformer = insertAt(transformer, originalPosition, normalizedContent);
+            transformer = insertAt(
+              transformer,
+              originalPosition,
+              normalizedContent,
+            );
             matchesFound = 1;
           }
 
           hasAnyChanges = true;
           results.push(
-            createResult(true, filePath, injection, transformer, undefined, logCode, matchesFound),
+            createResult(
+              true,
+              filePath,
+              injection,
+              transformer,
+              undefined,
+              logCode,
+              matchesFound,
+            ),
           );
         } catch (error) {
           results.push(
@@ -844,7 +946,15 @@ export const injectMultiple = async (
 
             if (removalPositions === null) {
               results.push(
-                createResult(true, filePath, injection, transformer, undefined, logCode, 0),
+                createResult(
+                  true,
+                  filePath,
+                  injection,
+                  transformer,
+                  undefined,
+                  logCode,
+                  0,
+                ),
               );
               continue;
             }
@@ -854,7 +964,11 @@ export const injectMultiple = async (
               matchesFound++;
             }
           } else {
-            const positions = findInjectionPositions(currentContent, targets, mode);
+            const positions = findInjectionPositions(
+              currentContent,
+              targets,
+              mode,
+            );
             matchesFound = positions.length;
 
             for (const { position } of positions) {
@@ -864,7 +978,15 @@ export const injectMultiple = async (
 
           hasAnyChanges = true;
           results.push(
-            createResult(true, filePath, injection, transformer, undefined, logCode, matchesFound),
+            createResult(
+              true,
+              filePath,
+              injection,
+              transformer,
+              undefined,
+              logCode,
+              matchesFound,
+            ),
           );
         } catch (error) {
           results.push(
@@ -893,7 +1015,10 @@ export const injectMultiple = async (
           includeContent: true,
         });
         const sourceMapFilename = `${path.parse(filePath).name}.map`;
-        const sourceMapPath = path.join(path.dirname(options.sourceMapPath), sourceMapFilename);
+        const sourceMapPath = path.join(
+          path.dirname(options.sourceMapPath),
+          sourceMapFilename,
+        );
         await fs.writeFile(sourceMapPath, map.toString());
       }
     } catch (error) {
@@ -957,7 +1082,10 @@ export const validateInjection = (
     return "File path is required";
   }
 
-  if (!injection.content || (Array.isArray(injection.content) && injection.content.length === 0)) {
+  if (
+    !injection.content ||
+    (Array.isArray(injection.content) && injection.content.length === 0)
+  ) {
     return "Content is required";
   }
 
@@ -975,12 +1103,19 @@ export const validateInjection = (
   }
 
   if (injection.location) {
-    return validateLineColumn(injection.location.line, injection.location.column, based);
+    return validateLineColumn(
+      injection.location.line,
+      injection.location.column,
+      based,
+    );
   }
 
   // Validate before/after targets
   if (injection.injectBefore) {
-    if (typeof injection.injectBefore !== "string" && !Array.isArray(injection.injectBefore)) {
+    if (
+      typeof injection.injectBefore !== "string" &&
+      !Array.isArray(injection.injectBefore)
+    ) {
       return "injectBefore must be a string or string array";
     }
     if (Array.isArray(injection.injectBefore)) {
@@ -996,7 +1131,10 @@ export const validateInjection = (
   }
 
   if (injection.injectAfter) {
-    if (typeof injection.injectAfter !== "string" && !Array.isArray(injection.injectAfter)) {
+    if (
+      typeof injection.injectAfter !== "string" &&
+      !Array.isArray(injection.injectAfter)
+    ) {
       return "injectAfter must be a string or string array";
     }
     if (Array.isArray(injection.injectAfter)) {
@@ -1041,7 +1179,8 @@ export const validateMultipleInjections = (
 export const previewInjection = async (
   injection: SingleInjection,
   options: Omit<InjectionOptions, "writeToFile"> = {},
-): Promise<InjectionResult> => injectAtLocation(injection, { ...options, writeToFile: false });
+): Promise<InjectionResult> =>
+  injectAtLocation(injection, { ...options, writeToFile: false });
 
 /**
  * Preview multiple injections without writing to files
@@ -1049,7 +1188,8 @@ export const previewInjection = async (
 export const previewMultipleInjections = async (
   injections: SingleInjection[],
   options: Omit<InjectionOptions, "writeToFile"> = {},
-): Promise<InjectionResult[]> => injectMultiple(injections, { ...options, writeToFile: false });
+): Promise<InjectionResult[]> =>
+  injectMultiple(injections, { ...options, writeToFile: false });
 
 /**
  * Preview revert operation without writing to file

@@ -65,7 +65,11 @@ export async function createWebProject({
     isDev,
     cwd,
   );
-  const { frontendUsername, projectName, primaryDomain: initialDomain } = projectConfig;
+  const {
+    frontendUsername,
+    projectName,
+    primaryDomain: initialDomain,
+  } = projectConfig;
 
   // -------------------------------------------------
   // 3) Download template
@@ -146,7 +150,10 @@ export async function createWebProject({
   // -------------------------------------------------
   // 9) Handle dependencies (install or not?)
   // -------------------------------------------------
-  const { shouldInstallDeps, shouldRunDbPush } = await handleDependencies(projectPath, config);
+  const { shouldInstallDeps, shouldRunDbPush } = await handleDependencies(
+    projectPath,
+    config,
+  );
 
   // -------------------------------------------------
   // 10) Generate or update project config files
@@ -164,24 +171,25 @@ export async function createWebProject({
   // -------------------------------------------------
   // 11) Deployment flow
   // -------------------------------------------------
-  const { deployService, primaryDomain, isDeployed, allDomains } = await promptGitDeploy({
-    isLib: false,
-    projectName,
-    config,
-    projectPath,
-    primaryDomain: initialDomain,
-    hasDbPush: shouldRunDbPush,
-    shouldRunDbPush,
-    shouldInstallDeps,
-    isDev,
-    memory,
-    cwd,
-    maskInput,
-    skipPrompts,
-    selectedTemplate: selectedRepo,
-    isTemplateDownload: false,
-    frontendUsername,
-  });
+  const { deployService, primaryDomain, isDeployed, allDomains } =
+    await promptGitDeploy({
+      isLib: false,
+      projectName,
+      config,
+      projectPath,
+      primaryDomain: initialDomain,
+      hasDbPush: shouldRunDbPush,
+      shouldRunDbPush,
+      shouldInstallDeps,
+      isDev,
+      memory,
+      cwd,
+      maskInput,
+      skipPrompts,
+      selectedTemplate: selectedRepo,
+      isTemplateDownload: false,
+      frontendUsername,
+    });
 
   // If the user changed domain or deploy service, update rseg again
   if (deployService !== "vercel" || primaryDomain !== initialDomain) {
@@ -246,7 +254,11 @@ export async function createMobileProject({
     isDev,
     cwd,
   );
-  const { frontendUsername, projectName, primaryDomain: initialDomain } = projectConfig;
+  const {
+    frontendUsername,
+    projectName,
+    primaryDomain: initialDomain,
+  } = projectConfig;
 
   // -------------------------------------------------
   // 2) Download template

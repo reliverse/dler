@@ -96,7 +96,9 @@ export function processAndValidateFlags(
     }
     config.projectName = projectName;
   } else if (options.projectDirectory) {
-    const baseName = path.basename(path.resolve(process.cwd(), options.projectDirectory));
+    const baseName = path.basename(
+      path.resolve(process.cwd(), options.projectDirectory),
+    );
     const result = ProjectNameSchema.safeParse(baseName);
     if (!result.success) {
       relinka(
@@ -116,7 +118,9 @@ export function processAndValidateFlags(
       }
       config.frontend = [];
     } else {
-      const validOptions = options.frontend.filter((f): f is Frontend => f !== "none");
+      const validOptions = options.frontend.filter(
+        (f): f is Frontend => f !== "none",
+      );
       const webFrontends = validOptions.filter(
         (f) =>
           f === "tanstack-router" ||
@@ -156,7 +160,9 @@ export function processAndValidateFlags(
       }
       config.addons = [];
     } else {
-      config.addons = options.addons.filter((addon): addon is Addons => addon !== "none");
+      config.addons = options.addons.filter(
+        (addon): addon is Addons => addon !== "none",
+      );
     }
   }
   if (options.examples && options.examples.length > 0) {
@@ -167,7 +173,9 @@ export function processAndValidateFlags(
       }
       config.examples = [];
     } else {
-      config.examples = options.examples.filter((ex): ex is Examples => ex !== "none");
+      config.examples = options.examples.filter(
+        (ex): ex is Examples => ex !== "none",
+      );
       if (options.examples.includes("none") && config.backend !== "convex") {
         config.examples = [];
       }
@@ -177,7 +185,8 @@ export function processAndValidateFlags(
   if (config.backend === "convex") {
     const incompatibleFlags: string[] = [];
 
-    if (providedFlags.has("auth") && options.auth === true) incompatibleFlags.push("--auth");
+    if (providedFlags.has("auth") && options.auth === true)
+      incompatibleFlags.push("--auth");
     if (providedFlags.has("database") && options.database !== "none")
       incompatibleFlags.push(`--database ${options.database}`);
     if (providedFlags.has("orm") && options.orm !== "none")
@@ -200,7 +209,9 @@ export function processAndValidateFlags(
     }
 
     if (providedFlags.has("frontend") && options.frontend) {
-      const incompatibleFrontends = options.frontend.filter((f) => f === "nuxt" || f === "solid");
+      const incompatibleFrontends = options.frontend.filter(
+        (f) => f === "nuxt" || f === "solid",
+      );
       if (incompatibleFrontends.length > 0) {
         relinka(
           "fatal",
@@ -222,7 +233,8 @@ export function processAndValidateFlags(
   } else if (config.backend === "none") {
     const incompatibleFlags: string[] = [];
 
-    if (providedFlags.has("auth") && options.auth === true) incompatibleFlags.push("--auth");
+    if (providedFlags.has("auth") && options.auth === true)
+      incompatibleFlags.push("--auth");
     if (providedFlags.has("database") && options.database !== "none")
       incompatibleFlags.push(`--database ${options.database}`);
     if (providedFlags.has("orm") && options.orm !== "none")
@@ -312,7 +324,11 @@ export function processAndValidateFlags(
     process.exit(1);
   }
 
-  if (config.dbSetup && config.dbSetup !== "none" && config.database === "none") {
+  if (
+    config.dbSetup &&
+    config.dbSetup !== "none" &&
+    config.database === "none"
+  ) {
     relinka(
       "fatal",
       "Database setup requires a database. Please choose a database or set '--db-setup none'.",
@@ -441,7 +457,9 @@ export function processAndValidateFlags(
   return config;
 }
 
-export function validateConfigCompatibility(config: Partial<ProjectConfig>): void {
+export function validateConfigCompatibility(
+  config: Partial<ProjectConfig>,
+): void {
   const effectiveDatabase = config.database;
   const effectiveBackend = config.backend;
   const effectiveFrontend = config.frontend;
@@ -457,7 +475,11 @@ export function validateConfigCompatibility(config: Partial<ProjectConfig>): voi
   }
 
   const effectiveOrm = config.orm;
-  if (effectiveRuntime === "workers" && effectiveOrm !== "drizzle" && effectiveOrm !== "none") {
+  if (
+    effectiveRuntime === "workers" &&
+    effectiveOrm !== "drizzle" &&
+    effectiveOrm !== "none"
+  ) {
     relinka(
       "fatal",
       `Cloudflare Workers runtime is only supported with Drizzle ORM or no ORM. Current ORM: ${effectiveOrm}. Please use a different runtime or change to Drizzle ORM or no ORM.`,
@@ -477,7 +499,10 @@ export function validateConfigCompatibility(config: Partial<ProjectConfig>): voi
   const includesSvelte = effectiveFrontend?.includes("svelte");
   const includesSolid = effectiveFrontend?.includes("solid");
 
-  if ((includesNuxt || includesSvelte || includesSolid) && effectiveApi === "trpc") {
+  if (
+    (includesNuxt || includesSvelte || includesSolid) &&
+    effectiveApi === "trpc"
+  ) {
     relinka(
       "fatal",
       `tRPC API is not supported with '${
@@ -491,10 +516,15 @@ export function validateConfigCompatibility(config: Partial<ProjectConfig>): voi
 
   if (config.addons && config.addons.length > 0) {
     const webSpecificAddons = ["pwa", "tauri"];
-    const hasWebSpecificAddons = config.addons.some((addon) => webSpecificAddons.includes(addon));
+    const hasWebSpecificAddons = config.addons.some((addon) =>
+      webSpecificAddons.includes(addon),
+    );
     const hasCompatibleWebFrontend = effectiveFrontend?.some((f) => {
       const isPwaCompatible =
-        f === "tanstack-router" || f === "react-router" || f === "solid" || f === "next";
+        f === "tanstack-router" ||
+        f === "react-router" ||
+        f === "solid" ||
+        f === "next";
       const isTauriCompatible =
         f === "tanstack-router" ||
         f === "react-router" ||
@@ -518,13 +548,17 @@ export function validateConfigCompatibility(config: Partial<ProjectConfig>): voi
     if (hasWebSpecificAddons && !hasCompatibleWebFrontend) {
       let incompatibleReason = "Selected frontend is not compatible.";
       if (config.addons.includes("pwa")) {
-        incompatibleReason = "PWA requires tanstack-router, react-router, next, or solid.";
+        incompatibleReason =
+          "PWA requires tanstack-router, react-router, next, or solid.";
       }
       if (config.addons.includes("tauri")) {
         incompatibleReason =
           "Tauri requires tanstack-router, react-router, nuxt, svelte, solid, or next.";
       }
-      relinka("fatal", `Incompatible addon/frontend combination: ${incompatibleReason}`);
+      relinka(
+        "fatal",
+        `Incompatible addon/frontend combination: ${incompatibleReason}`,
+      );
       process.exit(1);
     }
 
@@ -537,7 +571,11 @@ export function validateConfigCompatibility(config: Partial<ProjectConfig>): voi
     config.addons = [...new Set(config.addons)];
   }
 
-  if (config.examples && config.examples.length > 0 && !config.examples.includes("none")) {
+  if (
+    config.examples &&
+    config.examples.length > 0 &&
+    !config.examples.includes("none")
+  ) {
     if (
       config.examples.includes("todo") &&
       effectiveBackend !== "convex" &&
@@ -552,12 +590,18 @@ export function validateConfigCompatibility(config: Partial<ProjectConfig>): voi
     }
 
     if (config.examples.includes("ai") && effectiveBackend === "elysia") {
-      relinka("fatal", "The 'ai' example is not compatible with the Elysia backend.");
+      relinka(
+        "fatal",
+        "The 'ai' example is not compatible with the Elysia backend.",
+      );
       process.exit(1);
     }
 
     if (config.examples.includes("ai") && includesSolid) {
-      relinka("fatal", "The 'ai' example is not compatible with the Solid frontend.");
+      relinka(
+        "fatal",
+        "The 'ai' example is not compatible with the Solid frontend.",
+      );
       process.exit(1);
     }
   }
@@ -565,6 +609,8 @@ export function validateConfigCompatibility(config: Partial<ProjectConfig>): voi
 
 export function getProvidedFlags(options: CLIInput): Set<string> {
   return new Set(
-    Object.keys(options).filter((key) => options[key as keyof CLIInput] !== undefined),
+    Object.keys(options).filter(
+      (key) => options[key as keyof CLIInput] !== undefined,
+    ),
   );
 }

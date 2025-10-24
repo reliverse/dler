@@ -11,7 +11,10 @@ async function fileExists(path: string): Promise<boolean> {
   }
 }
 
-export async function safeRename(source: string, destination: string): Promise<void> {
+export async function safeRename(
+  source: string,
+  destination: string,
+): Promise<void> {
   if (await fileExists(destination)) {
     throw new Error(`Destination file already exists: ${destination}`);
   }
@@ -22,7 +25,11 @@ function isCommonJSFile(content: string): boolean {
   return content.includes("module.exports") || content.includes("require(");
 }
 
-async function getAllFilesAsync(dir: string, baseDir = dir, recursive = true): Promise<string[]> {
+async function getAllFilesAsync(
+  dir: string,
+  baseDir = dir,
+  recursive = true,
+): Promise<string[]> {
   let fileList: string[] = [];
   const entries = await fs.readdir(dir, {
     encoding: "utf8",
@@ -54,7 +61,9 @@ export async function prepareCLIFiles(
 
   if (fs.existsSync(configPath)) {
     const configContent = fs.readFileSync(configPath, "utf8");
-    const configMatch = configContent.match(/commonEntrySrcDir:\s*["']([^"']+)["']/);
+    const configMatch = configContent.match(
+      /commonEntrySrcDir:\s*["']([^"']+)["']/,
+    );
     srcDir = configMatch?.[1] ?? srcDir;
   }
 
@@ -81,12 +90,18 @@ export async function prepareCLIFiles(
     if (revert) {
       // revert mode
       if (file.endsWith(".json.json")) {
-        const originalName = path.join(dir, fileName.replace(".json.json", ".json"));
+        const originalName = path.join(
+          dir,
+          fileName.replace(".json.json", ".json"),
+        );
         relinka("verbose", `Reverting ${fullPath} to ${originalName}`);
         await safeRename(fullPath, originalName);
         renamedCount++;
       } else if (file.endsWith(".d.ts.txt") && useDtsTxtForPrepareMyCLI) {
-        const originalName = path.join(dir, fileName.replace(".d.ts.txt", ".d.ts"));
+        const originalName = path.join(
+          dir,
+          fileName.replace(".d.ts.txt", ".d.ts"),
+        );
         relinka("verbose", `Reverting ${fullPath} to ${originalName}`);
         await safeRename(fullPath, originalName);
         renamedCount++;
@@ -103,7 +118,10 @@ export async function prepareCLIFiles(
         relinka("verbose", `Renaming ${fullPath} to ${newName}`);
         await safeRename(fullPath, newName);
         renamedCount++;
-      } else if (fileName === "package.json" && !fileName.endsWith(".json.json")) {
+      } else if (
+        fileName === "package.json" &&
+        !fileName.endsWith(".json.json")
+      ) {
         const newName = path.join(dir, "package.json.json");
         relinka("verbose", `Renaming ${fullPath} to ${newName}`);
         await safeRename(fullPath, newName);
@@ -130,5 +148,8 @@ export async function prepareCLIFiles(
     }
   }
 
-  relinka("verbose", `CLI file preparation completed. Renamed ${renamedCount} files.`);
+  relinka(
+    "verbose",
+    `CLI file preparation completed. Renamed ${renamedCount} files.`,
+  );
 }

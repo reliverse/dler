@@ -1,0 +1,32 @@
+{
+  "name": "@reliverse/dler-config",
+  "description": "Configuration management for @reliverse/dler",
+  "author": "reliverse",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/mod.ts",
+      "default": "./src/mod.ts"
+    }
+  },
+  "dependencies": {
+    "c12": "catalog:",
+    "semver": "catalog:",
+    "@reliverse/dler-pkg-tsc": "workspace:*"
+  },
+  "devDependencies": {
+    "@reliverse/dler-logger": "workspace:*",
+    "@reliverse/dler-tsconfig": "workspace:*",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:",
+    "@types/semver": "catalog:"
+  },
+  "keywords": [
+    "dler",
+    "config",
+    "build",
+    "publish"
+  ]
+}

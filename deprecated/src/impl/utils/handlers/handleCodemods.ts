@@ -92,7 +92,10 @@ export async function handleCodemods(rules: ReliverseConfig, cwd: string) {
   }
 
   // Push: modernize codemod if any modernize options are enabled
-  if (rules.codeStyle?.modernize && Object.values(rules.codeStyle.modernize).some(Boolean)) {
+  if (
+    rules.codeStyle?.modernize &&
+    Object.values(rules.codeStyle.modernize).some(Boolean)
+  ) {
     availableCodemods.push({
       label: "Modernize Code",
       value: "modernize",
@@ -134,7 +137,10 @@ export async function handleCodemods(rules: ReliverseConfig, cwd: string) {
 
       if (shouldReplace) {
         await replaceImportSymbol(cwd, targetSymbol);
-        relinka("success", `Replaced detected import symbol with "${targetSymbol}"`);
+        relinka(
+          "success",
+          `Replaced detected import symbol with "${targetSymbol}"`,
+        );
       }
     } else if (codemod === "quote-style" && rules.codeStyle?.quoteMark) {
       const shouldConvert = await confirmPrompt({
@@ -236,5 +242,10 @@ export async function handleCodemods(rules: ReliverseConfig, cwd: string) {
 }
 
 function isValidMonorepoType(type: string): type is MonorepoType {
-  return ["turborepo", "moonrepo", "bun-workspaces", "pnpm-workspaces"].includes(type);
+  return [
+    "turborepo",
+    "moonrepo",
+    "bun-workspaces",
+    "pnpm-workspaces",
+  ].includes(type);
 }

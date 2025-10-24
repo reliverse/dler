@@ -159,7 +159,9 @@ async function getCachedRuleFiles(owner: string): Promise<string[]> {
     const files = await fs.readdir(repoCacheDir, { recursive: true });
     const filteredFiles = (files as string[]).filter(
       (file) =>
-        typeof file === "string" && file.endsWith(RULE_FILE_EXTENSION) && !file.startsWith("."),
+        typeof file === "string" &&
+        file.endsWith(RULE_FILE_EXTENSION) &&
+        !file.startsWith("."),
     );
     relinka(
       "success",
@@ -182,7 +184,10 @@ async function getCachedRuleFiles(owner: string): Promise<string[]> {
  * @param isDev - Flag indicating development mode.
  * @returns Array of file names (cached filenames) that will be installed.
  */
-export async function downloadRules(repoId: string, isDev: boolean): Promise<string[]> {
+export async function downloadRules(
+  repoId: string,
+  isDev: boolean,
+): Promise<string[]> {
   relinka("verbose", `Development mode: ${isDev}`);
   relinka("verbose", `Starting download process for repository: ${repoId}`);
   const [owner, repoName] = repoId.split("/");
@@ -213,10 +218,14 @@ export async function downloadRules(repoId: string, isDev: boolean): Promise<str
       retryDelay: 1000,
       onResponseError: (error) => {
         if (error.response?.status === 404) {
-          throw new Error(`Repository or branch not found: ${repoId}#${branch}`);
+          throw new Error(
+            `Repository or branch not found: ${repoId}#${branch}`,
+          );
         }
         if (error.response?.status === 403) {
-          throw new Error("GitHub API rate limit exceeded. Please try again later.");
+          throw new Error(
+            "GitHub API rate limit exceeded. Please try again later.",
+          );
         }
         throw new Error(
           `Failed to fetch repository: ${error.response?.statusText || "Unknown error"}`,
@@ -327,7 +336,10 @@ export async function downloadRules(repoId: string, isDev: boolean): Promise<str
             await fs.writeFile(cacheFilePath, content);
           }
           downloadedFiles.push(expectedCacheFile);
-          relinka("verbose", `[${downloadedFiles.length}/${total}] Processed ${filePath}`);
+          relinka(
+            "verbose",
+            `[${downloadedFiles.length}/${total}] Processed ${filePath}`,
+          );
         } catch (error) {
           relinka("error", `Failed to process ${filePath}: ${error}`);
         }
@@ -354,9 +366,15 @@ export async function downloadRules(repoId: string, isDev: boolean): Promise<str
       path.join(repoCacheDir, ".metadata.json"),
       JSON.stringify(metadata, null, 2),
     );
-    await fs.writeFile(path.join(repoCacheDir, ".last_updated"), new Date().toISOString());
+    await fs.writeFile(
+      path.join(repoCacheDir, ".last_updated"),
+      new Date().toISOString(),
+    );
 
-    relinka("verbose", `Processed ${downloadedFiles.length}/${total} rule file(s) successfully`);
+    relinka(
+      "verbose",
+      `Processed ${downloadedFiles.length}/${total} rule file(s) successfully`,
+    );
     return downloadedFiles;
   } catch (error) {
     relinka("error", `Failed to download rules: ${error}`);
@@ -373,7 +391,11 @@ export async function downloadRules(repoId: string, isDev: boolean): Promise<str
  * @param owner - Repository owner.
  * @param cwd - Current working directory.
  */
-export async function installRules(files: string[], owner: string, cwd: string): Promise<void> {
+export async function installRules(
+  files: string[],
+  owner: string,
+  cwd: string,
+): Promise<void> {
   relinka("verbose", `Installing ${files.length} rule(s) from owner: ${owner}`);
   const repoCacheDir = getRepoCacheDir(owner);
   const cursorRulesDir = path.join(cwd, ".cursor", "rules");
@@ -409,7 +431,10 @@ export async function installRules(files: string[], owner: string, cwd: string):
   if (skippedCount > 0) {
     relinka("verbose", `Skipped ${skippedCount} rule file(s)`);
   }
-  relinka("verbose", `Total installed: ${installedCount}, skipped: ${skippedCount}`);
+  relinka(
+    "verbose",
+    `Total installed: ${installedCount}, skipped: ${skippedCount}`,
+  );
 }
 
 /**
@@ -418,7 +443,10 @@ export async function installRules(files: string[], owner: string, cwd: string):
  * @param cwd - Current working directory.
  * @param isDev - Flag indicating development mode.
  */
-export async function handleRuleUpdates(cwd: string, isDev: boolean): Promise<void> {
+export async function handleRuleUpdates(
+  cwd: string,
+  isDev: boolean,
+): Promise<void> {
   relinka("verbose", `Checking for rule updates in workspace: ${cwd}`);
   const hasUpdates = await checkForRuleUpdates(isDev);
   if (!hasUpdates) {
@@ -448,7 +476,10 @@ export async function handleRuleUpdates(cwd: string, isDev: boolean): Promise<vo
       relinka("info", `Updates available for ${repoId}, downloading...`);
       const files = await downloadRules(repoId, isDev);
       if (files.length > 0 && (await hasCursorRulesDir(cwd))) {
-        relinka("info", `Installing downloaded rules into ${cwd}/.cursor/rules`);
+        relinka(
+          "info",
+          `Installing downloaded rules into ${cwd}/.cursor/rules`,
+        );
         await installRules(files, owner, cwd);
       }
     } else {

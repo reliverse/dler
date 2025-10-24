@@ -1,5 +1,9 @@
 import path, { dirname } from "@reliverse/pathkit";
-import fs, { ensuredir, rmEnsureDir, setHiddenAttribute } from "@reliverse/relifso";
+import fs, {
+  ensuredir,
+  rmEnsureDir,
+  setHiddenAttribute,
+} from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import {
   createFileProgressSpinner,
@@ -15,7 +19,11 @@ import prettyBytes from "pretty-bytes";
 import { simpleGit } from "simple-git";
 import { extract } from "tar";
 import { promisify } from "util";
-import { cliConfigJsonc, cliConfigTs, cliHomeRepos } from "~/impl/config/constants";
+import {
+  cliConfigJsonc,
+  cliConfigTs,
+  cliHomeRepos,
+} from "~/impl/config/constants";
 import { getReliverseConfigPath } from "~/impl/config/path";
 import { initGitDir } from "~/impl/init/use-template/cp-modules/git-deploy-prompts/git";
 import type { ReliverseConfig } from "~/impl/schema/mod";
@@ -75,7 +83,10 @@ export interface DownloadResult {
 /**
  * Recursively calculates the total size of a folder in bytes.
  */
-async function getFolderSize(directory: string, skipDirs: string[] = []): Promise<number> {
+async function getFolderSize(
+  directory: string,
+  skipDirs: string[] = [],
+): Promise<number> {
   let totalSize = 0;
   const entries = await fs.readdir(directory);
   for (const entry of entries) {
@@ -97,11 +108,15 @@ async function getFolderSize(directory: string, skipDirs: string[] = []): Promis
 function parseGitURI(input: string) {
   const normalizedInput = input
     .trim()
-    .replace(/^https?:\/\/(www\.)?(github|gitlab|bitbucket|sourcehut)\.com\//, "")
+    .replace(
+      /^https?:\/\/(www\.)?(github|gitlab|bitbucket|sourcehut)\.com\//,
+      "",
+    )
     .replace(/^(github|gitlab|bitbucket|sourcehut)\.com\//, "")
     .replace(/^https?:\/\/git\.sr\.ht\/~/, "")
     .replace(/^git\.sr\.ht\/~/, "");
-  const pattern = /^(?:(?<provider>[^:]+):)?(?<repo>[^#]+)(?<refPart>#[^/]+)?(?<subdir>\/.*)?$/;
+  const pattern =
+    /^(?:(?<provider>[^:]+):)?(?<repo>[^#]+)(?<refPart>#[^/]+)?(?<subdir>\/.*)?$/;
   const match = pattern.exec(normalizedInput);
   if (!match?.groups) {
     return {
@@ -208,7 +223,11 @@ async function getCommitHash(repoUrl: string, ref: string): Promise<string> {
  * Helper: Downloads a tarball from a URL to a destination file with progress tracking.
  * Supports proxy from process.env.https_proxy.
  */
-function downloadTarball(url: string, dest: string, showProgress = false): Promise<void> {
+function downloadTarball(
+  url: string,
+  dest: string,
+  showProgress = false,
+): Promise<void> {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
     const proxy = process.env.https_proxy;
@@ -227,7 +246,10 @@ function downloadTarball(url: string, dest: string, showProgress = false): Promi
           return;
         }
 
-        const totalBytes = parseInt(response.headers["content-length"] || "0", 10);
+        const totalBytes = parseInt(
+          response.headers["content-length"] || "0",
+          10,
+        );
         let downloadedBytes = 0;
 
         if (showProgress && totalBytes > 0) {
@@ -259,7 +281,9 @@ function downloadTarball(url: string, dest: string, showProgress = false): Promi
         if (transferSpinner) {
           transferSpinner.error(err);
         }
-        fs.unlink(dest).catch((unlinkErr) => console.error("Failed to unlink:", unlinkErr));
+        fs.unlink(dest).catch((unlinkErr) =>
+          console.error("Failed to unlink:", unlinkErr),
+        );
         reject(err);
       });
   });
@@ -268,7 +292,11 @@ function downloadTarball(url: string, dest: string, showProgress = false): Promi
 /**
  * Helper: Extracts a tarball file to the destination directory.
  */
-async function extractTarball(tarball: string, dest: string, subdir = ""): Promise<void> {
+async function extractTarball(
+  tarball: string,
+  dest: string,
+  subdir = "",
+): Promise<void> {
   const strip = subdir ? subdir.split("/").length : 1;
   await extract({ file: tarball, C: dest, strip });
 }
@@ -316,7 +344,10 @@ export async function downloadRepo({
     const hasOnlyRse = files.length === 1 && files[0] === cliConfigJsonc;
     if (files.length > 0 && !hasOnlyRse) {
       projectPath = await getUniqueProjectPath(projectPath, projectName, isDev);
-      relinka("verbose", `Directory already exists. Using new path: ${projectPath}`);
+      relinka(
+        "verbose",
+        `Directory already exists. Using new path: ${projectPath}`,
+      );
     }
   }
   await ensuredir(projectPath);
@@ -328,7 +359,11 @@ export async function downloadRepo({
   } catch (_error) {
     // Ignore errors
   }
-  const { configPath: projectConfigPath } = await getReliverseConfigPath(projectPath, isDev, true);
+  const { configPath: projectConfigPath } = await getReliverseConfigPath(
+    projectPath,
+    isDev,
+    true,
+  );
   const hasConfig = await fs.pathExists(projectConfigPath);
   if (hasConfig) {
     const choice = await selectPrompt({
@@ -360,7 +395,9 @@ export async function downloadRepo({
     await fs.move(
       path.join(
         projectPath,
-        projectConfigPath.endsWith(cliConfigJsonc) ? cliConfigJsonc : cliConfigTs,
+        projectConfigPath.endsWith(cliConfigJsonc)
+          ? cliConfigJsonc
+          : cliConfigTs,
       ),
       projectConfigPath,
     );
@@ -368,7 +405,12 @@ export async function downloadRepo({
   }
 
   // Parse and compute final repo info
-  const repoInfo = computeRepoInfo(repoURL, provider, githubToken, subdirectory);
+  const repoInfo = computeRepoInfo(
+    repoURL,
+    provider,
+    githubToken,
+    subdirectory,
+  );
   if (!repoInfo.gitUrl) {
     throw new Error(`Invalid repository URL or provider: ${repoURL}`);
   }
@@ -414,7 +456,10 @@ export async function downloadRepo({
 
     // Get tarball size for progress tracking
     const tarballStats = await fs.stat(tarballFile);
-    extractSpinner.updateProgress(tarballStats.size, path.basename(tarballFile));
+    extractSpinner.updateProgress(
+      tarballStats.size,
+      path.basename(tarballFile),
+    );
 
     relinka("verbose", `Extracting tarball to ${projectPath}`);
     await extractTarball(tarballFile, projectPath, repoInfo.subdir);
@@ -446,19 +491,28 @@ export async function downloadRepo({
     try {
       if (repoInfo.subdir) {
         if (preserveGit) {
-          await git.clone(finalUrl, projectPath, ["--branch", repoInfo.version]);
+          await git.clone(finalUrl, projectPath, [
+            "--branch",
+            repoInfo.version,
+          ]);
           await git.cwd(projectPath);
           await git.raw(["sparse-checkout", "init", "--cone"]);
           await git.raw(["sparse-checkout", "set", repoInfo.subdir]);
           const subdirPath = path.join(projectPath, repoInfo.subdir);
           if (!(await fs.pathExists(subdirPath))) {
-            throw new Error(`Subdirectory '${repoInfo.subdir}' not found in repository ${repoURL}`);
+            throw new Error(
+              `Subdirectory '${repoInfo.subdir}' not found in repository ${repoURL}`,
+            );
           }
           const files = await fs.readdir(subdirPath);
           for (const file of files) {
-            await fs.move(path.join(subdirPath, file), path.join(projectPath, file), {
-              overwrite: true,
-            });
+            await fs.move(
+              path.join(subdirPath, file),
+              path.join(projectPath, file),
+              {
+                overwrite: true,
+              },
+            );
           }
           await fs.remove(subdirPath);
         } else {
@@ -472,7 +526,9 @@ export async function downloadRepo({
           ]);
           const srcSubdir = path.join(tempCloneDir, repoInfo.subdir);
           if (!(await fs.pathExists(srcSubdir))) {
-            throw new Error(`Subdirectory '${repoInfo.subdir}' not found in repository ${repoURL}`);
+            throw new Error(
+              `Subdirectory '${repoInfo.subdir}' not found in repository ${repoURL}`,
+            );
           }
           await fs.copy(srcSubdir, projectPath, {
             filter: (src) => !src.includes(`${path.sep}.git`),
@@ -555,7 +611,10 @@ export async function downloadRepo({
   const result: DownloadResult = { source: repoURL, dir: projectPath };
   if (returnTime) result.time = durationSeconds;
   if (returnSize) {
-    const folderSizeBytes = await getFolderSize(projectPath, preserveGit ? [] : [".git"]);
+    const folderSizeBytes = await getFolderSize(
+      projectPath,
+      preserveGit ? [] : [".git"],
+    );
     const sizeMB = parseFloat((folderSizeBytes / (1024 * 1024)).toFixed(2));
     result.size = sizeMB;
     result.sizePretty = prettyBytes(folderSizeBytes);

@@ -51,7 +51,10 @@ export async function createGithubRepo(
   isTemplateDownload: boolean,
 ): Promise<boolean> {
   if (isTemplateDownload) {
-    relinka("verbose", "Skipping createGithubRepo since it's a template download");
+    relinka(
+      "verbose",
+      "Skipping createGithubRepo since it's a template download",
+    );
     return true;
   }
 
@@ -115,7 +118,14 @@ export async function createGithubRepo(
     // Setup remote and push initial commit
     const remoteUrl = `https://github.com/${repoOwner}/${repoName}.git`;
     relinka("verbose", "Setting up Git remote and pushing initial commit...");
-    return await setupGitRemote(cwd, isDev, repoName, projectPath, remoteUrl, "origin");
+    return await setupGitRemote(
+      cwd,
+      isDev,
+      repoName,
+      projectPath,
+      remoteUrl,
+      "origin",
+    );
   } catch (error: any) {
     if (error instanceof RequestError) {
       if (error.status === 401 || error.status === 403) {
@@ -129,15 +139,25 @@ export async function createGithubRepo(
           "Invalid repository name or repository already exists and you don't have access to it.",
         );
       } else if (error.message?.includes("rate limit")) {
-        relinka("error", "GitHub API rate limit exceeded. Please try again later.");
+        relinka(
+          "error",
+          "GitHub API rate limit exceeded. Please try again later.",
+        );
       } else if (error.message?.includes("network")) {
-        relinka("error", "Network error occurred. Please check your internet connection.");
+        relinka(
+          "error",
+          "Network error occurred. Please check your internet connection.",
+        );
       } else {
         relinka("error", "GitHub operation failed:", error.message);
       }
     } else {
       // Non-Octokit errors or unexpected exceptions
-      relinka("error", "An unexpected error occurred:", (error as Error)?.message ?? String(error));
+      relinka(
+        "error",
+        "An unexpected error occurred:",
+        (error as Error)?.message ?? String(error),
+      );
     }
     return false;
   }

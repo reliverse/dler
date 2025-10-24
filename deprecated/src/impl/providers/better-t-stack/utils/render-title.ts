@@ -41,7 +41,9 @@ export const renderTitle = () => {
     ║  Better T Stack  ║
     ╚══════════════════╝
     `;
-    console.log(gradient(Object.values(catppuccinTheme)).multiline(simplifiedTitle));
+    console.log(
+      gradient(Object.values(catppuccinTheme)).multiline(simplifiedTitle),
+    );
   } else {
     console.log(gradient(Object.values(catppuccinTheme)).multiline(TITLE_TEXT));
   }

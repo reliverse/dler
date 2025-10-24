@@ -33,7 +33,9 @@ possiblePaths = [
   ...possiblePaths.map((it) => `app/${it}`),
 ];
 
-async function getPathAliases(cwd: string): Promise<Record<string, string> | null> {
+async function getPathAliases(
+  cwd: string,
+): Promise<Record<string, string> | null> {
   const tsConfigPath = path.join(cwd, "tsconfig.json");
   if (!(await pathExists(tsConfigPath))) {
     return null;
@@ -52,7 +54,9 @@ async function getPathAliases(cwd: string): Promise<Record<string, string> | nul
       for (const aliasedPath of aliasPaths) {
         const resolvedBaseUrl = path.join(cwd, baseUrl);
         const finalAlias = alias.endsWith("*") ? alias.slice(0, -1) : alias;
-        const finalAliasedPath = aliasedPath.endsWith("*") ? aliasedPath.slice(0, -1) : aliasedPath;
+        const finalAliasedPath = aliasedPath.endsWith("*")
+          ? aliasedPath.slice(0, -1)
+          : aliasedPath;
 
         result[finalAlias || ""] = path.join(resolvedBaseUrl, finalAliasedPath);
       }
@@ -145,7 +149,8 @@ export async function getConfig({
           });
           const hasConfig = Object.keys(config).length > 0;
           if (hasConfig) {
-            configFile = config.auth?.options || config.default?.options || null;
+            configFile =
+              config.auth?.options || config.default?.options || null;
             if (!configFile) {
               if (shouldThrowOnError) {
                 throw new Error(
@@ -167,7 +172,9 @@ export async function getConfig({
             e &&
             "message" in e &&
             typeof e.message === "string" &&
-            e.message.includes("This module cannot be imported from a Client Component module")
+            e.message.includes(
+              "This module cannot be imported from a Client Component module",
+            )
           ) {
             if (shouldThrowOnError) {
               throw new Error(
@@ -194,7 +201,9 @@ export async function getConfig({
       e &&
       "message" in e &&
       typeof e.message === "string" &&
-      e.message.includes("This module cannot be imported from a Client Component module")
+      e.message.includes(
+        "This module cannot be imported from a Client Component module",
+      )
     ) {
       if (shouldThrowOnError) {
         throw new Error(

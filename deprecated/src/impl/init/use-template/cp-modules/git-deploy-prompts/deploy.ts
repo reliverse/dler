@@ -9,8 +9,13 @@ import type { ReliverseMemory } from "~/impl/utils/schemaMemory";
 
 import { prepareVercelProjectCreation } from "./vercel/vercel-create";
 
-export async function selectDeploymentService(config: ReliverseConfig): Promise<DeploymentService> {
-  if (config.projectDeployService !== undefined && config.projectDeployService !== "none") {
+export async function selectDeploymentService(
+  config: ReliverseConfig,
+): Promise<DeploymentService> {
+  if (
+    config.projectDeployService !== undefined &&
+    config.projectDeployService !== "none"
+  ) {
     const deployService = config.projectDeployService;
     relinka("verbose", `Using configured deployment service: ${deployService}`);
     return deployService;

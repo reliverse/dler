@@ -22,11 +22,16 @@ export async function getProjectContent(projectPath: string): Promise<{
   const configJSONC = path.join(projectPath, cliConfigJsonc);
   const configTS = path.join(projectPath, cliConfigTs);
 
-  const fileReliverseConfig = (await fs.pathExists(configJSONC)) || (await fs.pathExists(configTS));
+  const fileReliverseConfig =
+    (await fs.pathExists(configJSONC)) || (await fs.pathExists(configTS));
 
-  const filePackageJson = await fs.pathExists(path.join(projectPath, "package.json"));
+  const filePackageJson = await fs.pathExists(
+    path.join(projectPath, "package.json"),
+  );
 
-  const dirNodeModules = await fs.pathExists(path.join(projectPath, "node_modules"));
+  const dirNodeModules = await fs.pathExists(
+    path.join(projectPath, "node_modules"),
+  );
 
   const dirGit = await fs.pathExists(path.join(projectPath, ".git"));
 

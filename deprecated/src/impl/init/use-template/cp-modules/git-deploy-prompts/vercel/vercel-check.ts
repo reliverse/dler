@@ -35,10 +35,11 @@ export async function checkVercelDeployment(
   }
 
   try {
-    const { data: deployments } = await githubInstance.rest.repos.listDeployments({
-      owner: githubUsername,
-      repo: projectName,
-    });
+    const { data: deployments } =
+      await githubInstance.rest.repos.listDeployments({
+        owner: githubUsername,
+        repo: projectName,
+      });
     return deployments.length > 0;
   } catch (error) {
     relinka(

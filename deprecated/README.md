@@ -4,8 +4,6 @@
 > You are reading the README for the **deprecated version** of **Dler (v1)** — **`@reliverse/dler-v1`** (`library + CLI`) located at `./deprecated/dler-v1/README.md`.
 >
 > The **new and actively maintained version (v2+)** is available here: 👉 [github.com/reliverse/dler](https://github.com/reliverse/dler) as **`@reliverse/dler` (CLI)** and **`@reliverse/dler-*` (libraries)**.
->
-> `@reliverse/dler-v1` will remain maintained for a limited time for stability purposes, but **no new features** will be introduced.
 
 ## What is Dler?
 

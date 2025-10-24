@@ -89,7 +89,9 @@ function removeTrailingPunctuation(token: string): string {
  * Determines if a token might represent a file or directory path.
  */
 function looksLikePath(token: string): boolean {
-  return token.includes("/") || token.includes("\\") || /\.(jsx?|tsx?)$/i.test(token);
+  return (
+    token.includes("/") || token.includes("\\") || /\.(jsx?|tsx?)$/i.test(token)
+  );
 }
 
 /**
@@ -140,7 +142,10 @@ async function handleNormalChatFlow(userInput: string): Promise<void> {
 
     messages.push({ role: "assistant", content: assistantResponse });
   } catch (error) {
-    console.error("Error:", error instanceof Error ? error.message : String(error));
+    console.error(
+      "Error:",
+      error instanceof Error ? error.message : String(error),
+    );
     msg({ type: "M_BAR", borderColor: "dim" });
   }
 }

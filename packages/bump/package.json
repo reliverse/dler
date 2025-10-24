@@ -1,0 +1,28 @@
+{
+  "name": "@reliverse/dler-bump",
+  "description": "Bump utils for @reliverse/dler",
+  "author": "reliverse",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/mod.ts",
+      "default": "./src/mod.ts"
+    }
+  },
+  "dependencies": {
+    "semver": "catalog:"
+  },
+  "devDependencies": {
+    "@reliverse/dler-logger": "workspace:*",
+    "@reliverse/dler-tsconfig": "workspace:*",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:",
+    "@types/semver": "catalog:"
+  },
+  "keywords": [
+    "dler",
+    "bump"
+  ]
+}

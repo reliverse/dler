@@ -3,7 +3,10 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { glob } from "tinyglobby";
 
-export async function convertImportStyle(projectPath: string, targetStyle: "import" | "require") {
+export async function convertImportStyle(
+  projectPath: string,
+  targetStyle: "import" | "require",
+) {
   relinka("info", `Converting to ${targetStyle} style in ${projectPath}`);
 
   const files = await glob("**/*.{js,jsx,ts,tsx}", {
@@ -32,9 +35,15 @@ export async function convertImportStyle(projectPath: string, targetStyle: "impo
       // Convert import to require
       updatedContent = content
         // Convert import { x } from "y" to const { x } = require('y')
-        .replace(/import\s*{\s*([^}]+)}\s*from\s*['"]([^'"]+)['"]/g, "const { $1 } = require('$2')")
+        .replace(
+          /import\s*{\s*([^}]+)}\s*from\s*['"]([^'"]+)['"]/g,
+          "const { $1 } = require('$2')",
+        )
         // Convert import x from "y" to const x = require('y')
-        .replace(/import\s+(\w+)\s+from\s+['"]([^'"]+)['"]/g, "const $1 = require('$2')");
+        .replace(
+          /import\s+(\w+)\s+from\s+['"]([^'"]+)['"]/g,
+          "const $1 = require('$2')",
+        );
     }
 
     if (content !== updatedContent) {

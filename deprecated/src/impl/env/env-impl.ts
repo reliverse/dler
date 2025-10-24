@@ -19,12 +19,21 @@ export async function envArgImpl(isDev: boolean, pathToProject?: string) {
 
     // Prompt user about secret masking
     const maskInput = await confirmPrompt({
-      title: "Do you want to mask secret inputs (e.g., GitHub token) in the next steps?",
-      content: "Regardless of your choice, your data will be securely stored on your device.",
+      title:
+        "Do you want to mask secret inputs (e.g., GitHub token) in the next steps?",
+      content:
+        "Regardless of your choice, your data will be securely stored on your device.",
     });
 
     // Compose .env file
-    await composeEnvFile(projectPath, FALLBACK_ENV_EXAMPLE_URL, maskInput, false, config, false);
+    await composeEnvFile(
+      projectPath,
+      FALLBACK_ENV_EXAMPLE_URL,
+      maskInput,
+      false,
+      config,
+      false,
+    );
   } catch (error) {
     relinka(
       "error",

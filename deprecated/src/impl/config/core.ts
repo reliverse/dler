@@ -43,7 +43,9 @@ export async function getOrCreateReliverseConfig({
   // Collect additional configs in "mrse" folder
   if (await fs.pathExists(mrseFolderPath)) {
     const dirItems = await fs.readdir(mrseFolderPath);
-    const rseFiles = dirItems.filter((item) => item === cliConfigJsonc || item === cliConfigTs);
+    const rseFiles = dirItems.filter(
+      (item) => item === cliConfigJsonc || item === cliConfigTs,
+    );
     const configs = await Promise.all(
       rseFiles.map(async (file) => {
         const filePath = path.join(mrseFolderPath, file);
@@ -58,7 +60,9 @@ export async function getOrCreateReliverseConfig({
       }),
     );
     results.push(
-      ...configs.filter((cfg: ReliverseConfig | null): cfg is ReliverseConfig => cfg !== null),
+      ...configs.filter(
+        (cfg: ReliverseConfig | null): cfg is ReliverseConfig => cfg !== null,
+      ),
     );
   }
 
@@ -77,14 +81,22 @@ export async function getOrCreateReliverseConfig({
     // Check if the file is empty or has only "{}"
     const content = (await fs.readFile(configPath, "utf-8")).trim();
     if (!content || content === "{}") {
-      await createReliverseConfig(projectPath, githubUsername, isDev, overrides);
+      await createReliverseConfig(
+        projectPath,
+        githubUsername,
+        isDev,
+        overrides,
+      );
     } else {
       // If the existing config is invalid, attempt to fix it
       const validConfig = await readReliverseConfig(configPath, isDev);
       if (!validConfig) {
         const fixed = await parseAndFixReliverseConfig(configPath, isDev);
         if (!fixed) {
-          relinka("warn", "Could not fix existing config. Using fallback defaults.");
+          relinka(
+            "warn",
+            "Could not fix existing config. Using fallback defaults.",
+          );
         }
       }
     }

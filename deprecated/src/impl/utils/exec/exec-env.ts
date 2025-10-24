@@ -1,4 +1,8 @@
-import { dirname, delimiter as pathDelimiter, resolve as resolvePath } from "node:path";
+import {
+  dirname,
+  delimiter as pathDelimiter,
+  resolve as resolvePath,
+} from "node:path";
 
 export type EnvLike = typeof process.env;
 

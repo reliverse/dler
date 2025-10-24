@@ -1,7 +1,11 @@
 import { re } from "@reliverse/relico";
 import { cancel, isCancel, select } from "@reliverse/rempts";
 
-import type { Backend, DatabaseSetup, ORM } from "~/impl/providers/better-t-stack/types";
+import type {
+  Backend,
+  DatabaseSetup,
+  ORM,
+} from "~/impl/providers/better-t-stack/types";
 
 export async function getDBSetupChoice(
   databaseType: string,

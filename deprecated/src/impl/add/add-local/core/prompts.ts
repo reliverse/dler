@@ -3,7 +3,10 @@ import { re } from "@reliverse/relico";
 /**
  * Returns the text content for the final prompt, depending on missing deps or updates.
  */
-export function getPromptContent(depsMissing: boolean, updateAvailable: boolean): string {
+export function getPromptContent(
+  depsMissing: boolean,
+  updateAvailable: boolean,
+): string {
   if (depsMissing) {
     return re.yellow(
       `Dependencies are missing in your project. Would you like to install them?\n${re.bold(

@@ -1,7 +1,10 @@
 import path from "node:path";
 import fs from "@reliverse/relifso";
 
-import type { Backend, ProjectConfig } from "~/impl/providers/better-t-stack/types";
+import type {
+  Backend,
+  ProjectConfig,
+} from "~/impl/providers/better-t-stack/types";
 
 import { addPackageDependency } from "~/impl/providers/better-t-stack/utils/add-package-deps";
 
@@ -35,7 +38,10 @@ export async function setupRuntime(config: ProjectConfig): Promise<void> {
   }
 }
 
-async function setupBunRuntime(serverDir: string, _backend: Backend): Promise<void> {
+async function setupBunRuntime(
+  serverDir: string,
+  _backend: Backend,
+): Promise<void> {
   const packageJsonPath = path.join(serverDir, "package.json");
   if (!(await fs.pathExists(packageJsonPath))) return;
 
@@ -55,7 +61,10 @@ async function setupBunRuntime(serverDir: string, _backend: Backend): Promise<vo
   });
 }
 
-async function setupNodeRuntime(serverDir: string, backend: Backend): Promise<void> {
+async function setupNodeRuntime(
+  serverDir: string,
+  backend: Backend,
+): Promise<void> {
   const packageJsonPath = path.join(serverDir, "package.json");
   if (!(await fs.pathExists(packageJsonPath))) return;
 

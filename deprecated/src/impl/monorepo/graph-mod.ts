@@ -107,7 +107,11 @@ export class DependencyGraph {
     this.printNode(this.root, 0, true);
   }
 
-  private depthFirstSearch(node: GraphNode, visited: Set<string>, result: Package[]): void {
+  private depthFirstSearch(
+    node: GraphNode,
+    visited: Set<string>,
+    result: Package[],
+  ): void {
     if (visited.has(node.id)) return;
     visited.add(node.id);
 

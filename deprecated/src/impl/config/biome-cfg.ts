@@ -7,7 +7,9 @@ import type { BiomeConfig, BiomeConfigResult } from "~/impl/types/mod";
 
 let cachedBiomeConfig: BiomeConfigResult = null;
 
-export async function getBiomeConfig(projectPath: string): Promise<BiomeConfigResult> {
+export async function getBiomeConfig(
+  projectPath: string,
+): Promise<BiomeConfigResult> {
   if (cachedBiomeConfig !== null) {
     return cachedBiomeConfig;
   }

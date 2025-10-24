@@ -40,14 +40,17 @@ function generateReadmeContent(options: ProjectConfig): string {
   const isConvex = backend === "convex";
   const hasReactRouter = frontend.includes("react-router");
   const hasTanstackRouter = frontend.includes("tanstack-router");
-  const hasNative = frontend.includes("native-nativewind") || frontend.includes("native-unistyles");
+  const hasNative =
+    frontend.includes("native-nativewind") ||
+    frontend.includes("native-unistyles");
   const hasNext = frontend.includes("next");
   const hasTanstackStart = frontend.includes("tanstack-start");
   const hasSvelte = frontend.includes("svelte");
   const hasSolid = frontend.includes("solid");
   const hasNuxt = frontend.includes("nuxt");
 
-  const packageManagercallCmd = packageManager === "npm" ? "npm run" : packageManager;
+  const packageManagercallCmd =
+    packageManager === "npm" ? "npm run" : packageManager;
 
   let webPort = "3001";
   if (hasReactRouter || hasSvelte) {
@@ -195,23 +198,31 @@ function generateFeaturesList(
   const isConvex = backend === "convex";
   const hasTanstackRouter = frontend.includes("tanstack-router");
   const hasReactRouter = frontend.includes("react-router");
-  const hasNative = frontend.includes("native-nativewind") || frontend.includes("native-unistyles");
+  const hasNative =
+    frontend.includes("native-nativewind") ||
+    frontend.includes("native-unistyles");
   const hasNext = frontend.includes("next");
   const hasTanstackStart = frontend.includes("tanstack-start");
   const hasSvelte = frontend.includes("svelte");
   const hasNuxt = frontend.includes("nuxt");
   const hasSolid = frontend.includes("solid");
 
-  const addonsList = ["- **TypeScript** - For type safety and improved developer experience"];
+  const addonsList = [
+    "- **TypeScript** - For type safety and improved developer experience",
+  ];
 
   if (hasTanstackRouter) {
-    addonsList.push("- **TanStack Router** - File-based routing with full type safety");
+    addonsList.push(
+      "- **TanStack Router** - File-based routing with full type safety",
+    );
   } else if (hasReactRouter) {
     addonsList.push("- **React Router** - Declarative routing for React");
   } else if (hasNext) {
     addonsList.push("- **Next.js** - Full-stack React framework");
   } else if (hasTanstackStart) {
-    addonsList.push("- **TanStack Start** - SSR framework with TanStack Router");
+    addonsList.push(
+      "- **TanStack Start** - SSR framework with TanStack Router",
+    );
   } else if (hasSvelte) {
     addonsList.push("- **SvelteKit** - Web framework for building Svelte apps");
   } else if (hasNuxt) {
@@ -248,10 +259,14 @@ function generateFeaturesList(
     if (api === "trpc") {
       addonsList.push("- **tRPC** - End-to-end type-safe APIs");
     } else if (api === "orpc") {
-      addonsList.push("- **oRPC** - End-to-end type-safe APIs with OpenAPI integration");
+      addonsList.push(
+        "- **oRPC** - End-to-end type-safe APIs with OpenAPI integration",
+      );
     }
 
-    addonsList.push(`- **${runtime === "bun" ? "Bun" : "Node.js"}** - Runtime environment`);
+    addonsList.push(
+      `- **${runtime === "bun" ? "Bun" : "Node.js"}** - Runtime environment`,
+    );
   }
 
   if (database !== "none" && !isConvex) {
@@ -272,7 +287,9 @@ function generateFeaturesList(
   }
 
   if (auth && !isConvex) {
-    addonsList.push("- **Authentication** - Email & password authentication with Better Auth");
+    addonsList.push(
+      "- **Authentication** - Email & password authentication with Better Auth",
+    );
   }
 
   for (const addon of addons) {

@@ -16,7 +16,10 @@ export function cleanGitHubUrl(url: string): string {
   return url
     .trim()
     .replace(/^git\+/, "")
-    .replace(/^https?:\/\/(www\.)?(github|gitlab|bitbucket|sourcehut)\.com\//i, "")
+    .replace(
+      /^https?:\/\/(www\.)?(github|gitlab|bitbucket|sourcehut)\.com\//i,
+      "",
+    )
     .replace(/^(github|gitlab|bitbucket|sourcehut)\.com\//i, "")
     .replace(/\.git$/i, "");
 }
@@ -55,7 +58,9 @@ export function objectToCodeString(obj: any, indentLevel = 0): string {
 }
 
 // Updates tsconfig.json's "include" array to ensure "rses present.
-export async function updateTsConfigInclude(projectPath: string): Promise<void> {
+export async function updateTsConfigInclude(
+  projectPath: string,
+): Promise<void> {
   const tsconfigPath = path.join(projectPath, tsconfigJson);
   if (!(await fs.pathExists(tsconfigPath))) return;
   try {

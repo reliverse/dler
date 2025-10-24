@@ -9,7 +9,9 @@ export async function getBackendFrameworkChoice(
 ): Promise<Backend> {
   if (backendFramework !== undefined) return backendFramework;
 
-  const hasIncompatibleFrontend = frontends?.some((f) => f === "nuxt" || f === "solid");
+  const hasIncompatibleFrontend = frontends?.some(
+    (f) => f === "nuxt" || f === "solid",
+  );
 
   const backendOptions: {
     value: Backend;

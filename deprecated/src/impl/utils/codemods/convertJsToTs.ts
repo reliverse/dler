@@ -22,7 +22,10 @@ function generateTypeDefinitions(content: string): string {
   );
 
   // Inject return types to functions
-  result = result.replace(/function\s+(\w+)\s*\((.*?)\)\s*{/g, (match: string) => `${match}: any`);
+  result = result.replace(
+    /function\s+(\w+)\s*\((.*?)\)\s*{/g,
+    (match: string) => `${match}: any`,
+  );
 
   // Inject types to variables
   result = result.replace(
@@ -31,13 +34,16 @@ function generateTypeDefinitions(content: string): string {
   );
 
   // Inject types to class properties
-  result = result.replace(/class\s+(\w+)\s*{([^}]+)}/g, (_: string, name: string, body: string) => {
-    const typedBody = body.replace(
-      /(\w+)\s*=/g,
-      (_: string, propName: string) => `${propName}: any =`,
-    );
-    return `class ${name} {${typedBody}}`;
-  });
+  result = result.replace(
+    /class\s+(\w+)\s*{([^}]+)}/g,
+    (_: string, name: string, body: string) => {
+      const typedBody = body.replace(
+        /(\w+)\s*=/g,
+        (_: string, propName: string) => `${propName}: any =`,
+      );
+      return `class ${name} {${typedBody}}`;
+    },
+  );
 
   // Inject interface for object literals
   result = result.replace(

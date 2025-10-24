@@ -15,7 +15,9 @@ import type { ReliverseMemory } from "~/impl/utils/schemaMemory";
  * If not found or invalid, prompts the user to provide one,
  * then stores it in memory.
  */
-export async function ensureOpenAIKey(memory: ReliverseMemory): Promise<string> {
+export async function ensureOpenAIKey(
+  memory: ReliverseMemory,
+): Promise<string> {
   let envKeyInvalid = false;
   let memoryKeyInvalid = false;
 
@@ -30,7 +32,10 @@ export async function ensureOpenAIKey(memory: ReliverseMemory): Promise<string> 
       return process.env.OPENAI_API_KEY;
     } catch {
       envKeyInvalid = true;
-      relinka("warn", "OpenAI key in .env file is invalid, let me check my memory...");
+      relinka(
+        "warn",
+        "OpenAI key in .env file is invalid, let me check my memory...",
+      );
     }
   }
 
@@ -43,7 +48,10 @@ export async function ensureOpenAIKey(memory: ReliverseMemory): Promise<string> 
       // If valid, update .env if needed.
       process.env.OPENAI_API_KEY = memory.openaiKey;
       if (envKeyInvalid) {
-        relinka("info", "Found valid key in memory, using it instead of invalid .env key");
+        relinka(
+          "info",
+          "Found valid key in memory, using it instead of invalid .env key",
+        );
       }
       return memory.openaiKey;
     } catch {
@@ -54,11 +62,15 @@ export async function ensureOpenAIKey(memory: ReliverseMemory): Promise<string> 
 
   // 3) Prompt for a new one.
   if (envKeyInvalid || memoryKeyInvalid) {
-    relinka("info", "Please provide a new OpenAI API key as existing ones are invalid");
+    relinka(
+      "info",
+      "Please provide a new OpenAI API key as existing ones are invalid",
+    );
   }
 
   const token = await inputPrompt({
-    title: "Please enter your OpenAI API key.\n(It will be securely stored on your machine):",
+    title:
+      "Please enter your OpenAI API key.\n(It will be securely stored on your machine):",
     content: "Get one at https://platform.openai.com/api-keys",
     validate: async (value: string): Promise<string | boolean> => {
       if (!value?.trim()) {

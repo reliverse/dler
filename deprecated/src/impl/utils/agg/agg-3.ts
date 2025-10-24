@@ -6,7 +6,11 @@ import { relinka } from "@reliverse/relinka";
  * Build a relative import/export path, removing `stripPrefix` if it is truly a prefix,
  * converting .ts -> .js, and ensuring it starts with "./" or "../".
  */
-export function buildPathRelative(filePath: string, inputDir: string, stripPrefix: string): string {
+export function buildPathRelative(
+  filePath: string,
+  inputDir: string,
+  stripPrefix: string,
+): string {
   let resolved = path.resolve(filePath);
   const resolvedStrip = stripPrefix ? path.resolve(stripPrefix) : "";
 
@@ -91,7 +95,10 @@ export async function collectFiles(
       }
     } else if (entry.isFile()) {
       // Skip file if its basename starts with the internal marker and internal files are not included.
-      if (!includeInternal && path.basename(fullPath).startsWith(internalMarker)) {
+      if (
+        !includeInternal &&
+        path.basename(fullPath).startsWith(internalMarker)
+      ) {
         if (verbose) {
           relinka("verbose", `Skipping internal file: ${fullPath}`);
         }
@@ -157,7 +164,9 @@ export async function generateAggregatorLines(
   if (useImport) {
     const lines: string[] = [];
     if (typeNames.length > 0) {
-      lines.push(`import type { ${typeNames.join(", ")} } from "${importPath}";`);
+      lines.push(
+        `import type { ${typeNames.join(", ")} } from "${importPath}";`,
+      );
     }
     if (valueNames.length > 0) {
       lines.push(`import { ${valueNames.join(", ")} } from "${importPath}";`);
@@ -228,7 +237,10 @@ export async function getNamedExports(
               valueNamesSet.add(name);
             }
           }
-        } else if (pattern.source.includes("=\\s*([A-Za-z0-9_$]+)") && matchGroups[1]) {
+        } else if (
+          pattern.source.includes("=\\s*([A-Za-z0-9_$]+)") &&
+          matchGroups[1]
+        ) {
           // Handle export assignments
           valueNamesSet.add(matchGroups[1]);
         } else {
@@ -236,7 +248,11 @@ export async function getNamedExports(
           const keyword = matchGroups[1];
           const name = matchGroups[2];
           if (keyword && name) {
-            if (keyword === "type" || keyword === "interface" || keyword === "enum") {
+            if (
+              keyword === "type" ||
+              keyword === "interface" ||
+              keyword === "enum"
+            ) {
               typeNamesSet.add(name);
             } else {
               valueNamesSet.add(name);

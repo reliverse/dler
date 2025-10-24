@@ -29,12 +29,7 @@
     "check": "bun --filter '*' check"
   },
   "workspaces": {
-    "packages": [
-      "examples/*",
-      "packages/*",
-      "plugins/*",
-      "scripts/*"
-    ]
+    "packages": ["examples/*", "packages/*", "plugins/*", "scripts/*"]
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -52,7 +47,5 @@
       "import": "./bin/mod.js"
     }
   },
-  "files": [
-    "bin"
-  ]
+  "files": ["bin"]
 }

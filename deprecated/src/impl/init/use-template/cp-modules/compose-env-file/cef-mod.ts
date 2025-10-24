@@ -53,7 +53,10 @@ export async function composeEnvFile(
     // In auto mode, use last env path if it exists and is valid
     if (skipPrompts && lastEnvPath && (await fs.pathExists(lastEnvPath))) {
       if (await copyFromExisting(projectPath, lastEnvPath)) {
-        relinka("success", "Environment variables copied from the last used file.");
+        relinka(
+          "success",
+          "Environment variables copied from the last used file.",
+        );
         const remainingMissingKeys = await getMissingKeys(projectPath);
         if (remainingMissingKeys.length > 0) {
           relinka(
@@ -96,7 +99,8 @@ export async function composeEnvFile(
     const response = await selectPrompt({
       title:
         "Do you want me to help you fill in the .env file? Or, do you prefer to do it manually?",
-      content: "✨ Everything is saved only in your .env file and will not be shared anywhere.",
+      content:
+        "✨ Everything is saved only in your .env file and will not be shared anywhere.",
       options,
     });
 
@@ -105,12 +109,17 @@ export async function composeEnvFile(
       try {
         await execa("code", [envPath]);
       } catch {
-        relinka("warn", "Failed to open .env in VSCode. Please open it manually:", envPath);
+        relinka(
+          "warn",
+          "Failed to open .env in VSCode. Please open it manually:",
+          envPath,
+        );
       }
     } else if (response === "existing") {
       let existingPath: string;
       existingPath = await inputPrompt({
-        title: "Please provide the path to your existing .env file or directory:",
+        title:
+          "Please provide the path to your existing .env file or directory:",
         placeholder:
           process.platform === "win32"
             ? `Enter the path (e.g. "C:\\B\\S\\project\\.env" or "C:\\B\\S\\project")`
@@ -145,7 +154,10 @@ export async function composeEnvFile(
       }
     } else if (response === "latest") {
       if (lastEnvPath && (await copyFromExisting(projectPath, lastEnvPath))) {
-        relinka("success", "Environment variables copied from the last used file.");
+        relinka(
+          "success",
+          "Environment variables copied from the last used file.",
+        );
         const remainingMissingKeys = await getMissingKeys(projectPath);
         if (remainingMissingKeys.length > 0) {
           relinka(
@@ -190,7 +202,11 @@ export async function composeEnvFile(
       );
     }
 
-    relinka("info", "You can always check the rseto learn more about env variables:", cliDomainEnv);
+    relinka(
+      "info",
+      "You can always check the rseto learn more about env variables:",
+      cliDomainEnv,
+    );
   } catch (err) {
     relinka("error", "Failed to compose env file:", getErrorMessage(err));
   }

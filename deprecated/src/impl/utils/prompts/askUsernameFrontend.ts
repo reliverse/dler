@@ -12,7 +12,8 @@ export async function askUsernameFrontend(
   if (!shouldAskIfExists && config.projectAuthor && config.projectAuthor !== "")
     return config.projectAuthor;
 
-  const previousName = typeof config.projectAuthor === "string" ? config.projectAuthor : "";
+  const previousName =
+    typeof config.projectAuthor === "string" ? config.projectAuthor : "";
   const hasPreviousName = previousName !== "";
 
   // Determine placeholder and content based on previous config
@@ -23,7 +24,8 @@ export async function askUsernameFrontend(
 
   // Prompt the user for a name
   const userInput = await inputPrompt({
-    title: "Enter a name/username for the frontend (e.g. footer, contact page, etc.):",
+    title:
+      "Enter a name/username for the frontend (e.g. footer, contact page, etc.):",
     content,
     placeholder: hasPreviousName
       ? "No worries about @ symbol anywhere, I'll add it for you."
@@ -39,12 +41,20 @@ export async function askUsernameFrontend(
     if (hasPreviousName) {
       return previousName;
     }
-    await updateReliverseConfig(process.cwd(), { projectAuthor: DEFAULT_CLI_USERNAME }, false);
+    await updateReliverseConfig(
+      process.cwd(),
+      { projectAuthor: DEFAULT_CLI_USERNAME },
+      false,
+    );
     // deleteLastLine();
     return DEFAULT_CLI_USERNAME;
   }
 
   // User provided a new name, save it to memory
-  await updateReliverseConfig(process.cwd(), { projectAuthor: trimmedInput }, false);
+  await updateReliverseConfig(
+    process.cwd(),
+    { projectAuthor: trimmedInput },
+    false,
+  );
   return trimmedInput;
 }

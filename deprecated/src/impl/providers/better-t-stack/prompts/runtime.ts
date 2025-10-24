@@ -3,7 +3,10 @@ import { cancel, isCancel, select } from "@reliverse/rempts";
 import { DEFAULT_CONFIG } from "~/impl/providers/better-t-stack/constants";
 import type { Backend, Runtime } from "~/impl/providers/better-t-stack/types";
 
-export async function getRuntimeChoice(runtime?: Runtime, backend?: Backend): Promise<Runtime> {
+export async function getRuntimeChoice(
+  runtime?: Runtime,
+  backend?: Backend,
+): Promise<Runtime> {
   if (backend === "convex" || backend === "none") {
     return "none";
   }

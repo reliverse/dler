@@ -47,7 +47,10 @@ export async function getConfigDler(): Promise<ReliverseConfig> {
   }
 
   // Config file not found or error loading it, return default config
-  relinka("verbose", `Config file not found at ${configPath}. Using default configuration.`);
+  relinka(
+    "verbose",
+    `Config file not found at ${configPath}. Using default configuration.`,
+  );
   return defineConfig();
 }
 
@@ -64,7 +67,10 @@ export async function getConfigBunfig(): Promise<Record<string, any> | null> {
   const xdgConfigHome = process.env.XDG_CONFIG_HOME;
 
   // Define search paths for bunfig files
-  const localPaths = [resolve(cwd, "bunfig.toml"), resolve(cwd, ".bunfig.toml")];
+  const localPaths = [
+    resolve(cwd, "bunfig.toml"),
+    resolve(cwd, ".bunfig.toml"),
+  ];
 
   const globalPaths = [
     ...(homeDir ? [resolve(homeDir, ".bunfig.toml")] : []),
@@ -94,7 +100,11 @@ export async function getConfigBunfig(): Promise<Record<string, any> | null> {
         globalConfig = { ...globalConfig, ...config };
         // relinka("verbose", `Loaded global bunfig from ${configPath}`);
       } catch (error) {
-        relinka("error", `Error loading global bunfig from ${configPath}:`, error);
+        relinka(
+          "error",
+          `Error loading global bunfig from ${configPath}:`,
+          error,
+        );
       }
     }
   }
@@ -120,7 +130,11 @@ export async function getConfigBunfig(): Promise<Record<string, any> | null> {
         // relinka("verbose", `Loaded local bunfig from ${configPath}`);
         break; // Only load the first local config found
       } catch (error) {
-        relinka("error", `Error loading local bunfig from ${configPath}:`, error);
+        relinka(
+          "error",
+          `Error loading local bunfig from ${configPath}:`,
+          error,
+        );
       }
     }
   }

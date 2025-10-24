@@ -29,5 +29,8 @@ export async function createPackageJSON(
   const formatted = JSON.stringify(JSON.parse(content), null, 2);
   await fs.writeFile(packageJsonPath, formatted, "utf-8");
 
-  relinka("verbose", `Created ${filename} with ${isLib ? "library" : "application"} configuration`);
+  relinka(
+    "verbose",
+    `Created ${filename} with ${isLib ? "library" : "application"} configuration`,
+  );
 }

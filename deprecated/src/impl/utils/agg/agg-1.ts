@@ -15,7 +15,9 @@ export async function promptAggCommand() {
 
   // Check for main package
   const mainEntryFile = await findMainEntryFile(config);
-  const isMainDisabled = mainEntryFile ? await isAggregationDisabled(mainEntryFile) : false;
+  const isMainDisabled = mainEntryFile
+    ? await isAggregationDisabled(mainEntryFile)
+    : false;
 
   if (config?.libsList && Object.keys(config.libsList).length > 0) {
     const libEntries = await Promise.all(
@@ -87,7 +89,9 @@ export async function promptAggCommand() {
       strip = entryDir;
     } else if (selectedLibName === "main" && isMainDisabled) {
       // Main package is disabled, exit early
-      relinka.verbose("Main package aggregation is disabled due to <dler-disable-agg> comment.");
+      relinka.verbose(
+        "Main package aggregation is disabled due to <dler-disable-agg> comment.",
+      );
       return;
     } else {
       // Use library configuration
@@ -183,7 +187,8 @@ export async function promptAggCommand() {
     });
 
     overrideFile = await confirmPrompt({
-      title: "Override entire file instead of updating only the aggregator block?",
+      title:
+        "Override entire file instead of updating only the aggregator block?",
       defaultValue: false,
     });
 
@@ -193,7 +198,8 @@ export async function promptAggCommand() {
     });
 
     imports = await confirmPrompt({
-      title: "Do you want to generate imports instead of exports? (N generates exports)",
+      title:
+        "Do you want to generate imports instead of exports? (N generates exports)",
       defaultValue: imports,
     });
 

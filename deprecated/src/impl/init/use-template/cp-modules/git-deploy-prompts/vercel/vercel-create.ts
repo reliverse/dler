@@ -79,10 +79,16 @@ export async function prepareVercelProjectCreation(
 
   try {
     const selectedOptions =
-      deployMode === "new" || skipPrompts ? { options: ["env"] } : await getConfigurationOptions();
+      deployMode === "new" || skipPrompts
+        ? { options: ["env"] }
+        : await getConfigurationOptions();
 
     // Always create a new project.
-    const projectId = await createVercelProject(projectName, projectPath, vercelInstance);
+    const projectId = await createVercelProject(
+      projectName,
+      projectPath,
+      vercelInstance,
+    );
 
     // Configure analytics, branch protection, and resources if selected.
     if (selectedOptions.options.includes("analytics")) {
@@ -116,9 +122,16 @@ export async function prepareVercelProjectCreation(
           if (!addDomainRes.ok) {
             throw addDomainRes.error;
           }
-          const verified = await verifyDomain(vercelInstance, projectId, domain);
+          const verified = await verifyDomain(
+            vercelInstance,
+            projectId,
+            domain,
+          );
           if (!verified) {
-            relinka("warn", "Domain not verified. Complete verification in the dashboard.");
+            relinka(
+              "warn",
+              "Domain not verified. Complete verification in the dashboard.",
+            );
           }
         } catch (error) {
           relinka(
@@ -132,10 +145,15 @@ export async function prepareVercelProjectCreation(
 
     // Environment variables phase.
     if (selectedOptions.options.includes("env")) {
-      await addEnvVarsToVercelProject(vercelInstance, projectName, projectPath, {
-        options: selectedOptions.options,
-        useSharedEnvVars: false,
-      });
+      await addEnvVarsToVercelProject(
+        vercelInstance,
+        projectName,
+        projectPath,
+        {
+          options: selectedOptions.options,
+          useSharedEnvVars: false,
+        },
+      );
     }
 
     // Create initial deployment.
@@ -160,11 +178,17 @@ export async function prepareVercelProjectCreation(
   } catch (error) {
     if (error instanceof Error) {
       if (error.message.includes("rate limit")) {
-        relinka("error", "Vercel API rate limit exceeded. Please try again later.");
+        relinka(
+          "error",
+          "Vercel API rate limit exceeded. Please try again later.",
+        );
       } else if (error.message.includes("network")) {
         relinka("error", "Network error. Please check your connection.");
       } else if (error.message.includes("unauthorized")) {
-        relinka("error", "Invalid/expired Vercel token. Please provide a new token.");
+        relinka(
+          "error",
+          "Invalid/expired Vercel token. Please provide a new token.",
+        );
         await updateReliverseMemory({ vercelKey: "" });
       } else {
         relinka("error", "Error creating Vercel deployment:", error.message);

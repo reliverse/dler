@@ -2,7 +2,10 @@ import path from "node:path";
 import fs from "@reliverse/relifso";
 
 import type { AvailableDependencies } from "~/impl/providers/better-t-stack/constants";
-import type { Frontend, ProjectConfig } from "~/impl/providers/better-t-stack/types";
+import type {
+  Frontend,
+  ProjectConfig,
+} from "~/impl/providers/better-t-stack/types";
 
 import { addPackageDependency } from "~/impl/providers/better-t-stack/utils/add-package-deps";
 
@@ -16,7 +19,8 @@ interface PackageJson {
 }
 
 export async function setupApi(config: ProjectConfig): Promise<void> {
-  const { api, projectName, frontend, backend, packageManager, projectDir } = config;
+  const { api, projectName, frontend, backend, packageManager, projectDir } =
+    config;
   const isConvex = backend === "convex";
   const webDir = path.join(projectDir, "apps/web");
   const nativeDir = path.join(projectDir, "apps/native");
@@ -64,19 +68,31 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
       if (hasReactWeb) {
         if (api === "orpc") {
           await addPackageDependency({
-            dependencies: ["@orpc/tanstack-query", "@orpc/client", "@orpc/server"],
+            dependencies: [
+              "@orpc/tanstack-query",
+              "@orpc/client",
+              "@orpc/server",
+            ],
             projectDir: webDir,
           });
         } else if (api === "trpc") {
           await addPackageDependency({
-            dependencies: ["@trpc/tanstack-react-query", "@trpc/client", "@trpc/server"],
+            dependencies: [
+              "@trpc/tanstack-react-query",
+              "@trpc/client",
+              "@trpc/server",
+            ],
             projectDir: webDir,
           });
         }
       } else if (hasNuxtWeb) {
         if (api === "orpc") {
           await addPackageDependency({
-            dependencies: ["@orpc/tanstack-query", "@orpc/client", "@orpc/server"],
+            dependencies: [
+              "@orpc/tanstack-query",
+              "@orpc/client",
+              "@orpc/server",
+            ],
             projectDir: webDir,
           });
         }
@@ -110,12 +126,20 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
     if (nativeDirExists) {
       if (api === "trpc") {
         await addPackageDependency({
-          dependencies: ["@trpc/tanstack-react-query", "@trpc/client", "@trpc/server"],
+          dependencies: [
+            "@trpc/tanstack-react-query",
+            "@trpc/client",
+            "@trpc/server",
+          ],
           projectDir: nativeDir,
         });
       } else if (api === "orpc") {
         await addPackageDependency({
-          dependencies: ["@orpc/tanstack-query", "@orpc/client", "@orpc/server"],
+          dependencies: [
+            "@orpc/tanstack-query",
+            "@orpc/client",
+            "@orpc/server",
+          ],
           projectDir: nativeDir,
         });
       }
@@ -135,14 +159,19 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
 
   if (needsReactQuery && !isConvex) {
     const reactQueryDeps: AvailableDependencies[] = ["@tanstack/react-query"];
-    const reactQueryDevDeps: AvailableDependencies[] = ["@tanstack/react-query-devtools"];
+    const reactQueryDevDeps: AvailableDependencies[] = [
+      "@tanstack/react-query-devtools",
+    ];
 
     const hasReactWeb = frontend.some(
       (f) =>
-        f !== "native-nativewind" && f !== "native-unistyles" && reactBasedFrontends.includes(f),
+        f !== "native-nativewind" &&
+        f !== "native-unistyles" &&
+        reactBasedFrontends.includes(f),
     );
     const hasNative =
-      frontend.includes("native-nativewind") || frontend.includes("native-unistyles");
+      frontend.includes("native-nativewind") ||
+      frontend.includes("native-unistyles");
 
     if (hasReactWeb && webDirExists) {
       const webPkgJsonPath = path.join(webDir, "package.json");
@@ -174,7 +203,9 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
 
   if (needsSolidQuery && !isConvex) {
     const solidQueryDeps: AvailableDependencies[] = ["@tanstack/solid-query"];
-    const solidQueryDevDeps: AvailableDependencies[] = ["@tanstack/solid-query-devtools"];
+    const solidQueryDevDeps: AvailableDependencies[] = [
+      "@tanstack/solid-query-devtools",
+    ];
 
     if (webDirExists) {
       const webPkgJsonPath = path.join(webDir, "package.json");
@@ -226,7 +257,8 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
     }
 
     const backendPackageName = `@${projectName}/backend`;
-    const backendWorkspaceVersion = packageManager === "npm" ? "*" : "workspace:*";
+    const backendWorkspaceVersion =
+      packageManager === "npm" ? "*" : "workspace:*";
     const addWorkspaceDepManually = async (
       pkgJsonPath: string,
       depName: string,
@@ -248,7 +280,11 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
     if (webDirExists) {
       const webPkgJsonPath = path.join(webDir, "package.json");
       if (await fs.pathExists(webPkgJsonPath)) {
-        await addWorkspaceDepManually(webPkgJsonPath, backendPackageName, backendWorkspaceVersion);
+        await addWorkspaceDepManually(
+          webPkgJsonPath,
+          backendPackageName,
+          backendWorkspaceVersion,
+        );
       } else {
       }
     }

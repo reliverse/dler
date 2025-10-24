@@ -58,7 +58,11 @@ export function getCurrentWorkingDirectory(useCache = true): string {
     }
     return currentDirectory;
   } catch (error) {
-    relinka("error", "Error getting current working directory:", handleError(error));
+    relinka(
+      "error",
+      "Error getting current working directory:",
+      handleError(error),
+    );
     throw error;
   }
 }

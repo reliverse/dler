@@ -22,6 +22,7 @@ The current codebase enforces strict type safety, accessibility standards, and c
 - Always use Bun as the package manager.
 - Always use `cd <absolute/path/to/directory>` to change the current working directory.
 - Never use `cd` without an absolute path.
+- When working on CLI commands, you can check their performance by running `Measure-Command { bun dler tsc --verbose }`.
 
 ### Code Complexity and Quality
 - Don't use consecutive spaces in regular expression literals.

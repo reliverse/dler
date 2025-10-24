@@ -54,8 +54,10 @@ export async function gatherConfig(
   const result = await group<PromptGroupResults>(
     {
       frontend: () => getFrontendChoice(flags.frontend, flags.backend),
-      backend: ({ results }) => getBackendFrameworkChoice(flags.backend, results.frontend),
-      runtime: ({ results }) => getRuntimeChoice(flags.runtime, results.backend),
+      backend: ({ results }) =>
+        getBackendFrameworkChoice(flags.backend, results.frontend),
+      runtime: ({ results }) =>
+        getRuntimeChoice(flags.runtime, results.backend),
       database: ({ results }) =>
         getDatabaseChoice(flags.database, results.backend, results.runtime),
       orm: ({ results }) =>
@@ -66,7 +68,8 @@ export async function gatherConfig(
           results.backend,
           results.runtime,
         ),
-      api: ({ results }) => getApiChoice(flags.api, results.frontend, results.backend),
+      api: ({ results }) =>
+        getApiChoice(flags.api, results.frontend, results.backend),
       auth: ({ results }) =>
         getAuthChoice(flags.auth, results.database !== "none", results.backend),
       addons: ({ results }) => getAddonsChoice(flags.addons, results.frontend),
@@ -79,7 +82,12 @@ export async function gatherConfig(
           results.api,
         ),
       dbSetup: ({ results }) =>
-        getDBSetupChoice(results.database ?? "none", flags.dbSetup, results.orm, results.backend),
+        getDBSetupChoice(
+          results.database ?? "none",
+          flags.dbSetup,
+          results.orm,
+          results.backend,
+        ),
       git: () => getGitChoice(flags.git),
       packageManager: () => getPackageManagerChoice(flags.packageManager),
       install: () => getinstallChoice(flags.install),

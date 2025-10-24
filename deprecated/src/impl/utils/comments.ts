@@ -44,7 +44,10 @@ const createCommentMapping = <T extends FileExtension>(
   extensions: T[],
   comment: CommentStyle,
 ): Record<T, CommentStyle> =>
-  Object.fromEntries(extensions.map((ext) => [ext, comment])) as Record<T, CommentStyle>;
+  Object.fromEntries(extensions.map((ext) => [ext, comment])) as Record<
+    T,
+    CommentStyle
+  >;
 
 export const COMMENT_MAP: CommentMapping = {
   // Single-line comment style //
@@ -72,7 +75,10 @@ export const COMMENT_MAP: CommentMapping = {
     "// ",
   ),
   // Single-line comment style #
-  ...createCommentMapping(["py", "rb", "sh", "pl", "r", "yml", "yaml"] as const, "# "),
+  ...createCommentMapping(
+    ["py", "rb", "sh", "pl", "r", "yml", "yaml"] as const,
+    "# ",
+  ),
   // Single-line comment style --
   ...createCommentMapping(["sql", "lua"] as const, "-- "),
   // Multi-line comment style /* */

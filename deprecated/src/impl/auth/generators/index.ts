@@ -16,7 +16,10 @@ export const getGenerator = (opts: {
   options: BetterAuthOptions;
 }) => {
   const adapter = opts.adapter;
-  const generator = adapter.id in adapters ? adapters[adapter.id as keyof typeof adapters] : null;
+  const generator =
+    adapter.id in adapters
+      ? adapters[adapter.id as keyof typeof adapters]
+      : null;
   if (!generator) {
     logger.error(`${adapter.id} is not supported.`);
     process.exit(1);

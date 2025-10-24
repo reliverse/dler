@@ -12,12 +12,14 @@
     }
   },
   "scripts": {
-    "dler": "bun src/cli.ts",
-    "typecheck": "tsc --noEmit"
+    "dler": "bun src/cli.ts"
   },
   "dependencies": {
     "c12": "catalog:",
-    "@reliverse/dler-spinner": "workspace:*",
+    "clipboardy": "catalog:",
+    "@reliverse/dler-publish": "workspace:*",
+    "@reliverse/dler-bump": "workspace:*",
+    "@reliverse/dler-build": "workspace:*",
     "@reliverse/dler-logger": "workspace:*",
     "@reliverse/dler-matcher": "workspace:*",
     "@reliverse/dler-launcher": "workspace:*",
@@ -27,9 +29,11 @@
     "@reliverse/dler-mapper": "workspace:*"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.3.0",
     "@reliverse/dler-tsconfig": "workspace:*",
+    "@types/bun": "catalog:",
     "typescript": "catalog:",
-    "@types/bun": "catalog:"
+    "ultracite": "^5.6.4"
   },
   "keywords": [
     "dler",

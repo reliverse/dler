@@ -8,7 +8,11 @@ import { db } from "~/impl/db/client";
 import { decrypt, encrypt } from "~/impl/db/config";
 import { configKeysTable, userDataTable } from "~/impl/db/schema";
 
-import type { EncryptedDataMemory, ReliverseMemory, UserDataMemory } from "./schemaMemory";
+import type {
+  EncryptedDataMemory,
+  ReliverseMemory,
+  UserDataMemory,
+} from "./schemaMemory";
 
 export async function getOrCreateReliverseMemory(): Promise<ReliverseMemory> {
   // Ensure directory exists
@@ -91,11 +95,15 @@ export async function getOrCreateReliverseMemory(): Promise<ReliverseMemory> {
   }
 }
 
-export async function updateReliverseMemory(data: Partial<ReliverseMemory>): Promise<void> {
+export async function updateReliverseMemory(
+  data: Partial<ReliverseMemory>,
+): Promise<void> {
   try {
     // Split updates into encrypted and non-encrypted data
     const encryptedEntries = Object.entries(data)
-      .filter(([key]) => ["code", "key", "githubKey", "vercelKey", "openaiKey"].includes(key))
+      .filter(([key]) =>
+        ["code", "key", "githubKey", "vercelKey", "openaiKey"].includes(key),
+      )
       .filter(([_, value]) => value !== null && value !== undefined);
 
     // Process encrypted data
@@ -117,7 +125,13 @@ export async function updateReliverseMemory(data: Partial<ReliverseMemory>): Pro
 
     const userDataUpdates = Object.entries(data)
       .filter(([key]) =>
-        ["name", "email", "githubUsername", "vercelTeamSlug", "vercelTeamId"].includes(key),
+        [
+          "name",
+          "email",
+          "githubUsername",
+          "vercelTeamSlug",
+          "vercelTeamId",
+        ].includes(key),
       )
       .filter(([_, value]) => value !== null && value !== undefined)
       .map(([key, value]) => ({
@@ -132,7 +146,9 @@ export async function updateReliverseMemory(data: Partial<ReliverseMemory>): Pro
 
     // Delete entries that are explicitly set to null
     const keysToDelete = Object.entries(data)
-      .filter(([key]) => ["code", "key", "githubKey", "vercelKey", "openaiKey"].includes(key))
+      .filter(([key]) =>
+        ["code", "key", "githubKey", "vercelKey", "openaiKey"].includes(key),
+      )
       .filter(([_, value]) => value === null)
       .map(([key]) => key as EncryptedDataMemory);
 

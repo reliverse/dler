@@ -2,7 +2,10 @@ import type { EventEmitter } from "node:events";
 
 import { PassThrough, type Readable } from "node:stream";
 
-export const waitForEvent = (emitter: EventEmitter, name: string): Promise<void> =>
+export const waitForEvent = (
+  emitter: EventEmitter,
+  name: string,
+): Promise<void> =>
   new Promise((resolve) => {
     emitter.on(name, resolve);
   });

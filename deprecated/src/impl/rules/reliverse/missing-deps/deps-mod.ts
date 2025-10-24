@@ -1,9 +1,15 @@
 import { IGNORE_PATTERNS } from "~/impl/config/constants";
 import { analyzeDependencies } from "~/impl/rules/reliverse/missing-deps/analyzer";
-import type { CheckIssue, CheckResult, RulesCheckOptions } from "~/impl/types/mod";
+import type {
+  CheckIssue,
+  CheckResult,
+  RulesCheckOptions,
+} from "~/impl/types/mod";
 
 // check missing dependencies
-export async function checkMissingDependencies(options: RulesCheckOptions): Promise<CheckResult> {
+export async function checkMissingDependencies(
+  options: RulesCheckOptions,
+): Promise<CheckResult> {
   const startTime = Date.now();
   const issues: CheckIssue[] = [];
   const {

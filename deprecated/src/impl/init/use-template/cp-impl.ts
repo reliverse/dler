@@ -59,7 +59,9 @@ async function ensureUniqueProjectName(
         },
       });
     }
-    targetPath = isDev ? path.join(cwd, "tests-runtime", projectName) : path.join(cwd, projectName);
+    targetPath = isDev
+      ? path.join(cwd, "tests-runtime", projectName)
+      : path.join(cwd, projectName);
   }
 
   return projectName;
@@ -78,7 +80,9 @@ export async function initializeProjectConfig(
 ): Promise<ProjectConfigReturn> {
   // 1. Determine user (author)
   const frontendUsername =
-    skipPrompts && config?.projectAuthor !== UNKNOWN_VALUE && config?.projectAuthor !== ""
+    skipPrompts &&
+    config?.projectAuthor !== UNKNOWN_VALUE &&
+    config?.projectAuthor !== ""
       ? config.projectAuthor
       : ((await askUsernameFrontend(config, true)) ?? "default-user");
 
@@ -100,11 +104,18 @@ export async function initializeProjectConfig(
   }
 
   // Ensure the project name is unique
-  projectName = await ensureUniqueProjectName(projectName, isDev, cwd, skipPrompts);
+  projectName = await ensureUniqueProjectName(
+    projectName,
+    isDev,
+    cwd,
+    skipPrompts,
+  );
 
   // 3. Determine domain
   const primaryDomain =
-    skipPrompts && config?.projectDomain !== UNKNOWN_VALUE && config?.projectDomain !== ""
+    skipPrompts &&
+    config?.projectDomain !== UNKNOWN_VALUE &&
+    config?.projectDomain !== ""
       ? config.projectDomain
       : `${projectName}.vercel.app`;
 
@@ -129,7 +140,10 @@ export async function setupI18nSupport(
     (await fs.pathExists(path.join(projectPath, "src/impl/[lang]")));
 
   if (i18nFolderExists) {
-    relinka("verbose", "i18n is already enabled in the template. No changes needed.");
+    relinka(
+      "verbose",
+      "i18n is already enabled in the template. No changes needed.",
+    );
     return true;
   }
 
@@ -184,7 +198,10 @@ export async function shouldInstallDependencies(
 /**
  * Installs dependencies and checks optional DB push script.
  */
-export async function handleDependencies(projectPath: string, config: ReliverseConfig) {
+export async function handleDependencies(
+  projectPath: string,
+  config: ReliverseConfig,
+) {
   const depsBehavior: Behavior = config?.depsBehavior ?? "prompt";
   const shouldInstallDeps = await shouldInstallDependencies(depsBehavior, true);
 
@@ -193,7 +210,11 @@ export async function handleDependencies(projectPath: string, config: ReliverseC
     await installDependencies({ cwd: projectPath });
 
     // Check if there's a db push script
-    const scriptStatus = await promptPackageJsonScripts(projectPath, shouldRunDbPush, true);
+    const scriptStatus = await promptPackageJsonScripts(
+      projectPath,
+      shouldRunDbPush,
+      true,
+    );
     shouldRunDbPush = scriptStatus.dbPush;
   }
 
@@ -249,7 +270,9 @@ async function moveProjectFromTestsRuntime(
         content: "Enter a new name for the project directory:",
         defaultValue: `${projectName}-${counter}`,
         validate: (value: string) =>
-          /^[a-zA-Z0-9-_]+$/.test(value) ? true : "Invalid directory name format",
+          /^[a-zA-Z0-9-_]+$/.test(value)
+            ? true
+            : "Invalid directory name format",
       });
 
       effectiveProjectName = newName;
@@ -283,13 +306,19 @@ export async function showSuccessAndNextSteps(
 
   // If dev mode, offer to move from tests-runtime
   if (isDev && !skipPrompts) {
-    const newPath = await moveProjectFromTestsRuntime(path.basename(projectPath), projectPath);
+    const newPath = await moveProjectFromTestsRuntime(
+      path.basename(projectPath),
+      projectPath,
+    );
     if (newPath) {
       effectiveProjectPath = newPath;
     }
   }
 
-  relinka("info", `✅ Template '${selectedRepo}' was installed at ${effectiveProjectPath}`);
+  relinka(
+    "info",
+    `✅ Template '${selectedRepo}' was installed at ${effectiveProjectPath}`,
+  );
 
   const vscodeInstalled = isVSCodeInstalled();
 
@@ -411,7 +440,10 @@ export async function handleNextAction(
               ...(d === primaryDomain ? { hint: "(primary)" } : {}),
             })),
           });
-          relinka("verbose", `Opening deployed project at ${selectedDomain}...`);
+          relinka(
+            "verbose",
+            `Opening deployed project at ${selectedDomain}...`,
+          );
           await open(`https://${selectedDomain}`);
         } else {
           relinka("verbose", `Opening deployed project at ${primaryDomain}...`);

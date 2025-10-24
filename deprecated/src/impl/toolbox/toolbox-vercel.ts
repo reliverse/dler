@@ -1,11 +1,18 @@
 import { relinka } from "@reliverse/relinka";
-import { confirmPrompt, multiselectPrompt, selectPrompt } from "@reliverse/rempts";
+import {
+  confirmPrompt,
+  multiselectPrompt,
+  selectPrompt,
+} from "@reliverse/rempts";
 import { projectsDeleteProject } from "@vercel/sdk/funcs/projectsDeleteProject";
 import { projectsGetProjects } from "@vercel/sdk/funcs/projectsGetProjects";
 import type { GetProjectsResponseBody } from "@vercel/sdk/models/getprojectsop";
 import { withRateLimit } from "~/impl/init/use-template/cp-modules/git-deploy-prompts/vercel/vercel-api";
 import { getPrimaryVercelTeam } from "~/impl/init/use-template/cp-modules/git-deploy-prompts/vercel/vercel-team";
-import { type InstanceVercel, initVercelSDK } from "~/impl/utils/instanceVercel";
+import {
+  type InstanceVercel,
+  initVercelSDK,
+} from "~/impl/utils/instanceVercel";
 import { getMaxHeightSize, sleep } from "~/impl/utils/microHelpers";
 import type { ReliverseMemory } from "~/impl/utils/schemaMemory";
 
@@ -87,10 +94,18 @@ async function deleteVercelProjects(
   const allProjects = await getVercelProjects(vercelInstance, maxItems, team);
 
   // Define projects that should not be deleted.
-  const protectedNames = ["relivator", "relidocs", "versator", "bleverse", "blefnk"];
+  const protectedNames = [
+    "relivator",
+    "relidocs",
+    "versator",
+    "bleverse",
+    "blefnk",
+  ];
 
   // Filter out the protected projects.
-  const projects = allProjects.filter((p) => !protectedNames.includes(p.name.toLowerCase()));
+  const projects = allProjects.filter(
+    (p) => !protectedNames.includes(p.name.toLowerCase()),
+  );
 
   // Map project IDs to names.
   const projectNames = new Map(projects.map((p) => [p.id, p.name]));
@@ -117,7 +132,9 @@ async function deleteVercelProjects(
   }
 
   // Confirm deletion with the user.
-  const selectedNames = projectsToDelete.map((id) => projectNames.get(id) ?? id).join(", ");
+  const selectedNames = projectsToDelete
+    .map((id) => projectNames.get(id) ?? id)
+    .join(", ");
   const confirmed = await confirmPrompt({
     title: "Are you sure you want to delete these projects?",
     content: selectedNames,

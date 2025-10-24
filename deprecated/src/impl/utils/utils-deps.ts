@@ -115,7 +115,9 @@ export async function filterDeps(
   const shouldExcludeDep = (depName: string, isDevDep: boolean) => {
     // For CLI packages building for JSR, only exclude dependencies matching patterns
     // Check if any package has CLI enabled
-    const hasCliEnabled = Object.values(config.commonIsCLI).some((cliConfig) => cliConfig.enabled);
+    const hasCliEnabled = Object.values(config.commonIsCLI).some(
+      (cliConfig) => cliConfig.enabled,
+    );
     if (isJsr && hasCliEnabled) {
       return shouldExcludeByPattern(depName);
     }
@@ -128,12 +130,15 @@ export async function filterDeps(
   const devDeps = deps === originalPkg.devDependencies;
 
   if (!clearUnused) {
-    const filtered = Object.entries(deps).reduce<Record<string, string>>((acc, [k, v]) => {
-      if (!shouldExcludeDep(k, devDeps)) {
-        acc[k] = v;
-      }
-      return acc;
-    }, {});
+    const filtered = Object.entries(deps).reduce<Record<string, string>>(
+      (acc, [k, v]) => {
+        if (!shouldExcludeDep(k, devDeps)) {
+          acc[k] = v;
+        }
+        return acc;
+      },
+      {},
+    );
 
     // Add dependencies from addPatterns if they don't exist
     for (const pattern of addPatterns) {
@@ -144,7 +149,10 @@ export async function filterDeps(
       }
     }
 
-    relinka("verbose", `Filtered dependencies count: ${Object.keys(filtered).length}`);
+    relinka(
+      "verbose",
+      `Filtered dependencies count: ${Object.keys(filtered).length}`,
+    );
     return filtered;
   }
 
@@ -155,7 +163,9 @@ export async function filterDeps(
   const usedPackages = new Set<string>();
   for (const file of files) {
     const content = await readFileSafe(file, isJsr, "filterDeps");
-    const importMatches = content.matchAll(/from\s+['"](\.|\.\/|\.\\)?src(\/|\\)/g);
+    const importMatches = content.matchAll(
+      /from\s+['"](\.|\.\/|\.\\)?src(\/|\\)/g,
+    );
     for (const match of importMatches) {
       const importPath = match[1];
       const pkg = extractPackageName(importPath);
@@ -164,12 +174,15 @@ export async function filterDeps(
       }
     }
   }
-  const filtered = Object.entries(deps).reduce<Record<string, string>>((acc, [k, v]) => {
-    if (usedPackages.has(k) && !shouldExcludeDep(k, devDeps)) {
-      acc[k] = v;
-    }
-    return acc;
-  }, {});
+  const filtered = Object.entries(deps).reduce<Record<string, string>>(
+    (acc, [k, v]) => {
+      if (usedPackages.has(k) && !shouldExcludeDep(k, devDeps)) {
+        acc[k] = v;
+      }
+      return acc;
+    },
+    {},
+  );
   relinka(
     "verbose",
     `Filtered dependencies count (after usage check): ${Object.keys(filtered).length}`,

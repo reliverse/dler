@@ -9,7 +9,9 @@ export async function getUnusedDependencies(
   ignoredDeps: string[] = [],
 ): Promise<string[]> {
   const packageJsonPath = path.join(cwd, "package.json");
-  const packageJson = destr<PackageJson>(await fs.readFile(packageJsonPath, "utf-8"));
+  const packageJson = destr<PackageJson>(
+    await fs.readFile(packageJsonPath, "utf-8"),
+  );
   const allDeps = {
     ...(packageJson.dependencies ?? {}),
     ...(packageJson.devDependencies ?? {}),
@@ -37,7 +39,9 @@ export async function getUnusedDependencies(
     (dep) =>
       !imports.has(dep) &&
       !ignoredDeps.some((pattern) =>
-        pattern.startsWith("/") ? new RegExp(pattern.slice(1, -1)).test(dep) : pattern === dep,
+        pattern.startsWith("/")
+          ? new RegExp(pattern.slice(1, -1)).test(dep)
+          : pattern === dep,
       ),
   );
 }

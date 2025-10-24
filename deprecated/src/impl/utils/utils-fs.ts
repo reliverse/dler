@@ -67,18 +67,29 @@ export async function copyRootFile(
               if (file) {
                 const targetPath = path.join(outDirRoot, variant);
 
-                if (options?.skipIfExists && (await fs.pathExists(targetPath))) {
+                if (
+                  options?.skipIfExists &&
+                  (await fs.pathExists(targetPath))
+                ) {
                   // Skip copying to avoid overwriting existing files
                   relinka("verbose", `Skipping copy (exists): ${targetPath}`);
                   continue;
                 }
 
-                if (!options?.skipIfExists && (await fs.pathExists(targetPath))) {
+                if (
+                  !options?.skipIfExists &&
+                  (await fs.pathExists(targetPath))
+                ) {
                   await fs.remove(targetPath);
                 }
 
-                await fs.copy(file, targetPath, { errorOnExist: Boolean(options?.skipIfExists) });
-                relinka("verbose", `Copied ${file} to ${outDirRoot}/${variant}`);
+                await fs.copy(file, targetPath, {
+                  errorOnExist: Boolean(options?.skipIfExists),
+                });
+                relinka(
+                  "verbose",
+                  `Copied ${file} to ${outDirRoot}/${variant}`,
+                );
               }
             }
           } else {
@@ -96,7 +107,9 @@ export async function copyRootFile(
                 await fs.remove(targetPath);
               }
 
-              await fs.copy(file, targetPath, { errorOnExist: Boolean(options?.skipIfExists) });
+              await fs.copy(file, targetPath, {
+                errorOnExist: Boolean(options?.skipIfExists),
+              });
               relinka("verbose", `Copied ${file} to ${outDirRoot}/${fileName}`);
             }
           }
@@ -115,7 +128,10 @@ export async function copyRootFile(
 /**
  * Calculates the total size (in bytes) of a directory.
  */
-export async function getDirectorySize(outDirRoot: string, isDev: boolean): Promise<number> {
+export async function getDirectorySize(
+  outDirRoot: string,
+  isDev: boolean,
+): Promise<number> {
   if (SHOW_VERBOSE.getDirectorySize) {
     relinka("verbose", `Calculating directory size for: ${outDirRoot}`);
   }
@@ -132,11 +148,18 @@ export async function getDirectorySize(outDirRoot: string, isDev: boolean): Prom
     );
     const totalSize = sizes.reduce((total, s) => total + s, 0);
     if (SHOW_VERBOSE.getDirectorySize) {
-      relinka("verbose", `Calculated directory size: ${totalSize} bytes for ${outDirRoot}`);
+      relinka(
+        "verbose",
+        `Calculated directory size: ${totalSize} bytes for ${outDirRoot}`,
+      );
     }
     return totalSize;
   } catch (error) {
-    relinka("error", `Failed to calculate directory size for ${outDirRoot}`, error);
+    relinka(
+      "error",
+      `Failed to calculate directory size for ${outDirRoot}`,
+      error,
+    );
     return 0;
   }
 }
@@ -148,7 +171,10 @@ export async function outDirBinFilesCount(outDirBin: string): Promise<number> {
   relinka("verbose", `Counting files in directory: ${outDirBin}`);
   let fileCount = 0;
   if (!(await fs.pathExists(outDirBin))) {
-    relinka("error", `[outDirBinFilesCount] Directory does not exist: ${outDirBin}`);
+    relinka(
+      "error",
+      `[outDirBinFilesCount] Directory does not exist: ${outDirBin}`,
+    );
     return fileCount;
   }
 
@@ -163,9 +189,13 @@ export async function outDirBinFilesCount(outDirBin: string): Promise<number> {
 /**
  * Finds a file in the current directory regardless of case.
  */
-async function findFileCaseInsensitive(transpileTargetFile: string): Promise<null | string> {
+async function findFileCaseInsensitive(
+  transpileTargetFile: string,
+): Promise<null | string> {
   const files = await fs.readdir(".");
-  const found = files.find((file) => file.toLowerCase() === transpileTargetFile.toLowerCase());
+  const found = files.find(
+    (file) => file.toLowerCase() === transpileTargetFile.toLowerCase(),
+  );
   return found || null;
 }
 
@@ -209,7 +239,10 @@ export async function deleteSpecificFiles(outDirBin: string): Promise<void> {
     await pMap(snapshotDirs, async (dir) => fs.remove(dir), {
       concurrency: CONCURRENCY_DEFAULT,
     });
-    relinka("verbose", `Deleted snapshot directories:\n${snapshotDirs.join("\n")}`);
+    relinka(
+      "verbose",
+      `Deleted snapshot directories:\n${snapshotDirs.join("\n")}`,
+    );
   }
 }
 
@@ -225,11 +258,18 @@ export async function readFileSafe(
   try {
     const content = await fs.readFile(filePath, "utf8");
     if (SHOW_VERBOSE.readFileSafe) {
-      relinka("verbose", `[${distName}] Successfully read file: ${filePath} [Reason: ${reason}]`);
+      relinka(
+        "verbose",
+        `[${distName}] Successfully read file: ${filePath} [Reason: ${reason}]`,
+      );
     }
     return content;
   } catch (error) {
-    relinka("error", `[${distName}] Failed to read file: ${filePath} [Reason: ${reason}]`, error);
+    relinka(
+      "error",
+      `[${distName}] Failed to read file: ${filePath} [Reason: ${reason}]`,
+      error,
+    );
     throw error;
   }
 }
@@ -244,9 +284,16 @@ export async function writeFileSafe(
 ): Promise<void> {
   try {
     await fs.writeFile(filePath, content, "utf8");
-    relinka("verbose", `Successfully wrote file: ${filePath} [Reason: ${reason}]`);
+    relinka(
+      "verbose",
+      `Successfully wrote file: ${filePath} [Reason: ${reason}]`,
+    );
   } catch (error) {
-    relinka("error", `Failed to write file: ${filePath} [Reason: ${reason}]`, error);
+    relinka(
+      "error",
+      `Failed to write file: ${filePath} [Reason: ${reason}]`,
+      error,
+    );
     throw error;
   }
 }

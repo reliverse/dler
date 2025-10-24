@@ -116,7 +116,9 @@ export async function handleIntegrations(cwd: string, isDev: boolean) {
 
     // Handle provider selection for PostgreSQL
     if (dbType === "postgres") {
-      const postgresOption = option.subOptions.find((sub) => sub.value === "postgres");
+      const postgresOption = option.subOptions.find(
+        (sub) => sub.value === "postgres",
+      );
       if (!postgresOption?.providers) {
         throw new Error("PostgreSQL providers not found");
       }
@@ -163,10 +165,16 @@ export async function handleIntegrations(cwd: string, isDev: boolean) {
   const integrationKey = selectedIntegration;
   const config = INTEGRATION_CONFIGS[integrationKey];
   if (!config) {
-    relinka("error", `Integration configuration not found for ${integrationKey}`);
+    relinka(
+      "error",
+      `Integration configuration not found for ${integrationKey}`,
+    );
     return;
   }
   await installIntegration(cwd, config, isDev);
-  relinka("info", `Selected ${selectedIntegration} for ${category} - Implementation coming soon!`);
+  relinka(
+    "info",
+    `Selected ${selectedIntegration} for ${category} - Implementation coming soon!`,
+  );
   return;
 }

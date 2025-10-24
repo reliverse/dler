@@ -83,7 +83,10 @@ export const getFileMetadata = async (file: string): Promise<FileMetadata> => {
       updatedHash: hash,
     };
   } catch (err) {
-    relinka("warn", `Failed to get metadata for ${file}: ${(err as Error).message}`);
+    relinka(
+      "warn",
+      `Failed to get metadata for ${file}: ${(err as Error).message}`,
+    );
     return {
       updatedAt: new Date().toISOString(),
       updatedHash: "",
@@ -128,7 +131,10 @@ export const readFileForTemplate = async (
           if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
         });
       } catch (err) {
-        relinka("error", `Failed copying binary ${relPath}: ${(err as Error).message}`);
+        relinka(
+          "error",
+          `Failed copying binary ${relPath}: ${(err as Error).message}`,
+        );
         return {
           content: "",
           type: "binary",
@@ -156,11 +162,15 @@ export const readFileForTemplate = async (
 
       lines.forEach((line, idx) => {
         const trimmed = line.trim();
-        if (trimmed.startsWith("//") || trimmed.startsWith("/*")) comments[idx + 1] = line;
+        if (trimmed.startsWith("//") || trimmed.startsWith("/*"))
+          comments[idx + 1] = line;
       });
 
       try {
-        const parsed = JSON.parse(stripJsonComments(raw)) as Record<string, unknown>;
+        const parsed = JSON.parse(stripJsonComments(raw)) as Record<
+          string,
+          unknown
+        >;
         return {
           content: parsed,
           type: "json",
@@ -168,7 +178,10 @@ export const readFileForTemplate = async (
           metadata,
         };
       } catch (err) {
-        relinka("warn", `Failed to parse JSON file ${relPath}: ${(err as Error).message}`);
+        relinka(
+          "warn",
+          `Failed to parse JSON file ${relPath}: ${(err as Error).message}`,
+        );
         return {
           content: {} as Record<string, unknown>,
           type: "json",
@@ -186,7 +199,10 @@ export const readFileForTemplate = async (
       metadata,
     };
   } catch (err) {
-    relinka("warn", `Failed to read file ${relPath}: ${(err as Error).message}`);
+    relinka(
+      "warn",
+      `Failed to read file ${relPath}: ${(err as Error).message}`,
+    );
     return {
       content: "",
       type: "text",
@@ -202,7 +218,9 @@ export const readFileForTemplate = async (
 /* -------------------------------------------------------------------------- */
 
 /** Locate the object holding templates in a dynamically-imported module */
-export const findTemplatesObject = (mod: Record<string, unknown>): ExistingTemplates => {
+export const findTemplatesObject = (
+  mod: Record<string, unknown>,
+): ExistingTemplates => {
   if (mod.DLER_TEMPLATES && typeof mod.DLER_TEMPLATES === "object") {
     return mod.DLER_TEMPLATES as ExistingTemplates;
   }
@@ -235,7 +253,10 @@ export const restoreFile = async (
   try {
     if (!force) {
       await fs.access(dest);
-      relinka("verbose", `Skipping existing file (use --force to overwrite): ${relPath}`);
+      relinka(
+        "verbose",
+        `Skipping existing file (use --force to overwrite): ${relPath}`,
+      );
       return;
     }
   } catch {
@@ -248,7 +269,10 @@ export const restoreFile = async (
     try {
       await fs.copyFile(src, dest);
     } catch (err) {
-      relinka("error", `Missing binary ${src} for ${relPath}: ${(err as Error).message}`);
+      relinka(
+        "error",
+        `Missing binary ${src} for ${relPath}: ${(err as Error).message}`,
+      );
     }
   } else if (meta.type === "json") {
     const jsonStr = JSON.stringify(meta.content, null, 2);
@@ -275,7 +299,9 @@ export const unpackTemplates = async (
   try {
     mod = await jiti.import(aggregatorPath);
   } catch (err) {
-    throw new Error(`Failed to import aggregator file: ${(err as Error).message}`);
+    throw new Error(
+      `Failed to import aggregator file: ${(err as Error).message}`,
+    );
   }
 
   const templatesObj = findTemplatesObject(mod);
@@ -283,7 +309,11 @@ export const unpackTemplates = async (
     throw new Error("No templates found in aggregator file.");
   }
 
-  const binsDir = path.join(path.dirname(aggregatorPath), TPLS_DIR, BINARIES_DIR);
+  const binsDir = path.join(
+    path.dirname(aggregatorPath),
+    TPLS_DIR,
+    BINARIES_DIR,
+  );
   let unpackedFiles = 0;
 
   for (const [tplName, tpl] of Object.entries(templatesObj)) {
@@ -293,7 +323,10 @@ export const unpackTemplates = async (
         await restoreFile(outDir, relPath, meta, binsDir, force);
         unpackedFiles++;
       } catch (err) {
-        relinka("error", `Failed restoring ${relPath}: ${(err as Error).message}`);
+        relinka(
+          "error",
+          `Failed restoring ${relPath}: ${(err as Error).message}`,
+        );
       }
     }
   }

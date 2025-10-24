@@ -16,7 +16,10 @@ import type { NpmOutExt, ReliverseConfig, Sourcemap } from "~/impl/schema/mod";
 export function getBunSourcemapOption(
   transpileSourcemap: Sourcemap,
 ): "external" | "inline" | "none" {
-  relinka("verbose", `Converting Bun sourcemap option from: ${transpileSourcemap}`);
+  relinka(
+    "verbose",
+    `Converting Bun sourcemap option from: ${transpileSourcemap}`,
+  );
   switch (transpileSourcemap) {
     case "inline":
       return "inline";
@@ -33,8 +36,13 @@ export function getBunSourcemapOption(
  * @param transpileSourcemap - The sourcemap configuration ('none', 'inline', 'linked', 'external', true, false).
  * @returns "inline" if inline is specified; true for linked/external or boolean true; otherwise false.
  */
-export function getUnifiedSourcemapOption(transpileSourcemap: Sourcemap): "inline" | boolean {
-  relinka("verbose", `Converting Unified/Rollup sourcemap option from: ${transpileSourcemap}`);
+export function getUnifiedSourcemapOption(
+  transpileSourcemap: Sourcemap,
+): "inline" | boolean {
+  relinka(
+    "verbose",
+    `Converting Unified/Rollup sourcemap option from: ${transpileSourcemap}`,
+  );
   switch (transpileSourcemap) {
     case "external":
     case "linked":
@@ -87,7 +95,10 @@ export async function renameEntryFile(
   let targetDeclarationBasename: string | null = null;
 
   const outputExt = isJsr ? distJsrOutFilesExt : unifiedBundlerOutExt;
-  const originalBasenameNoExt = originalEntryFileBasename.split(".").slice(0, -1).join(".");
+  const originalBasenameNoExt = originalEntryFileBasename
+    .split(".")
+    .slice(0, -1)
+    .join(".");
 
   if (isJsr) {
     // JSR specifics: Keep .ts if original was .ts, otherwise use specified JSR ext
@@ -122,7 +133,9 @@ export async function renameEntryFile(
   // 3. Check if Source Entry File Exists
   if (!(await fs.pathExists(sourceEntryPath))) {
     // Throw an error if the expected source file isn't there.
-    throw new Error(`Entry file expected for renaming not found: ${sourceEntryPath}`);
+    throw new Error(
+      `Entry file expected for renaming not found: ${sourceEntryPath}`,
+    );
   }
 
   relinka(

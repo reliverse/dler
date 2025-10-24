@@ -44,7 +44,9 @@ export const addPackageDependency = async (opts: {
     if (version) {
       pkgJson.devDependencies[pkgName] = version;
     } else {
-      console.warn(`Warning: Dev dependency ${pkgName} not found in version map.`);
+      console.warn(
+        `Warning: Dev dependency ${pkgName} not found in version map.`,
+      );
     }
   }
 

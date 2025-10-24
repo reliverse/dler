@@ -1,5 +1,10 @@
 import { relinka } from "@reliverse/relinka";
-import { confirmPrompt, inputPrompt, multiselectPrompt, selectPrompt } from "@reliverse/rempts";
+import {
+  confirmPrompt,
+  inputPrompt,
+  multiselectPrompt,
+  selectPrompt,
+} from "@reliverse/rempts";
 import type { ReliverseConfig } from "~/impl/schema/mod";
 import { getUserPkgManager } from "~/impl/utils/dependencies/getUserPkgManager";
 import { handleDownload } from "~/impl/utils/downloading/handleDownload";
@@ -14,7 +19,10 @@ import { cd } from "~/impl/utils/terminalHelpers";
 function normalizeGitHubUrl(url: string): string {
   return url
     .trim()
-    .replace(/^https?:\/\/(www\.)?(github|gitlab|bitbucket|sourcehut)\.com\//i, "")
+    .replace(
+      /^https?:\/\/(www\.)?(github|gitlab|bitbucket|sourcehut)\.com\//i,
+      "",
+    )
     .replace(/^(github|gitlab|bitbucket|sourcehut)\.com\//i, "")
     .replace(/\.git$/i, "");
 }
@@ -53,7 +61,15 @@ const REPO_OWNERS = {
     "relivator-nextjs-template",
     "versator-nextjs-template",
   ],
-  rse: ["template-browser-extension", "acme", "cli", "pm", "prompts", "relico", "relinka"],
+  rse: [
+    "template-browser-extension",
+    "acme",
+    "cli",
+    "pm",
+    "prompts",
+    "relico",
+    "relinka",
+  ],
   onwidget: ["astrowind"],
   "shadcn-ui": ["taxonomy"],
   "47ng": ["nuqs"],
@@ -67,7 +83,11 @@ const REPO_OWNERS = {
  * Creates menu options for repositories based on the provided list,
  * owner, and configuration.
  */
-function createMenuOptions(repos: string[], owner: string, config: ReliverseConfig): MenuOption[] {
+function createMenuOptions(
+  repos: string[],
+  owner: string,
+  config: ReliverseConfig,
+): MenuOption[] {
   const customRepos = (config.customUserFocusedRepos ?? [])
     .concat(config.customDevsFocusedRepos ?? [])
     .map(normalizeGitHubUrl)
@@ -76,7 +96,9 @@ function createMenuOptions(repos: string[], owner: string, config: ReliverseConf
     .filter((repo: string | undefined): repo is string => repo !== undefined);
 
   const allRepos =
-    config.hideRepoSuggestions && customRepos.length > 0 ? customRepos : [...repos, ...customRepos];
+    config.hideRepoSuggestions && customRepos.length > 0
+      ? customRepos
+      : [...repos, ...customRepos];
 
   if (!config.multipleRepoCloneMode) {
     return [

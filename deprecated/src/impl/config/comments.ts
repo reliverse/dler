@@ -17,7 +17,9 @@ export function injectSectionComments(fileContent: string): string {
     ],
     projectName: [comment("General project information")],
     skipPromptsUseAutoBehavior: [
-      comment("Enable auto-answering for prompts to skip manual confirmations."),
+      comment(
+        "Enable auto-answering for prompts to skip manual confirmations.",
+      ),
       comment("Make sure you have unknown values configured above."),
     ],
     features: [comment("Project features")],
@@ -25,7 +27,9 @@ export function injectSectionComments(fileContent: string): string {
     codeStyle: [comment("Code style preferences")],
     multipleRepoCloneMode: [comment("Settings for cloning an existing repo")],
     envComposerOpenBrowser: [
-      comment("Set to false to disable opening the browser during env composing"),
+      comment(
+        "Set to false to disable opening the browser during env composing",
+      ),
     ],
     ignoreDependencies: [comment("List dependencies to exclude from checks")],
     customRules: [
@@ -49,8 +53,13 @@ export function injectSectionComments(fileContent: string): string {
   // For each section, find matches in the original file content
   for (const [section, lines] of Object.entries(commentSections)) {
     if (!lines?.length) continue;
-    const combinedComments = lines.map((line, idx) => (idx === 0 ? line : `  ${line}`)).join("\n");
-    const regex = new RegExp(`(\\s+)(["']?)${section.replace("$", "\\$")}(\\2):`, "g");
+    const combinedComments = lines
+      .map((line, idx) => (idx === 0 ? line : `  ${line}`))
+      .join("\n");
+    const regex = new RegExp(
+      `(\\s+)(["']?)${section.replace("$", "\\$")}(\\2):`,
+      "g",
+    );
     let match: RegExpExecArray | null = regex.exec(fileContent);
     while (match !== null) {
       const insertPos = match.index;

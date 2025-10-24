@@ -17,7 +17,8 @@ const RUNTIME_REPLACEMENTS = {
     "import { promises as fs }":
       'import { readFile, writeFile, readdir, mkdir, stat } from "@reliverse/relifso"',
     // Node.js path to Bun's path
-    'import path from "path"': 'import { join, resolve, dirname, basename } from "path"',
+    'import path from "path"':
+      'import { join, resolve, dirname, basename } from "path"',
     // Node.js crypto to Bun's crypto
     'import crypto from "uncrypto"': 'import { crypto } from "bun"',
     // Node.js buffer to Bun's buffer
@@ -28,24 +29,35 @@ const RUNTIME_REPLACEMENTS = {
   },
   deno: {
     // Node.js fs to Deno's fs
-    'import fs from "@reliverse/relifso"': 'import * as fs from "https://deno.land/std/fs/mod.ts"',
-    'import fs from "fs/promises"': 'import * as fs from "https://deno.land/std/fs/mod.ts"',
-    "import { promises as fs }": 'import * as fs from "https://deno.land/std/fs/mod.ts"',
+    'import fs from "@reliverse/relifso"':
+      'import * as fs from "https://deno.land/std/fs/mod.ts"',
+    'import fs from "fs/promises"':
+      'import * as fs from "https://deno.land/std/fs/mod.ts"',
+    "import { promises as fs }":
+      'import * as fs from "https://deno.land/std/fs/mod.ts"',
     // Node.js path to Deno's path
-    'import path from "path"': 'import * as path from "https://deno.land/std/path/mod.ts"',
+    'import path from "path"':
+      'import * as path from "https://deno.land/std/path/mod.ts"',
     // Node.js crypto to Deno's crypto
     'import crypto from "uncrypto"':
       'import * as crypto from "https://deno.land/std/crypto/mod.ts"',
     // Node.js buffer to Deno's buffer
-    "import { Buffer }": 'import { Buffer } from "https://deno.land/std/io/buffer.ts"',
+    "import { Buffer }":
+      'import { Buffer } from "https://deno.land/std/io/buffer.ts"',
     // Node.js process to Deno
     "process.env": "Deno.env.toObject()",
     "process.cwd()": "Deno.cwd()",
   },
 };
 
-export async function convertRuntime(projectPath: string, targetRuntime: "bun" | "deno") {
-  relinka("info", `Converting Node.js code to ${targetRuntime} in ${projectPath}`);
+export async function convertRuntime(
+  projectPath: string,
+  targetRuntime: "bun" | "deno",
+) {
+  relinka(
+    "info",
+    `Converting Node.js code to ${targetRuntime} in ${projectPath}`,
+  );
 
   const files = await glob("**/*.{js,jsx,ts,tsx}", {
     cwd: path.resolve(projectPath),
@@ -59,7 +71,9 @@ export async function convertRuntime(projectPath: string, targetRuntime: "bun" |
     let updatedContent = content;
 
     // Replace imports and APIs
-    for (const [nodePattern, runtimePattern] of Object.entries(runtimeReplacements)) {
+    for (const [nodePattern, runtimePattern] of Object.entries(
+      runtimeReplacements,
+    )) {
       updatedContent = updatedContent.replace(
         new RegExp(nodePattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
         runtimePattern,
@@ -70,7 +84,9 @@ export async function convertRuntime(projectPath: string, targetRuntime: "bun" |
     if (targetRuntime === "bun") {
       // Convert package.json scripts
       if (file === "package.json") {
-        const packageJson = destr<{ scripts?: Record<string, string> }>(updatedContent);
+        const packageJson = destr<{ scripts?: Record<string, string> }>(
+          updatedContent,
+        );
         if (packageJson?.scripts) {
           for (const [key, value] of Object.entries(packageJson.scripts)) {
             if (typeof value === "string") {
@@ -104,7 +120,9 @@ export async function convertRuntime(projectPath: string, targetRuntime: "bun" |
         );
 
         // Create import map for third-party dependencies
-        const packageJson = destr<{ dependencies?: Record<string, string> }>(content);
+        const packageJson = destr<{ dependencies?: Record<string, string> }>(
+          content,
+        );
         const importMap = {
           imports: {} as Record<string, string>,
         };
@@ -131,7 +149,9 @@ export async function convertRuntime(projectPath: string, targetRuntime: "bun" |
     // Convert tsconfig.json for Bun
     const tsconfigPath = path.join(projectPath, tsconfigJson);
     if (await fs.pathExists(tsconfigPath)) {
-      const tsconfig = destr<TSConfig>(await fs.readFile(tsconfigPath, "utf-8"));
+      const tsconfig = destr<TSConfig>(
+        await fs.readFile(tsconfigPath, "utf-8"),
+      );
       tsconfig.compilerOptions = {
         ...tsconfig.compilerOptions,
         types: [...(tsconfig.compilerOptions?.types ?? []), "bun-types"],

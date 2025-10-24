@@ -1,6 +1,9 @@
 import path from "node:path";
 import fs from "@reliverse/relifso";
-import type { Frontend, ProjectConfig } from "~/impl/providers/better-t-stack/types";
+import type {
+  Frontend,
+  ProjectConfig,
+} from "~/impl/providers/better-t-stack/types";
 
 import { addPackageDependency } from "~/impl/providers/better-t-stack/utils/add-package-deps";
 
@@ -60,7 +63,9 @@ export async function setupAddons(config: ProjectConfig) {
 function getWebAppDir(projectDir: string, frontends: Frontend[]): string {
   if (
     frontends.some((f) =>
-      ["react-router", "tanstack-router", "nuxt", "svelte", "solid"].includes(f),
+      ["react-router", "tanstack-router", "nuxt", "svelte", "solid"].includes(
+        f,
+      ),
     )
   ) {
     return path.join(projectDir, "apps/web");
@@ -103,7 +108,9 @@ async function setupHusky(projectDir: string) {
     };
 
     packageJson["lint-staged"] = {
-      "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": ["biome check --write ."],
+      "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+        "biome check --write .",
+      ],
     };
 
     await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
@@ -130,7 +137,9 @@ async function setupPwa(projectDir: string, frontends: Frontend[]) {
 
   const clientPackageJsonPath = path.join(clientPackageDir, "package.json");
   if (await fs.pathExists(clientPackageJsonPath)) {
-    const packageJson = (await fs.readJson(clientPackageJsonPath)) as PackageJson;
+    const packageJson = (await fs.readJson(
+      clientPackageJsonPath,
+    )) as PackageJson;
 
     packageJson.scripts = {
       ...packageJson.scripts,

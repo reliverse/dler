@@ -9,7 +9,9 @@ import { generateReltypesContent } from "./gen";
 // Format: YYYY-MM-DD (ISO date format, easy to read and compare)
 const LAST_UPDATED = "2025-08-26";
 
-export async function checkIfRegenerationNeeded(reltypesPath: string): Promise<boolean> {
+export async function checkIfRegenerationNeeded(
+  reltypesPath: string,
+): Promise<boolean> {
   try {
     const content = await fs.readFile(reltypesPath, "utf8");
     const lines = content.split("\n");
@@ -20,7 +22,9 @@ export async function checkIfRegenerationNeeded(reltypesPath: string): Promise<b
     }
 
     // Extract ISO date from comment like "// reliverse.ts types version 2025-08-26"
-    const dateMatch = firstLine.match(/^\/\/ reliverse\.ts types version (\d{4}-\d{2}-\d{2})\b/);
+    const dateMatch = firstLine.match(
+      /^\/\/ reliverse\.ts types version (\d{4}-\d{2}-\d{2})\b/,
+    );
     if (!dateMatch || !dateMatch[1]) {
       return true; // No timestamp found, regenerate
     }
@@ -74,7 +78,9 @@ export async function ensureReltypesFile(cwd: string) {
   }
 
   try {
-    const reltypesContent = generateReltypesContent({ lastUpdated: LAST_UPDATED });
+    const reltypesContent = generateReltypesContent({
+      lastUpdated: LAST_UPDATED,
+    });
     const isNewFile = !(await fs.pathExists(reltypesPath));
     await fs.outputFile(reltypesPath, reltypesContent, { encoding: "utf8" });
 
@@ -83,7 +89,10 @@ export async function ensureReltypesFile(cwd: string) {
     } else {
       relinka("success", `Regenerated reltypes.ts at ${reltypesPath}`);
     }
-    relinka("verbose", "This file contains TypeScript types for your reliverse.ts configuration");
+    relinka(
+      "verbose",
+      "This file contains TypeScript types for your reliverse.ts configuration",
+    );
   } catch (error: unknown) {
     relinka(
       "warn",
@@ -104,7 +113,9 @@ export interface JsonSchemaDocument {
   [key: string]: unknown;
 }
 
-export type SchemaFactory = () => JsonSchemaDocument | Promise<JsonSchemaDocument>;
+export type SchemaFactory = () =>
+  | JsonSchemaDocument
+  | Promise<JsonSchemaDocument>;
 
 export async function generateSchemaFile({
   filePath,
@@ -124,7 +135,9 @@ export async function generateSchemaFile({
       ...schema,
     };
 
-    await fs.outputFile(filePath, JSON.stringify(finalized, null, 2), { encoding: "utf8" });
+    await fs.outputFile(filePath, JSON.stringify(finalized, null, 2), {
+      encoding: "utf8",
+    });
     relinka("success", `Generated schema at ${filePath}`);
   } catch (error: unknown) {
     relinka(

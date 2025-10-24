@@ -18,4 +18,11 @@ export const CIRCULAR_TRIGGERS = [
   "check circular deps",
 ];
 
-export const EXIT_KEYWORDS = ["thanks! bye!", "goodbye", "quit", "exit", "bye", "gg"];
+export const EXIT_KEYWORDS = [
+  "thanks! bye!",
+  "goodbye",
+  "quit",
+  "exit",
+  "bye",
+  "gg",
+];

@@ -2,13 +2,22 @@ import path from "node:path";
 import { re } from "@reliverse/relico";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { cancel, createSpinner, isCancel, select, text } from "@reliverse/rempts";
+import {
+  cancel,
+  createSpinner,
+  isCancel,
+  select,
+  text,
+} from "@reliverse/rempts";
 import { execa } from "execa";
 import {
   addEnvVariablesToFile,
   type EnvVariable,
 } from "~/impl/providers/better-t-stack/helpers/project-generation/env-setup";
-import type { PackageManager, ProjectConfig } from "~/impl/providers/better-t-stack/types";
+import type {
+  PackageManager,
+  ProjectConfig,
+} from "~/impl/providers/better-t-stack/types";
 import { getPackageExecutionCommand } from "~/impl/providers/better-t-stack/utils/get-package-execution-command";
 
 interface NeonConfig {
@@ -55,12 +64,17 @@ async function executeNeonCommand(
     text: spinnerText ?? `Running ${packageManager} command...`,
   });
   try {
-    const fullCommand = getPackageExecutionCommand(packageManager, commandArgsString);
+    const fullCommand = getPackageExecutionCommand(
+      packageManager,
+      commandArgsString,
+    );
 
     if (spinnerText) s.start(spinnerText);
     const result = await execa(fullCommand, { shell: true });
     if (spinnerText)
-      s.succeed(re.green(spinnerText.replace("...", "").replace("ing ", "ed ").trim()));
+      s.succeed(
+        re.green(spinnerText.replace("...", "").replace("ing ", "ed ").trim()),
+      );
     return result;
   } catch (error) {
     if (s) s.fail(re.red(`Failed: ${spinnerText || "Command execution"}`));
@@ -101,7 +115,10 @@ async function createNeonProject(
         roleName: params.role,
       };
     }
-    relinka("error", re.red("Failed to extract connection information from response"));
+    relinka(
+      "error",
+      re.red("Failed to extract connection information from response"),
+    );
     return null;
   } catch (_error) {
     relinka("error", re.red("Failed to create Neon project"));
@@ -125,7 +142,10 @@ async function writeEnvFile(projectDir: string, config?: NeonConfig) {
   return true;
 }
 
-async function setupWithNeonDb(projectDir: string, packageManager: PackageManager) {
+async function setupWithNeonDb(
+  projectDir: string,
+  packageManager: PackageManager,
+) {
   try {
     const s = createSpinner({
       text: "Creating Neon database using neondb...",
@@ -135,7 +155,10 @@ async function setupWithNeonDb(projectDir: string, packageManager: PackageManage
     const serverDir = path.join(projectDir, "apps/server");
     await fs.ensureDir(serverDir);
 
-    const packageCmd = getPackageExecutionCommand(packageManager, "neondb --yes");
+    const packageCmd = getPackageExecutionCommand(
+      packageManager,
+      "neondb --yes",
+    );
 
     await execa(packageCmd, {
       shell: true,
@@ -216,10 +239,16 @@ export async function setupNeonPostgres(config: ProjectConfig): Promise<void> {
         process.exit(0);
       }
 
-      const neonConfig = await createNeonProject(projectName as string, regionId, packageManager);
+      const neonConfig = await createNeonProject(
+        projectName as string,
+        regionId,
+        packageManager,
+      );
 
       if (!neonConfig) {
-        throw new Error("Failed to create project - couldn't get connection information");
+        throw new Error(
+          "Failed to create project - couldn't get connection information",
+        );
       }
 
       const finalSpinner = createSpinner({

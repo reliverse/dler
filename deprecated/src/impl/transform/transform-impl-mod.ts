@@ -62,7 +62,8 @@ export const createTransformerFromMagicString = (
     isEmpty: () => ms.isEmpty(),
     clone: () => createTransformerFromMagicString(ms.clone(), original),
     generateMap: (mapOptions?: SourceMapOptions) => ms.generateMap(mapOptions),
-    generateDecodedMap: (mapOptions?: SourceMapOptions) => ms.generateDecodedMap(mapOptions),
+    generateDecodedMap: (mapOptions?: SourceMapOptions) =>
+      ms.generateDecodedMap(mapOptions),
   };
   return transformer;
 };
@@ -103,13 +104,19 @@ export const overwrite = (
   return createTransformerFromMagicString(ms, transformer.original);
 };
 
-export const append = (transformer: StringTransformer, content: string): StringTransformer => {
+export const append = (
+  transformer: StringTransformer,
+  content: string,
+): StringTransformer => {
   const ms = (transformer as InternalStringTransformer)._ms.clone();
   ms.append(content);
   return createTransformerFromMagicString(ms, transformer.original);
 };
 
-export const prepend = (transformer: StringTransformer, content: string): StringTransformer => {
+export const prepend = (
+  transformer: StringTransformer,
+  content: string,
+): StringTransformer => {
   const ms = (transformer as InternalStringTransformer)._ms.clone();
   ms.prepend(content);
   return createTransformerFromMagicString(ms, transformer.original);
@@ -155,7 +162,10 @@ export const indent = (
   return createTransformerFromMagicString(ms, transformer.original);
 };
 
-export const trim = (transformer: StringTransformer, charType?: string): StringTransformer => {
+export const trim = (
+  transformer: StringTransformer,
+  charType?: string,
+): StringTransformer => {
   const ms = (transformer as InternalStringTransformer)._ms.clone();
   ms.trim(charType);
   return createTransformerFromMagicString(ms, transformer.original);
@@ -187,14 +197,24 @@ export const insertAt = (
   return createTransformerFromMagicString(ms, transformer.original);
 };
 
-export const slice = (transformer: StringTransformer, start = 0, end?: number): string => {
+export const slice = (
+  transformer: StringTransformer,
+  start = 0,
+  end?: number,
+): string => {
   const currentString = transformer.current();
   return currentString.slice(start, end ?? currentString.length);
 };
 
 // Template literal helpers
-export const template = (strings: TemplateStringsArray, ...values: any[]): StringTransformer => {
-  const source = strings.reduce((result, string, i) => result + string + (values[i] || ""), "");
+export const template = (
+  strings: TemplateStringsArray,
+  ...values: any[]
+): StringTransformer => {
+  const source = strings.reduce(
+    (result, string, i) => result + string + (values[i] || ""),
+    "",
+  );
   return createTransformer(source);
 };
 

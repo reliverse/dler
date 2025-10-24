@@ -52,7 +52,9 @@ export async function detectPackageManager(
       if (!options.ignorePackageJSON) {
         const packageJSONPath = join(path, "package.json");
         if (existsSync(packageJSONPath)) {
-          const packageJSON = JSON.parse(await readFile(packageJSONPath, "utf8")) as {
+          const packageJSON = JSON.parse(
+            await readFile(packageJSONPath, "utf8"),
+          ) as {
             packageManager?: string;
           };
           if (packageJSON?.packageManager) {
@@ -91,7 +93,10 @@ export async function detectPackageManager(
       // 2. Use implicit file detection
       if (!options.ignoreLockFile) {
         for (const packageManager of packageManagers) {
-          const detectionsFiles = [packageManager.lockFile, packageManager.files]
+          const detectionsFiles = [
+            packageManager.lockFile,
+            packageManager.files,
+          ]
             .flat()
             .filter(Boolean) as string[];
 

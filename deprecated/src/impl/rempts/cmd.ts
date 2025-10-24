@@ -18,7 +18,8 @@ export async function handleReliverseConfig() {
     const commonIsCLI = dlerConfig?.commonIsCLI;
     // Check if any package has CLI enabled
     const hasCliEnabled =
-      commonIsCLI && Object.values(commonIsCLI).some((cliConfig) => cliConfig.enabled);
+      commonIsCLI &&
+      Object.values(commonIsCLI).some((cliConfig) => cliConfig.enabled);
     const cliConfig = hasCliEnabled
       ? Object.values(commonIsCLI).find((cliConfig) => cliConfig.enabled)
       : null;
@@ -33,7 +34,9 @@ export async function handleReliverseConfig() {
         const content = await fs.readFile(scriptPath, "utf8");
         if (content.includes("@reliverse/rempts")) {
           if (content.includes("runMain")) {
-            const cmdsRootMatch = content.match(/cmdsRootPath:\s*["']([^"']+)["']/);
+            const cmdsRootMatch = content.match(
+              /cmdsRootPath:\s*["']([^"']+)["']/,
+            );
             if (cmdsRootMatch?.[1]) {
               cmdsRoot = path.resolve(cmdsRootMatch[1]);
             }
@@ -88,7 +91,9 @@ export async function findCommandDirs(root: string): Promise<string[]> {
   return cmdDirs;
 }
 
-export async function generateCommandArgsMap(cmdDirs: string[]): Promise<string> {
+export async function generateCommandArgsMap(
+  cmdDirs: string[],
+): Promise<string> {
   let interfaceContent =
     "// Argument types for each command based on their defineArgs\ninterface CommandArgsMap {\n";
 
@@ -203,7 +208,9 @@ export function extractArgsFromContent(content: string): ArgDefinition[] {
     const allowedMatch = argProps.match(/allowed:\s*\[([^\]]+)\]/);
     let allowed: string[] | undefined;
     if (allowedMatch?.[1]) {
-      allowed = allowedMatch[1].split(",").map((s) => s.trim().replace(/["']/g, ""));
+      allowed = allowedMatch[1]
+        .split(",")
+        .map((s) => s.trim().replace(/["']/g, ""));
     }
 
     args.push({
@@ -259,7 +266,11 @@ export async function generateExports(cmdDirs: string[]): Promise<string> {
       "get" +
       dir
         .split(/[/\\]/)
-        .map((part) => part.charAt(0).toUpperCase() + part.slice(1).replace(/[^a-zA-Z0-9]/g, ""))
+        .map(
+          (part) =>
+            part.charAt(0).toUpperCase() +
+            part.slice(1).replace(/[^a-zA-Z0-9]/g, ""),
+        )
         .join("") +
       "Cmd";
     const keyName = dir.replace(/[/\\]/g, "_");

@@ -17,8 +17,7 @@
     "latest": "bun rse update && bun install",
     "size": "bun examples/benchmarks/bundle-size.ts",
     "bench": "bun examples/benchmarks/performance.ts",
-    "bench:bun": "bun examples/benchmarks/performance.ts --isBun",
-    "typecheck": "tsc --noEmit"
+    "bench:bun": "bun examples/benchmarks/performance.ts --isBun"
   },
   "devDependencies": {
     "@reliverse/dler-tsconfig": "workspace:*",

@@ -47,9 +47,13 @@ export function fixLineByLine(
   const changedKeys: string[] = [];
   const missingKeys: string[] = [];
 
-  const userObj = isPlainObject(userConfig) ? (userConfig as Record<string, unknown>) : {};
+  const userObj = isPlainObject(userConfig)
+    ? (userConfig as Record<string, unknown>)
+    : {};
 
-  for (const propName of Object.keys(defaultConfig as Record<string, unknown>)) {
+  for (const propName of Object.keys(
+    defaultConfig as Record<string, unknown>,
+  )) {
     const userValue = userObj[propName];
     const defaultValue = (defaultConfig as Record<string, unknown>)[propName];
 
@@ -59,7 +63,10 @@ export function fixLineByLine(
       continue;
     }
 
-    if (propName === "customUserFocusedRepos" || propName === "customDevsFocusedRepos") {
+    if (
+      propName === "customUserFocusedRepos" ||
+      propName === "customDevsFocusedRepos"
+    ) {
       if (Array.isArray(userValue)) {
         result[propName] = userValue.map((url) => cleanGitHubUrl(String(url)));
         continue;
@@ -67,9 +74,13 @@ export function fixLineByLine(
     }
 
     if (isPlainObject(defaultValue)) {
-      const { fixedConfig, changedKeys: nested } = fixLineByLine(userValue, defaultValue);
+      const { fixedConfig, changedKeys: nested } = fixLineByLine(
+        userValue,
+        defaultValue,
+      );
       result[propName] = fixedConfig;
-      if (nested.length > 0) changedKeys.push(...nested.map((n) => `${propName}.${n}`));
+      if (nested.length > 0)
+        changedKeys.push(...nested.map((n) => `${propName}.${n}`));
     } else if (userValue === undefined) {
       result[propName] = defaultValue;
       changedKeys.push(propName);
@@ -79,7 +90,11 @@ export function fixLineByLine(
   }
 
   if (missingKeys.length > 0) {
-    relinka("verbose", "Missing fields injected from default config:", missingKeys.join(", "));
+    relinka(
+      "verbose",
+      "Missing fields injected from default config:",
+      missingKeys.join(", "),
+    );
   }
 
   return { fixedConfig: result, changedKeys };
@@ -108,9 +123,16 @@ export async function parseAndFixReliverseConfig(
       const originalErrors: any[] = [];
       if (originalErrors.length === 0) return parsed as ReliverseConfig;
 
-      const { fixedConfig, changedKeys } = fixLineByLine(parsed, DEFAULT_CONFIG_RELIVERSE);
+      const { fixedConfig, changedKeys } = fixLineByLine(
+        parsed,
+        DEFAULT_CONFIG_RELIVERSE,
+      );
       if (fixedConfig && typeof fixedConfig === "object") {
-        await writeReliverseConfig(configPath, fixedConfig as ReliverseConfig, isDev);
+        await writeReliverseConfig(
+          configPath,
+          fixedConfig as ReliverseConfig,
+          isDev,
+        );
         const originalInvalidPaths = originalErrors.map((err) => err.path);
         relinka(
           "info",
@@ -123,7 +145,10 @@ export async function parseAndFixReliverseConfig(
         );
         return fixedConfig as ReliverseConfig;
       }
-      relinka("warn", "Could not validate all config lines. Applied best-effort fixes.");
+      relinka(
+        "warn",
+        "Could not validate all config lines. Applied best-effort fixes.",
+      );
       return null;
     }
   } catch (error) {

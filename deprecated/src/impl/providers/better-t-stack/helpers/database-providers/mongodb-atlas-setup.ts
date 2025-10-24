@@ -2,7 +2,12 @@ import path from "node:path";
 import { re } from "@reliverse/relico";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { cancel, createSpinner, inputPrompt, isCancel } from "@reliverse/rempts";
+import {
+  cancel,
+  createSpinner,
+  inputPrompt,
+  isCancel,
+} from "@reliverse/rempts";
 import { execa } from "execa";
 import {
   addEnvVariablesToFile,
@@ -32,7 +37,9 @@ async function checkAtlasCLI(): Promise<boolean> {
   }
 }
 
-async function initMongoDBAtlas(serverDir: string): Promise<MongoDBConfig | null> {
+async function initMongoDBAtlas(
+  serverDir: string,
+): Promise<MongoDBConfig | null> {
   try {
     const hasAtlas = await checkAtlasCLI();
 
@@ -58,7 +65,8 @@ async function initMongoDBAtlas(serverDir: string): Promise<MongoDBConfig | null
 
     const connectionString = await inputPrompt({
       message: "Enter your MongoDB connection string:",
-      placeholder: "mongodb+srv://username:password@cluster.mongodb.net/database",
+      placeholder:
+        "mongodb+srv://username:password@cluster.mongodb.net/database",
       validate(value) {
         /* error:
          */
@@ -141,7 +149,12 @@ export async function setupMongoDBAtlas(config: ProjectConfig) {
 
     if (config) {
       await writeEnvFile(projectDir, config);
-      relinka("success", re.green("MongoDB Atlas setup complete! Connection saved to .env file."));
+      relinka(
+        "success",
+        re.green(
+          "MongoDB Atlas setup complete! Connection saved to .env file.",
+        ),
+      );
     } else {
       relinka("warn", re.yellow("Falling back to local MongoDB configuration"));
       await writeEnvFile(projectDir);

@@ -4,26 +4,16 @@
   "files": {
     "includes": [
       "**",
+      "!**/bun.lock",
+      "!**/.zed",
       "!**/.js",
       "!**/.d.ts",
-      "!**/_generated",
-      "!**/.basehub",
-      "!**/.expo",
       "!**/.next",
-      "!**/.nuxt",
-      "!**/.react-email",
       "!**/.source",
       "!**/.turbo",
       "!**/.vercel",
-      "!**/.wrangler",
-      "!**/.zed",
-      "!**/dev-dist",
-      "!**/dist-*",
       "!**/dist",
-      "!**/drizzle/migrations",
-      "!**/node_modules",
-      "!**/routeTree.gen.ts",
-      "!**/src-tauri"
+      "!**/node_modules"
     ],
     "ignoreUnknown": false
   },
@@ -163,6 +153,7 @@
         "noNamespaceImport": "off"
       },
       "nursery": {
+        "useConsistentArrowReturn": "off",
         "useAnchorHref": "off",
         "useMaxParams": "off",
         "useImageSize": "off",

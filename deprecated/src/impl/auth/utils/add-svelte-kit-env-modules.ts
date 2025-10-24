@@ -1,6 +1,10 @@
 export function addSvelteKitEnvModules(aliases: Record<string, string>) {
-  aliases["$env/dynamic/private"] = createDataUriModule(createDynamicEnvModule());
-  aliases["$env/dynamic/public"] = createDataUriModule(createDynamicEnvModule());
+  aliases["$env/dynamic/private"] = createDataUriModule(
+    createDynamicEnvModule(),
+  );
+  aliases["$env/dynamic/public"] = createDataUriModule(
+    createDynamicEnvModule(),
+  );
   aliases["$env/static/private"] = createDataUriModule(
     createStaticEnvModule(filterPrivateEnv("PUBLIC_", "")),
   );
@@ -34,7 +38,9 @@ function createDynamicEnvModule() {
 export function filterPrivateEnv(publicPrefix: string, privatePrefix: string) {
   return Object.fromEntries(
     Object.entries(process.env).filter(
-      ([k]) => k.startsWith(privatePrefix) && (publicPrefix === "" || !k.startsWith(publicPrefix)),
+      ([k]) =>
+        k.startsWith(privatePrefix) &&
+        (publicPrefix === "" || !k.startsWith(publicPrefix)),
     ),
   ) as Record<string, string>;
 }
@@ -42,7 +48,9 @@ export function filterPrivateEnv(publicPrefix: string, privatePrefix: string) {
 export function filterPublicEnv(publicPrefix: string, privatePrefix: string) {
   return Object.fromEntries(
     Object.entries(process.env).filter(
-      ([k]) => k.startsWith(publicPrefix) && (privatePrefix === "" || !k.startsWith(privatePrefix)),
+      ([k]) =>
+        k.startsWith(publicPrefix) &&
+        (privatePrefix === "" || !k.startsWith(privatePrefix)),
     ),
   ) as Record<string, string>;
 }

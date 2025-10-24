@@ -9,8 +9,17 @@ import { getUserPkgManager, runtimeInfo } from "@reliverse/runtime";
 import { safeDestr } from "destr";
 import { type PackageJson, readPackageJSON } from "pkg-types";
 import { getBiomeConfig } from "~/impl/config/biome-cfg";
-import { cliDomainDocs, DEFAULT_DOMAIN, rseName, UNKNOWN_VALUE } from "~/impl/config/constants";
-import { detectFeatures, detectProjectFramework, getPackageJsonSafe } from "~/impl/config/detect";
+import {
+  cliDomainDocs,
+  DEFAULT_DOMAIN,
+  rseName,
+  UNKNOWN_VALUE,
+} from "~/impl/config/constants";
+import {
+  detectFeatures,
+  detectProjectFramework,
+  getPackageJsonSafe,
+} from "~/impl/config/detect";
 import type { ReliverseConfig } from "~/impl/schema/mod";
 import { DEFAULT_CONFIG_RELIVERSE } from "~/impl/schema/mod";
 
@@ -24,7 +33,8 @@ export async function getDefaultReliverseConfig(
   projectAuthor?: string,
 ): Promise<ReliverseConfig> {
   const packageJson = await getPackageJsonSafe(projectPath);
-  const effectiveProjectName = packageJson?.name ?? projectName ?? UNKNOWN_VALUE;
+  const effectiveProjectName =
+    packageJson?.name ?? projectName ?? UNKNOWN_VALUE;
 
   let effectiveAuthorName =
     typeof packageJson?.author === "object"
@@ -66,7 +76,8 @@ export async function getDefaultReliverseConfig(
       typeof packageData.repository === "string"
         ? packageData.repository
         : (packageData.repository?.url ?? DEFAULT_DOMAIN),
-    projectDomain: effectiveProjectName === rseName ? cliDomainDocs : DEFAULT_DOMAIN,
+    projectDomain:
+      effectiveProjectName === rseName ? cliDomainDocs : DEFAULT_DOMAIN,
     projectGitService: "github",
     projectDeployService: "vercel",
     repoBranch: "main",
@@ -120,15 +131,21 @@ export async function generateDefaultRulesForProject(
   };
 
   // File-based detection
-  const hasPrismaFile = await fs.pathExists(path.join(projectPath, "prisma/schema.prisma"));
-  const hasDrizzleFile = await fs.pathExists(path.join(projectPath, "drizzle.config.ts"));
+  const hasPrismaFile = await fs.pathExists(
+    path.join(projectPath, "prisma/schema.prisma"),
+  );
+  const hasDrizzleFile = await fs.pathExists(
+    path.join(projectPath, "drizzle.config.ts"),
+  );
   const hasNextAuthDir = await fs.pathExists(
     path.join(projectPath, "src/impl/api/auth/[...nextauth]"),
   );
   const hasBetterAuthFile = await fs.pathExists(
     path.join(projectPath, "src/impl/api/auth/[...all]/route.ts"),
   );
-  const hasShadcnUi = await fs.pathExists(path.join(projectPath, "components/ui"));
+  const hasShadcnUi = await fs.pathExists(
+    path.join(projectPath, "components/ui"),
+  );
 
   // Dependency-based detection
   const hasClerk = "@clerk/nextjs" in deps;
@@ -152,7 +169,9 @@ export async function generateDefaultRulesForProject(
   const hasStyledComponents = "styled-components" in deps;
   const hasCssModules =
     packageJson?.dependencies &&
-    Object.keys(deps).some((key) => key.includes("css-loader") || key.includes("css-modules"));
+    Object.keys(deps).some(
+      (key) => key.includes("css-loader") || key.includes("css-modules"),
+    );
   const hasSass = "sass" in deps || "node-sass" in deps;
 
   // UI libraries
@@ -163,7 +182,8 @@ export async function generateDefaultRulesForProject(
   const _hasBunTest =
     packageJson?.scripts &&
     Object.values(packageJson.scripts).some(
-      (script) => script && typeof script === "string" && script.includes("bun test"),
+      (script) =>
+        script && typeof script === "string" && script.includes("bun test"),
     );
   const _hasVitest = "vitest" in deps;
   const hasJest = "jest" in deps;
@@ -181,7 +201,8 @@ export async function generateDefaultRulesForProject(
   // Database providers
   const hasPg = "pg" in deps || "@neondatabase/serverless" in deps;
   const hasMysql = "mysql" in deps || "mysql2" in deps;
-  const hasSqlite = "sqlite" in deps || "sqlite3" in deps || "better-sqlite3" in deps;
+  const hasSqlite =
+    "sqlite" in deps || "sqlite3" in deps || "better-sqlite3" in deps;
   const hasMongo = "mongodb" in deps || "mongoose" in deps;
 
   // Other libraries to detect

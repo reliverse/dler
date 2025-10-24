@@ -1,5 +1,8 @@
-
-import { defineCmd, defineCmdArgs, defineCmdCfg } from "@reliverse/dler-launcher";
+import {
+  defineCmd,
+  defineCmdArgs,
+  defineCmdCfg,
+} from "@reliverse/dler-launcher";
 
 const args = defineCmdArgs({
   verbose: {
@@ -21,6 +24,10 @@ const cfg = defineCmdCfg({
   examples: ["test-command --verbose", "test-command --count 5"],
 });
 
-export default defineCmd(async (args) => {
-  console.log("Test command executed with args:", args);
-}, args, cfg);
+export default defineCmd(
+  async (args) => {
+    console.log("Test command executed with args:", args);
+  },
+  args,
+  cfg,
+);

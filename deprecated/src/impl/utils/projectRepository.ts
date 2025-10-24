@@ -60,7 +60,8 @@ export const REPO_TEMPLATES: CloneOrTemplateRepo[] = [
     id: "blefnk/all-in-one-nextjs-template",
     author: "blefnk",
     name: "all-in-one-nextjs-template",
-    description: "Comprehensive Next.js eCommerce template with multiple features",
+    description:
+      "Comprehensive Next.js eCommerce template with multiple features",
     category: "website",
   },
   {

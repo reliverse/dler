@@ -15,7 +15,10 @@ import { DEFAULT_CONFIG_RELIVERSE } from "~/impl/schema/mod";
 /**
  * Deep merges two objects recursively while preserving nested structures.
  */
-function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
+function deepMerge<T extends Record<string, unknown>>(
+  target: T,
+  source: Partial<T>,
+): T {
   const result = { ...target };
   for (const key in source) {
     if (!Object.hasOwn(source, key)) continue;
@@ -59,11 +62,18 @@ function findObjectDifferences(
     const val2 = obj2[key];
 
     if (val1 === undefined || val2 === undefined) {
-      differences.push(`${currentPath}: ${val1 === undefined ? "removed" : "added"}`);
+      differences.push(
+        `${currentPath}: ${val1 === undefined ? "removed" : "added"}`,
+      );
       continue;
     }
 
-    if (typeof val1 === "object" && val1 !== null && typeof val2 === "object" && val2 !== null) {
+    if (
+      typeof val1 === "object" &&
+      val1 !== null &&
+      typeof val2 === "object" &&
+      val2 !== null
+    ) {
       if (Array.isArray(val1) && Array.isArray(val2)) {
         if (JSON.stringify(val1) !== JSON.stringify(val2)) {
           differences.push(`${currentPath}: array values differ`);
@@ -78,7 +88,9 @@ function findObjectDifferences(
         );
       }
     } else if (val1 !== val2) {
-      differences.push(`${currentPath}: ${JSON.stringify(val1)} → ${JSON.stringify(val2)}`);
+      differences.push(
+        `${currentPath}: ${JSON.stringify(val1)} → ${JSON.stringify(val2)}`,
+      );
     }
   }
 
@@ -102,7 +114,11 @@ export async function updateReliverseConfig(
   updates: Partial<ReliverseConfig>,
   isDev: boolean,
 ): Promise<boolean> {
-  const { configPath } = await getReliverseConfigPath(projectPath, isDev, false);
+  const { configPath } = await getReliverseConfigPath(
+    projectPath,
+    isDev,
+    false,
+  );
   const { backupPath, tempPath } = getBackupAndTempPaths(configPath);
 
   try {
@@ -110,7 +126,8 @@ export async function updateReliverseConfig(
     if (await fs.pathExists(configPath)) {
       const existingContent = await fs.readFile(configPath, "utf-8");
       const parsed = parseJSONC(existingContent);
-      if (parsed && typeof parsed === "object") existingConfig = parsed as ReliverseConfig;
+      if (parsed && typeof parsed === "object")
+        existingConfig = parsed as ReliverseConfig;
     }
 
     // Filter out memory fields before merging
@@ -149,12 +166,19 @@ export async function updateReliverseConfig(
     return true;
   } catch (error) {
     relinka("error", "Failed to update config:", String(error));
-    if ((await fs.pathExists(backupPath)) && !(await fs.pathExists(configPath))) {
+    if (
+      (await fs.pathExists(backupPath)) &&
+      !(await fs.pathExists(configPath))
+    ) {
       try {
         await fs.copy(backupPath, configPath);
         relinka("warn", "Restored config from backup after failed update");
       } catch (restoreError) {
-        relinka("error", "Failed to restore config from backup:", String(restoreError));
+        relinka(
+          "error",
+          "Failed to restore config from backup:",
+          String(restoreError),
+        );
       }
     }
     if (await fs.pathExists(tempPath)) {
@@ -167,7 +191,9 @@ export async function updateReliverseConfig(
 /**
  * Merges a partial config with the default config.
  */
-export function mergeWithDefaults(partial: Partial<ReliverseConfig>): ReliverseConfig {
+export function mergeWithDefaults(
+  partial: Partial<ReliverseConfig>,
+): ReliverseConfig {
   return {
     ...DEFAULT_CONFIG_RELIVERSE,
     ...partial,
@@ -207,6 +233,7 @@ export function mergeWithDefaults(partial: Partial<ReliverseConfig>): ReliverseC
           ...partial.customRules,
         }
       : DEFAULT_CONFIG_RELIVERSE.customRules,
-    ignoreDependencies: partial.ignoreDependencies ?? DEFAULT_CONFIG_RELIVERSE.ignoreDependencies,
+    ignoreDependencies:
+      partial.ignoreDependencies ?? DEFAULT_CONFIG_RELIVERSE.ignoreDependencies,
   } as ReliverseConfig;
 }

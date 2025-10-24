@@ -96,7 +96,12 @@ export type BiomeConfig = BaseConfig & {
   };
 };
 
-export type DeploymentService = "vercel" | "deno" | "netlify" | "railway" | "none";
+export type DeploymentService =
+  | "vercel"
+  | "deno"
+  | "netlify"
+  | "railway"
+  | "none";
 
 export interface VSCodeSettings {
   "editor.formatOnSave"?: boolean;
@@ -192,7 +197,11 @@ export type IntegrationCategory =
 
 export type IntegrationOptions = Record<string, IntegrationOption[]>;
 
-export type MonorepoType = "turborepo" | "moonrepo" | "bun-workspaces" | "pnpm-workspaces";
+export type MonorepoType =
+  | "turborepo"
+  | "moonrepo"
+  | "bun-workspaces"
+  | "pnpm-workspaces";
 
 export interface IntegrationConfig {
   name: string;
@@ -250,9 +259,10 @@ export type CamelCase<T extends string> = T extends `${infer U}${infer V}`
   ? `${Uppercase<U>}${V}`
   : T;
 
-export type HyphenatedStringToCamelCase<S extends string> = S extends `${infer T}-${infer U}`
-  ? `${T}${HyphenatedStringToCamelCase<CamelCase<U>>}`
-  : CamelCase<S>;
+export type HyphenatedStringToCamelCase<S extends string> =
+  S extends `${infer T}-${infer U}`
+    ? `${T}${HyphenatedStringToCamelCase<CamelCase<U>>}`
+    : CamelCase<S>;
 
 export type IconName =
   | "billing"
@@ -313,7 +323,10 @@ export type CopyBuildEntry = BaseBuildEntry & {
 
 export interface CopyHooks {
   "copy:done": (ctx: BuildContext) => Promise<void> | void;
-  "copy:entries": (ctx: BuildContext, entries: CopyBuildEntry[]) => Promise<void> | void;
+  "copy:entries": (
+    ctx: BuildContext,
+    entries: CopyBuildEntry[],
+  ) => Promise<void> | void;
 }
 
 export type MkdistBuildEntry = _BaseAndMkdist & {
@@ -321,7 +334,10 @@ export type MkdistBuildEntry = _BaseAndMkdist & {
 };
 export interface MkdistHooks {
   "mkdist:done": (ctx: BuildContext) => Promise<void> | void;
-  "mkdist:entries": (ctx: BuildContext, entries: MkdistBuildEntry[]) => Promise<void> | void;
+  "mkdist:entries": (
+    ctx: BuildContext,
+    entries: MkdistBuildEntry[],
+  ) => Promise<void> | void;
   "mkdist:entry:build": (
     ctx: BuildContext,
     entry: MkdistBuildEntry,
@@ -438,11 +454,23 @@ export interface RollupBuildOptions {
 }
 
 export interface RollupHooks {
-  "rollup:build": (ctx: BuildContext, build: RollupBuild) => Promise<void> | void;
+  "rollup:build": (
+    ctx: BuildContext,
+    build: RollupBuild,
+  ) => Promise<void> | void;
   "rollup:done": (ctx: BuildContext) => Promise<void> | void;
-  "rollup:dts:build": (ctx: BuildContext, build: RollupBuild) => Promise<void> | void;
-  "rollup:dts:options": (ctx: BuildContext, options: RollupOptions) => Promise<void> | void;
-  "rollup:options": (ctx: BuildContext, options: RollupOptions) => Promise<void> | void;
+  "rollup:dts:build": (
+    ctx: BuildContext,
+    build: RollupBuild,
+  ) => Promise<void> | void;
+  "rollup:dts:options": (
+    ctx: BuildContext,
+    options: RollupOptions,
+  ) => Promise<void> | void;
+  "rollup:options": (
+    ctx: BuildContext,
+    options: RollupOptions,
+  ) => Promise<void> | void;
 }
 
 export type RollupOptions = _RollupOptions & {
@@ -456,7 +484,10 @@ export type UntypedBuildEntry = BaseBuildEntry & {
 
 export interface UntypedHooks {
   "untyped:done": (ctx: BuildContext) => Promise<void> | void;
-  "untyped:entries": (ctx: BuildContext, entries: UntypedBuildEntry[]) => Promise<void> | void;
+  "untyped:entries": (
+    ctx: BuildContext,
+    entries: UntypedBuildEntry[],
+  ) => Promise<void> | void;
   "untyped:entry:options": (
     ctx: BuildContext,
     entry: UntypedBuildEntry,
@@ -721,7 +752,12 @@ export interface PerfTimer {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-export type DirectoryType = "src" | "dist-npm" | "dist-jsr" | "dist-libs/npm" | "dist-libs/jsr";
+export type DirectoryType =
+  | "src"
+  | "dist-npm"
+  | "dist-jsr"
+  | "dist-libs/npm"
+  | "dist-libs/jsr";
 
 export interface RulesCheckOptions {
   directory: DirectoryType;
@@ -788,7 +824,9 @@ export interface OutputFile {
 
 export type LoaderResult = OutputFile[] | undefined;
 
-export type LoadFile = (input: InputFile) => LoaderResult | Promise<LoaderResult>;
+export type LoadFile = (
+  input: InputFile,
+) => LoaderResult | Promise<LoaderResult>;
 
 interface LoaderOptions {
   ext?: "js" | "mjs" | "cjs" | "ts" | "mts" | "cts";

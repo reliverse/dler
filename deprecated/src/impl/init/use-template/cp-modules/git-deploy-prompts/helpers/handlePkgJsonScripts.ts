@@ -17,7 +17,9 @@ export async function ensureDbInitialized(
   const choice = await selectPrompt({
     title:
       "You project has `db:push` script, it is recommended to run it before deploying. Without initializing, your production build may crash.\n✅ It is safe to skip if you have already run it before.",
-    content: !shouldInstallDeps ? "This requires dependencies to be installed." : "",
+    content: !shouldInstallDeps
+      ? "This requires dependencies to be installed."
+      : "",
     options: [
       {
         label: !shouldInstallDeps

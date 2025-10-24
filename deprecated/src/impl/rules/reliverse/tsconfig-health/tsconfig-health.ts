@@ -18,7 +18,10 @@ export async function checkTsConfigHealth(): Promise<CheckResult> {
         message: "moduleResolution is not specified in tsconfig.json",
         file: "tsconfig.json",
       });
-    } else if (moduleResolution !== "bundler" && moduleResolution !== "nodenext") {
+    } else if (
+      moduleResolution !== "bundler" &&
+      moduleResolution !== "nodenext"
+    ) {
       issues.push({
         type: "tsconfig-health" as const,
         message: `unsupported moduleResolution: ${moduleResolution}. Only "bundler" and "nodenext" are supported`,

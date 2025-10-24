@@ -23,14 +23,18 @@ export async function handleExistingRepo(
 ): Promise<boolean> {
   const effectiveDir = getEffectiveDir(params);
 
-  relinka("info", `Using existing repo: ${params.githubUsername}/${params.projectName}`);
-
-  const { success: repoSuccess, externalReliverseConfig } = await handleExistingRepoContent(
-    params.memory,
-    params.githubUsername,
-    params.projectName,
-    effectiveDir,
+  relinka(
+    "info",
+    `Using existing repo: ${params.githubUsername}/${params.projectName}`,
   );
+
+  const { success: repoSuccess, externalReliverseConfig } =
+    await handleExistingRepoContent(
+      params.memory,
+      params.githubUsername,
+      params.projectName,
+      effectiveDir,
+    );
 
   if (!repoSuccess) {
     throw new Error("Failed to handle existing repository content");

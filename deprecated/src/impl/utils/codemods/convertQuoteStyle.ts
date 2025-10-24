@@ -7,7 +7,10 @@ export async function convertQuoteStyle(
   projectPath: string,
   targetQuoteStyle: "single" | "double",
 ) {
-  relinka("info", `Converting quotes to ${targetQuoteStyle} quotes in ${projectPath}`);
+  relinka(
+    "info",
+    `Converting quotes to ${targetQuoteStyle} quotes in ${projectPath}`,
+  );
 
   const files = await glob("**/*.{js,jsx,ts,tsx}", {
     cwd: path.resolve(projectPath),
@@ -23,7 +26,10 @@ export async function convertQuoteStyle(
       (_match: string, _quote: string, content: string) => {
         const targetQuote = targetQuoteStyle === "single" ? "'" : '"';
         // Escape any instances of the target quote in the content
-        const escapedContent = content.replace(new RegExp(targetQuote, "g"), `\\${targetQuote}`);
+        const escapedContent = content.replace(
+          new RegExp(targetQuote, "g"),
+          `\\${targetQuote}`,
+        );
         // Unescape the other type of quote
         const otherQuote = targetQuoteStyle === "single" ? '"' : "'";
         const unescapedContent = escapedContent.replace(

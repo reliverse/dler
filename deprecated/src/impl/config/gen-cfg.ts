@@ -24,7 +24,10 @@ async function generateBiomeConfig(projectPath: string): Promise<void> {
   }
 }
 
-async function generateVSCodeSettings(projectPath: string, overwrite: boolean): Promise<void> {
+async function generateVSCodeSettings(
+  projectPath: string,
+  overwrite: boolean,
+): Promise<void> {
   const vscodePath = path.join(projectPath, ".vscode");
   await ensuredir(vscodePath);
 
@@ -171,7 +174,10 @@ export async function generateConfigFiles(
     );
 
     if (generatedFiles.length > 0) {
-      relinka("verbose", `Generated configuration files: ${generatedFiles.join(", ")}`);
+      relinka(
+        "verbose",
+        `Generated configuration files: ${generatedFiles.join(", ")}`,
+      );
     }
   } catch (error) {
     relinka(
@@ -196,7 +202,8 @@ export async function generateProjectConfigs(
     // Check which files exist based on categories defined in CONFIG_CATEGORIES.
     const existingFiles: string[] = [];
     for (const category of Object.keys(CONFIG_CATEGORIES)) {
-      const files = CONFIG_CATEGORIES[category as keyof typeof CONFIG_CATEGORIES];
+      const files =
+        CONFIG_CATEGORIES[category as keyof typeof CONFIG_CATEGORIES];
       for (const file of files) {
         const filePath = path.join(projectPath, file);
         if (await fs.pathExists(filePath)) {
@@ -206,7 +213,10 @@ export async function generateProjectConfigs(
     }
 
     if (existingFiles.length > 0) {
-      relinka("verbose", `Found ${existingFiles.length} existing configuration files`);
+      relinka(
+        "verbose",
+        `Found ${existingFiles.length} existing configuration files`,
+      );
       // Generate missing files without overwriting existing ones
       await generateConfigFiles(
         projectPath,

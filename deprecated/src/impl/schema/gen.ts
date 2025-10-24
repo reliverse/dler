@@ -1,6 +1,10 @@
 // !! AFTER EDITING THIS FILE, UPDATE LAST_UPDATED IN APP/SCHEMA/UTILS.TS FILE !!
 
-export function generateReltypesContent({ lastUpdated }: { lastUpdated: string }): string {
+export function generateReltypesContent({
+  lastUpdated,
+}: {
+  lastUpdated: string;
+}): string {
   return `// reliverse.ts types version ${lastUpdated} (this file is generated, don't edit it)
 
 export interface ReliverseConfig {

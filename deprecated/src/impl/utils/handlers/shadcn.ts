@@ -110,7 +110,9 @@ const THEMES: Theme[] = [
   },
 ];
 
-export async function readShadcnConfig(cwd: string): Promise<ShadcnConfig | null> {
+export async function readShadcnConfig(
+  cwd: string,
+): Promise<ShadcnConfig | null> {
   const configPath = path.join(cwd, "components.json");
   try {
     if (await fs.pathExists(configPath)) {
@@ -126,12 +128,17 @@ export async function readShadcnConfig(cwd: string): Promise<ShadcnConfig | null
   return null;
 }
 
-export async function getInstalledComponents(cwd: string, config: ShadcnConfig): Promise<string[]> {
+export async function getInstalledComponents(
+  cwd: string,
+  config: ShadcnConfig,
+): Promise<string[]> {
   const uiPath = path.join(cwd, config.aliases.ui.replace("~", "src"));
   try {
     if (await fs.pathExists(uiPath)) {
       const files = await fs.readdir(uiPath);
-      return files.filter((f) => f.endsWith(".tsx")).map((f) => f.replace(".tsx", ""));
+      return files
+        .filter((f) => f.endsWith(".tsx"))
+        .map((f) => f.replace(".tsx", ""));
     }
   } catch (error) {
     relinka(
@@ -209,7 +216,10 @@ export async function installComponent(
   }
 }
 
-export async function updateComponent(cwd: string, component: string): Promise<void> {
+export async function updateComponent(
+  cwd: string,
+  component: string,
+): Promise<void> {
   return installComponent(cwd, component, { overwrite: true });
 }
 
@@ -236,7 +246,11 @@ export async function removeComponent(
       return;
     }
 
-    const componentPath = path.join(cwd, config.aliases.ui.replace("~", "src"), `${component}.tsx`);
+    const componentPath = path.join(
+      cwd,
+      config.aliases.ui.replace("~", "src"),
+      `${component}.tsx`,
+    );
     await fs.remove(componentPath);
     relinka("success", `Removed component: ${component}`);
   } catch (error) {
@@ -248,7 +262,11 @@ export async function removeComponent(
   }
 }
 
-export async function applyTheme(cwd: string, config: ShadcnConfig, theme: Theme): Promise<void> {
+export async function applyTheme(
+  cwd: string,
+  config: ShadcnConfig,
+  theme: Theme,
+): Promise<void> {
   const cssPath = path.join(cwd, config.tailwind.css.replace("~", "src"));
   try {
     let cssContent = await fs.readFile(cssPath, "utf-8");
@@ -265,7 +283,10 @@ ${Object.entries(theme.colors)
     cssContent = cssContent.replace(rootRegex, newRootSection);
 
     await fs.writeFile(cssPath, cssContent);
-    relinka("success", `Applied theme: ${theme.name} (backup created at ${cssPath}.backup)`);
+    relinka(
+      "success",
+      `Applied theme: ${theme.name} (backup created at ${cssPath}.backup)`,
+    );
   } catch (error) {
     relinka(
       "error",
@@ -281,7 +302,9 @@ ${Object.entries(theme.colors)
       relinka(
         "error",
         "Failed to restore theme backup:",
-        backupError instanceof Error ? backupError.message : String(backupError),
+        backupError instanceof Error
+          ? backupError.message
+          : String(backupError),
       );
     }
   }
@@ -342,11 +365,19 @@ export const AVAILABLE_COMPONENTS = [
 export { THEMES };
 
 export function selectSidebarPrompt(projectPath: string): void {
-  relinka("verbose", "The following project requested sidebar installation", projectPath);
+  relinka(
+    "verbose",
+    "The following project requested sidebar installation",
+    projectPath,
+  );
   relinka("verbose", "Coming soon...");
 }
 
 export function selectChartsPrompt(projectPath: string): void {
-  relinka("verbose", "The following project requested charts installation", projectPath);
+  relinka(
+    "verbose",
+    "The following project requested charts installation",
+    projectPath,
+  );
   relinka("verbose", "Coming soon...");
 }

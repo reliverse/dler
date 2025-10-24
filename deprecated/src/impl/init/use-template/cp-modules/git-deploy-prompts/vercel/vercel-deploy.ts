@@ -45,7 +45,10 @@ export async function monitorDeployment(
         }
       }
       if (errors > 0 || warnings > 0) {
-        relinka("info", `Deployment summary: ${errors} errors, ${warnings} warnings`);
+        relinka(
+          "info",
+          `Deployment summary: ${errors} errors, ${warnings} warnings`,
+        );
       }
     }
   } catch (error) {
@@ -95,7 +98,9 @@ export async function createInitialVercelDeployment(
   try {
     commitSha = await git.revparse(["HEAD"]);
   } catch (error) {
-    throw new Error(`Failed to get local commit SHA. Ensure the repository is not empty. ${error}`);
+    throw new Error(
+      `Failed to get local commit SHA. Ensure the repository is not empty. ${error}`,
+    );
   }
 
   // Fetch numeric GitHub repository ID using Octokit.
@@ -132,7 +137,9 @@ export async function createInitialVercelDeployment(
   if (!deploymentRes.ok) throw deploymentRes.error;
   const deployment = deploymentRes.value;
   if (!deployment?.id || !deployment.readyState || !deployment.url) {
-    throw new Error("Failed to create deployment: invalid response from Vercel");
+    throw new Error(
+      "Failed to create deployment: invalid response from Vercel",
+    );
   }
 
   // Monitor deployment progress.
@@ -148,7 +155,9 @@ export async function createInitialVercelDeployment(
 
   let lastMessageTime = Date.now();
   let status = deployment.readyState;
-  while (inProgressStates.includes(status as (typeof inProgressStates)[number])) {
+  while (
+    inProgressStates.includes(status as (typeof inProgressStates)[number])
+  ) {
     await monitorDeployment(
       vercelInstance,
       deployment.id,
@@ -169,11 +178,17 @@ export async function createInitialVercelDeployment(
     status = depRes.value.readyState;
     const now = Date.now();
     if (now - lastMessageTime >= 10000) {
-      await relinkaAsync("info", `Deployment status: ${status}`, undefined, undefined, {
-        delay: 50,
-        useSpinner: true,
-        spinnerDelay: 50,
-      });
+      await relinkaAsync(
+        "info",
+        `Deployment status: ${status}`,
+        undefined,
+        undefined,
+        {
+          delay: 50,
+          useSpinner: true,
+          spinnerDelay: 50,
+        },
+      );
       lastMessageTime = now;
     }
   }

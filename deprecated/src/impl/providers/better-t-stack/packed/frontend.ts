@@ -364,7 +364,11 @@ export const DLER_TPL_FRONTEND: Template = {
               output: "static",
               favicon: "./assets/favicon.png",
             },
-            plugins: ["expo-router", "react-native-edge-to-edge", "expo-secure-store"],
+            plugins: [
+              "expo-router",
+              "react-native-edge-to-edge",
+              "expo-secure-store",
+            ],
             experiments: {
               typedRoutes: true,
               tsconfigPaths: true,
@@ -1345,7 +1349,8 @@ export const DLER_TPL_FRONTEND: Template = {
             preview: "vite preview",
             prepare: "svelte-kit sync || echo ''",
             check: "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-            "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+            "check:watch":
+              "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
           },
           devDependencies: {
             "@sveltejs/adapter-auto": "^6.0.0",

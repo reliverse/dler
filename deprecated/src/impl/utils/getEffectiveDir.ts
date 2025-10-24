@@ -5,6 +5,11 @@ import type { GitModParams } from "~/impl/types/mod";
 /**
  * Gets the effective directory path based on dev mode and project settings
  */
-export function getEffectiveDir({ cwd, isDev, projectPath, projectName }: GitModParams): string {
+export function getEffectiveDir({
+  cwd,
+  isDev,
+  projectPath,
+  projectName,
+}: GitModParams): string {
   return isDev ? path.join(cwd, "tests-runtime", projectName) : projectPath;
 }

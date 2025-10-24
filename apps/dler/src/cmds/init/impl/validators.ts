@@ -8,7 +8,8 @@ export const validatePackageName = (name: string): ValidationResult => {
   if (!/^[a-z0-9-]+$/.test(name)) {
     return {
       valid: false,
-      error: "Package name must contain only lowercase letters, numbers, and hyphens",
+      error:
+        "Package name must contain only lowercase letters, numbers, and hyphens",
     };
   }
 
@@ -30,7 +31,8 @@ export const validateMonorepoName = (name: string): ValidationResult => {
   if (!/^[a-z0-9-]+$/.test(name)) {
     return {
       valid: false,
-      error: "Monorepo name must contain only lowercase letters, numbers, and hyphens",
+      error:
+        "Monorepo name must contain only lowercase letters, numbers, and hyphens",
     };
   }
 

@@ -62,7 +62,8 @@ const MODERN_REPLACEMENTS: ModernReplacement[] = [
   // URL
   {
     pattern: /import url from ["']url["'];/g,
-    replacement: '// Use URL and URLSearchParams globals instead of "url" module',
+    replacement:
+      '// Use URL and URLSearchParams globals instead of "url" module',
     description: "Replace url module with URL globals",
   },
 
@@ -94,7 +95,13 @@ export async function replaceWithModern(projectPath: string) {
   const files = await glob("**/*.{js,ts,tsx}", {
     cwd: projectPath,
     absolute: true,
-    ignore: ["node_modules/**", "dist/**", ".next/**", "build/**", "coverage/**"],
+    ignore: [
+      "node_modules/**",
+      "dist/**",
+      ".next/**",
+      "build/**",
+      "coverage/**",
+    ],
   });
 
   let totalReplacements = 0;

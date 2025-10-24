@@ -86,7 +86,9 @@ export async function createProjectTSConfig(
             lib: ["es2022", "dom", "dom.iterable"],
           }),
     },
-    ...(isLib ? { include: ["**/*.ts"] } : { include: ["**/*.ts", "**/*.tsx"] }),
+    ...(isLib
+      ? { include: ["**/*.ts"] }
+      : { include: ["**/*.ts", "**/*.tsx"] }),
     exclude: ["node_modules"],
   });
 
@@ -108,5 +110,8 @@ export async function createProjectTSConfig(
     await fs.writeFile(tsconfigPath, formatted, "utf-8");
   }
 
-  relinka("verbose", `Created ${filename} with ${isLib ? "library" : "application"} configuration`);
+  relinka(
+    "verbose",
+    `Created ${filename} with ${isLib ? "library" : "application"} configuration`,
+  );
 }

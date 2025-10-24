@@ -16,7 +16,12 @@ export const REMOVAL_CONFIGS: Record<string, RemovalConfig> = {
     files: ["drizzle.config.ts", "prisma/schema.prisma"],
     directories: ["prisma", "drizzle", "src/db"],
     scripts: ["db:push", "db:pull", "db:generate", "db:studio"],
-    envVars: ["DATABASE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL", "POSTGRES_URL_NON_POOLING"],
+    envVars: [
+      "DATABASE_URL",
+      "POSTGRES_URL",
+      "POSTGRES_PRISMA_URL",
+      "POSTGRES_URL_NON_POOLING",
+    ],
   },
   auth: {
     name: "Authentication",
@@ -59,7 +64,12 @@ export const REMOVAL_CONFIGS: Record<string, RemovalConfig> = {
     files: ["src/lib/stripe.ts", "src/impl/api/stripe/webhook/route.ts"],
     directories: ["src/impl/api/stripe"],
     scripts: [],
-    envVars: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "STRIPE_PRICE_ID", "POLAR_TOKEN"],
+    envVars: [
+      "STRIPE_SECRET_KEY",
+      "STRIPE_WEBHOOK_SECRET",
+      "STRIPE_PRICE_ID",
+      "POLAR_TOKEN",
+    ],
   },
   email: {
     name: "Email",
@@ -74,7 +84,11 @@ export const REMOVAL_CONFIGS: Record<string, RemovalConfig> = {
     name: "Styling",
     dependencies: ["tailwindcss", "postcss", "autoprefixer", "@shadcn/ui"],
     devDependencies: [],
-    files: ["tailwind.config.js", "postcss.config.js", "src/styles/globals.css"],
+    files: [
+      "tailwind.config.js",
+      "postcss.config.js",
+      "src/styles/globals.css",
+    ],
     directories: ["src/components/ui"],
     scripts: [],
     envVars: [],
@@ -82,7 +96,14 @@ export const REMOVAL_CONFIGS: Record<string, RemovalConfig> = {
   testing: {
     name: "Testing",
     dependencies: [],
-    devDependencies: ["jest", "@types/jest", "ts-jest", "vitest", "@vitest/ui", "bun-types"],
+    devDependencies: [
+      "jest",
+      "@types/jest",
+      "ts-jest",
+      "vitest",
+      "@vitest/ui",
+      "bun-types",
+    ],
     files: ["jest.config.js", "vitest.config.ts"],
     directories: ["src/__tests__"],
     scripts: ["test", "test:ui", "test:watch"],
@@ -90,9 +111,19 @@ export const REMOVAL_CONFIGS: Record<string, RemovalConfig> = {
   },
   i18n: {
     name: "Internationalization",
-    dependencies: ["next-intl", "next-international", "@lingui/react", "@lingui/core"],
+    dependencies: [
+      "next-intl",
+      "next-international",
+      "@lingui/react",
+      "@lingui/core",
+    ],
     devDependencies: ["@lingui/cli", "@lingui/macro"],
-    files: ["src/i18n.ts", "src/middleware.ts", "lingui.config.ts", "src/i18n/index.ts"],
+    files: [
+      "src/i18n.ts",
+      "src/middleware.ts",
+      "lingui.config.ts",
+      "src/i18n/index.ts",
+    ],
     directories: ["src/messages", "src/locales", "src/i18n"],
     scripts: ["i18n:extract", "i18n:compile"],
     envVars: [],

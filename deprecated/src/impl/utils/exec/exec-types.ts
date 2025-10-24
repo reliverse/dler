@@ -13,7 +13,11 @@ export interface ExecParseResult {
   };
 }
 
-export function _parse(file: string, args: string[], options?: SpawnOptions): ExecParseResult {
+export function _parse(
+  file: string,
+  args: string[],
+  options?: SpawnOptions,
+): ExecParseResult {
   return {
     command: file,
     args,

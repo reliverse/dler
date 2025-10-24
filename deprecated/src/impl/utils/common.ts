@@ -26,7 +26,11 @@ export async function commonStartActions({
   await prepareReliverseEnvironment(cwdStr, isDev, "ts");
 }
 
-export async function commonEndActions({ withEndPrompt }: { withEndPrompt: boolean }) {
+export async function commonEndActions({
+  withEndPrompt,
+}: {
+  withEndPrompt: boolean;
+}) {
   if (withEndPrompt) {
     await showEndPrompt();
   }

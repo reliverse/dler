@@ -1,6 +1,6 @@
 # 🧬 Dler
 
-> **@reliverse/dler** is an open-source framework which helps developers build TypeScript/JavaScript libraries and CLI tools easily. It provides ready-to-use primitives, so you don't have to write them from scratch.
+> **@reliverse/dler** is an open-source CLI & framework which helps developers build TypeScript/JavaScript libraries and CLI tools easily. It provides ready-to-use primitives, so you don't have to write them from scratch.
 
 [Sponsor](https://github.com/sponsors/blefnk) — [Discord](https://discord.gg/Pb8uKbwpsJ) — [GitHub](https://github.com/reliverse/dler) — [NPM](https://npmjs.com/@reliverse/dler) — [Introduction](https://blefnk.reliverse.org/blog/articles/package-managers)
 
@@ -8,14 +8,6 @@
 
 ```bash
 bun add @reliverse/dler
-```
-
-## Usage Example
-
-```ts
-import { installDependencies } from "@reliverse/dler";
-
-await installDependencies({ cwd: ".", silent: true, packageManager: "bun" });
 ```
 
 ## Documentation

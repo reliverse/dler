@@ -6,12 +6,18 @@ import { simpleGit } from "simple-git";
 import tar from "tar-stream";
 import { promisify } from "util";
 import { gzip } from "zlib";
-import { cliConfigJsonc, cliConfigJsoncTmp, cliHomeTmp } from "~/impl/config/constants";
+import {
+  cliConfigJsonc,
+  cliConfigJsoncTmp,
+  cliHomeTmp,
+} from "~/impl/config/constants";
 import type { ReliverseMemory } from "~/impl/utils/schemaMemory";
 
 const gzipAsync = promisify(gzip);
 
-async function createArchive(files: { name: string; data: Buffer }[]): Promise<Buffer> {
+async function createArchive(
+  files: { name: string; data: Buffer }[],
+): Promise<Buffer> {
   const pack = tar.pack();
 
   for (const file of files) {
@@ -47,7 +53,8 @@ export async function archiveExistingRepoContent(
     await git.clone(repoUrl, tempDir);
 
     const shouldArchive = await confirmPrompt({
-      title: "Would you like to create an archive of the existing repository content?",
+      title:
+        "Would you like to create an archive of the existing repository content?",
       content:
         "In the future, you will be able to run `rse cli` to use merge operations on the project's old and new content. The term `cluster` is used as the name for the old content.",
       defaultValue: false,
@@ -94,7 +101,10 @@ export async function archiveExistingRepoContent(
         const archivePath = path.join(projectPath, archiveName);
         const tarData = await createArchive(fileInputs);
         await fs.writeFile(archivePath, tarData);
-        relinka("info", `Created archive of repository content at ${archiveName}`);
+        relinka(
+          "info",
+          `Created archive of repository content at ${archiveName}`,
+        );
       }
     }
 
@@ -140,7 +150,10 @@ export async function archiveExistingRepoContent(
       if (file.name) {
         const sourcePath = path.join(tempDir, file.name);
         if (await fs.pathExists(sourcePath)) {
-          const targetPath = path.join(projectPath, file.targetName ?? file.name);
+          const targetPath = path.join(
+            projectPath,
+            file.targetName ?? file.name,
+          );
           await fs.copy(sourcePath, targetPath);
           if (!file.hidden) {
             relinka("info", `Copied ${file.name} from existing repository`);
@@ -193,10 +206,8 @@ export async function handleExistingRepoContent(
   try {
     // Clone repo to temp dir and copy files
     const repoUrl = `https://oauth2:${memory.githubKey}@github.com/${repoOwner}/${repoName}.git`;
-    const { success, externalReliverseConfig } = await archiveExistingRepoContent(
-      repoUrl,
-      projectPath,
-    );
+    const { success, externalReliverseConfig } =
+      await archiveExistingRepoContent(repoUrl, projectPath);
 
     if (!success) {
       throw new Error("Failed to retrieve repository git data");

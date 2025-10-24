@@ -7,7 +7,10 @@ export async function convertTypeDefinitions(
   projectPath: string,
   targetStyle: "type" | "interface",
 ) {
-  relinka("info", `Converting type definitions to ${targetStyle} style in ${projectPath}`);
+  relinka(
+    "info",
+    `Converting type definitions to ${targetStyle} style in ${projectPath}`,
+  );
 
   const files = await glob("**/*.{ts,tsx}", {
     cwd: path.resolve(projectPath),
@@ -22,8 +25,15 @@ export async function convertTypeDefinitions(
       // Convert interface to type
       updatedContent = content.replace(
         /interface\s+(\w+)(\s*extends\s*[^{]+)?\s*{([^}]*)}/g,
-        (_match: string, name: string, extends_: string | undefined, body: string) => {
-          const extendsClause = extends_ ? extends_.replace("extends", "&") : "";
+        (
+          _match: string,
+          name: string,
+          extends_: string | undefined,
+          body: string,
+        ) => {
+          const extendsClause = extends_
+            ? extends_.replace("extends", "&")
+            : "";
           return `type ${name} = ${extendsClause}{${body}}`;
         },
       );

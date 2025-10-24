@@ -12,7 +12,9 @@ export async function isDirHasGit(
   projectName: string,
   projectPath: string,
 ): Promise<boolean> {
-  const effectiveDir = isDev ? path.join(cwd, "tests-runtime", projectName) : projectPath;
+  const effectiveDir = isDev
+    ? path.join(cwd, "tests-runtime", projectName)
+    : projectPath;
 
   try {
     if (!(await fs.pathExists(effectiveDir))) {
@@ -29,7 +31,11 @@ export async function isDirHasGit(
     return await git.checkIsRepo();
   } catch (error) {
     // Only log if it's not a "not a git repo" error
-    if (!(error instanceof Error && error.message.includes("not a git repository"))) {
+    if (
+      !(
+        error instanceof Error && error.message.includes("not a git repository")
+      )
+    ) {
       relinka(
         "error",
         "Error checking git repository:",
@@ -51,7 +57,9 @@ export async function setupGitRemote(
   remoteUrl: string,
   remoteName = "origin",
 ): Promise<boolean> {
-  const effectiveDir = isDev ? path.join(cwd, "tests-runtime", projectName) : projectPath;
+  const effectiveDir = isDev
+    ? path.join(cwd, "tests-runtime", projectName)
+    : projectPath;
 
   try {
     // Validate directory and git repo
@@ -84,13 +92,20 @@ export async function setupGitRemote(
         await git.remote(["set-url", remoteName, remoteUrl]);
         relinka("info", `Updated ${remoteName} remote URL to ${remoteUrl}`);
       } else {
-        relinka("info", `Remote '${remoteName}' already exists with correct URL.`);
+        relinka(
+          "info",
+          `Remote '${remoteName}' already exists with correct URL.`,
+        );
       }
     }
 
     // Push initial commit (if any) — sets upstream if it hasn't been set
     await git.push(remoteName, "main", ["--set-upstream"]);
-    relinka("success", "Initial commit pushed to remote repository:", remoteUrl);
+    relinka(
+      "success",
+      "Initial commit pushed to remote repository:",
+      remoteUrl,
+    );
 
     return true;
   } catch (error) {

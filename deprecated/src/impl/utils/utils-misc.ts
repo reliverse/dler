@@ -4,7 +4,9 @@
  * @param importPath - The import path string.
  * @returns The package name (e.g., "react", "@scope/pkg") or null.
  */
-export function extractPackageName(importPath: string | undefined): null | string {
+export function extractPackageName(
+  importPath: string | undefined,
+): null | string {
   if (!importPath || importPath.startsWith(".") || importPath.startsWith("/")) {
     return null;
   }

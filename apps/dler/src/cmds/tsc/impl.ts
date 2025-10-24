@@ -1,6 +1,7 @@
 // apps/dler/src/cmds/tsc/impl.ts
 
 import { existsSync } from "node:fs";
+import { cpus } from "node:os";
 import { join, resolve } from "node:path";
 import { writeErrorLines } from "@reliverse/dler-helpers";
 import { logger } from "@reliverse/dler-logger";
@@ -11,19 +12,18 @@ import {
   hasWorkspaces,
   readPackageJSON,
 } from "@reliverse/dler-pkg-tsc";
-import {
-  createMultiStepSpinner,
-  createSpinner,
-  withSpinner,
-} from "@reliverse/dler-spinner";
+import clipboard from "clipboardy";
+import { TscCache } from "./cache";
+import type { PackageDiscoveryResult } from "./types";
 
-const DEFAULT_CONCURRENCY = 5;
+const DEFAULT_CONCURRENCY = Math.max(4, cpus().length);
+const DISCOVERY_CONCURRENCY = 10;
 
 // ============================================================================
 // Types
 // ============================================================================
 
-interface PackageInfo {
+export interface PackageInfo {
   name: string;
   path: string;
   hasTsConfig: boolean;
@@ -33,12 +33,14 @@ interface TscResult {
   package: PackageInfo;
   success: boolean;
   skipped: boolean;
+  cached: boolean;
   totalErrors: number;
   totalWarnings: number;
   filteredErrors: number;
   filteredWarnings: number;
   output: string;
   filteredOutput: string;
+  executionTime: number;
 }
 
 interface TscSummary {
@@ -56,6 +58,12 @@ interface TscOptions {
   concurrency?: number;
   stopOnError?: boolean;
   verbose?: boolean;
+  copyLogs?: boolean;
+  cache?: boolean;
+  incremental?: boolean;
+  autoConcurrency?: boolean;
+  skipUnchanged?: boolean;
+  buildMode?: boolean;
 }
 
 interface SpawnResult {
@@ -100,8 +108,15 @@ const resolvePackageInfo = async (
   packagePath: string,
 ): Promise<PackageInfo | null> => {
   const pkgJsonPath = join(packagePath, "package.json");
+  const tsConfigPath = join(packagePath, "tsconfig.json");
 
+  // Early skip if no package.json
   if (!existsSync(pkgJsonPath)) {
+    return null;
+  }
+
+  // Early skip if no tsconfig.json (cheaper check first)
+  if (!existsSync(tsConfigPath)) {
     return null;
   }
 
@@ -112,19 +127,20 @@ const resolvePackageInfo = async (
       return null;
     }
 
-    const hasTsConfig = existsSync(join(packagePath, "tsconfig.json"));
-
     return {
       name: pkg.name,
       path: packagePath,
-      hasTsConfig,
+      hasTsConfig: true, // We already checked this above
     };
   } catch {
     return null;
   }
 };
 
-const getWorkspacePackages = async (cwd?: string): Promise<PackageInfo[]> => {
+const getWorkspacePackages = async (
+  cwd?: string,
+): Promise<PackageDiscoveryResult> => {
+  const startTime = Date.now();
   const monorepoRoot = await findMonorepoRoot(cwd);
 
   if (!monorepoRoot) {
@@ -144,7 +160,8 @@ const getWorkspacePackages = async (cwd?: string): Promise<PackageInfo[]> => {
     throw new Error("❌ No workspace patterns found in package.json");
   }
 
-  const packages: PackageInfo[] = [];
+  // Collect all potential package paths first
+  const allPackagePaths: string[] = [];
   const seenPaths = new Set<string>();
 
   for (const pattern of patterns) {
@@ -156,16 +173,32 @@ const getWorkspacePackages = async (cwd?: string): Promise<PackageInfo[]> => {
 
       if (seenPaths.has(packagePath)) continue;
       seenPaths.add(packagePath);
-
-      const pkgInfo = await resolvePackageInfo(packagePath);
-
-      if (pkgInfo) {
-        packages.push(pkgInfo);
-      }
+      allPackagePaths.push(packagePath);
     }
   }
 
-  return packages;
+  // Resolve package info in parallel
+  const packageResults = await pMap(
+    allPackagePaths,
+    async (packagePath) => {
+      const pkgInfo = await resolvePackageInfo(packagePath);
+      return { packagePath, pkgInfo };
+    },
+    { concurrency: DISCOVERY_CONCURRENCY },
+  );
+
+  const packages = packageResults
+    .filter((result) => result.pkgInfo !== null)
+    .map((result) => result.pkgInfo!);
+
+  const discoveryTime = Date.now() - startTime;
+
+  return {
+    packages,
+    discoveryTime,
+    cacheHits: 0, // Will be updated by cache layer
+    cacheMisses: packages.length,
+  };
 };
 
 // ============================================================================
@@ -176,11 +209,17 @@ const filterPackages = (
   packages: PackageInfo[],
   ignore?: string | string[],
 ): PackageInfo[] => {
-  if (!ignore) {
-    return packages;
-  }
+  // Always ignore @reliverse/dler-v1 package
+  const alwaysIgnored = ["@reliverse/dler-v1"];
 
-  const ignoreFilter = createIgnoreFilter(ignore);
+  // Combine user-provided ignore patterns with always ignored packages
+  const combinedIgnore = ignore
+    ? Array.isArray(ignore)
+      ? [...alwaysIgnored, ...ignore]
+      : [...alwaysIgnored, ignore]
+    : alwaysIgnored;
+
+  const ignoreFilter = createIgnoreFilter(combinedIgnore);
   return ignoreFilter(packages);
 };
 
@@ -188,9 +227,54 @@ const filterPackages = (
 // TypeScript Execution
 // ============================================================================
 
-const runTscCommand = async (packagePath: string): Promise<SpawnResult> => {
+const hasProjectReferences = async (packagePath: string): Promise<boolean> => {
   try {
-    const proc = Bun.spawn(["tsc", "--noEmit"], {
+    const tsConfigPath = join(packagePath, "tsconfig.json");
+    if (!existsSync(tsConfigPath)) return false;
+
+    const content = await Bun.file(tsConfigPath).text();
+    const config = JSON.parse(content);
+    return !!(
+      config.references &&
+      Array.isArray(config.references) &&
+      config.references.length > 0
+    );
+  } catch {
+    return false;
+  }
+};
+
+const runTscCommand = async (
+  packagePath: string,
+  options: { incremental?: boolean; buildMode?: boolean } = {},
+): Promise<SpawnResult> => {
+  try {
+    const { incremental = true, buildMode = false } = options;
+
+    let args: string[];
+
+    if (buildMode && (await hasProjectReferences(packagePath))) {
+      // Use tsc --build for project references (faster for multi-package setups)
+      args = ["tsc", "--build"];
+      if (incremental) {
+        args.push("--incremental");
+      }
+    } else {
+      // Use regular tsc --noEmit for single packages
+      args = ["tsc", "--noEmit"];
+      if (incremental) {
+        args.push("--incremental");
+        // Add tsbuildinfo file path for incremental compilation
+        const tsBuildInfoPath = join(
+          packagePath,
+          "node_modules/.cache/dler-tsc",
+          `${packagePath.split(/[/\\]/).pop()}.tsbuildinfo`,
+        );
+        args.push("--tsBuildInfoFile", tsBuildInfoPath);
+      }
+    }
+
+    const proc = Bun.spawn(args, {
       cwd: packagePath,
       stdout: "pipe",
       stderr: "pipe",
@@ -277,8 +361,21 @@ const filterOutputLines = (output: string, packagePath: string): string => {
 
 const runTscOnPackage = async (
   pkg: PackageInfo,
-  verbose = false,
+  options: {
+    verbose?: boolean;
+    cache?: TscCache;
+    incremental?: boolean;
+    buildMode?: boolean;
+  } = {},
 ): Promise<TscResult> => {
+  const {
+    verbose = false,
+    cache,
+    incremental = true,
+    buildMode = false,
+  } = options;
+  const startTime = Date.now();
+
   if (!pkg.hasTsConfig) {
     if (verbose) {
       logger.info(`⏭️  Skipping ${pkg.name} (no tsconfig.json)`);
@@ -287,13 +384,39 @@ const runTscOnPackage = async (
       package: pkg,
       success: true,
       skipped: true,
+      cached: false,
       totalErrors: 0,
       totalWarnings: 0,
       filteredErrors: 0,
       filteredWarnings: 0,
       output: "",
       filteredOutput: "",
+      executionTime: Date.now() - startTime,
     };
+  }
+
+  // Check cache first
+  if (cache) {
+    const shouldSkip = await cache.shouldSkipPackage(pkg);
+    if (shouldSkip) {
+      if (verbose) {
+        logger.info(`⚡ Skipping ${pkg.name} (no changes since last check)`);
+      }
+      const cachedResult = await cache.getCachedResult(pkg);
+      return {
+        package: pkg,
+        success: !cachedResult?.hasErrors,
+        skipped: false,
+        cached: true,
+        totalErrors: cachedResult?.errorCount ?? 0,
+        totalWarnings: cachedResult?.warningCount ?? 0,
+        filteredErrors: cachedResult?.errorCount ?? 0,
+        filteredWarnings: cachedResult?.warningCount ?? 0,
+        output: cachedResult?.output ?? "Cached result",
+        filteredOutput: cachedResult?.filteredOutput ?? "Cached result",
+        executionTime: Date.now() - startTime,
+      };
+    }
   }
 
   if (verbose) {
@@ -301,7 +424,7 @@ const runTscOnPackage = async (
   }
 
   try {
-    const result = await runTscCommand(pkg.path);
+    const result = await runTscCommand(pkg.path, { incremental, buildMode });
     const output = result.stdout + result.stderr;
     const filteredOutput = filterOutputLines(output, pkg.path);
 
@@ -315,17 +438,32 @@ const runTscOnPackage = async (
       );
     }
 
-    return {
+    const tscResult: TscResult = {
       package: pkg,
       success: filteredCounts.errors === 0,
       skipped: false,
+      cached: false,
       totalErrors: totalCounts.errors,
       totalWarnings: totalCounts.warnings,
       filteredErrors: filteredCounts.errors,
       filteredWarnings: filteredCounts.warnings,
       output,
       filteredOutput,
+      executionTime: Date.now() - startTime,
     };
+
+    // Update cache
+    if (cache) {
+      await cache.updatePackageCache(pkg, {
+        success: tscResult.success,
+        errorCount: tscResult.filteredErrors,
+        warningCount: tscResult.filteredWarnings,
+        output: tscResult.output,
+        filteredOutput: tscResult.filteredOutput,
+      });
+    }
+
+    return tscResult;
   } catch (error) {
     logger.error(
       `❌ ${pkg.name}: Failed to run tsc - ${error instanceof Error ? error.message : String(error)}`,
@@ -334,12 +472,14 @@ const runTscOnPackage = async (
       package: pkg,
       success: false,
       skipped: false,
+      cached: false,
       totalErrors: 1,
       totalWarnings: 0,
       filteredErrors: 1,
       filteredWarnings: 0,
       output: error instanceof Error ? error.message : String(error),
       filteredOutput: error instanceof Error ? error.message : String(error),
+      executionTime: Date.now() - startTime,
     };
   }
 };
@@ -351,22 +491,19 @@ const runTscOnPackage = async (
 const collectAllResults = async (
   packages: PackageInfo[],
   options: TscOptions = {},
+  cache?: TscCache,
 ): Promise<TscSummary> => {
   const {
     concurrency = DEFAULT_CONCURRENCY,
     stopOnError = false,
     verbose = false,
+    incremental = true,
+    buildMode = false,
   } = options;
 
-  // Create progress spinner for package processing
-  const progressSpinner = createSpinner({
-    text: `Processing ${packages.length} packages...`,
-    color: "cyan",
-    spinner: "dots",
-  });
-
+  // Log progress for package processing
   if (!verbose) {
-    progressSpinner.start();
+    logger.info(`Processing ${packages.length} packages...`);
   }
 
   try {
@@ -374,19 +511,22 @@ const collectAllResults = async (
       packages,
       async (pkg, index) => {
         if (!verbose) {
-          progressSpinner.text = `Processing ${pkg.name} (${index + 1}/${packages.length})...`;
+          logger.info(
+            `Processing ${pkg.name} (${index + 1}/${packages.length})...`,
+          );
         }
-        return runTscOnPackage(pkg, verbose);
+        return runTscOnPackage(pkg, {
+          verbose,
+          cache,
+          incremental,
+          buildMode,
+        });
       },
       {
         concurrency,
         stopOnError,
       },
     );
-
-    if (!verbose) {
-      progressSpinner.stop();
-    }
 
     const failedPackages = tscResults.filter(
       (r) => !r.success && !r.skipped,
@@ -413,10 +553,6 @@ const collectAllResults = async (
       results: tscResults,
     };
   } catch (error) {
-    if (!verbose) {
-      progressSpinner.stop();
-    }
-
     // Handle aggregate errors from pMap when stopOnError is false
     if (error instanceof AggregateError) {
       const tscResults: TscResult[] = error.errors.map((err, index) => {
@@ -435,12 +571,14 @@ const collectAllResults = async (
           package: pkg,
           success: false,
           skipped: false,
+          cached: false,
           totalErrors: 1,
           totalWarnings: 0,
           filteredErrors: 1,
           filteredWarnings: 0,
           output: err instanceof Error ? err.message : String(err),
           filteredOutput: err instanceof Error ? err.message : String(err),
+          executionTime: 0,
         };
       });
 
@@ -472,6 +610,69 @@ const collectAllResults = async (
 
     // Re-throw other errors
     throw error;
+  }
+};
+
+// ============================================================================
+// Clipboard Functionality
+// ============================================================================
+
+const collectFailedPackageLogs = (summary: TscSummary): string => {
+  const failed = summary.results.filter((r) => !r.success && !r.skipped);
+
+  if (failed.length === 0) {
+    return "";
+  }
+
+  const logs: string[] = [];
+  logs.push(
+    "I received the following TypeScript errors (please analyse the related code for each and correct them):",
+  );
+  logs.push("```");
+  logs.push("TypeScript Check (bun dler tsc)");
+  logs.push("");
+
+  for (const result of failed) {
+    logs.push(`📦 ${result.package.name}`);
+    logs.push(
+      `   Errors: ${result.filteredErrors}, Warnings: ${result.filteredWarnings}`,
+    );
+    logs.push("   " + "─".repeat(30));
+
+    if (result.filteredOutput.trim()) {
+      const lines = result.filteredOutput
+        .trim()
+        .split("\n")
+        .map((line) => `   ${line}`);
+      logs.push(...lines);
+    }
+
+    logs.push("```");
+    logs.push("");
+    logs.push("");
+  }
+
+  return logs.join("\n");
+};
+
+const copyLogsToClipboard = async (summary: TscSummary): Promise<void> => {
+  try {
+    const logs = collectFailedPackageLogs(summary);
+
+    if (!logs) {
+      logger.info("ℹ️  No failed packages to copy to clipboard");
+      return;
+    }
+
+    await clipboard.write(logs);
+    logger.success("📋 Failed package logs copied to clipboard!");
+  } catch (error) {
+    logger.error("❌ Failed to copy logs to clipboard:");
+    if (error instanceof Error) {
+      logger.error(error.message);
+    } else {
+      logger.error(String(error));
+    }
   }
 };
 
@@ -552,97 +753,80 @@ export const runTscOnAllPackages = async (
   cwd?: string,
   options: TscOptions = {},
 ): Promise<TscSummary> => {
-  const { verbose = false } = options;
+  const {
+    verbose = false,
+    copyLogs = false,
+    cache: enableCache = true,
+    autoConcurrency = false,
+  } = options;
 
-  return withSpinner(
-    {
-      text: "🔍 Discovering workspace packages...",
-      color: "cyan",
-      spinner: "dots",
-    },
-    async (spinner) => {
-      // Discover packages
-      const allPackages = await getWorkspacePackages(cwd);
+  return (async () => {
+    // Initialize cache
+    const cache = enableCache ? new TscCache() : undefined;
+    if (cache) {
+      await cache.initialize();
+    }
 
-      if (verbose) {
-        spinner.text = `   Found ${allPackages.length} packages`;
-        logger.info("   Packages found:");
-        for (const pkg of allPackages) {
-          const configStatus = pkg.hasTsConfig ? "✅" : "⏭️";
-          logger.info(`     ${configStatus} ${pkg.name} (${pkg.path})`);
-        }
-        logger.info("");
-      }
+    // Discover packages with timing
+    const discoveryResult = await getWorkspacePackages(cwd);
+    const { packages: allPackages, discoveryTime } = discoveryResult;
 
-      // Apply filters
-      const packages = filterPackages(allPackages, ignore);
-      const ignoredCount = allPackages.length - packages.length;
-
-      if (ignoredCount > 0) {
-        const patterns = normalizePatterns(ignore!);
-        logger.info(
-          `   Ignoring ${ignoredCount} packages matching: ${patterns.join(", ")}`,
-        );
-      }
-
-      const { concurrency = DEFAULT_CONCURRENCY, stopOnError = false } =
-        options;
+    if (verbose) {
       logger.info(
-        `   Checking ${packages.length} packages (concurrency: ${concurrency}, stopOnError: ${stopOnError})...\n`,
+        `   Found ${allPackages.length} packages (${discoveryTime}ms)`,
       );
-
-      // Create multi-step spinner for TypeScript checks
-      const steps = [
-        "Initializing TypeScript checks",
-        "Running type checking on packages",
-        "Processing results",
-        "Generating summary",
-      ];
-
-      const multiStepSpinner = createMultiStepSpinner(
-        "TypeScript Check",
-        steps,
-        {
-          color: "cyan",
-          spinner: "dots",
-        },
-      );
-
-      try {
-        // Step 1: Initialize
-        multiStepSpinner.nextStep(0);
-
-        if (verbose) {
-          logger.info("🚀 Starting TypeScript checks...\n");
-        }
-
-        // Step 2: Run TypeScript checks
-        multiStepSpinner.nextStep(1);
-        const summary = await collectAllResults(packages, options);
-
-        // Step 3: Process results
-        multiStepSpinner.nextStep(2);
-
-        // Step 4: Generate summary
-        multiStepSpinner.nextStep(3);
-
-        // Display results
-        formatOutput(summary, verbose);
-
-        // Complete with success
-        multiStepSpinner.complete(
-          `TypeScript check completed - ${summary.successfulPackages}/${summary.totalPackages} packages passed`,
-        );
-
-        return summary;
-      } catch (error) {
-        multiStepSpinner.error(
-          error instanceof Error ? error : new Error(String(error)),
-        );
-        throw error;
+      logger.info("   Packages found:");
+      for (const pkg of allPackages) {
+        const configStatus = pkg.hasTsConfig ? "✅" : "⏭️";
+        logger.info(`     ${configStatus} ${pkg.name} (${pkg.path})`);
       }
-    },
-    verbose ? "✅ Workspace packages discovered successfully" : undefined,
-    "❌ Failed to discover workspace packages",
-  );
+      logger.info("");
+    }
+
+    // Apply filters
+    const packages = filterPackages(allPackages, ignore);
+    const ignoredCount = allPackages.length - packages.length;
+
+    if (ignoredCount > 0) {
+      // Always ignore @reliverse/dler-v1 package
+      const alwaysIgnored = ["@reliverse/dler-v1"];
+      const combinedIgnore = ignore
+        ? Array.isArray(ignore)
+          ? [...alwaysIgnored, ...ignore]
+          : [...alwaysIgnored, ignore]
+        : alwaysIgnored;
+
+      const patterns = normalizePatterns(combinedIgnore);
+      logger.info(
+        `   Ignoring ${ignoredCount} packages matching: ${patterns.join(", ")}`,
+      );
+    }
+
+    // Auto-detect concurrency if requested
+    let concurrency = options.concurrency ?? DEFAULT_CONCURRENCY;
+    if (autoConcurrency) {
+      concurrency = Math.max(4, cpus().length * 2);
+    }
+
+    const { stopOnError = false } = options;
+    logger.info(
+      `   Checking ${packages.length} packages (concurrency: ${concurrency}, stopOnError: ${stopOnError})...\n`,
+    );
+
+    if (verbose) {
+      logger.info("🚀 Starting TypeScript checks...\n");
+    }
+
+    const summary = await collectAllResults(packages, options, cache);
+
+    // Display results
+    formatOutput(summary, verbose);
+
+    // Copy logs to clipboard if requested and there are errors
+    if (copyLogs && summary.hasErrors) {
+      await copyLogsToClipboard(summary);
+    }
+
+    return summary;
+  })();
 };

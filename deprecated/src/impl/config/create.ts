@@ -12,7 +12,10 @@ import { execaCommand } from "execa";
 /**
  * Adds ~/app/types/mod as a devDependency to the nearest package.json in the given cwd.
  */
-async function addDevDependency(pkgName: string, opts: { cwd: string }): Promise<void> {
+async function addDevDependency(
+  pkgName: string,
+  opts: { cwd: string },
+): Promise<void> {
   const pkgPath = path.join(opts.cwd, "package.json");
   let pkg: any;
   try {
@@ -33,7 +36,10 @@ async function addDevDependency(pkgName: string, opts: { cwd: string }): Promise
     await fs.writeFile(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
     relinka("log", `Added ${pkgName} to devDependencies in ${pkgPath}`);
   } else {
-    relinka("log", `${pkgName} already present in devDependencies in ${pkgPath}`);
+    relinka(
+      "log",
+      `${pkgName} already present in devDependencies in ${pkgPath}`,
+    );
   }
 }
 
@@ -45,7 +51,10 @@ import {
   rseName,
   UNKNOWN_VALUE,
 } from "~/impl/config/constants";
-import { generateDefaultRulesForProject, getDefaultReliverseConfig } from "~/impl/config/def-utils";
+import {
+  generateDefaultRulesForProject,
+  getDefaultReliverseConfig,
+} from "~/impl/config/def-utils";
 import { detectFeatures, getPackageJson } from "~/impl/config/detect";
 import { getReliverseConfigPath } from "~/impl/config/path";
 import { readReliverseConfig } from "~/impl/config/read";
@@ -73,7 +82,10 @@ export async function writeReliverseConfig(
 ): Promise<void> {
   // If file exists, skip writing and continue
   if (await fs.pathExists(configPath)) {
-    relinka("verbose", `Config file already exists at ${configPath}, skipping creation`);
+    relinka(
+      "verbose",
+      `Config file already exists at ${configPath}, skipping creation`,
+    );
     return;
   }
 
@@ -101,10 +113,16 @@ export async function writeReliverseConfig(
       }
 
       if (await fs.pathExists(configPath)) {
-        relinka("verbose", `Creating backup of existing config at: ${backupPath}`);
+        relinka(
+          "verbose",
+          `Creating backup of existing config at: ${backupPath}`,
+        );
         await fs.copy(configPath, backupPath);
       } else {
-        relinka("verbose", "No existing config found, skipping backup creation");
+        relinka(
+          "verbose",
+          "No existing config found, skipping backup creation",
+        );
       }
 
       // Convert the config object to a TypeScript-friendly string
@@ -181,12 +199,19 @@ export default defineConfig(${objectLiteralWithComments});
       relinka("error", "Failed to write TS config:", String(error));
 
       // Attempt to restore from backup if write failed
-      if ((await fs.pathExists(backupPath)) && !(await fs.pathExists(configPath))) {
+      if (
+        (await fs.pathExists(backupPath)) &&
+        !(await fs.pathExists(configPath))
+      ) {
         try {
           await fs.copy(backupPath, configPath);
           relinka("warn", "Restored TS config from backup after failed write");
         } catch (restoreError) {
-          relinka("error", "Failed to restore TS config from backup:", String(restoreError));
+          relinka(
+            "error",
+            "Failed to restore TS config from backup:",
+            String(restoreError),
+          );
         }
       }
       if (await fs.pathExists(tempPath)) {
@@ -221,7 +246,8 @@ export async function createReliverseConfig(
   overrides: Partial<ReliverseConfig>,
 ): Promise<void> {
   const defaultRules = await generateDefaultRulesForProject(projectPath, isDev);
-  const effectiveProjectName = defaultRules?.projectName ?? path.basename(projectPath);
+  const effectiveProjectName =
+    defaultRules?.projectName ?? path.basename(projectPath);
   let effectiveAuthorName = defaultRules?.projectAuthor ?? UNKNOWN_VALUE;
   const effectiveDomain =
     defaultRules?.projectDomain ??
@@ -305,9 +331,12 @@ export async function generateReliverseConfig({
   defaultConfig.projectName = projectName;
   defaultConfig.projectAuthor = frontendUsername;
   defaultConfig.projectDescription =
-    packageJson?.description ?? defaultConfig.projectDescription ?? UNKNOWN_VALUE;
+    packageJson?.description ??
+    defaultConfig.projectDescription ??
+    UNKNOWN_VALUE;
   defaultConfig.version = packageJson?.version ?? defaultConfig.version;
-  defaultConfig.projectLicense = packageJson?.license ?? defaultConfig.projectLicense;
+  defaultConfig.projectLicense =
+    packageJson?.license ?? defaultConfig.projectLicense;
 
   // Derive a repository URL based on package.json or a fallback
   const projectNameWithoutAt = projectName?.replace("@", "");
@@ -381,7 +410,8 @@ export async function generateReliverseConfig({
   } else {
     // Use standard logic to figure out TS or JSONC, unless configInfo is already provided
     const configPathInfo =
-      configInfo ?? (await getReliverseConfigPath(projectPath, isDev, skipInstallPrompt));
+      configInfo ??
+      (await getReliverseConfigPath(projectPath, isDev, skipInstallPrompt));
     effectiveConfigPath = configPathInfo.configPath;
   }
 
@@ -409,5 +439,10 @@ export async function generateReliverseConfig({
   }
 
   // Write the final config to disk
-  await writeReliverseConfig(effectiveConfigPath, effectiveConfig, isDev, skipInstallPrompt);
+  await writeReliverseConfig(
+    effectiveConfigPath,
+    effectiveConfig,
+    isDev,
+    skipInstallPrompt,
+  );
 }

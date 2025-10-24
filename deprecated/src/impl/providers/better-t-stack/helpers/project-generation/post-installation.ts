@@ -1,10 +1,17 @@
 import { re } from "@reliverse/relico";
 import { relinka } from "@reliverse/relinka";
-import type { Database, ORM, ProjectConfig, Runtime } from "~/impl/providers/better-t-stack/types";
+import type {
+  Database,
+  ORM,
+  ProjectConfig,
+  Runtime,
+} from "~/impl/providers/better-t-stack/types";
 
 import { getPackageExecutionCommand } from "~/impl/providers/better-t-stack/utils/get-package-execution-command";
 
-export function displayPostInstallInstructions(config: ProjectConfig & { depsInstalled: boolean }) {
+export function displayPostInstallInstructions(
+  config: ProjectConfig & { depsInstalled: boolean },
+) {
   const {
     database,
     relativePath,
@@ -20,22 +27,29 @@ export function displayPostInstallInstructions(config: ProjectConfig & { depsIns
   const isConvex = backend === "convex";
   const callCmd = packageManager === "npm" ? "npm run" : packageManager;
   const cdCmd = `cd ${relativePath}`;
-  const hasHuskyOrBiome = addons?.includes("husky") || addons?.includes("biome");
+  const hasHuskyOrBiome =
+    addons?.includes("husky") || addons?.includes("biome");
 
   const databaseInstructions =
     !isConvex && database !== "none"
       ? getDatabaseInstructions(database, orm, callCmd, runtime)
       : "";
 
-  const tauriInstructions = addons?.includes("tauri") ? getTauriInstructions(callCmd) : "";
-  const lintingInstructions = hasHuskyOrBiome ? getLintingInstructions(callCmd) : "";
+  const tauriInstructions = addons?.includes("tauri")
+    ? getTauriInstructions(callCmd)
+    : "";
+  const lintingInstructions = hasHuskyOrBiome
+    ? getLintingInstructions(callCmd)
+    : "";
   const nativeInstructions =
-    frontend?.includes("native-nativewind") || frontend?.includes("native-unistyles")
+    frontend?.includes("native-nativewind") ||
+    frontend?.includes("native-unistyles")
       ? getNativeInstructions(isConvex)
       : "";
   const pwaInstructions =
     addons?.includes("pwa") &&
-    (frontend?.includes("react-router") || frontend?.includes("tanstack-router"))
+    (frontend?.includes("react-router") ||
+      frontend?.includes("tanstack-router"))
       ? getPwaInstructions()
       : "";
   const starlightInstructions = addons?.includes("starlight")
@@ -54,11 +68,15 @@ export function displayPostInstallInstructions(config: ProjectConfig & { depsIns
     ].includes(f),
   );
   const hasNative =
-    frontend?.includes("native-nativewind") || frontend?.includes("native-unistyles");
+    frontend?.includes("native-nativewind") ||
+    frontend?.includes("native-unistyles");
 
   const bunWebNativeWarning =
-    packageManager === "bun" && hasNative && hasWeb ? getBunWebNativeWarning() : "";
-  const noOrmWarning = !isConvex && database !== "none" && orm === "none" ? getNoOrmWarning() : "";
+    packageManager === "bun" && hasNative && hasWeb
+      ? getBunWebNativeWarning()
+      : "";
+  const noOrmWarning =
+    !isConvex && database !== "none" && orm === "none" ? getNoOrmWarning() : "";
 
   const hasReactRouter = frontend?.includes("react-router");
   const hasSvelte = frontend?.includes("svelte");
@@ -126,7 +144,9 @@ export function displayPostInstallInstructions(config: ProjectConfig & { depsIns
 
 function getNativeInstructions(isConvex: boolean): string {
   const envVar = isConvex ? "EXPO_PUBLIC_CONVEX_URL" : "EXPO_PUBLIC_SERVER_URL";
-  const exampleUrl = isConvex ? "https://<YOUR_CONVEX_URL>" : "http://<YOUR_LOCAL_IP>:3000";
+  const exampleUrl = isConvex
+    ? "https://<YOUR_CONVEX_URL>"
+    : "http://<YOUR_LOCAL_IP>:3000";
   const envFileName = ".env";
   const ipNote = isConvex
     ? "your Convex deployment URL (find after running 'dev:setup')"
@@ -188,10 +208,14 @@ function getDatabaseInstructions(
       );
     }
   } else if (orm === "none") {
-    instructions.push(`${re.yellow("NOTE:")} Manual database schema setup required.`);
+    instructions.push(
+      `${re.yellow("NOTE:")} Manual database schema setup required.`,
+    );
   }
 
-  return instructions.length ? `${re.bold("Database commands:")}\n${instructions.join("\n")}` : "";
+  return instructions.length
+    ? `${re.bold("Database commands:")}\n${instructions.join("\n")}`
+    : "";
 }
 
 function getTauriInstructions(callCmd?: string): string {

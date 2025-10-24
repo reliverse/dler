@@ -117,7 +117,9 @@ export async function downloadFileFromGitHub(
     if (repo.includes("/")) {
       const repoParts = repo.split("/");
       if (repoParts.length !== 2) {
-        throw new Error(`Invalid repository format: "${repo}". Expected format: "owner/repo".`);
+        throw new Error(
+          `Invalid repository format: "${repo}". Expected format: "owner/repo".`,
+        );
       }
       repoOwner = repoParts[0]!;
       repoName = repoParts[1]!;
@@ -125,8 +127,10 @@ export async function downloadFileFromGitHub(
 
     // Prompt user about secret masking
     const maskInput = await confirmPrompt({
-      title: "Do you want to mask secret inputs (e.g., GitHub token) in the next steps?",
-      content: "Regardless of your choice, your data will be securely stored on your device.",
+      title:
+        "Do you want to mask secret inputs (e.g., GitHub token) in the next steps?",
+      content:
+        "Regardless of your choice, your data will be securely stored on your device.",
     });
 
     // Memory used for storing credentials
@@ -146,7 +150,11 @@ export async function downloadFileFromGitHub(
     }
 
     // Initialize Octokit
-    const githubResult = await initGithubSDK(memory, frontendUsername, maskInput);
+    const githubResult = await initGithubSDK(
+      memory,
+      frontendUsername,
+      maskInput,
+    );
     if (!githubResult) {
       throw new Error(
         "Failed to initialize Octokit SDK. Please notify CLI developers if the problem persists.",
@@ -167,7 +175,9 @@ Please use a repository you own or a public repository.`,
     // STEP 3: Download file from GitHub
     // ----------------------------------------------------------------
     if (!repoOwner || !repoName) {
-      throw new Error(`Invalid repository format: "${repo}". Expected format: "owner/repo".`);
+      throw new Error(
+        `Invalid repository format: "${repo}". Expected format: "owner/repo".`,
+      );
     }
 
     logVerbose(
@@ -195,8 +205,16 @@ Please use a repository you own or a public repository.`,
 
     // Ensure we're dealing with a single file (not a directory)
     const data = response.data;
-    if (Array.isArray(data) || data.type !== "file" || !data.content || !data.encoding) {
-      relinka("warn", `Unexpected response format for ${filePath} from ${repo} (${branch}).`);
+    if (
+      Array.isArray(data) ||
+      data.type !== "file" ||
+      !data.content ||
+      !data.encoding
+    ) {
+      relinka(
+        "warn",
+        `Unexpected response format for ${filePath} from ${repo} (${branch}).`,
+      );
       return null;
     }
 
@@ -210,7 +228,9 @@ Please use a repository you own or a public repository.`,
     }
 
     // Decode file content
-    const decodedContent = Buffer.from(data.content, "base64").toString("utf-8");
+    const decodedContent = Buffer.from(data.content, "base64").toString(
+      "utf-8",
+    );
 
     // -----------------------------------------------------------------
     // STEP 4: Cache the file if caching is enabled
@@ -219,7 +239,9 @@ Please use a repository you own or a public repository.`,
       const cachePath = getEnvCachePath(repo, branch);
       await ensureEnvCacheDir();
       await fs.writeFile(cachePath, decodedContent);
-      logVerbose(`Cached .env.example for ${repo} (${branch}) at ${cachePath}.`);
+      logVerbose(
+        `Cached .env.example for ${repo} (${branch}) at ${cachePath}.`,
+      );
     }
 
     return decodedContent;

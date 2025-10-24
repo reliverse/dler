@@ -75,7 +75,9 @@ export async function initializeGitRepo(
 
     // Rename branch if necessary.
     const branchName =
-      config.repoBranch && config.repoBranch !== "main" ? config.repoBranch : "main";
+      config.repoBranch && config.repoBranch !== "main"
+        ? config.repoBranch
+        : "main";
     try {
       await git.raw(["branch", "-M", branchName]);
     } catch (error) {
@@ -119,9 +121,13 @@ async function createGitCommit(
     // Commit all changes.
     await git.add(".");
     await git.commit(
-      message ?? (alreadyGit ? `Update by ${cliName}` : `Initial commit by ${cliName}`),
+      message ??
+        (alreadyGit ? `Update by ${cliName}` : `Initial commit by ${cliName}`),
     );
-    relinka("success", alreadyGit ? "Changes committed" : "Initial commit created");
+    relinka(
+      "success",
+      alreadyGit ? "Changes committed" : "Initial commit created",
+    );
   } else {
     relinka("info", "No changes to commit in existing repository");
   }
@@ -167,18 +173,38 @@ export async function initGitDir(
       relinka("verbose", "Reinitializing existing git repository...");
       if (!(await removeGitDir(effectiveDir))) return false;
       const git: SimpleGit = simpleGit({ baseDir: effectiveDir });
-      await initializeGitRepo(git, false, params.config, params.isTemplateDownload);
+      await initializeGitRepo(
+        git,
+        false,
+        params.config,
+        params.isTemplateDownload,
+      );
       if (params.createCommit) {
-        await createGitCommit(git, effectiveDir, false, params.isTemplateDownload);
+        await createGitCommit(
+          git,
+          effectiveDir,
+          false,
+          params.isTemplateDownload,
+        );
       }
       return true;
     }
 
     const git: SimpleGit = simpleGit({ baseDir: effectiveDir });
-    await initializeGitRepo(git, alreadyGit, params.config, params.isTemplateDownload);
+    await initializeGitRepo(
+      git,
+      alreadyGit,
+      params.config,
+      params.isTemplateDownload,
+    );
 
     if (params.createCommit) {
-      await createGitCommit(git, effectiveDir, alreadyGit, params.isTemplateDownload);
+      await createGitCommit(
+        git,
+        effectiveDir,
+        alreadyGit,
+        params.isTemplateDownload,
+      );
     }
 
     return true;
@@ -236,8 +262,19 @@ export async function createCommit(
     );
 
     const git: SimpleGit = simpleGit({ baseDir: effectiveDir });
-    await initializeGitRepo(git, alreadyGit, params.config, params.isTemplateDownload);
-    await createGitCommit(git, effectiveDir, alreadyGit, params.isTemplateDownload, params.message);
+    await initializeGitRepo(
+      git,
+      alreadyGit,
+      params.config,
+      params.isTemplateDownload,
+    );
+    await createGitCommit(
+      git,
+      effectiveDir,
+      alreadyGit,
+      params.isTemplateDownload,
+      params.message,
+    );
 
     return true;
   } catch (error) {
@@ -283,7 +320,11 @@ async function isRepoOwner(
     return false;
   }
   try {
-    const { isOwner } = await checkGithubRepoOwnership(githubInstance, githubUsername, repoName);
+    const { isOwner } = await checkGithubRepoOwnership(
+      githubInstance,
+      githubUsername,
+      repoName,
+    );
     return isOwner;
   } catch (error) {
     relinka(
@@ -315,7 +356,10 @@ export async function handleGithubRepo(
   },
 ): Promise<boolean> {
   if (params.isTemplateDownload) {
-    relinka("verbose", "Skipping GitHub repository handling for template download");
+    relinka(
+      "verbose",
+      "Skipping GitHub repository handling for template download",
+    );
     return true;
   }
 
@@ -370,7 +414,8 @@ export async function handleGithubRepo(
     } else {
       choice = await selectPrompt({
         title: `Repository ${params.githubUsername}/${params.projectName} already exists and you own it. What would you like to do?`,
-        content: "Note: A commit will be created and pushed only if there are uncommitted changes.",
+        content:
+          "Note: A commit will be created and pushed only if there are uncommitted changes.",
         options: [
           {
             value: "commit",
@@ -382,7 +427,8 @@ export async function handleGithubRepo(
           },
           {
             value: "new",
-            label: "Initialize a brand-new GitHub repository with a different name",
+            label:
+              "Initialize a brand-new GitHub repository with a different name",
           },
         ],
         defaultValue: "commit",
@@ -399,7 +445,8 @@ export async function handleGithubRepo(
         validate: (value: string) => {
           const trimmed = value.trim();
           if (!trimmed) return "Repository name is required";
-          if (!/^[a-zA-Z0-9-_]+$/.test(trimmed)) return "Invalid repository name format";
+          if (!/^[a-zA-Z0-9-_]+$/.test(trimmed))
+            return "Invalid repository name format";
           return true;
         },
       });
@@ -428,7 +475,14 @@ export async function handleGithubRepo(
 export async function pushGitCommits(params: GitModParams): Promise<boolean> {
   const effectiveDir = getEffectiveDir(params);
   try {
-    if (!(await isDirHasGit(params.cwd, params.isDev, params.projectName, params.projectPath))) {
+    if (
+      !(await isDirHasGit(
+        params.cwd,
+        params.isDev,
+        params.projectName,
+        params.projectPath,
+      ))
+    ) {
       relinka("error", "Not a git repository. Please initialize git first.");
       return false;
     }
@@ -450,7 +504,10 @@ export async function pushGitCommits(params: GitModParams): Promise<boolean> {
     }
 
     await git.push("origin", currentBranch);
-    relinka("success", `Pushed ${status.ahead} commit(s) to origin/${currentBranch}`);
+    relinka(
+      "success",
+      `Pushed ${status.ahead} commit(s) to origin/${currentBranch}`,
+    );
 
     return true;
   } catch (error) {

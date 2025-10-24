@@ -46,7 +46,8 @@ export function getMimeType(filePath: string) {
     ".gif": "image/gif",
     ".pdf": "application/pdf",
     ".doc": "application/msword",
-    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".docx":
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ".txt": "text/plain",
   };
   return mimeTypes[extension] || "application/octet-stream";

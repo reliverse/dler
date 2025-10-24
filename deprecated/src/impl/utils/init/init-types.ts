@@ -1,8 +1,13 @@
-import type { DEST_FILE_EXISTS_BEHAVIOURS, FILE_TYPES, INIT_BEHAVIOURS } from "./init-const";
+import type {
+  DEST_FILE_EXISTS_BEHAVIOURS,
+  FILE_TYPES,
+  INIT_BEHAVIOURS,
+} from "./init-const";
 
 export type FileType = (typeof FILE_TYPES)[number]["type"];
 export type InitBehaviour = (typeof INIT_BEHAVIOURS)[number];
-export type DestFileExistsBehaviour = (typeof DEST_FILE_EXISTS_BEHAVIOURS)[number];
+export type DestFileExistsBehaviour =
+  (typeof DEST_FILE_EXISTS_BEHAVIOURS)[number];
 
 /** Library-level interface for hooking into the file init process. */
 export interface ReinitUserConfig {

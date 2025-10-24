@@ -23,7 +23,9 @@ interface ScriptOption {
 const SCRIPT_DEFINITIONS = {
   latest: {
     label: "Update dependencies to latest version",
-    hint: re.redBright("may break project if dependencies have critical changes"),
+    hint: re.redBright(
+      "may break project if dependencies have critical changes",
+    ),
   },
   dbGenerate: {
     label: "Generate database schema files",
@@ -126,7 +128,10 @@ export async function promptPackageJsonScripts(
           value: scriptName,
           hint: def.hint,
         });
-      } else if (!scripts.check || !["typecheck", "lint", "format"].includes(key)) {
+      } else if (
+        !scripts.check ||
+        !["typecheck", "lint", "format"].includes(key)
+      ) {
         scriptOptions.push({
           label: def.label,
           value: scriptName,

@@ -214,9 +214,15 @@ export async function handleOpenProjectMenu(
   // (4) Handle Actions
   switch (action) {
     case "better-auth": {
-      relinka("info", "The following args will be passed to the rse auth command:");
+      relinka(
+        "info",
+        "The following args will be passed to the rse auth command:",
+      );
       relinka("log", `--config ${selectedProject.path}/src/lib/auth.ts`);
-      relinka("log", `--output ${selectedProject.path}/src/db/schema/user/tables.ts`);
+      relinka(
+        "log",
+        `--output ${selectedProject.path}/src/db/schema/user/tables.ts`,
+      );
       // await handleBetterAuth(selectedProject.path);
 
       // TODO: uncomment this
@@ -229,23 +235,34 @@ export async function handleOpenProjectMenu(
 
     case "git-deploy": {
       // Initialize Github SDK
-      const githubResult = await initGithubSDK(memory, frontendUsername, maskInput);
+      const githubResult = await initGithubSDK(
+        memory,
+        frontendUsername,
+        maskInput,
+      );
       if (!githubResult) {
-        throw new Error("Failed to initialize GitHub SDK. Please notify the CLI developers.");
+        throw new Error(
+          "Failed to initialize GitHub SDK. Please notify the CLI developers.",
+        );
       }
       const [githubToken, githubInstance, githubUsername] = githubResult;
 
       // Initialize Vercel SDK
       const vercelResult = await initVercelSDK(memory, maskInput);
       if (!vercelResult) {
-        throw new Error("Failed to initialize Vercel SDK. Please notify the CLI developers.");
+        throw new Error(
+          "Failed to initialize Vercel SDK. Please notify the CLI developers.",
+        );
       }
       const [vercelToken, vercelInstance] = vercelResult;
 
       // --- Git and Deploy Operations ---
       let showCreateGithubOption = true;
       let hasGithubRepo = false;
-      const hasDbPush = await checkScriptExists(selectedProject.path, "db:push");
+      const hasDbPush = await checkScriptExists(
+        selectedProject.path,
+        "db:push",
+      );
       const shouldRunDbPush = false; // preset flag
 
       const { exists, isOwner } = await checkGithubRepoOwnership(
@@ -385,7 +402,10 @@ export async function handleOpenProjectMenu(
           );
           return;
         }
-        relinka("info", "No existing deployment found. Initializing new deployment...");
+        relinka(
+          "info",
+          "No existing deployment found. Initializing new deployment...",
+        );
         const { deployService } = await deployProject(
           githubInstance,
           vercelInstance,
@@ -466,9 +486,15 @@ export async function handleOpenProjectMenu(
         }
         const toProvider = await selectPrompt({
           title: "Convert to:",
-          options: toProviderOptions.filter((opt) => opt.value !== fromProvider),
+          options: toProviderOptions.filter(
+            (opt) => opt.value !== fromProvider,
+          ),
         });
-        await convertDatabaseProvider(selectedProject.path, fromProvider, toProvider);
+        await convertDatabaseProvider(
+          selectedProject.path,
+          fromProvider,
+          toProvider,
+        );
       }
       break;
     }

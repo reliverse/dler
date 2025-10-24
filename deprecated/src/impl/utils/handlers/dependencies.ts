@@ -3,7 +3,10 @@ import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 
 // Function to uninstall dependencies
-export async function uninstallDependencies(cwd: string, dependencies: string[]): Promise<void> {
+export async function uninstallDependencies(
+  cwd: string,
+  dependencies: string[],
+): Promise<void> {
   if (dependencies.length === 0) {
     return;
   }

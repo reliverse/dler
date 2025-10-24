@@ -1,6 +1,9 @@
 import { normalize } from "@reliverse/pathkit";
 
-import type { DetectPackageManagerOptions, PackageManagerName } from "./pm-types";
+import type {
+  DetectPackageManagerOptions,
+  PackageManagerName,
+} from "./pm-types";
 
 export async function findup<T>(
   cwd: string,
@@ -32,7 +35,11 @@ export function parsePackageManagerField(packageManager?: string): {
   const [name, _version] = (packageManager || "").split("@");
   const [version, buildMeta] = _version?.split("+") || [];
 
-  if (name && name !== "-" && /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/.test(name)) {
+  if (
+    name &&
+    name !== "-" &&
+    /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/.test(name)
+  ) {
     return { name: name as PackageManagerName, version, buildMeta };
   }
 

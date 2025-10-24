@@ -9,10 +9,6 @@
       "default": "./src/mod.ts"
     }
   },
-  "scripts": {
-    "dev": "bun src/mod.ts",
-    "typecheck": "tsc --noEmit"
-  },
   "dependencies": {
     "@reliverse/dler-logger": "workspace:*"
   },

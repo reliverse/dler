@@ -16,7 +16,10 @@ interface CommonIndexConfig_Regex<AdditionalFields> {
 }
 interface CommonIndexConfig_manual<AdditionalFields> {
   type: "manual";
-  getIndex: (args: { content: string; additionalFields: AdditionalFields }) => number | null;
+  getIndex: (args: {
+    content: string;
+    additionalFields: AdditionalFields;
+  }) => number | null;
 }
 
 export type CommonIndexConfig<AdditionalFields> =
@@ -76,21 +79,33 @@ export async function generateAuthConfig({
       pluginContents: string;
       config: string;
     }): Promise<{ code: string; dependencies: string[]; envs: string[] }> => {
-      const start_of_plugins = getGroupInfo(opts.config, common_indexes.START_OF_PLUGINS, {});
+      const start_of_plugins = getGroupInfo(
+        opts.config,
+        common_indexes.START_OF_PLUGINS,
+        {},
+      );
 
       // console.log(`start of plugins:`, start_of_plugins);
 
       if (!start_of_plugins) {
-        throw new Error("Couldn't find start of your plugins array in your auth config file.");
+        throw new Error(
+          "Couldn't find start of your plugins array in your auth config file.",
+        );
       }
-      const end_of_plugins = getGroupInfo(opts.config, common_indexes.END_OF_PLUGINS, {
-        start_of_plugins: start_of_plugins.index,
-      });
+      const end_of_plugins = getGroupInfo(
+        opts.config,
+        common_indexes.END_OF_PLUGINS,
+        {
+          start_of_plugins: start_of_plugins.index,
+        },
+      );
 
       // console.log(`end of plugins:`, end_of_plugins);
 
       if (!end_of_plugins) {
-        throw new Error("Couldn't find end of your plugins array in your auth config file.");
+        throw new Error(
+          "Couldn't find end of your plugins array in your auth config file.",
+        );
       }
       // console.log(
       // 	"slice:\n",
@@ -136,7 +151,9 @@ export async function generateAuthConfig({
         new_content = await format(new_content);
       } catch (error) {
         console.error(error);
-        throw new Error(`Failed to generate new auth config during plugin addition phase.`);
+        throw new Error(
+          `Failed to generate new auth config during plugin addition phase.`,
+        );
       }
       return { code: await new_content, dependencies: [], envs: [] };
     },
@@ -148,7 +165,10 @@ export async function generateAuthConfig({
       for (const import_ of opts.imports) {
         if (Array.isArray(import_.variables)) {
           importString += `import { ${import_.variables
-            .map((x) => `${x.asType ? "type " : ""}${x.name}${x.as ? ` as ${x.as}` : ""}`)
+            .map(
+              (x) =>
+                `${x.asType ? "type " : ""}${x.name}${x.as ? ` as ${x.as}` : ""}`,
+            )
             .join(", ")} } from "${import_.path}";\n`;
         } else {
           importString += `import ${import_.variables.asType ? "type " : ""}${
@@ -161,7 +181,9 @@ export async function generateAuthConfig({
         return { code: await new_content, dependencies: [], envs: [] };
       } catch (error) {
         console.error(error);
-        throw new Error(`Failed to generate new auth config during import addition phase.`);
+        throw new Error(
+          `Failed to generate new auth config during import addition phase.`,
+        );
       }
     },
     add_database: async (opts: {
@@ -415,7 +437,11 @@ export async function generateAuthConfig({
         });
       }
 
-      const start_of_betterauth = getGroupInfo(opts.config, common_indexes.START_OF_BETTERAUTH, {});
+      const start_of_betterauth = getGroupInfo(
+        opts.config,
+        common_indexes.START_OF_BETTERAUTH,
+        {},
+      );
       if (!start_of_betterauth) {
         throw new Error("Couldn't find start of betterAuth() function.");
       }
@@ -436,7 +462,9 @@ export async function generateAuthConfig({
         };
       } catch (error) {
         console.error(error);
-        throw new Error(`Failed to generate new auth config during database addition phase.`);
+        throw new Error(
+          `Failed to generate new auth config during database addition phase.`,
+        );
       }
     },
   };
@@ -498,7 +526,8 @@ export async function generateAuthConfig({
       }
       const { code, dependencies, envs } = await config_generation.add_plugin({
         config: new_user_config,
-        direction_in_plugins_array: plugin.id === "next-cookies" ? "append" : "prepend",
+        direction_in_plugins_array:
+          plugin.id === "next-cookies" ? "append" : "prepend",
         pluginFunctionName: plugin.name,
         pluginContents: pluginContents,
       });
@@ -508,7 +537,9 @@ export async function generateAuthConfig({
       // console.log(new_user_config);
       // console.log(`--------- UPDATE END ---------`);
     } catch (error: any) {
-      spinner.fail(`Something went wrong while generating/updating your new auth config file.`);
+      spinner.fail(
+        `Something went wrong while generating/updating your new auth config file.`,
+      );
       logger.error(error.message);
       process.exit(1);
     }
@@ -516,15 +547,19 @@ export async function generateAuthConfig({
 
   if (database) {
     try {
-      const { code, dependencies, envs } = await config_generation.add_database({
-        config: new_user_config,
-        database: database,
-      });
+      const { code, dependencies, envs } = await config_generation.add_database(
+        {
+          config: new_user_config,
+          database: database,
+        },
+      );
       new_user_config = code;
       total_dependencies.push(...dependencies);
       total_envs.push(...envs);
     } catch (error: any) {
-      spinner.fail(`Something went wrong while generating/updating your new auth config file.`);
+      spinner.fail(
+        `Something went wrong while generating/updating your new auth config file.`,
+      );
       logger.error(error.message);
       process.exit(1);
     }
@@ -609,7 +644,10 @@ function insertContent(params: {
 
   // Insert the new content at the specified position
   const targetLine = lines[targetLineIndex]!;
-  const updatedLine = targetLine.slice(0, character) + insert_content + targetLine.slice(character);
+  const updatedLine =
+    targetLine.slice(0, character) +
+    insert_content +
+    targetLine.slice(character);
   lines[targetLineIndex] = updatedLine;
 
   // Join the lines back into a single string

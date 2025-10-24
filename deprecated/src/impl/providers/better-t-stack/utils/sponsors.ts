@@ -17,7 +17,9 @@ export interface SponsorEntry {
 
 export const SPONSORS_JSON_URL = "https://sponsors.amanv.dev/sponsors.json";
 
-export async function fetchSponsors(url: string = SPONSORS_JSON_URL): Promise<SponsorEntry[]> {
+export async function fetchSponsors(
+  url: string = SPONSORS_JSON_URL,
+): Promise<SponsorEntry[]> {
   const s = createSpinner({
     text: "Fetching sponsors…",
   });
@@ -37,7 +39,11 @@ export async function fetchSponsors(url: string = SPONSORS_JSON_URL): Promise<Sp
 export function displaySponsors(sponsors: SponsorEntry[]): void {
   if (sponsors.length === 0) {
     log.info("No sponsors found. You can be the first one! ✨");
-    outro(re.cyan("Visit https://github.com/sponsors/AmanVarshney01 to become a sponsor."));
+    outro(
+      re.cyan(
+        "Visit https://github.com/sponsors/AmanVarshney01 to become a sponsor.",
+      ),
+    );
     return;
   }
 
@@ -56,5 +62,9 @@ export function displaySponsors(sponsors: SponsorEntry[]): void {
   });
 
   log.message("");
-  outro(re.magenta("Visit https://github.com/sponsors/AmanVarshney01 to become a sponsor."));
+  outro(
+    re.magenta(
+      "Visit https://github.com/sponsors/AmanVarshney01 to become a sponsor.",
+    ),
+  );
 }

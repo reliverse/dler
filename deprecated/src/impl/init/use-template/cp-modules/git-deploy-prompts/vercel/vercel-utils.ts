@@ -3,7 +3,10 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { selectPrompt } from "@reliverse/rempts";
 import { projectsGetProjectDomain } from "@vercel/sdk/funcs/projectsGetProjectDomain";
-import type { GetProjectsFramework, GetProjectsTarget1 } from "@vercel/sdk/models/getprojectsop";
+import type {
+  GetProjectsFramework,
+  GetProjectsTarget1,
+} from "@vercel/sdk/models/getprojectsop";
 
 import type { InstanceVercel } from "~/impl/utils/instanceVercel";
 import { updateReliverseMemory } from "~/impl/utils/reliverseMemory";
@@ -31,7 +34,10 @@ export async function saveVercelToken(
     let selectedTeam: VercelTeam;
     if (teams.length === 1 && teams[0]) {
       selectedTeam = teams[0];
-      relinka("info", `Auto-selected Vercel team with slug: ${selectedTeam.slug}`);
+      relinka(
+        "info",
+        `Auto-selected Vercel team with slug: ${selectedTeam.slug}`,
+      );
     } else {
       const teamChoice = await selectPrompt<string>({
         title: "Select a Vercel team:",
@@ -45,7 +51,11 @@ export async function saveVercelToken(
     }
 
     // Verify team details before saving
-    const isTeamValid = await verifyTeam(vercelInstance, selectedTeam.id, selectedTeam.slug);
+    const isTeamValid = await verifyTeam(
+      vercelInstance,
+      selectedTeam.id,
+      selectedTeam.slug,
+    );
 
     // If team is valid, save it to memory
     if (isTeamValid) {
@@ -56,7 +66,10 @@ export async function saveVercelToken(
 
       // If team is not valid, save an empty team to memory
     } else {
-      relinka("error", "Failed to verify Vercel team details. Vercel team will not be saved.");
+      relinka(
+        "error",
+        "Failed to verify Vercel team details. Vercel team will not be saved.",
+      );
       await updateReliverseMemory({
         vercelTeamId: "",
         vercelTeamSlug: "",
@@ -144,7 +157,9 @@ export async function getEnvVars(projectPath: string): Promise<
 /**
  * Detects the project framework
  */
-export async function detectFramework(directory: string): Promise<VercelFramework> {
+export async function detectFramework(
+  directory: string,
+): Promise<VercelFramework> {
   try {
     const packageJsonPath = path.join(directory, "package.json");
     if (await fs.pathExists(packageJsonPath)) {
@@ -170,8 +185,10 @@ export async function detectFramework(directory: string): Promise<VercelFramewor
 
     // Check for framework-specific files/directories
     const files = await fs.readdir(directory);
-    if (files.includes("astro.config.mjs") || files.includes("astro.config.ts")) return "astro";
-    if (files.includes("nuxt.config.js") || files.includes("nuxt.config.ts")) return "nuxtjs";
+    if (files.includes("astro.config.mjs") || files.includes("astro.config.ts"))
+      return "astro";
+    if (files.includes("nuxt.config.js") || files.includes("nuxt.config.ts"))
+      return "nuxtjs";
     if (files.includes("svelte.config.js")) return "sveltekit";
     if (files.includes("gatsby-config.js")) return "gatsby";
     if (files.includes("remix.config.js")) return "remix";
@@ -181,7 +198,8 @@ export async function detectFramework(directory: string): Promise<VercelFramewor
       files.includes("next.config.ts")
     )
       return "nextjs";
-    if (files.includes("vite.config.js") || files.includes("vite.config.ts")) return "vite";
+    if (files.includes("vite.config.js") || files.includes("vite.config.ts"))
+      return "vite";
 
     return "nextjs"; // Default to Next.js if no framework is detected
   } catch (_error) {
@@ -208,7 +226,10 @@ export async function verifyDomain(
     }
     const domainResponse = res.value;
     if (domainResponse.verification && domainResponse.verification.length > 0) {
-      relinka("info", "Domain verification required. Please add the following DNS records:");
+      relinka(
+        "info",
+        "Domain verification required. Please add the following DNS records:",
+      );
       for (const record of domainResponse.verification) {
         relinka("info", `Type: ${record.type}, Value: ${record.value}`);
       }

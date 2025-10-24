@@ -84,8 +84,11 @@ export async function addEnvVariablesToFile(
   }
 }
 
-export async function setupEnvironmentVariables(config: ProjectConfig): Promise<void> {
-  const { backend, frontend, database, auth, examples, dbSetup, projectDir } = config;
+export async function setupEnvironmentVariables(
+  config: ProjectConfig,
+): Promise<void> {
+  const { backend, frontend, database, auth, examples, dbSetup, projectDir } =
+    config;
 
   const hasReactRouter = frontend.includes("react-router");
   const hasTanStackRouter = frontend.includes("tanstack-router");
@@ -137,7 +140,10 @@ export async function setupEnvironmentVariables(config: ProjectConfig): Promise<
     }
   }
 
-  if (frontend.includes("native-nativewind") || frontend.includes("native-unistyles")) {
+  if (
+    frontend.includes("native-nativewind") ||
+    frontend.includes("native-unistyles")
+  ) {
     const nativeDir = path.join(projectDir, "apps/native");
     if (await fs.pathExists(nativeDir)) {
       let envVarName = "EXPO_PUBLIC_SERVER_URL";

@@ -1,5 +1,8 @@
-
-import { defineCmd, defineCmdArgs, defineCmdCfg } from "@reliverse/dler-launcher";
+import {
+  defineCmd,
+  defineCmdArgs,
+  defineCmdCfg,
+} from "@reliverse/dler-launcher";
 
 const args = defineCmdArgs({});
 
@@ -8,6 +11,10 @@ const cfg = defineCmdCfg({
   description: "A simple command with no arguments",
 });
 
-export default defineCmd(async () => {
-  console.log("Third command executed");
-}, args, cfg);
+export default defineCmd(
+  async () => {
+    console.log("Third command executed");
+  },
+  args,
+  cfg,
+);

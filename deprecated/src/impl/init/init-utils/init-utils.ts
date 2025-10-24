@@ -23,7 +23,10 @@ import { shouldInitGit } from "~/impl/utils/prompts/shouldInitGit";
 import { getOrCreateReliverseMemory } from "~/impl/utils/reliverseMemory";
 import { findTsconfigUp } from "~/impl/utils/tsconfigHelpers";
 import { createTSConfig } from "~/impl/utils/utils-tsconfig";
-import { getProjectContent, type RequiredProjectContent } from "../../config/content";
+import {
+  getProjectContent,
+  type RequiredProjectContent,
+} from "../../config/content";
 import { getOrCreateReliverseConfig } from "../../config/core";
 import { detectProjectsWithReliverseConfig } from "../../config/detect";
 import type { ProjectFramework } from "../../schema/mod";
@@ -71,12 +74,22 @@ function buildProjectSelectionMenuOptions(
 /**
  * Shows a menu to pick an existing rse project or create a new one.
  */
-export async function handleProjectSelectionMenu(cwd: string, isDev: boolean): Promise<string> {
+export async function handleProjectSelectionMenu(
+  cwd: string,
+  isDev: boolean,
+): Promise<string> {
   try {
-    const detectedProjects = await detectProjectsWithReliverseConfig(cwd, isDev);
+    const detectedProjects = await detectProjectsWithReliverseConfig(
+      cwd,
+      isDev,
+    );
     const directoryEmpty = await isDirectoryEmpty(cwd);
 
-    const menuData = buildProjectSelectionMenuOptions(cwd, detectedProjects, directoryEmpty);
+    const menuData = buildProjectSelectionMenuOptions(
+      cwd,
+      detectedProjects,
+      directoryEmpty,
+    );
 
     const selectedOption = await selectPrompt(menuData);
 
@@ -230,7 +243,11 @@ export async function showExistingProjectMenu(
       requiredContent.fileReliverseConfig,
     );
 
-    const menuOptions = buildExistingProjectMenuOptions(depsMissing, updateAvailable, updateInfo);
+    const menuOptions = buildExistingProjectMenuOptions(
+      depsMissing,
+      updateAvailable,
+      updateInfo,
+    );
 
     const promptContent = getPromptContent(depsMissing, updateAvailable);
 
@@ -246,7 +263,10 @@ export async function showExistingProjectMenu(
       await updateProjectTemplateDate(cwd, updateInfo.latestDate, isDev);
       relinka("info", "Template date updated. Pull changes if needed.");
     } else if (action === "edit-settings") {
-      relinka("info", "Feature not implemented yet. Please edit your rse config file manually.");
+      relinka(
+        "info",
+        "Feature not implemented yet. Please edit your rse config file manually.",
+      );
     }
 
     return { areDependenciesMissing: depsMissing };
@@ -325,7 +345,10 @@ export function determineProjectStatus(
 /**
  * Sets up new rse configuration files for a project without them.
  */
-export async function handleNewProject(cwd: string, isDev: boolean): Promise<ShowMenuResult> {
+export async function handleNewProject(
+  cwd: string,
+  isDev: boolean,
+): Promise<ShowMenuResult> {
   try {
     relinka("info", "Setting up rse config for this project...");
     await getOrCreateReliverseConfig({
@@ -349,7 +372,10 @@ export async function handleNewProject(cwd: string, isDev: boolean): Promise<Sho
 /**
  * Calls the advanced menu handler for a project that already has necessary files.
  */
-export async function handleExistingProject(cwd: string, isDev: boolean): Promise<ShowMenuResult> {
+export async function handleExistingProject(
+  cwd: string,
+  isDev: boolean,
+): Promise<ShowMenuResult> {
   return showExistingProjectMenu(cwd, isDev);
 }
 

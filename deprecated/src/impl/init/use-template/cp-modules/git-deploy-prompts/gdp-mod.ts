@@ -3,7 +3,10 @@ import { selectPrompt } from "@reliverse/rempts";
 import type { ReliverseConfig } from "~/impl/schema/mod";
 import type { DeploymentService } from "~/impl/types/mod";
 import { decide } from "~/impl/utils/decideHelper";
-import { type InstanceGithub, initGithubSDK } from "~/impl/utils/instanceGithub";
+import {
+  type InstanceGithub,
+  initGithubSDK,
+} from "~/impl/utils/instanceGithub";
 import { initVercelSDK } from "~/impl/utils/instanceVercel";
 import type { RepoOption } from "~/impl/utils/projectRepository";
 import { getOrCreateReliverseMemory } from "~/impl/utils/reliverseMemory";
@@ -98,7 +101,10 @@ export async function configureGithubRepo(
     githubUsername,
   });
   if (!repoCreated) {
-    relinka("error", "Failed to create GitHub repository. Stopping deploy process.");
+    relinka(
+      "error",
+      "Failed to create GitHub repository. Stopping deploy process.",
+    );
     return { success: false };
   }
 
@@ -196,7 +202,14 @@ export async function promptGitDeploy({
       }
 
       if (
-        !(await handleGitInit(cwd, isDev, projectName, projectPath, config, isTemplateDownload))
+        !(await handleGitInit(
+          cwd,
+          isDev,
+          projectName,
+          projectPath,
+          config,
+          isTemplateDownload,
+        ))
       ) {
         relinka("error", "Failed to initialize git locally.");
         return {
@@ -219,7 +232,11 @@ export async function promptGitDeploy({
     // -----------------------------------------------------------------
     // STEP 2: Initialize GitHub SDK
     // -----------------------------------------------------------------
-    const githubResult = await initGithubSDK(memory, frontendUsername, maskInput);
+    const githubResult = await initGithubSDK(
+      memory,
+      frontendUsername,
+      maskInput,
+    );
     if (!githubResult) {
       throw new Error(
         "Failed to initialize Octokit SDK. Please notify CLI developers if the problem persists.",
@@ -285,8 +302,20 @@ export async function promptGitDeploy({
         if (userAction === "retry") continue;
         else if (userAction === "skip") {
           skipGithub = true;
-          if (!(await handleGitInit(cwd, isDev, projectName, projectPath, config, false))) {
-            relinka("error", "Failed to initialize local git after skipping GitHub.");
+          if (
+            !(await handleGitInit(
+              cwd,
+              isDev,
+              projectName,
+              projectPath,
+              config,
+              false,
+            ))
+          ) {
+            relinka(
+              "error",
+              "Failed to initialize local git after skipping GitHub.",
+            );
             return {
               deployService: "none",
               primaryDomain,
@@ -322,7 +351,16 @@ export async function promptGitDeploy({
         ],
       });
       if (userAction === "skip") {
-        if (!(await handleGitInit(cwd, isDev, projectName, projectPath, config, false))) {
+        if (
+          !(await handleGitInit(
+            cwd,
+            isDev,
+            projectName,
+            projectPath,
+            config,
+            false,
+          ))
+        ) {
           relinka("error", "Failed to initialize local git after final skip.");
           return {
             deployService: "none",
@@ -358,7 +396,10 @@ export async function promptGitDeploy({
 
     // TODO: Ensure GitHub setup succeeded.
     if (!githubData.success) {
-      relinka("error", "GitHub setup did not complete successfully after multiple attempts.");
+      relinka(
+        "error",
+        "GitHub setup did not complete successfully after multiple attempts.",
+      );
       return {
         deployService: "none",
         primaryDomain,
@@ -391,7 +432,9 @@ export async function promptGitDeploy({
       relinka(
         "warn",
         "Could not check existing Vercel deployments. Assuming none:",
-        vercelError instanceof Error ? vercelError.message : String(vercelError),
+        vercelError instanceof Error
+          ? vercelError.message
+          : String(vercelError),
       );
     }
     // If already deployed on Vercel, show the current status.
@@ -456,13 +499,21 @@ export async function promptGitDeploy({
 
     // Determine project domain:
     if (!alreadyDeployed) {
-      if (skipPrompts && config.projectDomain && !isSpecialDomain(config.projectDomain)) {
+      if (
+        skipPrompts &&
+        config.projectDomain &&
+        !isSpecialDomain(config.projectDomain)
+      ) {
         primaryDomain = config.projectDomain.replace(/^https?:\/\//, "");
       } else {
         primaryDomain = await promptForDomain(projectName);
       }
     } else {
-      const domainResult = await getVercelProjectDomain(vercelInstance, vercelToken, projectName);
+      const domainResult = await getVercelProjectDomain(
+        vercelInstance,
+        vercelToken,
+        projectName,
+      );
       primaryDomain = domainResult.primary;
       allDomains = domainResult.domains;
     }
@@ -505,7 +556,10 @@ export async function promptGitDeploy({
           githubUsername,
         );
         if (deployResult.deployService !== "none") {
-          relinka("success", "Git, GitHub, and deployment completed successfully! ✅");
+          relinka(
+            "success",
+            "Git, GitHub, and deployment completed successfully! ✅",
+          );
           return deployResult;
         }
         deployRetryCount++;

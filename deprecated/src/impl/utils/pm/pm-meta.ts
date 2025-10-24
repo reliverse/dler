@@ -38,7 +38,9 @@ export class PackageNotFoundError extends Error {
 
 export class VersionNotFoundError extends Error {
   constructor(packageName: string, version: string) {
-    super(`Version \`${version}\` for package \`${packageName}\` could not be found`);
+    super(
+      `Version \`${version}\` for package \`${packageName}\` could not be found`,
+    );
     this.name = "VersionNotFoundError";
   }
 }
@@ -52,13 +54,17 @@ export async function pmPackageJson(
 
   const scope = packageName.split("/")[0];
   const registryUrl_ = options.registryUrl ?? registryUrl(scope);
-  const packageUrl = new URL(encodeURIComponent(packageName).replace(/^%40/, "@"), registryUrl_);
-  const authInfo = registryAuthToken(registryUrl_.toString(), { recursive: true }) as
-    | AuthInfo
-    | undefined;
+  const packageUrl = new URL(
+    encodeURIComponent(packageName).replace(/^%40/, "@"),
+    registryUrl_,
+  );
+  const authInfo = registryAuthToken(registryUrl_.toString(), {
+    recursive: true,
+  }) as AuthInfo | undefined;
 
   const headers: Record<string, string> = {
-    accept: "application/vnd.npm.install-v1+json; q=1.0, application/json; q=0.8, */*",
+    accept:
+      "application/vnd.npm.install-v1+json; q=1.0, application/json; q=0.8, */*",
   };
 
   if (options.fullMetadata) {
@@ -71,7 +77,10 @@ export async function pmPackageJson(
 
   let data: PackageData;
   try {
-    data = await ky(packageUrl, { headers, keepalive: true }).json<PackageData>();
+    data = await ky(packageUrl, {
+      headers,
+      keepalive: true,
+    }).json<PackageData>();
   } catch (error: any) {
     if (error?.response?.status === 404) {
       throw new PackageNotFoundError(packageName);
@@ -132,8 +141,14 @@ export async function pmPackageJson(
   throw versionError;
 }
 
-export async function latestVersion(packageName: string, options: PackageJsonOptions = {}) {
-  const { version } = (await pmPackageJson(packageName.toLowerCase(), options)) as PackageVersion;
+export async function latestVersion(
+  packageName: string,
+  options: PackageJsonOptions = {},
+) {
+  const { version } = (await pmPackageJson(
+    packageName.toLowerCase(),
+    options,
+  )) as PackageVersion;
   return version;
 }
 

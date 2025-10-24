@@ -2,7 +2,10 @@ import { re } from "@reliverse/relico";
 
 import type { DependencyResult, FinderOptions } from "./deps-types";
 
-export const formatOutput = (result: DependencyResult, options: FinderOptions): string => {
+export const formatOutput = (
+  result: DependencyResult,
+  options: FinderOptions,
+): string => {
   if (options.json) {
     return JSON.stringify(result, null, 2);
   }
@@ -28,7 +31,9 @@ export const formatOutput = (result: DependencyResult, options: FinderOptions): 
   // Show duplicate dependencies warning
   if (result.duplicateDependencies.length > 0) {
     output += re.yellowBright("⚠️  Duplicate Dependencies Found:\n");
-    output += re.yellow("These packages are listed in both dependencies and devDependencies.\n");
+    output += re.yellow(
+      "These packages are listed in both dependencies and devDependencies.\n",
+    );
     output += re.yellow(
       "This can cause confusion and potential issues. Consider keeping them in only one section.\n\n",
     );
@@ -41,11 +46,15 @@ export const formatOutput = (result: DependencyResult, options: FinderOptions): 
 
   // Show dev-only dependencies warning
   if (result.devOnlyDependencies.length > 0) {
-    output += re.yellowBright("⚠️  Dev-only Dependencies Used in Production Code:\n");
+    output += re.yellowBright(
+      "⚠️  Dev-only Dependencies Used in Production Code:\n",
+    );
     output += re.yellow(
       "These packages are only in devDependencies but are imported in your code.\n",
     );
-    output += re.yellow("They will cause errors in production after bundling!\n\n");
+    output += re.yellow(
+      "They will cause errors in production after bundling!\n\n",
+    );
 
     for (const dep of result.devOnlyDependencies) {
       output += `${re.gray("• ")}${re.yellow(dep)}\n`;
@@ -54,7 +63,9 @@ export const formatOutput = (result: DependencyResult, options: FinderOptions): 
 
     // Add installation hint
     output += re.gray("To fix, move these to dependencies:\n");
-    output += re.cyan(`npm install ${result.devOnlyDependencies.join(" ")} --save\n\n`);
+    output += re.cyan(
+      `npm install ${result.devOnlyDependencies.join(" ")} --save\n\n`,
+    );
   }
 
   // Show missing dependencies
@@ -67,7 +78,9 @@ export const formatOutput = (result: DependencyResult, options: FinderOptions): 
 
     // Add installation hint
     output += re.gray("To install, run:\n");
-    output += re.cyan(`npm install ${result.missingDependencies.join(" ")}\n\n`);
+    output += re.cyan(
+      `npm install ${result.missingDependencies.join(" ")}\n\n`,
+    );
   } else {
     output += re.greenBright("No missing dependencies found! ✅\n\n");
   }
@@ -84,7 +97,9 @@ export const formatOutput = (result: DependencyResult, options: FinderOptions): 
   // Show all dependencies if requested
   if (options.showAll) {
     output += re.bold("All Dependencies:\n");
-    output += re.gray("(✓ = listed in package.json, ✗ = missing, ⚠️ = dev-only, 🔄 = duplicate)\n");
+    output += re.gray(
+      "(✓ = listed in package.json, ✗ = missing, ⚠️ = dev-only, 🔄 = duplicate)\n",
+    );
 
     for (const dep of result.allDependencies) {
       const isListed = result.listedDependencies.includes(dep);

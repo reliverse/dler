@@ -39,7 +39,10 @@ export async function manageShadcn(projectPath: string) {
       selectChartsPrompt(projectPath);
       return;
     case "add": {
-      const installedComponents = await getInstalledComponents(projectPath, shadcnConfig);
+      const installedComponents = await getInstalledComponents(
+        projectPath,
+        shadcnConfig,
+      );
       const availableComponents = AVAILABLE_COMPONENTS.filter(
         (c) => !installedComponents.includes(c),
       );
@@ -53,7 +56,10 @@ export async function manageShadcn(projectPath: string) {
       return;
     }
     case "remove": {
-      const installedComponents = await getInstalledComponents(projectPath, shadcnConfig);
+      const installedComponents = await getInstalledComponents(
+        projectPath,
+        shadcnConfig,
+      );
       const components = await multiselectPrompt({
         title: "Select components to remove:",
         options: installedComponents.map((c) => ({ label: c, value: c })),
@@ -64,7 +70,10 @@ export async function manageShadcn(projectPath: string) {
       return;
     }
     case "update": {
-      const installedComponents = await getInstalledComponents(projectPath, shadcnConfig);
+      const installedComponents = await getInstalledComponents(
+        projectPath,
+        shadcnConfig,
+      );
       const components = await multiselectPrompt({
         title: "Select components to update:",
         options: installedComponents.map((c) => ({ label: c, value: c })),

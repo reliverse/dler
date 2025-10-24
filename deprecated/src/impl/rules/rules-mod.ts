@@ -17,14 +17,21 @@ export function displayCheckResults(
       `  files checked: ${stats.filesChecked}, imports: ${stats.importsChecked}, time: ${stats.timeElapsed}ms`,
     );
   } else {
-    relinka("error", `✗ ${checkType} check failed for ${directory} (${issues.length} issues)`);
+    relinka(
+      "error",
+      `✗ ${checkType} check failed for ${directory} (${issues.length} issues)`,
+    );
 
     // group issues by type
     const fileIssues = issues.filter((i) => i.type === "file-extension");
     const pathIssues = issues.filter((i) => i.type === "path-extension");
-    const missingDepIssues = issues.filter((i) => i.type === "missing-dependency");
+    const missingDepIssues = issues.filter(
+      (i) => i.type === "missing-dependency",
+    );
     const builtinIssues = issues.filter((i) => i.type === "builtin-module");
-    const dlerConfigIssues = issues.filter((i) => i.type === "dler-config-health");
+    const dlerConfigIssues = issues.filter(
+      (i) => i.type === "dler-config-health",
+    );
     const selfIncludeIssues = issues.filter((i) => i.type === "self-include");
     const noIndexIssues = issues.filter((i) => i.type === "no-index-files");
 
@@ -69,7 +76,10 @@ export function displayCheckResults(
     }
 
     if (dlerConfigIssues.length > 0) {
-      relinka("error", `  dler configuration issues (${dlerConfigIssues.length}):`);
+      relinka(
+        "error",
+        `  dler configuration issues (${dlerConfigIssues.length}):`,
+      );
       for (const issue of dlerConfigIssues.slice(0, 10)) {
         relinka("error", `    ${issue.message}`);
       }

@@ -29,7 +29,10 @@ export async function setupI18nFiles(projectPath: string): Promise<void> {
   try {
     // Check if i18n is already set up
     if (await isI18nAlreadySetup(projectPath)) {
-      relinka("info", "i18n is already set up in this project, skipping setup.");
+      relinka(
+        "info",
+        "i18n is already set up in this project, skipping setup.",
+      );
       return;
     }
 

@@ -16,7 +16,8 @@ export async function askInstallDeps(cwd: string): Promise<boolean> {
 
   try {
     const shouldInstall = await confirmPrompt({
-      title: "Dependencies are missing in your project. Would you like to install them?",
+      title:
+        "Dependencies are missing in your project. Would you like to install them?",
       content: re.bold(
         "🚨 Note: Certain addons will be disabled until the dependencies are installed.",
       ),

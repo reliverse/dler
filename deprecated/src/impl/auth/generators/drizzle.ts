@@ -1,5 +1,9 @@
 import { existsSync } from "@reliverse/relifso";
-import { type BetterAuthDBSchema, type DBFieldAttribute, getAuthTables } from "better-auth/db";
+import {
+  type BetterAuthDBSchema,
+  type DBFieldAttribute,
+  getAuthTables,
+} from "better-auth/db";
 
 import type { SchemaGenerator } from "./types";
 
@@ -7,10 +11,15 @@ export function convertToSnakeCase(str: string) {
   return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }
 
-export const generateDrizzleSchema: SchemaGenerator = async ({ options, file, adapter }) => {
+export const generateDrizzleSchema: SchemaGenerator = async ({
+  options,
+  file,
+  adapter,
+}) => {
   const tables = getAuthTables(options);
   const filePath = file || "./auth-schema.ts";
-  const databaseType: "sqlite" | "mysql" | "pg" | undefined = adapter.options?.provider;
+  const databaseType: "sqlite" | "mysql" | "pg" | undefined =
+    adapter.options?.provider;
 
   if (!databaseType) {
     throw new Error(
@@ -56,7 +65,10 @@ export const generateDrizzleSchema: SchemaGenerator = async ({ options, file, ad
         | "date"
         | `${"string" | "number"}[]`;
 
-      const typeMap: Record<typeof type, Record<typeof databaseType, string>> = {
+      const typeMap: Record<
+        typeof type,
+        Record<typeof databaseType, string>
+      > = {
         string: {
           sqlite: `text('${name}')`,
           pg: `text('${name}')`,
@@ -73,8 +85,12 @@ export const generateDrizzleSchema: SchemaGenerator = async ({ options, file, ad
         },
         number: {
           sqlite: `integer('${name}')`,
-          pg: field.bigint ? `bigint('${name}', { mode: 'number' })` : `integer('${name}')`,
-          mysql: field.bigint ? `bigint('${name}', { mode: 'number' })` : `int('${name}')`,
+          pg: field.bigint
+            ? `bigint('${name}', { mode: 'number' })`
+            : `integer('${name}')`,
+          mysql: field.bigint
+            ? `bigint('${name}', { mode: 'number' })`
+            : `int('${name}')`,
         },
         date: {
           sqlite: `integer('${name}', { mode: 'timestamp' })`,
@@ -168,7 +184,11 @@ function generateImport({
 
   imports.push(`${databaseType}Table`);
   imports.push(
-    databaseType === "mysql" ? "varchar, text" : databaseType === "pg" ? "text" : "text",
+    databaseType === "mysql"
+      ? "varchar, text"
+      : databaseType === "pg"
+        ? "text"
+        : "text",
   );
   imports.push(hasBigint ? (databaseType !== "sqlite" ? "bigint" : "") : "");
   imports.push(databaseType !== "sqlite" ? "timestamp, boolean" : "");
@@ -180,6 +200,9 @@ function generateImport({
     .join(", ")} } from "drizzle-orm/${databaseType}-core";\n`;
 }
 
-function getModelName(modelName: string, options: Record<string, any> | undefined) {
+function getModelName(
+  modelName: string,
+  options: Record<string, any> | undefined,
+) {
   return options?.usePlural ? `${modelName}s` : modelName;
 }

@@ -12,7 +12,9 @@ async function resolveCommandAttempt(
   const cwd = process.cwd();
   const hasCustomCwd = parsed.options.cwd != null;
   const shouldSwitchCwd =
-    hasCustomCwd && typeof process.chdir === "function" && !(process.chdir as any).disabled;
+    hasCustomCwd &&
+    typeof process.chdir === "function" &&
+    !(process.chdir as any).disabled;
   if (shouldSwitchCwd) {
     try {
       process.chdir(String(parsed.options.cwd ?? cwd));
@@ -44,6 +46,11 @@ async function resolveCommandAttempt(
   return resolved;
 }
 
-export async function resolveCommand(parsed: ExecParseResult): Promise<string | undefined> {
-  return (await resolveCommandAttempt(parsed)) || (await resolveCommandAttempt(parsed, true));
+export async function resolveCommand(
+  parsed: ExecParseResult,
+): Promise<string | undefined> {
+  return (
+    (await resolveCommandAttempt(parsed)) ||
+    (await resolveCommandAttempt(parsed, true))
+  );
 }

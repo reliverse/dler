@@ -5,7 +5,9 @@ export const DatabaseSchema = z
   .describe("Database type");
 export type Database = z.infer<typeof DatabaseSchema>;
 
-export const ORMSchema = z.enum(["drizzle", "prisma", "mongoose", "none"]).describe("ORM type");
+export const ORMSchema = z
+  .enum(["drizzle", "prisma", "mongoose", "none"])
+  .describe("ORM type");
 export type ORM = z.infer<typeof ORMSchema>;
 
 export const BackendSchema = z
@@ -15,7 +17,9 @@ export type Backend = z.infer<typeof BackendSchema>;
 
 export const RuntimeSchema = z
   .enum(["bun", "node", "workers", "none"])
-  .describe("Runtime environment (workers only available with hono backend and drizzle orm)");
+  .describe(
+    "Runtime environment (workers only available with hono backend and drizzle orm)",
+  );
 export type Runtime = z.infer<typeof RuntimeSchema>;
 
 export const FrontendSchema = z
@@ -44,11 +48,20 @@ export const ExamplesSchema = z
   .describe("Example templates to include");
 export type Examples = z.infer<typeof ExamplesSchema>;
 
-export const PackageManagerSchema = z.enum(["npm", "pnpm", "bun"]).describe("Package manager");
+export const PackageManagerSchema = z
+  .enum(["npm", "pnpm", "bun"])
+  .describe("Package manager");
 export type PackageManager = z.infer<typeof PackageManagerSchema>;
 
 export const DatabaseSetupSchema = z
-  .enum(["turso", "neon", "prisma-postgres", "mongodb-atlas", "supabase", "none"])
+  .enum([
+    "turso",
+    "neon",
+    "prisma-postgres",
+    "mongodb-atlas",
+    "supabase",
+    "none",
+  ])
   .describe("Database hosting setup");
 export type DatabaseSetup = z.infer<typeof DatabaseSetupSchema>;
 
@@ -63,12 +76,18 @@ export const ProjectNameSchema = z
     (name) => name === "." || !name.startsWith("."),
     "Project name cannot start with a dot (except for '.')",
   )
-  .refine((name) => name === "." || !name.startsWith("-"), "Project name cannot start with a dash")
+  .refine(
+    (name) => name === "." || !name.startsWith("-"),
+    "Project name cannot start with a dash",
+  )
   .refine((name) => {
     const invalidChars = ["<", ">", ":", '"', "|", "?", "*"];
     return !invalidChars.some((char) => name.includes(char));
   }, "Project name contains invalid characters")
-  .refine((name) => name.toLowerCase() !== "node_modules", "Project name is reserved")
+  .refine(
+    (name) => name.toLowerCase() !== "node_modules",
+    "Project name is reserved",
+  )
   .describe("Project name or path");
 export type ProjectName = z.infer<typeof ProjectNameSchema>;
 

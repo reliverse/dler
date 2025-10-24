@@ -16,11 +16,15 @@ interface TSConfig {
 export async function validateAliasConfig(alias: string): Promise<void> {
   try {
     const tsconfigPath = path.resolve("tsconfig.json");
-    const tsconfig = JSON.parse(await fs.readFile(tsconfigPath, "utf8")) as TSConfig;
+    const tsconfig = JSON.parse(
+      await fs.readFile(tsconfigPath, "utf8"),
+    ) as TSConfig;
 
     const paths = tsconfig?.compilerOptions?.paths;
     if (!paths) {
-      throw new Error("tsconfig.json is missing compilerOptions.paths configuration");
+      throw new Error(
+        "tsconfig.json is missing compilerOptions.paths configuration",
+      );
     }
 
     const aliasPattern = `${alias}/*`;
@@ -32,7 +36,9 @@ export async function validateAliasConfig(alias: string): Promise<void> {
     }
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Failed to validate alias configuration: ${error.message}`);
+      throw new Error(
+        `Failed to validate alias configuration: ${error.message}`,
+      );
     }
     throw new Error("Failed to validate alias configuration: Unknown error");
   }
@@ -67,11 +73,18 @@ export async function resolveCrossLibs(
           await fs.access(libBinDir);
 
           // Process the library
-          const modified = await resolveCrossLibsInternal(libBinDir, alias, subFolders);
+          const modified = await resolveCrossLibsInternal(
+            libBinDir,
+            alias,
+            subFolders,
+          );
           allModified.push(...modified);
         } catch {
           // Skip if directory doesn't exist
-          relinka("internal", `[inline] skipping non-existent path: ${libBinDir}`);
+          relinka(
+            "internal",
+            `[inline] skipping non-existent path: ${libBinDir}`,
+          );
         }
       }
     }
@@ -122,7 +135,8 @@ export async function resolveCrossLibsInternal(
       entries.map((e) =>
         e.isDirectory()
           ? collect(path.join(dir, e.name))
-          : e.name.endsWith(".d.ts") || !(e.name.endsWith(".ts") || e.name.endsWith(".js"))
+          : e.name.endsWith(".d.ts") ||
+              !(e.name.endsWith(".ts") || e.name.endsWith(".js"))
             ? []
             : [path.join(dir, e.name)],
       ),
@@ -140,12 +154,21 @@ export async function resolveCrossLibsInternal(
         throw new Error(`Failed to read file: ${filePath}`);
       }
       if (!currentLib) throw new Error("Current library is undefined");
-      const updated = await transformFile(original, filePath, currentLib, alias, subFolders);
+      const updated = await transformFile(
+        original,
+        filePath,
+        currentLib,
+        alias,
+        subFolders,
+      );
 
       if (updated !== original) {
         await fs.writeFile(filePath, updated, "utf8");
         modified.push(filePath);
-        relinka("verbose", `[inline]   ↳ modified ${path.relative(process.cwd(), filePath)}`);
+        relinka(
+          "verbose",
+          `[inline]   ↳ modified ${path.relative(process.cwd(), filePath)}`,
+        );
       }
     }),
   );
@@ -231,7 +254,10 @@ export async function transformFile(
       // Self-imports are now handled by convertImportsAliasToRelative
       // so we just output the original statement
       output.push(stmt);
-      relinka("verbose", `  [skip]      ${libName} (self-import handled by pathkit)`);
+      relinka(
+        "verbose",
+        `  [skip]      ${libName} (self-import handled by pathkit)`,
+      );
       buffer = [];
       return;
     }
@@ -307,5 +333,7 @@ export async function resolveTargetFile(
       /* empty */
     }
   }
-  throw new Error(`Cannot inline ~/libs/${lib}/${rest}: tried [${subFolders.join(", ")}]`);
+  throw new Error(
+    `Cannot inline ~/libs/${lib}/${rest}: tried [${subFolders.join(", ")}]`,
+  );
 }

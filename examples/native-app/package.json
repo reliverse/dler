@@ -1,0 +1,29 @@
+{
+  "name": "@reliverse/native-app-example",
+  "version": "1.0.0",
+  "description": "Example native CLI application built with Dler",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "native-app": "dist/index.js"
+  },
+  "scripts": {
+    "build": "dler build --compile --production --target bun --format cjs --bytecode",
+    "dev": "dler build --watch --target bun --format cjs",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "cli",
+    "native",
+    "executable",
+    "dler",
+    "bun"
+  ],
+  "author": "reliverse",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@reliverse/dler-tsconfig": "workspace:*",
+    "@reliverse/dler": "workspace:*"
+  }
+}

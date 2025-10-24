@@ -10,9 +10,15 @@ import { getElapsedPerfTime } from "~/impl/utils/utils-perf";
 /**
  * Provides guidance about publishing based on the current mode and pause state.
  */
-function providePublishGuidance(usedMode: "build" | "pub", commonPubPause: boolean): void {
+function providePublishGuidance(
+  usedMode: "build" | "pub",
+  commonPubPause: boolean,
+): void {
   if (commonPubPause) {
-    relinka("info", "📝 Publishing is paused in your config (commonPubPause=true)");
+    relinka(
+      "info",
+      "📝 Publishing is paused in your config (commonPubPause=true)",
+    );
     relinka(
       "info",
       usedMode === "pub"
@@ -41,7 +47,10 @@ export async function finalizeBuild(
     // Print separator for better visual separation
     console.log("\n" + "=".repeat(60));
     // Report build completion with timing
-    relinka("verbose", `✅ Build completed successfully in ${formattedPerfTime}`);
+    relinka(
+      "verbose",
+      `✅ Build completed successfully in ${formattedPerfTime}`,
+    );
   }
 
   providePublishGuidance(usedMode, commonPubPause);
@@ -57,7 +66,12 @@ export async function finalizePub(
   libsDirDist: string,
 ): Promise<void> {
   // Delete dist folders
-  await removeDistFolders(distNpmDirName, distJsrDirName, libsDirDist, libsList);
+  await removeDistFolders(
+    distNpmDirName,
+    distJsrDirName,
+    libsDirDist,
+    libsList,
+  );
 
   // Reset bump if it was disabled
   try {

@@ -48,7 +48,11 @@ async function resolveCrossLibsViaInline(
       );
     }
 
-    const files = await findSourceFiles(libBinDir, buildPreExtensions, buildTemplatesDir);
+    const files = await findSourceFiles(
+      libBinDir,
+      buildPreExtensions,
+      buildTemplatesDir,
+    );
     const modifiedFiles: string[] = [];
 
     await Promise.all(
@@ -94,7 +98,11 @@ async function findSourceFiles(
 
       if (entry.isDirectory()) {
         // relinka("internal", `Recursing into directory: ${fullPath}`);
-        const subFiles = await findSourceFiles(fullPath, buildPreExtensions, buildTemplatesDir);
+        const subFiles = await findSourceFiles(
+          fullPath,
+          buildPreExtensions,
+          buildTemplatesDir,
+        );
         files.push(...subFiles);
       } else if (entry.isFile()) {
         const ext = path.extname(entry.name).slice(1);
@@ -155,7 +163,10 @@ async function processFileViaInline(
     // Track inlined block boundaries
     if (line.includes("/* inlined-start ")) {
       insideInlined = true;
-      relinka("verbose", `[resolve-cross-libs] Entering inlined block: ${line.trim()}`);
+      relinka(
+        "verbose",
+        `[resolve-cross-libs] Entering inlined block: ${line.trim()}`,
+      );
       result.push(line);
       continue;
     }
@@ -182,8 +193,12 @@ async function processFileViaInline(
 
     if (match) {
       // processedImports++;
-      const [, indentation, fullStatement, quote, libName, rest, comment] = match;
-      relinka("verbose", `[resolve-cross-libs] Processing import/export: ${libName}/${rest}`);
+      const [, indentation, fullStatement, quote, libName, rest, comment] =
+        match;
+      relinka(
+        "verbose",
+        `[resolve-cross-libs] Processing import/export: ${libName}/${rest}`,
+      );
 
       // Skip if already converted to relative path (idempotent)
       if (fullStatement?.includes(`${quote}./`)) {
@@ -199,7 +214,10 @@ async function processFileViaInline(
         // Same library - rewrite to relative path
         // relinka("internal", `[resolve-cross-libs] Converting to relative path: ${libName}/${rest}`);
         const newStatement =
-          fullStatement?.replace(`${quote}${alias}/libs/${libName}/`, `${quote}./`) ?? "";
+          fullStatement?.replace(
+            `${quote}${alias}/libs/${libName}/`,
+            `${quote}./`,
+          ) ?? "";
         result.push(`${indentation}${newStatement}${comment || ""}`);
       } else {
         // Different library - inline contents
@@ -207,12 +225,22 @@ async function processFileViaInline(
           if (!libName || !rest) {
             throw new Error("Library name or path is undefined");
           }
-          relinka("verbose", `[resolve-cross-libs] Attempting to inline: ${libName}/${rest}`);
-          const targetPath = await resolveTargetFile(libName, rest, subFolders, currentFilePath);
+          relinka(
+            "verbose",
+            `[resolve-cross-libs] Attempting to inline: ${libName}/${rest}`,
+          );
+          const targetPath = await resolveTargetFile(
+            libName,
+            rest,
+            subFolders,
+            currentFilePath,
+          );
           // relinka("internal", `Found target file: ${targetPath}`);
           const targetContent = await fs.readFile(targetPath, "utf-8");
 
-          result.push(`${indentation}/* inlined-start ${alias}/libs/${libName}/${rest} */`);
+          result.push(
+            `${indentation}/* inlined-start ${alias}/libs/${libName}/${rest} */`,
+          );
 
           // Add target content with preserved indentation
           const targetLines = targetContent.split("\n");
@@ -226,7 +254,8 @@ async function processFileViaInline(
 
           result.push(`${indentation}/* inlined-end */`);
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           relinka(
             "error",
             `[resolve-cross-libs] Failed to inline ${alias}/libs/${libName}/${rest}: ${errorMessage}`,
@@ -249,11 +278,16 @@ async function resolveTargetFile(
   subFolders: ("npm" | "jsr")[],
   currentFilePath: string,
 ): Promise<string> {
-  relinka("verbose", `[resolve-cross-libs] Resolving target file for ${libName}/${rest}`);
+  relinka(
+    "verbose",
+    `[resolve-cross-libs] Resolving target file for ${libName}/${rest}`,
+  );
 
   // Determine extension priority based on current file type
   const isCurrentFileDts = currentFilePath.endsWith(".d.ts");
-  const extensions = isCurrentFileDts ? [".d.ts", ".ts", ".js"] : [".ts", ".js", ".d.ts"];
+  const extensions = isCurrentFileDts
+    ? [".d.ts", ".ts", ".js"]
+    : [".ts", ".js", ".d.ts"];
   // relinka(
   //   "internal",
   //   `[resolve-cross-libs] Current file is .d.ts: ${isCurrentFileDts}, using extension priority: ${extensions.join(", ")}`,
@@ -268,7 +302,10 @@ async function resolveTargetFile(
       const fullPath = `${basePath}${ext}`;
       try {
         await fs.access(fullPath);
-        relinka("internal", `[resolve-cross-libs] Found target file: ${fullPath}`);
+        relinka(
+          "internal",
+          `[resolve-cross-libs] Found target file: ${fullPath}`,
+        );
         return fullPath;
       } catch {
         relinka("internal", `[resolve-cross-libs] File not found: ${fullPath}`);
@@ -287,7 +324,10 @@ async function directoryExists(dirPath: string): Promise<boolean> {
     const stat = await fs.stat(dirPath);
     return stat.isDirectory();
   } catch (error) {
-    if (error instanceof Error && (error as NodeJS.ErrnoException).code === "ENOENT") {
+    if (
+      error instanceof Error &&
+      (error as NodeJS.ErrnoException).code === "ENOENT"
+    ) {
       return false;
     }
     throw error;
@@ -310,7 +350,9 @@ async function resolveAllCrossLibsViaInline(
   const distLibsExists = await directoryExists(distLibsDir);
   if (distLibsExists) {
     const entries = await fs.readdir(distLibsDir, { withFileTypes: true });
-    const libDirs = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+    const libDirs = entries
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name);
     // relinka("internal", `Found ${libDirs.length} libraries to process: ${libDirs.join(", ")}`);
 
     await Promise.all(
@@ -337,7 +379,8 @@ async function resolveAllCrossLibsViaInline(
               //   `Successfully processed ${modifiedFiles.length} files in ${binDir}`,
               // );
             } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : String(error);
+              const errorMessage =
+                error instanceof Error ? error.message : String(error);
               relinka(
                 "error",
                 `[resolveAllCrossLibsViaInline] Error processing ${binDir}: ${errorMessage}`,
@@ -353,8 +396,14 @@ async function resolveAllCrossLibsViaInline(
   }
 
   if (allModifiedFiles.length > 0) {
-    relinka("info", "[resolveAllCrossLibsViaInline] Cross libraries replacements done in:");
-    relinka("verbose", "[resolveAllCrossLibsViaInline] " + allModifiedFiles.join(", "));
+    relinka(
+      "info",
+      "[resolveAllCrossLibsViaInline] Cross libraries replacements done in:",
+    );
+    relinka(
+      "verbose",
+      "[resolveAllCrossLibsViaInline] " + allModifiedFiles.join(", "),
+    );
   }
 
   // relinka(
@@ -406,7 +455,11 @@ async function resolveCrossLibsViaCopy(
       );
     }
 
-    const files = await findSourceFiles(libBinDir, buildPreExtensions, buildTemplatesDir);
+    const files = await findSourceFiles(
+      libBinDir,
+      buildPreExtensions,
+      buildTemplatesDir,
+    );
     const modifiedFiles: string[] = [];
     const copiedLibs = new Set<string>();
 
@@ -423,7 +476,10 @@ async function resolveCrossLibsViaCopy(
         );
 
         if (processed !== content) {
-          relinka("verbose", `[resolveCrossLibsViaCopy] File modified: ${filePath}`);
+          relinka(
+            "verbose",
+            `[resolveCrossLibsViaCopy] File modified: ${filePath}`,
+          );
           await fs.writeFile(filePath, processed, "utf-8");
           modifiedFiles.push(path.resolve(filePath));
         }
@@ -467,8 +523,12 @@ async function processFileViaCopy(
     const match = line.match(pattern);
 
     if (match) {
-      const [, indentation, fullStatement, quote, libName, rest, comment] = match;
-      relinka("verbose", `[resolveCrossLibsViaCopy] Processing import/export: ${libName}/${rest}`);
+      const [, indentation, fullStatement, quote, libName, rest, comment] =
+        match;
+      relinka(
+        "verbose",
+        `[resolveCrossLibsViaCopy] Processing import/export: ${libName}/${rest}`,
+      );
 
       // Skip if already converted to relative path (idempotent)
       if (fullStatement?.includes(`${quote}./`)) {
@@ -484,7 +544,10 @@ async function processFileViaCopy(
         // Same library - rewrite to relative path
         // relinka("internal", `[resolveCrossLibsViaCopy] Converting to relative path: ${libName}/${rest}`);
         const newStatement =
-          fullStatement?.replace(`${quote}${alias}/libs/${libName}/`, `${quote}./`) ?? "";
+          fullStatement?.replace(
+            `${quote}${alias}/libs/${libName}/`,
+            `${quote}./`,
+          ) ?? "";
         result.push(`${indentation}${newStatement}${comment || ""}`);
       } else {
         // Different library - rewrite to copied directory path
@@ -508,7 +571,8 @@ async function processFileViaCopy(
             ) ?? "";
           result.push(`${indentation}${newStatement}${comment || ""}`);
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           relinka(
             "error",
             `[resolveCrossLibsViaCopy] Failed to rewrite ${alias}/libs/${libName}/${rest}: ${errorMessage}`,
@@ -553,7 +617,10 @@ async function copyLibraryDirectory(
     // Copy the entire library directory
     await copyDirectoryRecursive(sourceDir, targetDir);
 
-    relinka("verbose", `[resolveCrossLibsViaCopy] Successfully copied library ${libName}`);
+    relinka(
+      "verbose",
+      `[resolveCrossLibsViaCopy] Successfully copied library ${libName}`,
+    );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     relinka(
@@ -564,7 +631,10 @@ async function copyLibraryDirectory(
   }
 }
 
-async function copyDirectoryRecursive(source: string, target: string): Promise<void> {
+async function copyDirectoryRecursive(
+  source: string,
+  target: string,
+): Promise<void> {
   // Create target directory if it doesn't exist
   await fs.mkdir(target, { recursive: true });
 
@@ -598,7 +668,9 @@ async function resolveAllCrossLibsViaCopy(
   const distLibsExists = await directoryExists(distLibsDir);
   if (distLibsExists) {
     const entries = await fs.readdir(distLibsDir, { withFileTypes: true });
-    const libDirs = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+    const libDirs = entries
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name);
     // relinka("internal", `Found ${libDirs.length} libraries to process: ${libDirs.join(", ")}`);
 
     await Promise.all(
@@ -625,7 +697,8 @@ async function resolveAllCrossLibsViaCopy(
               //   `Successfully processed ${modifiedFiles.length} files in ${binDir}`,
               // );
             } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : String(error);
+              const errorMessage =
+                error instanceof Error ? error.message : String(error);
               relinka(
                 "error",
                 `[resolveAllCrossLibsViaCopy] Error processing ${binDir}: ${errorMessage}`,
@@ -641,8 +714,14 @@ async function resolveAllCrossLibsViaCopy(
   }
 
   if (allModifiedFiles.length > 0) {
-    relinka("info", "[resolveAllCrossLibsViaCopy] Cross libraries copy replacements done in:");
-    relinka("verbose", "[resolveAllCrossLibsViaCopy] " + allModifiedFiles.join(", "));
+    relinka(
+      "info",
+      "[resolveAllCrossLibsViaCopy] Cross libraries copy replacements done in:",
+    );
+    relinka(
+      "verbose",
+      "[resolveAllCrossLibsViaCopy] " + allModifiedFiles.join(", "),
+    );
   }
 
   // relinka(
@@ -692,10 +771,14 @@ export async function resolveAllCrossLibs(
 }
 
 // Load dler config to get libsList mapping
-async function loadReliverseConfig(): Promise<{ libsList: Record<string, any> }> {
+async function loadReliverseConfig(): Promise<{
+  libsList: Record<string, any>;
+}> {
   try {
     const jiti = createJiti(import.meta.url);
-    const config = (await jiti.import("reliverse.ts", { default: true })) as any;
+    const config = (await jiti.import("reliverse.ts", {
+      default: true,
+    })) as any;
     return { libsList: config?.libsList || {} };
   } catch (error) {
     relinka(
@@ -707,7 +790,9 @@ async function loadReliverseConfig(): Promise<{ libsList: Record<string, any> }>
 }
 
 // Create reverse mapping from libDirName to package name
-function createLibDirToPackageMap(libsList: Record<string, any>): Record<string, string> {
+function createLibDirToPackageMap(
+  libsList: Record<string, any>,
+): Record<string, string> {
   const mapping: Record<string, string> = {};
 
   for (const [packageName, libConfig] of Object.entries(libsList)) {
@@ -743,7 +828,11 @@ async function addDependencyToPackageJson(
       );
 
       // Write back to file
-      await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2), "utf-8");
+      await fs.writeFile(
+        packageJsonPath,
+        JSON.stringify(packageJson, null, 2),
+        "utf-8",
+      );
     } else {
       relinka(
         "log",
@@ -805,7 +894,11 @@ async function resolveCrossLibsViaPackage(
     const { libsList } = await loadReliverseConfig();
     const libDirToPackageMap = createLibDirToPackageMap(libsList);
 
-    const files = await findSourceFiles(libBinDir, buildPreExtensions, buildTemplatesDir);
+    const files = await findSourceFiles(
+      libBinDir,
+      buildPreExtensions,
+      buildTemplatesDir,
+    );
     const modifiedFiles: string[] = [];
     const addedDependencies = new Set<string>();
 
@@ -820,7 +913,10 @@ async function resolveCrossLibsViaPackage(
         );
 
         if (processed !== content) {
-          relinka("verbose", `[resolveCrossLibsViaPackage] File modified: ${filePath}`);
+          relinka(
+            "verbose",
+            `[resolveCrossLibsViaPackage] File modified: ${filePath}`,
+          );
           await fs.writeFile(filePath, processed, "utf-8");
           modifiedFiles.push(path.resolve(filePath));
         }
@@ -863,7 +959,8 @@ async function processFileViaPackage(
     const match = line.match(pattern);
 
     if (match) {
-      const [, indentation, fullStatement, quote, libName, rest, comment] = match;
+      const [, indentation, fullStatement, quote, libName, rest, comment] =
+        match;
       relinka(
         "verbose",
         `[resolveCrossLibsViaPackage] Processing import/export: ${libName}/${rest}`,
@@ -883,7 +980,10 @@ async function processFileViaPackage(
         // Same library - rewrite to relative path
         // relinka("internal", `[resolveCrossLibsViaPackage] Converting to relative path: ${libName}/${rest}`);
         const newStatement =
-          fullStatement?.replace(`${quote}${alias}/libs/${libName}/`, `${quote}./`) ?? "";
+          fullStatement?.replace(
+            `${quote}${alias}/libs/${libName}/`,
+            `${quote}./`,
+          ) ?? "";
         result.push(`${indentation}${newStatement}${comment || ""}`);
       } else {
         // Different library - rewrite to package name
@@ -918,7 +1018,8 @@ async function processFileViaPackage(
             ) ?? "";
           result.push(`${indentation}${newStatement}${comment || ""}`);
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           relinka(
             "error",
             `[resolveCrossLibsViaPackage] Failed to rewrite ${alias}/libs/${libName}/${rest}: ${errorMessage}`,
@@ -950,7 +1051,9 @@ async function resolveAllCrossLibsViaPackage(
   const distLibsExists = await directoryExists(distLibsDir);
   if (distLibsExists) {
     const entries = await fs.readdir(distLibsDir, { withFileTypes: true });
-    const libDirs = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+    const libDirs = entries
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name);
     // relinka("internal", `Found ${libDirs.length} libraries to process: ${libDirs.join(", ")}`);
 
     await Promise.all(
@@ -976,7 +1079,8 @@ async function resolveAllCrossLibsViaPackage(
               //   `Successfully processed ${modifiedFiles.length} files in ${binDir}`,
               // );
             } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : String(error);
+              const errorMessage =
+                error instanceof Error ? error.message : String(error);
               relinka(
                 "error",
                 `[resolveAllCrossLibsViaPackage] Error processing ${binDir}: ${errorMessage}`,
@@ -996,7 +1100,10 @@ async function resolveAllCrossLibsViaPackage(
       "info",
       "[resolveAllCrossLibsViaPackage] Cross libraries package replacements done in:",
     );
-    relinka("verbose", "[resolveAllCrossLibsViaPackage] " + allModifiedFiles.join(", "));
+    relinka(
+      "verbose",
+      "[resolveAllCrossLibsViaPackage] " + allModifiedFiles.join(", "),
+    );
   }
 
   // relinka(

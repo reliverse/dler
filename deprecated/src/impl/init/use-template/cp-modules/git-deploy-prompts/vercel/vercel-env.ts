@@ -23,7 +23,8 @@ export async function addEnvVarsToVercelProject(
   if (selectedOptions.useSharedEnvVars) {
     const shouldUseShared = await confirmPrompt({
       title: `Would you like to use shared environment variables from Vercel.com? ${re.red("[🚨 Experimental]")}`,
-      content: "Only missing variables will be uploaded from your local .env file",
+      content:
+        "Only missing variables will be uploaded from your local .env file",
       defaultValue: false,
     });
 
@@ -33,16 +34,27 @@ export async function addEnvVarsToVercelProject(
         projectName,
         envVars[0]?.key ?? "",
       );
-      const newEnvVars = envVars.filter((env) => !existingEnvVars?.key.includes(env.key));
+      const newEnvVars = envVars.filter(
+        (env) => !existingEnvVars?.key.includes(env.key),
+      );
 
       if (newEnvVars.length > 0) {
         await uploadEnvVars(vercelInstance, projectName, newEnvVars);
-        relinka("success", `Added ${newEnvVars.length} new environment variables`);
+        relinka(
+          "success",
+          `Added ${newEnvVars.length} new environment variables`,
+        );
         if (existingEnvVars) {
-          relinka("info", `Kept ${existingEnvVars.key} existing shared variables`);
+          relinka(
+            "info",
+            `Kept ${existingEnvVars.key} existing shared variables`,
+          );
         }
       } else {
-        relinka("info", "All required environment variables are already set in Vercel");
+        relinka(
+          "info",
+          "All required environment variables are already set in Vercel",
+        );
       }
     } else {
       await uploadEnvVars(vercelInstance, projectName, envVars);

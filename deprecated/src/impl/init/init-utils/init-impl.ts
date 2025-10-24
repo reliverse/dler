@@ -15,7 +15,9 @@ import {
 /**
  * Main entry point for the manual builder menu.
  */
-export async function showManualBuilderMenu(params: ParamsOmitReli): Promise<ShowMenuResult> {
+export async function showManualBuilderMenu(
+  params: ParamsOmitReli,
+): Promise<ShowMenuResult> {
   await setupDevModeIfNeeded(params);
 
   try {

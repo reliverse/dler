@@ -11,10 +11,13 @@ async function getDerivedKey(): Promise<CryptoKey> {
   const hashBuffer = await subtle.digest("SHA-256", data);
 
   // Import the hash as a key
-  return subtle.importKey("raw", hashBuffer, { name: "AES-CBC", length: 256 }, false, [
-    "encrypt",
-    "decrypt",
-  ]);
+  return subtle.importKey(
+    "raw",
+    hashBuffer,
+    { name: "AES-CBC", length: 256 },
+    false,
+    ["encrypt", "decrypt"],
+  );
 }
 
 export async function encrypt(text: string): Promise<string> {
@@ -38,7 +41,11 @@ export async function encrypt(text: string): Promise<string> {
     const data = encoder.encode(textToEncrypt);
 
     // Encrypt the data
-    const encryptedBuffer = await subtle.encrypt({ name: "AES-CBC", iv }, key, data);
+    const encryptedBuffer = await subtle.encrypt(
+      { name: "AES-CBC", iv },
+      key,
+      data,
+    );
 
     // Convert to hex strings for storage
     const ivHex = Array.from(iv)
@@ -68,7 +75,9 @@ export async function decrypt(text: string): Promise<string> {
     }
 
     // Convert hex strings back to buffers
-    const iv = new Uint8Array(ivHex.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
+    const iv = new Uint8Array(
+      ivHex.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)),
+    );
     const encryptedData = new Uint8Array(
       encryptedHex.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)),
     );
@@ -77,7 +86,11 @@ export async function decrypt(text: string): Promise<string> {
     const key = await getDerivedKey();
 
     // Decrypt the data
-    const decryptedBuffer = await subtle.decrypt({ name: "AES-CBC", iv }, key, encryptedData);
+    const decryptedBuffer = await subtle.decrypt(
+      { name: "AES-CBC", iv },
+      key,
+      encryptedData,
+    );
 
     // Decode the result
     const decoder = new TextDecoder();

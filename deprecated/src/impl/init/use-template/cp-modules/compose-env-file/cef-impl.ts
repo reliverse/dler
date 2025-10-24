@@ -1,7 +1,11 @@
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { confirmPrompt, inputPrompt, multiselectPrompt } from "@reliverse/rempts";
+import {
+  confirmPrompt,
+  inputPrompt,
+  multiselectPrompt,
+} from "@reliverse/rempts";
 import { eq } from "drizzle-orm";
 import { ofetch } from "ofetch";
 import open from "open";
@@ -36,7 +40,10 @@ async function safeReadFile(filePath: string): Promise<string | null> {
   }
 }
 
-async function safeWriteFile(filePath: string, content: string): Promise<boolean> {
+async function safeWriteFile(
+  filePath: string,
+  content: string,
+): Promise<boolean> {
   try {
     await fs.writeFile(filePath, content);
     return true;
@@ -95,7 +102,10 @@ export async function ensureEnvExists(projectPath: string): Promise<boolean> {
       return false;
     }
 
-    relinka("verbose", ".env file created from .env.example provided by the template.");
+    relinka(
+      "verbose",
+      ".env file created from .env.example provided by the template.",
+    );
     return true;
   } catch {
     relinka("error", "Failed to ensure .env exists.");
@@ -183,7 +193,10 @@ async function getRequiredKeys(exampleEnvPath: string): Promise<string[]> {
     .map((key) => key.trim());
 }
 
-export async function copyFromExisting(projectPath: string, sourcePath: string): Promise<boolean> {
+export async function copyFromExisting(
+  projectPath: string,
+  sourcePath: string,
+): Promise<boolean> {
   const { envPath } = getEnvPaths(projectPath);
 
   try {
@@ -212,7 +225,9 @@ export function getEnvPath(projectPath: string): string {
   return getEnvPaths(projectPath).envPath;
 }
 
-export async function fetchEnvExampleContent(urlResource: string): Promise<string | null> {
+export async function fetchEnvExampleContent(
+  urlResource: string,
+): Promise<string | null> {
   try {
     const response = await ofetch<Response>(urlResource);
     if (!response.ok) {
@@ -231,7 +246,11 @@ export async function fetchEnvExampleContent(urlResource: string): Promise<strin
 
 const LAST_ENV_FILE_KEY = "last_env_file";
 
-async function updateEnvValue(envPath: string, key: string, value: string): Promise<void> {
+async function updateEnvValue(
+  envPath: string,
+  key: string,
+  value: string,
+): Promise<void> {
   const envContent = await fs.readFile(envPath, "utf8");
   const envLines = envContent.split("\n");
   const newLine = `${key}="${value}"`;
@@ -264,7 +283,9 @@ function validateKeyValue(value: string, keyType: KeyType): string | boolean {
       return true;
     case "email": {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return emailRegex.test(trimmed) ? true : "Please enter a valid email address.";
+      return emailRegex.test(trimmed)
+        ? true
+        : "Please enter a valid email address.";
     }
     case "boolean": {
       // Accept "true" or "false" (case-insensitive)
@@ -274,7 +295,9 @@ function validateKeyValue(value: string, keyType: KeyType): string | boolean {
     }
     case "number": {
       // Check if numeric
-      return Number.isNaN(Number(trimmed)) ? "Please enter a valid number." : true;
+      return Number.isNaN(Number(trimmed))
+        ? "Please enter a valid number."
+        : true;
     }
     default:
       return true;
@@ -313,7 +336,9 @@ export async function promptAndSetMissingValues(
   if (missingKeys.length === 0 || wasEnvCopied) {
     relinka(
       "verbose",
-      wasEnvCopied ? "Using values from copied .env file" : "No missing keys to process.",
+      wasEnvCopied
+        ? "Using values from copied .env file"
+        : "No missing keys to process.",
     );
     return;
   }
@@ -335,9 +360,15 @@ export async function promptAndSetMissingValues(
 
     // If skipPrompts is true and the mrse env file exists, use it automatically
     if (skipPrompts && mrseEnvExists) {
-      relinka("info", `Using environment variables from mrse/${projectName}.env`);
+      relinka(
+        "info",
+        `Using environment variables from mrse/${projectName}.env`,
+      );
       if (await copyFromExisting(projectPath, mrseEnvPath)) {
-        relinka("success", "Environment variables copied from mrse environment file.");
+        relinka(
+          "success",
+          "Environment variables copied from mrse environment file.",
+        );
         const remainingMissingKeys = await getMissingKeys(projectPath);
         if (remainingMissingKeys.length > 0) {
           relinka(
@@ -362,8 +393,8 @@ export async function promptAndSetMissingValues(
   }
 
   // Group missing keys by service
-  const servicesWithMissingKeys = Object.entries(KNOWN_SERVICES).filter(([, service]) =>
-    service.keys.some((k) => missingKeys.includes(k.key)),
+  const servicesWithMissingKeys = Object.entries(KNOWN_SERVICES).filter(
+    ([, service]) => service.keys.some((k) => missingKeys.includes(k.key)),
   );
 
   const selectedServicesMsg = config.envComposerOpenBrowser
@@ -378,7 +409,10 @@ export async function promptAndSetMissingValues(
 
   // If for some reason no services matched, just skip
   if (validServices.length === 0) {
-    relinka("verbose", "No known services require missing keys. Possibly custom keys missing?");
+    relinka(
+      "verbose",
+      "No known services require missing keys. Possibly custom keys missing?",
+    );
     return;
   }
 
@@ -407,7 +441,10 @@ export async function promptAndSetMissingValues(
   if (selectedServices.includes("mrse_env") && mrseEnvPath) {
     relinka("info", `Using environment variables from mrse/${projectName}.env`);
     if (await copyFromExisting(projectPath, mrseEnvPath)) {
-      relinka("success", "Environment variables copied from mrse environment file.");
+      relinka(
+        "success",
+        "Environment variables copied from mrse environment file.",
+      );
       const remainingMissingKeys = await getMissingKeys(projectPath);
       if (remainingMissingKeys.length > 0) {
         relinka(
@@ -415,11 +452,19 @@ export async function promptAndSetMissingValues(
           `The following keys are still missing in the copied .env file: ${remainingMissingKeys.join(", ")}`,
         );
         // Continue with the normal flow for remaining keys, but remove the mrse option
-        const filteredServices = selectedServices.filter((s) => s !== "mrse_env");
+        const filteredServices = selectedServices.filter(
+          (s) => s !== "mrse_env",
+        );
         if (filteredServices.length > 0) {
           // Process the remaining services
           for (const serviceKey of filteredServices) {
-            await processService(serviceKey, missingKeys, envPath, maskInput, config);
+            await processService(
+              serviceKey,
+              missingKeys,
+              envPath,
+              maskInput,
+              config,
+            );
           }
         }
       }
@@ -487,7 +532,9 @@ async function processService(
           relinka(
             "verbose",
             `Using ${
-              keyConfig.defaultValue === "generate-64-chars" ? "generated" : "default"
+              keyConfig.defaultValue === "generate-64-chars"
+                ? "generated"
+                : "default"
             } value for ${keyConfig.key}${maskInput ? "" : `: ${value}`}`,
           );
         }
@@ -556,7 +603,10 @@ export async function saveLastEnvFilePath(envPath: string): Promise<void> {
         target: userDataTable.key,
         set: { value: encryptedPath },
       });
-    relinka("success", "Environment file path saved securely. You can use it later.");
+    relinka(
+      "success",
+      "Environment file path saved securely. You can use it later.",
+    );
   } catch (error) {
     relinka(
       "error",

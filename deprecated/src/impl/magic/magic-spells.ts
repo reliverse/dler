@@ -48,7 +48,8 @@ export interface SpellInfo {
 }
 
 // Pre-compiled regex patterns for better performance
-const SPELL_REGEX = /\/\/\s*(?:@ts-expect-error\s+.*?)?<\s*(dler-[^>\s]+)(.*?)>/i;
+const SPELL_REGEX =
+  /\/\/\s*(?:@ts-expect-error\s+.*?)?<\s*(dler-[^>\s]+)(.*?)>/i;
 const REPLACEMENT_REGEX = /`([^`]+)`/;
 const IF_CONDITION_REGEX = /\bif\s+['"`]([^'"`]+)['"`]/i;
 const ELSE_CONTENT_REGEX = /\belse\s+['"`]([^'"`]+)['"`]/i;
@@ -61,7 +62,8 @@ export function getAvailableSpells(): SpellInfo[] {
   return [
     {
       name: "dler-replace-line-to",
-      description: "Replaces the current line with new content, optionally based on a condition",
+      description:
+        "Replaces the current line with new content, optionally based on a condition",
       example:
         "// <dler-replace-line-to `export const version = \"1.0.0\";` if 'current file path starts with dist-npm'>",
       notes:
@@ -82,14 +84,16 @@ export function getAvailableSpells(): SpellInfo[] {
     },
     {
       name: "dler-remove-comment",
-      description: "Removes only the comment portion containing this directive from the line",
+      description:
+        "Removes only the comment portion containing this directive from the line",
       example: "console.log('debug info'); // <dler-remove-comment>",
       notes:
         "Removes everything from '//' to the end of the line when the comment contains this directive. The code portion before the comment is preserved. Also supports @ts-expect-error prefix.",
     },
     {
       name: "dler-ignore-this-line",
-      description: "Prevents any magic directives on this line from being processed",
+      description:
+        "Prevents any magic directives on this line from being processed",
       example: "// <dler-remove-line> // <dler-ignore-this-line>",
       notes:
         "When present on a line, all magic directives on that line are ignored and the line is kept as-is. Useful for code that contains magic directive strings that shouldn't be executed.",
@@ -101,7 +105,10 @@ export function getAvailableSpells(): SpellInfo[] {
  * Evaluates a single line for magic directives and returns the effect.
  * If no directive is present, returns neutral outcome.
  */
-export function evaluateMagicDirective(line: string, ctx: SpellEvaluationContext): SpellOutcome {
+export function evaluateMagicDirective(
+  line: string,
+  ctx: SpellEvaluationContext,
+): SpellOutcome {
   // First check if the line contains dler-ignore-this-line
   // If it does, ignore all magic directives on this line
   if (line.includes("<dler-ignore-this-line>")) {
@@ -142,7 +149,11 @@ export function evaluateMagicDirective(line: string, ctx: SpellEvaluationContext
       if (commentIndex !== -1) {
         // Keep everything before the comment, trimming any trailing whitespace
         const codeBeforeComment = line.substring(0, commentIndex).trimEnd();
-        return { replacement: codeBeforeComment, removeLine: false, removeFile: false };
+        return {
+          replacement: codeBeforeComment,
+          removeLine: false,
+          removeFile: false,
+        };
       }
       // If no '//' found (shouldn't happen since we matched the regex), keep the line as-is
       return NO_OP;
@@ -152,20 +163,30 @@ export function evaluateMagicDirective(line: string, ctx: SpellEvaluationContext
     /* dler-replace-line-to                                           */
     /* -------------------------------------------------------------- */
     case "dler-replace-line-to": {
-      const { replacement, elseContent, condition } = parseReplacementDirective(body ?? "");
+      const { replacement, elseContent, condition } = parseReplacementDirective(
+        body ?? "",
+      );
 
       if (!replacement) {
-        relinka("warn", "[spells] dler-replace-line-to missing replacement content");
+        relinka(
+          "warn",
+          "[spells] dler-replace-line-to missing replacement content",
+        );
         return NO_OP;
       }
 
-      const condMet = condition === undefined ? true : evaluatePathCondition(condition, ctx);
+      const condMet =
+        condition === undefined ? true : evaluatePathCondition(condition, ctx);
 
       if (condMet) {
         return { replacement, removeLine: false, removeFile: false };
       }
       if (elseContent !== undefined) {
-        return { replacement: elseContent, removeLine: false, removeFile: false };
+        return {
+          replacement: elseContent,
+          removeLine: false,
+          removeFile: false,
+        };
       }
       // else "do nothing" – keep original line
       return NO_OP;
@@ -232,7 +253,10 @@ function parseReplacementDirective(body: string): ReplaceParts {
 }
 
 /** Evaluates a path-based condition against the file context */
-function evaluatePathCondition(condition: string, ctx: SpellEvaluationContext): boolean {
+function evaluatePathCondition(
+  condition: string,
+  ctx: SpellEvaluationContext,
+): boolean {
   const STARTS_WITH = STARTS_WITH_REGEX.exec(condition)?.[1];
 
   if (STARTS_WITH) {

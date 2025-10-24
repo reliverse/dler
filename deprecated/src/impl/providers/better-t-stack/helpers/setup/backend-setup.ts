@@ -5,7 +5,9 @@ import type { ProjectConfig } from "~/impl/providers/better-t-stack/types";
 
 import { addPackageDependency } from "~/impl/providers/better-t-stack/utils/add-package-deps";
 
-export async function setupBackendDependencies(config: ProjectConfig): Promise<void> {
+export async function setupBackendDependencies(
+  config: ProjectConfig,
+): Promise<void> {
   const { backend, runtime, api, projectDir } = config;
 
   if (backend === "convex") {

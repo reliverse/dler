@@ -31,7 +31,9 @@ export async function getPrimaryVercelTeam(
       if (isTeamValid) {
         // Get full team details to include name
         const teams = await getVercelTeams(vercelInstance);
-        const memoryTeam = teams.find((team) => team.id === memory.vercelTeamId);
+        const memoryTeam = teams.find(
+          (team) => team.id === memory.vercelTeamId,
+        );
         if (memoryTeam) {
           return memoryTeam;
         }
@@ -75,7 +77,11 @@ export async function verifyTeam(
     });
 
     if (!res.ok) {
-      relinka("warn", "Failed to verify team:", res.error?.message ?? "Unknown error");
+      relinka(
+        "warn",
+        "Failed to verify team:",
+        res.error?.message ?? "Unknown error",
+      );
       return false;
     }
 
@@ -90,7 +96,9 @@ export async function verifyTeam(
   }
 }
 
-export async function getVercelTeams(vercelInstance: InstanceVercel): Promise<VercelTeam[]> {
+export async function getVercelTeams(
+  vercelInstance: InstanceVercel,
+): Promise<VercelTeam[]> {
   const res = await teamsGetTeams(vercelInstance, {
     limit: 10,
   });
@@ -102,7 +110,8 @@ export async function getVercelTeams(vercelInstance: InstanceVercel): Promise<Ve
   const { teams } = res.value;
   return teams
     .filter(
-      (team): team is GetTeamsResponseBody["teams"][0] & { name: string } => team.name !== null,
+      (team): team is GetTeamsResponseBody["teams"][0] & { name: string } =>
+        team.name !== null,
     )
     .map((team) => ({
       id: team.id,

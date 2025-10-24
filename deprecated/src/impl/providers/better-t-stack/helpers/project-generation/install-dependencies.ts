@@ -3,7 +3,10 @@ import { relinka } from "@reliverse/relinka";
 import { createSpinner } from "@reliverse/rempts";
 import { $ } from "execa";
 
-import type { Addons, PackageManager } from "~/impl/providers/better-t-stack/types";
+import type {
+  Addons,
+  PackageManager,
+} from "~/impl/providers/better-t-stack/types";
 
 export async function installDependencies({
   projectDir,

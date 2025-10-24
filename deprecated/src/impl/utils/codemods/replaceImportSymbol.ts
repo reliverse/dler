@@ -3,7 +3,9 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { glob } from "tinyglobby";
 
-async function detectCurrentImportSymbol(projectPath: string): Promise<string | null> {
+async function detectCurrentImportSymbol(
+  projectPath: string,
+): Promise<string | null> {
   // Common import symbols used in projects
   const commonSymbols = ["@", "~", "#", "$", "@src", "@app"];
 
@@ -25,7 +27,10 @@ async function detectCurrentImportSymbol(projectPath: string): Promise<string | 
       const importRegex = new RegExp(`(from|import)\\s+(['"])${symbol}/`, "g");
       const matches = content.match(importRegex);
       if (matches) {
-        symbolCounts.set(symbol, (symbolCounts.get(symbol) ?? 0) + matches.length);
+        symbolCounts.set(
+          symbol,
+          (symbolCounts.get(symbol) ?? 0) + matches.length,
+        );
       }
     }
   }
@@ -44,16 +49,25 @@ async function detectCurrentImportSymbol(projectPath: string): Promise<string | 
   return mostUsedSymbol;
 }
 
-export async function replaceImportSymbol(projectPath: string, toSymbol: string) {
+export async function replaceImportSymbol(
+  projectPath: string,
+  toSymbol: string,
+) {
   // Detect the current import symbol
   const fromSymbol = await detectCurrentImportSymbol(projectPath);
 
   if (!fromSymbol) {
-    relinka("warn", "No common import symbol detected in the project. No changes will be made.");
+    relinka(
+      "warn",
+      "No common import symbol detected in the project. No changes will be made.",
+    );
     return;
   }
 
-  relinka("info", `Replacing import symbol "${fromSymbol}" with "${toSymbol}" in ${projectPath}`);
+  relinka(
+    "info",
+    `Replacing import symbol "${fromSymbol}" with "${toSymbol}" in ${projectPath}`,
+  );
 
   // Find files in the specified project folder
   const files = await glob("**/*.{js,jsx,ts,tsx}", {

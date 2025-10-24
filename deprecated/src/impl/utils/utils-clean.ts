@@ -59,7 +59,9 @@ export async function removeDistFolders(
  * @param targetDir Directory to process recursively
  * @returns Promise<boolean> True if successful
  */
-export async function removeLogInternalCalls(targetDir: string): Promise<boolean> {
+export async function removeLogInternalCalls(
+  targetDir: string,
+): Promise<boolean> {
   const files = await fs.readdir(targetDir, { recursive: true });
   const tsJsFiles = files.filter(
     (file) =>
@@ -107,6 +109,9 @@ export async function removeLogInternalCalls(targetDir: string): Promise<boolean
     { concurrency: CONCURRENCY_DEFAULT },
   );
 
-  relinka("verbose", "Successfully removed logInternal and relinka internal calls from files");
+  relinka(
+    "verbose",
+    "Successfully removed logInternal and relinka internal calls from files",
+  );
   return true;
 }

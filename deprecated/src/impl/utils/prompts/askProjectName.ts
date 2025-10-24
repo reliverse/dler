@@ -1,7 +1,11 @@
 import { inputPrompt, isValidName } from "@reliverse/rempts";
 import { generate } from "random-words";
 
-export async function askProjectName({ repoName = "" }: { repoName?: string }): Promise<string> {
+export async function askProjectName({
+  repoName = "",
+}: {
+  repoName?: string;
+}): Promise<string> {
   let defaultValue: string;
 
   if (repoName) {
@@ -29,7 +33,8 @@ export async function askProjectName({ repoName = "" }: { repoName?: string }): 
     content,
     placeholder,
     defaultValue,
-    validate: (value: string) => isValidName(value).isValid || `Invalid project name: ${value}`,
+    validate: (value: string) =>
+      isValidName(value).isValid || `Invalid project name: ${value}`,
   });
 
   return name.toString();

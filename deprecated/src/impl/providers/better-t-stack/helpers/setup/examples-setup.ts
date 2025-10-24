@@ -9,7 +9,12 @@ import { addPackageDependency } from "~/impl/providers/better-t-stack/utils/add-
 export async function setupExamples(config: ProjectConfig): Promise<void> {
   const { examples, frontend, backend, projectDir } = config;
 
-  if (backend === "convex" || !examples || examples.length === 0 || examples[0] === "none") {
+  if (
+    backend === "convex" ||
+    !examples ||
+    examples.length === 0 ||
+    examples[0] === "none"
+  ) {
     return;
   }
 

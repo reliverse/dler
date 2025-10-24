@@ -4,11 +4,17 @@ import { relinka } from "@reliverse/relinka";
 import { confirmPrompt, inputPrompt, selectPrompt } from "@reliverse/rempts";
 import { installIntegration } from "~/impl/init/mm-deprecated/editor-mod";
 import { INTEGRATION_CONFIGS } from "~/impl/init/mm-deprecated/feature-add";
-import type { ColumnType, DatabaseProvider, TableSchema } from "~/impl/types/mod";
+import type {
+  ColumnType,
+  DatabaseProvider,
+  TableSchema,
+} from "~/impl/types/mod";
 
 import { COLUMN_TYPES } from "./manageDrizzleConstants";
 
-export async function detectDatabaseProvider(cwd: string): Promise<DatabaseProvider | null> {
+export async function detectDatabaseProvider(
+  cwd: string,
+): Promise<DatabaseProvider | null> {
   const drizzleConfigPath = path.join(cwd, "drizzle.config.ts");
   if (await fs.pathExists(drizzleConfigPath)) {
     const content = await fs.readFile(drizzleConfigPath, "utf-8");
@@ -25,8 +31,14 @@ export async function detectDatabaseProvider(cwd: string): Promise<DatabaseProvi
   return null;
 }
 
-export async function setupDrizzle(cwd: string, isDev: boolean): Promise<DatabaseProvider | null> {
-  relinka("info", "Drizzle is not set up in this project. Let's set it up first.");
+export async function setupDrizzle(
+  cwd: string,
+  isDev: boolean,
+): Promise<DatabaseProvider | null> {
+  relinka(
+    "info",
+    "Drizzle is not set up in this project. Let's set it up first.",
+  );
 
   const provider = await selectPrompt({
     title: "Select database provider:",
@@ -171,7 +183,11 @@ export async function addNewTable(
 
     let defaultValue;
     if (hasDefaultValue) {
-      if (columnType === "timestamp" || columnType === "timestamptz" || columnType === "datetime") {
+      if (
+        columnType === "timestamp" ||
+        columnType === "timestamptz" ||
+        columnType === "datetime"
+      ) {
         const useNow = await confirmPrompt({
           title: "Use current timestamp as default?",
           defaultValue: true,
@@ -340,7 +356,10 @@ export async function renameTable(
     await renameTableInSchema(filePath, oldName, newName, provider);
   }
 
-  relinka("success", `Table renamed from ${oldName} to ${newName} successfully!`);
+  relinka(
+    "success",
+    `Table renamed from ${oldName} to ${newName} successfully!`,
+  );
 }
 
 export async function manageRelations(
@@ -361,7 +380,9 @@ export async function manageRelations(
 
   const targetTable = await selectPrompt({
     title: "Select target table:",
-    options: tables.filter((t) => t !== sourceTable).map((t) => ({ label: t, value: t })),
+    options: tables
+      .filter((t) => t !== sourceTable)
+      .map((t) => ({ label: t, value: t })),
   });
 
   const relationType = await selectPrompt({
@@ -395,7 +416,11 @@ export async function manageRelations(
     };
 
     if (useMultipleFiles) {
-      const filePath = path.join(cwd, "src/db/schema", `${junctionTableName}.ts`);
+      const filePath = path.join(
+        cwd,
+        "src/db/schema",
+        `${junctionTableName}.ts`,
+      );
       await generateTableFile(filePath, schema, provider);
 
       // Update index.ts
@@ -514,7 +539,10 @@ export async function appendTableToSchema(
   await fs.writeFile(filePath, content);
 }
 
-export async function removeFromSchemaIndex(indexPath: string, tableName: string) {
+export async function removeFromSchemaIndex(
+  indexPath: string,
+  tableName: string,
+) {
   if (await fs.pathExists(indexPath)) {
     let content = await fs.readFile(indexPath, "utf-8");
     content = content.replace(`export * from "./${tableName}";`, "");
@@ -551,17 +579,27 @@ export async function renameTableInSchema(
     let content = await fs.readFile(filePath, "utf-8");
     const dbPrefix = provider === "postgres" ? "pg" : provider;
     content = content.replace(
-      new RegExp(`export const ${oldName} = ${dbPrefix}Table\\("${oldName}"`, "g"),
+      new RegExp(
+        `export const ${oldName} = ${dbPrefix}Table\\("${oldName}"`,
+        "g",
+      ),
       `export const ${newName} = ${dbPrefix}Table("${newName}"`,
     );
     await fs.writeFile(filePath, content);
   }
 }
 
-export async function updateTableNameInIndex(indexPath: string, oldName: string, newName: string) {
+export async function updateTableNameInIndex(
+  indexPath: string,
+  oldName: string,
+  newName: string,
+) {
   if (await fs.pathExists(indexPath)) {
     let content = await fs.readFile(indexPath, "utf-8");
-    content = content.replace(`export * from "./${oldName}";`, `export * from "./${newName}";`);
+    content = content.replace(
+      `export * from "./${oldName}";`,
+      `export * from "./${newName}";`,
+    );
     await fs.writeFile(indexPath, content);
   }
 }
@@ -575,7 +613,9 @@ export async function addColumnToTable(
   if (await fs.pathExists(filePath)) {
     let content = await fs.readFile(filePath, "utf-8");
     const dbPrefix = provider === "postgres" ? "pg" : provider;
-    const tableRegex = new RegExp(`export const ${tableName} = ${dbPrefix}Table\\([\\s\\S]*?\\);`);
+    const tableRegex = new RegExp(
+      `export const ${tableName} = ${dbPrefix}Table\\([\\s\\S]*?\\);`,
+    );
     const match = content.match(tableRegex);
 
     if (match) {
@@ -600,7 +640,9 @@ export async function addColumnToTable(
       columnDef += ",";
 
       const newTableContent =
-        tableContent.slice(0, insertPoint) + columnDef + tableContent.slice(insertPoint);
+        tableContent.slice(0, insertPoint) +
+        columnDef +
+        tableContent.slice(insertPoint);
       content = content.replace(tableRegex, newTableContent);
       await fs.writeFile(filePath, content);
     }

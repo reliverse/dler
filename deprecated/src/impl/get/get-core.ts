@@ -22,7 +22,11 @@ interface GitHubRelease {
   }[];
 }
 
-export async function installDlerStandalone(installDir: string, appsPath: string, args: any) {
+export async function installDlerStandalone(
+  installDir: string,
+  appsPath: string,
+  args: any,
+) {
   relinka("info", "Installing dler standalone binary...");
 
   // Check for conflicts with globally installed dler
@@ -35,10 +39,16 @@ export async function installDlerStandalone(installDir: string, appsPath: string
   if (!args.force && currentMeta) {
     const latestVersion = await getLatestVersion(repository);
     if (currentMeta.version === latestVersion) {
-      relinka("success", `dler ${latestVersion} is already installed and up-to-date`);
+      relinka(
+        "success",
+        `dler ${latestVersion} is already installed and up-to-date`,
+      );
       return;
     } else {
-      relinka("info", `Upgrading dler from ${currentMeta.version} to ${latestVersion}`);
+      relinka(
+        "info",
+        `Upgrading dler from ${currentMeta.version} to ${latestVersion}`,
+      );
     }
   }
 
@@ -71,7 +81,10 @@ export async function installDlerStandalone(installDir: string, appsPath: string
 
   await updateAppsJson(appsPath, "dler", meta);
 
-  relinka("success", `dler ${actualVersion} installed successfully to ${binaryPath}`);
+  relinka(
+    "success",
+    `dler ${actualVersion} installed successfully to ${binaryPath}`,
+  );
 
   // Add to PATH if not skipped
   if (!args["skip-path"]) {
@@ -131,7 +144,10 @@ export async function installFromGitHub(
 
   await updateAppsJson(appsPath, binaryKey, meta);
 
-  relinka("success", `${binaryName} ${release.tag_name} installed successfully to ${binaryPath}`);
+  relinka(
+    "success",
+    `${binaryName} ${release.tag_name} installed successfully to ${binaryPath}`,
+  );
 
   // Add to PATH if not skipped
   if (!args["skip-path"]) {
@@ -162,7 +178,10 @@ function getDlerBinaryInfo() {
   }
 }
 
-function findBinaryAsset(assets: GitHubRelease["assets"], specificBinary?: string) {
+function findBinaryAsset(
+  assets: GitHubRelease["assets"],
+  specificBinary?: string,
+) {
   if (specificBinary) {
     return assets.find((asset) => asset.name === specificBinary);
   }
@@ -199,7 +218,10 @@ function findBinaryAsset(assets: GitHubRelease["assets"], specificBinary?: strin
   });
 }
 
-async function getCurrentMeta(appsPath: string, binaryKey: string): Promise<MetaInfo | null> {
+async function getCurrentMeta(
+  appsPath: string,
+  binaryKey: string,
+): Promise<MetaInfo | null> {
   try {
     if (await fs.pathExists(appsPath)) {
       const content = await fs.readFile(appsPath, "utf8");
@@ -212,7 +234,11 @@ async function getCurrentMeta(appsPath: string, binaryKey: string): Promise<Meta
   return null;
 }
 
-async function updateAppsJson(appsPath: string, binaryKey: string, meta: MetaInfo): Promise<void> {
+async function updateAppsJson(
+  appsPath: string,
+  binaryKey: string,
+  meta: MetaInfo,
+): Promise<void> {
   let allMeta: Record<string, MetaInfo> = {};
 
   // Load existing apps file if it exists
@@ -271,20 +297,32 @@ export async function checkPowerShellVersion(): Promise<void> {
     const isVersionValid = major > 7 || (major === 7 && minor >= 5);
 
     if (!isVersionValid) {
-      relinka("error", "❌ PowerShell 7.5+ is required for dler installation on Windows");
+      relinka(
+        "error",
+        "❌ PowerShell 7.5+ is required for dler installation on Windows",
+      );
       relinka("verbose", `   Current version: ${versionString}`);
       relinka("verbose", `   Required version: 7.5.0 or higher`);
       relinka("verbose", "");
       relinka("info", "🔧 To install PowerShell 7.5+:");
-      relinka("verbose", "   • Visit: https://github.com/PowerShell/PowerShell/releases");
+      relinka(
+        "verbose",
+        "   • Visit: https://github.com/PowerShell/PowerShell/releases",
+      );
       relinka(
         "verbose",
         "   • Or use Windows Package Manager: winget install Microsoft.PowerShell",
       );
-      relinka("verbose", "   • Or use Chocolatey: choco install powershell-core");
+      relinka(
+        "verbose",
+        "   • Or use Chocolatey: choco install powershell-core",
+      );
       relinka("verbose", "   • Or use Scoop: scoop install pwsh");
       relinka("verbose", "");
-      relinka("info", "After installation, restart your terminal and try again.");
+      relinka(
+        "info",
+        "After installation, restart your terminal and try again.",
+      );
 
       process.exit(1);
     }
@@ -293,7 +331,10 @@ export async function checkPowerShellVersion(): Promise<void> {
   } catch (error) {
     if (error instanceof Error && error.message.includes("Command failed")) {
       relinka("error", "❌ PowerShell not found or not working properly");
-      relinka("info", "Please ensure PowerShell 7.5+ is installed and accessible");
+      relinka(
+        "info",
+        "Please ensure PowerShell 7.5+ is installed and accessible",
+      );
     } else {
       throw error; // Re-throw other errors
     }
@@ -315,7 +356,12 @@ async function checkGlobalDlerConflicts(force: boolean): Promise<void> {
 
       if (pm === "npm") {
         // Check npm global packages
-        const { stdout } = await execa("npm", ["list", "-g", "--depth=0", "@reliverse/dler"]);
+        const { stdout } = await execa("npm", [
+          "list",
+          "-g",
+          "--depth=0",
+          "@reliverse/dler",
+        ]);
         isInstalled = stdout.includes("@reliverse/dler");
       } else if (pm === "yarn") {
         // Check yarn global packages
@@ -338,7 +384,11 @@ async function checkGlobalDlerConflicts(force: boolean): Promise<void> {
         }
       } else if (pm === "pnpm") {
         // Check pnpm global packages
-        const { stdout } = await execa("pnpm", ["list", "-g", "@reliverse/dler"]);
+        const { stdout } = await execa("pnpm", [
+          "list",
+          "-g",
+          "@reliverse/dler",
+        ]);
         isInstalled = stdout.includes("@reliverse/dler");
       } else if (pm === "bun") {
         // Check bun global packages
@@ -370,7 +420,10 @@ async function checkGlobalDlerConflicts(force: boolean): Promise<void> {
   }
 
   if (conflicts.length > 0 && !force) {
-    relinka("warn", "⚠️  Detected globally installed dler via package manager(s):");
+    relinka(
+      "warn",
+      "⚠️  Detected globally installed dler via package manager(s):",
+    );
     conflicts.forEach((conflict) => {
       relinka(
         "log",
@@ -378,7 +431,10 @@ async function checkGlobalDlerConflicts(force: boolean): Promise<void> {
       );
     });
 
-    relinka("warn", "\n🔧 To avoid conflicts, please remove the global installation(s) first:");
+    relinka(
+      "warn",
+      "\n🔧 To avoid conflicts, please remove the global installation(s) first:",
+    );
     conflicts.forEach((conflict) => {
       relinka("verbose", `  ${conflict.command}`);
     });
@@ -391,13 +447,18 @@ async function checkGlobalDlerConflicts(force: boolean): Promise<void> {
 
     process.exit(1);
   } else if (conflicts.length > 0 && force) {
-    relinka("warn", "⚠️  Proceeding with --force despite global dler installation conflicts");
+    relinka(
+      "warn",
+      "⚠️  Proceeding with --force despite global dler installation conflicts",
+    );
   }
 }
 
 async function getLatestVersion(repository: string): Promise<string> {
   try {
-    const response = await fetch(`https://api.github.com/repos/${repository}/releases/latest`);
+    const response = await fetch(
+      `https://api.github.com/repos/${repository}/releases/latest`,
+    );
     if (!response.ok) {
       throw new Error(`GitHub API error: ${response.status}`);
     }
@@ -457,7 +518,9 @@ async function downloadBinary(url: string, targetPath: string): Promise<void> {
 
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Download failed: ${response.status} ${response.statusText}`,
+    );
   }
 
   if (!response.body) {
@@ -578,7 +641,10 @@ async function ensureInPath(installDir: string): Promise<void> {
     try {
       await addToWindowsPath(installDir);
       relinka("success", `Added ${installDir} to PATH`);
-      relinka("info", "Please restart your terminal for PATH changes to take effect");
+      relinka(
+        "info",
+        "Please restart your terminal for PATH changes to take effect",
+      );
     } catch (error) {
       relinka("warn", `Failed to automatically modify PATH: ${error}`);
       relinka("warn", "Please add manually:");
@@ -591,7 +657,9 @@ async function ensureInPath(installDir: string): Promise<void> {
   } else {
     // Unix-like systems
     const shellRc =
-      os === "darwin" ? path.resolve(homeDir, ".zshrc") : path.resolve(homeDir, ".bashrc");
+      os === "darwin"
+        ? path.resolve(homeDir, ".zshrc")
+        : path.resolve(homeDir, ".bashrc");
 
     try {
       let rcContent = "";
@@ -605,7 +673,10 @@ async function ensureInPath(installDir: string): Promise<void> {
         rcContent += `\n# Added by dler get command\n${pathExport}\n`;
         await fs.writeFile(shellRc, rcContent, "utf8");
         relinka("success", `Added to PATH in ${shellRc}`);
-        relinka("info", "Please restart your terminal or run: source " + shellRc);
+        relinka(
+          "info",
+          "Please restart your terminal or run: source " + shellRc,
+        );
       } else {
         relinka("info", "PATH export already exists in " + shellRc);
       }

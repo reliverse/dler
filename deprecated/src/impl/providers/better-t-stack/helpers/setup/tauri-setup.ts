@@ -39,7 +39,9 @@ export async function setupTauri(config: ProjectConfig): Promise<void> {
 
     const clientPackageJsonPath = path.join(clientPackageDir, "package.json");
     if (await fs.pathExists(clientPackageJsonPath)) {
-      const packageJson = (await fs.readJson(clientPackageJsonPath)) as PackageJson;
+      const packageJson = (await fs.readJson(
+        clientPackageJsonPath,
+      )) as PackageJson;
 
       packageJson.scripts = {
         ...packageJson.scripts,
@@ -86,7 +88,10 @@ export async function setupTauri(config: ProjectConfig): Promise<void> {
 
     const commandWithArgs = `@tauri-apps/cli@latest ${tauriArgsString}`;
 
-    const tauriInitCommand = getPackageExecutionCommand(packageManager, commandWithArgs);
+    const tauriInitCommand = getPackageExecutionCommand(
+      packageManager,
+      commandWithArgs,
+    );
 
     await execa(tauriInitCommand, {
       cwd: clientPackageDir,

@@ -50,7 +50,11 @@ function hashFile(filePath: string): string {
 /**
  * Get the cache directory for a package
  */
-export function getPackageCacheDir(monorepo: Monorepo, pkg: Package, packageHash: string): string {
+export function getPackageCacheDir(
+  monorepo: Monorepo,
+  pkg: Package,
+  packageHash: string,
+): string {
   return path.join(monorepo.root, ".cache", pkg.name, packageHash);
 }
 

@@ -7,7 +7,10 @@ import { readPackageJSON } from "pkg-types";
  * @param scriptName - Name of the script to check for
  * @returns Promise resolving to true if the script exists, false otherwise
  */
-export async function checkScriptExists(projectPath: string, scriptName: string): Promise<boolean> {
+export async function checkScriptExists(
+  projectPath: string,
+  scriptName: string,
+): Promise<boolean> {
   try {
     const packageJson = await readPackageJSON(projectPath);
     return !!packageJson?.scripts?.[scriptName];

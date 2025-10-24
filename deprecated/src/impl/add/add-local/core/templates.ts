@@ -34,17 +34,25 @@ export async function checkForTemplateUpdate(
   projectConfig: ReliverseConfig,
 ): Promise<TemplateUpdateInfo> {
   // If no template is specified or it has an unknown value, no updates to check
-  if (!projectConfig.projectTemplate || projectConfig.projectTemplate === UNKNOWN_VALUE) {
+  if (
+    !projectConfig.projectTemplate ||
+    projectConfig.projectTemplate === UNKNOWN_VALUE
+  ) {
     return { hasUpdate: false, currentDate: "", latestDate: null };
   }
 
   // If no template date is recorded, no way to check for updates
-  if (!projectConfig.projectTemplateDate || projectConfig.projectTemplateDate === UNKNOWN_VALUE) {
+  if (
+    !projectConfig.projectTemplateDate ||
+    projectConfig.projectTemplateDate === UNKNOWN_VALUE
+  ) {
     return { hasUpdate: false, currentDate: "", latestDate: null };
   }
 
   // Find the template in our repository list
-  const templateRepo = REPO_TEMPLATES.find((repo) => repo.id === projectConfig.projectTemplate);
+  const templateRepo = REPO_TEMPLATES.find(
+    (repo) => repo.id === projectConfig.projectTemplate,
+  );
   if (!templateRepo) {
     return {
       hasUpdate: false,
@@ -116,7 +124,11 @@ export async function updateProjectTemplateDate(
 ): Promise<void> {
   try {
     // Update the projectTemplateDate field in the config
-    await updateReliverseConfig(projectPath, { projectTemplateDate: latestDate }, isDev);
+    await updateReliverseConfig(
+      projectPath,
+      { projectTemplateDate: latestDate },
+      isDev,
+    );
     relinka("success", `Updated project template date to ${latestDate}`);
   } catch (error) {
     relinka(

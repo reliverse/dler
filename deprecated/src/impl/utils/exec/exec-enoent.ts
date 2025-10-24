@@ -7,7 +7,13 @@ const isWin = process.platform === "win32";
 export function notFoundError(
   original: { command: string; args: string[] },
   syscall: string,
-): Error & { code: string; errno: string; syscall: string; path: string; spawnargs: string[] } {
+): Error & {
+  code: string;
+  errno: string;
+  syscall: string;
+  path: string;
+  spawnargs: string[];
+} {
   return Object.assign(new Error(`${syscall} ${original.command} ENOENT`), {
     code: "ENOENT",
     errno: "ENOENT",
@@ -17,7 +23,10 @@ export function notFoundError(
   });
 }
 
-export function hookChildProcess(cp: ChildProcess, parsed: ExecParseResult): void {
+export function hookChildProcess(
+  cp: ChildProcess,
+  parsed: ExecParseResult,
+): void {
   if (!isWin) return;
   const originalEmit = cp.emit;
   (cp.emit as any) = (name: string | symbol, ...args: any[]): boolean => {
@@ -34,14 +43,20 @@ export function hookChildProcess(cp: ChildProcess, parsed: ExecParseResult): voi
   };
 }
 
-export function verifyENOENT(status: number | null, parsed: ExecParseResult): Error | null {
+export function verifyENOENT(
+  status: number | null,
+  parsed: ExecParseResult,
+): Error | null {
   if (isWin && status === 1 && !parsed.file) {
     return notFoundError(parsed.original, "spawn");
   }
   return null;
 }
 
-export function verifyENOENTSync(status: number | null, parsed: ExecParseResult): Error | null {
+export function verifyENOENTSync(
+  status: number | null,
+  parsed: ExecParseResult,
+): Error | null {
   if (isWin && status === 1 && !parsed.file) {
     return notFoundError(parsed.original, "spawnSync");
   }

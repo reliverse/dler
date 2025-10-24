@@ -22,7 +22,8 @@ export async function createCompletionTexts(
       : "";
 
   const includeLibs =
-    buildConfig.libsActMode === "libs-only" || buildConfig.libsActMode === "main-and-libs";
+    buildConfig.libsActMode === "libs-only" ||
+    buildConfig.libsActMode === "main-and-libs";
 
   const namesForAction = (() => {
     if (!includeLibs) return [] as string[];
@@ -32,14 +33,18 @@ export async function createCompletionTexts(
       if (action === "publish") {
         if (buildConfig.commonPubPause || libCfg?.libPubPause) continue;
       }
-      const libVersionLabel = libCfg?.version ? ` v${libCfg.version}` : versionLabelMain;
+      const libVersionLabel = libCfg?.version
+        ? ` v${libCfg.version}`
+        : versionLabelMain;
       names.push(`${libName}${libVersionLabel}`);
     }
     return names;
   })();
 
   const displayName =
-    namesForAction.length > 0 ? namesForAction.join(", ") : `${packageName}${versionLabelMain}`;
+    namesForAction.length > 0
+      ? namesForAction.join(", ")
+      : `${packageName}${versionLabelMain}`;
 
   const publishTargetLabel = (() => {
     switch (buildConfig.commonPubRegistry) {

@@ -48,7 +48,8 @@ export async function setupAuth(config: ProjectConfig): Promise<void> {
     }
 
     if (
-      (frontend.includes("native-nativewind") || frontend.includes("native-unistyles")) &&
+      (frontend.includes("native-nativewind") ||
+        frontend.includes("native-unistyles")) &&
       nativeDirExists
     ) {
       await addPackageDependency({
@@ -71,7 +72,8 @@ export async function setupAuth(config: ProjectConfig): Promise<void> {
 }
 
 export function generateAuthSecret(length = 32): string {
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
   const charactersLength = characters.length;
   for (let i = 0; i < length; i++) {

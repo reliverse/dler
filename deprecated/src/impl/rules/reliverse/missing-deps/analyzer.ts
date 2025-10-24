@@ -1,15 +1,24 @@
 import type { DependencyResult, FinderOptions } from "./deps-types";
 
 import { findSourceFiles, readFile, readPackageJson } from "./filesystem";
-import { extractPackageNames, getBuiltinModules, getListedDependencies } from "./parser";
+import {
+  extractPackageNames,
+  getBuiltinModules,
+  getListedDependencies,
+} from "./parser";
 
-export const analyzeDependencies = async (options: FinderOptions): Promise<DependencyResult> => {
+export const analyzeDependencies = async (
+  options: FinderOptions,
+): Promise<DependencyResult> => {
   // Read package.json
   const packageJson = await readPackageJson(options.directory);
   const listedDependencies = getListedDependencies(packageJson);
 
   // Find all source files
-  const sourceFiles = await findSourceFiles(options.directory, options.ignorePatterns);
+  const sourceFiles = await findSourceFiles(
+    options.directory,
+    options.ignorePatterns,
+  );
 
   // Get builtin modules
   const builtinModules = getBuiltinModules();

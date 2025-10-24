@@ -16,7 +16,12 @@
  */
 
 import { relinka } from "@reliverse/relinka";
-import { confirmPrompt, defineCommand, inputPrompt, selectPrompt } from "@reliverse/rempts";
+import {
+  confirmPrompt,
+  defineCommand,
+  inputPrompt,
+  selectPrompt,
+} from "@reliverse/rempts";
 import { execaCommand } from "execa";
 import { getOrCreateReliverseConfig } from "~/impl/config/core";
 import { getCurrentWorkingDirectory } from "~/impl/utils/terminalHelpers";
@@ -36,7 +41,15 @@ interface InvokeChain {
 }
 
 // Security: Commands that should be restricted in certain modes
-const DANGEROUS_COMMANDS = ["login", "logout", "memory", "schema", "studio", "update", "upload"];
+const DANGEROUS_COMMANDS = [
+  "login",
+  "logout",
+  "memory",
+  "schema",
+  "studio",
+  "update",
+  "upload",
+];
 
 // Commands that can be safely invoked by AI/automation
 const SAFE_COMMANDS = [
@@ -71,14 +84,18 @@ const PREDEFINED_CHAINS: Record<string, InvokeChain> = {
   "code-quality": {
     name: "Code Quality Check",
     description: "Run linting and code improvements",
-    steps: [{ command: "ai", args: ["--agent", "relinter"] }, { command: "cmod" }],
+    steps: [
+      { command: "ai", args: ["--agent", "relinter"] },
+      { command: "cmod" },
+    ],
   },
 };
 
 export default defineCommand({
   meta: {
     name: "invoke",
-    description: "Invoke RSE CLI commands programmatically for AI agents and automation",
+    description:
+      "Invoke RSE CLI commands programmatically for AI agents and automation",
   },
   args: {
     dev: {
@@ -142,7 +159,8 @@ export default defineCommand({
     });
 
     // Check if self-invocation is allowed in config (stored in customRules)
-    const allowSelfInvocation = config.customRules?.allowSelfInvocation === true;
+    const allowSelfInvocation =
+      config.customRules?.allowSelfInvocation === true;
     if (!allowSelfInvocation && !isDev) {
       relinka(
         "error",
@@ -171,18 +189,28 @@ export default defineCommand({
         await showInvokeHelp();
       }
     } catch (error) {
-      relinka("error", "Invoke failed:", error instanceof Error ? error.message : String(error));
+      relinka(
+        "error",
+        "Invoke failed:",
+        error instanceof Error ? error.message : String(error),
+      );
       process.exit(1);
     }
   },
 });
 
-async function invokeSingleCommand(options: InvokeOptions, isDev: boolean): Promise<void> {
+async function invokeSingleCommand(
+  options: InvokeOptions,
+  isDev: boolean,
+): Promise<void> {
   const { command, args = [], allowDangerous, dryRun, verbose } = options;
 
   // Security check
   if (DANGEROUS_COMMANDS.includes(command) && !allowDangerous) {
-    relinka("error", `Command '${command}' is restricted. Use --allowDangerous to override.`);
+    relinka(
+      "error",
+      `Command '${command}' is restricted. Use --allowDangerous to override.`,
+    );
     return;
   }
 
@@ -237,7 +265,9 @@ async function executeChain(
   if (options.dryRun) {
     relinka("info", "[DRY RUN] Chain steps:");
     for (const step of chain.steps) {
-      const cmd = options.isDev ? `bun dev:${step.command}` : `rse ${step.command}`;
+      const cmd = options.isDev
+        ? `bun dev:${step.command}`
+        : `rse ${step.command}`;
       const args = step.args ? ` ${step.args.join(" ")}` : "";
       relinka("info", `  ${cmd}${args}`);
     }
@@ -356,10 +386,12 @@ async function interactiveChainSelection(options: {
   verbose: boolean;
   isDev: boolean;
 }): Promise<void> {
-  const chainOptions = Object.entries(PREDEFINED_CHAINS).map(([key, chain]) => ({
-    label: `${chain.name} - ${chain.description || "No description"}`,
-    value: key,
-  }));
+  const chainOptions = Object.entries(PREDEFINED_CHAINS).map(
+    ([key, chain]) => ({
+      label: `${chain.name} - ${chain.description || "No description"}`,
+      value: key,
+    }),
+  );
 
   const selectedChain = await selectPrompt({
     title: "Select predefined chain",
@@ -380,7 +412,10 @@ async function interactiveCustomChain(options: {
 
   while (true) {
     const shouldAddStep = await confirmPrompt({
-      title: steps.length === 0 ? "Add first command to chain?" : "Add another command to chain?",
+      title:
+        steps.length === 0
+          ? "Add first command to chain?"
+          : "Add another command to chain?",
       defaultValue: true,
     });
 
@@ -451,7 +486,10 @@ async function showInvokeHelp(): Promise<void> {
   relinka("info", "");
   relinka("info", "Examples:");
   relinka("info", "  rse invoke --command add");
-  relinka("info", "  rse invoke --command ai --args --agent relinter --target ./src");
+  relinka(
+    "info",
+    "  rse invoke --command ai --args --agent relinter --target ./src",
+  );
   relinka("info", "  rse invoke --chain setup-auth");
   relinka("info", "  rse invoke --interactive");
   relinka("info", "");
@@ -461,10 +499,17 @@ async function showInvokeHelp(): Promise<void> {
   }
   relinka("info", "");
   relinka("info", "Safe commands:", SAFE_COMMANDS.join(", "));
-  relinka("info", "Restricted commands (need --allowDangerous):", DANGEROUS_COMMANDS.join(", "));
+  relinka(
+    "info",
+    "Restricted commands (need --allowDangerous):",
+    DANGEROUS_COMMANDS.join(", "),
+  );
   relinka("info", "");
   relinka("info", "Security:");
-  relinka("info", "  Enable self-invocation in reliverse.ts: allowSelfInvocation: true");
+  relinka(
+    "info",
+    "  Enable self-invocation in reliverse.ts: allowSelfInvocation: true",
+  );
   relinka("info", "  Use --allowDangerous flag for restricted commands");
   relinka("info", "  Use --dryRun to preview commands without execution");
 }

@@ -27,6 +27,7 @@ export async function spawnSync(
 ): Promise<SpawnSyncReturns<string | Buffer<ArrayBufferLike>>> {
   const parsed: ExecParseResult = await parse(command, args, options);
   const result = nodeSpawnSync(parsed.command, parsed.args, parsed.options);
-  (result as any).error = (result as any).error || verifyENOENTSync(result.status, parsed);
+  (result as any).error =
+    (result as any).error || verifyENOENTSync(result.status, parsed);
   return result;
 }

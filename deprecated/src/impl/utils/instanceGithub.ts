@@ -9,7 +9,8 @@ import { updateReliverseMemory } from "./reliverseMemory";
 import type { ReliverseMemory } from "./schemaMemory";
 
 // A custom Octokit with REST endpoint methods.
-export const OctokitWithRest: typeof Octokit = Octokit.plugin(restEndpointMethods);
+export const OctokitWithRest: typeof Octokit =
+  Octokit.plugin(restEndpointMethods);
 // Our user agent string with the CLI version.
 export const octokitUserAgent = `rse/${cliVersion}`;
 // Type alias for OctokitWithRest.
@@ -35,7 +36,9 @@ function initOctokitSDK(githubKey: string): InstanceGithub {
         },
         octokit: InstanceGithub,
       ) => {
-        octokit.log.warn(`Request quota exhausted for ${options.method} ${options.url}`);
+        octokit.log.warn(
+          `Request quota exhausted for ${options.method} ${options.url}`,
+        );
         // Retry once if no previous retries have been made.
         return options.request.retryCount === 0;
       },
@@ -48,7 +51,9 @@ function initOctokitSDK(githubKey: string): InstanceGithub {
         },
         octokit: InstanceGithub,
       ) => {
-        octokit.log.warn(`Secondary rate limit encountered for ${options.method} ${options.url}`);
+        octokit.log.warn(
+          `Secondary rate limit encountered for ${options.method} ${options.url}`,
+        );
         return options.request.retryCount === 0;
       },
     },
@@ -77,8 +82,14 @@ export async function ensureGithubToken(
       await octokit.rest.users.getAuthenticated();
       return memory.githubKey.trim();
     } catch (error) {
-      relinka("warn", "Existing GitHub token is invalid. Please provide a new one.");
-      relinka("verbose", error instanceof Error ? error.message : String(error));
+      relinka(
+        "warn",
+        "Existing GitHub token is invalid. Please provide a new one.",
+      );
+      relinka(
+        "verbose",
+        error instanceof Error ? error.message : String(error),
+      );
     }
   }
 

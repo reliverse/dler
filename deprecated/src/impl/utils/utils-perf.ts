@@ -13,8 +13,14 @@ export function createPerfTimer(): PerfTimer {
 }
 
 export function getElapsedPerfTime(timer: PerfTimer): number {
-  const currentPausedTime = timer.pausedAt !== null ? performance.now() - timer.pausedAt : 0;
-  return performance.now() - timer.startTime - timer.pausedDuration - currentPausedTime;
+  const currentPausedTime =
+    timer.pausedAt !== null ? performance.now() - timer.pausedAt : 0;
+  return (
+    performance.now() -
+    timer.startTime -
+    timer.pausedDuration -
+    currentPausedTime
+  );
 }
 
 export function pausePerfTimer(timer: PerfTimer): void {

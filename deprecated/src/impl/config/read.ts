@@ -56,7 +56,9 @@ async function parseReliverseConfig(configPath: string): Promise<{
  * Helper for TS config reading.
  * Uses jiti for TypeScript module loading.
  */
-export async function readRseTs(configPath: string): Promise<ReliverseConfig | null> {
+export async function readRseTs(
+  configPath: string,
+): Promise<ReliverseConfig | null> {
   try {
     const config: ReliverseConfig = await jiti.import(configPath, {
       default: true,
@@ -88,10 +90,14 @@ export async function readReliverseConfig(
   if (!parseResult) return null;
   if (!parseResult.errors) return parseResult.parsed as ReliverseConfig;
 
-  const errors = [...parseResult.errors].map((err) => `Path "${err.path}": ${err.message}`);
+  const errors = [...parseResult.errors].map(
+    (err) => `Path "${err.path}": ${err.message}`,
+  );
   relinka("verbose", "Detected invalid fields in config:", errors.join("; "));
 
-  const merged = mergeWithDefaults(parseResult.parsed as Partial<ReliverseConfig>);
+  const merged = mergeWithDefaults(
+    parseResult.parsed as Partial<ReliverseConfig>,
+  );
   await writeReliverseConfig(configPath, merged, isDev);
   relinka("info", "Merged missing or invalid fields into config");
   return merged;

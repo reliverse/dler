@@ -4,7 +4,11 @@ import { relinka } from "@reliverse/relinka";
 import { selectPrompt } from "@reliverse/rempts";
 import pMap from "p-map";
 import { FILE_TYPES } from "./init-const";
-import { gitignoreTemplate, licenseTemplate, readmeTemplate } from "./init-tmpl";
+import {
+  gitignoreTemplate,
+  licenseTemplate,
+  readmeTemplate,
+} from "./init-tmpl";
 import type {
   DestFileExistsBehaviour,
   FileType,
@@ -77,7 +81,8 @@ export async function initFile(
 ): Promise<InitFileResult> {
   const config = { ...DEFAULT_CONFIG_INIT, ...userCfg };
   const initBehaviour = req.initBehaviour ?? config.defaultInitBehaviour;
-  const existsBehaviour = req.destFileExistsBehaviour ?? config.defaultDestFileExistsBehaviour;
+  const existsBehaviour =
+    req.destFileExistsBehaviour ?? config.defaultDestFileExistsBehaviour;
 
   config.onFileStart?.(req);
 
@@ -145,7 +150,9 @@ async function doInitFile(
   const { destFileName } = options ?? {};
 
   // Look up known variations for the fileType
-  const knownType = FILE_TYPES.find((f) => f.type.toLowerCase() === fileType.toLowerCase());
+  const knownType = FILE_TYPES.find(
+    (f) => f.type.toLowerCase() === fileType.toLowerCase(),
+  );
 
   if (!knownType) {
     throw new Error(`Unknown file type: ${fileType}`);
@@ -181,7 +188,10 @@ async function doInitFile(
   // Check if file exists (with caching)
   const alreadyExists = await checkFileExists(resolvedDestPath);
   if (alreadyExists) {
-    const maybeNewDest = await handleExistingFile(resolvedDestPath, destFileExistsBehaviour);
+    const maybeNewDest = await handleExistingFile(
+      resolvedDestPath,
+      destFileExistsBehaviour,
+    );
 
     if (!maybeNewDest) {
       return { requested: req, status: "skipped" };
@@ -215,7 +225,10 @@ async function finalizeInit(
         try {
           return await runCopy(req, chosenVariation, resolvedDestPath);
         } catch {
-          relinka("warn", `Copy failed for ${chosenVariation}, falling back to create...`);
+          relinka(
+            "warn",
+            `Copy failed for ${chosenVariation}, falling back to create...`,
+          );
           return await runCreate(req, resolvedDestPath);
         }
     }
@@ -248,7 +261,10 @@ async function runCopy(
     }
 
     if (fallbackSource) {
-      const fallbackPath = path.join(path.resolve(process.cwd(), fallbackSource), chosenVariation);
+      const fallbackPath = path.join(
+        path.resolve(process.cwd(), fallbackSource),
+        chosenVariation,
+      );
       if (await checkFileExists(fallbackPath)) {
         await fs.copy(fallbackPath, resolvedDestPath);
         return {
@@ -261,21 +277,32 @@ async function runCopy(
 
     throw new Error(`Source file not found: ${chosenVariation}`);
   } catch (error) {
-    throw new Error(`Copy failed: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Copy failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 
-async function runCreate(req: InitFileRequest, resolvedDestPath: string): Promise<InitFileResult> {
+async function runCreate(
+  req: InitFileRequest,
+  resolvedDestPath: string,
+): Promise<InitFileResult> {
   try {
     const { contentCreateMode } = req.options ?? {};
-    await createFileFromScratch(resolvedDestPath, req.fileType, contentCreateMode);
+    await createFileFromScratch(
+      resolvedDestPath,
+      req.fileType,
+      contentCreateMode,
+    );
     return {
       requested: req,
       finalPath: resolvedDestPath,
       status: "created",
     };
   } catch (error) {
-    throw new Error(`Create failed: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Create failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 

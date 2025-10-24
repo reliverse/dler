@@ -24,7 +24,8 @@ export function determineDistName(
   const baseDistName = isJsr ? "dist-jsr" : "dist-npm";
 
   // Check if this is a library path by looking for "/libs/" or "\libs\" in the path
-  const isLibraryPath = filePath.includes("/libs/") || filePath.includes("\\libs\\");
+  const isLibraryPath =
+    filePath.includes("/libs/") || filePath.includes("\\libs\\");
 
   if (!isLibraryPath) {
     // For non-library paths, just return the base distribution name
@@ -46,7 +47,9 @@ export function determineDistName(
     // Try to find the library config by matching the extracted library name
     for (const [libName, libConfig] of Object.entries(libsList)) {
       // For scoped packages like @reliverse/dler-sdk, extract the part after /
-      const simplifiedLibName = libName.startsWith("@") ? libName.split("/")[1] : libName;
+      const simplifiedLibName = libName.startsWith("@")
+        ? libName.split("/")[1]
+        : libName;
 
       // Check if this library matches our extracted name
       if (simplifiedLibName === extractedLibName && libConfig.libDirName) {
@@ -59,5 +62,7 @@ export function determineDistName(
   }
 
   // Return the default library distribution path based on the extracted name
-  return isJsr ? `dist-libs/${extractedLibName}/jsr` : `dist-libs/${extractedLibName}/npm`;
+  return isJsr
+    ? `dist-libs/${extractedLibName}/jsr`
+    : `dist-libs/${extractedLibName}/npm`;
 }

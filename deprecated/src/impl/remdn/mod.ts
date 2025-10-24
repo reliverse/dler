@@ -68,7 +68,8 @@ export const DEFAULT_CONFIG: ConfigRemdn = {
 
 export const DEFAULT_CONFIG_PATH = "remdn.ts";
 
-export const resolvePath = (path: string): string => resolve(process.cwd(), path);
+export const resolvePath = (path: string): string =>
+  resolve(process.cwd(), path);
 
 export const validateConfigPath = (filePath: string): void => {
   const parts = filePath.split(".");
@@ -102,7 +103,9 @@ export const validateOutputPath = (filePath: string): void => {
   }
 };
 
-export const evaluateTsConfig = async (filePath: string): Promise<ConfigRemdn> => {
+export const evaluateTsConfig = async (
+  filePath: string,
+): Promise<ConfigRemdn> => {
   try {
     // Create jiti instance with caching enabled
     const jiti = createJiti(import.meta.url, {
@@ -121,7 +124,9 @@ export const evaluateTsConfig = async (filePath: string): Promise<ConfigRemdn> =
     // Validate required fields
     const typedConfig = config as ConfigRemdn;
     if (!typedConfig.dirs || typeof typedConfig.dirs !== "object") {
-      throw new Error("Config file must export an object with a 'dirs' property");
+      throw new Error(
+        "Config file must export an object with a 'dirs' property",
+      );
     }
 
     return typedConfig;
@@ -141,7 +146,9 @@ export const expandDistLibs = async (dirs: DirConfig): Promise<DirConfig> => {
       const resolvedDistLibs = resolvePath(dir);
       if (await Bun.file(resolvedDistLibs).exists()) {
         try {
-          const libDirs = await readdir(resolvedDistLibs, { withFileTypes: true });
+          const libDirs = await readdir(resolvedDistLibs, {
+            withFileTypes: true,
+          });
 
           for (const libDir of libDirs) {
             if (libDir.isDirectory()) {
@@ -167,7 +174,9 @@ export const expandDistLibs = async (dirs: DirConfig): Promise<DirConfig> => {
           );
         }
       } else {
-        console.warn(`Warning: dist-libs directory "${resolvedDistLibs}" not found. Skipping.`);
+        console.warn(
+          `Warning: dist-libs directory "${resolvedDistLibs}" not found. Skipping.`,
+        );
       }
     } else {
       expanded[dir] = opts;
@@ -226,7 +235,10 @@ export const readConfig = async (path?: string): Promise<ConfigRemdn> => {
     const resolvedConfig = {
       ...DEFAULT_CONFIG,
       dirs: Object.fromEntries(
-        Object.entries(expandedDirs).map(([key, value]) => [resolvePath(key), value]),
+        Object.entries(expandedDirs).map(([key, value]) => [
+          resolvePath(key),
+          value,
+        ]),
       ),
     };
 
@@ -284,7 +296,9 @@ export const readConfig = async (path?: string): Promise<ConfigRemdn> => {
       if (await Bun.file(resolvedDir).exists()) {
         existingDirs[resolvedDir] = opts;
       } else {
-        console.warn(`Warning: Directory "${resolvedDir}" not found. Skipping.`);
+        console.warn(
+          `Warning: Directory "${resolvedDir}" not found. Skipping.`,
+        );
       }
     }
 
@@ -425,7 +439,10 @@ export const getExpectedFilenames = (
   return [canonicalFilename];
 };
 
-export const scanDir = async (base: string, opts: DirOptions): Promise<FileTree> => {
+export const scanDir = async (
+  base: string,
+  opts: DirOptions,
+): Promise<FileTree> => {
   validateFilters(opts);
   const folders = new Map<string, Set<string>>();
 
@@ -451,7 +468,8 @@ export const scanDir = async (base: string, opts: DirOptions): Promise<FileTree>
   return { folders };
 };
 
-export const normalizePath = (path: string): string => path.replace(/[\\/]+/g, "/");
+export const normalizePath = (path: string): string =>
+  path.replace(/[\\/]+/g, "/");
 
 export const generateAnchor = (path: string): string =>
   path.toLowerCase().replace(/[^a-z0-9-]+/g, "");
@@ -481,8 +499,10 @@ export function mapDistLibsFolderToLibs(
       // Find the corresponding src/dist-npm/dist-jsr path
       for (const p of allPaths) {
         if (p.includes("src")) mappedBase = `src/libs/${libName}`;
-        if (type === "npm" && p.includes("dist-npm")) mappedBase = `dist-npm/bin/libs/${libName}`;
-        if (type === "jsr" && p.includes("dist-jsr")) mappedBase = `dist-jsr/bin/libs/${libName}`;
+        if (type === "npm" && p.includes("dist-npm"))
+          mappedBase = `dist-npm/bin/libs/${libName}`;
+        if (type === "jsr" && p.includes("dist-jsr"))
+          mappedBase = `dist-jsr/bin/libs/${libName}`;
       }
     }
     return mappedBase + (subfolder ? `/${subfolder}` : "");
@@ -512,7 +532,9 @@ export const buildTableRow = (
       const folderFiles = tree.folders.get(mappedFolder ?? "");
       if (!folderFiles || !folderFiles.size) return "";
       const matched = Array.from(folderFiles).filter(
-        (f) => getCanonicalFilename(f, extMap, mappedFolder ?? "") === canonicalFilename,
+        (f) =>
+          getCanonicalFilename(f, extMap, mappedFolder ?? "") ===
+          canonicalFilename,
       );
       return matched.join(", ");
     })
@@ -566,14 +588,20 @@ export const buildMarkdown = (
       const folderFiles = tree.folders.get(mappedFolder ?? "");
       if (folderFiles?.size) {
         for (const filename of folderFiles) {
-          const canonical = getCanonicalFilename(filename, extMap, mappedFolder ?? "");
+          const canonical = getCanonicalFilename(
+            filename,
+            extMap,
+            mappedFolder ?? "",
+          );
           canonicalFiles.add(canonical);
         }
       }
     }
 
     for (const canonicalFilename of [...canonicalFiles].sort()) {
-      lines.push(buildTableRow(canonicalFilename, paths, trees, folder, extMap));
+      lines.push(
+        buildTableRow(canonicalFilename, paths, trees, folder, extMap),
+      );
     }
 
     lines.push(""); // blank line after each table
@@ -602,10 +630,13 @@ export const findMissingFiles = (
       // For dist-libs, map to libs folder
       let mainFolderToCheck = folder;
       if (otherPath.includes("dist-libs")) {
-        mainFolderToCheck = mapDistLibsFolderToLibs(folder, otherPath, paths) || folder;
+        mainFolderToCheck =
+          mapDistLibsFolderToLibs(folder, otherPath, paths) || folder;
       } else if (otherPath === "dist-npm/bin") {
         // For files in dist-npm/bin, look in src
-        mainFolderToCheck = folder.replace(/^[/\\]+/, "").replace(/[/\\]+/g, "/");
+        mainFolderToCheck = folder
+          .replace(/^[/\\]+/, "")
+          .replace(/[/\\]+/g, "/");
         if (mainFolderToCheck === "") {
           mainFolderToCheck = "src";
         } else {
@@ -615,8 +646,16 @@ export const findMissingFiles = (
       const mainFiles = mainFolders.get(mainFolderToCheck ?? "");
       if (!mainFiles || !mainFiles.size) continue;
       for (const file of files) {
-        const canonicalFile = getCanonicalFilename(file, extMap, folder?.toString() ?? "");
-        const expectedFilenames = getExpectedFilenames(canonicalFile, otherPath ?? "", extMap);
+        const canonicalFile = getCanonicalFilename(
+          file,
+          extMap,
+          folder?.toString() ?? "",
+        );
+        const expectedFilenames = getExpectedFilenames(
+          canonicalFile,
+          otherPath ?? "",
+          extMap,
+        );
         const hasAnyExpectedFile = expectedFilenames.some((expectedFile) =>
           mainFiles.has(expectedFile),
         );
@@ -713,7 +752,11 @@ export const buildHtml = (
       const folderFiles = tree.folders.get(mappedFolder ?? "");
       if (folderFiles?.size) {
         for (const filename of folderFiles) {
-          const canonical = getCanonicalFilename(filename, extMap, mappedFolder ?? "");
+          const canonical = getCanonicalFilename(
+            filename,
+            extMap,
+            mappedFolder ?? "",
+          );
           canonicalFiles.add(canonical);
         }
       }
@@ -721,7 +764,11 @@ export const buildHtml = (
     const mainFiles = mainTree.folders.get(folder);
     if (!mainFiles) return canonicalFiles.size > 0;
     for (const canonicalFile of canonicalFiles) {
-      const expectedFilenames = getExpectedFilenames(canonicalFile, paths[0] ?? "", extMap);
+      const expectedFilenames = getExpectedFilenames(
+        canonicalFile,
+        paths[0] ?? "",
+        extMap,
+      );
       for (const expectedFilename of expectedFilenames) {
         if (!mainFiles.has(expectedFilename)) {
           return true;
@@ -736,7 +783,9 @@ export const buildHtml = (
     const anchor = folder === "" ? basename(mainPath) : generateAnchor(folder);
     const hasDiff = hasFolderDifferences(folder);
     const diffClass = hasDiff ? " has-diff" : "";
-    lines.push(`    <a href="#${anchor}" class="${diffClass}">${header}</a><br>`);
+    lines.push(
+      `    <a href="#${anchor}" class="${diffClass}">${header}</a><br>`,
+    );
   }
 
   for (const folder of folderList) {
@@ -764,7 +813,11 @@ export const buildHtml = (
       const folderFiles = tree.folders.get(mappedFolder ?? "");
       if (folderFiles?.size) {
         for (const filename of folderFiles) {
-          const canonical = getCanonicalFilename(filename, extMap, mappedFolder ?? "");
+          const canonical = getCanonicalFilename(
+            filename,
+            extMap,
+            mappedFolder ?? "",
+          );
           canonicalFiles.add(canonical);
         }
       }
@@ -772,8 +825,13 @@ export const buildHtml = (
 
     for (const canonicalFilename of [...canonicalFiles].sort()) {
       const mainFiles = mainTree.folders.get(folder);
-      const expectedFilenames = getExpectedFilenames(canonicalFilename, paths[0] ?? "", extMap);
-      const hasDiff = mainFiles && expectedFilenames.some((f) => !mainFiles.has(f));
+      const expectedFilenames = getExpectedFilenames(
+        canonicalFilename,
+        paths[0] ?? "",
+        extMap,
+      );
+      const hasDiff =
+        mainFiles && expectedFilenames.some((f) => !mainFiles.has(f));
       const diffClass = hasDiff ? " class='diff-row'" : "";
       lines.push(`      <tr${diffClass}>`);
       for (let i = 0; i < paths.length; i++) {
@@ -789,10 +847,14 @@ export const buildHtml = (
         // Show all files in this column that canonicalize to this canonicalFilename
         const matched = folderFiles?.size
           ? Array.from(folderFiles).filter(
-              (f) => getCanonicalFilename(f, extMap, mappedFolder ?? "") === canonicalFilename,
+              (f) =>
+                getCanonicalFilename(f, extMap, mappedFolder ?? "") ===
+                canonicalFilename,
             )
           : [];
-        lines.push(`        <td>${matched.length ? matched.join(", ") : ""}</td>`);
+        lines.push(
+          `        <td>${matched.length ? matched.join(", ") : ""}</td>`,
+        );
       }
       lines.push("      </tr>");
     }
@@ -807,7 +869,9 @@ export const buildHtml = (
   return lines.join("\n");
 };
 
-export const getFormatFromExtension = (filePath: string): "markdown" | "html" => {
+export const getFormatFromExtension = (
+  filePath: string,
+): "markdown" | "html" => {
   const parts = filePath.split(".");
   // Handle cases like "filename" or "filename."
   if (parts.length <= 1 || (parts.length === 2 && parts[1] === "")) {
@@ -867,7 +931,8 @@ export async function scanDirectories(
   outputPath?: string,
 ) {
   const resolvedConfig = config ?? (await readConfig(configPath));
-  const resolvedOutputPath = outputPath ?? resolvedConfig.output ?? "table.html";
+  const resolvedOutputPath =
+    outputPath ?? resolvedConfig.output ?? "table.html";
 
   // Ensure output path is valid
   validateOutputPath(resolvedOutputPath);
@@ -900,7 +965,12 @@ export async function scanDirectories(
 
   // Find missing files if ext-map is provided
   const missingFiles = resolvedConfig["ext-map"]
-    ? findMissingFiles(mainTree, otherTrees, dirPaths, resolvedConfig["ext-map"])
+    ? findMissingFiles(
+        mainTree,
+        otherTrees,
+        dirPaths,
+        resolvedConfig["ext-map"],
+      )
     : [];
 
   // Display missing files notifications
@@ -916,8 +986,18 @@ export async function scanDirectories(
   const title = resolvedConfig.title ?? "File Comparison";
   const content =
     format === "html"
-      ? buildHtml(title, dirPaths, [mainTree, ...otherTrees], resolvedConfig["ext-map"])
-      : buildMarkdown(title, dirPaths, [mainTree, ...otherTrees], resolvedConfig["ext-map"]);
+      ? buildHtml(
+          title,
+          dirPaths,
+          [mainTree, ...otherTrees],
+          resolvedConfig["ext-map"],
+        )
+      : buildMarkdown(
+          title,
+          dirPaths,
+          [mainTree, ...otherTrees],
+          resolvedConfig["ext-map"],
+        );
 
   await writeFile(outFile, content, { flag: "w" });
   console.log("✅ Generated " + outFile);

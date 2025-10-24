@@ -13,7 +13,9 @@ import {
 } from "./manageDrizzleSchemaUtils";
 
 export async function manageDrizzleSchema(cwd: string, isDev: boolean) {
-  const singleSchemaDir = isDev ? path.join(cwd, "src/impl/db") : path.join(cwd, "src/db");
+  const singleSchemaDir = isDev
+    ? path.join(cwd, "src/impl/db")
+    : path.join(cwd, "src/db");
   const multiSchemaDir = path.join(singleSchemaDir, "schema");
 
   // Check if Drizzle is configured
@@ -28,8 +30,10 @@ export async function manageDrizzleSchema(cwd: string, isDev: boolean) {
 
   // Check schema organization preference
   const useMultipleFiles = await confirmPrompt({
-    title: "Would you like to use multiple files for schema (one file per table)?",
-    content: "This will organize tables in src/db/schema/* instead of a single schema.ts file",
+    title:
+      "Would you like to use multiple files for schema (one file per table)?",
+    content:
+      "This will organize tables in src/db/schema/* instead of a single schema.ts file",
     defaultValue: false,
   });
 

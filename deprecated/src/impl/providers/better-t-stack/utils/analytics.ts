@@ -7,7 +7,9 @@ import { getLatestCLIVersion } from "./get-latest-cli-version";
 const POSTHOG_API_KEY = process.env.POSTHOG_API_KEY || "";
 const POSTHOG_HOST = process.env.POSTHOG_HOST;
 
-export async function trackProjectCreation(config: ProjectConfig): Promise<void> {
+export async function trackProjectCreation(
+  config: ProjectConfig,
+): Promise<void> {
   const posthog = new PostHog(POSTHOG_API_KEY, {
     host: POSTHOG_HOST,
     flushAt: 1,

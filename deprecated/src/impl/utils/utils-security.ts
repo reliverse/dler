@@ -9,7 +9,10 @@ const DEFAULT_MAX_MERGE_SIZE = DEFAULT_MAX_FILE_SIZE * 10; // 100MB
 let MAX_FILE_SIZE = DEFAULT_MAX_FILE_SIZE;
 let MAX_MERGE_SIZE = DEFAULT_MAX_MERGE_SIZE;
 
-export const setFileSizeLimits = (maxFileSize?: number, maxMergeSize?: number): void => {
+export const setFileSizeLimits = (
+  maxFileSize?: number,
+  maxMergeSize?: number,
+): void => {
   if (maxFileSize !== undefined) {
     MAX_FILE_SIZE = maxFileSize;
   }
@@ -120,10 +123,12 @@ export const validateTemplate = (template: any): void => {
 };
 
 // Merge operation safety
-export const validateMergeOperation = async (files: string[]): Promise<void> => {
-  const totalSize = await Promise.all(files.map(async (f) => (await fs.stat(f)).size)).then(
-    (sizes) => sizes.reduce((a, b) => a + b, 0),
-  );
+export const validateMergeOperation = async (
+  files: string[],
+): Promise<void> => {
+  const totalSize = await Promise.all(
+    files.map(async (f) => (await fs.stat(f)).size),
+  ).then((sizes) => sizes.reduce((a, b) => a + b, 0));
 
   if (totalSize > MAX_MERGE_SIZE) {
     throw new Error("Total size of files to merge exceeds limit");
@@ -131,7 +136,10 @@ export const validateMergeOperation = async (files: string[]): Promise<void> => 
 };
 
 // File existence check with validation
-export const validateFileExists = async (filePath: string, operation: string): Promise<void> => {
+export const validateFileExists = async (
+  filePath: string,
+  operation: string,
+): Promise<void> => {
   if (!(await fs.pathExists(filePath))) {
     throw new Error(`File does not exist for ${operation}: ${filePath}`);
   }

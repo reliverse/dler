@@ -1,7 +1,11 @@
 import path from "@reliverse/pathkit";
 import fs, { ensuredir } from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { confirmPrompt, multiselectPrompt, selectPrompt } from "@reliverse/rempts";
+import {
+  confirmPrompt,
+  multiselectPrompt,
+  selectPrompt,
+} from "@reliverse/rempts";
 import { ofetch } from "ofetch";
 
 import {
@@ -63,7 +67,9 @@ export async function handleDirectRules(opts: {
   }
 
   // Filter the full list to only those that match user-specified names
-  const selected = allAvailable.filter((item) => targetNames.includes(item.baseNameNoExt));
+  const selected = allAvailable.filter((item) =>
+    targetNames.includes(item.baseNameNoExt),
+  );
 
   if (selected.length === 0) {
     relinka("error", "No matching rule files found for your --get arguments");
@@ -261,13 +267,21 @@ async function downloadSpecificFiles(
       path.join(repoCacheDir, ".metadata.json"),
       JSON.stringify(metadata, null, 2),
     );
-    await fs.writeFile(path.join(repoCacheDir, ".last_updated"), new Date().toISOString());
+    await fs.writeFile(
+      path.join(repoCacheDir, ".last_updated"),
+      new Date().toISOString(),
+    );
   }
 
   return results;
 }
 
-type AddRuleMenuChoice = "download-official" | "download-community" | "update" | "manage" | "exit";
+type AddRuleMenuChoice =
+  | "download-official"
+  | "download-community"
+  | "update"
+  | "manage"
+  | "exit";
 
 /**
  * Main menu handler for the rules command.
@@ -287,7 +301,10 @@ export async function showRulesMenu({
   // 1. If the user specified an explicit source (official/community),
   //    skip the main menu prompt and do a direct download.
   if (source === "official" || source === "community") {
-    const repoId = source === "official" ? "blefnk/awesome-cursor-rules" : "pontusab/directories";
+    const repoId =
+      source === "official"
+        ? "blefnk/awesome-cursor-rules"
+        : "pontusab/directories";
 
     const [owner] = repoId.split("/");
     if (!owner) {
@@ -308,7 +325,10 @@ export async function showRulesMenu({
 
   // 2. If we reach here, source === "prompt", so we do the interactive menu
   const hasInstalledMdc = await hasInstalledRules(cwd);
-  const mainOptions: AddRuleMenuChoice[] = ["download-official", "download-community"];
+  const mainOptions: AddRuleMenuChoice[] = [
+    "download-official",
+    "download-community",
+  ];
 
   if (hasInstalledMdc) {
     mainOptions.push("update", "manage");
@@ -344,9 +364,14 @@ export async function showRulesMenu({
     ],
   });
 
-  if (mainOption === "download-official" || mainOption === "download-community") {
+  if (
+    mainOption === "download-official" ||
+    mainOption === "download-community"
+  ) {
     const repoId =
-      mainOption === "download-official" ? "blefnk/awesome-cursor-rules" : "pontusab/directories";
+      mainOption === "download-official"
+        ? "blefnk/awesome-cursor-rules"
+        : "pontusab/directories";
 
     const [owner] = repoId.split("/");
     if (!owner) {

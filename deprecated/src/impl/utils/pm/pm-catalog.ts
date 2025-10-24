@@ -16,14 +16,18 @@ export interface CatalogStructure {
 /**
  * Get catalog structure from package.json
  */
-export async function getCatalogStructure(cwd: string = process.cwd()): Promise<CatalogStructure> {
+export async function getCatalogStructure(
+  cwd: string = process.cwd(),
+): Promise<CatalogStructure> {
   try {
     const packageJson = await readPackageJSON(cwd);
     const workspaces = (packageJson as any).workspaces || {};
 
     return {
-      catalog: (workspaces as any).catalog || (packageJson as any).catalog || {},
-      catalogs: (workspaces as any).catalogs || (packageJson as any).catalogs || {},
+      catalog:
+        (workspaces as any).catalog || (packageJson as any).catalog || {},
+      catalogs:
+        (workspaces as any).catalogs || (packageJson as any).catalogs || {},
     };
   } catch (error) {
     relinka("warn", `Failed to read catalog structure: ${error}`);
@@ -53,7 +57,9 @@ export async function addToCatalog(
         const packageName = dep.split("@")[0] || dep;
 
         // Fetch latest version from npm registry
-        const response = await fetch(`https://registry.npmjs.org/${packageName}/latest`);
+        const response = await fetch(
+          `https://registry.npmjs.org/${packageName}/latest`,
+        );
         if (response.ok) {
           const data = (await response.json()) as { version: string };
           latestVersions[packageName] = `^${data.version}`;
@@ -78,7 +84,10 @@ export async function addToCatalog(
         (updatedPackageJson as any).workspaces.catalog = {};
       }
 
-      Object.assign((updatedPackageJson as any).workspaces.catalog, latestVersions);
+      Object.assign(
+        (updatedPackageJson as any).workspaces.catalog,
+        latestVersions,
+      );
 
       // Also update top-level catalog if it exists
       if ((updatedPackageJson as any).catalog) {
@@ -96,19 +105,29 @@ export async function addToCatalog(
         (updatedPackageJson as any).workspaces.catalogs[catalogName] = {};
       }
 
-      Object.assign((updatedPackageJson as any).workspaces.catalogs[catalogName], latestVersions);
+      Object.assign(
+        (updatedPackageJson as any).workspaces.catalogs[catalogName],
+        latestVersions,
+      );
 
       // Also update top-level catalogs if it exists
       if ((updatedPackageJson as any).catalogs) {
         if (!(updatedPackageJson as any).catalogs[catalogName]) {
           (updatedPackageJson as any).catalogs[catalogName] = {};
         }
-        Object.assign((updatedPackageJson as any).catalogs[catalogName], latestVersions);
+        Object.assign(
+          (updatedPackageJson as any).catalogs[catalogName],
+          latestVersions,
+        );
       }
     }
 
     // Write updated package.json
-    await fs.writeFile(packageJsonPath, JSON.stringify(updatedPackageJson, null, 2) + "\n", "utf8");
+    await fs.writeFile(
+      packageJsonPath,
+      JSON.stringify(updatedPackageJson, null, 2) + "\n",
+      "utf8",
+    );
 
     relinka(
       "success",
@@ -181,7 +200,9 @@ export async function listCatalogs(cwd: string = process.cwd()): Promise<void> {
 /**
  * Update catalog dependencies to latest versions
  */
-export async function updateCatalogs(cwd: string = process.cwd()): Promise<void> {
+export async function updateCatalogs(
+  cwd: string = process.cwd(),
+): Promise<void> {
   try {
     const { catalog, catalogs } = await getCatalogStructure(cwd);
     const packageJsonPath = path.resolve(cwd, "package.json");
@@ -196,7 +217,9 @@ export async function updateCatalogs(cwd: string = process.cwd()): Promise<void>
       for (const [dep, currentVersion] of Object.entries(catalog)) {
         try {
           // Fetch latest version from npm registry
-          const response = await fetch(`https://registry.npmjs.org/${dep}/latest`);
+          const response = await fetch(
+            `https://registry.npmjs.org/${dep}/latest`,
+          );
           if (response.ok) {
             const data = (await response.json()) as { version: string };
             const latestVersion = `^${data.version}`;
@@ -204,7 +227,10 @@ export async function updateCatalogs(cwd: string = process.cwd()): Promise<void>
             if (latestVersion !== currentVersion) {
               updatedCatalog[dep] = latestVersion;
               updatedCount++;
-              relinka("verbose", `  ${dep}: ${currentVersion} → ${latestVersion}`);
+              relinka(
+                "verbose",
+                `  ${dep}: ${currentVersion} → ${latestVersion}`,
+              );
             } else {
               updatedCatalog[dep] = currentVersion;
             }
@@ -244,7 +270,9 @@ export async function updateCatalogs(cwd: string = process.cwd()): Promise<void>
         for (const [dep, currentVersion] of Object.entries(dependencies)) {
           try {
             // Fetch latest version from npm registry
-            const response = await fetch(`https://registry.npmjs.org/${dep}/latest`);
+            const response = await fetch(
+              `https://registry.npmjs.org/${dep}/latest`,
+            );
             if (response.ok) {
               const data = (await response.json()) as { version: string };
               const latestVersion = `^${data.version}`;
@@ -252,7 +280,10 @@ export async function updateCatalogs(cwd: string = process.cwd()): Promise<void>
               if (latestVersion !== currentVersion) {
                 updatedNamedCatalog[dep] = latestVersion;
                 updatedCount++;
-                relinka("verbose", `  ${catalogName}:${dep}: ${currentVersion} → ${latestVersion}`);
+                relinka(
+                  "verbose",
+                  `  ${catalogName}:${dep}: ${currentVersion} → ${latestVersion}`,
+                );
               } else {
                 updatedNamedCatalog[dep] = currentVersion;
               }
@@ -265,17 +296,23 @@ export async function updateCatalogs(cwd: string = process.cwd()): Promise<void>
           }
         }
 
-        (updatedPackageJson as any).workspaces.catalogs[catalogName] = updatedNamedCatalog;
+        (updatedPackageJson as any).workspaces.catalogs[catalogName] =
+          updatedNamedCatalog;
 
         // Also update top-level catalogs if it exists
         if ((updatedPackageJson as any).catalogs) {
-          (updatedPackageJson as any).catalogs[catalogName] = updatedNamedCatalog;
+          (updatedPackageJson as any).catalogs[catalogName] =
+            updatedNamedCatalog;
         }
       }
     }
 
     // Write updated package.json
-    await fs.writeFile(packageJsonPath, JSON.stringify(updatedPackageJson, null, 2) + "\n", "utf8");
+    await fs.writeFile(
+      packageJsonPath,
+      JSON.stringify(updatedPackageJson, null, 2) + "\n",
+      "utf8",
+    );
 
     if (updatedCount > 0) {
       relinka("success", `Updated ${updatedCount} catalog dependencies`);
@@ -320,7 +357,9 @@ export async function removeFromCatalog(
       // Remove from named catalog
       if ((updatedPackageJson as any).workspaces?.catalogs?.[catalogName]) {
         for (const dep of dependencies) {
-          delete (updatedPackageJson as any).workspaces.catalogs[catalogName][dep];
+          delete (updatedPackageJson as any).workspaces.catalogs[catalogName][
+            dep
+          ];
         }
       }
 
@@ -333,7 +372,11 @@ export async function removeFromCatalog(
     }
 
     // Write updated package.json
-    await fs.writeFile(packageJsonPath, JSON.stringify(updatedPackageJson, null, 2) + "\n", "utf8");
+    await fs.writeFile(
+      packageJsonPath,
+      JSON.stringify(updatedPackageJson, null, 2) + "\n",
+      "utf8",
+    );
 
     relinka(
       "success",

@@ -39,7 +39,9 @@ export const readFile = async (filePath: string): Promise<string> => {
   }
 };
 
-export const readPackageJson = async (directory: string): Promise<PackageJson> => {
+export const readPackageJson = async (
+  directory: string,
+): Promise<PackageJson> => {
   const packageJsonPath = path.join(directory, "package.json");
 
   try {

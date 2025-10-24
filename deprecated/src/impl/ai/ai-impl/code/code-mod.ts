@@ -31,7 +31,9 @@ async function getUserPrompt(): Promise<string> {
 }
 
 // Generates code from AI
-async function generateAiContent(userDescription: string): Promise<AiGeneratedResult> {
+async function generateAiContent(
+  userDescription: string,
+): Promise<AiGeneratedResult> {
   const result = await generateText({
     model: MODEL,
     system: `ALWAYS follow these rules:
@@ -59,7 +61,8 @@ function parseAiOutput(aiText: string): ParsedAiOutput {
 // Checks if a file is modified in Git
 async function isFileModified(filePath: string): Promise<boolean> {
   try {
-    const status = (await execaCommand(`git status --porcelain ${filePath}`)).stdout;
+    const status = (await execaCommand(`git status --porcelain ${filePath}`))
+      .stdout;
     return status.trim().startsWith("M");
   } catch {
     return false;
@@ -128,7 +131,10 @@ async function maybeCommitFile(filePath: string): Promise<void> {
 }
 
 // Stages and commits changes
-async function commitChanges(filePath: string, options: CommitOptions): Promise<void> {
+async function commitChanges(
+  filePath: string,
+  options: CommitOptions,
+): Promise<void> {
   await execaCommand(`git add ${filePath}`, { stdio: "inherit" });
   await execaCommand(`git commit -m "${options.commitMessage}"`, {
     stdio: "inherit",
@@ -169,7 +175,10 @@ export async function aiCodeCommand(
   await maybeFormatFile(filePath);
   await maybeCommitFile(filePath);
 
-  relinka("info", `Successfully ${fileExists ? "updated" : "created"} ${filePath}`);
+  relinka(
+    "info",
+    `Successfully ${fileExists ? "updated" : "created"} ${filePath}`,
+  );
 
   // 2. Handle additional file/folder patterns via tinyglobby
   if (!fileOrFolderPatterns.length) {

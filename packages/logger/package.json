@@ -10,9 +10,6 @@
       "default": "./src/mod.ts"
     }
   },
-  "scripts": {
-    "typecheck": "tsc --noEmit"
-  },
   "dependencies": {
     "@reliverse/dler-colors": "workspace:*"
   },

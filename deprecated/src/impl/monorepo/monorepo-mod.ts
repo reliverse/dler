@@ -166,7 +166,9 @@ async function readWorkspace(
   return null;
 }
 
-export async function readPackageJson(packageJsonPath: string): Promise<Package | null> {
+export async function readPackageJson(
+  packageJsonPath: string,
+): Promise<Package | null> {
   try {
     const content = await fs.readFile(packageJsonPath, "utf-8");
     const json = JSON.parse(content);
@@ -195,7 +197,10 @@ export async function readPackageJson(packageJsonPath: string): Promise<Package 
       config: createPackageConfig(json),
     };
   } catch (error) {
-    relinka("warn", `Failed to read package.json at ${packageJsonPath}: ${error}`);
+    relinka(
+      "warn",
+      `Failed to read package.json at ${packageJsonPath}: ${error}`,
+    );
     return null;
   }
 }

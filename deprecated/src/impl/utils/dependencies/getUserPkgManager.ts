@@ -24,7 +24,10 @@ export interface DetectOptions {
 }
 
 // Cache for detection results with more specific keys
-const cache = new Map<string, PkgManagerInfo[] | PkgManagerInfo | string | null>();
+const cache = new Map<
+  string,
+  PkgManagerInfo[] | PkgManagerInfo | string | null
+>();
 
 /**
  * Check if a path exists
@@ -41,7 +44,10 @@ async function pathExists(p: string): Promise<boolean> {
 /**
  * Check if a package manager is available globally by running its version command
  */
-async function checkPMVersion(pm: PackageManager, includeGlobalBun = true): Promise<string | null> {
+async function checkPMVersion(
+  pm: PackageManager,
+  includeGlobalBun = true,
+): Promise<string | null> {
   if (pm === "bun" && !includeGlobalBun) return null;
 
   const cacheKey = `has_global_${pm}`;
@@ -64,7 +70,9 @@ async function checkPMVersion(pm: PackageManager, includeGlobalBun = true): Prom
 /**
  * Check for lock files in the directory
  */
-async function detectLockFile(projectPath: string): Promise<PkgManagerInfo | null> {
+async function detectLockFile(
+  projectPath: string,
+): Promise<PkgManagerInfo | null> {
   const cacheKey = `lockfile_${projectPath}`;
   if (cache.has(cacheKey)) {
     return cache.get(cacheKey) as PkgManagerInfo | null;
@@ -168,12 +176,20 @@ async function detectPackageManagers(
     pathExists(path.join(projectPath, "bunfig.toml")),
   ]);
 
-  const [hasNpmrc, hasYarnrc, hasYarnrcYml, hasPnpmfileCjs, hasPnpmfileJs, hasBunConfig] =
-    configFiles;
+  const [
+    hasNpmrc,
+    hasYarnrc,
+    hasYarnrcYml,
+    hasPnpmfileCjs,
+    hasPnpmfileJs,
+    hasBunConfig,
+  ] = configFiles;
 
   if (hasNpmrc) detected.push({ packageManager: "npm", source: "config" });
-  if (hasYarnrc || hasYarnrcYml) detected.push({ packageManager: "yarn", source: "config" });
-  if (hasPnpmfileCjs || hasPnpmfileJs) detected.push({ packageManager: "pnpm", source: "config" });
+  if (hasYarnrc || hasYarnrcYml)
+    detected.push({ packageManager: "yarn", source: "config" });
+  if (hasPnpmfileCjs || hasPnpmfileJs)
+    detected.push({ packageManager: "pnpm", source: "config" });
   if (hasBunConfig) detected.push({ packageManager: "bun", source: "config" });
 
   // 5. Version check detection (async)
@@ -257,7 +273,9 @@ export async function getAllPkgManagers(
 ): Promise<PkgManagerInfo[]> {
   try {
     const detected = await detectPackageManagers(projectPath, options);
-    return detected.length > 0 ? detected : [{ packageManager: "npm", source: "default" }];
+    return detected.length > 0
+      ? detected
+      : [{ packageManager: "npm", source: "default" }];
   } catch (error) {
     console.error("Error detecting package managers:", error);
     return [{ packageManager: "npm", source: "default" }];

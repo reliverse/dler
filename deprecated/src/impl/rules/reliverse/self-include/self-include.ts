@@ -3,10 +3,16 @@ import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
 import { getConfigDler } from "~/impl/config/load";
 import { getAllFiles, getLineNumber } from "~/impl/rules/rules-utils";
-import type { CheckIssue, CheckResult, RulesCheckOptions } from "~/impl/types/mod";
+import type {
+  CheckIssue,
+  CheckResult,
+  RulesCheckOptions,
+} from "~/impl/types/mod";
 
 // check for self-includes in imports/exports
-export async function checkSelfInclude(options: RulesCheckOptions): Promise<CheckResult> {
+export async function checkSelfInclude(
+  options: RulesCheckOptions,
+): Promise<CheckResult> {
   const startTime = Date.now();
   const issues: CheckIssue[] = [];
   const { directory, onProgress } = options;
@@ -14,7 +20,9 @@ export async function checkSelfInclude(options: RulesCheckOptions): Promise<Chec
 
   try {
     // Get package name from package.json
-    const packageJson = JSON.parse(await fs.readFile("package.json", "utf8")) as {
+    const packageJson = JSON.parse(
+      await fs.readFile("package.json", "utf8"),
+    ) as {
       name: string;
     };
     const packageName = packageJson.name;

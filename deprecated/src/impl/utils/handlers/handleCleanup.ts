@@ -3,7 +3,11 @@
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { relinka } from "@reliverse/relinka";
-import { confirmPrompt, multiselectPrompt, selectPrompt } from "@reliverse/rempts";
+import {
+  confirmPrompt,
+  multiselectPrompt,
+  selectPrompt,
+} from "@reliverse/rempts";
 import { destr } from "destr";
 import { readReliverseConfig } from "~/impl/config/read";
 import type { BaseConfig } from "~/impl/types/mod";
@@ -26,14 +30,20 @@ const defaultIgnoredDeps: string[] = [
   // TODO: add default dependencies to ignore
 ];
 
-export async function handleCleanup(cwd: string, configPath: string, isDev: boolean) {
+export async function handleCleanup(
+  cwd: string,
+  configPath: string,
+  isDev: boolean,
+) {
   const ignoredDeps = new Set<string>(defaultIgnoredDeps);
 
   // Try to read Knip config for ignoreDependencies
   try {
     const knipConfigPath = path.join(cwd, "knip.json");
     if (await fs.pathExists(knipConfigPath)) {
-      const knipConfig = destr<KnipConfig>(await fs.readFile(knipConfigPath, "utf-8"));
+      const knipConfig = destr<KnipConfig>(
+        await fs.readFile(knipConfigPath, "utf-8"),
+      );
       if (knipConfig?.ignoreDependencies) {
         knipConfig.ignoreDependencies.forEach((dep) => ignoredDeps.add(dep));
       }
@@ -87,7 +97,10 @@ export async function handleCleanup(cwd: string, configPath: string, isDev: bool
       await removeComments(cwd);
     }
   } else if (action === "dependencies") {
-    const unusedDeps = await getUnusedDependencies(cwd, Array.from(ignoredDeps));
+    const unusedDeps = await getUnusedDependencies(
+      cwd,
+      Array.from(ignoredDeps),
+    );
 
     if (unusedDeps.length === 0) {
       relinka("info", "No unused dependencies found!");
