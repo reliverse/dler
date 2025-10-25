@@ -3,7 +3,7 @@
   "description": "Configuration management for @reliverse/dler",
   "author": "reliverse",
   "version": "2.0.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "exports": {
     ".": {
@@ -28,5 +28,8 @@
     "config",
     "build",
     "publish"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

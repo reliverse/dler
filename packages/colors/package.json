@@ -1,7 +1,7 @@
 {
   "name": "@reliverse/dler-colors",
   "version": "2.0.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "description": "@reliverse/dler-colors is a themeable, chainable, typed, truecolor-powered, modern terminal styling toolkit. Designed to make your CLI output colorful, accessible, and human-friendly. It gives you a flexible way to apply colors and styles — with reliability and a smart developer experience baked in. Built for humans, not just terminals.",
   "exports": {
@@ -23,5 +23,8 @@
     "@reliverse/dler-tsconfig": "workspace:*",
     "typescript": "catalog:",
     "@types/bun": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

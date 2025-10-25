@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/react-app-example",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Example React app demonstrating dler build frontend capabilities with modern features",
   "type": "module",
   "scripts": {
@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.1"
+    "@types/react-dom": "^19.2.1",
+    "@types/bun": "catalog:"
   }
 }

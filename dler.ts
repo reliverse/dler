@@ -1,13 +1,9 @@
-// reliverse.example.ts
-// Example configuration file for @reliverse/dler build system
+import { defineConfig } from "./packages/config/src/mod";
 
-import type { BuildDlerConfig as DlerConfig } from "./packages/config/src/mod";
-
-export default {
+export default defineConfig({
   build: {
     // Global build configuration applied to all packages
     global: {
-      // enable defaults to true when not specified
       target: "bun",
       format: "esm",
       minify: false,
@@ -19,7 +15,6 @@ export default {
     // Per-package specific configurations
     packages: {
       "@reliverse/dler-launcher": {
-        // enable defaults to true when not specified
         target: "bun",
         format: "esm",
         minify: true,
@@ -27,14 +22,13 @@ export default {
         external: ["@reliverse/dler-logger"],
       },
       "@reliverse/dler-colors": {
-        // enable defaults to true when not specified
         target: "bun",
         format: "esm",
         minify: true,
         sourcemap: "linked",
       },
       "@reliverse/react-app-example": {
-        enable: false, // Explicitly disabled
+        enable: false,
         target: "browser",
         format: "esm",
         minify: false,
@@ -49,7 +43,7 @@ export default {
         external: ["react", "react-dom"],
       },
       "@reliverse/native-app-example": {
-        enable: false, // Explicitly disabled
+        enable: false,
         target: "bun",
         format: "cjs",
         minify: true,
@@ -69,61 +63,67 @@ export default {
   publish: {
     // Global publish configuration applied to all packages
     global: {
-      // enable defaults to true when not specified
+      bumpDisable: false,
       access: "public",
       tag: "latest",
       verbose: false,
       concurrency: 1,
+      registry: "npm",
+      kind: "library",
     },
 
     // Per-package specific publish configurations
     packages: {
+      "@reliverse/dler": {
+        enable: true,
+        tag: "latest",
+        access: "public",
+        registry: "npm",
+        kind: "cli",
+      },
+      "@reliverse/dler-v1": {
+        enable: false,
+        tag: "latest",
+        access: "public",
+        registry: "npm",
+        kind: "cli",
+      },
+      "@reliverse/dler-tsconfig": {
+        enable: false,
+        tag: "latest",
+        access: "public",
+        registry: "npm",
+        kind: "library",
+      },
       "@reliverse/dler-launcher": {
-        // enable defaults to true when not specified
         tag: "latest",
         access: "public",
         verbose: true,
+        registry: "npm",
+        kind: "library",
       },
       "@reliverse/dler-colors": {
-        // enable defaults to true when not specified
         tag: "latest",
         access: "public",
         bump: "patch",
+        registry: "npm",
+        kind: "library",
       },
       "@reliverse/react-app-example": {
-        // enable defaults to true when not specified
         tag: "next",
-        access: "public",
+        access: "restricted",
         dryRun: false,
+        registry: "vercel",
+        kind: "browser-app",
       },
       "@reliverse/native-app-example": {
-        enable: false, // Explicitly disabled
+        enable: false,
         tag: "beta",
         access: "restricted",
         bump: "prerelease",
+        registry: "none",
+        kind: "native-app",
       },
     },
-
-    // Pattern-based configurations
-    patterns: [
-      {
-        pattern: "@reliverse/dler-*",
-        config: {
-          // enable defaults to true when not specified
-          tag: "latest",
-          access: "public",
-          verbose: true,
-        },
-      },
-      {
-        pattern: "*example*",
-        config: {
-          enable: false, // Explicitly disabled
-          tag: "next",
-          access: "public",
-          dryRun: true,
-        },
-      },
-    ],
   },
-} satisfies DlerConfig;
+});

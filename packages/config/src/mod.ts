@@ -2,11 +2,10 @@
 
 import { inc, parse, type ReleaseType, valid } from "semver";
 
-// Re-export specific types and functions to avoid conflicts
+// Re-export build types and functions
 export type {
   AssetOptions,
   BuildConfig,
-  DlerConfig as BuildDlerConfig,
   HtmlOptions,
   PackageBuildConfig,
   PerformanceBudget,
@@ -15,14 +14,17 @@ export {
   getPackageBuildConfig,
   mergeBuildOptions,
 } from "./impl/build";
+// Re-export core utilities
+export { type BaseConfig, type DlerConfig, defineConfig } from "./impl/core";
 // Re-export all configuration utilities
 export * from "./impl/discovery";
-
+// Re-export publish types and functions
 export type {
-  DlerConfig as PublishDlerConfig,
+  PackageKind,
+  PackagePublishConfig,
   PublishConfig,
+  RegistryType,
 } from "./impl/publish";
-
 export {
   getPackagePublishConfig,
   mergePublishOptions,

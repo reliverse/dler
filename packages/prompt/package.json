@@ -1,7 +1,7 @@
 {
   "name": "@reliverse/dler-prompt",
   "version": "2.0.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "exports": {
     ".": {
@@ -16,5 +16,8 @@
     "@reliverse/dler-tsconfig": "workspace:*",
     "typescript": "catalog:",
     "@types/bun": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

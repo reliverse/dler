@@ -1,7 +1,7 @@
 {
   "name": "@reliverse/dler-helpers",
   "version": "2.0.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "description": "@reliverse/dler-helpers is a collection of helper functions for the dler monorepo.",
   "exports": {
@@ -14,5 +14,8 @@
     "@reliverse/dler-tsconfig": "workspace:*",
     "typescript": "catalog:",
     "@types/bun": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

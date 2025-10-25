@@ -1,75 +1,41 @@
-// packages/config/src/publish.ts
+// packages/config/src/impl/publish.ts
+
+import type { BumpType } from "../mod";
+import { type BaseConfig, mergeConfig, resolvePackageConfig } from "./core";
+
+export type RegistryType = "npm" | "jsr" | "vercel" | "npm-jsr" | "none";
+export type PackageKind = "library" | "browser-app" | "native-app" | "cli";
 
 // ============================================================================
 // Publish Configuration Types
 // ============================================================================
 
-export interface PublishConfig {
+export interface PackagePublishConfig {
+  enable?: boolean;
+  dryRun?: boolean;
+  tag?: string;
+  access?: "public" | "restricted";
+  otp?: string;
+  authType?: "web" | "legacy";
+  concurrency?: number;
+  verbose?: boolean;
+  bump?: BumpType;
+  bumpDisable?: boolean;
+  registry?: RegistryType;
+  kind?: PackageKind;
+  bin?: string;
+}
+
+export interface PublishConfig extends BaseConfig {
   // Global publish configuration
-  global?: {
-    enable?: boolean;
-    dryRun?: boolean;
-    tag?: string;
-    access?: "public" | "restricted";
-    otp?: string;
-    authType?: "web" | "legacy";
-    concurrency?: number;
-    verbose?: boolean;
-    bump?:
-      | "major"
-      | "minor"
-      | "patch"
-      | "premajor"
-      | "preminor"
-      | "prepatch"
-      | "prerelease";
-  };
+  global?: PackagePublishConfig;
   // Per-package publish configurations
-  packages?: Record<
-    string,
-    {
-      enable?: boolean;
-      dryRun?: boolean;
-      tag?: string;
-      access?: "public" | "restricted";
-      otp?: string;
-      authType?: "web" | "legacy";
-      verbose?: boolean;
-      bump?:
-        | "major"
-        | "minor"
-        | "patch"
-        | "premajor"
-        | "preminor"
-        | "prepatch"
-        | "prerelease";
-    }
-  >;
+  packages?: Record<string, PackagePublishConfig>;
   // Package patterns for applying configs
   patterns?: Array<{
     pattern: string;
-    config: {
-      enable?: boolean;
-      dryRun?: boolean;
-      tag?: string;
-      access?: "public" | "restricted";
-      otp?: string;
-      authType?: "web" | "legacy";
-      verbose?: boolean;
-      bump?:
-        | "major"
-        | "minor"
-        | "patch"
-        | "premajor"
-        | "preminor"
-        | "prepatch"
-        | "prerelease";
-    };
+    config: PackagePublishConfig;
   }>;
-}
-
-export interface DlerConfig {
-  publish?: PublishConfig;
 }
 
 // ============================================================================
@@ -81,51 +47,12 @@ export interface DlerConfig {
  */
 export const getPackagePublishConfig = (
   packageName: string,
-  dlerConfig: DlerConfig | null,
-): Partial<Record<string, any>> | undefined => {
-  if (!dlerConfig?.publish) {
-    return;
-  }
-
-  const { publish } = dlerConfig;
-
-  // 1. Check for exact package name match
-  if (publish.packages?.[packageName]) {
-    const packageConfig = publish.packages[packageName];
-    // If enable is explicitly false, return undefined to skip this package
-    // enable defaults to true when not specified
-    if (packageConfig.enable === false) {
-      return;
-    }
-    return packageConfig;
-  }
-
-  // 2. Check for pattern matches
-  if (publish.patterns) {
-    for (const { pattern, config: patternConfig } of publish.patterns) {
-      // Simple glob pattern matching
-      if (
-        packageName.includes(pattern.replace(/\*/g, "")) ||
-        new RegExp(pattern.replace(/\*/g, ".*")).test(packageName)
-      ) {
-        // If enable is explicitly false, return undefined to skip this package
-        // enable defaults to true when not specified
-        if (patternConfig.enable === false) {
-          return;
-        }
-        return patternConfig;
-      }
-    }
-  }
-
-  // 3. Return global config if no specific match
-  const globalConfig = publish.global;
-  // If global enable is explicitly false, return undefined to skip this package
-  // enable defaults to true when not specified
-  if (globalConfig?.enable === false) {
-    return;
-  }
-  return globalConfig;
+  dlerConfig: { publish?: PublishConfig } | null,
+): PackagePublishConfig | undefined => {
+  return resolvePackageConfig<PackagePublishConfig>(
+    packageName,
+    dlerConfig?.publish,
+  );
 };
 
 // ============================================================================
@@ -138,13 +65,8 @@ export const getPackagePublishConfig = (
 export const mergePublishOptions = <T extends Record<string, any>>(
   cliOptions: T,
   packageName: string,
-  dlerConfig: DlerConfig | null,
+  dlerConfig: { publish?: PublishConfig } | null,
 ): T => {
-  const configOptions = getPackagePublishConfig(packageName, dlerConfig) || {};
-
-  // CLI options take precedence over config options
-  return {
-    ...configOptions,
-    ...cliOptions,
-  } as T;
+  const packageConfig = getPackagePublishConfig(packageName, dlerConfig);
+  return mergeConfig(cliOptions, packageConfig);
 };

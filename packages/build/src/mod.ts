@@ -3,11 +3,11 @@
 import { existsSync, mkdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import {
-  type BuildDlerConfig as DlerConfig,
   findMonorepoRoot,
   getPackageBuildConfig,
   loadDlerConfig,
   mergeBuildOptions,
+  type DlerConfig,
 } from "@reliverse/dler-config";
 import { writeErrorLines } from "@reliverse/dler-helpers";
 import { logger } from "@reliverse/dler-logger";
@@ -50,8 +50,6 @@ export { applyPresets} from "./impl/presets";
 export type { BuildOptions } from "./impl/types";
 export { validateAndExit } from "./impl/validation";
 
-export type { DlerConfig };
-
 const DEFAULT_CONCURRENCY = 5;
 
 // ============================================================================
@@ -88,7 +86,7 @@ const formatBytes = (bytes: number): string => {
 // Package Discovery (using @reliverse/dler-config)
 // ============================================================================
 
-const getWorkspacePackages = async (cwd?: string, maxConfigDepth: number = 3): Promise<PackageInfo[]> => {
+const getWorkspacePackages = async (cwd?: string): Promise<PackageInfo[]> => {
   const monorepoRoot = await findMonorepoRoot(cwd);
 
   if (!monorepoRoot) {
@@ -109,7 +107,7 @@ const getWorkspacePackages = async (cwd?: string, maxConfigDepth: number = 3): P
   }
 
   // Load dler configuration
-  const dlerConfig = await loadDlerConfig(monorepoRoot, maxConfigDepth);
+  const dlerConfig = await loadDlerConfig(monorepoRoot);
 
   const packages: PackageInfo[] = [];
   const seenPaths = new Set<string>();
@@ -1272,7 +1270,6 @@ export const runBuildOnAllPackages = async (
     devServer = false,
     port = 3000,
     open = false,
-    maxConfigDepth = 3,
   } = options;
   
   // Initialize cache
@@ -1286,13 +1283,13 @@ export const runBuildOnAllPackages = async (
   // Execute the main logic
   const result = await (async (): Promise<BuildSummary> => {
       // Discover packages
-      const allPackages = await getWorkspacePackages(cwd, maxConfigDepth);
+      const allPackages = await getWorkspacePackages(cwd);
 
       if (verbose) {
         logger.info(`   Found ${allPackages.length} packages`);
         
         // Check if dler config was loaded
-        const dlerConfig = await loadDlerConfig(cwd, maxConfigDepth);
+        const dlerConfig = await loadDlerConfig(cwd);
         if (dlerConfig?.build) {
           logger.info("   📋 Using dler.ts configuration");
           if (dlerConfig.build.global) {

@@ -1,7 +1,7 @@
 {
   "name": "@reliverse/dler-spinner",
   "version": "2.0.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "description": "@reliverse/dler-spinner is a modern and lightweight spinner library.",
   "exports": {
@@ -10,7 +10,7 @@
       "default": "./src/mod.ts"
     }
   },
-  "dependencies": {
+ "dependencies": {
     "@reliverse/dler-colors": "workspace:*",
     "cli-cursor": "catalog:",
     "cli-spinners": "catalog:",
@@ -26,5 +26,8 @@
     "@reliverse/dler-tsconfig": "workspace:*",
     "typescript": "catalog:",
     "@types/bun": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

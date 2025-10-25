@@ -20,7 +20,7 @@ import {
   type UpdateResult,
   updatePackageJsonFileDirectly,
   validatePackageJson,
-} from "../../../mod";
+} from "../../../cli";
 import { type CmdName, msgs } from "../../const";
 
 // Updates ALL dependencies (prod/dev/peer/optional/catalog) to their latest versions across ALL package.json files found in the project

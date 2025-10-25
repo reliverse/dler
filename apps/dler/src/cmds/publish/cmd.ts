@@ -8,8 +8,10 @@ import {
 } from "@reliverse/dler-launcher";
 import { logger } from "@reliverse/dler-logger";
 import {
+  type PackageKind,
   type PublishOptions,
   publishAllPackages,
+  type RegistryType,
 } from "@reliverse/dler-publish";
 
 const publishCmd = async (args: any): Promise<void> => {
@@ -29,6 +31,10 @@ const publishCmd = async (args: any): Promise<void> => {
       verbose: args.verbose,
       bump: args.bump as BumpType,
       concurrency: args.concurrency,
+      registry: args.registry as RegistryType,
+      kind: args.kind as PackageKind,
+      bin: args.bin,
+      bumpDisable: args.bumpDisable,
     };
 
     const results = await publishAllPackages(args.cwd, args.ignore, options);
@@ -115,6 +121,26 @@ const publishCmdArgs = defineCmdArgs({
     type: "boolean",
     description: "Verbose mode (default: false)",
   },
+  registry: {
+    type: "string",
+    description:
+      "Registry to publish to: npm, jsr, vercel, npm-jsr, or none (default: npm)",
+  },
+  kind: {
+    type: "string",
+    description:
+      "Package kind: library, browser-app, native-app, or cli (default: library)",
+  },
+  bin: {
+    type: "string",
+    description:
+      "Binary definitions for CLI packages (e.g., 'dler=dist/cli.js,login=dist/foo/bar/login.js')",
+  },
+  bumpDisable: {
+    type: "boolean",
+    description:
+      "Disable version bumping for all published packages, overwrites config (default: false)",
+  },
 });
 
 const publishCmdCfg = defineCmdCfg({
@@ -141,14 +167,37 @@ const publishCmdCfg = defineCmdCfg({
     "dler publish --verbose",
     "dler publish --bump patch --tag next --dry-run --verbose",
     "dler publish --ignore @reliverse/* --bump minor --concurrency 2",
+    "dler publish --registry npm",
+    "dler publish --registry jsr",
+    "dler publish --registry vercel",
+    "dler publish --registry npm-jsr",
+    "dler publish --registry none",
+    "dler publish --kind library",
+    "dler publish --kind browser-app",
+    "dler publish --kind native-app",
+    "dler publish --kind cli",
+    "dler publish --kind library --registry npm",
+    "dler publish --kind browser-app --registry vercel",
+    "dler publish --kind cli --registry jsr",
+    "dler publish --kind cli --bin 'dler=dist/cli.js'",
+    "dler publish --kind cli --bin 'dler=dist/cli.js,login=dist/foo/bar/login.js'",
+    "dler publish --bumpDisable",
+    "dler publish --bumpDisable --dry-run",
+    "dler publish --bumpDisable --tag next",
     "",
     "# Configuration Examples:",
     "# Create dler.ts in your monorepo root:",
     "# export default {",
     "#   publish: {",
-    "#     global: { access: 'public', tag: 'latest' },",
-    "#     packages: { 'my-package': { tag: 'next', bump: 'minor' } },",
-    "#     patterns: [{ pattern: '*example*', config: { dryRun: true } }]",
+    "#     global: { access: 'public', tag: 'latest', registry: 'npm', kind: 'library' },",
+    "#     packages: { ",
+    "#       'my-library': { tag: 'next', bump: 'minor', registry: 'jsr', kind: 'library' },",
+    "#       'my-web-app': { registry: 'vercel', kind: 'browser-app' },",
+    "#       'my-native-app': { registry: 'none', kind: 'native-app' },",
+    "#       'my-cli-tool': { registry: 'npm', kind: 'cli', bin: 'my-cli=dist/cli.js' },",
+    "#       'my-library': { bumpDisable: true, tag: 'next' }",
+    "#     },",
+    "#     patterns: [{ pattern: '*example*', config: { dryRun: true, registry: 'vercel', kind: 'browser-app' } }]",
     "#   }",
     "# }",
     "",

@@ -3,7 +3,7 @@
   "description": "Bump utils for @reliverse/dler",
   "author": "reliverse",
   "version": "2.0.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "exports": {
     ".": {
@@ -24,5 +24,8 @@
   "keywords": [
     "dler",
     "bump"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

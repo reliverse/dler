@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler-tsconfig",
   "version": "2.0.0",
-  "private": true,
+  "private": false,
   "description": "Shared TypeScript configuration"
 }

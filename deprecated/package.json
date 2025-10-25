@@ -3,10 +3,13 @@
   "author": "reliverse",
   "version": "1.7.154",
   "type": "module",
-  "main": "./src/mod.ts",
-  "module": "./src/mod.ts",
+  "main": "./dist/cli.js",
+  "module": "./dist/cli.js",
   "exports": {
-    ".": "./src/mod.ts"
+    ".": "./dist/cli.js"
+  },
+  "bin": {
+    "dler-v1": "./dist/cli.js"
   },
   "files": [
     "bin",

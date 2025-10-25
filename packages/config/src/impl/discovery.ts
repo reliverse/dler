@@ -1,9 +1,8 @@
 // packages/config/src/discovery.ts
 
-import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { readPackageJSON } from "@reliverse/dler-pkg-tsc";
-import { loadConfig } from "c12";
+import { loadConfig, watchConfig } from "c12";
 
 // ============================================================================
 // Monorepo Discovery
@@ -167,92 +166,67 @@ export const filterPackages = (
 };
 
 // ============================================================================
-// Configuration Discovery
-// ============================================================================
-
-/**
- * Find dler.ts configuration file by searching up the directory tree
- */
-export const findDlerConfig = async (
-  startDir: string,
-  maxDepth = 3,
-): Promise<string | null> => {
-  let currentDir = resolve(startDir);
-  let depth = 0;
-
-  while (depth <= maxDepth) {
-    const packageJsonPath = resolve(currentDir, "package.json");
-    const dlerPath = resolve(currentDir, "dler.ts");
-
-    // Check if both files exist
-    if (existsSync(packageJsonPath) && existsSync(dlerPath)) {
-      try {
-        // Verify package.json has workspaces.packages field
-        const pkg = await readPackageJSON(currentDir);
-        if (
-          pkg &&
-          pkg.workspaces &&
-          typeof pkg.workspaces === "object" &&
-          "packages" in pkg.workspaces
-        ) {
-          return currentDir;
-        }
-      } catch {
-        // If we can't read package.json, continue searching
-      }
-    }
-
-    // Move up one directory level
-    const parentDir = dirname(currentDir);
-    if (parentDir === currentDir) {
-      // Reached filesystem root
-      break;
-    }
-    currentDir = parentDir;
-    depth++;
-  }
-
-  return null;
-};
-
-// ============================================================================
 // Configuration Loading
 // ============================================================================
 
 /**
- * Load dler.ts configuration
+ * Load dler.ts configuration using c12
+ *
+ * c12 automatically handles:
+ * - Searching up directory tree for config files
+ * - Loading TypeScript/JavaScript config files
+ * - Merging multiple config sources (dler.ts, package.json, .dlerrc, etc.)
+ * - Environment-specific configurations ($test, $development, $production)
+ * - Config extending from remote/local sources
+ *
+ * Additional c12 features available:
+ * - .config/ directory support
+ * - RC file support (.dlerrc)
+ * - Environment-specific configs ($env: { staging: {...} })
+ * - Config watching with auto-reload
+ * - Remote config extending (gh:user/repo)
  */
 export const loadDlerConfig = async <T extends Record<string, any> = any>(
   cwd?: string,
-  maxConfigDepth = 3,
 ): Promise<T | null> => {
   try {
-    const startDir = cwd || process.cwd();
-    const configDir = await findDlerConfig(startDir, maxConfigDepth);
-
-    if (!configDir) {
-      throw new Error(
-        `Could not find dler.ts and root package.json with workspaces.packages in the same directory after searching ${maxConfigDepth} levels up from ${startDir}`,
-      );
-    }
-
     const { config } = await loadConfig<T>({
-      cwd: configDir,
+      cwd: cwd || process.cwd(),
       name: "dler",
       configFile: "dler",
-      packageJson: false,
+      packageJson: "dler", // Enable reading from package.json "dler" field
       dotenv: false,
     });
 
     return config || null;
   } catch (error) {
-    // Re-throw discovery errors, but return null for config loading errors
-    if (
-      error instanceof Error &&
-      error.message.includes("Could not find dler.ts")
-    ) {
-      throw error;
-    }
+    // Return null for config loading errors (file not found, etc.)
     return null;
   }
+};
+
+/**
+ * Watch dler.ts configuration for changes (development mode)
+ * Uses c12's watchConfig for auto-reload and HMR support
+ */
+export const watchDlerConfig = <T extends Record<string, any> = any>(
+  cwd?: string,
+  options?: {
+    onUpdate?: (config: T) => void;
+    onError?: (error: Error) => void;
+  },
+) => {
+  return watchConfig<T>({
+    cwd: cwd || process.cwd(),
+    name: "dler",
+    configFile: "dler",
+    packageJson: "dler",
+    dotenv: false,
+    onUpdate: ({ newConfig }) => {
+      options?.onUpdate?.(newConfig.config);
+    },
+    onWatch: (event) => {
+      console.log("[dler config watcher]", event.type, event.path);
+    },
+  });
 };

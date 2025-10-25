@@ -1,9 +1,9 @@
 {
   "name": "@reliverse/dler-build",
-	"description": "Build utils for @reliverse/dler",
-"author": "reliverse",  
+  "description": "Build utils for @reliverse/dler",
+  "author": "reliverse",
   "version": "2.0.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "exports": {
     ".": {
@@ -24,5 +24,8 @@
     "@reliverse/dler-tsconfig": "workspace:*",
     "typescript": "catalog:",
     "@types/bun": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -13,7 +13,7 @@ import {
 	parseFilterArgs,
 	promptWorkspacePackages,
 	showPackageSummary,
-} from "../../../mod";
+} from "../../../cli";
 
 export default defineCommand({
 	meta: {

@@ -1,4 +1,6 @@
-// packages/config/src/build.ts
+// packages/config/src/impl/build.ts
+
+import { type BaseConfig, mergeConfig, resolvePackageConfig } from "./core";
 
 // ============================================================================
 // Build Configuration Types
@@ -98,28 +100,13 @@ export interface PackageBuildConfig {
   windowsCopyright?: string;
 }
 
-export interface BuildConfig {
+export interface BuildConfig extends BaseConfig {
   global?: PackageBuildConfig;
   packages?: Record<string, PackageBuildConfig>;
   patterns?: Array<{
     pattern: string;
     config: PackageBuildConfig;
   }>;
-}
-
-export interface DlerConfig {
-  build?: {
-    // Global build configuration
-    global?: PackageBuildConfig;
-    // Per-package build configurations
-    packages?: Record<string, PackageBuildConfig>;
-    // Package patterns for applying configs
-    patterns?: Array<{
-      pattern: string;
-      config: PackageBuildConfig;
-    }>;
-  };
-  publish?: any; // Will be defined in publish.ts
 }
 
 // ============================================================================
@@ -131,52 +118,12 @@ export interface DlerConfig {
  */
 export const getPackageBuildConfig = async (
   packageName: string,
-  dlerConfig: DlerConfig | null,
+  dlerConfig: { build?: BuildConfig } | null,
 ): Promise<PackageBuildConfig | undefined> => {
-  // Check dler.ts configuration
-  if (!dlerConfig?.build) {
-    return;
-  }
-
-  const { build } = dlerConfig;
-
-  // 1. Check for exact package name match
-  if (build.packages?.[packageName]) {
-    const packageConfig = build.packages[packageName];
-    // If enable is explicitly false, return undefined to skip this package
-    // enable defaults to true when not specified
-    if (packageConfig.enable === false) {
-      return;
-    }
-    return packageConfig;
-  }
-
-  // 2. Check for pattern matches
-  if (build.patterns) {
-    for (const { pattern, config: patternConfig } of build.patterns) {
-      // Simple glob pattern matching (can be enhanced with minimatch later)
-      if (
-        packageName.includes(pattern.replace(/\*/g, "")) ||
-        new RegExp(pattern.replace(/\*/g, ".*")).test(packageName)
-      ) {
-        // If enable is explicitly false, return undefined to skip this package
-        // enable defaults to true when not specified
-        if (patternConfig.enable === false) {
-          return;
-        }
-        return patternConfig;
-      }
-    }
-  }
-
-  // 3. Return global config if no specific match
-  const globalConfig = build.global;
-  // If global enable is explicitly false, return undefined to skip this package
-  // enable defaults to true when not specified
-  if (globalConfig?.enable === false) {
-    return;
-  }
-  return globalConfig;
+  return resolvePackageConfig<PackageBuildConfig>(
+    packageName,
+    dlerConfig?.build,
+  );
 };
 
 // ============================================================================
@@ -187,19 +134,8 @@ export const getPackageBuildConfig = async (
  * Merge build options with package-specific configuration
  */
 export const mergeBuildOptions = <T extends Record<string, any>>(
-  globalOptions: T,
+  cliOptions: T,
   packageConfig?: PackageBuildConfig,
 ): T => {
-  if (!packageConfig) return globalOptions;
-
-  const merged = { ...globalOptions };
-
-  // Merge package-specific options
-  for (const [key, value] of Object.entries(packageConfig)) {
-    if (value !== undefined) {
-      (merged as any)[key] = value;
-    }
-  }
-
-  return merged as T;
+  return mergeConfig(cliOptions, packageConfig);
 };
