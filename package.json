@@ -6,9 +6,9 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dler": "bun apps/dler/src/cli.ts",
-    "build": "bun dler build",
-    "pub": "bun clean && bun run build && bun dler publish",
+    "dler": "bun cli/src/cli.ts",
+    "build": "bun clean && bun typecheck && bun dler build",
+    "pub": "bun run build && bun dler publish",
     "format": "bun biome check --write --unsafe",
     "typecheck": "bun dler tsc --copy-logs",
     "check": "bun format && bun typecheck",
@@ -17,12 +17,15 @@
   },
   "workspaces": {
     "packages": [
-      "apps/*",
+      "cli",
+      "deprecated",
       "examples/*",
-      "packages/*",
-      "deprecated"
+      "packages/*"
     ],
     "catalog": {
+      "dts-bundle-generator": "^9.5.1",
+      "@typescript/native-preview": "^7.0.0-dev.20251025.1",
+      "@microsoft/api-extractor": "^7.53.3",
       "clipboardy": "^5.0.0",
       "cli-cursor": "^5.0.0",
       "cli-spinners": "^3.3.0",
@@ -125,10 +128,10 @@
       "p-map": "^7.0.3",
       "path-key": "^4.0.0",
       "pkg-types": "^2.3.0",
-      "postcss-nested": "^7.0.2",
-      "postcss": "^8.5.6",
       "postgres": "^3.4.7",
       "posthog-node": "^5.9.5",
+      "postcss": "^8.5.6",
+      "postcss-nested": "^7.0.2",
       "pretty-bytes": "^7.1.0",
       "pretty-ms": "^9.3.0",
       "querystring": "^0.2.1",

@@ -1,6 +1,7 @@
 // packages/config/src/impl/core.ts
 
 import type { PublishConfig } from "./publish";
+import type { BuildConfig } from "./build";
 
 // ============================================================================
 // Generic Configuration Types
@@ -16,7 +17,7 @@ export interface BaseConfig {
 }
 
 export interface DlerConfig {
-  build?: BaseConfig;
+  build?: BuildConfig;
   publish?: PublishConfig;
 }
 
@@ -96,14 +97,3 @@ export const mergeConfig = <T extends Record<string, any>>(
   } as T;
 };
 
-// ============================================================================
-// Configuration Helper
-// ============================================================================
-
-/**
- * Type-safe configuration definition helper
- * Provides better DX and type inference for config files
- */
-export const defineConfig = <T extends DlerConfig>(config: T): T => {
-  return config;
-};

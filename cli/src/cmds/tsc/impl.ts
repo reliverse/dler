@@ -2,7 +2,7 @@
 
 import { existsSync } from "node:fs";
 import { cpus } from "node:os";
-import { join, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { writeErrorLines } from "@reliverse/dler-helpers";
 import { logger } from "@reliverse/dler-logger";
 import pMap from "@reliverse/dler-mapper";
@@ -195,6 +195,7 @@ const getWorkspacePackages = async (
 
   return {
     packages,
+    monorepoRoot,
     discoveryTime,
     cacheHits: 0, // Will be updated by cache layer
     cacheMisses: packages.length,
@@ -319,7 +320,7 @@ const countErrorsAndWarnings = (
   return { errors, warnings };
 };
 
-const filterOutputLines = (output: string, packagePath: string): string => {
+const filterOutputLines = (output: string, packagePath: string, monorepoRoot: string): string => {
   const lines = output.split("\n");
   const filtered: string[] = [];
   const normalizedPackagePath = resolve(packagePath);
@@ -331,21 +332,30 @@ const filterOutputLines = (output: string, packagePath: string): string => {
       continue;
     }
 
-    // Check if error is from another package
-    const isCrossPackageError = line.includes("../") || line.includes("..\\");
+    // Extract file path from error line and convert to full path
+    const match = line.match(/^(.+?)\(/);
+    
+    if (match && match[1]) {
+      const relativePath = match[1];
+      const fullPath = resolve(packagePath, relativePath);
+      const normalizedFilePath = resolve(fullPath);
+      
+      // Check if error is from another package
+      const isCrossPackageError = line.includes("../") || line.includes("..\\");
 
-    if (isCrossPackageError) {
-      // Extract file path from error line
-      const match = line.match(/^(.+?)\(/);
-
-      if (match && match[1]) {
-        const filePath = resolve(packagePath, match[1]);
-        const normalizedFilePath = resolve(filePath);
-
+      if (isCrossPackageError) {
         // Only include if file is within current package
         if (normalizedFilePath.startsWith(normalizedPackagePath)) {
-          filtered.push(line);
+          // Convert relative path to full path from monorepo root
+          const relativeToMonorepo = relative(monorepoRoot, normalizedFilePath);
+          const updatedLine = line.replace(relativePath, relativeToMonorepo);
+          filtered.push(updatedLine);
         }
+      } else {
+        // For same-package errors, also convert to full path from monorepo root
+        const relativeToMonorepo = relative(monorepoRoot, normalizedFilePath);
+        const updatedLine = line.replace(relativePath, relativeToMonorepo);
+        filtered.push(updatedLine);
       }
     } else {
       filtered.push(line);
@@ -361,6 +371,7 @@ const filterOutputLines = (output: string, packagePath: string): string => {
 
 const runTscOnPackage = async (
   pkg: PackageInfo,
+  monorepoRoot: string,
   options: {
     verbose?: boolean;
     cache?: TscCache;
@@ -426,7 +437,7 @@ const runTscOnPackage = async (
   try {
     const result = await runTscCommand(pkg.path, { incremental, buildMode });
     const output = result.stdout + result.stderr;
-    const filteredOutput = filterOutputLines(output, pkg.path);
+    const filteredOutput = filterOutputLines(output, pkg.path, monorepoRoot);
 
     const totalCounts = countErrorsAndWarnings(output);
     const filteredCounts = countErrorsAndWarnings(filteredOutput);
@@ -490,6 +501,7 @@ const runTscOnPackage = async (
 
 const collectAllResults = async (
   packages: PackageInfo[],
+  monorepoRoot: string,
   options: TscOptions = {},
   cache?: TscCache,
 ): Promise<TscSummary> => {
@@ -515,7 +527,7 @@ const collectAllResults = async (
             `Processing ${pkg.name} (${index + 1}/${packages.length})...`,
           );
         }
-        return runTscOnPackage(pkg, {
+        return runTscOnPackage(pkg, monorepoRoot, {
           verbose,
           cache,
           incremental,
@@ -817,7 +829,7 @@ export const runTscOnAllPackages = async (
       logger.info("🚀 Starting TypeScript checks...\n");
     }
 
-    const summary = await collectAllResults(packages, options, cache);
+    const summary = await collectAllResults(packages, discoveryResult.monorepoRoot, options, cache);
 
     // Display results
     formatOutput(summary, verbose);

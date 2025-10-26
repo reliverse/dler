@@ -45,6 +45,7 @@ export interface OptimizedTscOptions {
 
 export interface PackageDiscoveryResult {
   packages: PackageInfo[];
+  monorepoRoot: string;
   discoveryTime: number;
   cacheHits: number;
   cacheMisses: number;

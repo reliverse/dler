@@ -11,17 +11,18 @@
   },
   "dependencies": {
     "c12": "catalog:",
+    "@reliverse/dler-pkg-tsc": "workspace:*",
     "@reliverse/dler-config": "workspace:*",
     "@reliverse/dler-logger": "workspace:*",
-    "@reliverse/dler-bump": "workspace:*",
-    "@reliverse/dler-pkg-tsc": "workspace:*"
-  },
-  "devDependencies": {
-    "@reliverse/dler-tsconfig": "workspace:*",
-    "typescript": "catalog:",
-    "@types/bun": "catalog:"
+    "@reliverse/dler-bump": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "@reliverse/dler-tsconfig": "workspace:*",
+    "@microsoft/api-extractor": "catalog:",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:"
   }
 }

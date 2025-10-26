@@ -1,18 +1,17 @@
 import { resolve } from "node:path";
 import { type BumpType, bumpVersion } from "@reliverse/dler-bump";
 import {
-  type BaseConfig,
-  filterPackages as filterPackagesFromConfig,
   getPackagePublishConfig,
-  getWorkspacePackages as getWorkspacePackagesFromConfig,
-  loadDlerConfig,
   mergePublishOptions,
   type PackageKind,
-  type RegistryType,
-} from "@reliverse/dler-config";
+  type RegistryType, 
+} from "@reliverse/dler-config/impl/publish";
 import { logger } from "@reliverse/dler-logger";
 import { readPackageJSON, writePackageJSON } from "@reliverse/dler-pkg-tsc";
+// Note: We'll implement declaration generation directly here to avoid circular dependencies
 import { $ } from "bun";
+import type { BaseConfig } from "@reliverse/dler-config/impl/core";
+import { filterPackages, getWorkspacePackages, loadDlerConfig } from "@reliverse/dler-config/impl/discovery";
 
 export interface PackagePublishConfig {
   enable?: boolean;
@@ -64,47 +63,14 @@ export interface PublishOptions {
   concurrency?: number;
   registry?: RegistryType;
   kind?: PackageKind;
-  bin?: string;
 }
 
-export type { PackageKind, RegistryType } from "@reliverse/dler-config";
+export type { PackageKind, RegistryType } from "@reliverse/dler-config/impl/publish";
 
 // ============================================================================
 // Utility Functions
 // ============================================================================
 
-/**
- * Extract package name from scoped package name
- * @param packageName - The full package name (e.g., "@reliverse/dler")
- * @returns The package name without scope (e.g., "dler")
- */
-function extractPackageName(packageName: string): string {
-  const parts = packageName.split("/");
-  return parts[parts.length - 1] || packageName;
-}
-
-/**
- * Parse bin argument string into a record of binary definitions
- * @param binArg - The bin argument string (e.g., "dler=dist/cli.js,login=dist/foo/bar/login.js")
- * @returns Record mapping binary names to their file paths
- */
-function parseBinArgument(binArg: string): Record<string, string> {
-  const binMap: Record<string, string> = {};
-
-  if (!binArg) {
-    return binMap;
-  }
-
-  const entries = binArg.split(",");
-  for (const entry of entries) {
-    const [name, path] = entry.split("=");
-    if (name && path) {
-      binMap[name.trim()] = path.trim();
-    }
-  }
-
-  return binMap;
-}
 
 // ============================================================================
 // Kind-Registry Validation
@@ -161,10 +127,6 @@ export interface PublishAllResult {
   errorCount: number;
 }
 
-// Configuration functions moved to @reliverse/dler-config
-
-// Discovery functions moved to @reliverse/dler-config
-
 /**
  * Check if dist folder exists and has content
  */
@@ -178,54 +140,102 @@ async function validateDistFolder(packagePath: string): Promise<boolean> {
   }
 }
 
+
+
 /**
- * Update exports field to point to built files instead of source files
+ * Restore original dependencies after publishing
  */
-function updateExportsForPublishing(exports: any): any {
-  if (typeof exports === "string") {
-    // Simple string export - convert .ts to .js and src/ to dist/
-    return exports.replace(/\.ts$/, ".js").replace(/^\.\/src\//, "./");
+async function restoreOriginalDependencies(
+  packagePath: string,
+  originalDependencies: any,
+  originalDevDependencies: any
+): Promise<void> {
+  try {
+    const pkg = await readPackageJSON(packagePath);
+    if (pkg) {
+      // Restore original dependencies
+      pkg.dependencies = originalDependencies;
+      pkg.devDependencies = originalDevDependencies;
+      
+      // Write back the restored package.json
+      await writePackageJSON(resolve(packagePath, "package.json"), pkg);
+    }
+  } catch (error) {
+    logger.warn(
+      `⚠️  Failed to restore original dependencies: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
+}
 
-  if (Array.isArray(exports)) {
-    // Array of exports - recursively update each
-    return exports.map(updateExportsForPublishing);
-  }
+/**
+ * Resolve workspace dependency to actual version
+ */
+async function resolveWorkspaceVersion(packagePath: string, depName: string): Promise<string | null> {
+  try {
+    // Look for the workspace package in common locations
+    const possiblePaths = [
+      resolve(packagePath, "..", depName),
+      resolve(packagePath, "..", "..", depName),
+      resolve(packagePath, "..", "..", "..", depName),
+      resolve(packagePath, "..", "packages", depName),
+      resolve(packagePath, "..", "..", "packages", depName),
+      resolve(packagePath, "..", "..", "..", "packages", depName),
+    ];
 
-  if (typeof exports === "object" && exports !== null) {
-    const updated: any = {};
-    
-    for (const [key, value] of Object.entries(exports)) {
-      if (typeof value === "object" && value !== null) {
-        // Nested object (like { "types": "./src/mod.ts", "default": "./src/mod.ts" })
-        const updatedValue: any = {};
-        for (const [subKey, subValue] of Object.entries(value)) {
-          if (typeof subValue === "string") {
-            // Convert source paths to built paths
-            if (subKey === "types") {
-              // TypeScript declarations: .ts -> .d.ts and src/ -> dist/
-              updatedValue[subKey] = subValue.replace(/\.ts$/, ".d.ts").replace(/^\.\/src\//, "./");
-            } else {
-              // JavaScript files: .ts -> .js and src/ -> dist/
-              updatedValue[subKey] = subValue.replace(/\.ts$/, ".js").replace(/^\.\/src\//, "./");
-            }
-          } else {
-            updatedValue[subKey] = subValue;
-          }
+    for (const possiblePath of possiblePaths) {
+      try {
+        const workspacePkg = await readPackageJSON(possiblePath);
+        if (workspacePkg && workspacePkg.name === depName && workspacePkg.version) {
+          return workspacePkg.version;
         }
-        updated[key] = updatedValue;
-      } else if (typeof value === "string") {
-        // Direct string value - convert .ts to .js and src/ to dist/
-        updated[key] = value.replace(/\.ts$/, ".js").replace(/^\.\/src\//, "./");
-      } else {
-        updated[key] = value;
+      } catch {
+        // Continue to next path
       }
     }
-    
-    return updated;
-  }
 
-  return exports;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Resolve catalog dependency to actual version
+ */
+async function resolveCatalogVersion(packagePath: string, depName: string): Promise<string | null> {
+  try {
+    // Go up to 3 levels to find monorepo root
+    const possibleRoots = [
+      resolve(packagePath, ".."),
+      resolve(packagePath, "..", ".."),
+      resolve(packagePath, "..", "..", ".."),
+    ];
+
+    for (const possibleRoot of possibleRoots) {
+      try {
+        const rootPkg = await readPackageJSON(possibleRoot);
+        if (rootPkg && rootPkg.workspaces) {
+          // Handle both array format and object format for workspaces
+          const workspaces = rootPkg.workspaces;
+          if (typeof workspaces === 'object' && workspaces !== null && 'catalog' in workspaces) {
+            const catalog = (workspaces as any).catalog;
+            if (catalog && typeof catalog === 'object') {
+              const catalogVersion = catalog[depName];
+              if (catalogVersion) {
+                return catalogVersion;
+              }
+            }
+          }
+        }
+      } catch {
+        // Continue to next path
+      }
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -234,7 +244,14 @@ function updateExportsForPublishing(exports: any): any {
 async function preparePackageForPublishing(
   packagePath: string,
   options: PublishOptions,
-): Promise<{ success: boolean; version?: string; error?: string; originalPkg?: any }> {
+): Promise<{ 
+  success: boolean; 
+  version?: string; 
+  error?: string; 
+  originalPkg?: any;
+  originalDependencies?: any;
+  originalDevDependencies?: any;
+}> {
   try {
     const pkg = await readPackageJSON(packagePath);
     if (!pkg) {
@@ -266,47 +283,44 @@ async function preparePackageForPublishing(
     }
     pkg.publishConfig.access = options.access || "public";
 
-    // Add bin field for CLI packages
-    if (options.kind === "cli") {
-      const binMap = parseBinArgument(options.bin || "");
+    // Note: bin field should be added during build process with --prepareForPublish
+    // This function now assumes it's already present if needed
 
-      // If no custom bin definitions provided, use default
-      if (Object.keys(binMap).length === 0) {
-        const packageName = extractPackageName(pkg.name || "cli");
-        binMap[packageName] = "dist/cli.js";
-      }
+    // Note: Declaration files should be generated during build process
+    // This function now assumes they are already present
 
-      pkg.bin = binMap;
-    }
+    // Note: exports field should be updated during build process with --prepareForPublish
+    // This function now assumes it's already transformed
 
-    // Update exports field to point to built files
-    if (pkg.exports) {
-      pkg.exports = updateExportsForPublishing(pkg.exports);
-    }
+    // Store original dependencies for restoration
+    const originalDependencies = { ...pkg.dependencies };
+    const originalDevDependencies = { ...pkg.devDependencies };
+
+    // Remove devDependencies for publishing (they shouldn't go to npm)
+    delete pkg.devDependencies;
 
     // Resolve workspace and catalog dependencies to actual versions
     if (pkg.dependencies) {
       for (const [depName, version] of Object.entries(pkg.dependencies)) {
         if (typeof version === "string") {
           if (version.startsWith("workspace:")) {
-            // For workspace dependencies, we need to resolve to actual versions
-            // For now, we'll remove workspace deps that can't be resolved
-            delete pkg.dependencies[depName];
+            // Resolve workspace dependency to actual version
+            const workspaceVersion = await resolveWorkspaceVersion(packagePath, depName);
+            if (workspaceVersion) {
+              pkg.dependencies[depName] = workspaceVersion;
+            } else {
+              // If can't resolve, remove the dependency
+              delete pkg.dependencies[depName];
+            }
           } else if (version === "catalog:") {
-            // For catalog dependencies, we need to resolve to actual versions
-            // For now, we'll remove catalog deps that can't be resolved
-            delete pkg.dependencies[depName];
-          }
-        }
-      }
-    }
-
-    // Also resolve devDependencies
-    if (pkg.devDependencies) {
-      for (const [depName, version] of Object.entries(pkg.devDependencies)) {
-        if (typeof version === "string") {
-          if (version.startsWith("workspace:") || version === "catalog:") {
-            delete pkg.devDependencies[depName];
+            // Resolve catalog dependency to actual version
+            const catalogVersion = await resolveCatalogVersion(packagePath, depName);
+            if (catalogVersion) {
+              pkg.dependencies[depName] = catalogVersion;
+            } else {
+              // If can't resolve, remove the dependency
+              delete pkg.dependencies[depName];
+            }
           }
         }
       }
@@ -315,7 +329,13 @@ async function preparePackageForPublishing(
     // Write modified package.json back to root
     await writePackageJSON(resolve(packagePath, "package.json"), pkg);
 
-    return { success: true, version: pkg.version, originalPkg };
+    return { 
+      success: true, 
+      version: pkg.version, 
+      originalPkg,
+      originalDependencies,
+      originalDevDependencies
+    };
   } catch (error) {
     return {
       success: false,
@@ -336,6 +356,8 @@ export async function publishPackage(
     (await readPackageJSON(packagePath))?.name || "unknown";
 
   let originalPkg: any = null;
+  let originalDependencies: any = null;
+  let originalDevDependencies: any = null;
 
   try {
     // Validate kind-registry combination
@@ -384,8 +406,10 @@ export async function publishPackage(
       };
     }
 
-    // Store original package for potential restoration
+    // Store original package and dependencies for potential restoration
     originalPkg = prepResult.originalPkg;
+    originalDependencies = prepResult.originalDependencies;
+    originalDevDependencies = prepResult.originalDevDependencies;
 
     // Read package metadata from root after preparation
     const rootPackage = await readPackageJSON(packagePath);
@@ -466,6 +490,11 @@ export async function publishPackage(
       };
     }
 
+    // Restore original dependencies after successful publishing
+    if (originalDependencies || originalDevDependencies) {
+      await restoreOriginalDependencies(packagePath, originalDependencies, originalDevDependencies);
+    }
+
     return {
       success: true,
       packageName,
@@ -482,6 +511,11 @@ export async function publishPackage(
           `⚠️  Failed to restore original package.json: ${restoreError instanceof Error ? restoreError.message : String(restoreError)}`,
         );
       }
+    }
+    
+    // Also restore dependencies if they were modified
+    if (originalDependencies || originalDevDependencies) {
+      await restoreOriginalDependencies(packagePath, originalDependencies, originalDevDependencies);
     }
 
     return {
@@ -505,8 +539,8 @@ export async function publishAllPackages(
     // Load dler.ts configuration
     const dlerConfig = await loadDlerConfig(cwd);
 
-    const packages = await getWorkspacePackagesFromConfig(cwd);
-    const filteredPackages = filterPackagesFromConfig(packages, ignore);
+    const packages = await getWorkspacePackages(cwd);
+    const filteredPackages = filterPackages(packages, ignore);
 
     if (filteredPackages.length === 0) {
       logger.warn("No packages found to publish");

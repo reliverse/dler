@@ -10,7 +10,7 @@
       "default": "./src/mod.ts"
     }
   },
- "dependencies": {
+  "dependencies": {
     "@reliverse/dler-colors": "workspace:*",
     "cli-cursor": "catalog:",
     "cli-spinners": "catalog:",
@@ -22,12 +22,13 @@
     "pretty-bytes": "catalog:",
     "pretty-ms": "catalog:"
   },
-  "devDependencies": {
-    "@reliverse/dler-tsconfig": "workspace:*",
-    "typescript": "catalog:",
-    "@types/bun": "catalog:"
-  },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "@reliverse/dler-tsconfig": "workspace:*",
+    "@microsoft/api-extractor": "catalog:",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:"
   }
 }

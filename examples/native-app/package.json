@@ -24,6 +24,7 @@
   "dependencies": {},
   "devDependencies": {
     "@reliverse/dler-tsconfig": "workspace:*",
+    "@microsoft/api-extractor": "catalog:",
     "@reliverse/dler": "workspace:*",
     "@types/bun": "catalog:"
   }

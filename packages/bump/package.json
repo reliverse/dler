@@ -14,18 +14,19 @@
   "dependencies": {
     "semver": "catalog:"
   },
-  "devDependencies": {
-    "@reliverse/dler-logger": "workspace:*",
-    "@reliverse/dler-tsconfig": "workspace:*",
-    "typescript": "catalog:",
-    "@types/bun": "catalog:",
-    "@types/semver": "catalog:"
-  },
   "keywords": [
     "dler",
     "bump"
   ],
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "@reliverse/dler-logger": "workspace:*",
+    "@reliverse/dler-tsconfig": "workspace:*",
+    "@microsoft/api-extractor": "catalog:",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:",
+    "@types/semver": "catalog:"
   }
 }

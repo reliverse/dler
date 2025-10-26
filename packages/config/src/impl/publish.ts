@@ -1,7 +1,7 @@
 // packages/config/src/impl/publish.ts
 
-import type { BumpType } from "../mod";
 import { type BaseConfig, mergeConfig, resolvePackageConfig } from "./core";
+import type { BumpType } from "./types";
 
 export type RegistryType = "npm" | "jsr" | "vercel" | "npm-jsr" | "none";
 export type PackageKind = "library" | "browser-app" | "native-app" | "cli";

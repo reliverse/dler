@@ -12,6 +12,15 @@ export interface ValidationError {
 export function validateBuildOptions(options: BuildOptions): ValidationError[] {
   const errors: ValidationError[] = [];
 
+  // Validate bundler option
+  if (options.bundler && !['bun', 'mkdist'].includes(options.bundler)) {
+    errors.push({
+      field: 'bundler',
+      message: 'Bundler must be "bun" or "mkdist"',
+      suggestion: 'Set --bundler to "bun" or "mkdist"'
+    });
+  }
+
   // Validate bytecode requirements
   if (options.bytecode) {
     if (options.format !== 'cjs') {

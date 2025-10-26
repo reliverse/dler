@@ -12,13 +12,23 @@
     }
   },
   "dependencies": {
-    "c12": "catalog:",
     "@reliverse/dler-config": "workspace:*",
-    "@reliverse/dler-logger": "workspace:*",
-    "@reliverse/dler-matcher": "workspace:*",
     "@reliverse/dler-helpers": "workspace:*",
+    "@reliverse/dler-logger": "workspace:*",
+    "@reliverse/dler-mapper": "workspace:*",
+    "@reliverse/dler-matcher": "workspace:*",
     "@reliverse/dler-pkg-tsc": "workspace:*",
-    "@reliverse/dler-mapper": "workspace:*"
+    "autoprefixer": "^10.4.21",
+    "c12": "catalog:",
+    "cssnano": "^7.1.1",
+    "defu": "catalog:",
+    "dts-bundle-generator": "catalog:",
+    "esbuild": "^0.25.11",
+    "jiti": "^2.6.1",
+    "mlly": "^1.8.0",
+    "pkg-types": "catalog:",
+    "semver": "^7.7.3",
+    "tinyglobby": "catalog:"
   },
   "devDependencies": {
     "@reliverse/dler-tsconfig": "workspace:*",

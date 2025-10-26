@@ -1,0 +1,21 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+  "mainEntryPointFilePath": "C:\\B\\R\\cli-tools\\dler\\packages\\mapper\\dist\\index.d.ts",
+  "bundledPackages": [],
+  "compiler": {
+    "tsconfigFilePath": "C:\\B\\R\\cli-tools\\dler\\packages\\mapper\\tsconfig.json"
+  },
+  "apiReport": {
+    "enabled": false
+  },
+  "docModel": {
+    "enabled": false
+  },
+  "dtsRollup": {
+    "enabled": true,
+    "untrimmedFilePath": "C:\\B\\R\\cli-tools\\dler\\packages\\mapper\\dist\\dler-mapper.d.ts"
+  },
+  "tsdocMetadata": {
+    "enabled": false
+  }
+}

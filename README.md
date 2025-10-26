@@ -14,6 +14,54 @@ bun add @reliverse/dler
 
 Visit [docs.reliverse.org/libraries/dler](https://docs.reliverse.org/libraries/dler) to learn how to install and use `@reliverse/dler` library.
 
+## Declaration Generation
+
+Dler uses Rslib's recommended approach for TypeScript declaration generation, supporting both bundled and bundleless declarations.
+
+### Optional Dependencies
+
+For advanced declaration generation features, you can install these optional dependencies:
+
+```bash
+# For bundled declarations (single .d.ts file per package)
+bun add -D @microsoft/api-extractor
+
+# For experimental tsgo support (faster generation)
+bun add -D @typescript/native-preview
+```
+
+### Configuration
+
+Configure declaration generation in your `dler.ts`:
+
+```typescript
+export default defineConfig({
+  build: {
+    global: {
+      dts: {
+        enable: true,
+        bundle: false, // Bundleless by default
+        abortOnError: true,
+      },
+    },
+    packages: {
+      "my-library": {
+        dts: {
+          bundle: true, // Bundled declarations
+          distPath: "types",
+        },
+      },
+      "my-other-package": {
+        dts: {
+          tsgo: true, // Use experimental tsgo
+          bundle: false,
+        },
+      },
+    },
+  },
+});
+```
+
 ## Contributing
 
 A Bun monorepo created with the monorepo bootstrapper.

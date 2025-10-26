@@ -4,11 +4,13 @@ import { existsSync, mkdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import {
   findMonorepoRoot,
-  getPackageBuildConfig,
   loadDlerConfig,
+} from "@reliverse/dler-config/impl/discovery";
+import type { DlerConfig } from "@reliverse/dler-config/impl/core";
+import {
+  getPackageBuildConfig,
   mergeBuildOptions,
-  type DlerConfig,
-} from "@reliverse/dler-config";
+} from "@reliverse/dler-config/impl/build";
 import { writeErrorLines } from "@reliverse/dler-helpers";
 import { logger } from "@reliverse/dler-logger";
 import pMap from "@reliverse/dler-mapper";
@@ -23,6 +25,8 @@ import { BuildCache } from "./impl/cache";
 import { createDebugLogger } from "./impl/debug"; 
 import { startDevServer } from "./impl/dev-server";
 import { processHTMLForPackage } from "./impl/html-processor";
+import { preparePackageJsonForPublishing } from "./impl/package-json-transformer";
+import { validateTSConfig } from "./impl/tsconfig-validator";
 import { 
   AssetOptimizationPlugin,
   applyPlugins,
@@ -43,12 +47,31 @@ import type {
   BuildSummary,
   DlerPlugin,
   PackageInfo,
+  MkdistOptions,
 } from "./impl/types";
 import { startWatchMode } from "./impl/watch";
 
 export { applyPresets} from "./impl/presets";
 export type { BuildOptions } from "./impl/types";
 export { validateAndExit } from "./impl/validation";
+export { generateDeclarations } from "./impl/dts-generator";
+export type { DtsGeneratorOptions, DtsGeneratorResult } from "./impl/dts-generator";
+export type { MkdistDtsOptions } from "./impl/providers/mkdist-dts";
+export type { PackageKind, RegistryType } from "@reliverse/dler-config/impl/publish";
+export { 
+  transformExportsForBuild,
+  addBinFieldToPackageJson,
+  preparePackageJsonForPublishing,
+  extractPackageName,
+  parseBinArgument
+} from "./impl/package-json-transformer";
+export type { PreparePackageJsonOptions } from "./impl/package-json-transformer";
+export { 
+  validateTSConfig,
+  validateAllTSConfigs,
+  logValidationResults
+} from "./impl/tsconfig-validator";
+export type { TSConfigValidationResult, TSConfigValidationOptions } from "./impl/tsconfig-validator";
 
 const DEFAULT_CONCURRENCY = 5;
 
@@ -79,11 +102,7 @@ const formatBytes = (bytes: number): string => {
 };
 
 // ============================================================================
-// Config Discovery (moved to @reliverse/dler-config)
-// ============================================================================
-
-// ============================================================================
-// Package Discovery (using @reliverse/dler-config)
+// Package Discovery
 // ============================================================================
 
 const getWorkspacePackages = async (cwd?: string): Promise<PackageInfo[]> => {
@@ -142,10 +161,6 @@ const getWorkspacePackages = async (cwd?: string): Promise<PackageInfo[]> => {
 
   return packages;
 };
-
-// ============================================================================
-// Configuration Loading (moved to @reliverse/dler-config)
-// ============================================================================
 
 // Cache for package.json reads to avoid multiple file system calls
 const packageJsonCache = new Map<string, any>();
@@ -303,9 +318,6 @@ const detectFrontendApp = async (packagePath: string, pkg: any): Promise<boolean
   // Check for frontend framework dependencies
   const frontendFrameworks = [
     "react",
-    "vue",
-    "svelte",
-    "@angular/core",
     "preact",
     "solid-js",
     "lit",
@@ -440,10 +452,6 @@ const resolvePackageInfo = async (
 };
 
 // ============================================================================
-// Build Configuration Merging (moved to @reliverse/dler-config)
-// ============================================================================
-
-// ============================================================================
 // Package Filtering
 // ============================================================================
 
@@ -542,6 +550,86 @@ const compileToExecutable = async (
 // Build Execution
 // ============================================================================
 
+const buildWithMkdist = async (
+  pkg: PackageInfo,
+  options: BuildOptions,
+  _bunBuildConfig: any
+): Promise<BuildResult> => {
+  const startTime = Date.now();
+  
+  try {
+    // Import mkdist implementation
+    const { mkdist } = await import('./impl/providers/mkdist/make');
+    
+    // Configure mkdist options
+    // Note: declaration generation is controlled by the jsLoader checking for options.declaration
+    // mkdist internally uses typescript.compilerOptions.declaration to control DTS generation
+    // srcDir is relative to rootDir, so we pass 'src' to scan the src directory
+    const mkdistOptions: MkdistOptions & { declaration?: boolean; esbuild?: any } = {
+      srcDir: 'src',
+      distDir: pkg.outputDir,
+      rootDir: pkg.path,
+      format: options.format === 'cjs' ? 'cjs' : 'esm',
+      ext: options.format === 'cjs' ? '.cjs' : '.js',
+      cleanDist: false,
+      addRelativeDeclarationExtensions: true,
+      declaration: true,
+      typescript: {
+        compilerOptions: {
+          // Don't override emitDeclarationOnly here - let mkdist handle it
+          // mkdist will set it to true to generate declarations
+          allowJs: true,
+          skipLibCheck: true,
+        },
+      },
+    };
+    
+    // Execute mkdist build
+    const { result, duration } = await mkdist(mkdistOptions);
+    
+    // Calculate bundle size
+    let bundleSize = 0;
+    for (const filePath of result.writtenFiles) {
+      try {
+        const stats = statSync(filePath);
+        bundleSize += stats.size;
+      } catch {
+        // Ignore file stat errors
+      }
+    }
+    
+    // Return BuildResult
+    return {
+      package: pkg,
+      success: result.errors.length === 0,
+      skipped: false,
+      output: `Built ${result.writtenFiles.length} files`,
+      errors: result.errors.map(e => e.filename),
+      warnings: [],
+      buildTime: duration,
+      bundleSize,
+    };
+  } catch (error) {
+    const buildTime = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    logger.error(
+      `❌ ${pkg.name}: mkdist build failed - ${errorMessage}`,
+    );
+    
+    return {
+      package: pkg,
+      success: false,
+      skipped: false,
+      output: errorMessage,
+      errors: [errorMessage],
+      warnings: [],
+      buildTime,
+      bundleSize: 0,
+    };
+  }
+};
+
 export const buildPackage = async (
   pkg: PackageInfo,
   options: BuildOptions = {},
@@ -556,6 +644,7 @@ export const buildPackage = async (
   
   const { 
     verbose = false, 
+    bundler,
     target = "bun", 
     format = "esm", 
     minify = false, 
@@ -599,11 +688,20 @@ export const buildPackage = async (
     plugins = [],
     performanceMonitoring = false,
     bundleAnalysis = false,
+    // TSConfig validation
+    validateTsconfig = true,
+    strictTsconfig = false,
   } = mergedOptions;
 
   // Auto-detect frontend app settings
   const isFrontendApp = pkg.isFrontendApp || pkg.hasHtmlEntry;
   const shouldUseCssChunking = cssChunking !== false && (cssChunking === true || isFrontendApp);
+  
+  // Determine bundler based on package kind and options
+  const effectiveBundler = bundler || 
+    (pkg.buildConfig?.kind === 'browser-app' || pkg.buildConfig?.kind === 'native-app' 
+      ? 'bun' 
+      : 'mkdist');
   
   // Set appropriate defaults for frontend apps (but not for compilation)
   // When compiling, always use the configured target/format, not frontend defaults
@@ -618,7 +716,7 @@ export const buildPackage = async (
   if (mergedOptions.reactFastRefresh || (isFrontendApp && !mergedOptions.production)) {
     activePlugins.push(ReactRefreshPlugin);
   }
-  if (generateTypes || typeCheck) {
+  if (generateTypes || typeCheck || (typeof pkg.buildConfig?.dts === 'object' && pkg.buildConfig.dts?.enable)) {
     activePlugins.push(TypeScriptDeclarationsPlugin);
   }
   if (imageOptimization || fontOptimization || cssOptimization) {
@@ -675,6 +773,57 @@ export const buildPackage = async (
       warnings: [],
       buildTime: 0,
     };
+  }
+
+  // Validate tsconfig.json if enabled
+  if (validateTsconfig) {
+    try {
+      const validationResult = await validateTSConfig(pkg, {
+        strict: strictTsconfig,
+        checkDeclarations: generateTypes || typeCheck,
+        checkBuildOutput: true,
+      });
+
+      if (!validationResult.valid) {
+        if (strictTsconfig) {
+          return {
+            package: pkg,
+            success: false,
+            skipped: false,
+            output: `TSConfig validation failed: ${validationResult.errors.join(", ")}`,
+            errors: validationResult.errors,
+            warnings: validationResult.warnings,
+            buildTime: 0,
+          };
+        } else {
+          // Log warnings but continue
+          for (const warning of validationResult.warnings) {
+            logger.warn(`⚠️  ${pkg.name}: ${warning}`);
+          }
+          for (const error of validationResult.errors) {
+            logger.warn(`⚠️  ${pkg.name}: ${error}`);
+          }
+        }
+      } else if (validationResult.warnings.length > 0 && verbose) {
+        for (const warning of validationResult.warnings) {
+          logger.warn(`⚠️  ${pkg.name}: ${warning}`);
+        }
+      }
+    } catch (error) {
+      if (strictTsconfig) {
+        return {
+          package: pkg,
+          success: false,
+          skipped: false,
+          output: `TSConfig validation error: ${error instanceof Error ? error.message : String(error)}`,
+          errors: [error instanceof Error ? error.message : String(error)],
+          warnings: [],
+          buildTime: 0,
+        };
+      } else {
+        logger.warn(`⚠️  ${pkg.name}: TSConfig validation failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
   }
 
   // Check cache first
@@ -890,6 +1039,11 @@ export const buildPackage = async (
       logger.info(`🔍 Final build config: ${JSON.stringify(buildConfig, null, 2)}`);
     }
 
+    // Choose bundler based on effective bundler
+    if (effectiveBundler === 'mkdist') {
+      return await buildWithMkdist(pkg, mergedOptions, buildConfig);
+    }
+
     const result = await Bun.build(buildConfig);
 
     const buildTime = Date.now() - startTime;
@@ -993,7 +1147,7 @@ export const buildPackage = async (
               .map(log => log.message),
             buildTime,
             bundleSize,
-          });
+          }, mergedOptions);
         } catch (error) {
           logger.warn(`⚠️  ${pkg.name}: Plugin ${plugin.name} onBuildEnd failed - ${error}`);
         }
@@ -1012,6 +1166,27 @@ export const buildPackage = async (
     // After successful build, check if compilation is requested
     if (mergedOptions.compile && result.success && result.outputs) {
       await compileToExecutable(pkg, result.outputs, mergedOptions);
+    }
+
+    // Prepare package.json for publishing if requested
+    if (mergedOptions.prepareForPublish && result.success) {
+      try {
+        const prepResult = await preparePackageJsonForPublishing(pkg.path, {
+          kind: mergedOptions.kind,
+          binDefinitions: mergedOptions.bin,
+          access: "public",
+          setPrivate: true,
+          addPublishConfig: true,
+        });
+
+        if (!prepResult.success) {
+          logger.warn(`⚠️  ${pkg.name}: Failed to prepare package.json for publishing: ${prepResult.error}`);
+        } else if (verbose) {
+          logger.info(`📦 ${pkg.name}: Package.json prepared for publishing`);
+        }
+      } catch (error) {
+        logger.warn(`⚠️  ${pkg.name}: Error preparing package.json for publishing: ${error instanceof Error ? error.message : String(error)}`);
+      }
     }
 
     if (verbose) {

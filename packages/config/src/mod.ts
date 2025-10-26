@@ -1,46 +1,13 @@
 // packages/config/src/mod.ts
 
-import { inc, parse, type ReleaseType, valid } from "semver";
+import { inc, parse, valid } from "semver";
+import type { BumpType, VersionInfo } from "./impl/types";
 
-// Re-export build types and functions
-export type {
-  AssetOptions,
-  BuildConfig,
-  HtmlOptions,
-  PackageBuildConfig,
-  PerformanceBudget,
-} from "./impl/build";
-export {
-  getPackageBuildConfig,
-  mergeBuildOptions,
-} from "./impl/build";
-// Re-export core utilities
-export { type BaseConfig, type DlerConfig, defineConfig } from "./impl/core";
-// Re-export all configuration utilities
-export * from "./impl/discovery";
-// Re-export publish types and functions
-export type {
-  PackageKind,
-  PackagePublishConfig,
-  PublishConfig,
-  RegistryType,
-} from "./impl/publish";
-export {
-  getPackagePublishConfig,
-  mergePublishOptions,
-} from "./impl/publish";
 
 // ============================================================================
-// Version Management (existing functionality)
+// Version Management
 // ============================================================================
 
-export type BumpType = ReleaseType | "prerelease";
-
-export interface VersionInfo {
-  current: string;
-  bumped: string;
-  type: BumpType;
-}
 
 /**
  * Parse and validate a semver version string

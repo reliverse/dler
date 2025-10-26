@@ -10,8 +10,6 @@ export const CSSModulesPlugin: DlerPlugin = {
     buildConfig.loader = {
       ...buildConfig.loader,
       '.module.css': 'file',
-      '.module.scss': 'file',
-      '.module.sass': 'file',
       '.module.less': 'file',
       '.module.styl': 'file',
     };

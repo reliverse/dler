@@ -1,6 +1,6 @@
 // packages/build/src/impl/types.ts
 
-import type { PackageBuildConfig, PerformanceBudget } from "@reliverse/dler-config";
+import type { PackageBuildConfig, PerformanceBudget } from "@reliverse/dler-config/impl/build";
 
 export interface PackageInfo {
   name: string;
@@ -61,6 +61,7 @@ export interface BuildOptions {
   stopOnError?: boolean;
   verbose?: boolean;
   watch?: boolean;
+  bundler?: 'bun' | 'mkdist';
   target?: 'browser' | 'bun' | 'node';
   format?: 'esm' | 'cjs' | 'iife';
   minify?: boolean | MinifyOptions;
@@ -146,6 +147,15 @@ export interface BuildOptions {
   bundleAnalysis?: boolean;
   // Config discovery
   maxConfigDepth?: number;
+  // Package preparation for publishing
+  prepareForPublish?: boolean;
+  kind?: 'library' | 'cli' | 'browser-app' | 'native-app';
+  bin?: string;
+  // TSConfig validation
+  validateTsconfig?: boolean;
+  strictTsconfig?: boolean;
+  // DTS provider
+  dtsProvider?: 'dts-bundle-generator' | 'api-extractor' | 'typescript';
 }
 
 export interface CacheEntry {
@@ -228,7 +238,7 @@ export interface DlerPlugin {
   name: string;
   setup: (build: BunBuildConfig) => void;
   onBuildStart?: () => void;
-  onBuildEnd?: (result: BuildResult) => void;
+  onBuildEnd?: (result: BuildResult, buildOptions?: BuildOptions) => void;
   onResolve?: (args: any) => any;
   onLoad?: (args: any) => any;
 }
@@ -286,4 +296,53 @@ export interface BunBuildConfig {
   debugNoMinify?: boolean;
   compile?: CompileOptions | boolean;
 }
+
+export interface MkdistOptions {
+  srcDir: string;
+  distDir: string;
+  rootDir: string;
+  format?: 'esm' | 'cjs';
+  ext?: string;
+  pattern?: string;
+  cleanDist?: boolean;
+  addRelativeDeclarationExtensions?: boolean;
+  typescript?: {
+    compilerOptions?: any;
+  };
+  globOptions?: any;
+}
+
+export interface InputFile {
+  path: string;
+  srcPath: string;
+  extension: string;
+  getContents: () => Promise<string>;
+}
+
+export interface OutputFile {
+  path: string;
+  srcPath: string;
+  contents?: string;
+  extension?: string;
+  declaration?: boolean;
+  skip?: boolean;
+  raw?: boolean;
+  errors?: TypeError[];
+}
+
+export interface CreateLoaderOptions {
+  loaders?: (string | MkdistLoader)[];
+  [key: string]: any;
+}
+
+export interface LoaderContext {
+  loadFile: LoadFile;
+  options: CreateLoaderOptions;
+}
+
+export type LoadFile = (input: InputFile) => Promise<OutputFile[] | undefined>;
+
+export type MkdistLoader = (input: InputFile, context: LoaderContext) => Promise<OutputFile[] | undefined>;
+
+export type LoaderResult = OutputFile[];
 

@@ -33,7 +33,6 @@ const publishCmd = async (args: any): Promise<void> => {
       concurrency: args.concurrency,
       registry: args.registry as RegistryType,
       kind: args.kind as PackageKind,
-      bin: args.bin,
       bumpDisable: args.bumpDisable,
     };
 
@@ -131,11 +130,6 @@ const publishCmdArgs = defineCmdArgs({
     description:
       "Package kind: library, browser-app, native-app, or cli (default: library)",
   },
-  bin: {
-    type: "string",
-    description:
-      "Binary definitions for CLI packages (e.g., 'dler=dist/cli.js,login=dist/foo/bar/login.js')",
-  },
   bumpDisable: {
     type: "boolean",
     description:
@@ -179,8 +173,6 @@ const publishCmdCfg = defineCmdCfg({
     "dler publish --kind library --registry npm",
     "dler publish --kind browser-app --registry vercel",
     "dler publish --kind cli --registry jsr",
-    "dler publish --kind cli --bin 'dler=dist/cli.js'",
-    "dler publish --kind cli --bin 'dler=dist/cli.js,login=dist/foo/bar/login.js'",
     "dler publish --bumpDisable",
     "dler publish --bumpDisable --dry-run",
     "dler publish --bumpDisable --tag next",
@@ -194,16 +186,19 @@ const publishCmdCfg = defineCmdCfg({
     "#       'my-library': { tag: 'next', bump: 'minor', registry: 'jsr', kind: 'library' },",
     "#       'my-web-app': { registry: 'vercel', kind: 'browser-app' },",
     "#       'my-native-app': { registry: 'none', kind: 'native-app' },",
-    "#       'my-cli-tool': { registry: 'npm', kind: 'cli', bin: 'my-cli=dist/cli.js' },",
+    "#       'my-cli-tool': { registry: 'npm', kind: 'cli' },",
     "#       'my-library': { bumpDisable: true, tag: 'next' }",
     "#     },",
     "#     patterns: [{ pattern: '*example*', config: { dryRun: true, registry: 'vercel', kind: 'browser-app' } }]",
     "#   }",
     "# }",
     "",
-    "# Note: Make sure to run 'dler build' first to generate dist folders",
-    "# The command will automatically modify package.json files for publishing",
-    "# and ensure packages are published from their dist/ directories",
+    "# Note: Make sure to run 'dler build --prepareForPublish' first to:",
+    "# - Generate dist folders and declaration files",
+    "# - Transform package.json exports field for built files",
+    "# - Add bin field for CLI packages",
+    "# - Set private: false and publishConfig",
+    "# The publish command will then handle version bumping and registry publishing",
     "# CLI flags override dler.ts configuration settings",
   ],
 });

@@ -47,7 +47,7 @@ const features: Feature[] = [
   },
   {
     title: "Framework Detection",
-    description: "Auto-detection of React, Vue, Svelte and other frameworks",
+    description: "Auto-detection of React frameworks",
     icon: "🔍",
     status: "working",
   },

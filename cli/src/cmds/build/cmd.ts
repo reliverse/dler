@@ -67,6 +67,10 @@ const buildCmdArgs = defineCmdArgs({
     type: "boolean",
     description: "Watch mode for hot rebuild (default: false)",
   },
+  bundler: {
+    type: "string",
+    description: "Bundler to use: bun (fast, bundles deps) or mkdist (preserves structure, default for libraries)",
+  },
   target: {
     type: "string",
     description: "Build target: browser, bun, or node (default: bun)",
@@ -372,11 +376,37 @@ const buildCmdArgs = defineCmdArgs({
     type: "number",
     description: "Maximum directory levels to search up for dler.ts config (default: 3)",
   },
+  // Package preparation for publishing
+  prepareForPublish: {
+    type: "boolean",
+    description: "Transform package.json for publishing (exports, bin, private fields)",
+  },
+  kind: {
+    type: "string",
+    description: "Package kind: library, cli, browser-app, or native-app",
+  },
+  bin: {
+    type: "string",
+    description: "Binary definitions for CLI packages (e.g., 'dler=dist/cli.js,login=dist/foo/bar/login.js')",
+  },
+  // TSConfig validation
+  strictTsconfig: {
+    type: "boolean",
+    description: "Make TSConfig validation errors fatal (default: false)",
+  },
+  validateTsconfig: {
+    type: "boolean",
+    description: "Validate tsconfig.json files for common issues (default: true)",
+  },
+  dtsProvider: {
+    type: "string",
+    description: "Provider for generating .d.ts files: dts-bundle-generator (default), api-extractor, typescript, or mkdist",
+  },
 });
 
 const buildCmdCfg = defineCmdCfg({
   name: "build",
-  description: "Build all workspace packages using Bun's bundler with dler.ts configuration. Auto-detects frontend apps and libraries. Supports presets: --production, --dev, --library, --react, --node, --monorepo.",
+  description: "Build all workspace packages using configurable bundler (mkdist for libraries, bun for apps) with dler.ts configuration. Auto-detects frontend apps and libraries. Supports presets: --production, --dev, --library, --react, --node, --monorepo.",
   examples: [
     "dler build",
     'dler build --ignore "@reliverse/*"',
@@ -429,6 +459,15 @@ const buildCmdCfg = defineCmdCfg({
     "dler build --node        # Node.js server build",
     "dler build --monorepo    # Monorepo optimized build",
     "",
+    "# Bundler Examples:",
+    "dler build --bundler mkdist  # Use mkdist bundler (default for libraries)",
+    "dler build --bundler bun     # Use Bun bundler (default for apps)",
+    "dler build --bundler mkdist --kind library",
+    "dler build --bundler bun --kind library",
+    "",
+    "# Note: mkdist preserves file structure and is ideal for libraries",
+    "# bun bundles dependencies and is ideal for applications",
+    "",
     "# New Bun bundler features:",
     "dler build --noBundle --target node",
     "dler build --reactFastRefresh --watch",
@@ -477,6 +516,36 @@ const buildCmdCfg = defineCmdCfg({
     "",
     "# Config Discovery Examples:",
     "dler build --maxConfigDepth 5",
+    "",
+    "# Package Preparation for Publishing:",
+    "dler build --prepareForPublish",
+    "dler build --prepareForPublish --kind library",
+    "dler build --prepareForPublish --kind cli --bin 'my-cli=dist/cli.js'",
+    "dler build --prepareForPublish --kind cli --bin 'dler=dist/cli.js,login=dist/foo/bar/login.js'",
+    "dler build --production --prepareForPublish --kind library",
+    "",
+    "# Note: Use --prepareForPublish to transform package.json for publishing",
+    "# This updates exports field, adds bin field for CLI packages, and sets private: false",
+    "",
+    "# TSConfig Validation Examples:",
+    "dler build --validateTsconfig",
+    "dler build --strictTsconfig",
+    "dler build --validateTsconfig --verbose",
+    "dler build --noValidateTsconfig",
+    "",
+    "# Note: --validateTsconfig checks tsconfig.json for common issues",
+    "# Use --strictTsconfig to make validation errors fatal",
+    "",
+    "# DTS Provider Examples:",
+    "dler build --dtsProvider dts-bundle-generator",
+    "dler build --dtsProvider api-extractor",
+    "dler build --dtsProvider typescript",
+    "dler build --dtsProvider mkdist",
+    "dler build --generateTypes --dtsProvider dts-bundle-generator",
+    "",
+    "# Note: dts-bundle-generator is the default provider for better bundling",
+    "# mkdist provider offers VFS-based processing with automatic relative import resolution",
+    "# Use --dtsProvider to override the default provider",
   ],
 });
 

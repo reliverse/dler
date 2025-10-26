@@ -1,6 +1,7 @@
 // packages/config/src/impl/build.ts
 
 import { type BaseConfig, mergeConfig, resolvePackageConfig } from "./core";
+import type { PackageKind } from "./publish";
 
 // ============================================================================
 // Build Configuration Types
@@ -26,8 +27,49 @@ export interface HtmlOptions {
   minify?: boolean;
 }
 
+export interface DtsOptions {
+  /** Whether to generate declaration files */
+  enable?: boolean;
+  /** Provider for generating declaration files */
+  provider?: 'dts-bundle-generator' | 'api-extractor' | 'typescript' | 'mkdist';
+  /** Whether to bundle declaration files into a single file */
+  bundle?: boolean;
+  /** Output directory for declaration files (relative to package root) */
+  distPath?: string;
+  /** Whether to build with project references */
+  build?: boolean;
+  /** Whether to abort on declaration generation errors */
+  abortOnError?: boolean;
+  /** Whether to auto-set extension based on format (.d.ts, .d.mts, .d.cts) */
+  autoExtension?: boolean;
+  /** Path aliases for declaration files */
+  alias?: Record<string, string>;
+  /** Use experimental tsgo instead of TypeScript Compiler API */
+  tsgo?: boolean;
+  /** Banner content for declaration files */
+  banner?: string;
+  /** Footer content for declaration files */
+  footer?: string;
+  /** Options specific to dts-bundle-generator */
+  dtsBundleGenerator?: {
+    preferredConfigPath?: string;
+    externalInlines?: string[];
+    externalImports?: string[];
+    externalTypes?: string[];
+    umdModuleName?: string;
+    noBanner?: boolean;
+  };
+  /** Options specific to mkdist provider */
+  mkdist?: {
+    addRelativeDeclarationExtensions?: boolean;
+    pattern?: string;
+    globOptions?: object;
+  };
+}
+
 export interface PackageBuildConfig {
   enable?: boolean;
+  bundler?: "bun" | "mkdist";
   target?: "browser" | "bun" | "node";
   format?: "esm" | "cjs" | "iife";
   minify?:
@@ -98,6 +140,12 @@ export interface PackageBuildConfig {
   windowsVersion?: string;
   windowsDescription?: string;
   windowsCopyright?: string;
+  // Declaration file generation options
+  dts?: boolean | DtsOptions;
+  // Package preparation for publishing
+  prepareForPublish?: boolean;
+  kind?: PackageKind;
+  bin?: string;
 }
 
 export interface BuildConfig extends BaseConfig {

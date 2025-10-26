@@ -1,31 +1,65 @@
-import { defineConfig } from "./packages/config/src/mod";
+import type { DlerConfig } from "./packages/config/src/impl/core";
 
-export default defineConfig({
+export default {
   build: {
     // Global build configuration applied to all packages
     global: {
+      bundler: "mkdist",
       target: "bun",
       format: "esm",
       minify: false,
       sourcemap: "inline",
       splitting: true,
-      packages: "bundle",
+      packages: "external", // Changed to external to allow per-package configuration
+      // Declaration generation
+      dts: {
+        enable: true,
+        provider: "mkdist", // Default provider
+        bundle: false, // Bundleless by default
+        abortOnError: true,
+      },
     },
 
     // Per-package specific configurations
     packages: {
+      "@reliverse/dler-build": {
+        target: "bun",
+        format: "esm",
+        minify: true,
+        sourcemap: "none",
+        external: ["@reliverse/dler-logger"],
+        dts: {
+          enable: true,
+          provider: "mkdist",
+          bundle: false,
+          abortOnError: true,
+        },
+      },
       "@reliverse/dler-launcher": {
         target: "bun",
         format: "esm",
         minify: true,
         sourcemap: "none",
         external: ["@reliverse/dler-logger"],
+        // Bundled declarations for this package
+        dts: {
+          provider: "api-extractor", // Use api-extractor for bundled declarations
+          bundle: true,
+          distPath: "types",
+          abortOnError: true,
+        },
       },
       "@reliverse/dler-colors": {
         target: "bun",
         format: "esm",
         minify: true,
         sourcemap: "linked",
+        // Use experimental tsgo for faster declaration generation
+        dts: {
+          provider: "typescript", // Use TypeScript compiler for tsgo
+          tsgo: false,
+          bundle: false,
+        },
       },
       "@reliverse/react-app-example": {
         enable: false,
@@ -41,6 +75,8 @@ export default defineConfig({
         },
         packages: "bundle",
         external: ["react", "react-dom"],
+        // Disable declaration generation for frontend apps
+        dts: false,
       },
       "@reliverse/native-app-example": {
         enable: false,
@@ -126,4 +162,4 @@ export default defineConfig({
       },
     },
   },
-});
+} satisfies DlerConfig;
