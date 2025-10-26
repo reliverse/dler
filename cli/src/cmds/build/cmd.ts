@@ -8,6 +8,7 @@ import {
   defineCmdCfg,
 } from "@reliverse/dler-launcher";
 import { logger } from "@reliverse/dler-logger";
+import { replaceExportsInPackages } from "@reliverse/dler-helpers";
 
 const buildCmd = async (args: any): Promise<void> => {
   try {    
@@ -21,10 +22,27 @@ const buildCmd = async (args: any): Promise<void> => {
     const buildOptions = applyPresets(args as any as BuildOptions);
     validateAndExit(buildOptions);
 
-    const results = await runBuildOnAllPackages(args.ignore, args.cwd, buildOptions);
+    const results = await runBuildOnAllPackages(args.ignore, args.cwd, {
+      ...buildOptions,
+      allowPrivateBuild: args.allowPrivateBuild,
+    });
 
     if (results.hasErrors) {
       process.exit(1);
+    }
+
+    // Replace exports if enabled (default: true, unless explicitly false)
+    const shouldReplaceExports = args.replaceExports !== false;
+    if (shouldReplaceExports && !buildOptions.watch) {
+      if (args.verbose) {
+        logger.info("\n📝 Replacing exports from ./src/*.ts to ./dist/*.js after build...");
+      }
+      await replaceExportsInPackages({
+        direction: "ts-to-js",
+        cwd: args.cwd,
+        ignorePackages: args.replaceExportsIgnorePackages,
+        verbose: args.verbose,
+      });
     }
 
     logger.success("\n✅ All packages built successfully!");
@@ -376,11 +394,7 @@ const buildCmdArgs = defineCmdArgs({
     type: "number",
     description: "Maximum directory levels to search up for dler.ts config (default: 3)",
   },
-  // Package preparation for publishing
-  prepareForPublish: {
-    type: "boolean",
-    description: "Transform package.json for publishing (exports, bin, private fields)",
-  },
+  // Package kind and bin definitions
   kind: {
     type: "string",
     description: "Package kind: library, cli, browser-app, or native-app",
@@ -401,6 +415,18 @@ const buildCmdArgs = defineCmdArgs({
   dtsProvider: {
     type: "string",
     description: "Provider for generating .d.ts files: dts-bundle-generator (default), api-extractor, typescript, or mkdist",
+  },
+  replaceExports: {
+    type: "boolean",
+    description: "Replace exports from ./src/*.ts to ./dist/*.js after build completes (default: true)",
+  },
+  replaceExportsIgnorePackages: {
+    type: "string",
+    description: "Packages to ignore when replacing exports (supports glob patterns like @reliverse/*)",
+  },
+  allowPrivateBuild: {
+    type: "string",
+    description: "Allow building private packages (supports wildcards like @reliverse/* to build all packages starting with @reliverse/)",
   },
 });
 
@@ -516,16 +542,6 @@ const buildCmdCfg = defineCmdCfg({
     "",
     "# Config Discovery Examples:",
     "dler build --maxConfigDepth 5",
-    "",
-    "# Package Preparation for Publishing:",
-    "dler build --prepareForPublish",
-    "dler build --prepareForPublish --kind library",
-    "dler build --prepareForPublish --kind cli --bin 'my-cli=dist/cli.js'",
-    "dler build --prepareForPublish --kind cli --bin 'dler=dist/cli.js,login=dist/foo/bar/login.js'",
-    "dler build --production --prepareForPublish --kind library",
-    "",
-    "# Note: Use --prepareForPublish to transform package.json for publishing",
-    "# This updates exports field, adds bin field for CLI packages, and sets private: false",
     "",
     "# TSConfig Validation Examples:",
     "dler build --validateTsconfig",

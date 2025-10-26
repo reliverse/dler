@@ -1,10 +1,9 @@
-import path from "@reliverse/pathkit";
-import fs from "@reliverse/relifso";
-import { relinka } from "@reliverse/relinka";
-import pMap from "p-map";
-import { glob } from "tinyglobby";
+import path from "path";
+import fs from "fs/promises";
+import { logger } from "@reliverse/dler-logger";
+import pMap from "@reliverse/dler-mapper";
+import { Glob } from "bun";
 
-import { detectPackageManager } from "~/impl/utils/pm/pm-detect";
 import {
   applyVersionUpdate,
   checkPackageUpdate,
@@ -30,8 +29,10 @@ interface UpdateArgs {
 export async function validatePackageJson(): Promise<string> {
   const packageJsonPath = path.resolve(process.cwd(), "package.json");
 
-  if (!(await fs.pathExists(packageJsonPath))) {
-    relinka("error", "No package.json found in current directory");
+  try {
+    await fs.access(packageJsonPath);
+  } catch {
+    logger.error("No package.json found in current directory");
     process.exit(1);
   }
 
@@ -42,30 +43,39 @@ export async function prepareAllUpdateCandidates(): Promise<{
   packageJsonFiles: string[];
   fileDepsMap: Map<string, Record<string, any>>;
 }> {
-  // Find ALL package.json files in the project using tinyglobby
-  const packageJsonFiles = await glob("**/package.json", {
+  // Find ALL package.json files in the project using Bun's Glob
+  const glob = new Glob("**/package.json");
+  const packageJsonFiles: string[] = [];
+  
+  for await (const file of glob.scan({
     cwd: process.cwd(),
-    absolute: true,
-    ignore: [
-      "**/node_modules/**",
-      "**/dist/**",
-      "**/build/**",
-      "**/.git/**",
-      "**/coverage/**",
-      "**/.next/**",
-      "**/.nuxt/**",
-      "**/out/**",
-      "**/target/**",
-      "**/.turbo/**",
-    ],
-  });
+    onlyFiles: true,
+  })) {
+    const fullPath = path.resolve(process.cwd(), file);
+    
+    // Filter out unwanted directories
+    if (
+      !file.includes("node_modules") &&
+      !file.includes("dist") &&
+      !file.includes("build") &&
+      !file.includes(".git") &&
+      !file.includes("coverage") &&
+      !file.includes(".next") &&
+      !file.includes(".nuxt") &&
+      !file.includes("out") &&
+      !file.includes("target") &&
+      !file.includes(".turbo")
+    ) {
+      packageJsonFiles.push(fullPath);
+    }
+  }
 
   if (packageJsonFiles.length === 0) {
-    relinka("warn", "No package.json files found");
+    logger.warn("No package.json files found");
     return { packageJsonFiles: [], fileDepsMap: new Map() };
   }
 
-  relinka("verbose", `Found ${packageJsonFiles.length} package.json files`);
+  logger.debug(`Found ${packageJsonFiles.length} package.json files`);
 
   // Process each package.json file independently
   const fileDepsMap = new Map<string, Record<string, any>>();
@@ -80,15 +90,13 @@ export async function prepareAllUpdateCandidates(): Promise<{
       // Store file-specific dependencies
       fileDepsMap.set(packageJsonPath, map);
     } catch (error) {
-      relinka(
-        "warn",
+      logger.warn(
         `Failed to process ${packageJsonPath}: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
 
-  relinka(
-    "verbose",
+  logger.debug(
     `Processing ${packageJsonFiles.length} package.json files`,
   );
   return { packageJsonFiles, fileDepsMap };
@@ -207,8 +215,7 @@ export async function updatePackageJsonFileDirectly(
 
     return updatesToApply.length;
   } catch (error) {
-    relinka(
-      "warn",
+    logger.warn(
       `Failed to update ${packageJsonPath}: ${error instanceof Error ? error.message : String(error)}`,
     );
     return 0;
@@ -216,26 +223,15 @@ export async function updatePackageJsonFileDirectly(
 }
 
 export async function handleInstallation(): Promise<void> {
-  const packageManager = await detectPackageManager(process.cwd());
-  if (!packageManager) {
-    relinka(
-      "warn",
-      "Could not detect package manager. Please run install manually.",
-    );
-    return;
-  }
-
   try {
-    await runInstallCommand(packageManager);
-    relinka("log", "Installation completed successfully");
+    await runInstallCommand();
+    logger.log("Installation completed successfully");
   } catch (error) {
-    relinka(
-      "warn",
+    logger.warn(
       `Install failed: ${error instanceof Error ? error.message : String(error)}`,
     );
-    relinka(
-      "log",
-      `Run '${packageManager.command} install' manually to apply the changes`,
+    logger.log(
+      "Run 'bun install' manually to apply the changes",
     );
   }
 }

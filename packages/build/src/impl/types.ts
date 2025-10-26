@@ -12,6 +12,8 @@ export interface PackageInfo {
   isFrontendApp?: boolean;
   hasHtmlEntry?: boolean;
   hasPublicDir?: boolean;
+  private?: boolean;
+  isCLI?: boolean;
 }
 
 
@@ -82,7 +84,7 @@ export interface BuildOptions {
   banner?: string;
   footer?: string;
   conditions?: string[];
-  loader?: Record<string, Loader>;
+  loader?: Record<string, BunLoaderType>;
   ignoreDCEAnnotations?: boolean;
   emitDCEAnnotations?: boolean;
   throw?: boolean;
@@ -147,8 +149,7 @@ export interface BuildOptions {
   bundleAnalysis?: boolean;
   // Config discovery
   maxConfigDepth?: number;
-  // Package preparation for publishing
-  prepareForPublish?: boolean;
+  // Package kind and bin definitions (used for automatic package.json transformations)
   kind?: 'library' | 'cli' | 'browser-app' | 'native-app';
   bin?: string;
   // TSConfig validation
@@ -156,6 +157,11 @@ export interface BuildOptions {
   strictTsconfig?: boolean;
   // DTS provider
   dtsProvider?: 'dts-bundle-generator' | 'api-extractor' | 'typescript';
+  // Export replacement
+  replaceExports?: boolean;
+  replaceExportsIgnorePackages?: string;
+  // Private packages
+  allowPrivateBuild?: string | string[];
 }
 
 export interface CacheEntry {
@@ -172,7 +178,11 @@ export interface CacheOptions {
   ttl: number; // Time to live in milliseconds
 }
 
-export type Loader = 'js' | 'jsx' | 'ts' | 'tsx' | 'json' | 'toml' | 'file' | 'napi' | 'wasm' | 'text';
+// Bun loader type for BunBuildConfig
+export type BunLoaderType = 'js' | 'jsx' | 'ts' | 'tsx' | 'json' | 'toml' | 'file' | 'napi' | 'wasm' | 'text';
+
+// Mkdist loader function type
+export type Loader = MkdistLoader;
 
 export interface BunPlugin {
   name: string;
@@ -272,7 +282,7 @@ export interface BunBuildConfig {
   banner?: string;
   footer?: string;
   conditions?: string[];
-  loader?: Record<string, Loader>;
+  loader?: Record<string, BunLoaderType>;
   ignoreDCEAnnotations?: boolean;
   emitDCEAnnotations?: boolean;
   throw?: boolean;
@@ -319,6 +329,11 @@ export interface InputFile {
   getContents: () => Promise<string>;
 }
 
+// Ensure srcPath is required (not optional)
+export interface MkdistInputFile extends InputFile {
+  srcPath: string; // explicitly required, not optional
+}
+
 export interface OutputFile {
   path: string;
   srcPath: string;
@@ -330,8 +345,15 @@ export interface OutputFile {
   errors?: TypeError[];
 }
 
+export type LoaderName = 'js' | 'postcss';
+
 export interface CreateLoaderOptions {
-  loaders?: (string | MkdistLoader)[];
+  loaders?: (LoaderName | Loader)[];
+  declaration?: boolean;
+  format?: 'esm' | 'cjs';
+  ext?: string;
+  postcss?: any;
+  esbuild?: any;
   [key: string]: any;
 }
 

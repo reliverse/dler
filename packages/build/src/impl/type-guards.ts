@@ -4,7 +4,6 @@ import type { PackageBuildConfig } from "@reliverse/dler-config/impl/build";
 import type { 
   BuildOptions, 
   JSXOptions,
-  Loader, 
   MinifyOptions, 
   NamingOptions
 } from "./types";
@@ -59,8 +58,8 @@ export function isValidSourcemap(sourcemap: any): sourcemap is 'none' | 'linked'
   return sourcemap === 'none' || sourcemap === 'linked' || sourcemap === 'inline' || sourcemap === 'external';
 }
 
-export function isValidLoader(loader: any): loader is Loader {
-  const validLoaders: Loader[] = ['js', 'jsx', 'ts', 'tsx', 'json', 'toml', 'file', 'napi', 'wasm', 'text'];
+export function isValidLoader(loader: any): loader is 'js' | 'postcss' {
+  const validLoaders = ['js', 'postcss'];
   return validLoaders.includes(loader);
 }
 

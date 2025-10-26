@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
 
+// Note on `bun publish` and `bun tsc`: we don't display npm/tsc raw output, because both are not reliable for concurrent display, so we display them on our own.
+
 import type { BumpType } from "@reliverse/dler-bump";
 import {
   defineCmd,
@@ -29,7 +31,7 @@ const publishCmd = async (args: any): Promise<void> => {
       otp: args.otp,
       authType: args.authType as "web" | "legacy",
       verbose: args.verbose,
-      bump: args.bump as BumpType,
+      bump: (args.bump as BumpType) || "patch",
       concurrency: args.concurrency,
       registry: args.registry as RegistryType,
       kind: args.kind as PackageKind,
@@ -37,6 +39,15 @@ const publishCmd = async (args: any): Promise<void> => {
     };
 
     const results = await publishAllPackages(args.cwd, args.ignore, options);
+
+    // Log warnings (non-fatal)
+    if (results.warningCount > 0) {
+      for (const result of results.results) {
+        if (result.warning) {
+          logger.warn(`  ⚠️  ${result.packageName}: ${result.warning}`);
+        }
+      }
+    }
 
     if (results.hasErrors) {
       logger.error(
@@ -54,12 +65,12 @@ const publishCmd = async (args: any): Promise<void> => {
     }
 
     logger.success(
-      `\n✅ All packages published successfully! (${results.successCount} packages)`,
+      "\nAll packages published successfully!",
     );
 
     if (args.verbose) {
       for (const result of results.results) {
-        if (result.success) {
+        if (result.success && !result.warning) {
           logger.log(`  ✅ ${result.packageName}@${result.version}`);
         }
       }
@@ -89,7 +100,7 @@ const publishCmdArgs = defineCmdArgs({
   bump: {
     type: "string",
     description:
-      "Version bump type: major, minor, patch, premajor, preminor, prepatch, prerelease",
+      "Version bump type: major, minor, patch, premajor, preminor, prepatch, prerelease (default: patch)",
   },
   tag: {
     type: "string",
@@ -114,7 +125,7 @@ const publishCmdArgs = defineCmdArgs({
   },
   concurrency: {
     type: "number",
-    description: "Number of packages to publish concurrently (default: 1)",
+    description: "Number of packages to publish concurrently (default: 3)",
   },
   verbose: {
     type: "boolean",
@@ -193,11 +204,9 @@ const publishCmdCfg = defineCmdCfg({
     "#   }",
     "# }",
     "",
-    "# Note: Make sure to run 'dler build --prepareForPublish' first to:",
+    "# Note: Make sure to run 'dler build' first to:",
     "# - Generate dist folders and declaration files",
-    "# - Transform package.json exports field for built files",
-    "# - Add bin field for CLI packages",
-    "# - Set private: false and publishConfig",
+    "# - Transform package.json (adds files field, transforms exports, adds bin for CLI)",
     "# The publish command will then handle version bumping and registry publishing",
     "# CLI flags override dler.ts configuration settings",
   ],

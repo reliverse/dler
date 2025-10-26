@@ -1,15 +1,9 @@
-import fs from "@reliverse/relifso";
-import { relinka } from "@reliverse/relinka";
+import fs from "fs/promises";
+import { logger } from "@reliverse/dler-logger";
 import { $ } from "bun";
 import path from "path";
 import semver from "semver";
-import zeptomatch from "zeptomatch";
-import {
-  getAllPkgManagers,
-  type PackageManager,
-} from "~/impl/utils/dependencies/getUserPkgManager";
-import { latestVersion } from "~/impl/utils/pm/pm-meta";
-import { getCurrentWorkingDirectory } from "~/impl/utils/terminalHelpers";
+import zeptomatch from "@reliverse/dler-matcher";
 
 export interface UpdateResult {
   package: string;
@@ -278,16 +272,12 @@ export async function fetchVersionFromRegistry(
  */
 export async function getLatestVersion(packageName: string): Promise<string> {
   try {
-    return await latestVersion(packageName);
+    // Use Bun's built-in fetch to get the latest version from npm registry
+    return await fetchVersionFromRegistry(packageName);
   } catch (error) {
-    // Simple fallback to npm registry
-    try {
-      return await fetchVersionFromRegistry(packageName);
-    } catch (fallbackError) {
-      throw new Error(
-        `Failed to get latest version for ${packageName}: ${error}`,
-      );
-    }
+    throw new Error(
+      `Failed to get latest version for ${packageName}: ${error}`,
+    );
   }
 }
 
@@ -362,7 +352,7 @@ export function prepareDependenciesForUpdate(
           pattern.includes("[") ||
           pattern.includes("{")
         ) {
-          return zeptomatch(pattern, dep);
+          return zeptomatch.isMatch(pattern, dep);
         }
         return dep === pattern;
       });
@@ -375,15 +365,13 @@ export function prepareDependenciesForUpdate(
     const patternMatches = filteredDeps.length - exactMatches.length;
 
     if (patternMatches > 0) {
-      relinka(
-        "verbose",
+      logger.debug(
         `Found ${exactMatches.length} exact matches and ${patternMatches} pattern matches`,
       );
     }
 
     if (filteredDeps.length === 0) {
-      relinka(
-        "warn",
+      logger.warn(
         `No dependencies found matching patterns: ${namePatterns.join(", ")}`,
       );
     }
@@ -399,7 +387,7 @@ export function prepareDependenciesForUpdate(
           ignorePattern.includes("[") ||
           ignorePattern.includes("{")
         ) {
-          return zeptomatch(ignorePattern, dep);
+          return zeptomatch.isMatch(ignorePattern, dep);
         }
         return dep === ignorePattern;
       });
@@ -408,8 +396,7 @@ export function prepareDependenciesForUpdate(
     // Show info about ignored packages
     const ignoredCount = depsToUpdate.length - filteredDeps.length;
     if (ignoredCount > 0 && ignoreList.length > 0) {
-      relinka(
-        "verbose",
+      logger.debug(
         `Ignored ${ignoredCount} dependencies matching ignore patterns`,
       );
     }
@@ -428,8 +415,7 @@ export function prepareDependenciesForUpdate(
 
     const ignoredFieldsCount = depsToUpdate.length - filteredDeps.length;
     if (ignoredFieldsCount > 0) {
-      relinka(
-        "verbose",
+      logger.debug(
         `Ignored ${ignoredFieldsCount} dependencies in ignored fields: ${ignoreFields.join(", ")}`,
       );
     }
@@ -516,8 +502,7 @@ export async function updatePackageJsonFile(
 
     return updatesToApply.length;
   } catch (error) {
-    relinka(
-      "warn",
+    logger.warn(
       `Failed to update ${packageJsonPath}: ${error instanceof Error ? error.message : String(error)}`,
     );
     return 0;
@@ -541,23 +526,21 @@ export function displayStructuredUpdateResults(
 
   // Show errors first
   if (errors.length > 0) {
-    relinka("warn", `Failed to check ${errors.length} dependencies:`);
+    logger.warn(`Failed to check ${errors.length} dependencies:`);
     for (const error of errors) {
-      relinka("warn", `  ${error.package} (${error.location}): ${error.error}`);
+      logger.warn(`  ${error.package} (${error.location}): ${error.error}`);
     }
-    relinka("log", ""); // Empty line for spacing
+    logger.log(""); // Empty line for spacing
   }
 
   // If not showing details, just show simplified success info
   if (!showDetails) {
     if (toUpdate.length === 0) {
-      relinka(
-        "log",
+      logger.log(
         `All ${upToDate.length} dependencies are already up to date`,
       );
     } else {
-      relinka(
-        "log",
+      logger.log(
         `${toUpdate.length} dependencies can be updated across ${packageJsonFiles.length} package.json files`,
       );
     }
@@ -592,7 +575,7 @@ export function displayStructuredUpdateResults(
       filePath !== "unknown"
         ? path.relative(process.cwd(), filePath)
         : "unknown";
-    relinka("info", `${relativePath}`);
+    logger.info(`${relativePath}`);
 
     // Group by dependency category
     const byCategory = new Map<string, UpdateResult[]>();
@@ -609,8 +592,7 @@ export function displayStructuredUpdateResults(
       (r) => !r.updated && !r.error && r.semverCompatible,
     );
     if (upToDateInFile.length > 0) {
-      relinka(
-        "log",
+      logger.log(
         `  * ${upToDateInFile.length} deps are already up to date`,
       );
     }
@@ -618,7 +600,7 @@ export function displayStructuredUpdateResults(
     // Show available updates
     const toUpdateInFile = fileResults.filter((r) => r.updated && !r.error);
     if (toUpdateInFile.length > 0) {
-      relinka("log", `  * ${toUpdateInFile.length} deps can be updated:`);
+      logger.log(`  * ${toUpdateInFile.length} deps can be updated:`);
 
       // Sort categories for consistent display
       const sortedCategories = Array.from(byCategory.entries()).sort(
@@ -648,10 +630,9 @@ export function displayStructuredUpdateResults(
             displayCategory = "workspaces.catalog";
           }
 
-          relinka("log", `    - ${displayCategory}:`);
+          logger.log(`    - ${displayCategory}:`);
           for (const update of categoryUpdates) {
-            relinka(
-              "log",
+            logger.log(
               `      ${update.package}: ${update.currentVersion} → ${update.latestVersion}`,
             );
           }
@@ -662,80 +643,37 @@ export function displayStructuredUpdateResults(
     // Show errors for this file
     const errorsInFile = fileResults.filter((r) => r.error);
     if (errorsInFile.length > 0) {
-      relinka("warn", `  * ${errorsInFile.length} deps failed to check:`);
+      logger.warn(`  * ${errorsInFile.length} deps failed to check:`);
       for (const error of errorsInFile) {
-        relinka("warn", `    ${error.package}: ${error.error}`);
+        logger.warn(`    ${error.package}: ${error.error}`);
       }
     }
 
-    relinka("log", ""); // Empty line between files
+    logger.log(""); // Empty line between files
   }
 
   // Summary
   if (toUpdate.length === 0) {
-    relinka(
-      "log",
+    logger.log(
       `All ${upToDate.length} dependencies are already up to date`,
     );
   } else {
-    relinka(
-      "success",
+    logger.success(
       `Summary: ${toUpdate.length} dependencies can be updated across ${packageJsonFiles.length} package.json files`,
     );
   }
 }
 
 /**
- * Run install command for the detected package manager
+ * Run Bun install command
  */
-export async function runInstallCommand(packageManager: any): Promise<void> {
+export async function runInstallCommand(): Promise<void> {
   try {
-    switch (packageManager.name) {
-      case "bun":
-        await $`bun install`;
-        break;
-      case "npm":
-        await $`npm install`;
-        break;
-      case "yarn":
-        await $`yarn install`;
-        break;
-      case "pnpm":
-        await $`pnpm install`;
-        break;
-      default:
-        throw new Error(`Unsupported package manager: ${packageManager.name}`);
-    }
+    await $`bun install`.quiet();
   } catch (error) {
-    relinka(
-      "warn",
-      `Failed to run install command for ${packageManager.name}: ${error}`,
+    logger.warn(
+      `Failed to run install command: ${error instanceof Error ? error.message : String(error)}`,
     );
     throw error;
   }
-}
-
-export async function getPmOptions() {
-  const projectPath = getCurrentWorkingDirectory();
-  const detectedPMs = await getAllPkgManagers(projectPath);
-  // Get unique detected package managers with their sources
-  const detectedPMMap = new Map(
-    detectedPMs.map((pm) => [pm.packageManager, pm.source]),
-  );
-  // Create options list
-  const pmOptions = ["bun", "pnpm", "npm", "yarn"].map((pm) => {
-    const option: { label: string; value: PackageManager; hint?: string } = {
-      label: pm,
-      value: pm as PackageManager,
-    };
-    const source = detectedPMMap.get(pm as PackageManager);
-    if (source && source !== "default") {
-      option.hint = "detected";
-    }
-    return option;
-  });
-  // Get default value from detected PMs or fallback to npm
-  const defaultValue = [...detectedPMMap.keys()][0] ?? "npm";
-  // Return options and default value
-  return { pmOptions, defaultValue };
 }

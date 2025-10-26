@@ -8,7 +8,7 @@ import type {
 import { resolveLoaders } from "./loaders/loaders-mod";
 
 export function createLoader(loaderOptions: CreateLoaderOptions = {}) {
-	const loaders = resolveLoaders(loaderOptions.loaders as any);
+	const loaders = resolveLoaders(loaderOptions.loaders);
 
 	const loadFile: LoadFile = async (input: InputFile) => {
 		const context: LoaderContext = {

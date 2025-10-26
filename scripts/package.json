@@ -1,0 +1,20 @@
+{
+  "name": "@reliverse/dler-scripts",
+  "private": true,
+  "description": "Scripts for @reliverse/dler",
+  "author": "reliverse",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "exports-to-ts": "bun src/replace-exports.ts --direction js-to-ts --cwd '..'",
+    "exports-to-js": "bun src/replace-exports.ts --direction ts-to-js --cwd '..'"
+  },
+  "dependencies": {
+    "@reliverse/dler-helpers": "workspace:*"
+  },
+  "devDependencies": {
+    "@reliverse/dler-tsconfig": "workspace:*",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:"
+  }
+}

@@ -3,6 +3,7 @@
 // Examples:
 // # Command benchmarking
 //   dler perf --target "node --version" --runs 10 --warmup 2
+//   bun dler perf --runs 10 --warmup 2 --target "node --version"
 // # Monorepo analysis
 //   dler perf --type monorepo --verbose
 // # File system profiling

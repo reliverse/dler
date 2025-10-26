@@ -142,8 +142,7 @@ export interface PackageBuildConfig {
   windowsCopyright?: string;
   // Declaration file generation options
   dts?: boolean | DtsOptions;
-  // Package preparation for publishing
-  prepareForPublish?: boolean;
+  // Package kind and bin definitions (used for automatic package.json transformations)
   kind?: PackageKind;
   bin?: string;
 }

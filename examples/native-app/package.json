@@ -1,5 +1,6 @@
 {
   "name": "@reliverse/native-app-example",
+  "private": true,
   "version": "0.1.0",
   "description": "Example native CLI application built with Dler",
   "type": "module",

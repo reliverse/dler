@@ -2,13 +2,13 @@
   "name": "@reliverse/dler-bump",
   "description": "Bump utils for @reliverse/dler",
   "author": "reliverse",
-  "version": "2.0.0",
+  "version": "2.0.15",
   "private": false,
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/mod.ts",
-      "default": "./src/mod.ts"
+      "types": "./dist/mod.d.ts",
+      "default": "./dist/mod.js"
     }
   },
   "dependencies": {
@@ -21,6 +21,11 @@
   "publishConfig": {
     "access": "public"
   },
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "license": "MIT",
   "devDependencies": {
     "@reliverse/dler-logger": "workspace:*",
     "@reliverse/dler-tsconfig": "workspace:*",

@@ -1,5 +1,7 @@
 // apps/dler/src/cmds/tsc/cmd.ts
 
+// Note on `bun publish` and `bun tsc`: we don't display npm/tsc raw output, because both are not reliable for concurrent display, so we display them on our own.
+
 import {
   defineCmd,
   defineCmdArgs,

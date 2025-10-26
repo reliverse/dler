@@ -13,7 +13,7 @@ import { getDeclarations, normalizeCompilerOptions } from "./utils/dts";
 import { copyFileWithStream } from "./utils/fs";
 
 export async function mkdist(
-	options: MkdistOptions = {} as MkdistOptions,
+	options: MkdistOptions,
 ) {
 	const startTime = Date.now();
 
@@ -91,14 +91,6 @@ export async function mkdist(
 				outputs.push(...result);
 			}
 			processedCount++;
-
-			// Update progress every file or every 10% of files, whichever is more frequent
-			// const shouldUpdate =
-			//   processedCount % Math.max(1, Math.floor(files.length / 10)) === 0 ||
-			//   processedCount === files.length;
-			// if (shouldUpdate) {
-			//   relinka("verbose", `Processing files: ${file.path} (${processedCount}/${files.length})`);
-			// }
 		}),
 	);
 
@@ -133,25 +125,33 @@ export async function mkdist(
 		logger.debug(
 			`Generating TypeScript declarations for ${dtsOutputs.length} files...`,
 		);
-		const vfs = new Map(dtsOutputs.map((o) => [o.srcPath, o.contents || ""]));
+		
+		// Initialize VFS with original TypeScript source files, not transformed JS
+		const vfs = new Map<string, string>();
+		for (const output of dtsOutputs) {
+			// Read the original source file content from the filesystem
+			const originalContent = await fsp.readFile(output.srcPath, { encoding: "utf8" });
+			// Normalize path separators - TypeScript will use forward slashes on Windows
+			const normalizedPath = output.srcPath.replace(/\\/g, "/");
+			vfs.set(normalizedPath, originalContent);
+		}
+		
 		const declarations: DeclarationOutput = Object.create(null);
 
-		for (const loader of [getDeclarations]) {
-			Object.assign(declarations, await loader(vfs, options));
-		}
+		const getDeclarationsResult = await getDeclarations(vfs, options);
+		Object.assign(declarations, getDeclarationsResult);
 
 		let dtsProcessed = 0;
 		for (const output of dtsOutputs) {
-			const result = declarations[output.srcPath];
+			// Look up using normalized path (forward slashes)
+			const normalizedPath = output.srcPath.replace(/\\/g, "/");
+			const result = declarations[normalizedPath];
 			output.contents = result?.contents || "";
 			if (result?.errors) {
 				output.errors = result.errors;
 			}
 
 			dtsProcessed++;
-			// if (dtsProcessed % Math.max(1, Math.floor(dtsOutputs.length / 5)) === 0) {
-			//   relinka("verbose", `Generated declarations for ${dtsProcessed}/${dtsOutputs.length} files`);
-			// }
 		}
 	}
 
@@ -182,27 +182,27 @@ export async function mkdist(
 		(o) => o.extension === ".mjs" || o.extension === ".js",
 	);
 
-		for (const output of esmOutputs) {
-			// Resolve import statements
-			if (output.contents) {
-				output.contents = output.contents
-					.replace(
-						/(import|export)(\s+(?:.+|{[\s\w,]+})\s+from\s+["'])(.*)(["'])/g,
-						(_, type, head, id, tail) =>
-							type + head + resolveId(output.path, id, esmResolveExtensions) + tail,
-					)
-					// Resolve dynamic import
-					.replace(
-						/import\((["'])(.*)(["'])\)/g,
-						(_, head, id, tail) =>
-							"import(" +
-							head +
-							resolveId(output.path, id, esmResolveExtensions) +
-							tail +
-							")",
-					);
-			}
+	for (const output of esmOutputs) {
+		// Resolve import statements
+		if (output.contents) {
+			output.contents = output.contents
+				.replace(
+					/(import|export)(\s+(?:.+|{[\s\w,]+})\s+from\s+["'])(.*)(["'])/g,
+					(_, type, head, id, tail) =>
+						type + head + resolveId(output.path, id, esmResolveExtensions) + tail,
+				)
+				// Resolve dynamic import
+				.replace(
+					/import\((["'])(.*)(["'])\)/g,
+					(_, head, id, tail) =>
+						"import(" +
+						head +
+						resolveId(output.path, id, esmResolveExtensions) +
+						tail +
+						")",
+				);
 		}
+	}
 
 	const cjsResolveExtensions = ["", "/index.cjs", ".cjs"];
 	const cjsOutputs = outputs.filter((o) => o.extension === ".cjs");
@@ -253,12 +253,6 @@ export async function mkdist(
 			}
 
 			writtenCount++;
-
-			// Update progress every 10 files or every 10% of files, whichever is more frequent
-			// const progressUpdateInterval = Math.max(10, Math.floor(outputsToWrite.length / 10));
-			// if (writtenCount % progressUpdateInterval === 0 || writtenCount === outputsToWrite.length) {
-			//   relinka("verbose", `Written ${writtenCount}/${outputsToWrite.length} files`);
-			// }
 		}),
 	);
 

@@ -10,6 +10,8 @@ export interface CleanOptions {
   force?: boolean;
   verbose?: boolean;
   deleteLockFiles?: boolean;
+  replaceExports?: boolean;
+  replaceExportsIgnorePackages?: string;
 }
 
 export interface FileMatch {

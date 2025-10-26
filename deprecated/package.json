@@ -1,5 +1,6 @@
 {
   "name": "@reliverse/dler-v1",
+  "private": true,
   "author": "reliverse",
   "version": "1.7.154",
   "type": "module",

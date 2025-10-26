@@ -79,6 +79,11 @@ const DEFAULT_CONCURRENCY = 5;
 // Plugin System Initialization
 // ============================================================================
 
+// Lazy plugin registration - only register when plugins are needed
+let pluginsInitialized = false;
+const initializePlugins = (): void => {
+  if (pluginsInitialized) return;
+  
 // Register built-in plugins
 pluginRegistry.register(ReactRefreshPlugin);
 pluginRegistry.register(TypeScriptDeclarationsPlugin);
@@ -88,6 +93,9 @@ pluginRegistry.register(CSSModulesPlugin);
 pluginRegistry.register(SVGAsReactPlugin);
 pluginRegistry.register(WorkerPlugin);
 pluginRegistry.register(PerformancePlugin);
+  
+  pluginsInitialized = true;
+};
 
 // ============================================================================
 // Utility Functions
@@ -133,8 +141,17 @@ const getWorkspacePackages = async (cwd?: string): Promise<PackageInfo[]> => {
 
   // Process patterns in parallel for better performance
   const patternPromises = patterns.map(async (pattern) => {
-    const glob = new Bun.Glob(pattern);
-    const matches = Array.from(glob.scanSync({ cwd: monorepoRoot, onlyFiles: false }));
+    // Check if pattern contains wildcards
+    let matches: string[] = [];
+    
+    if (pattern.includes('*')) {
+      // Pattern with wildcards - use glob
+      const glob = new Bun.Glob(pattern);
+      matches = Array.from(glob.scanSync({ cwd: monorepoRoot, onlyFiles: false }));
+    } else {
+      // Direct package path (no wildcards)
+      matches = [pattern];
+    }
 
     const packagePromises = matches.map(async (match: string) => {
       const packagePath = resolve(monorepoRoot, match);
@@ -180,6 +197,8 @@ const detectEntryPoints = async (packagePath: string): Promise<string[]> => {
   }
   if (!pkg) return [];
 
+  const entryPoints: string[] = [];
+
   // 1. Check package.json "build" field for explicit config
   if (pkg.build?.entrypoints) {
     const entrypoints = Array.isArray(pkg.build.entrypoints) 
@@ -190,8 +209,6 @@ const detectEntryPoints = async (packagePath: string): Promise<string[]> => {
 
   // 2. Parse package.json "exports" field
   if (pkg.exports) {
-    const entryPoints: string[] = [];
-    
     const extractFromExports = (exports: any, basePath = ""): void => {
       if (typeof exports === "string") {
         const fullPath = resolve(packagePath, basePath, exports);
@@ -231,10 +248,17 @@ const detectEntryPoints = async (packagePath: string): Promise<string[]> => {
     };
 
     extractFromExports(pkg.exports);
-    if (entryPoints.length > 0) {
-      // Remove duplicates while preserving order
-      return [...new Set(entryPoints)];
-    }
+  }
+
+  // 2.5. Check for CLI packages via bin field
+  const binEntries = await detectBinEntryPoints(packagePath, pkg);
+  if (binEntries.length > 0) {
+    entryPoints.push(...binEntries);
+  }
+
+  // If we found entries from exports and/or bin, return them
+  if (entryPoints.length > 0) {
+    return [...new Set(entryPoints)];
   }
 
   // 3. Check for frontend app patterns (HTML files)
@@ -298,6 +322,48 @@ const detectJSEntryPoints = async (packagePath: string): Promise<string[]> => {
   return entryPoints;
 };
 
+const detectBinEntryPoints = async (packagePath: string, pkg: any): Promise<string[]> => {
+  if (!pkg.bin) return [];
+  
+  const binEntries: string[] = [];
+  const binField = pkg.bin;
+  
+  // bin can be a string or an object
+  const binPaths: string[] = typeof binField === 'string' 
+    ? [binField] 
+    : Object.values(binField) as string[];
+  
+  for (const binPath of binPaths) {
+    // bin paths typically point to dist/ output
+    // Infer source file by replacing dist/ with src/ and .js with .ts
+    // Handle multiple patterns:
+    // - "dist/cli.js" -> "src/cli.ts"
+    // - "./dist/cli.js" -> "src/cli.ts"
+    // - "cli.js" -> "cli.ts" or "src/cli.ts"
+    let sourcePath = binPath
+      .replace(/^\.\/dist\//, 'src/')
+      .replace(/^dist\//, 'src/')
+      .replace(/\.js$/, '.ts');
+    
+    // Check multiple potential locations
+    const potentialPaths = [
+      sourcePath,              // Direct conversion
+      sourcePath.replace(/^src\//, ''), // Remove src/ prefix
+      `src/${sourcePath}`,     // Add src/ prefix
+    ];
+    
+    for (const potential of new Set(potentialPaths)) {
+      const fullPath = resolve(packagePath, potential);
+      if (existsSync(fullPath)) {
+        binEntries.push(fullPath);
+        break; // Found it, no need to check others
+      }
+    }
+  }
+  
+  return binEntries;
+};
+
 const detectFrontendApp = async (packagePath: string, pkg: any): Promise<boolean> => {
   // Check for HTML files
   const htmlPatterns = [
@@ -333,34 +399,6 @@ const detectFrontendApp = async (packagePath: string, pkg: any): Promise<boolean
   for (const framework of frontendFrameworks) {
     if (allDeps[framework]) {
       return true;
-    }
-  }
-
-  // Check for frontend build scripts (but exclude CLI apps)
-  const frontendScripts = [
-    "dev",
-    "build:app",
-    "build:frontend",
-    "serve",
-    "preview",
-  ];
-
-  // Check for CLI indicators that should exclude from frontend detection
-  const cliIndicators = [
-    pkg.bin,
-    pkg.scripts?.start?.includes("node"),
-    pkg.scripts?.start?.includes("bun"),
-    pkg.scripts?.start?.includes("tsx"),
-    pkg.scripts?.start?.includes("ts-node"),
-  ];
-
-  const isCliApp = cliIndicators.some(indicator => indicator);
-
-  if (pkg.scripts && !isCliApp) {
-    for (const script of frontendScripts) {
-      if (pkg.scripts[script]) {
-        return true;
-      }
     }
   }
 
@@ -435,6 +473,12 @@ const resolvePackageInfo = async (
       dlerConfig,
     );
 
+    // Detect CLI package (has bin field with at least one entry)
+    const isCLI = !!(pkg.bin && (
+      typeof pkg.bin === 'string' || 
+      (typeof pkg.bin === 'object' && Object.keys(pkg.bin).length > 0)
+    ));
+
     return {
       name: pkg.name,
       path: packagePath,
@@ -445,6 +489,8 @@ const resolvePackageInfo = async (
       isFrontendApp,
       hasHtmlEntry,
       hasPublicDir,
+      private: pkg.private === true,
+      isCLI,
     };
   } catch {
     return null;
@@ -458,6 +504,7 @@ const resolvePackageInfo = async (
 const filterPackages = (
   packages: PackageInfo[],
   ignore?: string | string[],
+  allowPrivateBuild?: string | string[],
 ): PackageInfo[] => {
   // Always ignore @reliverse/dler-v1 package
   const alwaysIgnored = ["@reliverse/dler-v1"];
@@ -470,7 +517,36 @@ const filterPackages = (
     : alwaysIgnored;
 
   const ignoreFilter = createIgnoreFilter(combinedIgnore);
-  return ignoreFilter(packages);
+  const filteredPackages = ignoreFilter(packages);
+
+  // Filter out private packages unless explicitly allowed
+  if (!allowPrivateBuild) {
+    return filteredPackages.filter(pkg => pkg.private !== true);
+  }
+
+  // Normalize allowPrivateBuild to array
+  const allowedPatterns = Array.isArray(allowPrivateBuild) 
+    ? allowPrivateBuild 
+    : [allowPrivateBuild];
+
+  // Create a filter to check if a package name matches allowed patterns
+  const isAllowed = (pkgName: string): boolean => {
+    for (const pattern of allowedPatterns) {
+      // Simple glob pattern matching
+      if (pattern.includes('*')) {
+        const regexPattern = pattern.replace(/\*/g, '.*');
+        if (new RegExp(`^${regexPattern}$`).test(pkgName)) {
+          return true;
+        }
+      } else if (pkgName === pattern) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // Filter: allow if not private OR if private and explicitly allowed
+  return filteredPackages.filter(pkg => pkg.private !== true || isAllowed(pkg.name));
 };
 
 // ============================================================================
@@ -589,19 +665,45 @@ const buildWithMkdist = async (
     
     // Calculate bundle size
     let bundleSize = 0;
+    const outputFiles: string[] = [];
     for (const filePath of result.writtenFiles) {
       try {
         const stats = statSync(filePath);
         bundleSize += stats.size;
+        outputFiles.push(filePath);
       } catch {
         // Ignore file stat errors
+      }
+    }
+    
+    const buildSuccess = result.errors.length === 0;
+    
+    // After successful build, transform package.json (same as Bun bundler)
+    // This includes adding the files field, transforming exports, etc.
+    if (buildSuccess) {
+      try {
+        const prepResult = await preparePackageJsonForPublishing(pkg.path, {
+          kind: options.kind,
+          binDefinitions: options.bin,
+          access: "public",
+          setPrivate: true,
+          addPublishConfig: true,
+        });
+
+        if (!prepResult.success && options.verbose) {
+          logger.warn(`⚠️  ${pkg.name}: Failed to prepare package.json for publishing: ${prepResult.error}`);
+        } else if (options.verbose) {
+          logger.info(`📦 ${pkg.name}: Package.json prepared for publishing`);
+        }
+      } catch (error) {
+        logger.warn(`⚠️  ${pkg.name}: Error preparing package.json for publishing: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
     
     // Return BuildResult
     return {
       package: pkg,
-      success: result.errors.length === 0,
+      success: buildSuccess,
       skipped: false,
       output: `Built ${result.writtenFiles.length} files`,
       errors: result.errors.map(e => e.filename),
@@ -645,7 +747,7 @@ export const buildPackage = async (
   const { 
     verbose = false, 
     bundler,
-    target = "bun", 
+    target = "node", 
     format = "esm", 
     minify = false, 
     sourcemap = "none", 
@@ -676,7 +778,7 @@ export const buildPackage = async (
     sideEffects,
     bundleAnalyzer = false,
     typeCheck = false,
-    generateTypes = false,
+    generateTypes = true,
     // bundleSizeLimit, // Used in performance monitoring
     performanceBudget,
     imageOptimization = false,
@@ -698,6 +800,7 @@ export const buildPackage = async (
   const shouldUseCssChunking = cssChunking !== false && (cssChunking === true || isFrontendApp);
   
   // Determine bundler based on package kind and options
+  // Default to mkdist, use bun only for browser-app or native-app
   const effectiveBundler = bundler || 
     (pkg.buildConfig?.kind === 'browser-app' || pkg.buildConfig?.kind === 'native-app' 
       ? 'bun' 
@@ -708,6 +811,9 @@ export const buildPackage = async (
   const frontendTarget = isFrontendApp && !mergedOptions.compile ? "browser" : target;
   const frontendFormat = isFrontendApp && !mergedOptions.compile ? "esm" : format;
   const frontendSplitting = isFrontendApp && !mergedOptions.compile ? true : splitting;
+
+  // Initialize plugins (lazy registration)
+  initializePlugins();
 
   // Load and apply plugins
   const activePlugins: DlerPlugin[] = [];
@@ -1168,8 +1274,9 @@ export const buildPackage = async (
       await compileToExecutable(pkg, result.outputs, mergedOptions);
     }
 
-    // Prepare package.json for publishing if requested
-    if (mergedOptions.prepareForPublish && result.success) {
+    // Prepare package.json for publishing (runs for all successful builds)
+    // This includes adding the files field, transforming exports, etc.
+    if (result.success) {
       try {
         const prepResult = await preparePackageJsonForPublishing(pkg.path, {
           kind: mergedOptions.kind,
@@ -1445,6 +1552,7 @@ export const runBuildOnAllPackages = async (
     devServer = false,
     port = 3000,
     open = false,
+    allowPrivateBuild,
   } = options;
   
   // Initialize cache
@@ -1486,7 +1594,8 @@ export const runBuildOnAllPackages = async (
           const configSource = pkg.buildConfig ? "📋" : "⚙️";
           const frontendStatus = pkg.isFrontendApp ? "🌐" : "📦";
           const htmlStatus = pkg.hasHtmlEntry ? "📄" : "";
-          logger.info(`     ${entryStatus} ${configSource} ${frontendStatus}${htmlStatus} ${pkg.name} (${pkg.entryPoints.length} entry points)`);
+          const cliStatus = pkg.isCLI ? "⚡" : "";
+          logger.info(`     ${entryStatus} ${configSource} ${frontendStatus}${htmlStatus}${cliStatus} ${pkg.name} (${pkg.entryPoints.length} entry points)`);
           if (pkg.entryPoints.length > 0) {
             logger.info(`       Entry points: ${pkg.entryPoints.join(", ")}`);
             logger.info(`       Output dir: ${pkg.outputDir}`);
@@ -1494,6 +1603,8 @@ export const runBuildOnAllPackages = async (
               logger.info(`       Type: Frontend app`);
               if (pkg.hasHtmlEntry) logger.info(`       HTML entry: ✅`);
               if (pkg.hasPublicDir) logger.info(`       Public dir: ✅`);
+            } else if (pkg.isCLI) {
+              logger.info(`       Type: CLI${pkg.entryPoints.length > 1 ? ' (with library exports)' : ''}`);
             } else {
               logger.info(`       Type: Library`);
             }
@@ -1506,7 +1617,7 @@ export const runBuildOnAllPackages = async (
       }
 
       // Apply filters
-      const packages = filterPackages(allPackages, ignore);
+      const packages = filterPackages(allPackages, ignore, allowPrivateBuild);
       const ignoredCount = allPackages.length - packages.length;
 
       if (ignoredCount > 0) {

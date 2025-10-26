@@ -1,19 +1,27 @@
 {
   "name": "@reliverse/dler-helpers",
-  "version": "2.0.0",
+  "version": "2.0.15",
   "private": false,
   "type": "module",
   "description": "@reliverse/dler-helpers is a collection of helper functions for the dler monorepo.",
   "exports": {
     ".": {
-      "types": "./src/mod.ts",
-      "default": "./src/mod.ts"
+      "types": "./dist/mod.d.ts",
+      "default": "./dist/mod.js"
     }
   },
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@reliverse/dler-matcher": "workspace:*",
+    "@reliverse/dler-pkg-tsc": "workspace:*"
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "license": "MIT",
   "devDependencies": {
     "@reliverse/dler-tsconfig": "workspace:*",
     "@microsoft/api-extractor": "catalog:",

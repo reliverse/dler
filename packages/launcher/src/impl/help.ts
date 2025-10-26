@@ -34,51 +34,22 @@ const formatArgType = (def: CmdArgsSchema[string]): string => {
   return `<${def.type}>`;
 };
 
-// Cache for formatted argument help to avoid recomputation
-const argHelpCache = new Map<string, string>();
-
-// Cache for generated help text with file hash validation
-interface HelpCacheEntry {
-  commandHelp: string;
-  globalHelp: string;
-  fileHash: string;
-  lastModified: number;
-}
-
-const helpCache = new Map<string, HelpCacheEntry>();
-
 const getArgHelp = (name: string, def: CmdArgsSchema[string]): string => {
-  const cacheKey = `${name}:${JSON.stringify(def)}`;
-  let cached = argHelpCache.get(cacheKey);
+  const argName = formatArgName(name, def);
+  const argType = formatArgType(def);
+  const desc = def.description ?? "";
+  const defaultVal =
+    "default" in def && def.default !== undefined
+      ? ` (default: ${def.default})`
+      : "";
 
-  if (!cached) {
-    const argName = formatArgName(name, def);
-    const argType = formatArgType(def);
-    const desc = def.description ?? "";
-    const defaultVal =
-      "default" in def && def.default !== undefined
-        ? ` (default: ${def.default})`
-        : "";
-
-    cached = `  ${argName} ${argType}\n      ${desc}${defaultVal}`;
-    argHelpCache.set(cacheKey, cached);
-  }
-
-  return cached;
+  return `  ${argName} ${argType}\n      ${desc}${defaultVal}`;
 };
 
 export const generateCommandHelp = async (
   definition: CmdDefinition,
 ): Promise<string> => {
   const { cfg, args } = definition;
-
-  // Create cache key based on command configuration
-  const cacheKey = `${cfg.name}:${JSON.stringify(cfg)}:${JSON.stringify(args)}`;
-  const cached = helpCache.get(cacheKey);
-
-  if (cached) {
-    return cached.commandHelp;
-  }
 
   const lines: string[] = [
     HELP_TEMPLATES.commandHeader(
@@ -96,7 +67,6 @@ export const generateCommandHelp = async (
   if (Object.keys(args).length > 0) {
     lines.push(HELP_TEMPLATES.optionsHeader);
 
-    // Use cached argument help
     for (const [name, def] of Object.entries(args)) {
       lines.push(getArgHelp(name, def));
     }
@@ -111,47 +81,18 @@ export const generateCommandHelp = async (
     }
   }
 
-  const helpText = lines.join("\n");
-
-  // Cache the generated help
-  helpCache.set(cacheKey, {
-    commandHelp: helpText,
-    globalHelp: "",
-    fileHash: "",
-    lastModified: Date.now(),
-  });
-
-  return helpText;
+  return lines.join("\n");
 };
 
-// Cache for command help formatting
-const commandHelpCache = new Map<string, string>();
-
 const formatCommandHelp = (name: string, metadata: CmdMetadata): string => {
-  const cacheKey = `${name}:${JSON.stringify(metadata)}`;
-  let cached = commandHelpCache.get(cacheKey);
-
-  if (!cached) {
-    const aliases = metadata.aliases ? ` (${metadata.aliases.join(", ")})` : "";
-    const description = metadata.description || "No description available";
-    cached = `  ${name}${aliases}\n      ${description}`;
-    commandHelpCache.set(cacheKey, cached);
-  }
-
-  return cached;
+  const aliases = metadata.aliases ? ` (${metadata.aliases.join(", ")})` : "";
+  const description = metadata.description || "No description available";
+  return `  ${name}${aliases}\n      ${description}`;
 };
 
 export const generateGlobalHelp = async (
   registry: DiscoveryResult,
 ): Promise<string> => {
-  // Create cache key for global help
-  const cacheKey = `global:${Array.from(registry.metadata.keys()).sort().join(",")}`;
-  const cached = helpCache.get(cacheKey);
-
-  if (cached && cached.globalHelp) {
-    return cached.globalHelp;
-  }
-
   const lines: string[] = [HELP_TEMPLATES.globalHeader];
 
   // Load all metadata in parallel with controlled concurrency
@@ -167,22 +108,12 @@ export const generateGlobalHelp = async (
   // Sort commands alphabetically by name
   metadataResults.sort(([a], [b]) => a.localeCompare(b));
 
-  // Build help text using cached formatting
+  // Build help text
   for (const [name, metadata] of metadataResults) {
     lines.push(formatCommandHelp(name, metadata));
   }
 
   lines.push(HELP_TEMPLATES.helpFooter);
 
-  const helpText = lines.join("\n");
-
-  // Cache the global help
-  helpCache.set(cacheKey, {
-    commandHelp: "",
-    globalHelp: helpText,
-    fileHash: "",
-    lastModified: Date.now(),
-  });
-
-  return helpText;
+  return lines.join("\n");
 };

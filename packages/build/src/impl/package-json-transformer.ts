@@ -124,6 +124,46 @@ export function addBinFieldToPackageJson(
 }
 
 // ============================================================================
+// Files Field Management
+// ============================================================================
+
+/**
+ * Add files field to package.json if missing or empty
+ * @param packagePath - Path to the package directory
+ * @returns Object indicating success and whether the field was added
+ */
+export async function addFilesFieldIfMissing(
+  packagePath: string
+): Promise<{ success: boolean; added: boolean; error?: string }> {
+  try {
+    const pkg = await readPackageJSON(packagePath);
+    if (!pkg) {
+      return { success: false, added: false, error: "Could not read package.json" };
+    }
+
+    // Check if files field exists and has at least one element
+    if (pkg.files && Array.isArray(pkg.files) && pkg.files.length > 0) {
+      return { success: true, added: false };
+    }
+
+    // Add files field with default values - ensure it's always set
+    const files = ["dist", "package.json"];
+    pkg.files = files;
+
+    // Write modified package.json back
+    await writePackageJSON(resolve(packagePath, "package.json"), pkg);
+
+    return { success: true, added: true };
+  } catch (error) {
+    return {
+      success: false,
+      added: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+// ============================================================================
 // Package.json Preparation
 // ============================================================================
 
@@ -138,6 +178,8 @@ export interface PreparePackageJsonOptions {
   setPrivate?: boolean;
   /** Whether to add publishConfig */
   addPublishConfig?: boolean;
+  /** Whether to add license field if missing */
+  addLicense?: boolean;
 }
 
 /**
@@ -161,6 +203,14 @@ export async function preparePackageJsonForPublishing(
     // Add bin field for CLI packages
     addBinFieldToPackageJson(pkg, options.kind, options.binDefinitions);
 
+    // Add files field if missing or empty
+    if (!pkg.files || !Array.isArray(pkg.files) || pkg.files.length === 0) {
+      pkg.files = ["dist", "package.json"];
+    }
+
+    // Determine if package is/will be publishable (not private)
+    const isPublishable = pkg.private !== true || options.setPrivate !== false;
+
     // Set package as public for publishing
     if (options.setPrivate !== false) {
       pkg.private = false;
@@ -172,6 +222,11 @@ export async function preparePackageJsonForPublishing(
         pkg.publishConfig = {};
       }
       pkg.publishConfig.access = options.access || "public";
+    }
+
+    // Add license field for publishable packages if missing
+    if (isPublishable && options.addLicense !== false && !pkg.license) {
+      pkg.license = "MIT";
     }
 
     // Write modified package.json back

@@ -1,16 +1,18 @@
-import type { MkdistLoader } from "../../../types";
+import type { Loader } from "../../../types";
 
 import { jsLoader } from "./js";
+import { postcssLoader } from "./postcss";
 
 const loaders = {
 	js: jsLoader,
+	postcss: postcssLoader,
 };
 
 type LoaderName = keyof typeof loaders;
 
-export const defaultLoaders: LoaderName[] = ["js"];
+export const defaultLoaders: LoaderName[] = ["js", "postcss"];
 
-export function resolveLoader(loader: LoaderName | MkdistLoader) {
+export function resolveLoader(loader: LoaderName | Loader) {
 	if (typeof loader === "string") {
 		return loaders[loader];
 	}
@@ -18,9 +20,9 @@ export function resolveLoader(loader: LoaderName | MkdistLoader) {
 }
 
 export function resolveLoaders(
-	loaders: (LoaderName | MkdistLoader)[] = defaultLoaders,
+	loadersParam: (LoaderName | Loader)[] = defaultLoaders,
 ) {
-	return loaders
+	return loadersParam
 		.map((loaderName) => {
 			const _loader = resolveLoader(loaderName);
 			if (!_loader) {
@@ -28,5 +30,5 @@ export function resolveLoaders(
 			}
 			return _loader;
 		})
-		.filter(Boolean) as MkdistLoader[];
+		.filter((loader): loader is Loader => loader !== null && loader !== undefined);
 }

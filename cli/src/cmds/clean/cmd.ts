@@ -6,6 +6,7 @@ import {
   defineCmdCfg,
 } from "@reliverse/dler-launcher";
 import { logger } from "@reliverse/dler-logger";
+import { replaceExportsInPackages } from "@reliverse/dler-helpers";
 import { runCleanOnAllPackages } from "./impl";
 import type { CleanOptions } from "./types";
 
@@ -15,6 +16,20 @@ const cleanCmd = async (args: CleanOptions): Promise<void> => {
     if (typeof process.versions.bun === "undefined") {
       logger.error("❌ This command requires Bun runtime. Sorry.");
       process.exit(1);
+    }
+
+    // Replace exports if enabled (default: true, unless explicitly false)
+    const shouldReplaceExports = args.replaceExports !== false;
+    if (shouldReplaceExports) {
+      if (args.verbose) {
+        logger.info("📝 Replacing exports from ./dist/*.js to ./src/*.ts before cleaning...");
+      }
+      await replaceExportsInPackages({
+        direction: "js-to-ts",
+        cwd: args.cwd,
+        ignorePackages: args.replaceExportsIgnorePackages,
+        verbose: args.verbose,
+      });
     }
 
     const results = await runCleanOnAllPackages(args.ignore, args.cwd, args);
@@ -82,6 +97,14 @@ const cleanCmdArgs = defineCmdArgs({
     type: "boolean",
     description:
       "Include lock files (bun.lock, package-lock.json, etc.) when using deps preset",
+  },
+  replaceExports: {
+    type: "boolean",
+    description: "Replace exports from ./src/*.ts to ./dist/*.js before cleaning (default: true)",
+  },
+  replaceExportsIgnorePackages: {
+    type: "string",
+    description: "Packages to ignore when replacing exports (supports glob patterns like @reliverse/*)",
   },
 });
 

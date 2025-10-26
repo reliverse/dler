@@ -25,14 +25,13 @@ export type DeclarationOutput = Record<
 
 export async function getDeclarations(
 	vfs: Map<string, string>,
-	opts?: MkdistOptions,
+	opts?: Partial<MkdistOptions>,
 ): Promise<DeclarationOutput> {
 	const ts = await import("typescript").then((r) => r.default || r);
 
 	const inputFiles = [...vfs.keys()];
 
-	// @ts-expect-error TODO: fix ts
-	const tsHost = ts.createCompilerHost(opts.typescript.compilerOptions);
+	const tsHost = ts.createCompilerHost(opts?.typescript?.compilerOptions || {});
 
 	tsHost.writeFile = (fileName: string, declaration: string) => {
 		vfs.set(fileName, declaration);
@@ -64,13 +63,15 @@ const RELATIVE_RE = /^\.{1,2}[/\\]/;
 export function extractDeclarations(
 	vfs: Map<string, string>,
 	inputFiles: string[],
-	opts?: MkdistOptions,
+	opts?: Partial<MkdistOptions>,
 ): DeclarationOutput {
 	const output: DeclarationOutput = {};
 
 	for (const filename of inputFiles) {
-		const dtsFilename = filename.replace(JSX_EXT_RE, ".d.$1ts");
-		let contents = vfs.get(dtsFilename) || "";
+		const dtsFilename = filename.replace(JSX_EXT_RE, ".d.$1$2");
+		// Normalize path separators - TypeScript writes with forward slashes on Windows
+		const dtsFilenameNormalized = dtsFilename.replace(/\\/g, "/");
+		let contents = vfs.get(dtsFilename) || vfs.get(dtsFilenameNormalized) || "";
 		if (opts?.addRelativeDeclarationExtensions) {
 			const ext = filename.match(JS_EXT_RE)?.[0].replace(/ts$/, "js") || ".js";
 			const imports = findStaticImports(contents);
@@ -102,8 +103,8 @@ export function extractDeclarations(
 				if (!spec.specifier || !RELATIVE_RE.test(spec.specifier)) {
 					continue;
 				}
-				const srcPath = resolve(filename, "..", spec.specifier);
-				const srcDtsPath = srcPath + ext.replace(JS_EXT_RE, ".d.$1ts");
+			const srcPath = resolve(filename, "..", spec.specifier);
+			const srcDtsPath = srcPath + ext.replace(JS_EXT_RE, ".d.$1$2");
 				let specifier = spec.specifier;
 				try {
 					if (!vfs.get(srcDtsPath)) {
@@ -139,12 +140,9 @@ export function augmentWithDiagnostics(
 	if (result.diagnostics?.length) {
 		for (const diagnostic of result.diagnostics) {
 			const filename = diagnostic.file?.fileName;
-			// @ts-expect-error TODO: fix ts
-			if (filename in output) {
-				// @ts-expect-error TODO: fix ts
-				output[filename].errors = output[filename].errors || [];
-				// @ts-expect-error TODO: fix ts
-				output[filename].errors.push(
+			if (filename && filename in output && output[filename]) {
+				output[filename]!.errors = output[filename]!.errors || [];
+				output[filename]!.errors!.push(
 					new TypeError(ts.formatDiagnostics([diagnostic], tsHost), {
 						cause: diagnostic,
 					}),

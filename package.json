@@ -2,25 +2,27 @@
   "name": "@reliverse/dler-monorepo",
   "description": "@reliverse/dler is a framework which helps TypeScript and JavaScript developers create their libraries and CLI tools. It provides ready-to-use primitives, so you don't have to write them from scratch.",
   "author": "reliverse",
-  "version": "2.0.0",
+  "version": "2.0.4",
   "license": "MIT",
   "type": "module",
   "scripts": {
     "dler": "bun cli/src/cli.ts",
-    "build": "bun clean && bun typecheck && bun dler build",
     "pub": "bun run build && bun dler publish",
-    "format": "bun biome check --write --unsafe",
+    "build": "bun clean && bun typecheck && bun dler build",
+    "clean": "bun dler clean --presets build --force",
     "typecheck": "bun dler tsc --copy-logs",
     "check": "bun format && bun typecheck",
-    "clean": "bun dler clean --presets build --force",
-    "perf": "bun dler perf --runs 10 --warmup 2 --target"
+    "format": "bun biome check --write --unsafe",
+    "exports-to-ts": "bun scripts/src/replace-exports.ts --direction js-to-ts",
+    "exports-to-js": "bun scripts/src/replace-exports.ts --direction ts-to-js"
   },
   "workspaces": {
     "packages": [
       "cli",
       "deprecated",
       "examples/*",
-      "packages/*"
+      "packages/*",
+      "scripts"
     ],
     "catalog": {
       "dts-bundle-generator": "^9.5.1",
@@ -171,6 +173,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",
+    "@types/bun": "^1.3.1",
     "ultracite": "catalog:"
   },
   "packageManager": "bun@1.3.0",

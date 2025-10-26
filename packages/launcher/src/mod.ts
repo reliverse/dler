@@ -12,7 +12,7 @@ import {
 } from "./impl/errors";
 import { generateCommandHelp, generateGlobalHelp } from "./impl/help";
 import { parseArgs } from "./impl/parser";
-import { getRegistry, resolveCommand, setRegistry } from "./impl/registry";
+import { clearRegistry, getRegistry, resolveCommand, setRegistry } from "./impl/registry";
 
 export { defineCmd, defineCmdArgs, defineCmdCfg } from "./impl/command";
 export {
@@ -36,6 +36,7 @@ export type {
 export interface LauncherOptions {
   cmdsDir?: string;
   onError?: (error: LauncherError) => void;
+  verbose?: boolean;
 }
 
 // Get the directory of the file that called runLauncher
@@ -48,21 +49,25 @@ export const runLauncher = async (
   importMetaUrl: string,
   options: LauncherOptions = {},
 ): Promise<void> => {
-  const { cmdsDir = "./cmds", onError } = options;
+  const { cmdsDir = "./cmds", onError, verbose = false } = options;
 
   try {
+    // Clear registry to force rediscovery (for debugging)
+    clearRegistry();
     let registry = getRegistry();
     if (!registry) {
       // Get the caller's directory using import.meta.url
       const callerDir = getCallerDirectory(importMetaUrl);
-      registry = await discoverCommands(cmdsDir, callerDir);
+      if (verbose) {
+        console.debug(`📍 Caller directory: ${callerDir}`);
+      }
+      registry = await discoverCommands(cmdsDir, callerDir, verbose);
       setRegistry(registry);
     }
 
     const argv = process.argv.slice(2);
 
     if (argv.length === 0 || argv[0] === "--help" || argv[0] === "-h") {
-      // Use cached global help for faster display
       logger.log(await generateGlobalHelp(registry));
       process.exit(0);
     }

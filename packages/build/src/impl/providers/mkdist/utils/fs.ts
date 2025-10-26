@@ -9,8 +9,7 @@ export function copyFileWithStream(sourcePath: string, outPath: string) {
       if (error) {
         reject(error);
       } else {
-        // @ts-expect-error TODO: fix ts
-        resolve();
+        resolve(undefined);
       }
     });
   });

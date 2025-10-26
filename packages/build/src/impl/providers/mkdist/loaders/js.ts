@@ -1,7 +1,7 @@
 import { transform } from "esbuild";
 import jiti from "jiti";
 
-import type { MkdistLoader, LoaderResult } from "../../../types";
+import type { Loader, LoaderResult } from "../../../types";
 
 const DECLARATION_RE = /\.d\.[cm]?ts$/;
 const CM_LETTER_RE = /(?<=\.)(c|m)(?=[jt]s$)/;
@@ -10,7 +10,7 @@ const KNOWN_EXT_RE = /\.(c|m)?[jt]sx?$/;
 
 const TS_EXTS = new Set([".ts", ".mts", ".cts"]);
 
-export const jsLoader: MkdistLoader = async (input, { options }) => {
+export const jsLoader: Loader = async (input, { options }) => {
 	if (!KNOWN_EXT_RE.test(input.path) || DECLARATION_RE.test(input.path)) {
 		return;
 	}
@@ -38,11 +38,8 @@ export const jsLoader: MkdistLoader = async (input, { options }) => {
 			...options.esbuild,
 			loader: "ts",
 		}).then((r) => r.code);
-		// todo: introduce new option in dler config which allows to enable/disable transpiling other extensions that .ts and .js (disabling is especially useful for bootstrapping projects clis like @reliverse/rse)
-		// } else if ([".tsx", ".jsx"].includes(input.extension)) {
 	} else if (input.extension === ".jsx") {
 		contents = await transform(contents, {
-			// loader: input.extension === ".tsx" ? "tsx" : "jsx",
 			loader: "jsx",
 			...options.esbuild,
 		}).then((r) => r.code);
@@ -58,7 +55,7 @@ export const jsLoader: MkdistLoader = async (input, { options }) => {
 			.replace("module.exports = void 0;", "");
 	}
 
-	let extension = isCjs ? ".js" : ".mjs"; // TODO: Default to .cjs in next major version
+	let extension = isCjs ? ".js" : ".mjs";
 	if (options.ext) {
 		extension = options.ext.startsWith(".") ? options.ext : `.${options.ext}`;
 	}

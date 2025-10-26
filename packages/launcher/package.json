@@ -1,18 +1,13 @@
 {
   "name": "@reliverse/dler-launcher",
-  "version": "2.0.0",
+  "version": "2.0.15",
   "private": false,
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/mod.ts",
-      "default": "./src/mod.ts"
+      "types": "./dist/mod.d.ts",
+      "default": "./dist/mod.js"
     }
-  },
-  "scripts": {
-    "dev": "bun src/mod.ts",
-    "start": "bun src/mod.ts",
-    "bench": "bun bench/performance.ts"
   },
   "dependencies": {
     "@reliverse/dler-logger": "workspace:*",
@@ -22,10 +17,20 @@
   "publishConfig": {
     "access": "public"
   },
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "license": "MIT",
   "devDependencies": {
     "@reliverse/dler-tsconfig": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "typescript": "catalog:",
     "@types/bun": "catalog:"
+  },
+  "scripts": {
+    "dev": "bun src/mod.ts",
+    "start": "bun src/mod.ts",
+    "bench": "bun bench/performance.ts"
   }
 }

@@ -5,4 +5,4 @@
 
 import { runLauncher } from "@reliverse/dler-launcher";
 
-await runLauncher(import.meta.url);
+await runLauncher(import.meta.url, { verbose: false });

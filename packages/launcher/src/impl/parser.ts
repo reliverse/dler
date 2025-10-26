@@ -26,9 +26,6 @@ interface SchemaMetadata {
 const camelCase = (str: string): string =>
   str.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
 
-// Global cache for schema metadata to avoid recomputation
-const schemaMetadataCache = new Map<string, SchemaMetadata>();
-
 const createSchemaMetadata = (schema: CmdArgsSchema): SchemaMetadata => {
   const aliasMap = new Map<string, string>();
   const camelCaseCache = new Map<string, string>();
@@ -75,23 +72,8 @@ const createSchemaMetadata = (schema: CmdArgsSchema): SchemaMetadata => {
   };
 };
 
-// Lightweight hash function for schema keys
-const hashSchema = (schema: CmdArgsSchema): string => {
-  const keys = Object.keys(schema).sort();
-  return keys.join("|");
-};
-
 const getSchemaMetadata = (schema: CmdArgsSchema): SchemaMetadata => {
-  // Create a cache key from schema structure using lightweight hash
-  const schemaKey = hashSchema(schema);
-
-  let metadata = schemaMetadataCache.get(schemaKey);
-  if (!metadata) {
-    metadata = createSchemaMetadata(schema);
-    schemaMetadataCache.set(schemaKey, metadata);
-  }
-
-  return metadata;
+  return createSchemaMetadata(schema);
 };
 
 export const parseArgs = (

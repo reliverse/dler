@@ -2,23 +2,15 @@
   "name": "@reliverse/dler",
   "description": "@reliverse/dler is a framework which helps TypeScript and JavaScript developers create their libraries and CLI tools. It provides ready-to-use primitives, so you don't have to write them from scratch.",
   "author": "reliverse",
-  "version": "2.0.0",
+  "version": "2.0.15",
   "private": false,
   "type": "module",
   "bin": {
-    "dler": "src/cli.ts"
-  },
-  "exports": {
-    ".": {
-      "types": "./cli.d.ts",
-      "default": "./cli.js"
-    }
-  },
-  "scripts": {
-    "dler": "bun src/cli.ts"
+    "dler": "dist/cli.js"
   },
   "dependencies": {
     "c12": "catalog:",
+    "semver": "catalog:",
     "clipboardy": "catalog:",
     "@reliverse/dler-publish": "workspace:*",
     "@reliverse/dler-bump": "workspace:*",
@@ -38,12 +30,21 @@
   "publishConfig": {
     "access": "public"
   },
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "license": "MIT",
   "devDependencies": {
     "@biomejs/biome": "^2.3.0",
     "@reliverse/dler-tsconfig": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@types/bun": "catalog:",
     "typescript": "catalog:",
-    "ultracite": "^5.6.4"
+    "ultracite": "^5.6.4",
+    "@types/semver": "catalog:"
+  },
+  "scripts": {
+    "dler": "bun src/cli.ts"
   }
 }

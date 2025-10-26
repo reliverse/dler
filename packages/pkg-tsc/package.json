@@ -1,13 +1,13 @@
 {
   "name": "@reliverse/dler-pkg-tsc",
-  "version": "2.0.0",
+  "version": "2.0.15",
   "private": false,
   "type": "module",
   "description": "@reliverse/dler-pkg-tsc is a collection of utils to work with package.json and tsconfig.json files.",
   "exports": {
     ".": {
-      "types": "./src/mod.ts",
-      "default": "./src/mod.ts"
+      "types": "./dist/mod.d.ts",
+      "default": "./dist/mod.js"
     }
   },
   "dependencies": {
@@ -16,6 +16,11 @@
   "publishConfig": {
     "access": "public"
   },
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "license": "MIT",
   "devDependencies": {
     "@reliverse/dler-tsconfig": "workspace:*",
     "@microsoft/api-extractor": "catalog:",

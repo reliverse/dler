@@ -165,11 +165,22 @@ const getWorkspacePackages = async (
   const seenPaths = new Set<string>();
 
   for (const pattern of patterns) {
-    const glob = new Bun.Glob(pattern);
-    const matches = glob.scanSync({ cwd: monorepoRoot, onlyFiles: false });
+    // Check if pattern contains wildcards
+    if (pattern.includes('*')) {
+      // Pattern with wildcards - use glob
+      const glob = new Bun.Glob(pattern);
+      const matches = glob.scanSync({ cwd: monorepoRoot, onlyFiles: false });
 
-    for (const match of matches) {
-      const packagePath = resolve(monorepoRoot, match);
+      for (const match of matches) {
+        const packagePath = resolve(monorepoRoot, match);
+
+        if (seenPaths.has(packagePath)) continue;
+        seenPaths.add(packagePath);
+        allPackagePaths.push(packagePath);
+      }
+    } else {
+      // Direct package path (no wildcards)
+      const packagePath = resolve(monorepoRoot, pattern);
 
       if (seenPaths.has(packagePath)) continue;
       seenPaths.add(packagePath);

@@ -2,13 +2,13 @@
   "name": "@reliverse/dler-build",
   "description": "Build utils for @reliverse/dler",
   "author": "reliverse",
-  "version": "2.0.0",
+  "version": "2.0.15",
   "private": false,
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/mod.ts",
-      "default": "./src/mod.ts"
+      "types": "./dist/mod.d.ts",
+      "default": "./dist/mod.js"
     }
   },
   "dependencies": {
@@ -30,12 +30,17 @@
     "semver": "^7.7.3",
     "tinyglobby": "catalog:"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "license": "MIT",
   "devDependencies": {
     "@reliverse/dler-tsconfig": "workspace:*",
     "typescript": "catalog:",
     "@types/bun": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }
