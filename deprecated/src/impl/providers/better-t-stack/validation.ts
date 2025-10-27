@@ -127,8 +127,6 @@ export function processAndValidateFlags(
           f === "react-router" ||
           f === "tanstack-start" ||
           f === "next" ||
-          f === "nuxt" ||
-          f === "svelte" ||
           f === "solid",
       );
       const nativeFrontends = validOptions.filter(
@@ -138,7 +136,7 @@ export function processAndValidateFlags(
       if (webFrontends.length > 1) {
         relinka(
           "fatal",
-          "Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, svelte, solid",
+          "Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, solid",
         );
         process.exit(1);
       }
@@ -210,7 +208,7 @@ export function processAndValidateFlags(
 
     if (providedFlags.has("frontend") && options.frontend) {
       const incompatibleFrontends = options.frontend.filter(
-        (f) => f === "nuxt" || f === "solid",
+        (f) => f === "solid",
       );
       if (incompatibleFrontends.length > 0) {
         relinka(
@@ -495,24 +493,7 @@ export function validateConfigCompatibility(
     process.exit(1);
   }
 
-  const includesNuxt = effectiveFrontend?.includes("nuxt");
-  const includesSvelte = effectiveFrontend?.includes("svelte");
   const includesSolid = effectiveFrontend?.includes("solid");
-
-  if (
-    (includesNuxt || includesSvelte || includesSolid) &&
-    effectiveApi === "trpc"
-  ) {
-    relinka(
-      "fatal",
-      `tRPC API is not supported with '${
-        includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"
-      }' frontend. Please use --api orpc or --api none or remove '${
-        includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"
-      }' from --frontend.`,
-    );
-    process.exit(1);
-  }
 
   if (config.addons && config.addons.length > 0) {
     const webSpecificAddons = ["pwa", "tauri"];
@@ -528,8 +509,6 @@ export function validateConfigCompatibility(
       const isTauriCompatible =
         f === "tanstack-router" ||
         f === "react-router" ||
-        f === "nuxt" ||
-        f === "svelte" ||
         f === "solid" ||
         f === "next";
 
@@ -553,7 +532,7 @@ export function validateConfigCompatibility(
       }
       if (config.addons.includes("tauri")) {
         incompatibleReason =
-          "Tauri requires tanstack-router, react-router, nuxt, svelte, solid, or next.";
+          "Tauri requires tanstack-router, react-router, or next.";
       }
       relinka(
         "fatal",

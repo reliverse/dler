@@ -8,7 +8,6 @@ import { BetterAuthError, logger } from "better-auth";
 import { loadConfig } from "c12";
 import path from "path";
 
-import { addSvelteKitEnvModules } from "./add-svelte-kit-env-modules";
 import { getTsconfigInfo } from "./get-tsconfig-info";
 
 let possiblePaths = [
@@ -61,7 +60,6 @@ async function getPathAliases(
         result[finalAlias || ""] = path.join(resolvedBaseUrl, finalAliasedPath);
       }
     }
-    addSvelteKitEnvModules(result);
     return result;
   } catch (error) {
     console.error(error);

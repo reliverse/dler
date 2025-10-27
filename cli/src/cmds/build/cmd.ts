@@ -31,8 +31,8 @@ const buildCmd = async (args: any): Promise<void> => {
       process.exit(1);
     }
 
-    // Replace exports if enabled (default: true, unless explicitly false)
-    const shouldReplaceExports = args.replaceExports !== false;
+    // Replace exports if enabled (default: false, only when explicitly requested)
+    const shouldReplaceExports = args.replaceExports === true;
     if (shouldReplaceExports && !buildOptions.watch) {
       if (args.verbose) {
         logger.info("\n📝 Replacing exports from ./src/*.ts to ./dist/*.js after build...");
@@ -418,7 +418,7 @@ const buildCmdArgs = defineCmdArgs({
   },
   replaceExports: {
     type: "boolean",
-    description: "Replace exports from ./src/*.ts to ./dist/*.js after build completes (default: true)",
+    description: "Replace exports from ./src/*.ts to ./dist/*.js after build completes (default: false)",
   },
   replaceExportsIgnorePackages: {
     type: "string",

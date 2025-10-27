@@ -92,7 +92,14 @@ const getWorkspacePackages = async (
     }
   }
 
-  return packages;
+  // Filter out the monorepo root to prevent integrating into it
+  const filteredPackages = packages.filter(pkg => {
+    const normalizedPkgPath = resolve(pkg.path);
+    const normalizedRootPath = resolve(monorepoRoot);
+    return normalizedPkgPath !== normalizedRootPath;
+  });
+
+  return filteredPackages;
 };
 
 const resolvePackageInfo = async (

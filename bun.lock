@@ -11,7 +11,7 @@
     },
     "cli": {
       "name": "@reliverse/dler",
-      "version": "2.0.11",
+      "version": "2.0.23",
       "bin": {
         "dler": "dist/cli.js",
       },
@@ -28,6 +28,7 @@
         "@reliverse/dler-publish": "workspace:*",
         "c12": "catalog:",
         "clipboardy": "catalog:",
+        "lookpath": "catalog:",
         "semver": "catalog:",
       },
       "devDependencies": {
@@ -210,7 +211,7 @@
     },
     "packages/build": {
       "name": "@reliverse/dler-build",
-      "version": "2.0.11",
+      "version": "2.0.23",
       "dependencies": {
         "@reliverse/dler-config": "workspace:*",
         "@reliverse/dler-helpers": "workspace:*",
@@ -238,7 +239,7 @@
     },
     "packages/bump": {
       "name": "@reliverse/dler-bump",
-      "version": "2.0.11",
+      "version": "2.0.23",
       "dependencies": {
         "semver": "catalog:",
       },
@@ -253,7 +254,7 @@
     },
     "packages/colors": {
       "name": "@reliverse/dler-colors",
-      "version": "2.0.11",
+      "version": "2.0.23",
       "devDependencies": {
         "@microsoft/api-extractor": "catalog:",
         "@reliverse/dler-tsconfig": "workspace:*",
@@ -263,7 +264,7 @@
     },
     "packages/config": {
       "name": "@reliverse/dler-config",
-      "version": "2.0.11",
+      "version": "2.0.23",
       "dependencies": {
         "@reliverse/dler-pkg-tsc": "workspace:*",
         "c12": "catalog:",
@@ -280,7 +281,7 @@
     },
     "packages/helpers": {
       "name": "@reliverse/dler-helpers",
-      "version": "2.0.11",
+      "version": "2.0.23",
       "dependencies": {
         "@reliverse/dler-matcher": "workspace:*",
         "@reliverse/dler-pkg-tsc": "workspace:*",
@@ -294,8 +295,9 @@
     },
     "packages/launcher": {
       "name": "@reliverse/dler-launcher",
-      "version": "2.0.11",
+      "version": "2.0.23",
       "dependencies": {
+        "@reliverse/dler-colors": "workspace:*",
         "@reliverse/dler-helpers": "workspace:*",
         "@reliverse/dler-logger": "workspace:*",
         "@reliverse/dler-mapper": "workspace:*",
@@ -309,7 +311,7 @@
     },
     "packages/logger": {
       "name": "@reliverse/dler-logger",
-      "version": "2.0.11",
+      "version": "2.0.23",
       "dependencies": {
         "@reliverse/dler-colors": "workspace:*",
       },
@@ -322,7 +324,7 @@
     },
     "packages/mapper": {
       "name": "@reliverse/dler-mapper",
-      "version": "2.0.11",
+      "version": "2.0.23",
       "devDependencies": {
         "@microsoft/api-extractor": "catalog:",
         "@reliverse/dler-tsconfig": "workspace:*",
@@ -332,7 +334,7 @@
     },
     "packages/matcher": {
       "name": "@reliverse/dler-matcher",
-      "version": "2.0.11",
+      "version": "2.0.23",
       "dependencies": {
         "zeptomatch": "catalog:",
       },
@@ -345,7 +347,7 @@
     },
     "packages/pkg-tsc": {
       "name": "@reliverse/dler-pkg-tsc",
-      "version": "2.0.11",
+      "version": "2.0.23",
       "dependencies": {
         "pkg-types": "catalog:",
       },
@@ -358,7 +360,7 @@
     },
     "packages/prompt": {
       "name": "@reliverse/dler-prompt",
-      "version": "2.0.11",
+      "version": "2.0.23",
       "dependencies": {
         "@reliverse/dler-logger": "workspace:*",
       },
@@ -371,8 +373,9 @@
     },
     "packages/publish": {
       "name": "@reliverse/dler-publish",
-      "version": "2.0.11",
+      "version": "2.0.23",
       "dependencies": {
+        "@reliverse/dler-build": "workspace:*",
         "@reliverse/dler-bump": "workspace:*",
         "@reliverse/dler-config": "workspace:*",
         "@reliverse/dler-logger": "workspace:*",
@@ -388,7 +391,7 @@
     },
     "packages/spinner": {
       "name": "@reliverse/dler-spinner",
-      "version": "2.0.11",
+      "version": "2.0.23",
       "dependencies": {
         "@reliverse/dler-colors": "workspace:*",
         "cli-cursor": "catalog:",

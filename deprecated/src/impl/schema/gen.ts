@@ -1165,13 +1165,10 @@ export type ProjectFramework =
   | UnknownLiteral
   | "nextjs"
   | "vite"
-  | "svelte"
   | "remix"
   | "astro"
-  | "nuxt"
   | "solid"
   | "qwik"
-  | "vue"
   | "wxt"
   | "lynx"
   | "react-native"

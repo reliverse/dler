@@ -5,6 +5,8 @@ alwaysApply: true
 The current codebase enforces strict type safety, accessibility standards, and consistent code quality for JavaScript/TypeScript projects using Biome's lightning-fast formatter and linter.
 
 ## Key Principles
+- Strictly speak in English
+- Never produce in code non-English text
 - Zero configuration required
 - Subsecond performance
 - Maximum type safety

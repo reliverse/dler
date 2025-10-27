@@ -25,7 +25,7 @@ import { BuildCache } from "./impl/cache";
 import { createDebugLogger } from "./impl/debug"; 
 import { startDevServer } from "./impl/dev-server";
 import { processHTMLForPackage } from "./impl/html-processor";
-import { preparePackageJsonForPublishing } from "./impl/package-json-transformer";
+import { preparePackageJsonForPublishing } from "@reliverse/dler-pkg-tsc";
 import { validateTSConfig } from "./impl/tsconfig-validator";
 import { 
   AssetOptimizationPlugin,
@@ -64,8 +64,8 @@ export {
   preparePackageJsonForPublishing,
   extractPackageName,
   parseBinArgument
-} from "./impl/package-json-transformer";
-export type { PreparePackageJsonOptions } from "./impl/package-json-transformer";
+} from "@reliverse/dler-pkg-tsc";
+export type { PreparePackageJsonOptions } from "@reliverse/dler-pkg-tsc";
 export { 
   validateTSConfig,
   validateAllTSConfigs,
@@ -116,9 +116,19 @@ const formatBytes = (bytes: number): string => {
 const getWorkspacePackages = async (cwd?: string): Promise<PackageInfo[]> => {
   const monorepoRoot = await findMonorepoRoot(cwd);
 
+  // If no monorepo found, check if current directory is a single package
   if (!monorepoRoot) {
+    const currentDir = cwd || process.cwd();
+    const pkgInfo = await resolvePackageInfo(currentDir, null);
+    
+    if (pkgInfo) {
+      // Return single package info
+      return [pkgInfo];
+    }
+    
+    // Neither monorepo nor valid package found
     throw new Error(
-      "❌ No monorepo found. Ensure package.json has 'workspaces' field.",
+      "❌ No monorepo or valid package found. Ensure package.json has 'workspaces' field or contains a valid 'name' field.",
     );
   }
 
@@ -176,7 +186,14 @@ const getWorkspacePackages = async (cwd?: string): Promise<PackageInfo[]> => {
     }
   }
 
-  return packages;
+  // Filter out the monorepo root to prevent building it
+  const filteredPackages = packages.filter(pkg => {
+    const normalizedPkgPath = resolve(pkg.path);
+    const normalizedRootPath = resolve(monorepoRoot);
+    return normalizedPkgPath !== normalizedRootPath;
+  });
+
+  return filteredPackages;
 };
 
 // Cache for package.json reads to avoid multiple file system calls
@@ -686,8 +703,8 @@ const buildWithMkdist = async (
           kind: options.kind,
           binDefinitions: options.bin,
           access: "public",
-          setPrivate: true,
           addPublishConfig: true,
+          transformExports: options.replaceExports === true,
         });
 
         if (!prepResult.success && options.verbose) {
@@ -1282,8 +1299,8 @@ export const buildPackage = async (
           kind: mergedOptions.kind,
           binDefinitions: mergedOptions.bin,
           access: "public",
-          setPrivate: true,
           addPublishConfig: true,
+          transformExports: mergedOptions.replaceExports === true,
         });
 
         if (!prepResult.success) {

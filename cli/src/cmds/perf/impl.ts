@@ -284,7 +284,6 @@ export class PerfAnalyzer {
         "node_modules",
         ".git",
         ".next",
-        ".nuxt",
         "dist",
         "build",
       ],

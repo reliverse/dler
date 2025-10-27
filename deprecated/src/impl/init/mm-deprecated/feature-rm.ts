@@ -82,11 +82,10 @@ export const REMOVAL_CONFIGS: Record<string, RemovalConfig> = {
   },
   styling: {
     name: "Styling",
-    dependencies: ["tailwindcss", "postcss", "autoprefixer", "@shadcn/ui"],
+    dependencies: ["tailwindcss", "autoprefixer"],
     devDependencies: [],
     files: [
       "tailwind.config.js",
-      "postcss.config.js",
       "src/styles/globals.css",
     ],
     directories: ["src/components/ui"],

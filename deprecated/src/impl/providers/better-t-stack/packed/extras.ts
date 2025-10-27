@@ -14,14 +14,6 @@ export const DLER_TPL_EXTRAS: Template = {
         content: `packages:\n  - "apps/*"\n  - "packages/*"\n`,
         type: "text",
       },
-      "extras/_npmrc.hbs": {
-        metadata: {
-          updatedAt: "2025-06-17T06:06:35.000Z",
-          updatedHash: "bbf3cc73d5",
-        },
-        content: `node-linker=hoisted\n{{#if (includes frontend "nuxt")}}\nshamefully-hoist=true\nstrict-peer-dependencies=false\n{{/if}}\n`,
-        type: "text",
-      },
     },
   },
 };

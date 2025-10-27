@@ -128,7 +128,7 @@ const cleanCmdCfg = defineCmdCfg({
     "dler clean --presets build           # Clean dist/, dev-dist/, target/",
     "dler clean --presets db              # Clean _generated/",
     "dler clean --presets cms             # Clean .basehub/",
-    "dler clean --presets frontend        # Clean .next/, .nuxt/, .expo/, routeTree.gen.ts",
+    "dler clean --presets frontend        # Clean .next/, .expo/, routeTree.gen.ts",
     "dler clean --presets docs            # Clean .source/",
     "dler clean --presets email           # Clean .react-email/",
     "dler clean --presets build-tools     # Clean .turbo/, .vercel/, .wrangler/",

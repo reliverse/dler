@@ -33,7 +33,7 @@ async function getAllTsFiles(dir: string): Promise<string[]> {
         files.push(...subFiles);
       } else if (stats.isFile()) {
         const ext = extname(entry);
-        if ([".ts", ".tsx", ".js", ".jsx", ".vue", ".svelte"].includes(ext)) {
+        if ([".ts", ".tsx", ".js", ".jsx"].includes(ext)) {
           files.push(fullPath);
         }
       }

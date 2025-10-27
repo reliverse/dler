@@ -29,7 +29,6 @@ export const DLER_TPL_ADDONS: Template = {
               ".vscode",
               "routeTree.gen.ts",
               "src-tauri",
-              ".nuxt",
             ],
           },
           formatter: {

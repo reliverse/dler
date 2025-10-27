@@ -54,22 +54,16 @@ export async function setupTauri(config: ProjectConfig): Promise<void> {
     }
 
     const hasReactRouter = frontend.includes("react-router");
-    const hasNuxt = frontend.includes("nuxt");
-    const hasSvelte = frontend.includes("svelte");
     const hasNext = frontend.includes("next");
 
     const devUrl =
-      hasReactRouter || hasSvelte
+      hasReactRouter
         ? "http://localhost:5173"
         : hasNext
           ? "http://localhost:3001"
           : "http://localhost:3001";
 
-    const frontendDist = hasNuxt
-      ? "../.output/public"
-      : hasSvelte
-        ? "../build"
-        : hasNext
+    const frontendDist = hasNext
           ? "../.next"
           : hasReactRouter
             ? "../build/client"

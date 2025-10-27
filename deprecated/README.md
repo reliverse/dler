@@ -96,7 +96,7 @@ this creates a starter config file: `.config/dler.ts`
 - example config: [.config/dler.ts →](https://github.com/reliverse/dler/blob/main/.config/dler.ts)
 - useful options:
 
-  - `buildPreExtensions`: support additional file types like `["ts", "js", "vue", "tsx", "jsx"]`
+  - `buildPreExtensions`: support additional file types like `["ts", "js", "tsx", "jsx"]`
   - `buildTemplatesDir`: exclude a directory from being built; it will be copied as-is (e.g. `src/foo/templates → dist-*/bin/foo/templates`)
 
 ### 3. run and enjoy

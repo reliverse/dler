@@ -67,14 +67,12 @@ export async function setupFrontendTemplates(
   const hasReactWeb = context.frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
   );
-  const hasNuxtWeb = context.frontend.includes("nuxt");
-  const hasSvelteWeb = context.frontend.includes("svelte");
   const hasSolidWeb = context.frontend.includes("solid");
   const hasNativeWind = context.frontend.includes("native-nativewind");
   const hasUnistyles = context.frontend.includes("native-unistyles");
   const isConvex = context.backend === "convex";
 
-  if (hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb) {
+  if (hasReactWeb || hasSolidWeb) {
     const webAppDir = path.join(projectDir, "apps/web");
     await fs.ensureDir(webAppDir);
 
@@ -121,45 +119,6 @@ export async function setupFrontendTemplates(
             );
           } else {
           }
-        }
-      }
-    } else if (hasNuxtWeb) {
-      const nuxtBaseDir = path.join(PKG_ROOT, "templates/frontend/nuxt");
-      if (await fs.pathExists(nuxtBaseDir)) {
-        await processAndCopyFiles("**/*", nuxtBaseDir, webAppDir, context);
-      } else {
-      }
-
-      if (!isConvex && context.api === "orpc") {
-        const apiWebNuxtDir = path.join(
-          PKG_ROOT,
-          `templates/api/${context.api}/web/nuxt`,
-        );
-        if (await fs.pathExists(apiWebNuxtDir)) {
-          await processAndCopyFiles("**/*", apiWebNuxtDir, webAppDir, context);
-        } else {
-        }
-      }
-    } else if (hasSvelteWeb) {
-      const svelteBaseDir = path.join(PKG_ROOT, "templates/frontend/svelte");
-      if (await fs.pathExists(svelteBaseDir)) {
-        await processAndCopyFiles("**/*", svelteBaseDir, webAppDir, context);
-      } else {
-      }
-
-      if (!isConvex && context.api === "orpc") {
-        const apiWebSvelteDir = path.join(
-          PKG_ROOT,
-          `templates/api/${context.api}/web/svelte`,
-        );
-        if (await fs.pathExists(apiWebSvelteDir)) {
-          await processAndCopyFiles(
-            "**/*",
-            apiWebSvelteDir,
-            webAppDir,
-            context,
-          );
-        } else {
         }
       }
     } else if (hasSolidWeb) {
@@ -371,8 +330,6 @@ export async function setupAuthTemplate(
   const hasReactWeb = context.frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
   );
-  const hasNuxtWeb = context.frontend.includes("nuxt");
-  const hasSvelteWeb = context.frontend.includes("svelte");
   const hasSolidWeb = context.frontend.includes("solid");
   const hasNativeWind = context.frontend.includes("native-nativewind");
   const hasUnistyles = context.frontend.includes("native-unistyles");
@@ -434,7 +391,7 @@ export async function setupAuthTemplate(
   }
 
   if (
-    (hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb) &&
+    (hasReactWeb || hasSolidWeb) &&
     webAppDirExists
   ) {
     if (hasReactWeb) {
@@ -461,28 +418,6 @@ export async function setupAuthTemplate(
           await processAndCopyFiles(
             "**/*",
             authWebFrameworkSrc,
-            webAppDir,
-            context,
-          );
-        } else {
-        }
-      }
-    } else if (hasNuxtWeb) {
-      const authWebNuxtSrc = path.join(PKG_ROOT, "templates/auth/web/nuxt");
-      if (await fs.pathExists(authWebNuxtSrc)) {
-        await processAndCopyFiles("**/*", authWebNuxtSrc, webAppDir, context);
-      } else {
-      }
-    } else if (hasSvelteWeb) {
-      if (context.api === "orpc") {
-        const authWebSvelteSrc = path.join(
-          PKG_ROOT,
-          "templates/auth/web/svelte",
-        );
-        if (await fs.pathExists(authWebSvelteSrc)) {
-          await processAndCopyFiles(
-            "**/*",
-            authWebSvelteSrc,
             webAppDir,
             context,
           );
@@ -604,8 +539,6 @@ export async function setupExamplesTemplate(
   const hasReactWeb = context.frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
   );
-  const hasNuxtWeb = context.frontend.includes("nuxt");
-  const hasSvelteWeb = context.frontend.includes("svelte");
   const hasSolidWeb = context.frontend.includes("solid");
 
   for (const example of context.examples) {
@@ -721,30 +654,6 @@ export async function setupExamplesTemplate(
             }
           }
         }
-      } else if (hasNuxtWeb) {
-        const exampleWebNuxtSrc = path.join(exampleBaseDir, "web/nuxt");
-        if (await fs.pathExists(exampleWebNuxtSrc)) {
-          await processAndCopyFiles(
-            "**/*",
-            exampleWebNuxtSrc,
-            webAppDir,
-            context,
-            false,
-          );
-        } else {
-        }
-      } else if (hasSvelteWeb) {
-        const exampleWebSvelteSrc = path.join(exampleBaseDir, "web/svelte");
-        if (await fs.pathExists(exampleWebSvelteSrc)) {
-          await processAndCopyFiles(
-            "**/*",
-            exampleWebSvelteSrc,
-            webAppDir,
-            context,
-            false,
-          );
-        } else {
-        }
       } else if (hasSolidWeb) {
         const exampleWebSolidSrc = path.join(exampleBaseDir, "web/solid");
         if (await fs.pathExists(exampleWebSolidSrc)) {
@@ -809,7 +718,7 @@ export async function handleExtras(
 
   if (
     context.packageManager === "pnpm" &&
-    (hasNative || context.frontend.includes("nuxt"))
+    (hasNative)
   ) {
     const npmrcTemplateSrc = path.join(extrasDir, "_npmrc.hbs");
     const npmrcDest = path.join(projectDir, ".npmrc");

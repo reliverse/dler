@@ -100,9 +100,24 @@ export const getWorkspacePackages = async (
   cwd?: string,
 ): Promise<{ name: string; path: string; pkg: any }[]> => {
   const monorepoRoot = await findMonorepoRoot(cwd);
+  
+  // If no monorepo found, check if current directory is a single package
   if (!monorepoRoot) {
+    const currentDir = cwd || process.cwd();
+    const currentPkg = await readPackageJSON(currentDir);
+    
+    if (currentPkg?.name) {
+      // Return single package info
+      return [{
+        name: currentPkg.name,
+        path: currentDir,
+        pkg: currentPkg
+      }];
+    }
+    
+    // Neither monorepo nor valid package found
     throw new Error(
-      "❌ No monorepo found. Ensure package.json has 'workspaces' field.",
+      "❌ No monorepo or valid package found. Ensure package.json has 'workspaces' field or contains a valid 'name' field.",
     );
   }
 
@@ -149,7 +164,14 @@ export const getWorkspacePackages = async (
     }
   }
 
-  return packages;
+  // Filter out the monorepo root to prevent publishing it
+  const filteredPackages = packages.filter(pkg => {
+    const normalizedPkgPath = resolve(pkg.path);
+    const normalizedRootPath = resolve(monorepoRoot);
+    return normalizedPkgPath !== normalizedRootPath;
+  });
+
+  return filteredPackages;
 };
 
 // ============================================================================

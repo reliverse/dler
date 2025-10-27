@@ -171,15 +171,11 @@ export async function detectFramework(
       const allDeps = { ...dependencies, ...devDependencies };
 
       if (allDeps.next) return "nextjs";
-      if (allDeps.nuxt) return "nuxtjs";
-      if (allDeps["@sveltejs/kit"]) return "sveltekit";
       if (allDeps.astro) return "astro";
       if (allDeps.gatsby) return "gatsby";
       if (allDeps.remix) return "remix";
-      if (allDeps.vue) return "vue";
       if (allDeps.react) return "create-react-app";
       if (allDeps["@angular/core"]) return "angular";
-      if (allDeps.svelte) return "svelte";
       if (allDeps.vite) return "vite";
     }
 
@@ -187,9 +183,6 @@ export async function detectFramework(
     const files = await fs.readdir(directory);
     if (files.includes("astro.config.mjs") || files.includes("astro.config.ts"))
       return "astro";
-    if (files.includes("nuxt.config.js") || files.includes("nuxt.config.ts"))
-      return "nuxtjs";
-    if (files.includes("svelte.config.js")) return "sveltekit";
     if (files.includes("gatsby-config.js")) return "gatsby";
     if (files.includes("remix.config.js")) return "remix";
     if (

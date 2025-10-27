@@ -1,12 +1,12 @@
 {
   "name": "@reliverse/dler-publish",
-  "version": "2.0.15",
+  "version": "2.0.27",
   "private": false,
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/mod.d.ts",
-      "default": "./dist/mod.js"
+      "types": "./src/mod.ts",
+      "default": "./src/mod.ts"
     }
   },
   "dependencies": {
@@ -14,7 +14,8 @@
     "@reliverse/dler-pkg-tsc": "workspace:*",
     "@reliverse/dler-config": "workspace:*",
     "@reliverse/dler-logger": "workspace:*",
-    "@reliverse/dler-bump": "workspace:*"
+    "@reliverse/dler-bump": "workspace:*",
+    "@reliverse/dler-build": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

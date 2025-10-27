@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import { type BumpType, bumpVersion, getNextVersion } from "@reliverse/dler-bump";
+import { transformExportsForBuild } from "@reliverse/dler-build";
 import {
   getPackagePublishConfig,
   mergePublishOptions,
@@ -214,18 +215,13 @@ function validatePackageJsonFields(
     }
   }
 
-  // Check for exports field (should exist and be transformed by build)
+  // Check for exports field (should exist)
+  // The publish command will transform /src/ paths to /dist/ automatically
   // Skip exports requirement for packages with bin field
   const hasBinField = pkg.bin && typeof pkg.bin === "object" && Object.keys(pkg.bin).length > 0;
   
   if (!pkg.exports && !hasBinField) {
     errors.push("Missing 'exports' field - Run 'dler build' to add it.");
-  } else if (pkg.exports) {
-    // Verify exports point to dist files (not src)
-    const exportsStr = JSON.stringify(pkg.exports).toLowerCase();
-    if (exportsStr.includes("/src/")) {
-      errors.push("'exports' field still contains '/src/' paths - Run 'dler build' to transform them to '/dist/' paths.");
-    }
   }
 
   // Check for publishConfig (added by build command)
@@ -267,7 +263,8 @@ async function restoreOriginalDependencies(
   packagePath: string,
   originalDependencies: any,
   originalDevDependencies: any,
-  originalScripts?: any
+  originalScripts?: any,
+  originalExports?: any
 ): Promise<void> {
   try {
     const pkg = await readPackageJSON(packagePath);
@@ -282,6 +279,10 @@ async function restoreOriginalDependencies(
       // Restore original scripts if they existed
       if (originalScripts !== undefined) {
         pkg.scripts = originalScripts;
+      }
+      // Restore original exports if they existed
+      if (originalExports !== undefined) {
+        pkg.exports = originalExports;
       }
       
       // Write back the restored package.json
@@ -384,6 +385,7 @@ async function preparePackageForPublishing(
   originalDependencies?: any;
   originalDevDependencies?: any;
   originalScripts?: any;
+  originalExports?: any;
 }> {
   try {
     const pkg = await readPackageJSON(packagePath);
@@ -393,6 +395,7 @@ async function preparePackageForPublishing(
 
     // Create a backup of the original package.json
     const originalPkg = { ...pkg };
+    const originalExports = pkg.exports ? JSON.parse(JSON.stringify(pkg.exports)) : undefined;
 
     // Handle version bumping (skip if bumpDisable is true or dry-run is true or shouldBumpVersion is false)
     if (shouldBumpVersion && options.bump && !options.bumpDisable && !options.dryRun && pkg.version) {
@@ -466,6 +469,11 @@ async function preparePackageForPublishing(
       }
     }
 
+    // Transform exports from src/*.ts to dist/*.js for publishing
+    if (pkg.exports) {
+      pkg.exports = transformExportsForBuild(pkg.exports);
+    }
+
     // Write modified package.json back to root
     await writePackageJSON(resolve(packagePath, "package.json"), pkg);
 
@@ -475,7 +483,8 @@ async function preparePackageForPublishing(
       originalPkg,
       originalDependencies,
       originalDevDependencies,
-      originalScripts
+      originalScripts,
+      originalExports,
     };
   } catch (error) {
     return {
@@ -501,6 +510,7 @@ export async function publishPackage(
   let originalDependencies: any = null;
   let originalDevDependencies: any = null;
   let originalScripts: any = null;
+  let originalExports: any = null;
 
   // Fetch workspace packages once for efficient dependency resolution
   let workspacePackages: Array<{ name: string; path: string; pkg: any }> | undefined;
@@ -631,6 +641,7 @@ export async function publishPackage(
     originalDependencies = prepResult.originalDependencies;
     originalDevDependencies = prepResult.originalDevDependencies;
     originalScripts = prepResult.originalScripts;
+    originalExports = prepResult.originalExports;
 
     // Read package metadata from root after preparation
     const rootPackage = await readPackageJSON(packagePath);
@@ -714,9 +725,9 @@ export async function publishPackage(
       };
     }
 
-    // Restore original dependencies after successful publishing
-    if (originalDependencies || originalDevDependencies || originalScripts) {
-      await restoreOriginalDependencies(packagePath, originalDependencies, originalDevDependencies, originalScripts);
+    // Restore original dependencies and exports after successful publishing
+    if (originalDependencies || originalDevDependencies || originalScripts || originalExports) {
+      await restoreOriginalDependencies(packagePath, originalDependencies, originalDevDependencies, originalScripts, originalExports);
     }
 
     return {
@@ -737,9 +748,9 @@ export async function publishPackage(
       }
     }
     
-    // Also restore dependencies if they were modified
-    if (originalDependencies || originalDevDependencies || originalScripts) {
-      await restoreOriginalDependencies(packagePath, originalDependencies, originalDevDependencies, originalScripts);
+    // Also restore dependencies and exports if they were modified
+    if (originalDependencies || originalDevDependencies || originalScripts || originalExports) {
+      await restoreOriginalDependencies(packagePath, originalDependencies, originalDevDependencies, originalScripts, originalExports);
     }
 
     return {
@@ -777,7 +788,10 @@ export async function publishAllPackages(
     const dlerConfig = await loadDlerConfig(cwd);
 
     const packages = await getWorkspacePackages(cwd);
-    const filteredPackages = filterPackages(packages, ignore);
+    
+    // In single-repo mode, skip filterPackages since ignore would leave nothing to publish
+    const isSingleRepo = packages.length === 1 && !ignore;
+    const filteredPackages = isSingleRepo ? packages : filterPackages(packages, ignore);
 
     if (filteredPackages.length === 0) {
       logger.warn("No packages found to publish");

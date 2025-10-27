@@ -18,8 +18,6 @@ export async function getApiChoice(
 
   if (Api) return Api;
 
-  const includesNuxt = frontend?.includes("nuxt");
-  const includesSvelte = frontend?.includes("svelte");
   const includesSolid = frontend?.includes("solid");
 
   let apiOptions = [
@@ -40,14 +38,12 @@ export async function getApiChoice(
     },
   ];
 
-  if (includesNuxt || includesSvelte || includesSolid) {
+  if (includesSolid) {
     apiOptions = [
       {
         value: "orpc" as const,
         label: "oRPC",
-        hint: `End-to-end type-safe APIs (Recommended for ${
-          includesNuxt ? "Nuxt" : includesSvelte ? "Svelte" : "Solid"
-        } frontend)`,
+        hint: ``,
       },
       {
         value: "none" as const,

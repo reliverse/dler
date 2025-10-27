@@ -24,8 +24,6 @@ export async function setupAddons(config: ProjectConfig) {
     frontend.includes("react-router") ||
     frontend.includes("tanstack-router") ||
     frontend.includes("next");
-  const hasNuxtFrontend = frontend.includes("nuxt");
-  const hasSvelteFrontend = frontend.includes("svelte");
   const hasSolidFrontend = frontend.includes("solid");
   const hasNextFrontend = frontend.includes("next");
 
@@ -42,8 +40,6 @@ export async function setupAddons(config: ProjectConfig) {
   if (
     addons.includes("tauri") &&
     (hasReactWebFrontend ||
-      hasNuxtFrontend ||
-      hasSvelteFrontend ||
       hasSolidFrontend ||
       hasNextFrontend)
   ) {
@@ -63,7 +59,7 @@ export async function setupAddons(config: ProjectConfig) {
 function getWebAppDir(projectDir: string, frontends: Frontend[]): string {
   if (
     frontends.some((f) =>
-      ["react-router", "tanstack-router", "nuxt", "svelte", "solid"].includes(
+      ["react-router", "tanstack-router", "solid"].includes(
         f,
       ),
     )

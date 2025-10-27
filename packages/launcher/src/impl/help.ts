@@ -1,5 +1,6 @@
-// packages/launcher/src/impl/launcher/help.ts
+// packages/launcher/src/impl/help.ts
 
+import { re } from "@reliverse/dler-colors";
 import pMap from "@reliverse/dler-mapper";
 import type {
   CmdArgsSchema,
@@ -11,27 +12,27 @@ import type {
 // Pre-computed help templates to avoid string concatenation
 const HELP_TEMPLATES = {
   commandHeader: (name: string, description: string) =>
-    `\n${name} - ${description}`,
-  version: (version: string) => `Version: ${version}`,
-  usage: (name: string) => `\nUsage:\n  ${name} [options]`,
+    `\n${re.bold.cyan(name)} - ${re.gray(description)}`,
+  version: (version: string) => `${re.yellow("Version:")} ${re.white(version)}`,
+  usage: (name: string) => `\n${re.bold("Usage:")}\n  ${re.green(name)} ${re.gray("[options]")}`,
   usageWithSubCommands: (name: string) =>
-    `\nUsage:\n  ${name} [subcommand] [options]`,
-  optionsHeader: `\nOptions:`,
-  requiredNote: `\n* = required`,
-  examplesHeader: `\nExamples:`,
-  globalHeader: `\nAvailable commands:\n`,
-  helpFooter: `\nUse "command --help" for command-specific help\n`,
+    `\n${re.bold("Usage:")}\n  ${re.green(name)} ${re.gray("[subcommand] [options]")}`,
+  optionsHeader: `\n${re.bold("Options:")}`,
+  requiredNote: `\n${re.red("*")} = ${re.gray("required")}`,
+  examplesHeader: `\n${re.bold("Examples:")}`,
+  globalHeader: `\n${re.bold("Available commands:")}\n`,
+  helpFooter: `\n${re.gray('Use "command --help" for command-specific help')}\n`,
 } as const;
 
 const formatArgName = (name: string, def: CmdArgsSchema[string]): string => {
-  const aliases = def.aliases ? ` (-${def.aliases.join(", -")})` : "";
-  const required = def.required ? "*" : "";
-  return `--${name}${aliases}${required}`;
+  const aliases = def.aliases ? re.gray(` (-${def.aliases.join(", -")})`) : "";
+  const required = def.required ? re.red("*") : "";
+  return `${re.cyan(`--${name}`)}${aliases}${required}`;
 };
 
 const formatArgType = (def: CmdArgsSchema[string]): string => {
   if (def.type === "boolean") return "";
-  return `<${def.type}>`;
+  return re.dim(`<${def.type}>`);
 };
 
 const getArgHelp = (name: string, def: CmdArgsSchema[string]): string => {
@@ -40,7 +41,7 @@ const getArgHelp = (name: string, def: CmdArgsSchema[string]): string => {
   const desc = def.description ?? "";
   const defaultVal =
     "default" in def && def.default !== undefined
-      ? ` (default: ${def.default})`
+      ? re.gray(` (default: ${def.default})`)
       : "";
 
   return `  ${argName} ${argType}\n      ${desc}${defaultVal}`;
@@ -77,7 +78,7 @@ export const generateCommandHelp = async (
   if (cfg.examples && cfg.examples.length > 0) {
     lines.push(HELP_TEMPLATES.examplesHeader);
     for (const example of cfg.examples) {
-      lines.push(`  ${example}`);
+      lines.push(`  ${re.cyan(example)}`);
     }
   }
 
@@ -85,9 +86,9 @@ export const generateCommandHelp = async (
 };
 
 const formatCommandHelp = (name: string, metadata: CmdMetadata): string => {
-  const aliases = metadata.aliases ? ` (${metadata.aliases.join(", ")})` : "";
+  const aliases = metadata.aliases ? re.gray(` (${metadata.aliases.join(", ")})`) : "";
   const description = metadata.description || "No description available";
-  return `  ${name}${aliases}\n      ${description}`;
+  return `  ${re.cyan(name)}${aliases}\n      ${re.gray(description)}`;
 };
 
 export const generateGlobalHelp = async (

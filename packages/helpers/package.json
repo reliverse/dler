@@ -1,13 +1,13 @@
 {
   "name": "@reliverse/dler-helpers",
-  "version": "2.0.15",
+  "version": "2.0.27",
   "private": false,
   "type": "module",
   "description": "@reliverse/dler-helpers is a collection of helper functions for the dler monorepo.",
   "exports": {
     ".": {
-      "types": "./dist/mod.d.ts",
-      "default": "./dist/mod.js"
+      "types": "./src/mod.ts",
+      "default": "./src/mod.ts"
     }
   },
   "publishConfig": {

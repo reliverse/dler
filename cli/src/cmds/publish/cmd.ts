@@ -151,14 +151,18 @@ const publishCmdArgs = defineCmdArgs({
 const publishCmdCfg = defineCmdCfg({
   name: "publish",
   description:
-    "Publish workspace packages to npm registry using Bun's native publish command. Automatically handles version bumping, package.json modification, and dist folder validation. Supports dler.ts configuration for per-package settings.",
+    "Publish workspace packages or single package to npm registry using Bun's native publish command. Automatically handles version bumping, package.json modification, and dist folder validation. Supports both monorepo and single-repo projects. Supports dler.ts configuration for per-package settings.",
   examples: [
     "dler publish",
+    "",
+    "# Monorepo examples:",
     'dler publish --ignore "@reliverse/*"',
     'dler publish --ignore "@reliverse/dler-colors" --ignore "@reliverse/dler-v1"',
     'dler publish --ignore "@reliverse/dler-colors @reliverse/dler-v1"',
     "dler publish --cwd /path/to/monorepo",
     "dler publish --cwd /path/to/monorepo --ignore @reliverse/*",
+    "",
+    "# Single-repo examples:",
     "dler publish --bump patch",
     "dler publish --bump minor --tag next",
     "dler publish --bump major --access public",

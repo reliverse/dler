@@ -11,7 +11,6 @@ import { createLoader } from "./loader";
 import type { DeclarationOutput } from "./utils/dts";
 import { getDeclarations, normalizeCompilerOptions } from "./utils/dts";
 import { copyFileWithStream } from "./utils/fs";
-import { getVueDeclarations } from "./utils/vue-dts";
 
 export async function mkdist(
 	options: MkdistOptions /* istanbul ignore next */ = {},
@@ -139,7 +138,7 @@ export async function mkdist(
 		const vfs = new Map(dtsOutputs.map((o) => [o.srcPath, o.contents || ""]));
 		const declarations: DeclarationOutput = Object.create(null);
 
-		for (const loader of [getVueDeclarations, getDeclarations]) {
+		for (const loader of [getDeclarations]) {
 			// @ts-expect-error TODO: fix ts
 			Object.assign(declarations, await loader(vfs, options));
 		}

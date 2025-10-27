@@ -1,15 +1,16 @@
 {
   "name": "@reliverse/dler-launcher",
-  "version": "2.0.15",
+  "version": "2.0.27",
   "private": false,
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/mod.d.ts",
-      "default": "./dist/mod.js"
+      "types": "./src/mod.ts",
+      "default": "./src/mod.ts"
     }
   },
   "dependencies": {
+    "@reliverse/dler-colors": "workspace:*",
     "@reliverse/dler-logger": "workspace:*",
     "@reliverse/dler-mapper": "workspace:*",
     "@reliverse/dler-helpers": "workspace:*"

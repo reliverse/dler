@@ -28,10 +28,8 @@ export const FrontendSchema = z
     "react-router",
     "tanstack-start",
     "next",
-    "nuxt",
     "native-nativewind",
     "native-unistyles",
-    "svelte",
     "solid",
     "none",
   ])

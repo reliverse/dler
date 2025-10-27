@@ -213,7 +213,6 @@ export class FileSystemAnalyzer {
       "node_modules",
       ".git",
       ".next",
-      ".nuxt",
       ".expo",
       "dist",
       "build",

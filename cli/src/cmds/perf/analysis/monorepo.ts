@@ -47,20 +47,32 @@ export class MonorepoAnalyzer {
       logger.info("🔍 Analyzing monorepo structure...");
     }
 
-    // Find monorepo root
+    // Find monorepo root or single package
     const monorepoRoot = await this.findMonorepoRoot(cwd);
+    
     if (!monorepoRoot) {
-      throw new Error(
-        'No monorepo found. Ensure package.json has "workspaces" field.',
-      );
-    }
+      // Not a monorepo, try to analyze single package
+      const currentDir = cwd || process.cwd();
+      const singlePkg = await this.discoverSinglePackage(currentDir);
+      if (singlePkg) {
+        this.packages = [singlePkg];
+        if (verbose) {
+          logger.info(`   Single package root: ${currentDir}`);
+          logger.info("   Found 1 package");
+        }
+      } else {
+        throw new Error(
+          'No monorepo or valid package found. Ensure package.json has "workspaces" field or contains a valid "name" field.',
+        );
+      }
+    } else {
+      if (verbose) {
+        logger.info(`   Monorepo root: ${monorepoRoot}`);
+      }
 
-    if (verbose) {
-      logger.info(`   Monorepo root: ${monorepoRoot}`);
+      // Discover packages
+      this.packages = await this.discoverPackages(monorepoRoot);
     }
-
-    // Discover packages
-    this.packages = await this.discoverPackages(monorepoRoot);
 
     if (verbose) {
       logger.info(`   Found ${this.packages.length} packages`);
@@ -153,13 +165,46 @@ export class MonorepoAnalyzer {
       }
     }
 
+    // Filter out the monorepo root to prevent analyzing it
+    const filteredPackages = packages.filter(pkg => {
+      const normalizedPkgPath = resolve(pkg.path);
+      const normalizedRootPath = resolve(monorepoRoot);
+      return normalizedPkgPath !== normalizedRootPath;
+    });
+
     // Apply ignore filters
     if (this.options.ignore) {
       const ignoreFilter = createIgnoreFilter(this.options.ignore);
-      return ignoreFilter(packages);
+      return ignoreFilter(filteredPackages);
     }
 
-    return packages;
+    return filteredPackages;
+  }
+
+  private async discoverSinglePackage(packagePath: string): Promise<PackageInfo | null> {
+    try {
+      const pkg = await readPackageJSON(packagePath);
+      if (!pkg || !pkg.name) return null;
+
+      const dependencies = [
+        ...Object.keys(pkg.dependencies ?? {}),
+        ...(this.options.includeDevDependencies
+          ? Object.keys(pkg.devDependencies ?? {})
+          : []),
+        ...Object.keys(pkg.peerDependencies ?? {}),
+      ];
+
+      return {
+        name: pkg.name,
+        path: packagePath,
+        dependencies,
+        dependents: [], // Will be filled later
+        buildTime: 0,
+        size: 0,
+      };
+    } catch {
+      return null;
+    }
   }
 
   private async resolvePackageInfo(

@@ -153,7 +153,6 @@ export default config;`;
       "next.config.js",
       "next.config.ts",
       "tailwind.config.ts",
-      "postcss.config.js",
       "tsconfig.json",
     ];
 

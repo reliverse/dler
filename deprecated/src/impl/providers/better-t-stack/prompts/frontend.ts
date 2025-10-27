@@ -15,7 +15,7 @@ export async function getFrontendChoice(
       {
         value: "web",
         label: "Web",
-        hint: "React, Vue or Svelte Web Application",
+        hint: "React Application",
       },
       {
         value: "native",
@@ -52,16 +52,6 @@ export async function getFrontendChoice(
         hint: "The React Framework for the Web",
       },
       {
-        value: "nuxt" as const,
-        label: "Nuxt",
-        hint: "The Progressive Web Framework for Vue.js",
-      },
-      {
-        value: "svelte" as const,
-        label: "Svelte",
-        hint: "web development for the rest of us",
-      },
-      {
         value: "solid" as const,
         label: "Solid",
         hint: "Simple and performant reactivity for building user interfaces",
@@ -75,7 +65,7 @@ export async function getFrontendChoice(
 
     const webOptions = allWebOptions.filter((option) => {
       if (backend === "convex") {
-        return option.value !== "nuxt" && option.value !== "solid";
+        return option.value !== "solid";
       }
       return true;
     });

@@ -17,10 +17,8 @@ export const PROJECT_FRAMEWORK_FILES: Record<ProjectFramework, string[]> = {
   unknown: [],
   nextjs: ["next.config.js", "next.config.ts", "next.config.mjs"],
   vite: ["vite.config.js", "vite.config.ts", "react.config.js"],
-  svelte: ["svelte.config.js", "svelte.config.ts"],
   remix: ["remix.config.js", "remix.config.ts"],
   astro: ["astro.config.js", "astro.config.ts", "astro.config.mjs"],
-  nuxt: ["nuxt.config.js", "nuxt.config.ts"],
   solid: ["solid.config.js", "solid.config.ts"],
   qwik: ["qwik.config.js", "qwik.config.ts"],
   "react-native": ["App.js", "App.tsx", "App.ts"],
@@ -41,7 +39,6 @@ export const PROJECT_FRAMEWORK_FILES: Record<ProjectFramework, string[]> = {
   "browser-extension": ["manifest.json"],
   "npm-jsr": ["jsr.json", "jsr.jsonc"],
   lynx: ["App.tsx", "App.css"],
-  vue: ["vue.config.js", "vite.config.ts"],
   wxt: ["wxt.config.js", "wxt.config.ts"],
 };
 

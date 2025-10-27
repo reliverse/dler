@@ -2,13 +2,13 @@
   "name": "@reliverse/dler-bump",
   "description": "Bump utils for @reliverse/dler",
   "author": "reliverse",
-  "version": "2.0.15",
+  "version": "2.0.27",
   "private": false,
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/mod.d.ts",
-      "default": "./dist/mod.js"
+      "types": "./src/mod.ts",
+      "default": "./src/mod.ts"
     }
   },
   "dependencies": {

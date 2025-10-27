@@ -38,14 +38,6 @@ export const DLER_TPL_API: Template = {
         content: `{{#if auth}}\nimport { createContext } from '@/lib/context'\n{{/if}}\nimport { appRouter } from '@/routers'\nimport { RPCHandler } from '@orpc/server/fetch'\nimport { NextRequest } from 'next/server'\n\nconst handler = new RPCHandler(appRouter)\n\nasync function handleRequest(req: NextRequest) {\n  const { response } = await handler.handle(req, {\n    prefix: '/rpc',\n    context: {{#if auth}}await createContext(req){{else}}{}{{/if}},\n  })\n\n  return response ?? new Response('Not found', { status: 404 })\n}\n\nexport const GET = handleRequest\nexport const POST = handleRequest\nexport const PUT = handleRequest\nexport const PATCH = handleRequest\nexport const DELETE = handleRequest\n`,
         type: "text",
       },
-      "api/orpc/web/nuxt/app/plugins/orpc.ts.hbs": {
-        metadata: {
-          updatedAt: "2025-06-17T06:06:35.000Z",
-          updatedHash: "77efd9809c",
-        },
-        content: `import { defineNuxtPlugin, useRuntimeConfig } from '#app'\nimport type { RouterClient } from '@orpc/server'\nimport type { appRouter } from "../../../server/src/routers/index";\nimport { createORPCClient } from '@orpc/client'\nimport { RPCLink } from '@orpc/client/fetch'\nimport { createTanstackQueryUtils } from "@orpc/tanstack-query";\n\nexport default defineNuxtPlugin(() => {\n  const config = useRuntimeConfig()\n  const serverUrl = config.public.serverURL\n\n  const rpcUrl = \`\${serverUrl}/rpc\`;\n\n  const rpcLink = new RPCLink({\n    url: rpcUrl,\n    {{#if auth}}\n    fetch(url, options) {\n        return fetch(url, {\n        ...options,\n        credentials: "include",\n        });\n    },\n    {{/if}}\n  })\n\n\n  const client: RouterClient<typeof appRouter> = createORPCClient(rpcLink)\n  const orpcUtils = createTanstackQueryUtils(client)\n\n  return {\n    provide: {\n      orpc: orpcUtils\n    }\n  }\n})\n`,
-        type: "text",
-      },
       "api/orpc/web/react/base/src/utils/orpc.ts.hbs": {
         metadata: {
           updatedAt: "2025-06-17T06:06:35.000Z",
@@ -60,14 +52,6 @@ export const DLER_TPL_API: Template = {
           updatedHash: "6d53d8cc60",
         },
         content: `import { createORPCClient } from "@orpc/client";\nimport { RPCLink } from "@orpc/client/fetch";\nimport { createTanstackQueryUtils } from "@orpc/tanstack-query";\nimport { QueryCache, QueryClient } from "@tanstack/solid-query";\nimport type { appRouter } from "../../../server/src/routers/index";\nimport type { RouterClient } from "@orpc/server";\n\nexport const queryClient = new QueryClient({\n  queryCache: new QueryCache({\n    onError: (error) => {\n      console.error(\`Error: \${error.message}\`);\n    },\n  }),\n});\n\nexport const link = new RPCLink({\n  url: \`\${import.meta.env.VITE_SERVER_URL}/rpc\`,\n  {{#if auth}}\n  fetch(url, options) {\n    return fetch(url, {\n      ...options,\n      credentials: "include",\n    });\n  },\n  {{/if}}\n});\n\nexport const client: RouterClient<typeof appRouter> = createORPCClient(link);\n\nexport const orpc = createTanstackQueryUtils(client);\n`,
-        type: "text",
-      },
-      "api/orpc/web/svelte/src/lib/orpc.ts.hbs": {
-        metadata: {
-          updatedAt: "2025-06-17T06:06:35.000Z",
-          updatedHash: "b8abb27944",
-        },
-        content: `import { PUBLIC_SERVER_URL } from "$env/static/public";\nimport { createORPCClient } from "@orpc/client";\nimport { RPCLink } from "@orpc/client/fetch";\nimport type { RouterClient } from "@orpc/server";\nimport { createTanstackQueryUtils } from "@orpc/tanstack-query";\nimport { QueryCache, QueryClient } from "@tanstack/svelte-query";\nimport type { appRouter } from "../../../server/src/routers/index";\n\nexport const queryClient = new QueryClient({\n	queryCache: new QueryCache({\n		onError: (error) => {\n			console.error(\`Error: \${error.message}\`);\n		},\n	}),\n});\n\nexport const link = new RPCLink({\n	url: \`\${PUBLIC_SERVER_URL}/rpc\`,\n	{{#if auth}}\n	fetch(url, options) {\n		return fetch(url, {\n			...options,\n			credentials: "include",\n		});\n	},\n	{{/if}}\n});\n\nexport const client: RouterClient<typeof appRouter> = createORPCClient(link);\n\nexport const orpc = createTanstackQueryUtils(client);\n`,
         type: "text",
       },
       "api/trpc/native/utils/trpc.ts.hbs": {

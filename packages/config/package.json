@@ -2,17 +2,17 @@
   "name": "@reliverse/dler-config",
   "description": "Configuration management for @reliverse/dler",
   "author": "reliverse",
-  "version": "2.0.15",
+  "version": "2.0.27",
   "private": false,
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/mod.d.ts",
-      "default": "./dist/mod.js"
+      "types": "./src/mod.ts",
+      "default": "./src/mod.ts"
     },
     "./impl/*": {
-      "types": "./dist/impl/*.d.ts",
-      "default": "./dist/impl/*.js"
+      "types": "./src/impl/*.ts",
+      "default": "./src/impl/*.ts"
     }
   },
   "dependencies": {

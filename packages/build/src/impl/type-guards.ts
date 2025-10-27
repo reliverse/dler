@@ -58,8 +58,8 @@ export function isValidSourcemap(sourcemap: any): sourcemap is 'none' | 'linked'
   return sourcemap === 'none' || sourcemap === 'linked' || sourcemap === 'inline' || sourcemap === 'external';
 }
 
-export function isValidLoader(loader: any): loader is 'js' | 'postcss' {
-  const validLoaders = ['js', 'postcss'];
+export function isValidLoader(loader: any): loader is 'js' {
+  const validLoaders = ['js'];
   return validLoaders.includes(loader);
 }
 

@@ -94,17 +94,13 @@ export async function setupEnvironmentVariables(
   const hasTanStackRouter = frontend.includes("tanstack-router");
   const hasTanStackStart = frontend.includes("tanstack-start");
   const hasNextJs = frontend.includes("next");
-  const hasNuxt = frontend.includes("nuxt");
-  const hasSvelte = frontend.includes("svelte");
   const hasSolid = frontend.includes("solid");
   const hasWebFrontend =
     hasReactRouter ||
     hasTanStackRouter ||
     hasTanStackStart ||
     hasNextJs ||
-    hasNuxt ||
-    hasSolid ||
-    hasSvelte;
+    hasSolid;
 
   if (hasWebFrontend) {
     const clientDir = path.join(projectDir, "apps/web");
@@ -114,16 +110,10 @@ export async function setupEnvironmentVariables(
 
       if (hasNextJs) {
         envVarName = "NEXT_PUBLIC_SERVER_URL";
-      } else if (hasNuxt) {
-        envVarName = "NUXT_PUBLIC_SERVER_URL";
-      } else if (hasSvelte) {
-        envVarName = "PUBLIC_SERVER_URL";
       }
 
       if (backend === "convex") {
         if (hasNextJs) envVarName = "NEXT_PUBLIC_CONVEX_URL";
-        else if (hasNuxt) envVarName = "NUXT_PUBLIC_CONVEX_URL";
-        else if (hasSvelte) envVarName = "PUBLIC_CONVEX_URL";
         else envVarName = "VITE_CONVEX_URL";
 
         serverUrl = "https://<YOUR_CONVEX_URL>";
@@ -176,7 +166,7 @@ export async function setupEnvironmentVariables(
   const envPath = path.join(serverDir, ".env");
 
   let corsOrigin = "http://localhost:3001";
-  if (hasReactRouter || hasSvelte) {
+  if (hasReactRouter) {
     corsOrigin = "http://localhost:5173";
   }
 

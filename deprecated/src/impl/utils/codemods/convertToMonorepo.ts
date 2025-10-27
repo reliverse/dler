@@ -81,7 +81,6 @@ export async function convertToMonorepo(
       "eslint.config.js",
       ".prettierrc",
       "next.config.js",
-      "postcss.config.js",
       "tailwind.config.js",
     ];
     for (const file of commonFiles) {

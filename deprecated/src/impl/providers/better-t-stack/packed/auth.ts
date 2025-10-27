@@ -142,62 +142,6 @@ export const DLER_TPL_AUTH: Template = {
         content: `import { auth } from "@/lib/auth";\nimport { toNextJsHandler } from "better-auth/next-js";\n\nexport const { GET, POST } = toNextJsHandler(auth.handler);\n`,
         type: "text",
       },
-      "auth/web/nuxt/app/components/SignInForm.vue": {
-        metadata: {
-          updatedAt: "2025-06-17T06:06:35.000Z",
-          updatedHash: "4d70f0e8c7",
-        },
-        content: `<script setup lang="ts">\nimport z from 'zod/v4'\nconst {$authClient} = useNuxtApp()\nimport type { FormSubmitEvent } from '#ui/types'\n\nconst emit = defineEmits(['switchToSignUp'])\n\nconst toast = useToast()\nconst loading = ref(false)\n\nconst schema = z.object({\n  email: z.email('Invalid email address'),\n  password: z.string().min(8, 'Password must be at least 8 characters'),\n})\n\ntype Schema = z.output<typeof schema>\n\nconst state = reactive({\n  email: '',\n  password: '',\n})\n\nasync function onSubmit (event: FormSubmitEvent<Schema>) {\n  loading.value = true\n  try {\n    await $authClient.signIn.email(\n      {\n        email: event.data.email,\n        password: event.data.password,\n      },\n      {\n        onSuccess: () => {\n          toast.add({ title: 'Sign in successful' })\n          navigateTo('/dashboard', { replace: true })\n        },\n        onError: (error) => {\n          toast.add({ title: 'Sign in failed', description: error.error.message })\n        },\n      },\n    )\n  } catch (error: any) {\n     toast.add({ title: 'An unexpected error occurred', description: error.message || 'Please try again.' })\n  } finally {\n    loading.value = false\n  }\n}\n</script>\n\n<template>\n  <div class="mx-auto w-full mt-10 max-w-md p-6">\n    <h1 class="mb-6 text-center text-3xl font-bold">Welcome Back</h1>\n\n    <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">\n      <UFormField label="Email" name="email">\n        <UInput v-model="state.email" type="email" class="w-full" />\n      </UFormField>\n\n      <UFormField label="Password" name="password">\n        <UInput v-model="state.password" type="password" class="w-full" />\n      </UFormField>\n\n      <UButton type="submit" block :loading="loading">\n        Sign In\n      </UButton>\n    </UForm>\n\n    <div class="mt-4 text-center">\n      <UButton\n        variant="link"\n        @click="$emit('switchToSignUp')"\n        class="text-primary hover:text-primary-dark"\n      >\n        Need an account? Sign Up\n      </UButton>\n    </div>\n  </div>\n</template>\n`,
-        type: "text",
-      },
-      "auth/web/nuxt/app/components/SignUpForm.vue": {
-        metadata: {
-          updatedAt: "2025-06-17T06:06:35.000Z",
-          updatedHash: "414fb57522",
-        },
-        content: `<script setup lang="ts">\nimport z from 'zod/v4'\nimport type { FormSubmitEvent } from '#ui/types'\nconst {$authClient} = useNuxtApp()\n\nconst emit = defineEmits(['switchToSignIn'])\n\nconst toast = useToast()\nconst loading = ref(false)\n\nconst schema = z.object({\n  name: z.string().min(2, 'Name must be at least 2 characters'),\n  email: z.email('Invalid email address'),\n  password: z.string().min(8, 'Password must be at least 8 characters'),\n})\n\ntype Schema = z.output<typeof schema>\n\nconst state = reactive({\n  name: '',\n  email: '',\n  password: '',\n})\n\nasync function onSubmit (event: FormSubmitEvent<Schema>) {\n  loading.value = true\n  try {\n    await $authClient.signUp.email(\n      {\n        name: event.data.name,\n        email: event.data.email,\n        password: event.data.password,\n      },\n      {\n        onSuccess: () => {\n          toast.add({ title: 'Sign up successful' })\n          navigateTo('/dashboard', { replace: true })\n        },\n        onError: (error) => {\n          toast.add({ title: 'Sign up failed', description: error.error.message })\n        },\n      },\n    )\n  } catch (error: any) {\n     toast.add({ title: 'An unexpected error occurred', description: error.message || 'Please try again.' })\n  } finally {\n    loading.value = false\n  }\n}\n</script>\n\n<template>\n  <div class="mx-auto w-full mt-10 max-w-md p-6">\n    <h1 class="mb-6 text-center text-3xl font-bold">Create Account</h1>\n\n    <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">\n       <UFormField label="Name" name="name">\n        <UInput v-model="state.name" class="w-full" />\n      </UFormField>\n\n      <UFormField label="Email" name="email">\n        <UInput v-model="state.email" type="email" class="w-full" />\n      </UFormField>\n\n      <UFormField label="Password" name="password">\n        <UInput v-model="state.password" type="password" class="w-full" />\n      </UFormField>\n\n      <UButton type="submit" block :loading="loading">\n        Sign Up\n      </UButton>\n    </UForm>\n\n    <div class="mt-4 text-center">\n      <UButton\n        variant="link"\n        @click="$emit('switchToSignIn')"\n        class="text-primary hover:text-primary-dark"\n      >\n        Already have an account? Sign In\n      </UButton>\n    </div>\n  </div>\n</template>\n`,
-        type: "text",
-      },
-      "auth/web/nuxt/app/components/UserMenu.vue": {
-        metadata: {
-          updatedAt: "2025-06-17T06:06:35.000Z",
-          updatedHash: "fc4335c0e0",
-        },
-        content: `<script setup lang="ts">\n\nconst {$authClient} = useNuxtApp()\nconst session = $authClient.useSession()\nconst toast = useToast()\n\nconst handleSignOut = async () => {\n  try {\n    await $authClient.signOut({\n      fetchOptions: {\n        onSuccess: async () => {\n          toast.add({ title: 'Signed out successfully' })\n          await navigateTo('/', { replace: true, external: true })\n        },\n        onError: (error) => {\n           toast.add({ title: 'Sign out failed', description: error?.error?.message || 'Unknown error'})\n        }\n      },\n    })\n  } catch (error: any) {\n     toast.add({ title: 'An unexpected error occurred during sign out', description: error.message || 'Please try again.'})\n  }\n}\n</script>\n\n<template>\n  <div>\n    <USkeleton v-if="session.isPending" class="h-9 w-24" />\n\n    <UButton v-else-if="!session.data" variant="outline" to="/login">\n      Sign In\n    </UButton>\n\n    <UButton\n      v-else\n      variant="solid"\n      icon="i-lucide-log-out"\n      label="Sign out"\n      @click="handleSignOut()"\n    />\n  </div>\n</template>\n`,
-        type: "text",
-      },
-      "auth/web/nuxt/app/middleware/auth.ts": {
-        metadata: {
-          updatedAt: "2025-06-17T06:06:35.000Z",
-          updatedHash: "e1df215c73",
-        },
-        content: `export default defineNuxtRouteMiddleware(async (to, from) => {\n  if (import.meta.server) return\n\n  const { $authClient } = useNuxtApp()\n  const session = $authClient.useSession()\n\n  if (session.value.isPending || !session.value) {\n    if (to.path === "/dashboard") {\n      return navigateTo("/login");\n    }\n  }\n});\n`,
-        type: "text",
-      },
-      "auth/web/nuxt/app/pages/dashboard.vue": {
-        metadata: {
-          updatedAt: "2025-06-17T06:06:35.000Z",
-          updatedHash: "c21e12fd96",
-        },
-        content: `<script setup lang="ts">\nimport { useQuery } from '@tanstack/vue-query'\nconst {$authClient} = useNuxtApp()\n\ndefinePageMeta({\n  middleware: ['auth']\n})\n\nconst { $orpc } = useNuxtApp()\n\nconst session = $authClient.useSession()\n\nconst privateData = useQuery($orpc.privateData.queryOptions())\n\n</script>\n\n<template>\n  <div class="container mx-auto p-4">\n      <h1 class="text-2xl font-bold mb-4">Dashboard</h1>\n     <div v-if="session?.data?.user">\n        <p class="mb-2">Welcome {{ session.data.user.name }}</p>\n     </div>\n        <div v-if="privateData.status.value === 'pending'">Loading private data...</div>\n        <div v-else-if="privateData.status.value === 'error'">Error loading private data: {{ privateData.error.value?.message }}</div>\n        <p v-else-if="privateData.data.value">Private Data: {{ privateData.data.value.message }}</p>\n  </div>\n</template>\n`,
-        type: "text",
-      },
-      "auth/web/nuxt/app/pages/login.vue": {
-        metadata: {
-          updatedAt: "2025-06-17T06:06:35.000Z",
-          updatedHash: "d6c3c73480",
-        },
-        content: `<script setup lang="ts">\nconst { $authClient } = useNuxtApp();\nimport SignInForm from "~/components/SignInForm.vue";\nimport SignUpForm from "~/components/SignUpForm.vue";\n\nconst session = $authClient.useSession();\nconst showSignIn = ref(true);\n\nwatchEffect(() => {\n  if (!session?.value.isPending && session?.value.data) {\n    navigateTo("/dashboard", { replace: true });\n  }\n});\n</script>\n\n<template>\n  <div>\n    <Loader v-if="session.isPending" />\n    <div v-else-if="!session.data">\n      <SignInForm v-if="showSignIn" @switch-to-sign-up="showSignIn = false" />\n      <SignUpForm v-else @switch-to-sign-in="showSignIn = true" />\n    </div>\n  </div>\n</template>\n`,
-        type: "text",
-      },
-      "auth/web/nuxt/app/plugins/auth-client.ts": {
-        metadata: {
-          updatedAt: "2025-06-17T06:06:35.000Z",
-          updatedHash: "6fc7eac334",
-        },
-        content: `import { createAuthClient } from "better-auth/vue";\n\nexport default defineNuxtPlugin(nuxtApp => {\n  const config = useRuntimeConfig()\n  const serverUrl = config.public.serverURL\n\n  const authClient = createAuthClient({\n    baseURL: serverUrl\n  })\n\n  return {\n    provide: {\n      authClient: authClient\n    }\n  }\n})\n`,
-        type: "text",
-      },
       "auth/web/react/base/src/lib/auth-client.ts.hbs": {
         metadata: {
           updatedAt: "2025-06-17T06:06:35.000Z",
@@ -420,54 +364,6 @@ export const DLER_TPL_AUTH: Template = {
           updatedHash: "519b617d37",
         },
         content: `import SignInForm from "@/components/sign-in-form";\nimport SignUpForm from "@/components/sign-up-form";\nimport { createFileRoute } from "@tanstack/solid-router";\nimport { createSignal, Match, Switch } from "solid-js";\n\nexport const Route = createFileRoute("/login")({\n  component: RouteComponent,\n});\n\nfunction RouteComponent() {\n  const [showSignIn, setShowSignIn] = createSignal(false);\n\n  return (\n    <Switch>\n      <Match when={showSignIn()}>\n        <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />\n      </Match>\n      <Match when={!showSignIn()}>\n        <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />\n      </Match>\n    </Switch>\n  );\n}\n`,
-        type: "text",
-      },
-      "auth/web/svelte/src/components/SignInForm.svelte": {
-        metadata: {
-          updatedAt: "2025-06-17T06:06:35.000Z",
-          updatedHash: "fd1702a9d0",
-        },
-        content: `<script lang="ts">\n	import { createForm } from '@tanstack/svelte-form';\n	import z from 'zod/v4';\n	import { authClient } from '$lib/auth-client';\n	import { goto } from '$app/navigation';\n\n	let { switchToSignUp } = $props<{ switchToSignUp: () => void }>();\n\n	const validationSchema = z.object({\n		email: z.email('Invalid email address'),\n		password: z.string().min(1, 'Password is required'),\n	});\n\n	const form = createForm(() => ({\n		defaultValues: { email: '', password: '' },\n		onSubmit: async ({ value }) => {\n				await authClient.signIn.email(\n					{ email: value.email, password: value.password },\n					{\n						onSuccess: () => goto('/dashboard'),\n						onError: (error) => {\n							console.log(error.error.message || 'Sign in failed. Please try again.');\n						},\n					}\n				);\n\n		},\n		validators: {\n			onSubmit: validationSchema,\n		},\n	}));\n</script>\n\n<div class="mx-auto mt-10 w-full max-w-md p-6">\n	<h1 class="mb-6 text-center font-bold text-3xl">Welcome Back</h1>\n\n	<form\n		class="space-y-4"\n		onsubmit={(e) => {\n			e.preventDefault();\n			e.stopPropagation();\n			form.handleSubmit();\n		}}\n	>\n		<form.Field name="email">\n			{#snippet children(field)}\n				<div class="space-y-1">\n					<label for={field.name}>Email</label>\n					<input\n						id={field.name}\n						name={field.name}\n						type="email"\n						class="w-full border"\n						onblur={field.handleBlur}\n						value={field.state.value}\n        oninput={(e: Event) => {\n            const target = e.target as HTMLInputElement\n            field.handleChange(target.value)\n          }}					/>\n					{#if field.state.meta.isTouched}\n						{#each field.state.meta.errors as error}\n							<p class="text-sm text-red-500" role="alert">{error}</p>\n						{/each}\n					{/if}\n				</div>\n			{/snippet}\n		</form.Field>\n\n		<form.Field name="password">\n			{#snippet children(field)}\n				<div class="space-y-1">\n					<label for={field.name}>Password</label>\n					<input\n						id={field.name}\n						name={field.name}\n						type="password"\n						class="w-full border"\n						onblur={field.handleBlur}\n					 value={field.state.value}\n      oninput={(e: Event) => {\n            const target = e.target as HTMLInputElement\n            field.handleChange(target.value)\n          }}\n					/>\n					{#if field.state.meta.isTouched}\n						{#each field.state.meta.errors as error}\n							<p class="text-sm text-red-500" role="alert">{error}</p>\n						{/each}\n					{/if}\n				</div>\n			{/snippet}\n		</form.Field>\n\n		<form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>\n			{#snippet children(state)}\n				<button type="submit" class="w-full" disabled={!state.canSubmit || state.isSubmitting}>\n					{state.isSubmitting ? 'Submitting...' : 'Sign In'}\n				</button>\n			{/snippet}\n		</form.Subscribe>\n	</form>\n\n	<div class="mt-4 text-center">\n		<button type="button" class="text-indigo-600 hover:text-indigo-800" onclick={switchToSignUp}>\n			Need an account? Sign Up\n		</button>\n	</div>\n</div>\n`,
-        type: "text",
-      },
-      "auth/web/svelte/src/components/SignUpForm.svelte": {
-        metadata: {
-          updatedAt: "2025-06-17T06:06:35.000Z",
-          updatedHash: "e8283c1b3b",
-        },
-        content: `<script lang="ts">\n	import { createForm } from '@tanstack/svelte-form';\n	import z from 'zod/v4';\n	import { authClient } from '$lib/auth-client';\n	import { goto } from '$app/navigation';\n\n	let { switchToSignIn } = $props<{ switchToSignIn: () => void }>();\n\n	const validationSchema = z.object({\n		name: z.string().min(2, 'Name must be at least 2 characters'),\n		email: z.email('Invalid email address'),\n		password: z.string().min(8, 'Password must be at least 8 characters'),\n	});\n\n\n	const form = createForm(() => ({\n		defaultValues: { name: '', email: '', password: '' },\n		onSubmit: async ({ value }) => {\n				await authClient.signUp.email(\n					{\n						email: value.email,\n						password: value.password,\n						name: value.name,\n					},\n					{\n						onSuccess: () => {\n							goto('/dashboard');\n						},\n						onError: (error) => {\n							console.log(error.error.message || 'Sign up failed. Please try again.');\n						},\n					}\n				);\n\n		},\n		validators: {\n			onSubmit: validationSchema,\n		},\n	}));\n</script>\n\n<div class="mx-auto mt-10 w-full max-w-md p-6">\n	<h1 class="mb-6 text-center font-bold text-3xl">Create Account</h1>\n\n	<form\n		id="form"\n		class="space-y-4"\n		onsubmit={(e) => {\n			e.preventDefault();\n			e.stopPropagation();\n			form.handleSubmit();\n		}}\n	>\n		<form.Field name="name">\n			{#snippet children(field)}\n				<div class="space-y-1">\n					<label for={field.name}>Name</label>\n					<input\n						id={field.name}\n						name={field.name}\n						class="w-full border"\n						onblur={field.handleBlur}\n					 value={field.state.value}\n      oninput={(e: Event) => {\n            const target = e.target as HTMLInputElement\n            field.handleChange(target.value)\n          }}\n					/>\n					{#if field.state.meta.isTouched}\n						{#each field.state.meta.errors as error}\n							<p class="text-sm text-red-500" role="alert">{error}</p>\n						{/each}\n					{/if}\n				</div>\n			{/snippet}\n		</form.Field>\n\n		<form.Field name="email">\n			{#snippet children(field)}\n				<div class="space-y-1">\n					<label for={field.name}>Email</label>\n					<input\n						id={field.name}\n						name={field.name}\n						type="email"\n						class="w-full border"\n						onblur={field.handleBlur}\n      value={field.state.value}\n      oninput={(e: Event) => {\n            const target = e.target as HTMLInputElement\n            field.handleChange(target.value)\n          }}\n					/>\n					{#if field.state.meta.isTouched}\n						{#each field.state.meta.errors as error}\n							<p class="text-sm text-red-500" role="alert">{error}</p>\n						{/each}\n					{/if}\n				</div>\n			{/snippet}\n		</form.Field>\n\n		<form.Field name="password">\n			{#snippet children(field)}\n				<div class="space-y-1">\n					<label for={field.name}>Password</label>\n					<input\n						id={field.name}\n						name={field.name}\n						type="password"\n						class="w-full border"\n						onblur={field.handleBlur}\n					 value={field.state.value}\n      oninput={(e: Event) => {\n            const target = e.target as HTMLInputElement\n            field.handleChange(target.value)\n          }}\n					/>\n					{#if field.state.meta.errors}\n						{#each field.state.meta.errors as error}\n							<p class="text-sm text-red-500" role="alert">{error}</p>\n						{/each}\n					{/if}\n				</div>\n			{/snippet}\n		</form.Field>\n\n		<form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>\n			{#snippet children(state)}\n				<button type="submit" class="w-full" disabled={!state.canSubmit || state.isSubmitting}>\n					{state.isSubmitting ? 'Submitting...' : 'Sign Up'}\n				</button>\n			{/snippet}\n		</form.Subscribe>\n	</form>\n\n	<div class="mt-4 text-center">\n		<button type="button" class="text-indigo-600 hover:text-indigo-800" onclick={switchToSignIn}>\n			Already have an account? Sign In\n		</button>\n	</div>\n</div>\n`,
-        type: "text",
-      },
-      "auth/web/svelte/src/components/UserMenu.svelte": {
-        metadata: {
-          updatedAt: "2025-06-17T06:06:35.000Z",
-          updatedHash: "32a1d6548d",
-        },
-        content: `<script lang="ts">\n	import { authClient } from '$lib/auth-client';\n	import { goto } from '$app/navigation';\n	import { queryClient } from '$lib/orpc';\n\n	const sessionQuery = authClient.useSession();\n\n	async function handleSignOut() {\n		await authClient.signOut({\n		fetchOptions: {\n			onSuccess: () => {\n				queryClient.invalidateQueries();\n				goto('/');\n			},\n			onError: (error) => {\n				console.error('Sign out failed:', error);\n			}\n		}\n		});\n	}\n\n	function goToLogin() {\n		goto('/login');\n	}\n\n</script>\n\n<div class="relative">\n	{#if $sessionQuery.isPending}\n		<div class="h-8 w-24 animate-pulse rounded bg-neutral-700"></div>\n	{:else if $sessionQuery.data?.user}\n		{@const user = $sessionQuery.data.user}\n		<div class="flex items-center gap-3">\n			<span class="text-sm text-neutral-300 hidden sm:inline" title={user.email}>\n				{user.name || user.email?.split('@')[0] || 'User'}\n			</span>\n			<button\n				onclick={handleSignOut}\n				class="rounded px-3 py-1 text-sm bg-red-600 hover:bg-red-700 text-white transition-colors"\n			>\n				Sign Out\n			</button>\n		</div>\n	{:else}\n		<div class="flex items-center gap-2">\n			<button\n				onclick={goToLogin}\n				class="rounded px-3 py-1 text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"\n			>\n				Sign In\n			</button>\n		</div>\n	{/if}\n</div>\n`,
-        type: "text",
-      },
-      "auth/web/svelte/src/lib/auth-client.ts": {
-        metadata: {
-          updatedAt: "2025-06-17T06:06:35.000Z",
-          updatedHash: "53a67137c9",
-        },
-        content: `import { PUBLIC_SERVER_URL } from "$env/static/public";\nimport { createAuthClient } from "better-auth/svelte";\n\nexport const authClient = createAuthClient({\n	baseURL: PUBLIC_SERVER_URL,\n});\n`,
-        type: "text",
-      },
-      "auth/web/svelte/src/routes/dashboard/+page.svelte": {
-        metadata: {
-          updatedAt: "2025-06-17T06:06:35.000Z",
-          updatedHash: "6b3d81f7af",
-        },
-        content: `<script lang="ts">\n	import { onMount } from 'svelte';\n	import { goto } from '$app/navigation';\n	import { authClient } from '$lib/auth-client';\n	import { orpc } from '$lib/orpc';\n	import { createQuery } from '@tanstack/svelte-query';\n	import { get } from 'svelte/store';\n\n	const sessionQuery = authClient.useSession();\n\n	const privateDataQuery = createQuery(orpc.privateData.queryOptions());\n\n	onMount(() => {\n		const { data: session, isPending } = get(sessionQuery);\n		if (!session && !isPending) {\n			goto('/login');\n		}\n	});\n</script>\n\n{#if $sessionQuery.isPending}\n	<div>Loading...</div>\n{:else if !$sessionQuery.data}\n	<!-- Redirecting... -->\n{:else}\n	<div>\n		<h1>Dashboard</h1>\n		<p>Welcome {$sessionQuery.data.user.name}</p>\n		<p>privateData: {$privateDataQuery.data?.message}</p>\n	</div>\n{/if}\n`,
-        type: "text",
-      },
-      "auth/web/svelte/src/routes/login/+page.svelte": {
-        metadata: {
-          updatedAt: "2025-06-17T06:06:35.000Z",
-          updatedHash: "30212236e8",
-        },
-        content: `<script lang="ts">\n	import SignInForm from '../../components/SignInForm.svelte';\n	import SignUpForm from '../../components/SignUpForm.svelte';\n\n	let showSignIn = $state(true);\n</script>\n\n{#if showSignIn}\n	<SignInForm switchToSignUp={() => showSignIn = false} />\n{:else}\n	<SignUpForm switchToSignIn={() => showSignIn = true} />\n{/if}\n`,
         type: "text",
       },
     },

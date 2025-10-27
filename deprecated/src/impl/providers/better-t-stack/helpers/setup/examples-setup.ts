@@ -24,8 +24,6 @@ export async function setupExamples(config: ProjectConfig): Promise<void> {
     const clientDirExists = await fs.pathExists(clientDir);
     const serverDirExists = await fs.pathExists(serverDir);
 
-    const hasNuxt = frontend.includes("nuxt");
-    const hasSvelte = frontend.includes("svelte");
     const hasReact =
       frontend.includes("react-router") ||
       frontend.includes("tanstack-router") ||
@@ -36,11 +34,7 @@ export async function setupExamples(config: ProjectConfig): Promise<void> {
 
     if (clientDirExists) {
       const dependencies: AvailableDependencies[] = ["ai"];
-      if (hasNuxt) {
-        dependencies.push("@ai-sdk/vue");
-      } else if (hasSvelte) {
-        dependencies.push("@ai-sdk/svelte");
-      } else if (hasReact) {
+      if (hasReact) {
         dependencies.push("@ai-sdk/react");
       }
       await addPackageDependency({

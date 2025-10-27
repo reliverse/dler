@@ -182,8 +182,6 @@ const analyzeProject = async (
 const detectFramework = (dependencies: string[]): string | null => {
   if (dependencies.includes("next")) return "next";
   if (dependencies.includes("react")) return "react";
-  if (dependencies.includes("vue")) return "vue";
-  if (dependencies.includes("svelte")) return "svelte";
   if (dependencies.includes("express")) return "express";
   if (dependencies.includes("fastify")) return "fastify";
   return null;

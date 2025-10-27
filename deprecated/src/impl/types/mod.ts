@@ -11,11 +11,6 @@ import type { Hookable } from "hookable";
 import type { Jiti, JitiOptions } from "jiti";
 import type { PackageJson, TSConfig } from "pkg-types";
 import type {
-  AcceptedPlugin as PostcssPlugin,
-  ProcessOptions as PostcssProcessOptions,
-} from "postcss";
-import type { Options as PostcssNestedOptions } from "postcss-nested";
-import type {
   RollupOptions as _RollupOptions,
   OutputOptions,
   Plugin,
@@ -833,15 +828,6 @@ interface LoaderOptions {
   format?: "cjs" | "esm";
   declaration?: boolean;
   esbuild?: CommonOptions;
-  postcss?:
-    | false
-    | {
-        nested?: false | PostcssNestedOptions;
-        autoprefixer?: false | AutoprefixerOptions;
-        cssnano?: false | CssnanoOptions;
-        plugins?: PostcssPlugin[];
-        processOptions?: Omit<PostcssProcessOptions, "from">;
-      };
 }
 
 export interface LoaderContext {
@@ -855,7 +841,7 @@ export type Loader = (
 ) => LoaderResult | Promise<LoaderResult>;
 
 // should be the same as the loaders in loaders-mod.ts
-type LoaderName = "js" | "vue" | "sass" | "postcss";
+type LoaderName = "js";
 
 export type CreateLoaderOptions = {
   loaders?: (Loader | LoaderName)[];

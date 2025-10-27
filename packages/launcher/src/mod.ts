@@ -2,6 +2,7 @@
 
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { re } from "@reliverse/dler-colors";
 import { writeErrorLines } from "@reliverse/dler-helpers";
 import { logger } from "@reliverse/dler-logger";
 import { discoverCommands } from "./impl/discovery";
@@ -195,9 +196,11 @@ export const runLauncher = async (
       if (onError) {
         onError(error);
       } else {
-        const errorLines = [`\n❌ Error: ${error.message}`];
+        const errorLines = [
+          `\n${re.red.bold("❌ Error:")} ${re.red(error.message)}`,
+        ];
         if (error instanceof CommandLoadError && error.cause) {
-          errorLines.push(`Cause: ${error.cause}`);
+          errorLines.push(`${re.yellow("Cause:")} ${error.cause}`);
         }
         errorLines.push("");
         writeErrorLines(errorLines);

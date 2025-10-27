@@ -30,8 +30,6 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
   const hasReactWeb = frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
   );
-  const hasNuxtWeb = frontend.includes("nuxt");
-  const hasSvelteWeb = frontend.includes("svelte");
   const hasSolidWeb = frontend.includes("solid");
 
   if (!isConvex && api !== "none") {
@@ -81,29 +79,6 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
               "@trpc/tanstack-react-query",
               "@trpc/client",
               "@trpc/server",
-            ],
-            projectDir: webDir,
-          });
-        }
-      } else if (hasNuxtWeb) {
-        if (api === "orpc") {
-          await addPackageDependency({
-            dependencies: [
-              "@orpc/tanstack-query",
-              "@orpc/client",
-              "@orpc/server",
-            ],
-            projectDir: webDir,
-          });
-        }
-      } else if (hasSvelteWeb) {
-        if (api === "orpc") {
-          await addPackageDependency({
-            dependencies: [
-              "@orpc/tanstack-query",
-              "@orpc/client",
-              "@orpc/server",
-              "@tanstack/svelte-query",
             ],
             projectDir: webDir,
           });
@@ -229,9 +204,6 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
           const webDepsToAdd: AvailableDependencies[] = ["convex"];
           if (frontend.includes("tanstack-start")) {
             webDepsToAdd.push("@convex-dev/react-query");
-          }
-          if (hasSvelteWeb) {
-            webDepsToAdd.push("convex-svelte");
           }
 
           await addPackageDependency({

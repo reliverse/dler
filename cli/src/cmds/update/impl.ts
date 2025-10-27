@@ -61,7 +61,6 @@ export async function prepareAllUpdateCandidates(): Promise<{
       !file.includes(".git") &&
       !file.includes("coverage") &&
       !file.includes(".next") &&
-      !file.includes(".nuxt") &&
       !file.includes("out") &&
       !file.includes("target") &&
       !file.includes(".turbo")

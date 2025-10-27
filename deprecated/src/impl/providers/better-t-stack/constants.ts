@@ -83,8 +83,6 @@ export const dependencyVersionMap = {
 
   ai: "^4.3.16",
   "@ai-sdk/google": "^1.2.3",
-  "@ai-sdk/vue": "^1.2.8",
-  "@ai-sdk/svelte": "^2.1.9",
   "@ai-sdk/react": "^1.2.12",
 
   "@prisma/extension-accelerate": "^1.3.0",
@@ -99,9 +97,7 @@ export const dependencyVersionMap = {
 
   convex: "^1.23.0",
   "@convex-dev/react-query": "^0.0.0-alpha.8",
-  "convex-svelte": "^0.0.11",
 
-  "@tanstack/svelte-query": "^5.74.4",
   "@tanstack/react-query-devtools": "^5.80.5",
   "@tanstack/react-query": "^5.80.5",
 

@@ -143,9 +143,25 @@ const getWorkspacePackages = async (
   const startTime = Date.now();
   const monorepoRoot = await findMonorepoRoot(cwd);
 
+  // If no monorepo found, check if current directory is a single package
   if (!monorepoRoot) {
+    const currentDir = cwd || process.cwd();
+    const pkgInfo = await resolvePackageInfo(currentDir);
+    
+    if (pkgInfo) {
+      // Return single package result
+      return {
+        packages: [pkgInfo],
+        monorepoRoot: currentDir,
+        discoveryTime: Date.now() - startTime,
+        cacheHits: 0,
+        cacheMisses: 1,
+      };
+    }
+    
+    // Neither monorepo nor valid package found
     throw new Error(
-      "❌ No monorepo found. Ensure package.json has 'workspaces' field.",
+      "❌ No monorepo or valid package found. Ensure package.json has 'workspaces' field or contains a valid 'name' field.",
     );
   }
 
@@ -202,14 +218,21 @@ const getWorkspacePackages = async (
     .filter((result) => result.pkgInfo !== null)
     .map((result) => result.pkgInfo!);
 
+  // Filter out the monorepo root to prevent checking it
+  const filteredPackages = packages.filter(pkg => {
+    const normalizedPkgPath = resolve(pkg.path);
+    const normalizedRootPath = resolve(monorepoRoot);
+    return normalizedPkgPath !== normalizedRootPath;
+  });
+
   const discoveryTime = Date.now() - startTime;
 
   return {
-    packages,
+    packages: filteredPackages,
     monorepoRoot,
     discoveryTime,
     cacheHits: 0, // Will be updated by cache layer
-    cacheMisses: packages.length,
+    cacheMisses: filteredPackages.length,
   };
 };
 

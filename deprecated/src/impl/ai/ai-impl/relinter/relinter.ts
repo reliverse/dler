@@ -194,8 +194,6 @@ function isCodeFile(filename: string): boolean {
     "makefile",
     "cmake",
     "asm",
-    "vue",
-    "svelte",
     "pwn",
     "inc",
   ];

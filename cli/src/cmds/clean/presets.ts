@@ -31,7 +31,7 @@ export const PRESET_CATEGORIES: Record<string, PresetCategory> = {
   frontend: {
     name: "frontend",
     description: "Frontend framework build artifacts",
-    patterns: [".next/", ".nuxt/", ".expo/", "routeTree.gen.ts"],
+    patterns: [".next/", ".expo/", "routeTree.gen.ts"],
     order: 4,
   },
 

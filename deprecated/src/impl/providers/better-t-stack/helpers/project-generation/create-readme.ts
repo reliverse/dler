@@ -45,15 +45,13 @@ function generateReadmeContent(options: ProjectConfig): string {
     frontend.includes("native-unistyles");
   const hasNext = frontend.includes("next");
   const hasTanstackStart = frontend.includes("tanstack-start");
-  const hasSvelte = frontend.includes("svelte");
   const hasSolid = frontend.includes("solid");
-  const hasNuxt = frontend.includes("nuxt");
 
   const packageManagercallCmd =
     packageManager === "npm" ? "npm run" : packageManager;
 
   let webPort = "3001";
-  if (hasReactRouter || hasSvelte) {
+  if (hasReactRouter) {
     webPort = "5173";
   }
 
@@ -68,11 +66,7 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
           ? "Next.js"
           : hasTanstackStart
             ? "React, TanStack Start"
-            : hasSvelte
-              ? "SvelteKit"
-              : hasNuxt
-                ? "Nuxt"
-                : hasSolid
+            : hasSolid
                   ? "SolidJS"
                   : ""
   }, ${backend?.[0]?.toUpperCase() ?? ""}${backend?.slice(1) ?? ""}${
@@ -116,8 +110,6 @@ ${
   hasReactRouter ||
   hasNext ||
   hasTanstackStart ||
-  hasSvelte ||
-  hasNuxt ||
   hasSolid
     ? `Open [http://localhost:${webPort}](http://localhost:${webPort}) in your browser to see the web application.`
     : ""
@@ -145,8 +137,6 @@ ${
   hasReactRouter ||
   hasNext ||
   hasTanstackStart ||
-  hasSvelte ||
-  hasNuxt ||
   hasSolid
     ? `│   ├── web/         # Frontend application (${
         hasTanstackRouter
@@ -157,11 +147,7 @@ ${
               ? "Next.js"
               : hasTanstackStart
                 ? "React + TanStack Start"
-                : hasSvelte
-                  ? "SvelteKit"
-                  : hasNuxt
-                    ? "Nuxt"
-                    : hasSolid
+                : hasSolid
                       ? "SolidJS"
                       : ""
       })\n`
@@ -203,8 +189,6 @@ function generateFeaturesList(
     frontend.includes("native-unistyles");
   const hasNext = frontend.includes("next");
   const hasTanstackStart = frontend.includes("tanstack-start");
-  const hasSvelte = frontend.includes("svelte");
-  const hasNuxt = frontend.includes("nuxt");
   const hasSolid = frontend.includes("solid");
 
   const addonsList = [
@@ -223,10 +207,6 @@ function generateFeaturesList(
     addonsList.push(
       "- **TanStack Start** - SSR framework with TanStack Router",
     );
-  } else if (hasSvelte) {
-    addonsList.push("- **SvelteKit** - Web framework for building Svelte apps");
-  } else if (hasNuxt) {
-    addonsList.push("- **Nuxt** - The Intuitive Vue Framework");
   } else if (hasSolid) {
     addonsList.push("- **SolidJS** - Simple and performant reactivity");
   }

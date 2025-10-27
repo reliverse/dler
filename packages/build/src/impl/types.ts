@@ -345,14 +345,13 @@ export interface OutputFile {
   errors?: TypeError[];
 }
 
-export type LoaderName = 'js' | 'postcss';
+export type LoaderName = 'js';
 
 export interface CreateLoaderOptions {
   loaders?: (LoaderName | Loader)[];
   declaration?: boolean;
   format?: 'esm' | 'cjs';
   ext?: string;
-  postcss?: any;
   esbuild?: any;
   [key: string]: any;
 }

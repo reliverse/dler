@@ -60,7 +60,7 @@ export const randomWebsiteDetailsTitle = [
 ];
 
 export const randomAdContent = [
-  "Got a cool saas•tool•lib•etc? This spot can be yours! → blefnk@gmail.com",
+  "Got a cool website•tool•lib•etc? This spot can be yours! → blefnk@gmail.com",
   `Resend: "Railway is a game changer for us" → https://railway.com?referralCode=sATgpf`,
 ];
 

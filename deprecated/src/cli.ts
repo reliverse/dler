@@ -127,11 +127,6 @@ export {
 } from "./impl/auth/impl/init";
 export { migrateAction } from "./impl/auth/impl/migrate";
 export type { AuthConfigImport } from "./impl/auth/impl/types";
-export {
-  addSvelteKitEnvModules,
-  filterPrivateEnv,
-  filterPublicEnv,
-} from "./impl/auth/utils/add-svelte-kit-env-modules";
 export { checkPackageManagers } from "./impl/auth/utils/check-package-managers";
 export { formatMilliseconds } from "./impl/auth/utils/format-ms";
 export { generateSecretHash } from "./impl/auth/utils/generate-secret";
@@ -184,19 +179,6 @@ export {
   resolveLoader,
   resolveLoaders,
 } from "./impl/build/providers/mkdist/mkdist-impl/loaders/loaders-mod";
-export type { PostcssLoaderOptions } from "./impl/build/providers/mkdist/mkdist-impl/loaders/postcss";
-export { postcssLoader } from "./impl/build/providers/mkdist/mkdist-impl/loaders/postcss";
-export { sassLoader } from "./impl/build/providers/mkdist/mkdist-impl/loaders/sass";
-export type {
-  DefaultBlockLoaderOptions,
-  DefineVueLoaderOptions,
-  VueBlock,
-  VueBlockLoader,
-} from "./impl/build/providers/mkdist/mkdist-impl/loaders/vue";
-export {
-  fallbackVueLoader,
-  vueLoader,
-} from "./impl/build/providers/mkdist/mkdist-impl/loaders/vue";
 export { mkdist } from "./impl/build/providers/mkdist/mkdist-impl/make";
 export type { DeclarationOutput } from "./impl/build/providers/mkdist/mkdist-impl/utils/dts";
 export {
@@ -206,7 +188,6 @@ export {
   normalizeCompilerOptions,
 } from "./impl/build/providers/mkdist/mkdist-impl/utils/dts";
 export { copyFileWithStream } from "./impl/build/providers/mkdist/mkdist-impl/utils/fs";
-export { getVueDeclarations } from "./impl/build/providers/mkdist/mkdist-impl/utils/vue-dts";
 export { mkdistBuild } from "./impl/build/providers/mkdist/mkdist-mod";
 export { rollupBuild } from "./impl/build/providers/rollup/build";
 export { getRollupOptions } from "./impl/build/providers/rollup/config";
@@ -1032,35 +1013,6 @@ export type {
   UntypedOutputs,
   VSCodeSettings,
 } from "./impl/types/mod";
-export {
-  checkPackageUpdatesForFile,
-  handleInstallation,
-  prepareAllUpdateCandidates,
-  updatePackageJsonFileDirectly,
-  validatePackageJson,
-} from "./impl/update/impl";
-export type {
-  DependencyInfo,
-  PackageCheckOptions,
-  UpdateResult,
-} from "./impl/update/utils";
-export {
-  applyVersionUpdate,
-  checkPackageUpdate,
-  collectTargetDependencies,
-  displayStructuredUpdateResults,
-  fetchVersionFromRegistry,
-  getLatestVersion,
-  getPmOptions,
-  isCatalogReference,
-  isNonSemverSpecifier,
-  isNpmAlias,
-  isSemverCompatible,
-  isWorkspaceDependency,
-  prepareDependenciesForUpdate,
-  runInstallCommand,
-  updatePackageJsonFile,
-} from "./impl/update/utils";
 export type {
   UploadFile,
   UploadResult,

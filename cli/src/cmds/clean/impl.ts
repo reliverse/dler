@@ -107,9 +107,19 @@ const getWorkspacePackages = async (
 ): Promise<PackageInfo[]> => {
   const monorepoRoot = await findMonorepoRoot(cwd, useCwd);
 
+  // If no monorepo found, check if current directory is a single package
   if (!monorepoRoot) {
+    const currentDir = cwd || process.cwd();
+    const pkgInfo = await resolvePackageInfo(currentDir, true);
+    
+    if (pkgInfo) {
+      // Return single package info
+      return [pkgInfo];
+    }
+    
+    // Neither monorepo nor valid package found
     throw new Error(
-      "❌ No monorepo found. Ensure package.json has 'workspaces' field.",
+      "❌ No monorepo or valid package found. Ensure package.json has 'workspaces' field or contains a valid 'name' field.",
     );
   }
 
@@ -118,14 +128,17 @@ const getWorkspacePackages = async (
     throw new Error("❌ Could not read root package.json");
   }
 
+  // Add root package to the list
+  const rootPkgInfo = await resolvePackageInfo(monorepoRoot, true);
+  const packages: PackageInfo[] = rootPkgInfo ? [rootPkgInfo] : [];
+  const seenPaths = new Set<string>([monorepoRoot]);
+
   const patterns = getWorkspacePatterns(rootPkg);
 
   if (!patterns.length) {
-    throw new Error("❌ No workspace patterns found in package.json");
+    // If no workspace patterns, return root package only
+    return packages;
   }
-
-  const packages: PackageInfo[] = [];
-  const seenPaths = new Set<string>();
 
   for (const pattern of patterns) {
     // Check if pattern contains wildcards
@@ -290,7 +303,6 @@ const getCategoryForPattern = (pattern: string): string => {
   if (pattern.includes(".basehub")) return "cms";
   if (
     pattern.includes(".next") ||
-    pattern.includes(".nuxt") ||
     pattern.includes(".expo")
   )
     return "frontend";
@@ -856,12 +868,9 @@ export const runCleanOnAllPackages = async (
         (sum, r) => sum + r.files.reduce((s, f) => s + f.size, 0),
         0,
       ) + lockFilesResult.deletedSize;
-    const deletedFiles =
-      results.reduce((sum, r) => sum + r.deletedCount, 0) +
-      lockFilesResult.deletedCount;
-    const deletedSize =
-      results.reduce((sum, r) => sum + r.deletedSize, 0) +
-      lockFilesResult.deletedSize;
+    // In dry-run mode, deletedFiles/deletedSize should equal totalFiles/totalSize
+    const deletedFiles = totalFiles;
+    const deletedSize = totalSize;
     const allErrors = results.flatMap((r) => r.errors);
 
     const summary: CleanSummary = {

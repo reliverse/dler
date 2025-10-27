@@ -209,8 +209,6 @@ export const getDefaultAuthConfig = async ({ appName }: { appName?: string }) =>
 export type SupportedFrameworks =
   | "vanilla"
   | "react"
-  | "vue"
-  | "svelte"
   | "solid"
   | "nextjs";
 

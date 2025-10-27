@@ -146,7 +146,7 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
   },
   tailwind: {
     name: "Tailwind CSS",
-    dependencies: ["tailwindcss", "postcss", "autoprefixer"],
+    dependencies: ["tailwindcss", "autoprefixer"],
     files: [
       {
         path: "tailwind.config.js",
@@ -159,15 +159,6 @@ export const INTEGRATION_CONFIGS: Record<string, IntegrationConfig> = {
       extend: {},
     },
     plugins: [],
-  }`,
-      },
-      {
-        path: "postcss.config.js",
-        content: `module.exports = {
-    plugins: {
-      tailwindcss: {},
-      autoprefixer: {},
-    },
   }`,
       },
       {

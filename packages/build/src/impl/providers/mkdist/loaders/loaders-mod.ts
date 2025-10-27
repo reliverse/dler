@@ -1,16 +1,14 @@
 import type { Loader } from "../../../types";
 
 import { jsLoader } from "./js";
-import { postcssLoader } from "./postcss";
 
 const loaders = {
 	js: jsLoader,
-	postcss: postcssLoader,
 };
 
 type LoaderName = keyof typeof loaders;
 
-export const defaultLoaders: LoaderName[] = ["js", "postcss"];
+export const defaultLoaders: LoaderName[] = ["js"];
 
 export function resolveLoader(loader: LoaderName | Loader) {
 	if (typeof loader === "string") {
