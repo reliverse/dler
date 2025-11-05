@@ -63,9 +63,11 @@ All `@reliverse/dler` v2+ commands support both monorepo (recommended) and singl
 4. `dler integrate` automatically installs and configures integrations like Next.js, Ultracite/Biome, etc.
 5. `dler perf` runs performance benchmarks for the requested target.
 6. `dler publish` publishes all packages to npm and jsr (soon). Handles version bumping, and different validations. Supports dler.ts configuration for per-package settings.
-7. `dler shell` uses Bun's `$`, making it handy for running cross-platform custom terminal commands.
-8. `dler tsc` finds TypeScript errors across all monorepo packages and shows only real ones (unlike the native `tsc`, which sometimes shows errors of its dependencies). It also has a `--copy-logs` flag that copies errors/warnings straight to your clipboard (with an inserted prompt for fixing them), so you can just hit Ctrl/Cmd+V and send it to AI.
-9. `dler update` updates the dependencies of all packages to the latest version (yes, even across the monorepo).
+7. `dler senv` helps you manage system environment variables easily. Example: `dler senv --action append --name Path --value C:\Users\your-user-name\.local\bin` (on Windows it automates the following steps: System Properties →
+  Environment Variables → Edit User PATH → New → Add the path). The command is especially useful for Windows users, when you have too many vars so OS will not allow you to add more.
+8. `dler shell` uses Bun's `$`, making it handy for running cross-platform custom terminal commands.
+9. `dler tsc` finds TypeScript errors across all monorepo packages and shows only real ones (unlike the native `tsc`, which sometimes shows errors of its dependencies). It also has a `--copy-logs` flag that copies errors/warnings straight to your clipboard (with an inserted prompt for fixing them), so you can just hit Ctrl/Cmd+V and send it to AI.
+10. `dler update` updates the dependencies of all packages to the latest version (yes, even across the monorepo).
 
 ## v2 Docs
 

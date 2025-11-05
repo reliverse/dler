@@ -1,6 +1,5 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "extends": ["ultracite"],
   "files": {
     "includes": [
       "**",
@@ -154,17 +153,11 @@
       },
       "nursery": {
         "useConsistentArrowReturn": "off",
-        "useAnchorHref": "off",
         "useMaxParams": "off",
-        "useImageSize": "off",
         "noUnnecessaryConditions": "off",
         "useExhaustiveSwitchCases": "off",
         "noShadow": "off",
-        "useSortedClasses": "off",
-        "useConsistentTypeDefinitions": {
-          "level": "off",
-          "options": { "style": "interface" }
-        }
+        "useSortedClasses": "off"
       }
     }
   },

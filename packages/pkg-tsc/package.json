@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler-pkg-tsc",
-  "version": "2.0.27",
+  "version": "2.0.28",
   "private": false,
   "type": "module",
   "description": "@reliverse/dler-pkg-tsc is a collection of utils to work with package.json and tsconfig.json files.",
