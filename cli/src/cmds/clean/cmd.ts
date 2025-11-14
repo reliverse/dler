@@ -1,12 +1,12 @@
 // apps/dler/src/cmds/clean/cmd.ts
 
+import { replaceExportsInPackages } from "@reliverse/dler-helpers";
 import {
   defineCmd,
   defineCmdArgs,
   defineCmdCfg,
 } from "@reliverse/dler-launcher";
 import { logger } from "@reliverse/dler-logger";
-import { replaceExportsInPackages } from "@reliverse/dler-helpers";
 import { runCleanOnAllPackages } from "./impl";
 import type { CleanOptions } from "./types";
 
@@ -22,7 +22,9 @@ const cleanCmd = async (args: CleanOptions): Promise<void> => {
     const shouldReplaceExports = args.replaceExports !== false;
     if (shouldReplaceExports) {
       if (args.verbose) {
-        logger.info("📝 Replacing exports from ./dist/*.js to ./src/*.ts before cleaning...");
+        logger.info(
+          "📝 Replacing exports from ./dist/*.js to ./src/*.ts before cleaning...",
+        );
       }
       await replaceExportsInPackages({
         direction: "js-to-ts",
@@ -100,11 +102,13 @@ const cleanCmdArgs = defineCmdArgs({
   },
   replaceExports: {
     type: "boolean",
-    description: "Replace exports from ./src/*.ts to ./dist/*.js before cleaning (default: true)",
+    description:
+      "Replace exports from ./src/*.ts to ./dist/*.js before cleaning (default: true)",
   },
   replaceExportsIgnorePackages: {
     type: "string",
-    description: "Packages to ignore when replacing exports (supports glob patterns like @reliverse/*)",
+    description:
+      "Packages to ignore when replacing exports (supports glob patterns like @reliverse/*)",
   },
 });
 

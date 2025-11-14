@@ -18,7 +18,9 @@ export const BundleAnalyzerPlugin: DlerPlugin = {
     try {
       await analyzeBundle(result);
     } catch (error) {
-      logger.warn(`Failed to analyze bundle for ${result.package.name}: ${error}`);
+      logger.warn(
+        `Failed to analyze bundle for ${result.package.name}: ${error}`,
+      );
     }
   },
 };
@@ -26,7 +28,7 @@ export const BundleAnalyzerPlugin: DlerPlugin = {
 async function analyzeBundle(result: BuildResult): Promise<void> {
   const pkg = result.package;
   const outputDir = pkg.outputDir;
-  
+
   if (!existsSync(outputDir)) {
     return;
   }
@@ -58,8 +60,8 @@ async function analyzeBundle(result: BuildResult): Promise<void> {
   for (const file of files) {
     const filePath = join(outputDir, file);
     const stats = statSync(filePath);
-    const ext = file.split('.').pop()?.toLowerCase() || '';
-    
+    const ext = file.split(".").pop()?.toLowerCase() || "";
+
     const fileInfo = {
       name: file,
       size: stats.size,
@@ -71,9 +73,9 @@ async function analyzeBundle(result: BuildResult): Promise<void> {
     analysis.totals.totalFiles++;
 
     // Categorize files
-    if (ext === 'js' || ext === 'mjs') {
+    if (ext === "js" || ext === "mjs") {
       analysis.totals.jsFiles++;
-    } else if (ext === 'css') {
+    } else if (ext === "css") {
       analysis.totals.cssFiles++;
     } else {
       analysis.totals.assetFiles++;
@@ -87,18 +89,22 @@ async function analyzeBundle(result: BuildResult): Promise<void> {
   generateRecommendations(analysis);
 
   // Write analysis report
-  const reportPath = join(outputDir, 'bundle-analysis.json');
+  const reportPath = join(outputDir, "bundle-analysis.json");
   writeFileSync(reportPath, JSON.stringify(analysis, null, 2));
 
   // Log summary
   logger.info(`📊 Bundle analysis for ${pkg.name}:`);
   logger.info(`   Total size: ${formatBytes(analysis.totals.totalSize)}`);
-  logger.info(`   Files: ${analysis.totals.totalFiles} (${analysis.totals.jsFiles} JS, ${analysis.totals.cssFiles} CSS, ${analysis.totals.assetFiles} assets)`);
-  
+  logger.info(
+    `   Files: ${analysis.totals.totalFiles} (${analysis.totals.jsFiles} JS, ${analysis.totals.cssFiles} CSS, ${analysis.totals.assetFiles} assets)`,
+  );
+
   if (analysis.files.length > 0) {
     const largestFile = analysis.files[0];
     if (largestFile) {
-      logger.info(`   Largest file: ${largestFile.name} (${formatBytes(largestFile.size)})`);
+      logger.info(
+        `   Largest file: ${largestFile.name} (${formatBytes(largestFile.size)})`,
+      );
     }
   }
 
@@ -114,65 +120,80 @@ async function analyzeBundle(result: BuildResult): Promise<void> {
 
 function getFileType(ext: string): string {
   const typeMap: Record<string, string> = {
-    'js': 'JavaScript',
-    'mjs': 'JavaScript (ESM)',
-    'css': 'CSS',
-    'png': 'Image (PNG)',
-    'jpg': 'Image (JPEG)',
-    'jpeg': 'Image (JPEG)',
-    'gif': 'Image (GIF)',
-    'svg': 'Image (SVG)',
-    'webp': 'Image (WebP)',
-    'woff': 'Font (WOFF)',
-    'woff2': 'Font (WOFF2)',
-    'ttf': 'Font (TTF)',
-    'eot': 'Font (EOT)',
-    'html': 'HTML',
-    'json': 'JSON',
-    'txt': 'Text',
+    js: "JavaScript",
+    mjs: "JavaScript (ESM)",
+    css: "CSS",
+    png: "Image (PNG)",
+    jpg: "Image (JPEG)",
+    jpeg: "Image (JPEG)",
+    gif: "Image (GIF)",
+    svg: "Image (SVG)",
+    webp: "Image (WebP)",
+    woff: "Font (WOFF)",
+    woff2: "Font (WOFF2)",
+    ttf: "Font (TTF)",
+    eot: "Font (EOT)",
+    html: "HTML",
+    json: "JSON",
+    txt: "Text",
   };
-  
-  return typeMap[ext] || 'Unknown';
+
+  return typeMap[ext] || "Unknown";
 }
 
 function generateRecommendations(analysis: any): void {
   const { totals, files } = analysis;
-  
+
   // Check bundle size
-  if (totals.totalSize > 1024 * 1024) { // 1MB
-    analysis.recommendations.push("Bundle size is large (>1MB). Consider code splitting or removing unused code.");
+  if (totals.totalSize > 1024 * 1024) {
+    // 1MB
+    analysis.recommendations.push(
+      "Bundle size is large (>1MB). Consider code splitting or removing unused code.",
+    );
   }
-  
+
   // Check for large individual files
   const largeFiles = files.filter((f: any) => f.size > 500 * 1024); // 500KB
   if (largeFiles.length > 0) {
-    analysis.recommendations.push(`Large files detected: ${largeFiles.map((f: any) => f.name).join(', ')}. Consider optimizing or splitting.`);
+    analysis.recommendations.push(
+      `Large files detected: ${largeFiles.map((f: any) => f.name).join(", ")}. Consider optimizing or splitting.`,
+    );
   }
-  
+
   // Check for too many files
   if (totals.totalFiles > 50) {
-    analysis.recommendations.push("Many files in bundle. Consider consolidating or using code splitting.");
+    analysis.recommendations.push(
+      "Many files in bundle. Consider consolidating or using code splitting.",
+    );
   }
-  
+
   // Check JS/CSS ratio
   if (totals.jsFiles > 0 && totals.cssFiles > 0) {
-    const jsSize = files.filter((f: any) => f.type.includes('JavaScript')).reduce((sum: number, f: any) => sum + f.size, 0);
-    const cssSize = files.filter((f: any) => f.type.includes('CSS')).reduce((sum: number, f: any) => sum + f.size, 0);
-    
+    const jsSize = files
+      .filter((f: any) => f.type.includes("JavaScript"))
+      .reduce((sum: number, f: any) => sum + f.size, 0);
+    const cssSize = files
+      .filter((f: any) => f.type.includes("CSS"))
+      .reduce((sum: number, f: any) => sum + f.size, 0);
+
     if (cssSize > jsSize) {
-      analysis.recommendations.push("CSS is larger than JavaScript. Consider CSS optimization or purging unused styles.");
+      analysis.recommendations.push(
+        "CSS is larger than JavaScript. Consider CSS optimization or purging unused styles.",
+      );
     }
   }
-  
+
   // Check for duplicate file types
   const fileTypes = new Map<string, number>();
   files.forEach((f: any) => {
     fileTypes.set(f.type, (fileTypes.get(f.type) || 0) + 1);
   });
-  
+
   for (const [type, count] of fileTypes) {
     if (count > 10) {
-      analysis.recommendations.push(`Many ${type} files (${count}). Consider consolidating.`);
+      analysis.recommendations.push(
+        `Many ${type} files (${count}). Consider consolidating.`,
+      );
     }
   }
 }

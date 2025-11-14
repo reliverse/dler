@@ -1,23 +1,32 @@
 import { resolve } from "node:path";
-import { type BumpType, bumpVersion, getNextVersion } from "@reliverse/dler-bump";
 import { transformExportsForBuild } from "@reliverse/dler-build";
+import {
+  type BumpType,
+  bumpVersion,
+  getNextVersion,
+} from "@reliverse/dler-bump";
+import type { BaseConfig } from "@reliverse/dler-config/impl/core";
+import {
+  filterPackages,
+  findMonorepoRoot,
+  getWorkspacePackages,
+  loadDlerConfig,
+} from "@reliverse/dler-config/impl/discovery";
 import {
   getPackagePublishConfig,
   mergePublishOptions,
   type PackageKind,
-  type RegistryType, 
+  type RegistryType,
 } from "@reliverse/dler-config/impl/publish";
 import { logger } from "@reliverse/dler-logger";
 import { readPackageJSON, writePackageJSON } from "@reliverse/dler-pkg-tsc";
-import type { BaseConfig } from "@reliverse/dler-config/impl/core";
-import { filterPackages, getWorkspacePackages, loadDlerConfig, findMonorepoRoot } from "@reliverse/dler-config/impl/discovery";
 
 export interface PackagePublishConfig {
   enable?: boolean;
   dryRun?: boolean;
   tag?: string;
   access?: "public" | "restricted";
-  otp?: string; 
+  otp?: string;
   authType?: "web" | "legacy";
   concurrency?: number;
   verbose?: boolean;
@@ -64,7 +73,10 @@ export interface PublishOptions {
   kind?: PackageKind;
 }
 
-export type { PackageKind, RegistryType } from "@reliverse/dler-config/impl/publish";
+export type {
+  PackageKind,
+  RegistryType,
+} from "@reliverse/dler-config/impl/publish";
 
 // ============================================================================
 // Types
@@ -201,7 +213,9 @@ function validatePackageJsonFields(
 
   // Check if package is private (should not be)
   if (pkg.private === true) {
-    errors.push("Package has 'private: true' - cannot publish. Run 'dler build' to prepare the package.");
+    errors.push(
+      "Package has 'private: true' - cannot publish. Run 'dler build' to prepare the package.",
+    );
   }
 
   // Check for files field (added by build command)
@@ -218,8 +232,9 @@ function validatePackageJsonFields(
   // Check for exports field (should exist)
   // The publish command will transform /src/ paths to /dist/ automatically
   // Skip exports requirement for packages with bin field
-  const hasBinField = pkg.bin && typeof pkg.bin === "object" && Object.keys(pkg.bin).length > 0;
-  
+  const hasBinField =
+    pkg.bin && typeof pkg.bin === "object" && Object.keys(pkg.bin).length > 0;
+
   if (!pkg.exports && !hasBinField) {
     errors.push("Missing 'exports' field - Run 'dler build' to add it.");
   }
@@ -228,13 +243,17 @@ function validatePackageJsonFields(
   if (!pkg.publishConfig) {
     errors.push("Missing 'publishConfig' field - Run 'dler build' to add it.");
   } else if (!pkg.publishConfig.access) {
-    errors.push("Missing 'publishConfig.access' field - Run 'dler build' to add it.");
+    errors.push(
+      "Missing 'publishConfig.access' field - Run 'dler build' to add it.",
+    );
   }
 
   // For CLI packages, check for bin field
   if (kind === "cli") {
     if (!pkg.bin) {
-      errors.push("CLI package missing 'bin' field - Run 'dler build' to add it.");
+      errors.push(
+        "CLI package missing 'bin' field - Run 'dler build' to add it.",
+      );
     } else if (typeof pkg.bin === "object") {
       const binEntries = Object.keys(pkg.bin);
       if (binEntries.length === 0) {
@@ -243,7 +262,9 @@ function validatePackageJsonFields(
         // Verify bin paths point to dist
         for (const [binName, binPath] of Object.entries(pkg.bin)) {
           if (typeof binPath === "string" && !binPath.startsWith("dist/")) {
-            errors.push(`CLI bin entry '${binName}' should point to 'dist/' directory, found: '${binPath}'`);
+            errors.push(
+              `CLI bin entry '${binName}' should point to 'dist/' directory, found: '${binPath}'`,
+            );
           }
         }
       }
@@ -264,7 +285,7 @@ async function restoreOriginalDependencies(
   originalDependencies: any,
   originalDevDependencies: any,
   originalScripts?: any,
-  originalExports?: any
+  originalExports?: any,
 ): Promise<void> {
   try {
     const pkg = await readPackageJSON(packagePath);
@@ -272,7 +293,7 @@ async function restoreOriginalDependencies(
       // Restore original dependencies (only if they existed)
       if (originalDependencies !== undefined) {
         pkg.dependencies = originalDependencies;
-      }    
+      }
       if (originalDevDependencies !== undefined) {
         pkg.devDependencies = originalDevDependencies;
       }
@@ -284,7 +305,7 @@ async function restoreOriginalDependencies(
       if (originalExports !== undefined) {
         pkg.exports = originalExports;
       }
-      
+
       // Write back the restored package.json
       await writePackageJSON(resolve(packagePath, "package.json"), pkg);
     }
@@ -309,20 +330,20 @@ async function resolveWorkspaceVersion(
     if (bumpedVersions?.has(depName)) {
       return bumpedVersions.get(depName) || null;
     }
-    
+
     // Get workspace packages if not provided
     if (!workspacePackages) {
       const monorepoRoot = await findMonorepoRoot(packagePath);
       if (!monorepoRoot) return null;
       workspacePackages = await getWorkspacePackages(monorepoRoot);
     }
-    
+
     // Find the workspace package by name
-    const workspacePkg = workspacePackages.find(pkg => pkg.name === depName);
+    const workspacePkg = workspacePackages.find((pkg) => pkg.name === depName);
     if (workspacePkg?.pkg?.version) {
       return workspacePkg.pkg.version;
     }
-    
+
     return null;
   } catch {
     return null;
@@ -332,7 +353,10 @@ async function resolveWorkspaceVersion(
 /**
  * Resolve catalog dependency to actual version
  */
-async function resolveCatalogVersion(packagePath: string, depName: string): Promise<string | null> {
+async function resolveCatalogVersion(
+  packagePath: string,
+  depName: string,
+): Promise<string | null> {
   try {
     // Go up to 3 levels to find monorepo root
     const possibleRoots = [
@@ -347,9 +371,13 @@ async function resolveCatalogVersion(packagePath: string, depName: string): Prom
         if (rootPkg && rootPkg.workspaces) {
           // Handle both array format and object format for workspaces
           const workspaces = rootPkg.workspaces;
-          if (typeof workspaces === 'object' && workspaces !== null && 'catalog' in workspaces) {
+          if (
+            typeof workspaces === "object" &&
+            workspaces !== null &&
+            "catalog" in workspaces
+          ) {
             const catalog = (workspaces as any).catalog;
-            if (catalog && typeof catalog === 'object') {
+            if (catalog && typeof catalog === "object") {
               const catalogVersion = catalog[depName];
               if (catalogVersion) {
                 return catalogVersion;
@@ -377,10 +405,10 @@ async function preparePackageForPublishing(
   workspacePackages?: Array<{ name: string; path: string; pkg: any }>,
   bumpedVersions?: Map<string, string>,
   shouldBumpVersion = true,
-): Promise<{ 
-  success: boolean; 
-  version?: string; 
-  error?: string; 
+): Promise<{
+  success: boolean;
+  version?: string;
+  error?: string;
   originalPkg?: any;
   originalDependencies?: any;
   originalDevDependencies?: any;
@@ -395,10 +423,18 @@ async function preparePackageForPublishing(
 
     // Create a backup of the original package.json
     const originalPkg = { ...pkg };
-    const originalExports = pkg.exports ? JSON.parse(JSON.stringify(pkg.exports)) : undefined;
+    const originalExports = pkg.exports
+      ? JSON.parse(JSON.stringify(pkg.exports))
+      : undefined;
 
     // Handle version bumping (skip if bumpDisable is true or dry-run is true or shouldBumpVersion is false)
-    if (shouldBumpVersion && options.bump && !options.bumpDisable && !options.dryRun && pkg.version) {
+    if (
+      shouldBumpVersion &&
+      options.bump &&
+      !options.bumpDisable &&
+      !options.dryRun &&
+      pkg.version
+    ) {
       const bumpResult = bumpVersion(pkg.version, options.bump);
       if (!bumpResult) {
         return {
@@ -407,11 +443,12 @@ async function preparePackageForPublishing(
         };
       }
       if (options.verbose) {
-        logger.log(`  Bumping version from ${pkg.version} to ${bumpResult.bumped} (${options.bump})`);
+        logger.log(
+          `  Bumping version from ${pkg.version} to ${bumpResult.bumped} (${options.bump})`,
+        );
       }
       pkg.version = bumpResult.bumped;
     }
-
 
     // Add publishConfig with access level
     if (!pkg.publishConfig) {
@@ -420,9 +457,18 @@ async function preparePackageForPublishing(
     pkg.publishConfig.access = options.access || "public";
 
     // Store original dependencies for restoration (only if they exist and have content)
-    const originalDependencies = pkg.dependencies && Object.keys(pkg.dependencies).length > 0 ? { ...pkg.dependencies } : undefined;
-    const originalDevDependencies = pkg.devDependencies && Object.keys(pkg.devDependencies).length > 0 ? { ...pkg.devDependencies } : undefined;
-    const originalScripts = pkg.scripts && Object.keys(pkg.scripts).length > 0 ? { ...pkg.scripts } : undefined;
+    const originalDependencies =
+      pkg.dependencies && Object.keys(pkg.dependencies).length > 0
+        ? { ...pkg.dependencies }
+        : undefined;
+    const originalDevDependencies =
+      pkg.devDependencies && Object.keys(pkg.devDependencies).length > 0
+        ? { ...pkg.devDependencies }
+        : undefined;
+    const originalScripts =
+      pkg.scripts && Object.keys(pkg.scripts).length > 0
+        ? { ...pkg.scripts }
+        : undefined;
 
     // Remove devDependencies for publishing (they shouldn't go to npm)
     delete pkg.devDependencies;
@@ -436,31 +482,47 @@ async function preparePackageForPublishing(
         if (typeof version === "string") {
           if (version.startsWith("workspace:")) {
             // Resolve workspace dependency to actual version
-            const workspaceVersion = await resolveWorkspaceVersion(packagePath, depName, workspacePackages, bumpedVersions);
+            const workspaceVersion = await resolveWorkspaceVersion(
+              packagePath,
+              depName,
+              workspacePackages,
+              bumpedVersions,
+            );
             if (workspaceVersion) {
               if (options.verbose) {
-                logger.log(`  Resolving workspace dependency ${depName}: ${version} -> ${workspaceVersion}`);
+                logger.log(
+                  `  Resolving workspace dependency ${depName}: ${version} -> ${workspaceVersion}`,
+                );
               }
               pkg.dependencies[depName] = workspaceVersion;
             } else {
               // If can't resolve, remove the dependency
               if (options.verbose) {
-                logger.warn(`  ⚠️  Cannot resolve workspace dependency ${depName}, removing it`);
+                logger.warn(
+                  `  ⚠️  Cannot resolve workspace dependency ${depName}, removing it`,
+                );
               }
               delete pkg.dependencies[depName];
             }
           } else if (version === "catalog:") {
             // Resolve catalog dependency to actual version
-            const catalogVersion = await resolveCatalogVersion(packagePath, depName);
+            const catalogVersion = await resolveCatalogVersion(
+              packagePath,
+              depName,
+            );
             if (catalogVersion) {
               if (options.verbose) {
-                logger.log(`  Resolving catalog dependency ${depName}: ${version} -> ${catalogVersion}`);
+                logger.log(
+                  `  Resolving catalog dependency ${depName}: ${version} -> ${catalogVersion}`,
+                );
               }
               pkg.dependencies[depName] = catalogVersion;
             } else {
               // If can't resolve, remove the dependency
               if (options.verbose) {
-                logger.warn(`  ⚠️  Cannot resolve catalog dependency ${depName}, removing it`);
+                logger.warn(
+                  `  ⚠️  Cannot resolve catalog dependency ${depName}, removing it`,
+                );
               }
               delete pkg.dependencies[depName];
             }
@@ -477,9 +539,9 @@ async function preparePackageForPublishing(
     // Write modified package.json back to root
     await writePackageJSON(resolve(packagePath, "package.json"), pkg);
 
-    return { 
-      success: true, 
-      version: pkg.version, 
+    return {
+      success: true,
+      version: pkg.version,
       originalPkg,
       originalDependencies,
       originalDevDependencies,
@@ -513,7 +575,9 @@ export async function publishPackage(
   let originalExports: any = null;
 
   // Fetch workspace packages once for efficient dependency resolution
-  let workspacePackages: Array<{ name: string; path: string; pkg: any }> | undefined;
+  let workspacePackages:
+    | Array<{ name: string; path: string; pkg: any }>
+    | undefined;
   let monorepoRoot: string | null = null;
   try {
     monorepoRoot = await findMonorepoRoot(packagePath);
@@ -524,7 +588,7 @@ export async function publishPackage(
       }
     }
   } catch {
-    // If we can't fetch workspace packages, we'll continue 
+    // If we can't fetch workspace packages, we'll continue
     // without them and rely on fallback resolution
   }
 
@@ -571,27 +635,27 @@ export async function publishPackage(
     // Copy README.md and LICENSE from root if they're missing in package
     if (monorepoRoot) {
       const filesToCopy = ["README.md", "LICENSE"];
-      
+
       for (const fileName of filesToCopy) {
         const sourcePath = resolve(monorepoRoot, fileName);
         const targetPath = resolve(packagePath, fileName);
-        
+
         try {
           // Check if file exists in source (monorepo root)
           const sourceFile = Bun.file(sourcePath);
           const sourceExists = await sourceFile.exists();
-          
+
           if (sourceExists) {
             // Check if file already exists in package
             const targetFile = Bun.file(targetPath);
             const targetExists = await targetFile.exists();
-            
+
             if (!targetExists) {
               // Copy the file
               const content = await sourceFile.text();
               await Bun.write(targetPath, content);
               copiedFiles.push(targetPath);
-              
+
               if (options.verbose) {
                 logger.log(`  Copied ${fileName} from monorepo root`);
               }
@@ -604,7 +668,11 @@ export async function publishPackage(
     }
 
     // Validate package.json has all required fields
-    const pkgValidation = validatePackageJsonFields(rootPkg, rootPackageName, options.kind);
+    const pkgValidation = validatePackageJsonFields(
+      rootPkg,
+      rootPackageName,
+      options.kind,
+    );
     if (!pkgValidation.valid) {
       return {
         success: false,
@@ -626,7 +694,12 @@ export async function publishPackage(
     }
 
     // Prepare package for publishing (modifies root package.json)
-    const prepResult = await preparePackageForPublishing(packagePath, options, workspacePackages, bumpedVersions);
+    const prepResult = await preparePackageForPublishing(
+      packagePath,
+      options,
+      workspacePackages,
+      bumpedVersions,
+    );
     if (!prepResult.success) {
       return {
         success: false,
@@ -654,10 +727,10 @@ export async function publishPackage(
       // Execute bun publish for npm from package root
       // The package.json is now in the root and will be used for publishing
       // The dist folder contains the built artifacts that will be included
-      
+
       // Build command arguments properly
       const args: string[] = ["publish"];
-      
+
       if (options.dryRun) {
         args.push("--dry-run");
       }
@@ -673,30 +746,38 @@ export async function publishPackage(
       if (options.authType) {
         args.push("--auth-type", options.authType);
       }
-      
+
       try {
-        const result = await runBunPublishCommand(packagePath, ["bun", ...args]);
-        
+        const result = await runBunPublishCommand(packagePath, [
+          "bun",
+          ...args,
+        ]);
+
         if (result.exitCode !== 0) {
           // Parse output for error information
           const errorOutput = result.stderr || result.stdout;
-          throw new Error(`Failed to publish ${packageName} (exit code ${result.exitCode}): ${errorOutput}`);
+          throw new Error(
+            `Failed to publish ${packageName} (exit code ${result.exitCode}): ${errorOutput}`,
+          );
         }
-        
+
         // Success - parse output for relevant info
         const output = result.stdout || result.stderr;
-        
+
         // Extract published version if available
-        const versionMatch = output.match(/published\s+([^\s]+)/i) || 
-                           output.match(/@([0-9]+\.[0-9]+\.[0-9]+)/);
+        const versionMatch =
+          output.match(/published\s+([^\s]+)/i) ||
+          output.match(/@([0-9]+\.[0-9]+\.[0-9]+)/);
         const version = versionMatch ? versionMatch[1] : rootPackage?.version;
-        
+
         // Display custom log message (npm output is captured internally but never displayed)
         if (options.verbose) {
           logger.log(`✓ Published ${packageName}@${version || "unknown"}`);
         } else {
           // Minimal output in normal mode
-          logger.log(`✓ Published ${packageName}${version ? `@${version}` : ""}`);
+          logger.log(
+            `✓ Published ${packageName}${version ? `@${version}` : ""}`,
+          );
         }
       } catch (error) {
         throw new Error(
@@ -726,8 +807,19 @@ export async function publishPackage(
     }
 
     // Restore original dependencies and exports after successful publishing
-    if (originalDependencies || originalDevDependencies || originalScripts || originalExports) {
-      await restoreOriginalDependencies(packagePath, originalDependencies, originalDevDependencies, originalScripts, originalExports);
+    if (
+      originalDependencies ||
+      originalDevDependencies ||
+      originalScripts ||
+      originalExports
+    ) {
+      await restoreOriginalDependencies(
+        packagePath,
+        originalDependencies,
+        originalDevDependencies,
+        originalScripts,
+        originalExports,
+      );
     }
 
     return {
@@ -740,17 +832,31 @@ export async function publishPackage(
     // Restore original package.json if it was modified and an error occurred
     if (originalPkg) {
       try {
-        await writePackageJSON(resolve(packagePath, "package.json"), originalPkg);
+        await writePackageJSON(
+          resolve(packagePath, "package.json"),
+          originalPkg,
+        );
       } catch (restoreError) {
         logger.warn(
           `⚠️  Failed to restore original package.json: ${restoreError instanceof Error ? restoreError.message : String(restoreError)}`,
         );
       }
     }
-    
+
     // Also restore dependencies and exports if they were modified
-    if (originalDependencies || originalDevDependencies || originalScripts || originalExports) {
-      await restoreOriginalDependencies(packagePath, originalDependencies, originalDevDependencies, originalScripts, originalExports);
+    if (
+      originalDependencies ||
+      originalDevDependencies ||
+      originalScripts ||
+      originalExports
+    ) {
+      await restoreOriginalDependencies(
+        packagePath,
+        originalDependencies,
+        originalDevDependencies,
+        originalScripts,
+        originalExports,
+      );
     }
 
     return {
@@ -788,10 +894,12 @@ export async function publishAllPackages(
     const dlerConfig = await loadDlerConfig(cwd);
 
     const packages = await getWorkspacePackages(cwd);
-    
+
     // In single-repo mode, skip filterPackages since ignore would leave nothing to publish
     const isSingleRepo = packages.length === 1 && !ignore;
-    const filteredPackages = isSingleRepo ? packages : filterPackages(packages, ignore);
+    const filteredPackages = isSingleRepo
+      ? packages
+      : filterPackages(packages, ignore);
 
     if (filteredPackages.length === 0) {
       logger.warn("No packages found to publish");
@@ -842,11 +950,12 @@ export async function publishAllPackages(
     if (options.verbose) {
       logger.info("Pre-bumping package versions...");
     }
-    
+
     for (const pkg of packagesToPublish) {
       const mergedOptions = mergePublishOptions(options, pkg.name, dlerConfig);
-      const bumpType = mergedOptions.bump || (mergedOptions.bumpDisable ? undefined : "patch");
-      
+      const bumpType =
+        mergedOptions.bump || (mergedOptions.bumpDisable ? undefined : "patch");
+
       if (bumpType && !mergedOptions.bumpDisable && pkg.pkg.version) {
         try {
           const nextVersion = getNextVersion(pkg.pkg.version, bumpType);

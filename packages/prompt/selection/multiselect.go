@@ -1,0 +1,255 @@
+package selection
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"time"
+
+	"github.com/mritd/bubbles/common"
+
+	"github.com/mritd/bubbles/selector"
+
+	tea "github.com/charmbracelet/bubbletea"
+	"golang.org/x/term"
+)
+
+type multiselectModel struct {
+	sl         selector.Model
+	selected   map[int]bool
+	headerText string
+	footerText string
+	canceled   bool
+}
+
+func (m multiselectModel) Init() tea.Cmd {
+	return nil
+}
+
+func (m *multiselectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case " ":
+			// Toggle selection on space
+			currentIndex := m.sl.Index()
+			if m.selected[currentIndex] {
+				delete(m.selected, currentIndex)
+			} else {
+				m.selected[currentIndex] = true
+			}
+			// Don't pass space to selector, just update our selection state
+			return m, nil
+		case "enter":
+			// Confirm selection
+			return m, tea.Quit
+		case "ctrl+c":
+			// Cancel
+			m.canceled = true
+			return m, tea.Quit
+		}
+	}
+
+	_, cmd := m.sl.Update(msg)
+	return m, cmd
+}
+
+func (m multiselectModel) View() string {
+	return m.sl.View()
+}
+
+type MultiselectResult struct {
+	SelectedIndices []string `json:"selectedIndices"`
+	Error           string   `json:"error"`
+}
+
+type multiselectWaitForResizeModel struct {
+	minHeight int
+	message   string
+}
+
+func (m multiselectWaitForResizeModel) Init() tea.Cmd {
+	return tea.Tick(time.Second/2, func(t time.Time) tea.Msg {
+		return multiselectCheckTerminalSizeMsg{}
+	})
+}
+
+type multiselectCheckTerminalSizeMsg struct{}
+
+func (m multiselectWaitForResizeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		if msg.Height >= m.minHeight {
+			return m, tea.Quit
+		}
+		return m, tea.Tick(time.Second/2, func(t time.Time) tea.Msg {
+			return multiselectCheckTerminalSizeMsg{}
+		})
+	case multiselectCheckTerminalSizeMsg:
+		fd := int(os.Stdout.Fd())
+		_, height, err := term.GetSize(fd)
+		if err == nil && height >= m.minHeight {
+			return m, tea.Quit
+		}
+		return m, tea.Tick(time.Second/2, func(t time.Time) tea.Msg {
+			return multiselectCheckTerminalSizeMsg{}
+		})
+	case tea.KeyMsg:
+		if msg.String() == "ctrl+c" {
+			return m, tea.Quit
+		}
+	}
+	return m, nil
+}
+
+func (m multiselectWaitForResizeModel) View() string {
+	fd := int(os.Stdout.Fd())
+	_, height, err := term.GetSize(fd)
+	if err != nil {
+		return fmt.Sprintf("Error checking terminal size: %s\n", err)
+	}
+	return fmt.Sprintf("\n%s\n\nCurrent height: %d | Required: %d\n\nPlease resize your terminal window to continue...\n", m.message, height, m.minHeight)
+}
+
+func multiselectWaitForTerminalResize(minHeight int, message string) error {
+	m := multiselectWaitForResizeModel{
+		minHeight: minHeight,
+		message:   message,
+	}
+	p := tea.NewProgram(m, tea.WithAltScreen())
+	err := p.Start()
+	if err != nil {
+		return err
+	}
+	
+	// Block until terminal is large enough
+	fd := int(os.Stdout.Fd())
+	for {
+		_, height, err := term.GetSize(fd)
+		if err == nil && height >= minHeight {
+			break
+		}
+		time.Sleep(time.Second / 2)
+	}
+	return nil
+}
+
+func Multiselect(jsonData, headerText, footerText string, perPage int) string {
+	// Minimum height: header (1) + perPage items + footer (1) + buffer (2) = perPage + 4
+	minTerminalHeight := perPage + 4
+	if minTerminalHeight < 5 {
+		minTerminalHeight = 5
+	}
+
+	// Check terminal height before starting
+	fd := int(os.Stdout.Fd())
+	_, height, err := term.GetSize(fd)
+	if err != nil {
+		result, _ := json.Marshal(&MultiselectResult{
+			SelectedIndices: []string{},
+			Error:           fmt.Sprintf("failed to get terminal size: %s", err),
+		})
+		return string(result)
+	}
+
+	if height < minTerminalHeight {
+		// Wait for user to resize terminal instead of returning error
+		waitMessage := fmt.Sprintf("⚠️  Terminal height too small!\n   Current: %d lines | Required: %d lines (for perPage=%d)", height, minTerminalHeight, perPage)
+		err = multiselectWaitForTerminalResize(minTerminalHeight, waitMessage)
+		if err != nil {
+			result, _ := json.Marshal(&MultiselectResult{
+				SelectedIndices: []string{},
+				Error:           fmt.Sprintf("failed to wait for terminal resize: %s", err),
+			})
+			return string(result)
+		}
+	}
+
+	var item []ListItem
+	json.Unmarshal([]byte(jsonData), &item)
+	data := []interface{}{}
+	for _, val := range item {
+		data = append(data, ListItem{Text: val.Text, Description: val.Description})
+	}
+
+	selected := make(map[int]bool)
+	m := &multiselectModel{
+		selected:   selected,
+		headerText: headerText,
+		footerText: footerText,
+	}
+
+	m.sl = selector.Model{
+		Data:    data,
+		PerPage: perPage,
+		HeaderFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
+			selectedCount := 0
+			for range m.selected {
+				selectedCount++
+			}
+			header := headerText
+			if selectedCount > 0 {
+				header = fmt.Sprintf("%s (%d selected)", headerText, selectedCount)
+			}
+			return selector.DefaultHeaderFuncWithAppend(header)(sl, obj, gdIndex)
+		},
+		SelectedFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
+			t := obj.(ListItem)
+			prefix := " "
+			if m.selected[gdIndex] {
+				prefix = "✓"
+			}
+			if t.Description != "" {
+				return common.FontColor(fmt.Sprintf("%s [%d] %s (%s)", prefix, gdIndex+1, t.Text, t.Description), selector.ColorSelected)
+			}
+			return common.FontColor(fmt.Sprintf("%s [%d] %s", prefix, gdIndex+1, t.Text), selector.ColorSelected)
+		},
+		UnSelectedFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
+			t := obj.(ListItem)
+			prefix := " "
+			if m.selected[gdIndex] {
+				prefix = "✓"
+			}
+			if t.Description != "" {
+				return common.FontColor(fmt.Sprintf("%s  %d. %s (%s)", prefix, gdIndex+1, t.Text, t.Description), selector.ColorUnSelected)
+			}
+			return common.FontColor(fmt.Sprintf("%s  %d. %s", prefix, gdIndex+1, t.Text), selector.ColorUnSelected)
+		},
+		FooterFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
+			footer := footerText
+			if footer == "" {
+				footer = "Space: toggle, Enter: confirm"
+			}
+			return common.FontColor(footer, selector.ColorFooter)
+		},
+		FinishedFunc: func(s interface{}) string {
+			return ""
+		},
+	}
+
+	p := tea.NewProgram(m)
+	err = p.Start()
+	if err != nil {
+		result, _ := json.Marshal(&MultiselectResult{
+			SelectedIndices: []string{},
+			Error:           fmt.Sprintf("%s", err),
+		})
+		return string(result)
+	}
+	if m.canceled || m.sl.Canceled() {
+		result, _ := json.Marshal(&MultiselectResult{
+			SelectedIndices: []string{},
+			Error:           "Cancelled",
+		})
+		return string(result)
+	}
+	indices := []string{}
+	for idx := range m.selected {
+		indices = append(indices, fmt.Sprintf("%d", idx))
+	}
+	result, _ := json.Marshal(&MultiselectResult{
+		SelectedIndices: indices,
+		Error:           "",
+	})
+	return string(result)
+}

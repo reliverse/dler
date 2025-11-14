@@ -9,14 +9,14 @@ export function applyProductionPreset(options: BuildOptions): BuildOptions {
     minify: true,
     sourcemap: "none" as const,
     env: "inline",
-    splitting: options.compile ? false : true, // Disable splitting for executables
+    splitting: !options.compile, // Disable splitting for executables
     dev: false,
     watch: false,
     verbose: false,
   };
 
   // Auto-enable bytecode for Bun executables
-  if (options.compile && options.target === 'bun' && options.format === 'cjs') {
+  if (options.compile && options.target === "bun" && options.format === "cjs") {
     result.bytecode = true;
   }
 
@@ -75,16 +75,18 @@ export function applyPresets(options: BuildOptions): BuildOptions {
   }
 
   // Handle minification options
-  if (typeof result.minify === 'boolean') {
+  if (typeof result.minify === "boolean") {
     // Convert boolean minify to granular options
     result.minify = {
       whitespace: result.minify,
       syntax: result.minify,
       identifiers: result.minify,
     };
-  } else if (result.minifyWhitespace !== undefined || 
-             result.minifySyntax !== undefined || 
-             result.minifyIdentifiers !== undefined) {
+  } else if (
+    result.minifyWhitespace !== undefined ||
+    result.minifySyntax !== undefined ||
+    result.minifyIdentifiers !== undefined
+  ) {
     // Use granular minify options
     result.minify = {
       whitespace: result.minifyWhitespace ?? true,
@@ -103,18 +105,18 @@ export function applyPresets(options: BuildOptions): BuildOptions {
   }
 
   // Handle external packages
-  if (result.external && typeof result.external === 'string') {
+  if (result.external && typeof result.external === "string") {
     result.external = [result.external];
   }
 
   // Handle drop patterns
-  if (result.drop && typeof result.drop === 'string') {
+  if (result.drop && typeof result.drop === "string") {
     result.drop = [result.drop];
   }
 
   // Handle conditions - ensure it's always an array
   if (result.conditions) {
-    if (typeof result.conditions === 'string') {
+    if (typeof result.conditions === "string") {
       result.conditions = [result.conditions];
     } else if (!Array.isArray(result.conditions)) {
       result.conditions = [];
@@ -124,14 +126,17 @@ export function applyPresets(options: BuildOptions): BuildOptions {
   // Handle JSX options
   if ((result as any).jsxRuntime || (result as any).jsxImportSource) {
     result.jsx = {
-      runtime: (result as any).jsxRuntime as 'automatic' | 'classic' || 'automatic',
+      runtime:
+        ((result as any).jsxRuntime as "automatic" | "classic") || "automatic",
       importSource: (result as any).jsxImportSource,
     };
   }
 
   // Handle experimental features
-  if (result.experimental && typeof result.experimental === 'string') {
-    result.experimental = (result.experimental as string).split(',').map((f: string) => f.trim());
+  if (result.experimental && typeof result.experimental === "string") {
+    result.experimental = (result.experimental as string)
+      .split(",")
+      .map((f: string) => f.trim());
   }
 
   return result;
@@ -213,21 +218,29 @@ export function applyMonorepoPreset(options: BuildOptions): BuildOptions {
   };
 }
 
-export function getPresetDescription(preset: 'production' | 'development' | 'library' | 'react' | 'node' | 'monorepo'): string {
+export function getPresetDescription(
+  preset:
+    | "production"
+    | "development"
+    | "library"
+    | "react"
+    | "node"
+    | "monorepo",
+): string {
   switch (preset) {
-    case 'production':
-      return 'Optimized for production: minify=true, sourcemap=none, env=inline, splitting=true';
-    case 'development':
-      return 'Optimized for development: minify=false, sourcemap=inline, env=disable, watch=true';
-    case 'library':
-      return 'Optimized for libraries: target=bun, format=esm, splitting=false, packages=external';
-    case 'react':
-      return 'Optimized for React apps: target=browser, format=esm, jsx=automatic, html=true';
-    case 'node':
-      return 'Optimized for Node.js: target=node, format=esm, splitting=false, packages=bundle';
-    case 'monorepo':
-      return 'Optimized for monorepos: concurrency=8, cache=true, stopOnError=false';
+    case "production":
+      return "Optimized for production: minify=true, sourcemap=none, env=inline, splitting=true";
+    case "development":
+      return "Optimized for development: minify=false, sourcemap=inline, env=disable, watch=true";
+    case "library":
+      return "Optimized for libraries: target=bun, format=esm, splitting=false, packages=external";
+    case "react":
+      return "Optimized for React apps: target=browser, format=esm, jsx=automatic, html=true";
+    case "node":
+      return "Optimized for Node.js: target=node, format=esm, splitting=false, packages=bundle";
+    case "monorepo":
+      return "Optimized for monorepos: concurrency=8, cache=true, stopOnError=false";
     default:
-      return '';
+      return "";
   }
 }

@@ -1,0 +1,36 @@
+{
+  "name": "@reliverse/cli-app-example",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Example CLI application built with Dler using @prompt and @launcher",
+  "type": "module",
+  "main": "src/cli.ts",
+  "bin": {
+    "cli-app": "src/cli.ts"
+  },
+  "scripts": {
+    "build": "dler build --compile --production --target bun --format cjs --bytecode",
+    "dev": "dler build --watch --target bun --format cjs",
+    "start": "node dist/cli.js"
+  },
+  "keywords": [
+    "cli",
+    "prompt",
+    "launcher",
+    "dler",
+    "bun"
+  ],
+  "author": "reliverse",
+  "license": "MIT",
+  "dependencies": {
+    "@reliverse/dler-launcher": "workspace:*",
+    "@reliverse/dler-prompt": "workspace:*",
+    "@reliverse/dler-logger": "workspace:*"
+  },
+  "devDependencies": {
+    "@reliverse/dler-tsconfig": "workspace:*",
+    "@microsoft/api-extractor": "catalog:",
+    "@reliverse/dler": "workspace:*",
+    "@types/bun": "catalog:"
+  }
+}

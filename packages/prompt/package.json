@@ -9,21 +9,35 @@
       "default": "./src/mod.ts"
     }
   },
-  "dependencies": {
-    "@reliverse/dler-logger": "workspace:*"
-  },
-  "publishConfig": {
-    "access": "public"
+  "description": "",
+  "scripts": {
+    "build": "bun run ./build.mjs",
+    "bw": "bun run ./build.mjs --target windows/amd64",
+    "release": "bumpp --commit --push --tag && npm publish",
+    "prepublishOnly": "bun run build"
   },
   "files": [
     "dist",
+    "release",
+    "cleanup.mjs",
     "package.json"
   ],
+  "keywords": [
+    "bun"
+  ],
   "license": "MIT",
+  "homepage": "https://github.com/reliverse/dler/tree/main/packages/prompt#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reliverse/dler.git",
+    "directory": "packages/prompt"
+  },
+  "bugs": "https://github.com/reliverse/dler/issues",
+  "author": "Nazar Kornienko <blefnk@gmail.com>",
   "devDependencies": {
     "@reliverse/dler-tsconfig": "workspace:*",
-    "@microsoft/api-extractor": "catalog:",
     "typescript": "catalog:",
-    "@types/bun": "catalog:"
+    "@types/bun": "catalog:",
+    "bun-plugin-dts": "catalog:"
   }
 }

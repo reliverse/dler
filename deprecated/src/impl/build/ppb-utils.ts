@@ -67,7 +67,10 @@ export async function isCommandAvailable(command: string): Promise<boolean> {
 
   // First check if package exists in package.json dependencies
   if (await isCommandInPackageJson(command)) {
-    relinka("verbose", `[dlerPreBuild] Package "${packageName}" found in package.json`);
+    relinka(
+      "verbose",
+      `[dlerPreBuild] Package "${packageName}" found in package.json`,
+    );
     return true;
   }
 
@@ -91,7 +94,9 @@ export async function executeCommand(command: string): Promise<void> {
 
   // Handle case when package manager is accidentally included
   const pkgManagers = ["bun", "yarn", "pnpm", "npm"] as const;
-  const isPkgManager = pkgManagers.includes(firstWord as (typeof pkgManagers)[number]);
+  const isPkgManager = pkgManagers.includes(
+    firstWord as (typeof pkgManagers)[number],
+  );
   const cmd = isPkgManager ? rest[0] : firstWord;
   const args = isPkgManager ? rest.slice(1) : rest;
   if (!cmd) return;

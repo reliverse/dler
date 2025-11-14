@@ -52,16 +52,16 @@ export class DevServer {
 
           // Add CORS headers for API requests
           const corsHeaders = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
           };
 
           // Handle OPTIONS requests for CORS
-          if (request.method === 'OPTIONS') {
-            return new Response(null, { 
-              status: 200, 
-              headers: corsHeaders 
+          if (request.method === "OPTIONS") {
+            return new Response(null, {
+              status: 200,
+              headers: corsHeaders,
             });
           }
 
@@ -95,16 +95,16 @@ export class DevServer {
           }
 
           // 404
-          return new Response("Not Found", { 
+          return new Response("Not Found", {
             status: 404,
-            headers: corsHeaders 
+            headers: corsHeaders,
           });
         },
         websocket: {
           open: (ws) => {
             // Subscribe to HMR channel
             if (this.config.hmr) {
-              ws.subscribe('hmr');
+              ws.subscribe("hmr");
             }
           },
           message: (ws, message) => {
@@ -117,9 +117,7 @@ export class DevServer {
       });
 
       const url = `http://${this.config.host}:${this.config.port}`;
-      logger.success(
-        `🚀 Dev server running at ${url}`,
-      );
+      logger.success(`🚀 Dev server running at ${url}`);
 
       // Start file watching for HMR
       if (this.config.hmr) {
@@ -150,11 +148,11 @@ export class DevServer {
     // Look for index.html in package roots
     for (const pkg of this.packages) {
       if (pkg.hasHtmlEntry) {
-        const htmlFiles = pkg.entryPoints.filter(ep => ep.endsWith('.html'));
+        const htmlFiles = pkg.entryPoints.filter((ep) => ep.endsWith(".html"));
         if (htmlFiles.length > 0) {
           const htmlPath = htmlFiles[0];
           if (htmlPath && existsSync(htmlPath)) {
-            const content = readFileSync(htmlPath, 'utf-8');
+            const content = readFileSync(htmlPath, "utf-8");
             return new Response(content, {
               headers: { "Content-Type": "text/html" },
             });
@@ -223,30 +221,33 @@ export class DevServer {
 
   private getContentType(ext: string): string {
     const types: Record<string, string> = {
-      '.html': 'text/html',
-      '.js': 'application/javascript',
-      '.mjs': 'application/javascript',
-      '.css': 'text/css',
-      '.json': 'application/json',
-      '.png': 'image/png',
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.gif': 'image/gif',
-      '.svg': 'image/svg+xml',
-      '.webp': 'image/webp',
-      '.ico': 'image/x-icon',
-      '.woff': 'font/woff',
-      '.woff2': 'font/woff2',
-      '.ttf': 'font/ttf',
-      '.eot': 'application/vnd.ms-fontobject',
+      ".html": "text/html",
+      ".js": "application/javascript",
+      ".mjs": "application/javascript",
+      ".css": "text/css",
+      ".json": "application/json",
+      ".png": "image/png",
+      ".jpg": "image/jpeg",
+      ".jpeg": "image/jpeg",
+      ".gif": "image/gif",
+      ".svg": "image/svg+xml",
+      ".webp": "image/webp",
+      ".ico": "image/x-icon",
+      ".woff": "font/woff",
+      ".woff2": "font/woff2",
+      ".ttf": "font/ttf",
+      ".eot": "application/vnd.ms-fontobject",
     };
 
-    return types[ext] || 'application/octet-stream';
+    return types[ext] || "application/octet-stream";
   }
 
   private generateFallbackHtml(): string {
-        const title = this.packages.length === 1 ? this.packages[0]?.name || "Frontend App" : "Frontend App";
-    
+    const title =
+      this.packages.length === 1
+        ? this.packages[0]?.name || "Frontend App"
+        : "Frontend App";
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -313,7 +314,7 @@ export class DevServer {
       if (pkg.entryPoints.length === 0) continue;
 
       // Watch source files
-      const sourceFiles = pkg.entryPoints.filter(ep => !ep.endsWith('.html'));
+      const sourceFiles = pkg.entryPoints.filter((ep) => !ep.endsWith(".html"));
       for (const file of sourceFiles) {
         if (existsSync(file)) {
           await this.watchFile(file, pkg);
@@ -321,7 +322,7 @@ export class DevServer {
       }
 
       // Watch HTML files
-      const htmlFiles = pkg.entryPoints.filter(ep => ep.endsWith('.html'));
+      const htmlFiles = pkg.entryPoints.filter((ep) => ep.endsWith(".html"));
       for (const file of htmlFiles) {
         if (existsSync(file)) {
           await this.watchFile(file, pkg);
@@ -329,7 +330,7 @@ export class DevServer {
       }
 
       // Watch source directory if it exists
-      const srcDir = join(pkg.path, 'src');
+      const srcDir = join(pkg.path, "src");
       if (existsSync(srcDir) && statSync(srcDir).isDirectory()) {
         await this.watchDirectory(srcDir, pkg);
       }
@@ -343,14 +344,14 @@ export class DevServer {
 
     try {
       // Use fs.watch as fallback since Bun.file().watch() doesn't exist
-      const { watch } = await import('node:fs');
+      const { watch } = await import("node:fs");
       const watcher = watch(filePath, (eventType) => {
-        if (eventType === 'change') {
+        if (eventType === "change") {
           this.handleFileChange(filePath, pkg);
         }
       });
 
-      watcher.on('error', (error) => {
+      watcher.on("error", (error) => {
         logger.warn(`File watcher error for ${filePath}: ${error.message}`);
         this.watchers.delete(filePath);
       });
@@ -361,19 +362,26 @@ export class DevServer {
     }
   }
 
-  private async watchDirectory(dirPath: string, pkg: PackageInfo): Promise<void> {
+  private async watchDirectory(
+    dirPath: string,
+    pkg: PackageInfo,
+  ): Promise<void> {
     if (this.watchers.has(dirPath)) return;
 
     try {
-      const { watch } = await import('node:fs');
-      const watcher = watch(dirPath, { recursive: true }, (eventType, filename) => {
-        if (eventType === 'change' && filename) {
-          const fullPath = join(dirPath, filename);
-          this.handleFileChange(fullPath, pkg);
-        }
-      });
+      const { watch } = await import("node:fs");
+      const watcher = watch(
+        dirPath,
+        { recursive: true },
+        (eventType, filename) => {
+          if (eventType === "change" && filename) {
+            const fullPath = join(dirPath, filename);
+            this.handleFileChange(fullPath, pkg);
+          }
+        },
+      );
 
-      watcher.on('error', (error) => {
+      watcher.on("error", (error) => {
         logger.warn(`Directory watcher error for ${dirPath}: ${error.message}`);
         this.watchers.delete(dirPath);
       });
@@ -386,7 +394,7 @@ export class DevServer {
 
   private handleFileChange(filePath: string, pkg: PackageInfo): void {
     logger.info(`📝 File changed: ${filePath}`);
-    
+
     // Add package to rebuild queue
     this.rebuildQueue.add(pkg.name);
 
@@ -403,9 +411,9 @@ export class DevServer {
   private async processRebuildQueue(): Promise<void> {
     if (this.rebuildQueue.size === 0) return;
 
-    const packagesToRebuild = Array.from(this.rebuildQueue).map(name => 
-      this.packages.find(pkg => pkg.name === name)
-    ).filter(Boolean) as PackageInfo[];
+    const packagesToRebuild = Array.from(this.rebuildQueue)
+      .map((name) => this.packages.find((pkg) => pkg.name === name))
+      .filter(Boolean) as PackageInfo[];
 
     this.rebuildQueue.clear();
 
@@ -414,22 +422,24 @@ export class DevServer {
     for (const pkg of packagesToRebuild) {
       try {
         // Import buildPackage dynamically to avoid circular dependency
-        const { buildPackage } = await import('../mod');
+        const { buildPackage } = await import("../mod");
         const result = await buildPackage(pkg, this.options);
-        
+
         if (result.success) {
           logger.success(`✅ ${pkg.name}: Rebuilt successfully`);
-          this.notifyClients('reload');
+          this.notifyClients("reload");
         } else {
           logger.error(`❌ ${pkg.name}: Rebuild failed`);
           for (const error of result.errors) {
             logger.error(`   ${error}`);
           }
-          this.notifyClients('error', { message: `Build failed: ${result.errors.join(', ')}` });
+          this.notifyClients("error", {
+            message: `Build failed: ${result.errors.join(", ")}`,
+          });
         }
       } catch (error) {
         logger.error(`❌ ${pkg.name}: Rebuild error - ${error}`);
-        this.notifyClients('error', { message: `Build error: ${error}` });
+        this.notifyClients("error", { message: `Build error: ${error}` });
       }
     }
   }
@@ -437,13 +447,13 @@ export class DevServer {
   private handleHMRMessage(ws: any, message: any): void {
     try {
       const data = JSON.parse(message.toString());
-      
+
       switch (data.type) {
-        case 'ping':
-          ws.send(JSON.stringify({ type: 'pong' }));
+        case "ping":
+          ws.send(JSON.stringify({ type: "pong" }));
           break;
-        case 'reload':
-          this.notifyClients('reload');
+        case "reload":
+          this.notifyClients("reload");
           break;
       }
     } catch (error) {
@@ -454,7 +464,7 @@ export class DevServer {
   private notifyClients(type: string, data?: any): void {
     if (this.server && this.server.publish) {
       const message = JSON.stringify({ type, data, timestamp: Date.now() });
-      this.server.publish('hmr', message);
+      this.server.publish("hmr", message);
     }
   }
 }

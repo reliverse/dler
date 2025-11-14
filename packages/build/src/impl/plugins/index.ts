@@ -45,7 +45,10 @@ export { TypeScriptDeclarationsPlugin } from "./typescript-declarations";
 export { WorkerPlugin } from "./worker";
 
 // Plugin utilities
-export function createPlugin(name: string, setup: (build: BunBuildConfig) => void): DlerPlugin {
+export function createPlugin(
+  name: string,
+  setup: (build: BunBuildConfig) => void,
+): DlerPlugin {
   return {
     name,
     setup,
@@ -54,7 +57,7 @@ export function createPlugin(name: string, setup: (build: BunBuildConfig) => voi
 
 export function loadPlugins(pluginNames: string[]): DlerPlugin[] {
   const plugins: DlerPlugin[] = [];
-  
+
   for (const name of pluginNames) {
     const plugin = pluginRegistry.getPlugin(name);
     if (plugin) {
@@ -63,11 +66,14 @@ export function loadPlugins(pluginNames: string[]): DlerPlugin[] {
       logger.warn(`Plugin ${name} not found in registry`);
     }
   }
-  
+
   return plugins;
 }
 
-export function applyPlugins(plugins: DlerPlugin[], buildConfig: BunBuildConfig): void {
+export function applyPlugins(
+  plugins: DlerPlugin[],
+  buildConfig: BunBuildConfig,
+): void {
   for (const plugin of plugins) {
     try {
       plugin.setup(buildConfig);

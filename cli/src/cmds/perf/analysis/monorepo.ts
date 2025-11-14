@@ -49,7 +49,7 @@ export class MonorepoAnalyzer {
 
     // Find monorepo root or single package
     const monorepoRoot = await this.findMonorepoRoot(cwd);
-    
+
     if (!monorepoRoot) {
       // Not a monorepo, try to analyze single package
       const currentDir = cwd || process.cwd();
@@ -166,7 +166,7 @@ export class MonorepoAnalyzer {
     }
 
     // Filter out the monorepo root to prevent analyzing it
-    const filteredPackages = packages.filter(pkg => {
+    const filteredPackages = packages.filter((pkg) => {
       const normalizedPkgPath = resolve(pkg.path);
       const normalizedRootPath = resolve(monorepoRoot);
       return normalizedPkgPath !== normalizedRootPath;
@@ -181,7 +181,9 @@ export class MonorepoAnalyzer {
     return filteredPackages;
   }
 
-  private async discoverSinglePackage(packagePath: string): Promise<PackageInfo | null> {
+  private async discoverSinglePackage(
+    packagePath: string,
+  ): Promise<PackageInfo | null> {
     try {
       const pkg = await readPackageJSON(packagePath);
       if (!pkg || !pkg.name) return null;

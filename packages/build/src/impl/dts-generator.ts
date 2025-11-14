@@ -1,16 +1,22 @@
 // packages/build/src/impl/dts-generator.ts
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
-import { resolve, join } from "node:path";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
+import { join, resolve } from "node:path";
+import type { DtsOptions } from "@reliverse/dler-config/impl/build";
 import { logger } from "@reliverse/dler-logger";
 import { readTSConfig } from "@reliverse/dler-pkg-tsc";
-import type { CompilationOptions, EntryPointConfig } from 'dts-bundle-generator';
+import type {
+  CompilationOptions,
+  EntryPointConfig,
+} from "dts-bundle-generator";
+import { getDeclarations, type MkdistDtsOptions } from "./providers/mkdist-dts";
 import type { PackageInfo } from "./types";
-import type { DtsOptions } from "@reliverse/dler-config/impl/build";
-import { 
-  getDeclarations, 
-  type MkdistDtsOptions 
-} from "./providers/mkdist-dts";
 
 export interface DtsGeneratorOptions {
   /** Package information */
@@ -62,31 +68,65 @@ export async function generateDeclarations(
     }
 
     // Enforce required compiler options for declaration generation
-    const enforcedOptions = enforceDeclarationOptions(tsconfig, dtsOptions, format);
+    const enforcedOptions = enforceDeclarationOptions(
+      tsconfig,
+      dtsOptions,
+      format,
+    );
 
     // Route to appropriate provider
-    const provider = dtsOptions.provider || 'dts-bundle-generator'; // Default
-    
+    const provider = dtsOptions.provider || "dts-bundle-generator"; // Default
+
     switch (provider) {
-      case 'dts-bundle-generator':
-        return await generateWithDtsBundleGenerator(pkg, dtsOptions, dtsOutputDir, enforcedOptions);
-      case 'api-extractor':
-        return await generateBundledDeclarations(pkg, dtsOptions, dtsOutputDir, enforcedOptions);
-      case 'typescript':
-        return await generateBundlelessDeclarations(pkg, dtsOptions, dtsOutputDir, enforcedOptions);
-      case 'mkdist':
-        return await generateWithMkdist(pkg, dtsOptions, dtsOutputDir, enforcedOptions);
+      case "dts-bundle-generator":
+        return await generateWithDtsBundleGenerator(
+          pkg,
+          dtsOptions,
+          dtsOutputDir,
+          enforcedOptions,
+        );
+      case "api-extractor":
+        return await generateBundledDeclarations(
+          pkg,
+          dtsOptions,
+          dtsOutputDir,
+          enforcedOptions,
+        );
+      case "typescript":
+        return await generateBundlelessDeclarations(
+          pkg,
+          dtsOptions,
+          dtsOutputDir,
+          enforcedOptions,
+        );
+      case "mkdist":
+        return await generateWithMkdist(
+          pkg,
+          dtsOptions,
+          dtsOutputDir,
+          enforcedOptions,
+        );
       default:
         // Fallback for backwards compatibility
         if (dtsOptions.bundle) {
-          return await generateBundledDeclarations(pkg, dtsOptions, dtsOutputDir, enforcedOptions);
+          return await generateBundledDeclarations(
+            pkg,
+            dtsOptions,
+            dtsOutputDir,
+            enforcedOptions,
+          );
         } else {
-          return await generateBundlelessDeclarations(pkg, dtsOptions, dtsOutputDir, enforcedOptions);
+          return await generateBundlelessDeclarations(
+            pkg,
+            dtsOptions,
+            dtsOutputDir,
+            enforcedOptions,
+          );
         }
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    
+
     if (dtsOptions.abortOnError !== false) {
       return {
         success: false,
@@ -95,7 +135,9 @@ export async function generateDeclarations(
     } else {
       logger.warn(`⚠️  Declaration generation failed for ${pkg.name}:`);
       logger.warn(`  Error: ${errorMessage}`);
-      logger.warn(`  Provider: ${dtsOptions.provider || 'dts-bundle-generator'}`);
+      logger.warn(
+        `  Provider: ${dtsOptions.provider || "dts-bundle-generator"}`,
+      );
       logger.warn(`  Output directory: ${outputDir}`);
       return { success: true };
     }
@@ -160,13 +202,16 @@ function enforceDeclarationOptions(
   if (dtsOptions.autoExtension !== false) {
     switch (format) {
       case "cjs":
-        enforced.compilerOptions.declarationDir = enforced.compilerOptions.declarationDir || "dist";
+        enforced.compilerOptions.declarationDir =
+          enforced.compilerOptions.declarationDir || "dist";
         break;
       case "esm":
-        enforced.compilerOptions.declarationDir = enforced.compilerOptions.declarationDir || "dist";
+        enforced.compilerOptions.declarationDir =
+          enforced.compilerOptions.declarationDir || "dist";
         break;
       default:
-        enforced.compilerOptions.declarationDir = enforced.compilerOptions.declarationDir || "dist";
+        enforced.compilerOptions.declarationDir =
+          enforced.compilerOptions.declarationDir || "dist";
     }
   }
 
@@ -185,10 +230,12 @@ async function generateBundlelessDeclarations(
   try {
     // Use TypeScript Compiler API
     const ts = await import("typescript");
-    
+
     // Create program
     const program = ts.createProgram(
-      pkg.entryPoints.filter(ep => ep.endsWith('.ts') && !ep.endsWith('.d.ts')),
+      pkg.entryPoints.filter(
+        (ep) => ep.endsWith(".ts") && !ep.endsWith(".d.ts"),
+      ),
       {
         ...tsconfig.compilerOptions,
         outDir: outputDir,
@@ -200,13 +247,13 @@ async function generateBundlelessDeclarations(
 
     if (emitResult.diagnostics.length > 0) {
       const errors = emitResult.diagnostics
-        .filter(d => d.category === ts.DiagnosticCategory.Error)
-        .map(d => ts.flattenDiagnosticMessageText(d.messageText, '\n'));
-      
+        .filter((d) => d.category === ts.DiagnosticCategory.Error)
+        .map((d) => ts.flattenDiagnosticMessageText(d.messageText, "\n"));
+
       if (errors.length > 0) {
         return {
           success: false,
-          error: `TypeScript compilation errors:\n${errors.join('\n')}`,
+          error: `TypeScript compilation errors:\n${errors.join("\n")}`,
         };
       }
     }
@@ -214,7 +261,9 @@ async function generateBundlelessDeclarations(
     // Get generated files
     const generatedFiles = getGeneratedDeclarationFiles(outputDir);
 
-    logger.info(`✅ Generated ${generatedFiles.length} declaration files for ${pkg.name}`);
+    logger.info(
+      `✅ Generated ${generatedFiles.length} declaration files for ${pkg.name}`,
+    );
 
     return {
       success: true,
@@ -229,7 +278,7 @@ async function generateBundlelessDeclarations(
   }
 }
 
-/** 
+/**
  * Generate bundled declarations using API Extractor
  */
 async function generateBundledDeclarations(
@@ -246,12 +295,18 @@ async function generateBundledDeclarations(
     } catch {
       return {
         success: false,
-        error: "API Extractor not found. Install @microsoft/api-extractor for bundled declarations.",
+        error:
+          "API Extractor not found. Install @microsoft/api-extractor for bundled declarations.",
       };
     }
 
     // First generate bundleless declarations
-    const bundlelessResult = await generateBundlelessDeclarations(pkg, dtsOptions, outputDir, tsconfig);
+    const bundlelessResult = await generateBundlelessDeclarations(
+      pkg,
+      dtsOptions,
+      outputDir,
+      tsconfig,
+    );
     if (!bundlelessResult.success) {
       return bundlelessResult;
     }
@@ -260,7 +315,8 @@ async function generateBundledDeclarations(
     const apiExtractorConfig = createApiExtractorConfig(pkg, outputDir);
 
     // Run API Extractor
-    const extractorConfig = apiExtractor.ExtractorConfig.loadFileAndPrepare(apiExtractorConfig);
+    const extractorConfig =
+      apiExtractor.ExtractorConfig.loadFileAndPrepare(apiExtractorConfig);
     const extractorResult = apiExtractor.Extractor.invoke(extractorConfig, {
       localBuild: true,
       showVerboseMessages: false,
@@ -278,7 +334,7 @@ async function generateBundledDeclarations(
     return {
       success: true,
       outputDir,
-      files: [join(outputDir, `${pkg.name.split('/').pop() || 'index'}.d.ts`)],
+      files: [join(outputDir, `${pkg.name.split("/").pop() || "index"}.d.ts`)],
     };
   } catch (error) {
     return {
@@ -291,31 +347,32 @@ async function generateBundledDeclarations(
 /**
  * Create API Extractor configuration
  */
-function createApiExtractorConfig(
-  pkg: PackageInfo,
-  outputDir: string,
-): string {
+function createApiExtractorConfig(pkg: PackageInfo, outputDir: string): string {
   const configPath = join(pkg.path, "api-extractor.json");
-  
+
   const config = {
-    "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
-    "mainEntryPointFilePath": join(outputDir, "index.d.ts"),
-    "bundledPackages": [],
-    "compiler": {
-      "tsconfigFilePath": join(pkg.path, "tsconfig.json"),
+    $schema:
+      "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+    mainEntryPointFilePath: join(outputDir, "index.d.ts"),
+    bundledPackages: [],
+    compiler: {
+      tsconfigFilePath: join(pkg.path, "tsconfig.json"),
     },
-    "apiReport": {
-      "enabled": false,
+    apiReport: {
+      enabled: false,
     },
-    "docModel": {
-      "enabled": false,
+    docModel: {
+      enabled: false,
     },
-    "dtsRollup": {
-      "enabled": true,
-      "untrimmedFilePath": join(outputDir, `${pkg.name.split('/').pop() || 'index'}.d.ts`),
+    dtsRollup: {
+      enabled: true,
+      untrimmedFilePath: join(
+        outputDir,
+        `${pkg.name.split("/").pop() || "index"}.d.ts`,
+      ),
     },
-    "tsdocMetadata": {
-      "enabled": false,
+    tsdocMetadata: {
+      enabled: false,
     },
   };
 
@@ -328,7 +385,7 @@ function createApiExtractorConfig(
  */
 function getGeneratedDeclarationFiles(outputDir: string): string[] {
   const files: string[] = [];
-  
+
   function scanDirectory(dir: string): void {
     try {
       const entries = readdirSync(dir, { withFileTypes: true });
@@ -336,7 +393,7 @@ function getGeneratedDeclarationFiles(outputDir: string): string[] {
         const fullPath = join(dir, entry.name);
         if (entry.isDirectory()) {
           scanDirectory(fullPath);
-        } else if (entry.name.endsWith('.d.ts')) {
+        } else if (entry.name.endsWith(".d.ts")) {
           files.push(fullPath);
         }
       }
@@ -362,11 +419,12 @@ async function generateWithDtsBundleGenerator(
     // Check if dts-bundle-generator is available
     let dtsBundleGenerator;
     try {
-      dtsBundleGenerator = await import('dts-bundle-generator');
+      dtsBundleGenerator = await import("dts-bundle-generator");
     } catch {
       return {
         success: false,
-        error: "dts-bundle-generator not found. Install dts-bundle-generator for this provider.",
+        error:
+          "dts-bundle-generator not found. Install dts-bundle-generator for this provider.",
       };
     }
 
@@ -381,8 +439,8 @@ async function generateWithDtsBundleGenerator(
 
     // Prepare entry points
     const entryPoints: EntryPointConfig[] = pkg.entryPoints
-      .filter(ep => ep.endsWith('.ts') && !ep.endsWith('.d.ts'))
-      .map(filePath => ({
+      .filter((ep) => ep.endsWith(".ts") && !ep.endsWith(".d.ts"))
+      .map((filePath) => ({
         filePath,
       }));
 
@@ -395,7 +453,9 @@ async function generateWithDtsBundleGenerator(
 
     // Prepare configuration
     const config: CompilationOptions = {
-      preferredConfigPath: dtsOptions.dtsBundleGenerator?.preferredConfigPath || join(pkg.path, 'tsconfig.json'),
+      preferredConfigPath:
+        dtsOptions.dtsBundleGenerator?.preferredConfigPath ||
+        join(pkg.path, "tsconfig.json"),
       ...dtsOptions.dtsBundleGenerator,
     };
 
@@ -404,26 +464,28 @@ async function generateWithDtsBundleGenerator(
 
     // Write generated files
     const generatedFiles: string[] = [];
-    
+
     for (let i = 0; i < entryPoints.length; i++) {
       const entryPoint = entryPoints[i];
       const content = result[i];
-      
+
       if (!entryPoint || !content) {
         logger.warn(`⚠️  No declaration content generated for entry point ${i}`);
         continue;
       }
 
       // Calculate relative path from package root, removing 'src/' prefix
-      let relativePath = entryPoint.filePath.replace(pkg.path + '/', '').replace(pkg.path + '\\', '');
+      let relativePath = entryPoint.filePath
+        .replace(pkg.path + "/", "")
+        .replace(pkg.path + "\\", "");
       // Remove 'src/' prefix if it exists (handle both forward and backward slashes)
-      if (relativePath.startsWith('src/') || relativePath.startsWith('src\\')) {
+      if (relativePath.startsWith("src/") || relativePath.startsWith("src\\")) {
         relativePath = relativePath.substring(4);
       }
-      const destPath = join(outputDir, relativePath).replace(/\.ts$/, '.d.ts');
-      
+      const destPath = join(outputDir, relativePath).replace(/\.ts$/, ".d.ts");
+
       // Ensure directory exists
-      const destDir = join(destPath, '..');
+      const destDir = join(destPath, "..");
       if (!existsSync(destDir)) {
         mkdirSync(destDir, { recursive: true });
       }
@@ -431,8 +493,10 @@ async function generateWithDtsBundleGenerator(
       // Write file
       writeFileSync(destPath, content);
       generatedFiles.push(destPath);
-      
-      logger.info(`✅ Generated declaration file: ${destPath} (${content.length} bytes)`);
+
+      logger.info(
+        `✅ Generated declaration file: ${destPath} (${content.length} bytes)`,
+      );
     }
 
     if (generatedFiles.length === 0) {
@@ -442,7 +506,9 @@ async function generateWithDtsBundleGenerator(
       };
     }
 
-    logger.info(`✅ Generated ${generatedFiles.length} declaration files for ${pkg.name} using dts-bundle-generator`);
+    logger.info(
+      `✅ Generated ${generatedFiles.length} declaration files for ${pkg.name} using dts-bundle-generator`,
+    );
 
     return {
       success: true,
@@ -475,19 +541,24 @@ async function generateWithMkdist(
     // Create VFS (Virtual File System) from entry points
     const vfs = new Map<string, string>();
     const readErrors: string[] = [];
-    
+
     // Read all TypeScript entry points into VFS
     for (const entryPoint of pkg.entryPoints) {
-      if (entryPoint.endsWith('.ts') && !entryPoint.endsWith('.d.ts')) {
+      if (entryPoint.endsWith(".ts") && !entryPoint.endsWith(".d.ts")) {
         try {
-          const content = readFileSync(entryPoint, 'utf-8');
-          
+          const content = readFileSync(entryPoint, "utf-8");
+
           // Basic validation: check if file has any exports
-          const hasExports = /export\s+(?:default\s+)?(?:function|class|interface|type|const|let|var|enum|namespace|\*|\{[^}]*\})/m.test(content);
+          const hasExports =
+            /export\s+(?:default\s+)?(?:function|class|interface|type|const|let|var|enum|namespace|\*|\{[^}]*\})/m.test(
+              content,
+            );
           if (!hasExports) {
-            logger.warn(`⚠️  Entry point ${entryPoint} appears to have no exports - this may cause declaration generation to fail`);
+            logger.warn(
+              `⚠️  Entry point ${entryPoint} appears to have no exports - this may cause declaration generation to fail`,
+            );
           }
-          
+
           vfs.set(entryPoint, content);
         } catch (error) {
           const errorMsg = `Failed to read entry point ${entryPoint}: ${error instanceof Error ? error.message : String(error)}`;
@@ -508,8 +579,13 @@ async function generateWithMkdist(
     const mkdistOptions: MkdistDtsOptions = dtsOptions.mkdist || {};
 
     // Generate declarations using mkdist's VFS approach
-    const declarations = await getDeclarations(vfs, pkg, dtsOptions, outputDir, mkdistOptions);
-
+    const declarations = await getDeclarations(
+      vfs,
+      pkg,
+      dtsOptions,
+      outputDir,
+      mkdistOptions,
+    );
 
     // Write generated declarations to output directory
     const generatedFiles: string[] = [];
@@ -522,11 +598,10 @@ async function generateWithMkdist(
 
       // The filename already contains the correct output path from the TypeScript compiler
       // We just need to ensure it has the .d.ts extension
-      const destPath = filename.replace(/\.ts$/, '.d.ts');
-      
-      
+      const destPath = filename.replace(/\.ts$/, ".d.ts");
+
       // Ensure directory exists
-      const destDir = join(destPath, '..');
+      const destDir = join(destPath, "..");
       if (!existsSync(destDir)) {
         mkdirSync(destDir, { recursive: true });
       }
@@ -536,7 +611,9 @@ async function generateWithMkdist(
         writeFileSync(destPath, result.contents);
         generatedFiles.push(destPath);
       } catch (error) {
-        logger.error(`Failed to write declaration file ${destPath}: ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(
+          `Failed to write declaration file ${destPath}: ${error instanceof Error ? error.message : String(error)}`,
+        );
         hasErrors = true;
       }
 
@@ -548,55 +625,67 @@ async function generateWithMkdist(
         }
       }
 
-      logger.info(`✅ Generated declaration file: ${destPath} (${result.contents.length} bytes)`);
+      logger.info(
+        `✅ Generated declaration file: ${destPath} (${result.contents.length} bytes)`,
+      );
     }
 
     if (generatedFiles.length === 0) {
       // Provide detailed diagnostic information
       const diagnosticInfo = [];
-      
+
       // Check if VFS has any files
       if (vfs.size === 0) {
         diagnosticInfo.push("No TypeScript files found in entry points");
         if (readErrors.length > 0) {
           diagnosticInfo.push(`File read errors: ${readErrors.length}`);
-          diagnosticInfo.push(...readErrors.map(error => `  - ${error}`));
+          diagnosticInfo.push(...readErrors.map((error) => `  - ${error}`));
         }
       } else {
         diagnosticInfo.push(`Found ${vfs.size} TypeScript files in VFS`);
         if (readErrors.length > 0) {
           diagnosticInfo.push(`File read errors: ${readErrors.length}`);
-          diagnosticInfo.push(...readErrors.map(error => `  - ${error}`));
+          diagnosticInfo.push(...readErrors.map((error) => `  - ${error}`));
         }
       }
-      
+
       // Check if declarations were generated but not written
-      const declarationFiles = Array.from(vfs.keys()).filter(key => key.endsWith('.d.ts'));
+      const declarationFiles = Array.from(vfs.keys()).filter((key) =>
+        key.endsWith(".d.ts"),
+      );
       if (declarationFiles.length > 0) {
-        diagnosticInfo.push(`Generated ${declarationFiles.length} declaration files in VFS but failed to write them`);
-        diagnosticInfo.push(`Declaration files: ${declarationFiles.join(', ')}`);
+        diagnosticInfo.push(
+          `Generated ${declarationFiles.length} declaration files in VFS but failed to write them`,
+        );
+        diagnosticInfo.push(
+          `Declaration files: ${declarationFiles.join(", ")}`,
+        );
       } else {
         diagnosticInfo.push("No declaration files were generated in VFS");
       }
-      
+
       // Check for TypeScript compilation errors
-      const hasCompilationErrors = Object.values(declarations).some(result => result.errors && result.errors.length > 0);
+      const hasCompilationErrors = Object.values(declarations).some(
+        (result) => result.errors && result.errors.length > 0,
+      );
       if (hasCompilationErrors) {
         diagnosticInfo.push("TypeScript compilation errors detected");
       }
-      
+
       // Check entry points
-      const validEntryPoints = pkg.entryPoints.filter(ep => ep.endsWith('.ts') && !ep.endsWith('.d.ts'));
+      const validEntryPoints = pkg.entryPoints.filter(
+        (ep) => ep.endsWith(".ts") && !ep.endsWith(".d.ts"),
+      );
       diagnosticInfo.push(`Entry points processed: ${validEntryPoints.length}`);
       if (validEntryPoints.length > 0) {
-        diagnosticInfo.push(`Entry points: ${validEntryPoints.join(', ')}`);
+        diagnosticInfo.push(`Entry points: ${validEntryPoints.join(", ")}`);
       }
-      
+
       const errorMessage = [
         "No declaration files were generated by mkdist provider",
         "",
         "Diagnostic information:",
-        ...diagnosticInfo.map(info => `  • ${info}`),
+        ...diagnosticInfo.map((info) => `  • ${info}`),
         "",
         "Troubleshooting suggestions:",
         "  • Ensure your TypeScript files have proper exports",
@@ -604,8 +693,8 @@ async function generateWithMkdist(
         "  • Verify that your tsconfig.json has 'declaration: true'",
         "  • Try using a different DTS provider (e.g., 'typescript' or 'dts-bundle-generator')",
         "  • Check if your entry points contain valid TypeScript code",
-      ].join('\n');
-      
+      ].join("\n");
+
       return {
         success: false,
         error: errorMessage,
@@ -613,9 +702,13 @@ async function generateWithMkdist(
     }
 
     if (hasErrors) {
-      logger.warn(`⚠️  mkdist generated ${generatedFiles.length} declaration files with some errors`);
+      logger.warn(
+        `⚠️  mkdist generated ${generatedFiles.length} declaration files with some errors`,
+      );
     } else {
-      logger.info(`✅ Generated ${generatedFiles.length} declaration files for ${pkg.name} using mkdist provider`);
+      logger.info(
+        `✅ Generated ${generatedFiles.length} declaration files for ${pkg.name} using mkdist provider`,
+      );
     }
 
     return {
@@ -653,8 +746,10 @@ export async function generateWithTsgo(
 
     // This is a placeholder - tsgo integration would go here
     // For now, fall back to regular TypeScript Compiler API
-    logger.warn("⚠️  tsgo support is experimental and not yet implemented, falling back to TypeScript Compiler API");
-    
+    logger.warn(
+      "⚠️  tsgo support is experimental and not yet implemented, falling back to TypeScript Compiler API",
+    );
+
     return await generateBundlelessDeclarations(pkg, dtsOptions, outputDir, {});
   } catch (error) {
     return {

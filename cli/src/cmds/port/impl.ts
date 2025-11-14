@@ -1,6 +1,6 @@
 import { platform } from "node:os";
-import { $ } from "bun";
 import { logger } from "@reliverse/dler-logger";
+import { $ } from "bun";
 
 /**
  * Kills processes running on the specified port
@@ -51,14 +51,20 @@ export async function killPort(port: number): Promise<void> {
           logger.info(`\n⚠️  UDP Port Detection - Important Information:`);
           logger.info(`   • UDP ports are connectionless and harder to detect`);
           logger.info(`   • Some UDP processes may not show up in netstat`);
-          logger.info(`   • UDP processes are often system services or drivers`);
-          logger.info(`   • Killing UDP processes may require elevated privileges`);
+          logger.info(
+            `   • UDP processes are often system services or drivers`,
+          );
+          logger.info(
+            `   • Killing UDP processes may require elevated privileges`,
+          );
           logger.info(`   • Some UDP processes restart automatically`);
           logger.info(`\n💡 If you're having trouble with UDP port ${port}:`);
           logger.info(`   1. Try running as Administrator`);
           logger.info(`   2. Check if it's a system service: services.msc`);
           logger.info(`   3. Use Task Manager to find the process by name`);
-          logger.info(`   4. Restart the application that should use this port`);
+          logger.info(
+            `   4. Restart the application that should use this port`,
+          );
           logger.info(`   5. Check Windows Firewall settings`);
         }
 
@@ -161,16 +167,24 @@ export async function killPort(port: number): Promise<void> {
 
             // Provide detailed UDP information
             logger.info(`\n⚠️  UDP Port Detection - Important Information:`);
-            logger.info(`   • UDP ports are connectionless and harder to detect`);
+            logger.info(
+              `   • UDP ports are connectionless and harder to detect`,
+            );
             logger.info(`   • Some UDP processes may not show up in netstat`);
-            logger.info(`   • UDP processes are often system services or drivers`);
-            logger.info(`   • Killing UDP processes may require elevated privileges`);
+            logger.info(
+              `   • UDP processes are often system services or drivers`,
+            );
+            logger.info(
+              `   • Killing UDP processes may require elevated privileges`,
+            );
             logger.info(`   • Some UDP processes restart automatically`);
             logger.info(`\n💡 If you're having trouble with UDP port ${port}:`);
             logger.info(`   1. Try running as Administrator`);
             logger.info(`   2. Check if it's a system service: services.msc`);
             logger.info(`   3. Use Task Manager to find the process by name`);
-            logger.info(`   4. Restart the application that should use this port`);
+            logger.info(
+              `   4. Restart the application that should use this port`,
+            );
             logger.info(`   5. Check Windows Firewall settings`);
           }
 
@@ -179,7 +193,9 @@ export async function killPort(port: number): Promise<void> {
             if (udpLines.length > 0) {
               logger.info(`\n🔍 UDP Port Troubleshooting:`);
               logger.info(`   This might be a UDP-only port. Try these steps:`);
-              logger.info(`   1. Check if any applications are using this port`);
+              logger.info(
+                `   1. Check if any applications are using this port`,
+              );
               logger.info(`   2. Look for processes in Task Manager`);
               logger.info(`   3. Try restarting your application`);
               logger.info(`   4. Check Windows Defender or antivirus software`);
@@ -196,7 +212,9 @@ export async function killPort(port: number): Promise<void> {
             } catch (killError) {
               logger.error(
                 `❌ Failed to kill process ${pid}:`,
-                killError instanceof Error ? killError.message : String(killError),
+                killError instanceof Error
+                  ? killError.message
+                  : String(killError),
               );
               if (udpLines.length > 0) {
                 logger.info(
@@ -270,17 +288,25 @@ export async function killPort(port: number): Promise<void> {
           logger.info(`\n⚠️  UDP Port Detection - Important Information:`);
           logger.info(`   • UDP ports are connectionless and harder to detect`);
           logger.info(`   • Some UDP processes may not show up in lsof`);
-          logger.info(`   • UDP processes are often system services or daemons`);
+          logger.info(
+            `   • UDP processes are often system services or daemons`,
+          );
           logger.info(`   • Killing UDP processes may require sudo privileges`);
           logger.info(`   • Some UDP processes restart automatically`);
           logger.info(`\n💡 If you're having trouble with UDP port ${port}:`);
-          logger.info(`   1. Try running with sudo: sudo bun dler port kill --port ${port}`);
+          logger.info(
+            `   1. Try running with sudo: sudo bun dler port kill --port ${port}`,
+          );
           logger.info(
             `   2. Check if it's a system service: systemctl status <service>`,
           );
           logger.info(`   3. Use ps aux | grep <port> to find the process`);
-          logger.info(`   4. Restart the application that should use this port`);
-          logger.info(`   5. Check firewall settings: ufw status or iptables -L`);
+          logger.info(
+            `   4. Restart the application that should use this port`,
+          );
+          logger.info(
+            `   5. Check firewall settings: ufw status or iptables -L`,
+          );
         }
 
         const pidList = Array.from(allPids);

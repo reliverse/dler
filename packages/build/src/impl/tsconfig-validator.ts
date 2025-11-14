@@ -26,16 +26,20 @@ export interface TSConfigValidationOptions {
  */
 export async function validateTSConfig(
   pkg: PackageInfo,
-  options: TSConfigValidationOptions = {}
+  options: TSConfigValidationOptions = {},
 ): Promise<TSConfigValidationResult> {
-  const { strict = false, checkDeclarations = true, checkBuildOutput = true } = options;
-  
+  const {
+    strict = false,
+    checkDeclarations = true,
+    checkBuildOutput = true,
+  } = options;
+
   const warnings: string[] = [];
   const errors: string[] = [];
 
   try {
     const tsconfigPath = join(pkg.path, "tsconfig.json");
-    
+
     if (!existsSync(tsconfigPath)) {
       if (pkg.hasTsConfig) {
         warnings.push("tsconfig.json referenced but not found");
@@ -59,17 +63,30 @@ export async function validateTSConfig(
     // Check declaration generation settings
     if (checkDeclarations) {
       if (compilerOptions.declaration === false) {
-        warnings.push("declaration: false - TypeScript declaration files will not be generated");
+        warnings.push(
+          "declaration: false - TypeScript declaration files will not be generated",
+        );
       } else if (compilerOptions.declaration === undefined) {
-        warnings.push("declaration not set - consider adding 'declaration: true' for library packages");
+        warnings.push(
+          "declaration not set - consider adding 'declaration: true' for library packages",
+        );
       }
 
-      if (compilerOptions.emitDeclarationOnly === true && !compilerOptions.declaration) {
+      if (
+        compilerOptions.emitDeclarationOnly === true &&
+        !compilerOptions.declaration
+      ) {
         errors.push("emitDeclarationOnly: true requires declaration: true");
       }
 
-      if (compilerOptions.declaration && !compilerOptions.outDir && !compilerOptions.declarationDir) {
-        warnings.push("declaration: true but no outDir or declarationDir specified - declarations will be emitted alongside source files");
+      if (
+        compilerOptions.declaration &&
+        !compilerOptions.outDir &&
+        !compilerOptions.declarationDir
+      ) {
+        warnings.push(
+          "declaration: true but no outDir or declarationDir specified - declarations will be emitted alongside source files",
+        );
       }
     }
 
@@ -78,67 +95,136 @@ export async function validateTSConfig(
       if (compilerOptions.outDir) {
         const outDir = compilerOptions.outDir;
         if (outDir.includes("src") || outDir.includes("source")) {
-          warnings.push(`outDir '${outDir}' contains 'src' or 'source' - consider using 'dist' or 'build' for output directory`);
+          warnings.push(
+            `outDir '${outDir}' contains 'src' or 'source' - consider using 'dist' or 'build' for output directory`,
+          );
         }
       } else {
-        warnings.push("No outDir specified - consider adding 'outDir: \"dist\"' for cleaner output structure");
+        warnings.push(
+          "No outDir specified - consider adding 'outDir: \"dist\"' for cleaner output structure",
+        );
       }
 
       if (compilerOptions.noEmit === true) {
-        warnings.push("noEmit: true - TypeScript will not emit any files (use for type checking only)");
+        warnings.push(
+          "noEmit: true - TypeScript will not emit any files (use for type checking only)",
+        );
       }
 
-      if (compilerOptions.emitDeclarationOnly === true && compilerOptions.noEmit === true) {
+      if (
+        compilerOptions.emitDeclarationOnly === true &&
+        compilerOptions.noEmit === true
+      ) {
         errors.push("emitDeclarationOnly: true conflicts with noEmit: true");
       }
     }
 
     // Check for common misconfigurations
-    if (compilerOptions.target && !["es2015", "es2016", "es2017", "es2018", "es2019", "es2020", "es2021", "es2022", "esnext"].includes(compilerOptions.target)) {
-      warnings.push(`Unusual target '${compilerOptions.target}' - consider using a standard ES target`);
+    if (
+      compilerOptions.target &&
+      ![
+        "es2015",
+        "es2016",
+        "es2017",
+        "es2018",
+        "es2019",
+        "es2020",
+        "es2021",
+        "es2022",
+        "esnext",
+      ].includes(compilerOptions.target)
+    ) {
+      warnings.push(
+        `Unusual target '${compilerOptions.target}' - consider using a standard ES target`,
+      );
     }
 
-    if (compilerOptions.module && !["commonjs", "amd", "system", "umd", "es6", "es2015", "esnext", "es2020", "es2022", "node16", "nodenext"].includes(compilerOptions.module)) {
-      warnings.push(`Unusual module '${compilerOptions.module}' - consider using 'esnext' or 'commonjs'`);
+    if (
+      compilerOptions.module &&
+      ![
+        "commonjs",
+        "amd",
+        "system",
+        "umd",
+        "es6",
+        "es2015",
+        "esnext",
+        "es2020",
+        "es2022",
+        "node16",
+        "nodenext",
+      ].includes(compilerOptions.module)
+    ) {
+      warnings.push(
+        `Unusual module '${compilerOptions.module}' - consider using 'esnext' or 'commonjs'`,
+      );
     }
 
     // Check for missing important options
     if (!compilerOptions.strict) {
-      warnings.push("strict mode not enabled - consider adding 'strict: true' for better type safety");
+      warnings.push(
+        "strict mode not enabled - consider adding 'strict: true' for better type safety",
+      );
     }
 
     if (!compilerOptions.skipLibCheck) {
-      warnings.push("skipLibCheck not set - consider adding 'skipLibCheck: true' for faster builds");
+      warnings.push(
+        "skipLibCheck not set - consider adding 'skipLibCheck: true' for faster builds",
+      );
     }
 
     // Check for problematic settings
     if (compilerOptions.allowJs === true && !compilerOptions.checkJs) {
-      warnings.push("allowJs: true without checkJs: true - JavaScript files will not be type-checked");
+      warnings.push(
+        "allowJs: true without checkJs: true - JavaScript files will not be type-checked",
+      );
     }
 
-    if (compilerOptions.experimentalDecorators === true && !compilerOptions.emitDecoratorMetadata) {
-      warnings.push("experimentalDecorators: true without emitDecoratorMetadata - decorator metadata will not be emitted");
+    if (
+      compilerOptions.experimentalDecorators === true &&
+      !compilerOptions.emitDecoratorMetadata
+    ) {
+      warnings.push(
+        "experimentalDecorators: true without emitDecoratorMetadata - decorator metadata will not be emitted",
+      );
     }
 
     // Check for frontend app specific issues
     if (pkg.isFrontendApp) {
-      if (compilerOptions.moduleResolution && !["node", "bundler"].includes(compilerOptions.moduleResolution)) {
-        warnings.push(`Frontend app using moduleResolution '${compilerOptions.moduleResolution}' - consider using 'bundler' for modern bundlers`);
+      if (
+        compilerOptions.moduleResolution &&
+        !["node", "bundler"].includes(compilerOptions.moduleResolution)
+      ) {
+        warnings.push(
+          `Frontend app using moduleResolution '${compilerOptions.moduleResolution}' - consider using 'bundler' for modern bundlers`,
+        );
       }
 
-      if (compilerOptions.target && ["es5", "es2015"].includes(compilerOptions.target)) {
-        warnings.push(`Frontend app using old target '${compilerOptions.target}' - consider using 'es2020' or newer for better performance`);
+      if (
+        compilerOptions.target &&
+        ["es5", "es2015"].includes(compilerOptions.target)
+      ) {
+        warnings.push(
+          `Frontend app using old target '${compilerOptions.target}' - consider using 'es2020' or newer for better performance`,
+        );
       }
     }
 
     // Check for library specific issues
     if (!pkg.isFrontendApp) {
-      if (compilerOptions.moduleResolution && compilerOptions.moduleResolution === "bundler") {
-        warnings.push("Library using moduleResolution 'bundler' - consider using 'node' for better compatibility");
+      if (
+        compilerOptions.moduleResolution &&
+        compilerOptions.moduleResolution === "bundler"
+      ) {
+        warnings.push(
+          "Library using moduleResolution 'bundler' - consider using 'node' for better compatibility",
+        );
       }
 
       if (!compilerOptions.declaration) {
-        warnings.push("Library package without declaration: true - consider enabling for better type support");
+        warnings.push(
+          "Library package without declaration: true - consider enabling for better type support",
+        );
       }
     }
 
@@ -146,7 +232,6 @@ export async function validateTSConfig(
     const isValid = !hasErrors || !strict;
 
     return { valid: isValid, warnings, errors };
-
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     errors.push(`Failed to validate tsconfig.json: ${errorMessage}`);
@@ -159,15 +244,19 @@ export async function validateTSConfig(
  */
 export async function validateAllTSConfigs(
   packages: PackageInfo[],
-  options: TSConfigValidationOptions = {}
-): Promise<{ valid: boolean; results: Array<{ package: string; result: TSConfigValidationResult }> }> {
-  const results: Array<{ package: string; result: TSConfigValidationResult }> = [];
+  options: TSConfigValidationOptions = {},
+): Promise<{
+  valid: boolean;
+  results: Array<{ package: string; result: TSConfigValidationResult }>;
+}> {
+  const results: Array<{ package: string; result: TSConfigValidationResult }> =
+    [];
   let allValid = true;
 
   for (const pkg of packages) {
     const result = await validateTSConfig(pkg, options);
     results.push({ package: pkg.name, result });
-    
+
     if (!result.valid) {
       allValid = false;
     }
@@ -181,7 +270,7 @@ export async function validateAllTSConfigs(
  */
 export function logValidationResults(
   results: Array<{ package: string; result: TSConfigValidationResult }>,
-  verbose: boolean = false
+  verbose: boolean = false,
 ): void {
   for (const { package: packageName, result } of results) {
     if (result.errors.length > 0) {

@@ -13,7 +13,12 @@ import {
 } from "./impl/errors";
 import { generateCommandHelp, generateGlobalHelp } from "./impl/help";
 import { parseArgs } from "./impl/parser";
-import { clearRegistry, getRegistry, resolveCommand, setRegistry } from "./impl/registry";
+import {
+  clearRegistry,
+  getRegistry,
+  resolveCommand,
+  setRegistry,
+} from "./impl/registry";
 
 export { defineCmd, defineCmdArgs, defineCmdCfg } from "./impl/command";
 export {

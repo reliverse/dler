@@ -67,8 +67,8 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
           : hasTanstackStart
             ? "React, TanStack Start"
             : hasSolid
-                  ? "SolidJS"
-                  : ""
+              ? "SolidJS"
+              : ""
   }, ${backend?.[0]?.toUpperCase() ?? ""}${backend?.slice(1) ?? ""}${
     isConvex ? "" : `, ${api.toUpperCase()}`
   }, and more.
@@ -106,11 +106,7 @@ ${packageManagercallCmd} dev
 \`\`\`
 
 ${
-  hasTanstackRouter ||
-  hasReactRouter ||
-  hasNext ||
-  hasTanstackStart ||
-  hasSolid
+  hasTanstackRouter || hasReactRouter || hasNext || hasTanstackStart || hasSolid
     ? `Open [http://localhost:${webPort}](http://localhost:${webPort}) in your browser to see the web application.`
     : ""
 }
@@ -133,11 +129,7 @@ ${
 ${projectName}/
 ├── apps/
 ${
-  hasTanstackRouter ||
-  hasReactRouter ||
-  hasNext ||
-  hasTanstackStart ||
-  hasSolid
+  hasTanstackRouter || hasReactRouter || hasNext || hasTanstackStart || hasSolid
     ? `│   ├── web/         # Frontend application (${
         hasTanstackRouter
           ? "React + TanStack Router"
@@ -148,8 +140,8 @@ ${
               : hasTanstackStart
                 ? "React + TanStack Start"
                 : hasSolid
-                      ? "SolidJS"
-                      : ""
+                  ? "SolidJS"
+                  : ""
       })\n`
     : ""
 }${hasNative ? "│   ├── native/      # Mobile application (React Native, Expo)\n" : ""}${

@@ -1,9 +1,9 @@
-import fs from "fs/promises";
 import { logger } from "@reliverse/dler-logger";
+import zeptomatch from "@reliverse/dler-matcher";
 import { $ } from "bun";
+import fs from "fs/promises";
 import path from "path";
 import semver from "semver";
-import zeptomatch from "@reliverse/dler-matcher";
 
 export interface UpdateResult {
   package: string;
@@ -536,9 +536,7 @@ export function displayStructuredUpdateResults(
   // If not showing details, just show simplified success info
   if (!showDetails) {
     if (toUpdate.length === 0) {
-      logger.log(
-        `All ${upToDate.length} dependencies are already up to date`,
-      );
+      logger.log(`All ${upToDate.length} dependencies are already up to date`);
     } else {
       logger.log(
         `${toUpdate.length} dependencies can be updated across ${packageJsonFiles.length} package.json files`,
@@ -592,9 +590,7 @@ export function displayStructuredUpdateResults(
       (r) => !r.updated && !r.error && r.semverCompatible,
     );
     if (upToDateInFile.length > 0) {
-      logger.log(
-        `  * ${upToDateInFile.length} deps are already up to date`,
-      );
+      logger.log(`  * ${upToDateInFile.length} deps are already up to date`);
     }
 
     // Show available updates
@@ -654,9 +650,7 @@ export function displayStructuredUpdateResults(
 
   // Summary
   if (toUpdate.length === 0) {
-    logger.log(
-      `All ${upToDate.length} dependencies are already up to date`,
-    );
+    logger.log(`All ${upToDate.length} dependencies are already up to date`);
   } else {
     logger.success(
       `Summary: ${toUpdate.length} dependencies can be updated across ${packageJsonFiles.length} package.json files`,

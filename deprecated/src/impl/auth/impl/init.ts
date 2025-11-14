@@ -206,11 +206,7 @@ export const getDefaultAuthConfig = async ({ appName }: { appName?: string }) =>
     "auth.ts",
   );
 
-export type SupportedFrameworks =
-  | "vanilla"
-  | "react"
-  | "solid"
-  | "nextjs";
+export type SupportedFrameworks = "vanilla" | "react" | "solid" | "nextjs";
 
 export const getDefaultAuthClientConfig = async ({
   auth_config_path,

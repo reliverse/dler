@@ -3,11 +3,9 @@
 import { inc, parse, valid } from "semver";
 import type { BumpType, VersionInfo } from "./impl/types";
 
-
 // ============================================================================
 // Version Management
 // ============================================================================
-
 
 /**
  * Parse and validate a semver version string

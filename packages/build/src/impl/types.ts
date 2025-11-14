@@ -1,6 +1,9 @@
 // packages/build/src/impl/types.ts
 
-import type { PackageBuildConfig, PerformanceBudget } from "@reliverse/dler-config/impl/build";
+import type {
+  PackageBuildConfig,
+  PerformanceBudget,
+} from "@reliverse/dler-config/impl/build";
 
 export interface PackageInfo {
   name: string;
@@ -16,7 +19,6 @@ export interface PackageInfo {
   isCLI?: boolean;
 }
 
-
 export interface MinifyOptions {
   whitespace?: boolean;
   syntax?: boolean;
@@ -24,7 +26,7 @@ export interface MinifyOptions {
 }
 
 export interface JSXOptions {
-  runtime?: 'automatic' | 'classic';
+  runtime?: "automatic" | "classic";
   importSource?: string;
 }
 
@@ -63,24 +65,24 @@ export interface BuildOptions {
   stopOnError?: boolean;
   verbose?: boolean;
   watch?: boolean;
-  bundler?: 'bun' | 'mkdist';
-  target?: 'browser' | 'bun' | 'node';
-  format?: 'esm' | 'cjs' | 'iife';
+  bundler?: "bun" | "mkdist";
+  target?: "browser" | "bun" | "node";
+  format?: "esm" | "cjs" | "iife";
   minify?: boolean | MinifyOptions;
   minifyWhitespace?: boolean;
   minifySyntax?: boolean;
   minifyIdentifiers?: boolean;
-  sourcemap?: 'none' | 'linked' | 'inline' | 'external' | boolean;
+  sourcemap?: "none" | "linked" | "inline" | "external" | boolean;
   splitting?: boolean;
   external?: string | string[];
   bytecode?: boolean;
   drop?: string[];
-  packages?: 'bundle' | 'external';
+  packages?: "bundle" | "external";
   publicPath?: string;
   root?: string;
   define?: Record<string, string>;
   naming?: NamingOptions;
-  env?: 'inline' | 'disable' | `${string}*`;
+  env?: "inline" | "disable" | `${string}*`;
   banner?: string;
   footer?: string;
   conditions?: string[];
@@ -150,13 +152,13 @@ export interface BuildOptions {
   // Config discovery
   maxConfigDepth?: number;
   // Package kind and bin definitions (used for automatic package.json transformations)
-  kind?: 'library' | 'cli' | 'browser-app' | 'native-app';
+  kind?: "library" | "cli" | "browser-app" | "native-app";
   bin?: string;
   // TSConfig validation
   validateTsconfig?: boolean;
   strictTsconfig?: boolean;
   // DTS provider
-  dtsProvider?: 'dts-bundle-generator' | 'api-extractor' | 'typescript';
+  dtsProvider?: "dts-bundle-generator" | "api-extractor" | "typescript";
   // Export replacement
   replaceExports?: boolean;
   replaceExportsIgnorePackages?: string;
@@ -179,7 +181,17 @@ export interface CacheOptions {
 }
 
 // Bun loader type for BunBuildConfig
-export type BunLoaderType = 'js' | 'jsx' | 'ts' | 'tsx' | 'json' | 'toml' | 'file' | 'napi' | 'wasm' | 'text';
+export type BunLoaderType =
+  | "js"
+  | "jsx"
+  | "ts"
+  | "tsx"
+  | "json"
+  | "toml"
+  | "file"
+  | "napi"
+  | "wasm"
+  | "text";
 
 // Mkdist loader function type
 export type Loader = MkdistLoader;
@@ -193,28 +205,38 @@ export interface BuildArtifact {
   path: string;
   loader: Loader;
   hash: string | null;
-  kind: 'entry-point' | 'chunk' | 'asset' | 'sourcemap' | 'bytecode';
+  kind: "entry-point" | "chunk" | "asset" | "sourcemap" | "bytecode";
   sourcemap: BuildArtifact | null;
 }
 
 export interface BuildMessage {
-  name: 'BuildMessage';
+  name: "BuildMessage";
   position: Position | null;
   code: string;
   message: string;
-  level: 'error' | 'warning' | 'info' | 'debug' | 'verbose';
+  level: "error" | "warning" | "info" | "debug" | "verbose";
   toString(): string;
 }
 
 export interface ResolveMessage {
-  name: 'ResolveMessage';
+  name: "ResolveMessage";
   position: Position | null;
   code: string;
   message: string;
   referrer: string;
   specifier: string;
-  importKind: 'entry_point' | 'stmt' | 'require' | 'import' | 'dynamic' | 'require_resolve' | 'at' | 'at_conditional' | 'url' | 'internal';
-  level: 'error' | 'warning' | 'info' | 'debug' | 'verbose';
+  importKind:
+    | "entry_point"
+    | "stmt"
+    | "require"
+    | "import"
+    | "dynamic"
+    | "require_resolve"
+    | "at"
+    | "at_conditional"
+    | "url"
+    | "internal";
+  level: "error" | "warning" | "info" | "debug" | "verbose";
   toString(): string;
 }
 
@@ -243,7 +265,6 @@ export interface DevServerOptions {
   open?: boolean;
 }
 
-
 export interface DlerPlugin {
   name: string;
   setup: (build: BunBuildConfig) => void;
@@ -266,19 +287,19 @@ export interface CompileOptions {
 export interface BunBuildConfig {
   entrypoints: string[];
   outdir: string;
-  target?: 'browser' | 'bun' | 'node';
-  format?: 'esm' | 'cjs' | 'iife';
-  sourcemap?: 'none' | 'linked' | 'inline' | 'external' | boolean;
+  target?: "browser" | "bun" | "node";
+  format?: "esm" | "cjs" | "iife";
+  sourcemap?: "none" | "linked" | "inline" | "external" | boolean;
   splitting?: boolean;
   external?: string[];
   bytecode?: boolean;
   drop?: string[];
-  packages?: 'bundle' | 'external';
+  packages?: "bundle" | "external";
   publicPath?: string;
   root?: string;
   define?: Record<string, string>;
   naming?: NamingOptions;
-  env?: 'inline' | 'disable' | `${string}*`;
+  env?: "inline" | "disable" | `${string}*`;
   banner?: string;
   footer?: string;
   conditions?: string[];
@@ -311,7 +332,7 @@ export interface MkdistOptions {
   srcDir: string;
   distDir: string;
   rootDir: string;
-  format?: 'esm' | 'cjs';
+  format?: "esm" | "cjs";
   ext?: string;
   pattern?: string;
   cleanDist?: boolean;
@@ -345,12 +366,12 @@ export interface OutputFile {
   errors?: TypeError[];
 }
 
-export type LoaderName = 'js';
+export type LoaderName = "js";
 
 export interface CreateLoaderOptions {
   loaders?: (LoaderName | Loader)[];
   declaration?: boolean;
-  format?: 'esm' | 'cjs';
+  format?: "esm" | "cjs";
   ext?: string;
   esbuild?: any;
   [key: string]: any;
@@ -363,7 +384,9 @@ export interface LoaderContext {
 
 export type LoadFile = (input: InputFile) => Promise<OutputFile[] | undefined>;
 
-export type MkdistLoader = (input: InputFile, context: LoaderContext) => Promise<OutputFile[] | undefined>;
+export type MkdistLoader = (
+  input: InputFile,
+  context: LoaderContext,
+) => Promise<OutputFile[] | undefined>;
 
 export type LoaderResult = OutputFile[];
-

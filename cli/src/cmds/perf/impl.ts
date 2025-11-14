@@ -280,13 +280,7 @@ export class PerfAnalyzer {
       verbose,
       maxDepth: 10,
       includeHidden: false,
-      excludePatterns: [
-        "node_modules",
-        ".git",
-        ".next",
-        "dist",
-        "build",
-      ],
+      excludePatterns: ["node_modules", ".git", ".next", "dist", "build"],
     });
   }
 

@@ -64,9 +64,7 @@ const publishCmd = async (args: any): Promise<void> => {
       process.exit(1);
     }
 
-    logger.success(
-      "\nAll packages published successfully!",
-    );
+    logger.success("\nAll packages published successfully!");
 
     if (args.verbose) {
       for (const result of results.results) {

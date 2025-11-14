@@ -3,75 +3,84 @@
 import { existsSync, mkdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import {
-  findMonorepoRoot,
-  loadDlerConfig,
-} from "@reliverse/dler-config/impl/discovery";
-import type { DlerConfig } from "@reliverse/dler-config/impl/core";
-import {
   getPackageBuildConfig,
   mergeBuildOptions,
 } from "@reliverse/dler-config/impl/build";
+import type { DlerConfig } from "@reliverse/dler-config/impl/core";
+import {
+  findMonorepoRoot,
+  loadDlerConfig,
+} from "@reliverse/dler-config/impl/discovery";
 import { writeErrorLines } from "@reliverse/dler-helpers";
 import { logger } from "@reliverse/dler-logger";
 import pMap from "@reliverse/dler-mapper";
 import { createIgnoreFilter, normalizePatterns } from "@reliverse/dler-matcher";
 import {
   getWorkspacePatterns,
+  preparePackageJsonForPublishing,
   readPackageJSON,
   readTSConfig,
 } from "@reliverse/dler-pkg-tsc";
 import { processAssetsForPackage, processCSSForPackage } from "./impl/assets";
 import { BuildCache } from "./impl/cache";
-import { createDebugLogger } from "./impl/debug"; 
+import { createDebugLogger } from "./impl/debug";
 import { startDevServer } from "./impl/dev-server";
 import { processHTMLForPackage } from "./impl/html-processor";
-import { preparePackageJsonForPublishing } from "@reliverse/dler-pkg-tsc";
-import { validateTSConfig } from "./impl/tsconfig-validator";
-import { 
+import {
   AssetOptimizationPlugin,
   applyPlugins,
   BundleAnalyzerPlugin,
   CSSModulesPlugin,
-  loadPlugins, 
+  loadPlugins,
   PerformancePlugin,
-  pluginRegistry, 
+  pluginRegistry,
   ReactRefreshPlugin,
   SVGAsReactPlugin,
   TypeScriptDeclarationsPlugin,
   WorkerPlugin,
 } from "./impl/plugins";
+import { validateTSConfig } from "./impl/tsconfig-validator";
 import { validateBuildConfig } from "./impl/type-guards";
 import type {
   BuildOptions,
   BuildResult,
   BuildSummary,
   DlerPlugin,
-  PackageInfo,
   MkdistOptions,
+  PackageInfo,
 } from "./impl/types";
 import { startWatchMode } from "./impl/watch";
 
-export { applyPresets} from "./impl/presets";
+export type {
+  PackageKind,
+  RegistryType,
+} from "@reliverse/dler-config/impl/publish";
+export type { PreparePackageJsonOptions } from "@reliverse/dler-pkg-tsc";
+export {
+  addBinFieldToPackageJson,
+  extractPackageName,
+  parseBinArgument,
+  preparePackageJsonForPublishing,
+  transformExportsForBuild,
+} from "@reliverse/dler-pkg-tsc";
+export type {
+  DtsGeneratorOptions,
+  DtsGeneratorResult,
+} from "./impl/dts-generator";
+export { generateDeclarations } from "./impl/dts-generator";
+export { applyPresets } from "./impl/presets";
+export type { MkdistDtsOptions } from "./impl/providers/mkdist-dts";
+export type {
+  TSConfigValidationOptions,
+  TSConfigValidationResult,
+} from "./impl/tsconfig-validator";
+export {
+  logValidationResults,
+  validateAllTSConfigs,
+  validateTSConfig,
+} from "./impl/tsconfig-validator";
 export type { BuildOptions } from "./impl/types";
 export { validateAndExit } from "./impl/validation";
-export { generateDeclarations } from "./impl/dts-generator";
-export type { DtsGeneratorOptions, DtsGeneratorResult } from "./impl/dts-generator";
-export type { MkdistDtsOptions } from "./impl/providers/mkdist-dts";
-export type { PackageKind, RegistryType } from "@reliverse/dler-config/impl/publish";
-export { 
-  transformExportsForBuild,
-  addBinFieldToPackageJson,
-  preparePackageJsonForPublishing,
-  extractPackageName,
-  parseBinArgument
-} from "@reliverse/dler-pkg-tsc";
-export type { PreparePackageJsonOptions } from "@reliverse/dler-pkg-tsc";
-export { 
-  validateTSConfig,
-  validateAllTSConfigs,
-  logValidationResults
-} from "./impl/tsconfig-validator";
-export type { TSConfigValidationResult, TSConfigValidationOptions } from "./impl/tsconfig-validator";
 
 const DEFAULT_CONCURRENCY = 5;
 
@@ -83,17 +92,17 @@ const DEFAULT_CONCURRENCY = 5;
 let pluginsInitialized = false;
 const initializePlugins = (): void => {
   if (pluginsInitialized) return;
-  
-// Register built-in plugins
-pluginRegistry.register(ReactRefreshPlugin);
-pluginRegistry.register(TypeScriptDeclarationsPlugin);
-pluginRegistry.register(AssetOptimizationPlugin);
-pluginRegistry.register(BundleAnalyzerPlugin);
-pluginRegistry.register(CSSModulesPlugin);
-pluginRegistry.register(SVGAsReactPlugin);
-pluginRegistry.register(WorkerPlugin);
-pluginRegistry.register(PerformancePlugin);
-  
+
+  // Register built-in plugins
+  pluginRegistry.register(ReactRefreshPlugin);
+  pluginRegistry.register(TypeScriptDeclarationsPlugin);
+  pluginRegistry.register(AssetOptimizationPlugin);
+  pluginRegistry.register(BundleAnalyzerPlugin);
+  pluginRegistry.register(CSSModulesPlugin);
+  pluginRegistry.register(SVGAsReactPlugin);
+  pluginRegistry.register(WorkerPlugin);
+  pluginRegistry.register(PerformancePlugin);
+
   pluginsInitialized = true;
 };
 
@@ -120,12 +129,12 @@ const getWorkspacePackages = async (cwd?: string): Promise<PackageInfo[]> => {
   if (!monorepoRoot) {
     const currentDir = cwd || process.cwd();
     const pkgInfo = await resolvePackageInfo(currentDir, null);
-    
+
     if (pkgInfo) {
       // Return single package info
       return [pkgInfo];
     }
-    
+
     // Neither monorepo nor valid package found
     throw new Error(
       "❌ No monorepo or valid package found. Ensure package.json has 'workspaces' field or contains a valid 'name' field.",
@@ -153,11 +162,13 @@ const getWorkspacePackages = async (cwd?: string): Promise<PackageInfo[]> => {
   const patternPromises = patterns.map(async (pattern) => {
     // Check if pattern contains wildcards
     let matches: string[] = [];
-    
-    if (pattern.includes('*')) {
+
+    if (pattern.includes("*")) {
       // Pattern with wildcards - use glob
       const glob = new Bun.Glob(pattern);
-      matches = Array.from(glob.scanSync({ cwd: monorepoRoot, onlyFiles: false }));
+      matches = Array.from(
+        glob.scanSync({ cwd: monorepoRoot, onlyFiles: false }),
+      );
     } else {
       // Direct package path (no wildcards)
       matches = [pattern];
@@ -176,7 +187,7 @@ const getWorkspacePackages = async (cwd?: string): Promise<PackageInfo[]> => {
   });
 
   const patternResults = await Promise.all(patternPromises);
-  
+
   // Flatten and filter results
   for (const patternResult of patternResults) {
     for (const pkgInfo of patternResult) {
@@ -187,7 +198,7 @@ const getWorkspacePackages = async (cwd?: string): Promise<PackageInfo[]> => {
   }
 
   // Filter out the monorepo root to prevent building it
-  const filteredPackages = packages.filter(pkg => {
+  const filteredPackages = packages.filter((pkg) => {
     const normalizedPkgPath = resolve(pkg.path);
     const normalizedRootPath = resolve(monorepoRoot);
     return normalizedPkgPath !== normalizedRootPath;
@@ -218,8 +229,8 @@ const detectEntryPoints = async (packagePath: string): Promise<string[]> => {
 
   // 1. Check package.json "build" field for explicit config
   if (pkg.build?.entrypoints) {
-    const entrypoints = Array.isArray(pkg.build.entrypoints) 
-      ? pkg.build.entrypoints 
+    const entrypoints = Array.isArray(pkg.build.entrypoints)
+      ? pkg.build.entrypoints
       : [pkg.build.entrypoints];
     return entrypoints.map((ep: string) => resolve(packagePath, ep));
   }
@@ -231,8 +242,12 @@ const detectEntryPoints = async (packagePath: string): Promise<string[]> => {
         const fullPath = resolve(packagePath, basePath, exports);
         if (existsSync(fullPath)) {
           // Filter out build artifacts to avoid circular issues
-          if (!fullPath.includes('/dist/') && !fullPath.includes('/build/') && 
-              !fullPath.includes('\\dist\\') && !fullPath.includes('\\build\\')) {
+          if (
+            !fullPath.includes("/dist/") &&
+            !fullPath.includes("/build/") &&
+            !fullPath.includes("\\dist\\") &&
+            !fullPath.includes("\\build\\")
+          ) {
             entryPoints.push(fullPath);
           }
         }
@@ -241,7 +256,12 @@ const detectEntryPoints = async (packagePath: string): Promise<string[]> => {
           if (key === "." || key.startsWith("./")) {
             // Handle subpath exports
             extractFromExports(value, basePath);
-          } else if (key === "import" || key === "require" || key === "types" || key === "default") {
+          } else if (
+            key === "import" ||
+            key === "require" ||
+            key === "types" ||
+            key === "default"
+          ) {
             // Handle conditional exports - prioritize import over require, skip types
             if (key !== "types") {
               extractFromExports(value, basePath);
@@ -254,8 +274,12 @@ const detectEntryPoints = async (packagePath: string): Promise<string[]> => {
             const fullPath = resolve(packagePath, basePath, value);
             if (existsSync(fullPath)) {
               // Filter out build artifacts to avoid circular issues
-              if (!fullPath.includes('/dist/') && !fullPath.includes('/build/') && 
-                  !fullPath.includes('\\dist\\') && !fullPath.includes('\\build\\')) {
+              if (
+                !fullPath.includes("/dist/") &&
+                !fullPath.includes("/build/") &&
+                !fullPath.includes("\\dist\\") &&
+                !fullPath.includes("\\build\\")
+              ) {
                 entryPoints.push(fullPath);
               }
             }
@@ -299,7 +323,7 @@ const detectEntryPoints = async (packagePath: string): Promise<string[]> => {
   // 4. Fallback to common library patterns
   const commonPatterns = [
     "src/index.ts",
-    "src/mod.ts", 
+    "src/mod.ts",
     "index.ts",
     "src/index.js",
     "src/mod.js",
@@ -339,17 +363,21 @@ const detectJSEntryPoints = async (packagePath: string): Promise<string[]> => {
   return entryPoints;
 };
 
-const detectBinEntryPoints = async (packagePath: string, pkg: any): Promise<string[]> => {
+const detectBinEntryPoints = async (
+  packagePath: string,
+  pkg: any,
+): Promise<string[]> => {
   if (!pkg.bin) return [];
-  
+
   const binEntries: string[] = [];
   const binField = pkg.bin;
-  
+
   // bin can be a string or an object
-  const binPaths: string[] = typeof binField === 'string' 
-    ? [binField] 
-    : Object.values(binField) as string[];
-  
+  const binPaths: string[] =
+    typeof binField === "string"
+      ? [binField]
+      : (Object.values(binField) as string[]);
+
   for (const binPath of binPaths) {
     // bin paths typically point to dist/ output
     // Infer source file by replacing dist/ with src/ and .js with .ts
@@ -357,18 +385,18 @@ const detectBinEntryPoints = async (packagePath: string, pkg: any): Promise<stri
     // - "dist/cli.js" -> "src/cli.ts"
     // - "./dist/cli.js" -> "src/cli.ts"
     // - "cli.js" -> "cli.ts" or "src/cli.ts"
-    let sourcePath = binPath
-      .replace(/^\.\/dist\//, 'src/')
-      .replace(/^dist\//, 'src/')
-      .replace(/\.js$/, '.ts');
-    
+    const sourcePath = binPath
+      .replace(/^\.\/dist\//, "src/")
+      .replace(/^dist\//, "src/")
+      .replace(/\.js$/, ".ts");
+
     // Check multiple potential locations
     const potentialPaths = [
-      sourcePath,              // Direct conversion
-      sourcePath.replace(/^src\//, ''), // Remove src/ prefix
-      `src/${sourcePath}`,     // Add src/ prefix
+      sourcePath, // Direct conversion
+      sourcePath.replace(/^src\//, ""), // Remove src/ prefix
+      `src/${sourcePath}`, // Add src/ prefix
     ];
-    
+
     for (const potential of new Set(potentialPaths)) {
       const fullPath = resolve(packagePath, potential);
       if (existsSync(fullPath)) {
@@ -377,11 +405,14 @@ const detectBinEntryPoints = async (packagePath: string, pkg: any): Promise<stri
       }
     }
   }
-  
+
   return binEntries;
 };
 
-const detectFrontendApp = async (packagePath: string, pkg: any): Promise<boolean> => {
+const detectFrontendApp = async (
+  packagePath: string,
+  pkg: any,
+): Promise<boolean> => {
   // Check for HTML files
   const htmlPatterns = [
     "index.html",
@@ -399,13 +430,7 @@ const detectFrontendApp = async (packagePath: string, pkg: any): Promise<boolean
   }
 
   // Check for frontend framework dependencies
-  const frontendFrameworks = [
-    "react",
-    "preact",
-    "solid-js",
-    "lit",
-    "alpinejs",
-  ];
+  const frontendFrameworks = ["react", "preact", "solid-js", "lit", "alpinejs"];
 
   const allDeps = {
     ...pkg.dependencies,
@@ -478,23 +503,22 @@ const resolvePackageInfo = async (
     const hasTsConfig = existsSync(join(packagePath, "tsconfig.json"));
     const entryPoints = await detectEntryPoints(packagePath);
     const outputDir = await resolveOutputDir(packagePath);
-    
+
     // Detect frontend app characteristics
     const isFrontendApp = await detectFrontendApp(packagePath, pkg);
-    const hasHtmlEntry = entryPoints.some(ep => ep.endsWith('.html'));
-    const hasPublicDir = existsSync(join(packagePath, "public")) && 
-                        statSync(join(packagePath, "public")).isDirectory();
+    const hasHtmlEntry = entryPoints.some((ep) => ep.endsWith(".html"));
+    const hasPublicDir =
+      existsSync(join(packagePath, "public")) &&
+      statSync(join(packagePath, "public")).isDirectory();
 
-    const buildConfig = await getPackageBuildConfig(
-      pkg.name,
-      dlerConfig,
-    );
+    const buildConfig = await getPackageBuildConfig(pkg.name, dlerConfig);
 
     // Detect CLI package (has bin field with at least one entry)
-    const isCLI = !!(pkg.bin && (
-      typeof pkg.bin === 'string' || 
-      (typeof pkg.bin === 'object' && Object.keys(pkg.bin).length > 0)
-    ));
+    const isCLI = !!(
+      pkg.bin &&
+      (typeof pkg.bin === "string" ||
+        (typeof pkg.bin === "object" && Object.keys(pkg.bin).length > 0))
+    );
 
     return {
       name: pkg.name,
@@ -525,10 +549,10 @@ const filterPackages = (
 ): PackageInfo[] => {
   // Always ignore @reliverse/dler-v1 package
   const alwaysIgnored = ["@reliverse/dler-v1"];
-  
+
   // Combine user-provided ignore patterns with always ignored packages
-  const combinedIgnore = ignore 
-    ? Array.isArray(ignore) 
+  const combinedIgnore = ignore
+    ? Array.isArray(ignore)
       ? [...alwaysIgnored, ...ignore]
       : [...alwaysIgnored, ignore]
     : alwaysIgnored;
@@ -538,20 +562,20 @@ const filterPackages = (
 
   // Filter out private packages unless explicitly allowed
   if (!allowPrivateBuild) {
-    return filteredPackages.filter(pkg => pkg.private !== true);
+    return filteredPackages.filter((pkg) => pkg.private !== true);
   }
 
   // Normalize allowPrivateBuild to array
-  const allowedPatterns = Array.isArray(allowPrivateBuild) 
-    ? allowPrivateBuild 
+  const allowedPatterns = Array.isArray(allowPrivateBuild)
+    ? allowPrivateBuild
     : [allowPrivateBuild];
 
   // Create a filter to check if a package name matches allowed patterns
   const isAllowed = (pkgName: string): boolean => {
     for (const pattern of allowedPatterns) {
       // Simple glob pattern matching
-      if (pattern.includes('*')) {
-        const regexPattern = pattern.replace(/\*/g, '.*');
+      if (pattern.includes("*")) {
+        const regexPattern = pattern.replace(/\*/g, ".*");
         if (new RegExp(`^${regexPattern}$`).test(pkgName)) {
           return true;
         }
@@ -563,7 +587,9 @@ const filterPackages = (
   };
 
   // Filter: allow if not private OR if private and explicitly allowed
-  return filteredPackages.filter(pkg => pkg.private !== true || isAllowed(pkg.name));
+  return filteredPackages.filter(
+    (pkg) => pkg.private !== true || isAllowed(pkg.name),
+  );
 };
 
 // ============================================================================
@@ -573,7 +599,7 @@ const filterPackages = (
 const compileToExecutable = async (
   pkg: PackageInfo,
   _outputs: Bun.BuildArtifact[],
-  options: BuildOptions
+  options: BuildOptions,
 ): Promise<void> => {
   // Use the original source entry point for compilation
   const entryPoint = pkg.entryPoints[0];
@@ -582,14 +608,23 @@ const compileToExecutable = async (
     return;
   }
 
-  const executableName = entryPoint.split('/').pop()?.split('\\').pop()?.replace(/\.(ts|js|mjs|cjs)$/, '') || 'app';
-  const executablePath = join(pkg.outputDir, executableName + (process.platform === 'win32' ? '.exe' : ''));
-  
+  const executableName =
+    entryPoint
+      .split("/")
+      .pop()
+      ?.split("\\")
+      .pop()
+      ?.replace(/\.(ts|js|mjs|cjs)$/, "") || "app";
+  const executablePath = join(
+    pkg.outputDir,
+    executableName + (process.platform === "win32" ? ".exe" : ""),
+  );
+
   // Ensure output directory exists
   if (!existsSync(pkg.outputDir)) {
     mkdirSync(pkg.outputDir, { recursive: true });
   }
-  
+
   logger.info(`🔨 Compiling ${pkg.name} to executable: ${executablePath}`);
 
   try {
@@ -597,29 +632,34 @@ const compileToExecutable = async (
       entrypoints: [entryPoint],
       outfile: executablePath,
       compile: true,
-      target: options.target || 'bun',
-      format: options.format || 'cjs',
+      target: options.target || "bun",
+      format: options.format || "cjs",
     };
 
     // Add Windows-specific metadata if on Windows
-    if (process.platform === 'win32') {
-      if (options.windowsHideConsole) buildConfig.windowsHideConsole = options.windowsHideConsole;
+    if (process.platform === "win32") {
+      if (options.windowsHideConsole)
+        buildConfig.windowsHideConsole = options.windowsHideConsole;
       if (options.windowsIcon) buildConfig.windowsIcon = options.windowsIcon;
       if (options.windowsTitle) buildConfig.windowsTitle = options.windowsTitle;
-      if (options.windowsPublisher) buildConfig.windowsPublisher = options.windowsPublisher;
-      if (options.windowsVersion) buildConfig.windowsVersion = options.windowsVersion;
-      if (options.windowsDescription) buildConfig.windowsDescription = options.windowsDescription;
-      if (options.windowsCopyright) buildConfig.windowsCopyright = options.windowsCopyright;
+      if (options.windowsPublisher)
+        buildConfig.windowsPublisher = options.windowsPublisher;
+      if (options.windowsVersion)
+        buildConfig.windowsVersion = options.windowsVersion;
+      if (options.windowsDescription)
+        buildConfig.windowsDescription = options.windowsDescription;
+      if (options.windowsCopyright)
+        buildConfig.windowsCopyright = options.windowsCopyright;
     }
 
     // Use Bun's CLI approach for compilation instead of the API
     const { $ } = await import("bun");
-    
+
     try {
       // For now, use the basic compilation without Windows-specific options
       // TODO: Add Windows-specific options support later (for some reason build is failing)
       const cmd = $`bun build ${entryPoint} --outfile ${executablePath} --compile --target ${buildConfig.target || "bun"}`;
-      
+
       await cmd.cwd(pkg.path).quiet();
     } catch (error) {
       logger.error(`❌ Bun CLI compilation failed: ${error}`);
@@ -632,7 +672,9 @@ const compileToExecutable = async (
     }
 
     const stats = statSync(executablePath);
-    logger.success(`✅ ${pkg.name}: Executable created (${formatBytes(stats.size)})`);
+    logger.success(
+      `✅ ${pkg.name}: Executable created (${formatBytes(stats.size)})`,
+    );
   } catch (error) {
     logger.error(`❌ ${pkg.name}: Compilation failed - ${error}`);
     throw error;
@@ -646,24 +688,27 @@ const compileToExecutable = async (
 const buildWithMkdist = async (
   pkg: PackageInfo,
   options: BuildOptions,
-  _bunBuildConfig: any
+  _bunBuildConfig: any,
 ): Promise<BuildResult> => {
   const startTime = Date.now();
-  
+
   try {
     // Import mkdist implementation
-    const { mkdist } = await import('./impl/providers/mkdist/make');
-    
+    const { mkdist } = await import("./impl/providers/mkdist/make");
+
     // Configure mkdist options
     // Note: declaration generation is controlled by the jsLoader checking for options.declaration
     // mkdist internally uses typescript.compilerOptions.declaration to control DTS generation
     // srcDir is relative to rootDir, so we pass 'src' to scan the src directory
-    const mkdistOptions: MkdistOptions & { declaration?: boolean; esbuild?: any } = {
-      srcDir: 'src',
+    const mkdistOptions: MkdistOptions & {
+      declaration?: boolean;
+      esbuild?: any;
+    } = {
+      srcDir: "src",
       distDir: pkg.outputDir,
       rootDir: pkg.path,
-      format: options.format === 'cjs' ? 'cjs' : 'esm',
-      ext: options.format === 'cjs' ? '.cjs' : '.js',
+      format: options.format === "cjs" ? "cjs" : "esm",
+      ext: options.format === "cjs" ? ".cjs" : ".js",
       cleanDist: false,
       addRelativeDeclarationExtensions: true,
       declaration: true,
@@ -676,10 +721,10 @@ const buildWithMkdist = async (
         },
       },
     };
-    
+
     // Execute mkdist build
     const { result, duration } = await mkdist(mkdistOptions);
-    
+
     // Calculate bundle size
     let bundleSize = 0;
     const outputFiles: string[] = [];
@@ -692,9 +737,9 @@ const buildWithMkdist = async (
         // Ignore file stat errors
       }
     }
-    
+
     const buildSuccess = result.errors.length === 0;
-    
+
     // After successful build, transform package.json (same as Bun bundler)
     // This includes adding the files field, transforming exports, etc.
     if (buildSuccess) {
@@ -708,22 +753,26 @@ const buildWithMkdist = async (
         });
 
         if (!prepResult.success && options.verbose) {
-          logger.warn(`⚠️  ${pkg.name}: Failed to prepare package.json for publishing: ${prepResult.error}`);
+          logger.warn(
+            `⚠️  ${pkg.name}: Failed to prepare package.json for publishing: ${prepResult.error}`,
+          );
         } else if (options.verbose) {
           logger.info(`📦 ${pkg.name}: Package.json prepared for publishing`);
         }
       } catch (error) {
-        logger.warn(`⚠️  ${pkg.name}: Error preparing package.json for publishing: ${error instanceof Error ? error.message : String(error)}`);
+        logger.warn(
+          `⚠️  ${pkg.name}: Error preparing package.json for publishing: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
-    
+
     // Return BuildResult
     return {
       package: pkg,
       success: buildSuccess,
       skipped: false,
       output: `Built ${result.writtenFiles.length} files`,
-      errors: result.errors.map(e => e.filename),
+      errors: result.errors.map((e) => e.filename),
       warnings: [],
       buildTime: duration,
       bundleSize,
@@ -731,11 +780,9 @@ const buildWithMkdist = async (
   } catch (error) {
     const buildTime = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : String(error);
-    
-    logger.error(
-      `❌ ${pkg.name}: mkdist build failed - ${errorMessage}`,
-    );
-    
+
+    logger.error(`❌ ${pkg.name}: mkdist build failed - ${errorMessage}`);
+
     return {
       package: pkg,
       success: false,
@@ -756,19 +803,19 @@ export const buildPackage = async (
 ): Promise<BuildResult> => {
   // Merge with package-specific config
   const mergedOptions = mergeBuildOptions(options, pkg.buildConfig);
-  
+
   // Create debug logger
   const debugLogger = createDebugLogger(mergedOptions);
   debugLogger.start();
-  
-  const { 
-    verbose = false, 
+
+  const {
+    verbose = false,
     bundler,
-    target = "node", 
-    format = "esm", 
-    minify = false, 
-    sourcemap = "none", 
-    splitting = true, 
+    target = "node",
+    format = "esm",
+    minify = false,
+    sourcemap = "none",
+    splitting = true,
     external,
     bytecode = false,
     drop,
@@ -814,32 +861,45 @@ export const buildPackage = async (
 
   // Auto-detect frontend app settings
   const isFrontendApp = pkg.isFrontendApp || pkg.hasHtmlEntry;
-  const shouldUseCssChunking = cssChunking !== false && (cssChunking === true || isFrontendApp);
-  
+  const shouldUseCssChunking =
+    cssChunking !== false && (cssChunking === true || isFrontendApp);
+
   // Determine bundler based on package kind and options
   // Default to mkdist, use bun only for browser-app or native-app
-  const effectiveBundler = bundler || 
-    (pkg.buildConfig?.kind === 'browser-app' || pkg.buildConfig?.kind === 'native-app' 
-      ? 'bun' 
-      : 'mkdist');
-  
+  const effectiveBundler =
+    bundler ||
+    (pkg.buildConfig?.kind === "browser-app" ||
+    pkg.buildConfig?.kind === "native-app"
+      ? "bun"
+      : "mkdist");
+
   // Set appropriate defaults for frontend apps (but not for compilation)
   // When compiling, always use the configured target/format, not frontend defaults
-  const frontendTarget = isFrontendApp && !mergedOptions.compile ? "browser" : target;
-  const frontendFormat = isFrontendApp && !mergedOptions.compile ? "esm" : format;
-  const frontendSplitting = isFrontendApp && !mergedOptions.compile ? true : splitting;
+  const frontendTarget =
+    isFrontendApp && !mergedOptions.compile ? "browser" : target;
+  const frontendFormat =
+    isFrontendApp && !mergedOptions.compile ? "esm" : format;
+  const frontendSplitting =
+    isFrontendApp && !mergedOptions.compile ? true : splitting;
 
   // Initialize plugins (lazy registration)
   initializePlugins();
 
   // Load and apply plugins
   const activePlugins: DlerPlugin[] = [];
-  
+
   // Auto-load plugins based on options
-  if (mergedOptions.reactFastRefresh || (isFrontendApp && !mergedOptions.production)) {
+  if (
+    mergedOptions.reactFastRefresh ||
+    (isFrontendApp && !mergedOptions.production)
+  ) {
     activePlugins.push(ReactRefreshPlugin);
   }
-  if (generateTypes || typeCheck || (typeof pkg.buildConfig?.dts === 'object' && pkg.buildConfig.dts?.enable)) {
+  if (
+    generateTypes ||
+    typeCheck ||
+    (typeof pkg.buildConfig?.dts === "object" && pkg.buildConfig.dts?.enable)
+  ) {
     activePlugins.push(TypeScriptDeclarationsPlugin);
   }
   if (imageOptimization || fontOptimization || cssOptimization) {
@@ -860,24 +920,31 @@ export const buildPackage = async (
   if (performanceMonitoring || performanceBudget) {
     activePlugins.push(PerformancePlugin);
   }
-  
+
   // Load custom plugins
   if (plugins.length > 0) {
     const customPlugins = loadPlugins(plugins);
     activePlugins.push(...customPlugins);
   }
-  
+
   // Use the resolved target
   const validTarget = frontendTarget;
-  
+
   // Validate format
-  const validFormat = (frontendFormat === "cjs" || frontendFormat === "iife") ? frontendFormat : "esm";
-  
+  const validFormat =
+    frontendFormat === "cjs" || frontendFormat === "iife"
+      ? frontendFormat
+      : "esm";
+
   // Validate sourcemap - handle boolean for backwards compatibility
   let validSourcemap: string | boolean = sourcemap;
-  if (typeof sourcemap === 'boolean') {
+  if (typeof sourcemap === "boolean") {
     validSourcemap = sourcemap ? "inline" : "none";
-  } else if (sourcemap === "linked" || sourcemap === "inline" || sourcemap === "external") {
+  } else if (
+    sourcemap === "linked" ||
+    sourcemap === "inline" ||
+    sourcemap === "external"
+  ) {
     validSourcemap = sourcemap;
   } else {
     validSourcemap = "none";
@@ -944,7 +1011,9 @@ export const buildPackage = async (
           buildTime: 0,
         };
       } else {
-        logger.warn(`⚠️  ${pkg.name}: TSConfig validation failed: ${error instanceof Error ? error.message : String(error)}`);
+        logger.warn(
+          `⚠️  ${pkg.name}: TSConfig validation failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
   }
@@ -954,7 +1023,9 @@ export const buildPackage = async (
     const cacheEntry = await cache.get(pkg, mergedOptions);
     if (cacheEntry) {
       if (verbose) {
-        logger.info(`⚡ ${pkg.name}: Using cache (${cacheEntry.buildTime}ms, ${formatBytes(cacheEntry.bundleSize)})`);
+        logger.info(
+          `⚡ ${pkg.name}: Using cache (${cacheEntry.buildTime}ms, ${formatBytes(cacheEntry.bundleSize)})`,
+        );
       }
       return {
         package: pkg,
@@ -975,7 +1046,7 @@ export const buildPackage = async (
   }
 
   // Debug logging
-  debugLogger.logConfigResolution(pkg, pkg.buildConfig ? 'dler' : 'default');
+  debugLogger.logConfigResolution(pkg, pkg.buildConfig ? "dler" : "default");
   debugLogger.logBuildOptions(mergedOptions, pkg);
   debugLogger.logEntryPoints(pkg);
 
@@ -985,9 +1056,11 @@ export const buildPackage = async (
     // Validate build options
     const validation = validateBuildConfig(mergedOptions);
     if (!validation.valid) {
-      logger.warn(`⚠️  ${pkg.name}: Invalid build options - ${validation.errors.join(', ')}`);
+      logger.warn(
+        `⚠️  ${pkg.name}: Invalid build options - ${validation.errors.join(", ")}`,
+      );
     }
-    
+
     const buildConfig: any = {
       entrypoints: pkg.entryPoints,
       outdir: pkg.outputDir,
@@ -998,8 +1071,10 @@ export const buildPackage = async (
     };
 
     // Debug logging for native app
-    if (pkg.name === '@reliverse/native-app-example') {
-      logger.info(`🔍 Debug: target=${validTarget}, format=${validFormat}, bytecode=${bytecode}`);
+    if (pkg.name === "@reliverse/native-app-example") {
+      logger.info(
+        `🔍 Debug: target=${validTarget}, format=${validFormat}, bytecode=${bytecode}`,
+      );
     }
 
     // Apply plugins to build configuration
@@ -1019,31 +1094,33 @@ export const buildPackage = async (
     if (isFrontendApp) {
       buildConfig.loader = {
         ...loader,
-        '.png': 'file',
-        '.jpg': 'file',
-        '.jpeg': 'file',
-        '.gif': 'file',
-        '.svg': 'file',
-        '.webp': 'file',
-        '.ico': 'file',
-        '.woff': 'file',
-        '.woff2': 'file',
-        '.ttf': 'file',
-        '.eot': 'file',
-        '.css': 'css',
+        ".png": "file",
+        ".jpg": "file",
+        ".jpeg": "file",
+        ".gif": "file",
+        ".svg": "file",
+        ".webp": "file",
+        ".ico": "file",
+        ".woff": "file",
+        ".woff2": "file",
+        ".ttf": "file",
+        ".eot": "file",
+        ".css": "css",
         ...loader,
       };
     }
 
     // Handle minification options
-    if (typeof minify === 'boolean') {
+    if (typeof minify === "boolean") {
       buildConfig.minify = minify;
-    } else if (typeof minify === 'object' && minify !== null) {
+    } else if (typeof minify === "object" && minify !== null) {
       // Validate minify object structure matches Bun API
       const validMinify: any = {};
-      if (minify.whitespace !== undefined) validMinify.whitespace = minify.whitespace;
+      if (minify.whitespace !== undefined)
+        validMinify.whitespace = minify.whitespace;
       if (minify.syntax !== undefined) validMinify.syntax = minify.syntax;
-      if (minify.identifiers !== undefined) validMinify.identifiers = minify.identifiers;
+      if (minify.identifiers !== undefined)
+        validMinify.identifiers = minify.identifiers;
       buildConfig.minify = validMinify;
     }
 
@@ -1051,13 +1128,13 @@ export const buildPackage = async (
     if (external) {
       const externalArray = Array.isArray(external) ? external : [external];
       // Always include node-fetch-native to fix giget and c12 import issues
-      if (!externalArray.includes('node-fetch-native')) {
-        externalArray.push('node-fetch-native');
+      if (!externalArray.includes("node-fetch-native")) {
+        externalArray.push("node-fetch-native");
       }
       buildConfig.external = externalArray;
     } else {
       // Always include node-fetch-native even if no external deps are specified
-      buildConfig.external = ['node-fetch-native'];
+      buildConfig.external = ["node-fetch-native"];
     }
     if (bytecode) {
       buildConfig.bytecode = bytecode;
@@ -1090,7 +1167,9 @@ export const buildPackage = async (
       buildConfig.footer = footer;
     }
     if (conditions) {
-      buildConfig.conditions = Array.isArray(conditions) ? conditions : [conditions];
+      buildConfig.conditions = Array.isArray(conditions)
+        ? conditions
+        : [conditions];
     }
     if (loader) {
       buildConfig.loader = loader;
@@ -1158,12 +1237,14 @@ export const buildPackage = async (
     }
 
     // Debug logging for native app
-    if (pkg.name === '@reliverse/native-app-example') {
-      logger.info(`🔍 Final build config: ${JSON.stringify(buildConfig, null, 2)}`);
+    if (pkg.name === "@reliverse/native-app-example") {
+      logger.info(
+        `🔍 Final build config: ${JSON.stringify(buildConfig, null, 2)}`,
+      );
     }
 
     // Choose bundler based on effective bundler
-    if (effectiveBundler === 'mkdist') {
+    if (effectiveBundler === "mkdist") {
       return await buildWithMkdist(pkg, mergedOptions, buildConfig);
     }
 
@@ -1174,7 +1255,7 @@ export const buildPackage = async (
     // Calculate bundle size
     let bundleSize = 0;
     const outputFiles: string[] = [];
-    
+
     if (result.outputs) {
       for (const output of result.outputs) {
         if (output.path) {
@@ -1191,20 +1272,20 @@ export const buildPackage = async (
 
     if (!result.success) {
       const errors = result.logs
-        .filter(log => log.level === "error")
-        .map(log => {
+        .filter((log) => log.level === "error")
+        .map((log) => {
           // Add file path and line number context if available
-          if ('position' in log && log.position) {
+          if ("position" in log && log.position) {
             return `${log.message} (${log.position.file}:${log.position.line}:${log.position.column})`;
           }
           return log.message;
         });
-      
+
       const warnings = result.logs
-        .filter(log => log.level === "warning")
-        .map(log => {
+        .filter((log) => log.level === "warning")
+        .map((log) => {
           // Add file path and line number context if available
-          if ('position' in log && log.position) {
+          if ("position" in log && log.position) {
             return `${log.message} (${log.position.file}:${log.position.line}:${log.position.column})`;
           }
           return log.message;
@@ -1227,12 +1308,14 @@ export const buildPackage = async (
         package: pkg,
         success: false,
         skipped: false,
-        output: result.logs.map(log => {
-          if ('position' in log && log.position) {
-            return `${log.message} (${log.position.file}:${log.position.line}:${log.position.column})`;
-          }
-          return log.message;
-        }).join("\n"),
+        output: result.logs
+          .map((log) => {
+            if ("position" in log && log.position) {
+              return `${log.message} (${log.position.file}:${log.position.line}:${log.position.column})`;
+            }
+            return log.message;
+          })
+          .join("\n"),
         errors,
         warnings,
         buildTime,
@@ -1246,9 +1329,12 @@ export const buildPackage = async (
         await processAssetsForPackage(pkg, pkg.outputDir, assets);
         await processCSSForPackage(pkg, pkg.outputDir, shouldUseCssChunking);
         await processHTMLForPackage(pkg, pkg.outputDir, {
-          minify: typeof minify === 'boolean' ? minify : minify?.whitespace ?? false,
+          minify:
+            typeof minify === "boolean"
+              ? minify
+              : (minify?.whitespace ?? false),
           injectAssets: true,
-          publicPath: publicPath || '/',
+          publicPath: publicPath || "/",
         });
       } catch (error) {
         logger.warn(`⚠️  ${pkg.name}: Asset processing failed - ${error}`);
@@ -1259,20 +1345,25 @@ export const buildPackage = async (
     for (const plugin of activePlugins) {
       if (plugin.onBuildEnd) {
         try {
-          await plugin.onBuildEnd({
-            package: pkg,
-            success: true,
-            skipped: false,
-            output: result.logs.map(log => log.message).join("\n"),
-            errors: [],
-            warnings: result.logs
-              .filter(log => log.level === "warning")
-              .map(log => log.message),
-            buildTime,
-            bundleSize,
-          }, mergedOptions);
+          await plugin.onBuildEnd(
+            {
+              package: pkg,
+              success: true,
+              skipped: false,
+              output: result.logs.map((log) => log.message).join("\n"),
+              errors: [],
+              warnings: result.logs
+                .filter((log) => log.level === "warning")
+                .map((log) => log.message),
+              buildTime,
+              bundleSize,
+            },
+            mergedOptions,
+          );
         } catch (error) {
-          logger.warn(`⚠️  ${pkg.name}: Plugin ${plugin.name} onBuildEnd failed - ${error}`);
+          logger.warn(
+            `⚠️  ${pkg.name}: Plugin ${plugin.name} onBuildEnd failed - ${error}`,
+          );
         }
       }
     }
@@ -1304,39 +1395,43 @@ export const buildPackage = async (
         });
 
         if (!prepResult.success) {
-          logger.warn(`⚠️  ${pkg.name}: Failed to prepare package.json for publishing: ${prepResult.error}`);
+          logger.warn(
+            `⚠️  ${pkg.name}: Failed to prepare package.json for publishing: ${prepResult.error}`,
+          );
         } else if (verbose) {
           logger.info(`📦 ${pkg.name}: Package.json prepared for publishing`);
         }
       } catch (error) {
-        logger.warn(`⚠️  ${pkg.name}: Error preparing package.json for publishing: ${error instanceof Error ? error.message : String(error)}`);
+        logger.warn(
+          `⚠️  ${pkg.name}: Error preparing package.json for publishing: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
 
     if (verbose) {
-      logger.success(`✅ ${pkg.name}: Built successfully (${buildTime}ms, ${formatBytes(bundleSize)})`);
+      logger.success(
+        `✅ ${pkg.name}: Built successfully (${buildTime}ms, ${formatBytes(bundleSize)})`,
+      );
     }
 
     return {
       package: pkg,
       success: true,
       skipped: false,
-      output: result.logs.map(log => log.message).join("\n"),
+      output: result.logs.map((log) => log.message).join("\n"),
       errors: [],
       warnings: result.logs
-        .filter(log => log.level === "warning")
-        .map(log => log.message),
+        .filter((log) => log.level === "warning")
+        .map((log) => log.message),
       buildTime,
       bundleSize,
     };
   } catch (error) {
     const buildTime = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : String(error);
-    
-    logger.error(
-      `❌ ${pkg.name}: Build failed - ${errorMessage}`,
-    );
-    
+
+    logger.error(`❌ ${pkg.name}: Build failed - ${errorMessage}`);
+
     return {
       package: pkg,
       success: false,
@@ -1389,7 +1484,9 @@ const collectAllResults = async (
       packages,
       async (pkg, index) => {
         if (!verbose) {
-          logger.info(`Building ${pkg.name} (${index + 1}/${packages.length})...`);
+          logger.info(
+            `Building ${pkg.name} (${index + 1}/${packages.length})...`,
+          );
         }
         return buildPackage(pkg, options, cache);
       },
@@ -1404,8 +1501,14 @@ const collectAllResults = async (
     ).length;
     const successfulPackages = buildResults.filter((r) => r.success).length;
     const skippedPackages = buildResults.filter((r) => r.skipped).length;
-    const totalBuildTime = buildResults.reduce((sum, r) => sum + r.buildTime, 0);
-    const totalBundleSize = buildResults.reduce((sum, r) => sum + (r.bundleSize || 0), 0);
+    const totalBuildTime = buildResults.reduce(
+      (sum, r) => sum + r.buildTime,
+      0,
+    );
+    const totalBundleSize = buildResults.reduce(
+      (sum, r) => sum + (r.bundleSize || 0),
+      0,
+    );
     const cacheHits = buildResults.filter((r) => r.cacheHit).length;
 
     return {
@@ -1420,7 +1523,6 @@ const collectAllResults = async (
       cacheHits,
     };
   } catch (error) {
-
     // Handle aggregate errors from pMap when stopOnError is false
     if (error instanceof AggregateError) {
       const buildResults: BuildResult[] = error.errors.map((err, index) => {
@@ -1451,8 +1553,14 @@ const collectAllResults = async (
       ).length;
       const successfulPackages = buildResults.filter((r) => r.success).length;
       const skippedPackages = buildResults.filter((r) => r.skipped).length;
-      const totalBuildTime = buildResults.reduce((sum, r) => sum + r.buildTime, 0);
-      const totalBundleSize = buildResults.reduce((sum, r) => sum + (r.bundleSize || 0), 0);
+      const totalBuildTime = buildResults.reduce(
+        (sum, r) => sum + r.buildTime,
+        0,
+      );
+      const totalBundleSize = buildResults.reduce(
+        (sum, r) => sum + (r.bundleSize || 0),
+        0,
+      );
       const cacheHits = buildResults.filter((r) => r.cacheHit).length;
 
       return {
@@ -1478,10 +1586,10 @@ const collectAllResults = async (
 // ============================================================================
 
 const formatOutput = (summary: BuildSummary, verbose: boolean): void => {
-  const { 
-    totalPackages, 
-    failedPackages, 
-    successfulPackages, 
+  const {
+    totalPackages,
+    failedPackages,
+    successfulPackages,
     skippedPackages,
     totalBuildTime,
     totalBundleSize,
@@ -1515,7 +1623,7 @@ const formatOutput = (summary: BuildSummary, verbose: boolean): void => {
 
       if (result.errors.length > 0) {
         logger.error("   ─".repeat(30));
-        const errorLines = result.errors.map(error => `   ${error}`);
+        const errorLines = result.errors.map((error) => `   ${error}`);
         writeErrorLines(errorLines);
         logger.error("");
       }
@@ -1529,9 +1637,13 @@ const formatOutput = (summary: BuildSummary, verbose: boolean): void => {
     if (successful.length > 0) {
       logger.success("\n✅ Successful Packages:\n");
       for (const result of successful) {
-        const sizeInfo = result.bundleSize ? `, ${formatBytes(result.bundleSize)}` : '';
-        const cacheInfo = result.cacheHit ? ' (cached)' : '';
-        logger.success(`   • ${result.package.name} (${result.buildTime}ms${sizeInfo})${cacheInfo}`);
+        const sizeInfo = result.bundleSize
+          ? `, ${formatBytes(result.bundleSize)}`
+          : "";
+        const cacheInfo = result.cacheHit ? " (cached)" : "";
+        logger.success(
+          `   • ${result.package.name} (${result.buildTime}ms${sizeInfo})${cacheInfo}`,
+        );
         if (result.warnings.length > 0) {
           logger.log(`     Warnings: ${result.warnings.length}`);
         }
@@ -1561,19 +1673,19 @@ export const runBuildOnAllPackages = async (
   cwd?: string,
   options: BuildOptions = {},
 ): Promise<BuildSummary> => {
-  const { 
-    verbose = false, 
-    watch = false, 
-    cache: enableCache = true, 
+  const {
+    verbose = false,
+    watch = false,
+    cache: enableCache = true,
     noCache = false,
     devServer = false,
     port = 3000,
     open = false,
     allowPrivateBuild,
   } = options;
-  
+
   // Initialize cache
-  const cache = (enableCache && !noCache) ? new BuildCache() : undefined;
+  const cache = enableCache && !noCache ? new BuildCache() : undefined;
 
   // Log discovery start
   if (verbose) {
@@ -1582,126 +1694,144 @@ export const runBuildOnAllPackages = async (
 
   // Execute the main logic
   const result = await (async (): Promise<BuildSummary> => {
-      // Discover packages
-      const allPackages = await getWorkspacePackages(cwd);
+    // Discover packages
+    const allPackages = await getWorkspacePackages(cwd);
 
-      if (verbose) {
-        logger.info(`   Found ${allPackages.length} packages`);
-        
-        // Check if dler config was loaded
-        const dlerConfig = await loadDlerConfig(cwd);
-        if (dlerConfig?.build) {
-          logger.info("   📋 Using dler.ts configuration");
-          if (dlerConfig.build.global) {
-            logger.info("     Global config: ✅");
-          }
-          if (dlerConfig.build.packages) {
-            logger.info(`     Package configs: ${Object.keys(dlerConfig.build.packages).length}`);
-          }
-          if (dlerConfig.build.patterns) {
-            logger.info(`     Pattern configs: ${dlerConfig.build.patterns.length}`);
-          }
-        } else {
-          logger.info("   ⚙️  No dler.ts found, using default configuration");
+    if (verbose) {
+      logger.info(`   Found ${allPackages.length} packages`);
+
+      // Check if dler config was loaded
+      const dlerConfig = await loadDlerConfig(cwd);
+      if (dlerConfig?.build) {
+        logger.info("   📋 Using dler.ts configuration");
+        if (dlerConfig.build.global) {
+          logger.info("     Global config: ✅");
         }
-        
-        logger.info("   Packages found:");
-        for (const pkg of allPackages) {
-          const entryStatus = pkg.entryPoints.length > 0 ? "✅" : "⏭️";
-          const configSource = pkg.buildConfig ? "📋" : "⚙️";
-          const frontendStatus = pkg.isFrontendApp ? "🌐" : "📦";
-          const htmlStatus = pkg.hasHtmlEntry ? "📄" : "";
-          const cliStatus = pkg.isCLI ? "⚡" : "";
-          logger.info(`     ${entryStatus} ${configSource} ${frontendStatus}${htmlStatus}${cliStatus} ${pkg.name} (${pkg.entryPoints.length} entry points)`);
-          if (pkg.entryPoints.length > 0) {
-            logger.info(`       Entry points: ${pkg.entryPoints.join(", ")}`);
-            logger.info(`       Output dir: ${pkg.outputDir}`);
-            if (pkg.isFrontendApp) {
-              logger.info(`       Type: Frontend app`);
-              if (pkg.hasHtmlEntry) logger.info(`       HTML entry: ✅`);
-              if (pkg.hasPublicDir) logger.info(`       Public dir: ✅`);
-            } else if (pkg.isCLI) {
-              logger.info(`       Type: CLI${pkg.entryPoints.length > 1 ? ' (with library exports)' : ''}`);
-            } else {
-              logger.info(`       Type: Library`);
-            }
-            if (pkg.buildConfig) {
-              logger.info(`       Build config: ${JSON.stringify(pkg.buildConfig, null, 2).split('\n').map(line => `         ${line}`).join('\n')}`);
-            }
-          }
+        if (dlerConfig.build.packages) {
+          logger.info(
+            `     Package configs: ${Object.keys(dlerConfig.build.packages).length}`,
+          );
         }
-        logger.info("");
+        if (dlerConfig.build.patterns) {
+          logger.info(
+            `     Pattern configs: ${dlerConfig.build.patterns.length}`,
+          );
+        }
+      } else {
+        logger.info("   ⚙️  No dler.ts found, using default configuration");
       }
 
-      // Apply filters
-      const packages = filterPackages(allPackages, ignore, allowPrivateBuild);
-      const ignoredCount = allPackages.length - packages.length;
-
-      if (ignoredCount > 0) {
-        // Always ignore @reliverse/dler-v1 package
-        const alwaysIgnored = ["@reliverse/dler-v1"];
-        const combinedIgnore = ignore 
-          ? Array.isArray(ignore) 
-            ? [...alwaysIgnored, ...ignore]
-            : [...alwaysIgnored, ignore]
-          : alwaysIgnored;
-        
-        const patterns = normalizePatterns(combinedIgnore);
+      logger.info("   Packages found:");
+      for (const pkg of allPackages) {
+        const entryStatus = pkg.entryPoints.length > 0 ? "✅" : "⏭️";
+        const configSource = pkg.buildConfig ? "📋" : "⚙️";
+        const frontendStatus = pkg.isFrontendApp ? "🌐" : "📦";
+        const htmlStatus = pkg.hasHtmlEntry ? "📄" : "";
+        const cliStatus = pkg.isCLI ? "⚡" : "";
         logger.info(
-          `   Ignoring ${ignoredCount} packages matching: ${patterns.join(", ")}`,
+          `     ${entryStatus} ${configSource} ${frontendStatus}${htmlStatus}${cliStatus} ${pkg.name} (${pkg.entryPoints.length} entry points)`,
         );
-      }
-
-      const { concurrency = DEFAULT_CONCURRENCY, stopOnError = false } =
-        options;
-      logger.info(
-        `   Building ${packages.length} packages (concurrency: ${concurrency}, stopOnError: ${stopOnError})...\n`,
-      );
-
-      if (watch || devServer) {
-        // Dev server mode
-        if (devServer) {
-          const frontendPackages = packages.filter(pkg => pkg.isFrontendApp || pkg.hasHtmlEntry);
-          
-          if (frontendPackages.length === 0) {
-            logger.warn("⚠️  No frontend packages found for dev server");
-            logger.info("   Dev server works best with packages that have HTML entry points");
+        if (pkg.entryPoints.length > 0) {
+          logger.info(`       Entry points: ${pkg.entryPoints.join(", ")}`);
+          logger.info(`       Output dir: ${pkg.outputDir}`);
+          if (pkg.isFrontendApp) {
+            logger.info(`       Type: Frontend app`);
+            if (pkg.hasHtmlEntry) logger.info(`       HTML entry: ✅`);
+            if (pkg.hasPublicDir) logger.info(`       Public dir: ✅`);
+          } else if (pkg.isCLI) {
+            logger.info(
+              `       Type: CLI${pkg.entryPoints.length > 1 ? " (with library exports)" : ""}`,
+            );
+          } else {
+            logger.info(`       Type: Library`);
           }
-
-          logger.info(`🚀 Starting dev server for ${frontendPackages.length} frontend packages...`);
-          
-          try {
-            await startDevServer(frontendPackages, options, {
-              port,
-              open,
-              hmr: true,
-            });
-            
-            // Keep the process running
-            return new Promise(() => {
-              // This will keep the process alive for dev server mode
-            });
-          } catch (error) {
-            logger.error(`❌ Failed to start dev server: ${error}`);
-            throw error;
+          if (pkg.buildConfig) {
+            logger.info(
+              `       Build config: ${JSON.stringify(pkg.buildConfig, null, 2)
+                .split("\n")
+                .map((line) => `         ${line}`)
+                .join("\n")}`,
+            );
           }
         }
-        
-        // Regular watch mode
-        return collectAllResults(packages, options);
+      }
+      logger.info("");
+    }
+
+    // Apply filters
+    const packages = filterPackages(allPackages, ignore, allowPrivateBuild);
+    const ignoredCount = allPackages.length - packages.length;
+
+    if (ignoredCount > 0) {
+      // Always ignore @reliverse/dler-v1 package
+      const alwaysIgnored = ["@reliverse/dler-v1"];
+      const combinedIgnore = ignore
+        ? Array.isArray(ignore)
+          ? [...alwaysIgnored, ...ignore]
+          : [...alwaysIgnored, ignore]
+        : alwaysIgnored;
+
+      const patterns = normalizePatterns(combinedIgnore);
+      logger.info(
+        `   Ignoring ${ignoredCount} packages matching: ${patterns.join(", ")}`,
+      );
+    }
+
+    const { concurrency = DEFAULT_CONCURRENCY, stopOnError = false } = options;
+    logger.info(
+      `   Building ${packages.length} packages (concurrency: ${concurrency}, stopOnError: ${stopOnError})...\n`,
+    );
+
+    if (watch || devServer) {
+      // Dev server mode
+      if (devServer) {
+        const frontendPackages = packages.filter(
+          (pkg) => pkg.isFrontendApp || pkg.hasHtmlEntry,
+        );
+
+        if (frontendPackages.length === 0) {
+          logger.warn("⚠️  No frontend packages found for dev server");
+          logger.info(
+            "   Dev server works best with packages that have HTML entry points",
+          );
+        }
+
+        logger.info(
+          `🚀 Starting dev server for ${frontendPackages.length} frontend packages...`,
+        );
+
+        try {
+          await startDevServer(frontendPackages, options, {
+            port,
+            open,
+            hmr: true,
+          });
+
+          // Keep the process running
+          return new Promise(() => {
+            // This will keep the process alive for dev server mode
+          });
+        } catch (error) {
+          logger.error(`❌ Failed to start dev server: ${error}`);
+          throw error;
+        }
       }
 
-      if (verbose) {
-        logger.info("🚀 Starting build process...\n");
-      }
+      // Regular watch mode
+      return collectAllResults(packages, options);
+    }
 
-      const summary = await collectAllResults(packages, options, cache);
+    if (verbose) {
+      logger.info("🚀 Starting build process...\n");
+    }
 
-      // Display results
-      formatOutput(summary, verbose);
+    const summary = await collectAllResults(packages, options, cache);
 
-      return summary;
-    })();
+    // Display results
+    formatOutput(summary, verbose);
 
-    return result;
+    return summary;
+  })();
+
+  return result;
 };

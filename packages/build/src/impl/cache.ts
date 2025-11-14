@@ -5,7 +5,12 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { DependencyTracker } from "./dependency-tracker";
-import type { BuildOptions, CacheEntry, CacheOptions, PackageInfo } from "./types";
+import type {
+  BuildOptions,
+  CacheEntry,
+  CacheOptions,
+  PackageInfo,
+} from "./types";
 
 const DEFAULT_CACHE_DIR = join(".reliverse", "dler", "cache", "build");
 const DEFAULT_TTL = 24 * 60 * 60 * 1000; // 24 hours
@@ -19,7 +24,7 @@ export class BuildCache {
   constructor(options: Partial<CacheOptions> = {}) {
     const homeDir = homedir();
     const cacheDir = options.directory ?? join(homeDir, DEFAULT_CACHE_DIR);
-    
+
     this.options = {
       enabled: options.enabled ?? true,
       directory: cacheDir,
@@ -65,12 +70,18 @@ export class BuildCache {
       emitDCEAnnotations: options.emitDCEAnnotations,
     };
 
-    const configString = JSON.stringify(buildConfig, Object.keys(buildConfig).sort());
-    const configHash = createHash('sha256').update(configString).digest('hex');
-    
+    const configString = JSON.stringify(
+      buildConfig,
+      Object.keys(buildConfig).sort(),
+    );
+    const configHash = createHash("sha256").update(configString).digest("hex");
+
     // Include project path in hash to avoid collisions between different projects
-    const projectHash = createHash('sha256').update(pkg.path).digest('hex').substring(0, 8);
-    
+    const projectHash = createHash("sha256")
+      .update(pkg.path)
+      .digest("hex")
+      .substring(0, 8);
+
     return `${pkg.name}-${projectHash}-${configHash}`;
   }
 
@@ -80,10 +91,10 @@ export class BuildCache {
 
   private async getSourceHash(pkg: PackageInfo): Promise<string> {
     const hashes: string[] = [];
-    
+
     // Track dependencies for all entry points
     await this.dependencyTracker.trackDependencies(pkg.entryPoints);
-    
+
     // Hash all tracked files (entry points + dependencies)
     const graph = this.dependencyTracker.getGraph();
     for (const filePath of Object.keys(graph)) {
@@ -94,25 +105,28 @@ export class BuildCache {
     }
 
     // Hash package.json for build config changes
-    const packageJsonPath = join(pkg.path, 'package.json');
+    const packageJsonPath = join(pkg.path, "package.json");
     if (existsSync(packageJsonPath)) {
-      const content = readFileSync(packageJsonPath, 'utf-8');
-      const hash = createHash('sha256').update(content).digest('hex');
+      const content = readFileSync(packageJsonPath, "utf-8");
+      const hash = createHash("sha256").update(content).digest("hex");
       hashes.push(hash);
     }
 
     // Hash tsconfig.json if it exists
-    const tsconfigPath = join(pkg.path, 'tsconfig.json');
+    const tsconfigPath = join(pkg.path, "tsconfig.json");
     if (existsSync(tsconfigPath)) {
-      const content = readFileSync(tsconfigPath, 'utf-8');
-      const hash = createHash('sha256').update(content).digest('hex');
+      const content = readFileSync(tsconfigPath, "utf-8");
+      const hash = createHash("sha256").update(content).digest("hex");
       hashes.push(hash);
     }
 
-    return createHash('sha256').update(hashes.join('')).digest('hex');
+    return createHash("sha256").update(hashes.join("")).digest("hex");
   }
 
-  async get(pkg: PackageInfo, options: BuildOptions): Promise<CacheEntry | null> {
+  async get(
+    pkg: PackageInfo,
+    options: BuildOptions,
+  ): Promise<CacheEntry | null> {
     if (!this.options.enabled) {
       this.misses++;
       return null;
@@ -121,13 +135,13 @@ export class BuildCache {
     try {
       const key = this.getCacheKey(pkg, options);
       const cacheFilePath = this.getCacheFilePath(key);
-      
+
       if (!existsSync(cacheFilePath)) {
         this.misses++;
         return null;
       }
 
-      const cacheData = JSON.parse(readFileSync(cacheFilePath, 'utf-8'));
+      const cacheData = JSON.parse(readFileSync(cacheFilePath, "utf-8"));
       const entry: CacheEntry = cacheData;
 
       // Check if cache is expired
@@ -164,11 +178,15 @@ export class BuildCache {
     }
   }
 
-  async set(pkg: PackageInfo, options: BuildOptions, result: {
-    buildTime: number;
-    bundleSize: number;
-    outputFiles: string[];
-  }): Promise<void> {
+  async set(
+    pkg: PackageInfo,
+    options: BuildOptions,
+    result: {
+      buildTime: number;
+      bundleSize: number;
+      outputFiles: string[];
+    },
+  ): Promise<void> {
     if (!this.options.enabled) {
       return;
     }
@@ -176,7 +194,7 @@ export class BuildCache {
     try {
       const key = this.getCacheKey(pkg, options);
       const sourceHash = await this.getSourceHash(pkg);
-      
+
       const entry: CacheEntry = {
         hash: sourceHash,
         timestamp: Date.now(),
@@ -200,7 +218,7 @@ export class BuildCache {
     try {
       const cacheFilePath = this.getCacheFilePath(key);
       if (existsSync(cacheFilePath)) {
-        const fs = require('node:fs');
+        const fs = require("node:fs");
         fs.unlinkSync(cacheFilePath);
       }
     } catch (error) {
@@ -214,13 +232,13 @@ export class BuildCache {
     }
 
     try {
-      const fs = require('node:fs');
-      const path = require('node:path');
-      
+      const fs = require("node:fs");
+      const path = require("node:path");
+
       if (existsSync(this.options.directory)) {
         const files = fs.readdirSync(this.options.directory);
         for (const file of files) {
-          if (file.endsWith('.json')) {
+          if (file.endsWith(".json")) {
             fs.unlinkSync(path.join(this.options.directory, file));
           }
         }
@@ -236,16 +254,16 @@ export class BuildCache {
     }
 
     try {
-      const fs = require('node:fs');
-      const path = require('node:path');
-      
+      const fs = require("node:fs");
+      const path = require("node:path");
+
       if (!existsSync(this.options.directory)) {
         return { hits: this.hits, misses: this.misses, size: 0 };
       }
 
       const files = fs.readdirSync(this.options.directory);
-      const jsonFiles = files.filter((file: string) => file.endsWith('.json'));
-      
+      const jsonFiles = files.filter((file: string) => file.endsWith(".json"));
+
       let totalSize = 0;
       for (const file of jsonFiles) {
         const filePath = path.join(this.options.directory, file);

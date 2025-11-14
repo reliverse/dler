@@ -147,7 +147,7 @@ const getWorkspacePackages = async (
   if (!monorepoRoot) {
     const currentDir = cwd || process.cwd();
     const pkgInfo = await resolvePackageInfo(currentDir);
-    
+
     if (pkgInfo) {
       // Return single package result
       return {
@@ -158,7 +158,7 @@ const getWorkspacePackages = async (
         cacheMisses: 1,
       };
     }
-    
+
     // Neither monorepo nor valid package found
     throw new Error(
       "❌ No monorepo or valid package found. Ensure package.json has 'workspaces' field or contains a valid 'name' field.",
@@ -182,7 +182,7 @@ const getWorkspacePackages = async (
 
   for (const pattern of patterns) {
     // Check if pattern contains wildcards
-    if (pattern.includes('*')) {
+    if (pattern.includes("*")) {
       // Pattern with wildcards - use glob
       const glob = new Bun.Glob(pattern);
       const matches = glob.scanSync({ cwd: monorepoRoot, onlyFiles: false });
@@ -219,7 +219,7 @@ const getWorkspacePackages = async (
     .map((result) => result.pkgInfo!);
 
   // Filter out the monorepo root to prevent checking it
-  const filteredPackages = packages.filter(pkg => {
+  const filteredPackages = packages.filter((pkg) => {
     const normalizedPkgPath = resolve(pkg.path);
     const normalizedRootPath = resolve(monorepoRoot);
     return normalizedPkgPath !== normalizedRootPath;
@@ -354,7 +354,11 @@ const countErrorsAndWarnings = (
   return { errors, warnings };
 };
 
-const filterOutputLines = (output: string, packagePath: string, monorepoRoot: string): string => {
+const filterOutputLines = (
+  output: string,
+  packagePath: string,
+  monorepoRoot: string,
+): string => {
   const lines = output.split("\n");
   const filtered: string[] = [];
   const normalizedPackagePath = resolve(packagePath);
@@ -368,12 +372,12 @@ const filterOutputLines = (output: string, packagePath: string, monorepoRoot: st
 
     // Extract file path from error line and convert to full path
     const match = line.match(/^(.+?)\(/);
-    
+
     if (match && match[1]) {
       const relativePath = match[1];
       const fullPath = resolve(packagePath, relativePath);
       const normalizedFilePath = resolve(fullPath);
-      
+
       // Check if error is from another package
       const isCrossPackageError = line.includes("../") || line.includes("..\\");
 
@@ -863,7 +867,12 @@ export const runTscOnAllPackages = async (
       logger.info("🚀 Starting TypeScript checks...\n");
     }
 
-    const summary = await collectAllResults(packages, discoveryResult.monorepoRoot, options, cache);
+    const summary = await collectAllResults(
+      packages,
+      discoveryResult.monorepoRoot,
+      options,
+      cache,
+    );
 
     // Display results
     formatOutput(summary, verbose);

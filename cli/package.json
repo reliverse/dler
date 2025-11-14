@@ -37,12 +37,12 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "@biomejs/biome": "^2.3.4",
+    "@biomejs/biome": "^2.3.5",
     "@reliverse/dler-tsconfig": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@types/bun": "catalog:",
     "typescript": "catalog:",
-    "ultracite": "^6.2.1",
+    "ultracite": "^6.3.2",
     "@types/semver": "catalog:"
   },
   "scripts": {

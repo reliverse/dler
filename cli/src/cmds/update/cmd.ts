@@ -1,5 +1,6 @@
 // The command philosophy is: "Find all package.json files, update everything you find, skip only non-updateable specifiers (workspace:, catalog:, npm:, etc.)"
 
+import { getCurrentWorkingDirectory } from "@reliverse/dler-helpers";
 import {
   defineCmd,
   defineCmdArgs,
@@ -7,6 +8,7 @@ import {
 } from "@reliverse/dler-launcher";
 import { logger } from "@reliverse/dler-logger";
 import path from "path";
+import { msgs } from "../const";
 import {
   checkPackageUpdatesForFile,
   handleInstallation,
@@ -14,12 +16,7 @@ import {
   updatePackageJsonFileDirectly,
   validatePackageJson,
 } from "./impl";
-import {
-  displayStructuredUpdateResults,
-  type UpdateResult,
-} from "./utils";
-import { msgs } from "../const";
-import { getCurrentWorkingDirectory } from "@reliverse/dler-helpers";
+import { displayStructuredUpdateResults, type UpdateResult } from "./utils";
 
 const updateCmd = async (args: any): Promise<void> => {
   try {
@@ -83,9 +80,7 @@ const updateCmd = async (args: any): Promise<void> => {
 
         if (updated > 0) {
           const relativePath = path.relative(process.cwd(), packageJsonPath);
-          logger.debug(
-            `Updated ${updated} dependencies in ${relativePath}`,
-          );
+          logger.debug(`Updated ${updated} dependencies in ${relativePath}`);
         }
       }
     }
@@ -181,7 +176,8 @@ const updateCmdArgs = defineCmdArgs({
 
 const updateCmdCfg = defineCmdCfg({
   name: "update",
-  description: "Update all dependencies to their latest versions across all package.json files. Supports selective updates with glob patterns and comprehensive filtering options.",
+  description:
+    "Update all dependencies to their latest versions across all package.json files. Supports selective updates with glob patterns and comprehensive filtering options.",
   examples: [
     "dler update",
     "dler update --install",

@@ -390,10 +390,7 @@ export async function setupAuthTemplate(
     }
   }
 
-  if (
-    (hasReactWeb || hasSolidWeb) &&
-    webAppDirExists
-  ) {
+  if ((hasReactWeb || hasSolidWeb) && webAppDirExists) {
     if (hasReactWeb) {
       const authWebBaseSrc = path.join(
         PKG_ROOT,
@@ -716,10 +713,7 @@ export async function handleExtras(
     }
   }
 
-  if (
-    context.packageManager === "pnpm" &&
-    (hasNative)
-  ) {
+  if (context.packageManager === "pnpm" && hasNative) {
     const npmrcTemplateSrc = path.join(extrasDir, "_npmrc.hbs");
     const npmrcDest = path.join(projectDir, ".npmrc");
     if (await fs.pathExists(npmrcTemplateSrc)) {

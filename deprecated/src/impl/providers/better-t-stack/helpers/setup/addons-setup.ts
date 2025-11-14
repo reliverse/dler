@@ -39,9 +39,7 @@ export async function setupAddons(config: ProjectConfig) {
   }
   if (
     addons.includes("tauri") &&
-    (hasReactWebFrontend ||
-      hasSolidFrontend ||
-      hasNextFrontend)
+    (hasReactWebFrontend || hasSolidFrontend || hasNextFrontend)
   ) {
     await setupTauri(config);
   }
@@ -59,9 +57,7 @@ export async function setupAddons(config: ProjectConfig) {
 function getWebAppDir(projectDir: string, frontends: Frontend[]): string {
   if (
     frontends.some((f) =>
-      ["react-router", "tanstack-router", "solid"].includes(
-        f,
-      ),
+      ["react-router", "tanstack-router", "solid"].includes(f),
     )
   ) {
     return path.join(projectDir, "apps/web");

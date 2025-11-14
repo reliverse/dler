@@ -111,12 +111,12 @@ const getWorkspacePackages = async (
   if (!monorepoRoot) {
     const currentDir = cwd || process.cwd();
     const pkgInfo = await resolvePackageInfo(currentDir, true);
-    
+
     if (pkgInfo) {
       // Return single package info
       return [pkgInfo];
     }
-    
+
     // Neither monorepo nor valid package found
     throw new Error(
       "❌ No monorepo or valid package found. Ensure package.json has 'workspaces' field or contains a valid 'name' field.",
@@ -142,7 +142,7 @@ const getWorkspacePackages = async (
 
   for (const pattern of patterns) {
     // Check if pattern contains wildcards
-    if (pattern.includes('*')) {
+    if (pattern.includes("*")) {
       // Pattern with wildcards - use glob
       const glob = new Bun.Glob(pattern);
       const matches = glob.scanSync({ cwd: monorepoRoot, onlyFiles: false });
@@ -162,7 +162,7 @@ const getWorkspacePackages = async (
     } else {
       // Direct package path (no wildcards)
       const packagePath = resolve(monorepoRoot, pattern);
-      
+
       if (seenPaths.has(packagePath)) continue;
       seenPaths.add(packagePath);
 
@@ -301,11 +301,7 @@ const getCategoryForPattern = (pattern: string): string => {
   if (pattern.includes("dist")) return "build";
   if (pattern.includes("_generated")) return "db";
   if (pattern.includes(".basehub")) return "cms";
-  if (
-    pattern.includes(".next") ||
-    pattern.includes(".expo")
-  )
-    return "frontend";
+  if (pattern.includes(".next") || pattern.includes(".expo")) return "frontend";
   if (pattern.includes(".source")) return "docs";
   if (pattern.includes(".react-email")) return "email";
   if (

@@ -1,7 +1,7 @@
 // packages/config/src/impl/core.ts
 
-import type { PublishConfig } from "./publish";
 import type { BuildConfig } from "./build";
+import type { PublishConfig } from "./publish";
 
 // ============================================================================
 // Generic Configuration Types
@@ -96,4 +96,3 @@ export const mergeConfig = <T extends Record<string, any>>(
     ...cliOptions,
   } as T;
 };
-

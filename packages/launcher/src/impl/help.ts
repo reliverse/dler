@@ -14,7 +14,8 @@ const HELP_TEMPLATES = {
   commandHeader: (name: string, description: string) =>
     `\n${re.bold.cyan(name)} - ${re.gray(description)}`,
   version: (version: string) => `${re.yellow("Version:")} ${re.white(version)}`,
-  usage: (name: string) => `\n${re.bold("Usage:")}\n  ${re.green(name)} ${re.gray("[options]")}`,
+  usage: (name: string) =>
+    `\n${re.bold("Usage:")}\n  ${re.green(name)} ${re.gray("[options]")}`,
   usageWithSubCommands: (name: string) =>
     `\n${re.bold("Usage:")}\n  ${re.green(name)} ${re.gray("[subcommand] [options]")}`,
   optionsHeader: `\n${re.bold("Options:")}`,
@@ -86,7 +87,9 @@ export const generateCommandHelp = async (
 };
 
 const formatCommandHelp = (name: string, metadata: CmdMetadata): string => {
-  const aliases = metadata.aliases ? re.gray(` (${metadata.aliases.join(", ")})`) : "";
+  const aliases = metadata.aliases
+    ? re.gray(` (${metadata.aliases.join(", ")})`)
+    : "";
   const description = metadata.description || "No description available";
   return `  ${re.cyan(name)}${aliases}\n      ${re.gray(description)}`;
 };

@@ -31,7 +31,7 @@ export interface DtsOptions {
   /** Whether to generate declaration files */
   enable?: boolean;
   /** Provider for generating declaration files */
-  provider?: 'dts-bundle-generator' | 'api-extractor' | 'typescript' | 'mkdist';
+  provider?: "dts-bundle-generator" | "api-extractor" | "typescript" | "mkdist";
   /** Whether to bundle declaration files into a single file */
   bundle?: boolean;
   /** Output directory for declaration files (relative to package root) */

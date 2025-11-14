@@ -22,14 +22,22 @@ export class FileWatcher {
     this.packages = packages;
     this.options = {
       debounceMs: options.debounceMs ?? 300,
-      ignorePatterns: options.ignorePatterns ?? ['node_modules/**', 'dist/**', '.git/**', '**/*.log', '**/.DS_Store'],
+      ignorePatterns: options.ignorePatterns ?? [
+        "node_modules/**",
+        "dist/**",
+        ".git/**",
+        "**/*.log",
+        "**/.DS_Store",
+      ],
       incremental: options.incremental ?? true,
       ...options,
     };
   }
 
   async start(): Promise<void> {
-    logger.info(`👀 Starting file watcher for ${this.packages.length} packages...`);
+    logger.info(
+      `👀 Starting file watcher for ${this.packages.length} packages...`,
+    );
 
     for (const pkg of this.packages) {
       if (pkg.entryPoints.length === 0) continue;
@@ -67,19 +75,19 @@ export class FileWatcher {
     }
 
     // Watch source directory if it exists
-    const srcDir = join(pkg.path, 'src');
+    const srcDir = join(pkg.path, "src");
     if (existsSync(srcDir) && statSync(srcDir).isDirectory()) {
       await this.watchDirectory(srcDir, pkg);
     }
 
     // Watch package.json for config changes
-    const packageJsonPath = join(pkg.path, 'package.json');
+    const packageJsonPath = join(pkg.path, "package.json");
     if (existsSync(packageJsonPath)) {
       await this.watchFile(packageJsonPath, pkg);
     }
 
     // Watch tsconfig.json if it exists
-    const tsconfigPath = join(pkg.path, 'tsconfig.json');
+    const tsconfigPath = join(pkg.path, "tsconfig.json");
     if (existsSync(tsconfigPath)) {
       await this.watchFile(tsconfigPath, pkg);
     }
@@ -90,14 +98,14 @@ export class FileWatcher {
 
     try {
       // Use fs.watch as the primary method
-      const { watch } = await import('node:fs');
+      const { watch } = await import("node:fs");
       const watcher = watch(filePath, (eventType) => {
-        if (eventType === 'change') {
+        if (eventType === "change") {
           this.handleFileChange(filePath, pkg);
         }
       });
 
-      watcher.on('error', (error) => {
+      watcher.on("error", (error) => {
         logger.warn(`File watcher error for ${filePath}: ${error.message}`);
         this.watchers.delete(filePath);
       });
@@ -108,19 +116,26 @@ export class FileWatcher {
     }
   }
 
-  private async watchDirectory(dirPath: string, pkg: PackageInfo): Promise<void> {
+  private async watchDirectory(
+    dirPath: string,
+    pkg: PackageInfo,
+  ): Promise<void> {
     if (this.watchers.has(dirPath)) return;
 
     try {
-      const { watch } = await import('node:fs');
-      const watcher = watch(dirPath, { recursive: true }, (eventType, filename) => {
-        if (eventType === 'change' && filename) {
-          const fullPath = join(dirPath, filename);
-          this.handleFileChange(fullPath, pkg);
-        }
-      });
+      const { watch } = await import("node:fs");
+      const watcher = watch(
+        dirPath,
+        { recursive: true },
+        (eventType, filename) => {
+          if (eventType === "change" && filename) {
+            const fullPath = join(dirPath, filename);
+            this.handleFileChange(fullPath, pkg);
+          }
+        },
+      );
 
-      watcher.on('error', (error) => {
+      watcher.on("error", (error) => {
         logger.warn(`Directory watcher error for ${dirPath}: ${error.message}`);
         this.watchers.delete(dirPath);
       });
@@ -138,7 +153,7 @@ export class FileWatcher {
     }
 
     logger.info(`📝 File changed: ${filePath}`);
-    
+
     // Add package to rebuild queue
     this.rebuildQueue.add(pkg.name);
 
@@ -159,13 +174,13 @@ export class FileWatcher {
     for (const pattern of this.options.ignorePatterns) {
       // Convert glob pattern to regex
       const regexPattern = pattern
-        .replace(/\*\*/g, '.*')  // ** matches any path
-        .replace(/\*/g, '[^/]*') // * matches any chars except /
-        .replace(/\?/g, '[^/]')  // ? matches single char except /
-        .replace(/\./g, '\\.');  // Escape dots
-      
+        .replace(/\*\*/g, ".*") // ** matches any path
+        .replace(/\*/g, "[^/]*") // * matches any chars except /
+        .replace(/\?/g, "[^/]") // ? matches single char except /
+        .replace(/\./g, "\\."); // Escape dots
+
       const regex = new RegExp(`^${regexPattern}$`);
-      if (regex.test(filePath) || regex.test(filePath.replace(/\\/g, '/'))) {
+      if (regex.test(filePath) || regex.test(filePath.replace(/\\/g, "/"))) {
         return true;
       }
     }
@@ -176,14 +191,16 @@ export class FileWatcher {
   private async processRebuildQueue(): Promise<void> {
     if (this.rebuildQueue.size === 0) return;
 
-    const packagesToRebuild = Array.from(this.rebuildQueue).map(name => 
-      this.packages.find(pkg => pkg.name === name)
-    ).filter(Boolean) as PackageInfo[];
+    const packagesToRebuild = Array.from(this.rebuildQueue)
+      .map((name) => this.packages.find((pkg) => pkg.name === name))
+      .filter(Boolean) as PackageInfo[];
 
     this.rebuildQueue.clear();
 
     if (this.options.incremental) {
-      logger.info(`🔄 Incrementally rebuilding ${packagesToRebuild.length} packages...`);
+      logger.info(
+        `🔄 Incrementally rebuilding ${packagesToRebuild.length} packages...`,
+      );
     } else {
       logger.info(`🔄 Rebuilding ${packagesToRebuild.length} packages...`);
     }
@@ -192,9 +209,9 @@ export class FileWatcher {
     const buildPromises = packagesToRebuild.map(async (pkg) => {
       try {
         // Import buildPackage dynamically to avoid circular dependency
-        const { buildPackage } = await import('../mod');
+        const { buildPackage } = await import("../mod");
         const result = await buildPackage(pkg, this.options);
-        
+
         if (result.success) {
           logger.success(`✅ ${pkg.name}: Rebuilt successfully`);
         } else {
@@ -219,7 +236,7 @@ export async function startWatchMode(
   options: WatchOptions,
 ): Promise<void> {
   const watcher = new FileWatcher(packages, options);
-  
+
   // Handle graceful shutdown
   const shutdown = async () => {
     logger.info("\n🛑 Shutting down watch mode...");
@@ -227,8 +244,8 @@ export async function startWatchMode(
     process.exit(0);
   };
 
-  process.on('SIGINT', shutdown);
-  process.on('SIGTERM', shutdown);
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 
   await watcher.start();
 

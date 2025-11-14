@@ -1,7 +1,7 @@
 // packages/launcher/src/impl/launcher/discovery.ts
 
-import { dirname, join } from "node:path";
 import { statSync } from "node:fs";
+import { dirname, join } from "node:path";
 import pMap from "@reliverse/dler-mapper";
 import { Glob } from "bun";
 import { CommandLoadError } from "./errors";
@@ -60,14 +60,16 @@ const resolveCommandsDirectory = (
 
   // Check parent directory first - this handles both dev and prod
   const parentDir = dirname(baseDir);
-  
+
   // Check parent/src/cmds (development - when baseDir is dist/)
   const parentSrcPath = join(parentDir, "src", cmdsDir);
   try {
     const srcStats = statSync(parentSrcPath);
     if (srcStats.isDirectory()) {
       if (verbose) {
-        console.debug(`   ✅ Found: ${parentSrcPath} (parent src - development)`);
+        console.debug(
+          `   ✅ Found: ${parentSrcPath} (parent src - development)`,
+        );
       }
       return parentSrcPath;
     }
@@ -83,7 +85,9 @@ const resolveCommandsDirectory = (
     const distStats = statSync(parentDistPath);
     if (distStats.isDirectory()) {
       if (verbose) {
-        console.debug(`   ✅ Found: ${parentDistPath} (parent dist - production)`);
+        console.debug(
+          `   ✅ Found: ${parentDistPath} (parent dist - production)`,
+        );
       }
       return parentDistPath;
     }
@@ -131,7 +135,7 @@ const resolveCommandsDirectory = (
     const fallbackStats = statSync(fallbackPath);
     if (fallbackStats.isDirectory()) {
       if (verbose) {
-          console.debug(`   ✅ Found: ${fallbackPath} (fallback)`);
+        console.debug(`   ✅ Found: ${fallbackPath} (fallback)`);
       }
       return fallbackPath;
     }
@@ -158,14 +162,18 @@ export const discoverCommands = async (
   const rootCommands = new Set<string>();
 
   const glob = new Glob("**/cmd.{ts,js}");
-  
+
   // Resolve the actual commands directory (src/cmds or dist/cmds)
   const actualBaseDir = baseDir || process.cwd();
   if (verbose) {
     console.debug(`\n🔍 Discovering commands:`);
     console.debug(`   actualBaseDir: ${actualBaseDir}`);
   }
-  const resolvedCommandsDir = resolveCommandsDirectory(actualBaseDir, cmdsDir, verbose);
+  const resolvedCommandsDir = resolveCommandsDirectory(
+    actualBaseDir,
+    cmdsDir,
+    verbose,
+  );
   if (verbose) {
     console.debug(`   resolvedCommandsDir: ${resolvedCommandsDir}`);
   }
@@ -201,13 +209,7 @@ export const discoverCommands = async (
   );
 
   // Process all file data
-  for (const {
-    cmdName,
-    filePath,
-    depth,
-    parent,
-    fullPath,
-  } of fileData) {
+  for (const { cmdName, filePath, depth, parent, fullPath } of fileData) {
     const loader = async (): Promise<CmdDefinition> => {
       try {
         const module = await import(filePath);

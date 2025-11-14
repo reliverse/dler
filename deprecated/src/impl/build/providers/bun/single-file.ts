@@ -24,22 +24,67 @@ export interface BunBuildOptions {
 
 const TARGETS: BuildTarget[] = [
   { platform: "linux", arch: "x64", extension: "", target: "bun-linux-x64" },
-  { platform: "linux", arch: "x64-baseline", extension: "", target: "bun-linux-x64-baseline" },
-  { platform: "linux", arch: "x64-modern", extension: "", target: "bun-linux-x64-modern" },
-  { platform: "linux", arch: "arm64", extension: "", target: "bun-linux-arm64" },
-  { platform: "linux", arch: "x64-musl", extension: "", target: "bun-linux-x64-musl" },
-  { platform: "linux", arch: "arm64-musl", extension: "", target: "bun-linux-arm64-musl" },
-  { platform: "windows", arch: "x64", extension: ".exe", target: "bun-windows-x64" },
-  { platform: "windows", arch: "arm64", extension: ".exe", target: "bun-windows-arm64" },
+  {
+    platform: "linux",
+    arch: "x64-baseline",
+    extension: "",
+    target: "bun-linux-x64-baseline",
+  },
+  {
+    platform: "linux",
+    arch: "x64-modern",
+    extension: "",
+    target: "bun-linux-x64-modern",
+  },
+  {
+    platform: "linux",
+    arch: "arm64",
+    extension: "",
+    target: "bun-linux-arm64",
+  },
+  {
+    platform: "linux",
+    arch: "x64-musl",
+    extension: "",
+    target: "bun-linux-x64-musl",
+  },
+  {
+    platform: "linux",
+    arch: "arm64-musl",
+    extension: "",
+    target: "bun-linux-arm64-musl",
+  },
+  {
+    platform: "windows",
+    arch: "x64",
+    extension: ".exe",
+    target: "bun-windows-x64",
+  },
+  {
+    platform: "windows",
+    arch: "arm64",
+    extension: ".exe",
+    target: "bun-windows-arm64",
+  },
   {
     platform: "windows",
     arch: "x64-baseline",
     extension: ".exe",
     target: "bun-windows-x64-baseline",
   },
-  { platform: "windows", arch: "x64-modern", extension: ".exe", target: "bun-windows-x64-modern" },
+  {
+    platform: "windows",
+    arch: "x64-modern",
+    extension: ".exe",
+    target: "bun-windows-x64-modern",
+  },
   { platform: "darwin", arch: "x64", extension: "", target: "bun-darwin-x64" },
-  { platform: "darwin", arch: "arm64", extension: "", target: "bun-darwin-arm64" },
+  {
+    platform: "darwin",
+    arch: "arm64",
+    extension: "",
+    target: "bun-darwin-arm64",
+  },
 ];
 
 export const getOutputFileName = (
@@ -58,7 +103,10 @@ export const buildForTarget = async (
   inputFile: string,
   options: BunBuildOptions,
 ): Promise<void> => {
-  const outputFile = join(options.outdir, getOutputFileName(target, "dler", options.compile));
+  const outputFile = join(
+    options.outdir,
+    getOutputFileName(target, "dler", options.compile),
+  );
 
   const buildArgs = [
     "build",
@@ -135,7 +183,10 @@ export const buildForTarget = async (
       }
     }
   } catch (error) {
-    relinka("error", `Failed to build for ${target.platform}-${target.arch}: ${error}`);
+    relinka(
+      "error",
+      `Failed to build for ${target.platform}-${target.arch}: ${error}`,
+    );
     throw error;
   }
 };

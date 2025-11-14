@@ -1,17 +1,21 @@
 // apps/dler/src/cmds/build/cmd.ts
 
 import type { BuildOptions } from "@reliverse/dler-build";
-import { applyPresets, runBuildOnAllPackages, validateAndExit } from "@reliverse/dler-build";
+import {
+  applyPresets,
+  runBuildOnAllPackages,
+  validateAndExit,
+} from "@reliverse/dler-build";
+import { replaceExportsInPackages } from "@reliverse/dler-helpers";
 import {
   defineCmd,
   defineCmdArgs,
   defineCmdCfg,
 } from "@reliverse/dler-launcher";
 import { logger } from "@reliverse/dler-logger";
-import { replaceExportsInPackages } from "@reliverse/dler-helpers";
 
 const buildCmd = async (args: any): Promise<void> => {
-  try {    
+  try {
     // Check if running in Bun
     if (typeof process.versions.bun === "undefined") {
       logger.error("❌ This command requires Bun runtime. Sorry.");
@@ -35,7 +39,9 @@ const buildCmd = async (args: any): Promise<void> => {
     const shouldReplaceExports = args.replaceExports === true;
     if (shouldReplaceExports && !buildOptions.watch) {
       if (args.verbose) {
-        logger.info("\n📝 Replacing exports from ./src/*.ts to ./dist/*.js after build...");
+        logger.info(
+          "\n📝 Replacing exports from ./src/*.ts to ./dist/*.js after build...",
+        );
       }
       await replaceExportsInPackages({
         direction: "ts-to-js",
@@ -87,7 +93,8 @@ const buildCmdArgs = defineCmdArgs({
   },
   bundler: {
     type: "string",
-    description: "Bundler to use: bun (fast, bundles deps) or mkdist (preserves structure, default for libraries)",
+    description:
+      "Bundler to use: bun (fast, bundles deps) or mkdist (preserves structure, default for libraries)",
   },
   target: {
     type: "string",
@@ -115,7 +122,8 @@ const buildCmdArgs = defineCmdArgs({
   },
   sourcemap: {
     type: "string",
-    description: "Sourcemap option: none, linked, inline, or external (default: none)",
+    description:
+      "Sourcemap option: none, linked, inline, or external (default: none)",
   },
   splitting: {
     type: "boolean",
@@ -123,11 +131,13 @@ const buildCmdArgs = defineCmdArgs({
   },
   external: {
     type: "string",
-    description: "External packages to exclude from bundle (supports wildcards)",
+    description:
+      "External packages to exclude from bundle (supports wildcards)",
   },
   bytecode: {
     type: "boolean",
-    description: "Generate bytecode for faster cold starts (requires format: cjs, target: bun)",
+    description:
+      "Generate bytecode for faster cold starts (requires format: cjs, target: bun)",
   },
   drop: {
     type: "string",
@@ -135,7 +145,8 @@ const buildCmdArgs = defineCmdArgs({
   },
   packages: {
     type: "string",
-    description: "How to handle dependencies: bundle or external (default: bundle)",
+    description:
+      "How to handle dependencies: bundle or external (default: bundle)",
   },
   publicPath: {
     type: "string",
@@ -147,7 +158,8 @@ const buildCmdArgs = defineCmdArgs({
   },
   define: {
     type: "string",
-    description: "Define global constants (JSON format, e.g., '{\"__VERSION__\":\"1.0.0\"}')",
+    description:
+      'Define global constants (JSON format, e.g., \'{"__VERSION__":"1.0.0"}\')',
   },
   naming: {
     type: "string",
@@ -155,7 +167,8 @@ const buildCmdArgs = defineCmdArgs({
   },
   env: {
     type: "string",
-    description: "Environment variable handling: inline, disable, or prefix like PUBLIC_*",
+    description:
+      "Environment variable handling: inline, disable, or prefix like PUBLIC_*",
   },
   banner: {
     type: "string",
@@ -187,11 +200,13 @@ const buildCmdArgs = defineCmdArgs({
   },
   production: {
     type: "boolean",
-    description: "Enable production mode (minify=true, sourcemap=none, env=inline)",
+    description:
+      "Enable production mode (minify=true, sourcemap=none, env=inline)",
   },
   dev: {
     type: "boolean",
-    description: "Enable development mode (minify=false, sourcemap=inline, watch=true)",
+    description:
+      "Enable development mode (minify=false, sourcemap=inline, watch=true)",
   },
   compile: {
     type: "boolean",
@@ -220,11 +235,13 @@ const buildCmdArgs = defineCmdArgs({
   // Frontend-specific options
   html: {
     type: "boolean",
-    description: "Enable HTML entry point processing (auto-detected for frontend apps)",
+    description:
+      "Enable HTML entry point processing (auto-detected for frontend apps)",
   },
   cssChunking: {
     type: "boolean",
-    description: "Chunk CSS to reduce duplication (default: true for frontend apps)",
+    description:
+      "Chunk CSS to reduce duplication (default: true for frontend apps)",
   },
   devServer: {
     type: "boolean",
@@ -269,7 +286,8 @@ const buildCmdArgs = defineCmdArgs({
   },
   reactFastRefresh: {
     type: "boolean",
-    description: "Enable React Fast Refresh transform (for development testing)",
+    description:
+      "Enable React Fast Refresh transform (for development testing)",
   },
   noClearScreen: {
     type: "boolean",
@@ -278,7 +296,8 @@ const buildCmdArgs = defineCmdArgs({
   // Windows executable options
   windowsHideConsole: {
     type: "boolean",
-    description: "Prevent a console window from opening when running a compiled Windows executable",
+    description:
+      "Prevent a console window from opening when running a compiled Windows executable",
   },
   windowsIcon: {
     type: "string",
@@ -315,7 +334,8 @@ const buildCmdArgs = defineCmdArgs({
   },
   debugDumpServerFiles: {
     type: "boolean",
-    description: "When --app is set, dump all server files to disk even for static builds",
+    description:
+      "When --app is set, dump all server files to disk even for static builds",
   },
   debugNoMinify: {
     type: "boolean",
@@ -328,7 +348,8 @@ const buildCmdArgs = defineCmdArgs({
   },
   sideEffects: {
     type: "string",
-    description: "Configure sideEffects for tree-shaking (boolean or JSON array)",
+    description:
+      "Configure sideEffects for tree-shaking (boolean or JSON array)",
   },
   bundleAnalyzer: {
     type: "boolean",
@@ -392,7 +413,8 @@ const buildCmdArgs = defineCmdArgs({
   },
   maxConfigDepth: {
     type: "number",
-    description: "Maximum directory levels to search up for dler.ts config (default: 3)",
+    description:
+      "Maximum directory levels to search up for dler.ts config (default: 3)",
   },
   // Package kind and bin definitions
   kind: {
@@ -401,7 +423,8 @@ const buildCmdArgs = defineCmdArgs({
   },
   bin: {
     type: "string",
-    description: "Binary definitions for CLI packages (e.g., 'dler=dist/cli.js,login=dist/foo/bar/login.js')",
+    description:
+      "Binary definitions for CLI packages (e.g., 'dler=dist/cli.js,login=dist/foo/bar/login.js')",
   },
   // TSConfig validation
   strictTsconfig: {
@@ -410,29 +433,35 @@ const buildCmdArgs = defineCmdArgs({
   },
   validateTsconfig: {
     type: "boolean",
-    description: "Validate tsconfig.json files for common issues (default: true)",
+    description:
+      "Validate tsconfig.json files for common issues (default: true)",
   },
   dtsProvider: {
     type: "string",
-    description: "Provider for generating .d.ts files: dts-bundle-generator (default), api-extractor, typescript, or mkdist",
+    description:
+      "Provider for generating .d.ts files: dts-bundle-generator (default), api-extractor, typescript, or mkdist",
   },
   replaceExports: {
     type: "boolean",
-    description: "Replace exports from ./src/*.ts to ./dist/*.js after build completes (default: false)",
+    description:
+      "Replace exports from ./src/*.ts to ./dist/*.js after build completes (default: false)",
   },
   replaceExportsIgnorePackages: {
     type: "string",
-    description: "Packages to ignore when replacing exports (supports glob patterns like @reliverse/*)",
+    description:
+      "Packages to ignore when replacing exports (supports glob patterns like @reliverse/*)",
   },
   allowPrivateBuild: {
     type: "string",
-    description: "Allow building private packages (supports wildcards like @reliverse/* to build all packages starting with @reliverse/)",
+    description:
+      "Allow building private packages (supports wildcards like @reliverse/* to build all packages starting with @reliverse/)",
   },
 });
 
 const buildCmdCfg = defineCmdCfg({
   name: "build",
-  description: "Build all workspace packages using configurable bundler (mkdist for libraries, bun for apps) with dler.ts configuration. Auto-detects frontend apps and libraries. Supports presets: --production, --dev, --library, --react, --node, --monorepo.",
+  description:
+    "Build all workspace packages using configurable bundler (mkdist for libraries, bun for apps) with dler.ts configuration. Auto-detects frontend apps and libraries. Supports presets: --production, --dev, --library, --react, --node, --monorepo.",
   examples: [
     "dler build",
     'dler build --ignore "@reliverse/*"',
@@ -458,7 +487,7 @@ const buildCmdCfg = defineCmdCfg({
     "dler build --bytecode --format cjs --target bun",
     "dler build --minifyWhitespace --minifySyntax --minifyIdentifiers",
     "dler build --drop console.log --drop debugger",
-    "dler build --env PUBLIC_* --define '{\"__VERSION__\":\"1.0.0\"}'",
+    'dler build --env PUBLIC_* --define \'{"__VERSION__":"1.0.0"}\'',
     "dler build --banner 'use client' --footer '// built with dler'",
     "dler build --entryNaming '[dir]/[name].[ext]' --chunkNaming '[name]-[hash].[ext]'",
     "dler build --compile --production",

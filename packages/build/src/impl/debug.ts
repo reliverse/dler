@@ -1,10 +1,15 @@
 // packages/build/src/impl/debug.ts
 
 import { logger } from "@reliverse/dler-logger";
-import type { BuildOptions, BuildResult, BuildSummary, PackageInfo } from "./types";
+import type {
+  BuildOptions,
+  BuildResult,
+  BuildSummary,
+  PackageInfo,
+} from "./types";
 
 export interface DebugInfo {
-  configSource: 'cli' | 'reliverse' | 'default';
+  configSource: "cli" | "reliverse" | "default";
   configPath?: string;
   resolvedOptions: BuildOptions;
   packageCount: number;
@@ -31,7 +36,11 @@ export class DebugLogger {
     }
   }
 
-  logConfigResolution(pkg: PackageInfo, configSource: string, configPath?: string): void {
+  logConfigResolution(
+    pkg: PackageInfo,
+    configSource: string,
+    configPath?: string,
+  ): void {
     if (!this.enabled) return;
 
     logger.info(`📋 Config resolution for ${pkg.name}:`);
@@ -45,22 +54,24 @@ export class DebugLogger {
     if (!this.enabled) return;
 
     logger.info(`⚙️  Build options for ${pkg.name}:`);
-    logger.info(`   Target: ${options.target || 'bun'}`);
-    logger.info(`   Format: ${options.format || 'esm'}`);
-    logger.info(`   Minify: ${options.minify ? 'enabled' : 'disabled'}`);
-    logger.info(`   Sourcemap: ${options.sourcemap || 'none'}`);
-    logger.info(`   Splitting: ${options.splitting ? 'enabled' : 'disabled'}`);
-    
+    logger.info(`   Target: ${options.target || "bun"}`);
+    logger.info(`   Format: ${options.format || "esm"}`);
+    logger.info(`   Minify: ${options.minify ? "enabled" : "disabled"}`);
+    logger.info(`   Sourcemap: ${options.sourcemap || "none"}`);
+    logger.info(`   Splitting: ${options.splitting ? "enabled" : "disabled"}`);
+
     if (options.jsx) {
-      logger.info(`   JSX Runtime: ${options.jsx.runtime || 'automatic'}`);
+      logger.info(`   JSX Runtime: ${options.jsx.runtime || "automatic"}`);
       if (options.jsx.importSource) {
         logger.info(`   JSX Import Source: ${options.jsx.importSource}`);
       }
     }
 
     if (options.external) {
-      const externals = Array.isArray(options.external) ? options.external : [options.external];
-      logger.info(`   External: ${externals.join(', ')}`);
+      const externals = Array.isArray(options.external)
+        ? options.external
+        : [options.external];
+      logger.info(`   External: ${externals.join(", ")}`);
     }
 
     if (options.define) {
@@ -81,7 +92,7 @@ export class DebugLogger {
     if (!this.enabled) return;
 
     const totalTime = Date.now() - this.startTime;
-    
+
     logger.info("📊 Build Statistics:");
     logger.info(`   Total packages: ${summary.totalPackages}`);
     logger.info(`   Successful: ${summary.successfulPackages}`);
@@ -89,12 +100,18 @@ export class DebugLogger {
     logger.info(`   Skipped: ${summary.skippedPackages}`);
     logger.info(`   Cache hits: ${summary.cacheHits}`);
     logger.info(`   Total build time: ${summary.totalBuildTime}ms`);
-    logger.info(`   Total bundle size: ${formatBytes(summary.totalBundleSize)}`);
+    logger.info(
+      `   Total bundle size: ${formatBytes(summary.totalBundleSize)}`,
+    );
     logger.info(`   Process time: ${totalTime}ms`);
-    logger.info(`   Average per package: ${Math.round(summary.totalBuildTime / summary.totalPackages)}ms`);
-    
+    logger.info(
+      `   Average per package: ${Math.round(summary.totalBuildTime / summary.totalPackages)}ms`,
+    );
+
     if (summary.cacheHits > 0) {
-      const cacheHitRate = Math.round((summary.cacheHits / summary.totalPackages) * 100);
+      const cacheHitRate = Math.round(
+        (summary.cacheHits / summary.totalPackages) * 100,
+      );
       logger.info(`   Cache hit rate: ${cacheHitRate}%`);
     }
   }
@@ -103,14 +120,14 @@ export class DebugLogger {
     if (!this.enabled) return;
 
     logger.info(`📦 Build result for ${result.package.name}:`);
-    logger.info(`   Success: ${result.success ? '✅' : '❌'}`);
-    logger.info(`   Skipped: ${result.skipped ? '⏭️' : '❌'}`);
+    logger.info(`   Success: ${result.success ? "✅" : "❌"}`);
+    logger.info(`   Skipped: ${result.skipped ? "⏭️" : "❌"}`);
     logger.info(`   Build time: ${result.buildTime}ms`);
-    
+
     if (result.bundleSize) {
       logger.info(`   Bundle size: ${formatBytes(result.bundleSize)}`);
     }
-    
+
     if (result.cacheHit) {
       logger.info(`   Cache hit: ⚡`);
     }
@@ -173,7 +190,7 @@ export class DebugLogger {
   logError(error: Error, context?: string): void {
     if (!this.enabled) return;
 
-    logger.error(`🐛 Debug error${context ? ` in ${context}` : ''}:`);
+    logger.error(`🐛 Debug error${context ? ` in ${context}` : ""}:`);
     logger.error(`   Message: ${error.message}`);
     if (error.stack) {
       logger.error(`   Stack: ${error.stack}`);

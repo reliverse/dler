@@ -39,12 +39,12 @@ export class DependencyTracker {
     this.visitedFiles.add(filePath);
 
     try {
-      const content = readFileSync(filePath, 'utf-8');
-      const hash = createHash('sha256').update(content).digest('hex');
-      const stats = require('node:fs').statSync(filePath);
-      
+      const content = readFileSync(filePath, "utf-8");
+      const hash = createHash("sha256").update(content).digest("hex");
+      const stats = require("node:fs").statSync(filePath);
+
       const dependencies = await this.extractDependencies(filePath, content);
-      
+
       this.graph[filePath] = {
         filePath,
         hash,
@@ -61,17 +61,21 @@ export class DependencyTracker {
     }
   }
 
-  private async extractDependencies(filePath: string, content: string): Promise<string[]> {
+  private async extractDependencies(
+    filePath: string,
+    content: string,
+  ): Promise<string[]> {
     const dependencies: string[] = [];
-    const dir = resolve(filePath, '..');
+    const dir = resolve(filePath, "..");
 
     // Extract import/require statements
-    const importRegex = /(?:import\s+.*?\s+from\s+['"]([^'"]+)['"]|require\s*\(\s*['"]([^'"]+)['"]\s*\)|import\s*\(\s*['"]([^'"]+)['"]\s*\))/g;
+    const importRegex =
+      /(?:import\s+.*?\s+from\s+['"]([^'"]+)['"]|require\s*\(\s*['"]([^'"]+)['"]\s*\)|import\s*\(\s*['"]([^'"]+)['"]\s*\))/g;
     let match;
 
     while ((match = importRegex.exec(content)) !== null) {
       const importPath = match[1] || match[2] || match[3];
-      if (importPath && typeof importPath === 'string') {
+      if (importPath && typeof importPath === "string") {
         const resolvedPath = this.resolveImportPath(importPath, dir);
         if (resolvedPath && existsSync(resolvedPath)) {
           dependencies.push(resolvedPath);
@@ -94,20 +98,23 @@ export class DependencyTracker {
     return [...new Set(dependencies)]; // Remove duplicates
   }
 
-  private resolveImportPath(importPath: string, fromDir: string): string | null {
+  private resolveImportPath(
+    importPath: string,
+    fromDir: string,
+  ): string | null {
     // Handle relative imports
-    if (importPath.startsWith('./') || importPath.startsWith('../')) {
+    if (importPath.startsWith("./") || importPath.startsWith("../")) {
       return resolve(fromDir, importPath);
     }
 
     // Handle absolute imports (skip node_modules for now)
-    if (importPath.startsWith('/')) {
+    if (importPath.startsWith("/")) {
       return importPath;
     }
 
     // Handle package imports - for now, skip these as they're external
     // In a full implementation, you'd resolve these to actual file paths
-    if (!importPath.startsWith('.') && !importPath.startsWith('/')) {
+    if (!importPath.startsWith(".") && !importPath.startsWith("/")) {
       return null;
     }
 
@@ -143,12 +150,12 @@ export class DependencyTracker {
 
   hasFileChanged(filePath: string): boolean {
     if (!existsSync(filePath)) return true;
-    
+
     try {
-      const content = readFileSync(filePath, 'utf-8');
-      const currentHash = createHash('sha256').update(content).digest('hex');
+      const content = readFileSync(filePath, "utf-8");
+      const currentHash = createHash("sha256").update(content).digest("hex");
       const cachedHash = this.getFileHash(filePath);
-      
+
       return currentHash !== cachedHash;
     } catch {
       return true;
@@ -157,13 +164,13 @@ export class DependencyTracker {
 
   hasAnyDependencyChanged(filePath: string): boolean {
     const deps = this.getAllDependencies(filePath);
-    
+
     for (const dep of deps) {
       if (this.hasFileChanged(dep)) {
         return true;
       }
     }
-    
+
     return false;
   }
 

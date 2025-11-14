@@ -1,8 +1,8 @@
-import path from "path";
-import fs from "fs/promises";
 import { logger } from "@reliverse/dler-logger";
 import pMap from "@reliverse/dler-mapper";
 import { Glob } from "bun";
+import fs from "fs/promises";
+import path from "path";
 
 import {
   applyVersionUpdate,
@@ -46,13 +46,13 @@ export async function prepareAllUpdateCandidates(): Promise<{
   // Find ALL package.json files in the project using Bun's Glob
   const glob = new Glob("**/package.json");
   const packageJsonFiles: string[] = [];
-  
+
   for await (const file of glob.scan({
     cwd: process.cwd(),
     onlyFiles: true,
   })) {
     const fullPath = path.resolve(process.cwd(), file);
-    
+
     // Filter out unwanted directories
     if (
       !file.includes("node_modules") &&
@@ -95,9 +95,7 @@ export async function prepareAllUpdateCandidates(): Promise<{
     }
   }
 
-  logger.debug(
-    `Processing ${packageJsonFiles.length} package.json files`,
-  );
+  logger.debug(`Processing ${packageJsonFiles.length} package.json files`);
   return { packageJsonFiles, fileDepsMap };
 }
 
@@ -229,8 +227,6 @@ export async function handleInstallation(): Promise<void> {
     logger.warn(
       `Install failed: ${error instanceof Error ? error.message : String(error)}`,
     );
-    logger.log(
-      "Run 'bun install' manually to apply the changes",
-    );
+    logger.log("Run 'bun install' manually to apply the changes");
   }
 }

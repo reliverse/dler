@@ -100,21 +100,23 @@ export const getWorkspacePackages = async (
   cwd?: string,
 ): Promise<{ name: string; path: string; pkg: any }[]> => {
   const monorepoRoot = await findMonorepoRoot(cwd);
-  
+
   // If no monorepo found, check if current directory is a single package
   if (!monorepoRoot) {
     const currentDir = cwd || process.cwd();
     const currentPkg = await readPackageJSON(currentDir);
-    
+
     if (currentPkg?.name) {
       // Return single package info
-      return [{
-        name: currentPkg.name,
-        path: currentDir,
-        pkg: currentPkg
-      }];
+      return [
+        {
+          name: currentPkg.name,
+          path: currentDir,
+          pkg: currentPkg,
+        },
+      ];
     }
-    
+
     // Neither monorepo nor valid package found
     throw new Error(
       "❌ No monorepo or valid package found. Ensure package.json has 'workspaces' field or contains a valid 'name' field.",
@@ -136,7 +138,7 @@ export const getWorkspacePackages = async (
 
   for (const pattern of patterns) {
     // Check if pattern contains wildcards
-    if (pattern.includes('*')) {
+    if (pattern.includes("*")) {
       // Pattern with wildcards - use glob
       const glob = new Bun.Glob(pattern);
       const matches = glob.scanSync({ cwd: monorepoRoot, onlyFiles: false });
@@ -165,7 +167,7 @@ export const getWorkspacePackages = async (
   }
 
   // Filter out the monorepo root to prevent publishing it
-  const filteredPackages = packages.filter(pkg => {
+  const filteredPackages = packages.filter((pkg) => {
     const normalizedPkgPath = resolve(pkg.path);
     const normalizedRootPath = resolve(monorepoRoot);
     return normalizedPkgPath !== normalizedRootPath;

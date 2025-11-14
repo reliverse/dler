@@ -35,7 +35,6 @@ export const hasWorkspaces = (packageJson: any): boolean =>
 export const getWorkspacePatterns = (packageJson: any): string[] =>
   packageJson?.workspaces?.packages || [];
 
-
 export type PackageKind = "library" | "browser-app" | "native-app" | "cli";
 
 // ============================================================================
@@ -96,7 +95,7 @@ export function transformExportsForBuild(exports: any): any {
 
   if (typeof exports === "object" && exports !== null) {
     const updated: any = {};
-    
+
     for (const [key, value] of Object.entries(exports)) {
       if (typeof value === "object" && value !== null) {
         // Nested object
@@ -106,10 +105,14 @@ export function transformExportsForBuild(exports: any): any {
             // Convert source paths to built paths
             if (subKey === "types") {
               // TypeScript declarations: .ts -> .d.ts and src/ -> dist/
-              updatedValue[subKey] = subValue.replace(/\.ts$/, ".d.ts").replace(/^\.\/src\//, "./dist/");
+              updatedValue[subKey] = subValue
+                .replace(/\.ts$/, ".d.ts")
+                .replace(/^\.\/src\//, "./dist/");
             } else {
               // JavaScript files: .ts -> .js and src/ -> dist/
-              updatedValue[subKey] = subValue.replace(/\.ts$/, ".js").replace(/^\.\/src\//, "./dist/");
+              updatedValue[subKey] = subValue
+                .replace(/\.ts$/, ".js")
+                .replace(/^\.\/src\//, "./dist/");
             }
           } else {
             updatedValue[subKey] = subValue;
@@ -118,12 +121,14 @@ export function transformExportsForBuild(exports: any): any {
         updated[key] = updatedValue;
       } else if (typeof value === "string") {
         // Direct string value - convert .ts to .js and src/ to dist/
-        updated[key] = value.replace(/\.ts$/, ".js").replace(/^\.\/src\//, "./dist/");
+        updated[key] = value
+          .replace(/\.ts$/, ".js")
+          .replace(/^\.\/src\//, "./dist/");
       } else {
         updated[key] = value;
       }
     }
-    
+
     return updated;
   }
 
@@ -140,7 +145,7 @@ export function transformExportsForBuild(exports: any): any {
 export function addBinFieldToPackageJson(
   pkg: any,
   kind: PackageKind | undefined,
-  binDefinitions?: string
+  binDefinitions?: string,
 ): void {
   if (kind !== "cli") {
     return;
@@ -167,12 +172,16 @@ export function addBinFieldToPackageJson(
  * @returns Object indicating success and whether the field was added
  */
 export async function addFilesFieldIfMissing(
-  packagePath: string
+  packagePath: string,
 ): Promise<{ success: boolean; added: boolean; error?: string }> {
   try {
     const pkg = await readPackageJSON(packagePath);
     if (!pkg) {
-      return { success: false, added: false, error: "Could not read package.json" };
+      return {
+        success: false,
+        added: false,
+        error: "Could not read package.json",
+      };
     }
 
     // Check if files field exists and has at least one element
@@ -221,7 +230,7 @@ export interface PreparePackageJsonOptions {
  */
 export async function preparePackageJsonForPublishing(
   packagePath: string,
-  options: PreparePackageJsonOptions = {}
+  options: PreparePackageJsonOptions = {},
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const pkg = await readPackageJSON(packagePath);

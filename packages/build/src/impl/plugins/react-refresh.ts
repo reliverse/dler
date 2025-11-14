@@ -8,7 +8,7 @@ export const ReactRefreshPlugin: DlerPlugin = {
   setup: (buildConfig: BunBuildConfig) => {
     // Enable React Fast Refresh
     buildConfig.reactFastRefresh = true;
-    
+
     // Add React Refresh runtime to banner
     const refreshRuntime = `
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {

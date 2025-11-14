@@ -12,274 +12,277 @@ import type { DeclarationOutput } from "./utils/dts";
 import { getDeclarations, normalizeCompilerOptions } from "./utils/dts";
 import { copyFileWithStream } from "./utils/fs";
 
-export async function mkdist(
-	options: MkdistOptions,
-) {
-	const startTime = Date.now();
+export async function mkdist(options: MkdistOptions) {
+  const startTime = Date.now();
 
-	// Resolve srcDir and distDir relative to rootDir
-	options.rootDir = resolve(process.cwd(), options.rootDir || ".");
-	options.srcDir = resolve(options.rootDir, options.srcDir || "src");
-	options.distDir = resolve(options.rootDir, options.distDir || "dist");
+  // Resolve srcDir and distDir relative to rootDir
+  options.rootDir = resolve(process.cwd(), options.rootDir || ".");
+  options.srcDir = resolve(options.rootDir, options.srcDir || "src");
+  options.distDir = resolve(options.rootDir, options.distDir || "dist");
 
-	// Setup dist
-	if (options.cleanDist !== false) {
-		logger.debug("Cleaning distribution directory...");
-		await fsp.unlink(options.distDir).catch(() => {});
-		await fsp.rm(options.distDir, { recursive: true, force: true });
-		await fsp.mkdir(options.distDir, { recursive: true });
-	}
+  // Setup dist
+  if (options.cleanDist !== false) {
+    logger.debug("Cleaning distribution directory...");
+    await fsp.unlink(options.distDir).catch(() => {});
+    await fsp.rm(options.distDir, { recursive: true, force: true });
+    await fsp.mkdir(options.distDir, { recursive: true });
+  }
 
-	// Scan input files
-	logger.debug("Scanning input files...");
-	const filePaths = await glob(options.pattern || "**", {
-		absolute: false,
-		ignore: ["**/node_modules", "**/coverage", "**/.git"],
-		cwd: options.srcDir,
-		dot: true,
-		...options.globOptions,
-	});
+  // Scan input files
+  logger.debug("Scanning input files...");
+  const filePaths = await glob(options.pattern || "**", {
+    absolute: false,
+    ignore: ["**/node_modules", "**/coverage", "**/.git"],
+    cwd: options.srcDir,
+    dot: true,
+    ...options.globOptions,
+  });
 
-	const files: InputFile[] = filePaths.map((path) => {
-		const sourcePath = resolve(options.srcDir, path);
-		return {
-			path,
-			srcPath: sourcePath,
-			extension: extname(path),
-			getContents: () => fsp.readFile(sourcePath, { encoding: "utf8" }),
-		};
-	});
+  const files: InputFile[] = filePaths.map((path) => {
+    const sourcePath = resolve(options.srcDir, path);
+    return {
+      path,
+      srcPath: sourcePath,
+      extension: extname(path),
+      getContents: () => fsp.readFile(sourcePath, { encoding: "utf8" }),
+    };
+  });
 
-	logger.debug(`Found ${files.length} files to process`);
+  logger.debug(`Found ${files.length} files to process`);
 
-	// Read and normalise TypeScript compiler options for emitting declarations
-	options.typescript ||= {};
-	if (options.typescript.compilerOptions) {
-		logger.debug("Normalizing TypeScript compiler options...");
-		options.typescript.compilerOptions = await normalizeCompilerOptions(
-			options.typescript.compilerOptions,
-		);
-	}
-	options.typescript.compilerOptions = defu(
-		{ noEmit: false } satisfies TSConfig["compilerOptions"],
-		options.typescript.compilerOptions,
-		{
-			allowJs: true,
-			declaration: true,
-			skipLibCheck: true,
-			strictNullChecks: true,
-			emitDeclarationOnly: true,
-			allowImportingTsExtensions: true,
-			allowNonTsExtensions: true,
-		} satisfies TSConfig["compilerOptions"],
-	);
+  // Read and normalise TypeScript compiler options for emitting declarations
+  options.typescript ||= {};
+  if (options.typescript.compilerOptions) {
+    logger.debug("Normalizing TypeScript compiler options...");
+    options.typescript.compilerOptions = await normalizeCompilerOptions(
+      options.typescript.compilerOptions,
+    );
+  }
+  options.typescript.compilerOptions = defu(
+    { noEmit: false } satisfies TSConfig["compilerOptions"],
+    options.typescript.compilerOptions,
+    {
+      allowJs: true,
+      declaration: true,
+      skipLibCheck: true,
+      strictNullChecks: true,
+      emitDeclarationOnly: true,
+      allowImportingTsExtensions: true,
+      allowNonTsExtensions: true,
+    } satisfies TSConfig["compilerOptions"],
+  );
 
-	// Create loader
-	logger.debug("Creating file loaders...");
-	const { loadFile } = createLoader(options);
+  // Create loader
+  logger.debug("Creating file loaders...");
+  const { loadFile } = createLoader(options);
 
-	// Use loaders to get output files
-	logger.debug("Processing files with loaders...");
-	const outputs: OutputFile[] = [];
-	let processedCount = 0;
+  // Use loaders to get output files
+  logger.debug("Processing files with loaders...");
+  const outputs: OutputFile[] = [];
+  let processedCount = 0;
 
-	// Process files
-	await Promise.all(
-		files.map(async (file) => {
-			const result = await loadFile(file);
-			if (result) {
-				outputs.push(...result);
-			}
-			processedCount++;
-		}),
-	);
+  // Process files
+  await Promise.all(
+    files.map(async (file) => {
+      const result = await loadFile(file);
+      if (result) {
+        outputs.push(...result);
+      }
+      processedCount++;
+    }),
+  );
 
-	// Normalize output extensions
-	logger.debug("Normalizing output extensions...");
-	const pathConflicts: string[] = [];
+  // Normalize output extensions
+  logger.debug("Normalizing output extensions...");
+  const pathConflicts: string[] = [];
 
-	for (const output of outputs.filter((o) => o.extension)) {
-		const renamed =
-			basename(output.path, extname(output.path)) + output.extension;
-		output.path = join(dirname(output.path), renamed);
+  for (const output of outputs.filter((o) => o.extension)) {
+    const renamed =
+      basename(output.path, extname(output.path)) + output.extension;
+    output.path = join(dirname(output.path), renamed);
 
-		// Check for output path conflicts
-		const conflictingOutput = outputs.find(
-			(o) => o !== output && o.path === output.path,
-		);
-		if (conflictingOutput) {
-			pathConflicts.push(output.path);
-		}
-	}
+    // Check for output path conflicts
+    const conflictingOutput = outputs.find(
+      (o) => o !== output && o.path === output.path,
+    );
+    if (conflictingOutput) {
+      pathConflicts.push(output.path);
+    }
+  }
 
-	// Handle path conflicts according to memory
-	if (pathConflicts.length > 0) {
-		const errorMessage = `Output path conflict detected for paths: ${pathConflicts.join(", ")}. Multiple files would write to the same output path.`;
-		logger.error(errorMessage);
-		throw new Error(errorMessage);
-	}
+  // Handle path conflicts according to memory
+  if (pathConflicts.length > 0) {
+    const errorMessage = `Output path conflict detected for paths: ${pathConflicts.join(", ")}. Multiple files would write to the same output path.`;
+    logger.error(errorMessage);
+    throw new Error(errorMessage);
+  }
 
-	// Generate declarations
-	const dtsOutputs = outputs.filter((o) => o.declaration && !o.skip);
-	if (dtsOutputs.length > 0) {
-		logger.debug(
-			`Generating TypeScript declarations for ${dtsOutputs.length} files...`,
-		);
-		
-		// Initialize VFS with original TypeScript source files, not transformed JS
-		const vfs = new Map<string, string>();
-		for (const output of dtsOutputs) {
-			// Read the original source file content from the filesystem
-			const originalContent = await fsp.readFile(output.srcPath, { encoding: "utf8" });
-			// Normalize path separators - TypeScript will use forward slashes on Windows
-			const normalizedPath = output.srcPath.replace(/\\/g, "/");
-			vfs.set(normalizedPath, originalContent);
-		}
-		
-		const declarations: DeclarationOutput = Object.create(null);
+  // Generate declarations
+  const dtsOutputs = outputs.filter((o) => o.declaration && !o.skip);
+  if (dtsOutputs.length > 0) {
+    logger.debug(
+      `Generating TypeScript declarations for ${dtsOutputs.length} files...`,
+    );
 
-		const getDeclarationsResult = await getDeclarations(vfs, options);
-		Object.assign(declarations, getDeclarationsResult);
+    // Initialize VFS with original TypeScript source files, not transformed JS
+    const vfs = new Map<string, string>();
+    for (const output of dtsOutputs) {
+      // Read the original source file content from the filesystem
+      const originalContent = await fsp.readFile(output.srcPath, {
+        encoding: "utf8",
+      });
+      // Normalize path separators - TypeScript will use forward slashes on Windows
+      const normalizedPath = output.srcPath.replace(/\\/g, "/");
+      vfs.set(normalizedPath, originalContent);
+    }
 
-		let dtsProcessed = 0;
-		for (const output of dtsOutputs) {
-			// Look up using normalized path (forward slashes)
-			const normalizedPath = output.srcPath.replace(/\\/g, "/");
-			const result = declarations[normalizedPath];
-			output.contents = result?.contents || "";
-			if (result?.errors) {
-				output.errors = result.errors;
-			}
+    const declarations: DeclarationOutput = Object.create(null);
 
-			dtsProcessed++;
-		}
-	}
+    const getDeclarationsResult = await getDeclarations(vfs, options);
+    Object.assign(declarations, getDeclarationsResult);
 
-	// Resolve relative imports
-	logger.debug("Resolving relative imports...");
-	const outPaths = new Set(outputs.map((o) => o.path));
-	const resolveId = (from: string, id = "", resolveExtensions: string[]) => {
-		if (!id.startsWith(".")) {
-			return id;
-		}
-		for (const extension of resolveExtensions) {
-			if (outPaths.has(join(dirname(from), id + extension))) {
-				return id + extension;
-			}
-		}
-		return id;
-	};
+    let dtsProcessed = 0;
+    for (const output of dtsOutputs) {
+      // Look up using normalized path (forward slashes)
+      const normalizedPath = output.srcPath.replace(/\\/g, "/");
+      const result = declarations[normalizedPath];
+      output.contents = result?.contents || "";
+      if (result?.errors) {
+        output.errors = result.errors;
+      }
 
-	const esmResolveExtensions = [
-		"",
-		"/index.mjs",
-		"/index.js",
-		".mjs",
-		".ts",
-		".js",
-	];
-	const esmOutputs = outputs.filter(
-		(o) => o.extension === ".mjs" || o.extension === ".js",
-	);
+      dtsProcessed++;
+    }
+  }
 
-	for (const output of esmOutputs) {
-		// Resolve import statements
-		if (output.contents) {
-			output.contents = output.contents
-				.replace(
-					/(import|export)(\s+(?:.+|{[\s\w,]+})\s+from\s+["'])(.*)(["'])/g,
-					(_, type, head, id, tail) =>
-						type + head + resolveId(output.path, id, esmResolveExtensions) + tail,
-				)
-				// Resolve dynamic import
-				.replace(
-					/import\((["'])(.*)(["'])\)/g,
-					(_, head, id, tail) =>
-						"import(" +
-						head +
-						resolveId(output.path, id, esmResolveExtensions) +
-						tail +
-						")",
-				);
-		}
-	}
+  // Resolve relative imports
+  logger.debug("Resolving relative imports...");
+  const outPaths = new Set(outputs.map((o) => o.path));
+  const resolveId = (from: string, id = "", resolveExtensions: string[]) => {
+    if (!id.startsWith(".")) {
+      return id;
+    }
+    for (const extension of resolveExtensions) {
+      if (outPaths.has(join(dirname(from), id + extension))) {
+        return id + extension;
+      }
+    }
+    return id;
+  };
 
-	const cjsResolveExtensions = ["", "/index.cjs", ".cjs"];
-	const cjsOutputs = outputs.filter((o) => o.extension === ".cjs");
+  const esmResolveExtensions = [
+    "",
+    "/index.mjs",
+    "/index.js",
+    ".mjs",
+    ".ts",
+    ".js",
+  ];
+  const esmOutputs = outputs.filter(
+    (o) => o.extension === ".mjs" || o.extension === ".js",
+  );
 
-	for (const output of cjsOutputs) {
-		// Resolve require statements
-		if (output.contents) {
-			output.contents = output.contents.replace(
-				/require\((["'])(.*)(["'])\)/g,
-				(_, head, id, tail) =>
-					"require(" +
-					head +
-					resolveId(output.path, id, cjsResolveExtensions) +
-					tail +
-					")",
-			);
-		}
-	}
+  for (const output of esmOutputs) {
+    // Resolve import statements
+    if (output.contents) {
+      output.contents = output.contents
+        .replace(
+          /(import|export)(\s+(?:.+|{[\s\w,]+})\s+from\s+["'])(.*)(["'])/g,
+          (_, type, head, id, tail) =>
+            type +
+            head +
+            resolveId(output.path, id, esmResolveExtensions) +
+            tail,
+        )
+        // Resolve dynamic import
+        .replace(
+          /import\((["'])(.*)(["'])\)/g,
+          (_, head, id, tail) =>
+            "import(" +
+            head +
+            resolveId(output.path, id, esmResolveExtensions) +
+            tail +
+            ")",
+        );
+    }
+  }
 
-	// Write outputs
-	const outputsToWrite = outputs.filter((o) => !o.skip);
-	logger.debug(`Writing ${outputsToWrite.length} output files...`);
+  const cjsResolveExtensions = ["", "/index.cjs", ".cjs"];
+  const cjsOutputs = outputs.filter((o) => o.extension === ".cjs");
 
-	const writtenFiles: string[] = [];
-	const errors: { filename: string; errors: TypeError[] }[] = [];
-	let writtenCount = 0;
+  for (const output of cjsOutputs) {
+    // Resolve require statements
+    if (output.contents) {
+      output.contents = output.contents.replace(
+        /require\((["'])(.*)(["'])\)/g,
+        (_, head, id, tail) =>
+          "require(" +
+          head +
+          resolveId(output.path, id, cjsResolveExtensions) +
+          tail +
+          ")",
+      );
+    }
+  }
 
-	// Write files with progress tracking
-	await Promise.all(
-		outputsToWrite.map(async (output) => {
-			try {
-				const outFile = join(options.distDir, output.path);
-				await fsp.mkdir(dirname(outFile), { recursive: true });
-				await (output.raw
-					? copyFileWithStream(output.srcPath, outFile)
-					: fsp.writeFile(outFile, output.contents || "", "utf8"));
-				writtenFiles.push(outFile);
+  // Write outputs
+  const outputsToWrite = outputs.filter((o) => !o.skip);
+  logger.debug(`Writing ${outputsToWrite.length} output files...`);
 
-				if (output.errors) {
-					errors.push({ filename: outFile, errors: output.errors });
-				}
-			} catch (error) {
-				const errorMessage = `Failed to write file ${output.path}: ${error instanceof Error ? error.message : "Unknown error"}`;
-				errors.push({
-					filename: output.path,
-					errors: [new TypeError(errorMessage)],
-				});
-			}
+  const writtenFiles: string[] = [];
+  const errors: { filename: string; errors: TypeError[] }[] = [];
+  let writtenCount = 0;
 
-			writtenCount++;
-		}),
-	);
+  // Write files with progress tracking
+  await Promise.all(
+    outputsToWrite.map(async (output) => {
+      try {
+        const outFile = join(options.distDir, output.path);
+        await fsp.mkdir(dirname(outFile), { recursive: true });
+        await (output.raw
+          ? copyFileWithStream(output.srcPath, outFile)
+          : fsp.writeFile(outFile, output.contents || "", "utf8"));
+        writtenFiles.push(outFile);
 
-	const duration = Date.now() - startTime;
+        if (output.errors) {
+          errors.push({ filename: outFile, errors: output.errors });
+        }
+      } catch (error) {
+        const errorMessage = `Failed to write file ${output.path}: ${error instanceof Error ? error.message : "Unknown error"}`;
+        errors.push({
+          filename: output.path,
+          errors: [new TypeError(errorMessage)],
+        });
+      }
 
-	// Final status
-	if (errors.length > 0) {
-		logger.warn(`Build completed with ${errors.length} errors`);
-		// Log error details for debugging
-		for (const error of errors.slice(0, 5)) {
-			// Show first 5 errors
-			logger.error(
-				`Error in ${error.filename}: ${error.errors[0]?.message || "Unknown error"}`,
-			);
-		}
-		if (errors.length > 5) {
-			logger.error(`... and ${errors.length - 5} more errors`);
-		}
-	} else {
-		logger.debug("Build completed successfully!");
-	}
+      writtenCount++;
+    }),
+  );
 
-	return {
-		result: {
-			errors,
-			writtenFiles,
-		},
-		duration,
-	};
+  const duration = Date.now() - startTime;
+
+  // Final status
+  if (errors.length > 0) {
+    logger.warn(`Build completed with ${errors.length} errors`);
+    // Log error details for debugging
+    for (const error of errors.slice(0, 5)) {
+      // Show first 5 errors
+      logger.error(
+        `Error in ${error.filename}: ${error.errors[0]?.message || "Unknown error"}`,
+      );
+    }
+    if (errors.length > 5) {
+      logger.error(`... and ${errors.length - 5} more errors`);
+    }
+  } else {
+    logger.debug("Build completed successfully!");
+  }
+
+  return {
+    result: {
+      errors,
+      writtenFiles,
+    },
+    duration,
+  };
 }

@@ -16,7 +16,9 @@ export const PerformancePlugin: DlerPlugin = {
     try {
       await checkPerformanceBudgets(result);
     } catch (error) {
-      logger.warn(`Failed to check performance budgets for ${result.package.name}: ${error}`);
+      logger.warn(
+        `Failed to check performance budgets for ${result.package.name}: ${error}`,
+      );
     }
   },
 };
@@ -24,7 +26,7 @@ export const PerformancePlugin: DlerPlugin = {
 async function checkPerformanceBudgets(result: BuildResult): Promise<void> {
   const pkg = result.package;
   const budget = pkg.buildConfig?.performanceBudget;
-  
+
   if (!budget) {
     return;
   }
@@ -34,15 +36,21 @@ async function checkPerformanceBudgets(result: BuildResult): Promise<void> {
 
   // Check bundle size limits
   if (budget.maxBundleSize && bundleSize > budget.maxBundleSize) {
-    warnings.push(`Bundle size ${formatBytes(bundleSize)} exceeds limit of ${formatBytes(budget.maxBundleSize)}`);
+    warnings.push(
+      `Bundle size ${formatBytes(bundleSize)} exceeds limit of ${formatBytes(budget.maxBundleSize)}`,
+    );
   }
 
   if (budget.maxChunkSize && bundleSize > budget.maxChunkSize) {
-    warnings.push(`Chunk size ${formatBytes(bundleSize)} exceeds limit of ${formatBytes(budget.maxChunkSize)}`);
+    warnings.push(
+      `Chunk size ${formatBytes(bundleSize)} exceeds limit of ${formatBytes(budget.maxChunkSize)}`,
+    );
   }
 
   if (budget.maxAssetSize && bundleSize > budget.maxAssetSize) {
-    warnings.push(`Asset size ${formatBytes(bundleSize)} exceeds limit of ${formatBytes(budget.maxAssetSize)}`);
+    warnings.push(
+      `Asset size ${formatBytes(bundleSize)} exceeds limit of ${formatBytes(budget.maxAssetSize)}`,
+    );
   }
 
   // Log warnings
@@ -52,7 +60,9 @@ async function checkPerformanceBudgets(result: BuildResult): Promise<void> {
       logger.warn(`   ${warning}`);
     }
   } else {
-    logger.info(`✅ Performance budget met for ${pkg.name} (${formatBytes(bundleSize)})`);
+    logger.info(
+      `✅ Performance budget met for ${pkg.name} (${formatBytes(bundleSize)})`,
+    );
   }
 }
 
