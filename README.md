@@ -9,7 +9,7 @@
 ```bash
 # install as a dev dep:
 bun add -D @reliverse/dler
-# or, install globally:
+# or/and install globally:
 bun i -g @reliverse/dler
 ```
 
