@@ -141,8 +141,8 @@ func Confirm(promptText, headerText, footerText string) string {
 
 	// Create Yes/No items
 	data := []interface{}{
-		ListItem{Text: "Yes", Description: ""},
-		ListItem{Text: "No", Description: ""},
+		ListItem{Value: "yes", Label: "Yes", Description: ""},
+		ListItem{Value: "no", Label: "No", Description: ""},
 	}
 
 	header := headerText
@@ -157,11 +157,11 @@ func Confirm(promptText, headerText, footerText string) string {
 			HeaderFunc: selector.DefaultHeaderFuncWithAppend(header),
 			SelectedFunc: func(m selector.Model, obj interface{}, gdIndex int) string {
 				t := obj.(ListItem)
-				return common.FontColor(fmt.Sprintf("[%d] %s", gdIndex+1, t.Text), selector.ColorSelected)
+				return common.FontColor(fmt.Sprintf("[%d] %s", gdIndex+1, t.Label), selector.ColorSelected)
 			},
 			UnSelectedFunc: func(m selector.Model, obj interface{}, gdIndex int) string {
 				t := obj.(ListItem)
-				return common.FontColor(fmt.Sprintf(" %d. %s", gdIndex+1, t.Text), selector.ColorUnSelected)
+				return common.FontColor(fmt.Sprintf(" %d. %s", gdIndex+1, t.Label), selector.ColorUnSelected)
 			},
 			FooterFunc: func(m selector.Model, obj interface{}, gdIndex int) string {
 				footer := footerText

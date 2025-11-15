@@ -100,6 +100,18 @@ const createSchemaMetadata = (schema: CmdArgsSchema): SchemaMetadata => {
 
     // Track defaults and required keys
     if ("default" in def && def.default !== undefined) {
+      // Validate default value against allowed list if present
+      if ("allowed" in def && def.allowed) {
+        if (!def.allowed.includes(def.default as never)) {
+          const allowedValues = def.allowed
+            .map((v) => (typeof v === "string" ? `"${v}"` : String(v)))
+            .join(", ");
+          throw new ArgumentValidationError(
+            key,
+            `Default value must be one of: ${allowedValues}. Got: ${typeof def.default === "string" ? `"${def.default}"` : def.default}`,
+          );
+        }
+      }
       defaults[key] = def.default;
     }
     if (def.required) {
@@ -199,7 +211,9 @@ export const parseArgs = (
           // If it's not a boolean value, treat it as a positional argument
           // and just set the flag to false (ignore the value)
         }
-        parsedArgs[actualKey] = false;
+        const falseValue = false;
+        validateArgValue(actualKey, falseValue, definition);
+        parsedArgs[actualKey] = falseValue;
         continue;
       }
       // Check if next argument is an explicit boolean value
@@ -213,7 +227,9 @@ export const parseArgs = (
           lowerNext === "yes" ||
           lowerNext === "on"
         ) {
-          parsedArgs[actualKey] = true;
+          const trueValue = true;
+          validateArgValue(actualKey, trueValue, definition);
+          parsedArgs[actualKey] = trueValue;
           i++; // Skip the value
           continue;
         }
@@ -223,14 +239,18 @@ export const parseArgs = (
           lowerNext === "no" ||
           lowerNext === "off"
         ) {
-          parsedArgs[actualKey] = false;
+          const falseValue = false;
+          validateArgValue(actualKey, falseValue, definition);
+          parsedArgs[actualKey] = falseValue;
           i++; // Skip the value
           continue;
         }
         // If it's not a recognized boolean value, treat it as a positional argument
         // and set the flag to true (default behavior)
       }
-      parsedArgs[actualKey] = true;
+      const trueValue = true;
+      validateArgValue(actualKey, trueValue, definition);
+      parsedArgs[actualKey] = trueValue;
       continue;
     }
 

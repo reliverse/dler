@@ -1,8 +1,4 @@
-import {
-  defineCmd,
-  defineCmdArgs,
-  defineCmdCfg,
-} from "@reliverse/dler-launcher";
+import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
 import { logger } from "@reliverse/dler-logger";
 import {
   inputPrompt,
@@ -11,8 +7,20 @@ import {
   spinnerPrompt,
 } from "@reliverse/dler-prompt";
 
-export default defineCmd(
-  async (_args) => {
+export default defineCommand({
+  meta: {
+    name: "playground",
+    description: "Demonstrate input, select, and multiselect prompts",
+    examples: ["cli-app playground", "cli-app playground --verbose"],
+  },
+  args: defineArgs({
+    verbose: {
+      type: "boolean",
+      description: "Enable verbose output",
+      default: false,
+    },
+  }),
+  run: async () => {
     logger.log("🎮 Prompt Playground Demo\n");
 
     // Input prompt - username
@@ -42,14 +50,14 @@ export default defineCmd(
 
     // Select prompt
     const commitTypeOptions = [
-      { id: "feat", label: "Introducing new features" },
-      { id: "fix", label: "Bug fix" },
-      { id: "docs", label: "Writing docs" },
-      { id: "style", label: "Improving structure/format of the code" },
-      { id: "refactor", label: "Refactoring code" },
-      { id: "test", label: "Refactoring code" },
-      { id: "chore", label: "When adding missing tests" },
-      { id: "perf", label: "Improving performance" },
+      { value: "feat", label: "Introducing new features" },
+      { value: "fix", label: "Bug fix" },
+      { value: "docs", label: "Writing docs" },
+      { value: "style", label: "Improving structure/format of the code" },
+      { value: "refactor", label: "Refactoring code" },
+      { value: "test", label: "Refactoring code" },
+      { value: "chore", label: "When adding missing tests" },
+      { value: "perf", label: "Improving performance" },
     ];
     const commitTypeResult = await selectPrompt({
       title: "Select Commit Type: ",
@@ -63,7 +71,7 @@ export default defineCmd(
       return;
     }
     const selectedCommitType =
-      commitTypeOptions[commitTypeResult.selectedIndex]?.id ?? "";
+      commitTypeOptions[commitTypeResult.selectedIndex]?.value ?? "";
     logger.success(`Selected commit type: ${selectedCommitType}\n`);
 
     // Multiselect prompt
@@ -82,7 +90,7 @@ export default defineCmd(
       return;
     }
     const selectedCommitTypes = multiselectResult.selectedIndices.map(
-      (idx) => commitTypeOptions[idx]?.id ?? "",
+      (idx) => commitTypeOptions[idx]?.value ?? "",
     );
     logger.success(
       `Selected commit types: ${selectedCommitTypes.join(", ")}\n`,
@@ -149,16 +157,4 @@ export default defineCmd(
 
     logger.success("\n🎉 Playground demo completed!");
   },
-  defineCmdArgs({
-    verbose: {
-      type: "boolean",
-      description: "Enable verbose output",
-      default: false,
-    },
-  }),
-  defineCmdCfg({
-    name: "playground",
-    description: "Demonstrate input, select, and multiselect prompts",
-    examples: ["cli-app playground", "cli-app playground --verbose"],
-  }),
-);
+});

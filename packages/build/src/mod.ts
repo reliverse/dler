@@ -15,7 +15,11 @@ import {
 import { writeErrorLines } from "@reliverse/dler-helpers";
 import { logger } from "@reliverse/dler-logger";
 import pMap from "@reliverse/dler-mapper";
-import { createIgnoreFilter, normalizePatterns } from "@reliverse/dler-matcher";
+import {
+  createIgnoreFilter,
+  createIncludeFilter,
+  normalizePatterns,
+} from "@reliverse/dler-matcher";
 import {
   getWorkspacePatterns,
   preparePackageJsonForPublishing,
@@ -600,7 +604,45 @@ const filterPackages = (
   packages: PackageInfo[],
   ignore?: string | string[],
   allowPrivateBuild?: string | string[],
+  filter?: string | string[],
 ): PackageInfo[] => {
+  // If filter is provided, use it to include only matching packages (takes precedence over ignore)
+  if (filter) {
+    const includeFilter = createIncludeFilter(filter);
+    const filteredPackages = includeFilter(packages);
+
+    // Filter out private packages unless explicitly allowed
+    if (!allowPrivateBuild) {
+      return filteredPackages.filter((pkg) => pkg.private !== true);
+    }
+
+    // Normalize allowPrivateBuild to array
+    const allowedPatterns = Array.isArray(allowPrivateBuild)
+      ? allowPrivateBuild
+      : [allowPrivateBuild];
+
+    // Create a filter to check if a package name matches allowed patterns
+    const isAllowed = (pkgName: string): boolean => {
+      for (const pattern of allowedPatterns) {
+        // Simple glob pattern matching
+        if (pattern.includes("*")) {
+          const regexPattern = pattern.replace(/\*/g, ".*");
+          if (new RegExp(`^${regexPattern}$`).test(pkgName)) {
+            return true;
+          }
+        } else if (pkgName === pattern) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    // Filter: allow if not private OR if private and explicitly allowed
+    return filteredPackages.filter(
+      (pkg) => pkg.private !== true || isAllowed(pkg.name),
+    );
+  }
+
   // Always ignore @reliverse/dler-v1 package
   const alwaysIgnored = ["@reliverse/dler-v1"];
 
@@ -751,7 +793,7 @@ const buildWithMkdist = async (
     const { mkdist } = await import("./impl/providers/mkdist/make");
 
     // Configure mkdist options
-    // Note: declaration generation is controlled by the jsLoader checking for options.declaration
+    // declaration generation is controlled by the jsLoader checking for options.declaration
     // mkdist internally uses typescript.compilerOptions.declaration to control DTS generation
     // srcDir is relative to rootDir, so we pass 'src' to scan the src directory
     const mkdistOptions: MkdistOptions & {
@@ -766,6 +808,7 @@ const buildWithMkdist = async (
       cleanDist: false,
       addRelativeDeclarationExtensions: true,
       declaration: true,
+      verbose: options.verbose,
       typescript: {
         compilerOptions: {
           // Don't override emitDeclarationOnly here - let mkdist handle it
@@ -819,8 +862,8 @@ const buildWithMkdist = async (
         );
       }
 
-      // Build Go binaries if Go files are detected
-      if (pkg.hasGoFiles) {
+      // Build Go binaries if Go files are detected (skip if tsOnly is set)
+      if (!options.tsOnly && pkg.hasGoFiles) {
         const goConfig = options.go ?? pkg.buildConfig?.go;
         // Enable by default if Go files are detected and config doesn't explicitly disable it
         if (goConfig?.enable !== false) {
@@ -849,6 +892,10 @@ const buildWithMkdist = async (
           }
         } else if (options.verbose) {
           logger.info(`⏭️  ${pkg.name}: Go build disabled in config`);
+        }
+      } else if (options.tsOnly && pkg.hasGoFiles) {
+        if (options.verbose) {
+          logger.info(`⏭️  ${pkg.name}: Skipping Go build (--ts-only flag set)`);
         }
       }
     }
@@ -890,6 +937,73 @@ export const buildPackage = async (
 ): Promise<BuildResult> => {
   // Merge with package-specific config
   const mergedOptions = mergeBuildOptions(options, pkg.buildConfig);
+
+  // If goOnly is set, skip TypeScript build and go straight to Go build
+  // This must be checked BEFORE any TypeScript setup to avoid unnecessary processing
+  if (mergedOptions.goOnly) {
+    const startTime = Date.now();
+    if (!pkg.hasGoFiles) {
+      // Skip packages without Go files when --go-only is set (not an error)
+      return {
+        package: pkg,
+        success: true,
+        skipped: true,
+        output: "Skipped (no Go files)",
+        errors: [],
+        warnings: [],
+        buildTime: Date.now() - startTime,
+        bundleSize: 0,
+      };
+    }
+
+    // Build Go binaries
+    const goConfig = mergedOptions.go ?? pkg.buildConfig?.go;
+    if (goConfig?.enable !== false) {
+      try {
+        logger.info(`🔨 ${pkg.name}: Building Go binaries...`);
+        const goResult = await buildGo(
+          pkg.path,
+          pkg.name,
+          goConfig ?? { enable: true },
+        );
+        if (!goResult.success) {
+          return {
+            package: pkg,
+            success: false,
+            skipped: false,
+            output: `Go build failed: ${goResult.errors.join(", ")}`,
+            errors: goResult.errors,
+            warnings: [],
+            buildTime: Date.now() - startTime,
+            bundleSize: 0,
+          };
+        }
+        logger.success(`✅ ${pkg.name}: Go binaries built successfully`);
+      } catch (error) {
+        return {
+          package: pkg,
+          success: false,
+          skipped: false,
+          output: `Go build error: ${error instanceof Error ? error.message : String(error)}`,
+          errors: [error instanceof Error ? error.message : String(error)],
+          warnings: [],
+          buildTime: Date.now() - startTime,
+          bundleSize: 0,
+        };
+      }
+    }
+
+    return {
+      package: pkg,
+      success: true,
+      skipped: false,
+      output: "Go binaries built successfully",
+      errors: [],
+      warnings: [],
+      buildTime: Date.now() - startTime,
+      bundleSize: 0,
+    };
+  }
 
   // Create debug logger
   const debugLogger = createDebugLogger(mergedOptions);
@@ -1155,6 +1269,7 @@ export const buildPackage = async (
       format: validFormat,
       sourcemap: validSourcemap,
       splitting: frontendSplitting,
+      verbose,
     };
 
     // Debug logging for native app
@@ -1410,8 +1525,8 @@ export const buildPackage = async (
       };
     }
 
-    // Build Go binaries if Go files are detected
-    if (pkg.hasGoFiles && result.success) {
+    // Build Go binaries if Go files are detected (skip if tsOnly is set)
+    if (!mergedOptions.tsOnly && pkg.hasGoFiles && result.success) {
       const goConfig = mergedOptions.go ?? pkg.buildConfig?.go;
       // Enable by default if Go files are detected and config doesn't explicitly disable it
       if (goConfig?.enable !== false) {
@@ -1440,6 +1555,10 @@ export const buildPackage = async (
         }
       } else if (verbose) {
         logger.info(`⏭️  ${pkg.name}: Go build disabled in config`);
+      }
+    } else if (mergedOptions.tsOnly && pkg.hasGoFiles && result.success) {
+      if (verbose) {
+        logger.info(`⏭️  ${pkg.name}: Skipping Go build (--ts-only flag set)`);
       }
     } else if (verbose && pkg.hasGoFiles && !result.success) {
       logger.info(
@@ -1809,6 +1928,7 @@ export const runBuildOnAllPackages = async (
     port = 3000,
     open = false,
     allowPrivateBuild,
+    filter,
   } = options;
 
   // Initialize cache
@@ -1886,10 +2006,20 @@ export const runBuildOnAllPackages = async (
     }
 
     // Apply filters
-    const packages = filterPackages(allPackages, ignore, allowPrivateBuild);
-    const ignoredCount = allPackages.length - packages.length;
+    const packages = filterPackages(
+      allPackages,
+      ignore,
+      allowPrivateBuild,
+      filter,
+    );
+    const filteredCount = allPackages.length - packages.length;
 
-    if (ignoredCount > 0) {
+    if (filter) {
+      const patterns = normalizePatterns(filter);
+      logger.info(
+        `   Filtering to ${packages.length} packages matching: ${patterns.join(", ")}`,
+      );
+    } else if (filteredCount > 0) {
       // Always ignore @reliverse/dler-v1 package
       const alwaysIgnored = ["@reliverse/dler-v1"];
       const combinedIgnore = ignore
@@ -1900,7 +2030,7 @@ export const runBuildOnAllPackages = async (
 
       const patterns = normalizePatterns(combinedIgnore);
       logger.info(
-        `   Ignoring ${ignoredCount} packages matching: ${patterns.join(", ")}`,
+        `   Ignoring ${filteredCount} packages matching: ${patterns.join(", ")}`,
       );
     }
 

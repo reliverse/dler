@@ -22,14 +22,18 @@ export async function mkdist(options: MkdistOptions) {
 
   // Setup dist
   if (options.cleanDist !== false) {
-    logger.debug("Cleaning distribution directory...");
+    if (options.verbose) {
+      logger.debug("Cleaning distribution directory...");
+    }
     await fsp.unlink(options.distDir).catch(() => {});
     await fsp.rm(options.distDir, { recursive: true, force: true });
     await fsp.mkdir(options.distDir, { recursive: true });
   }
 
   // Scan input files
-  logger.debug("Scanning input files...");
+  if (options.verbose) {
+    logger.debug("Scanning input files...");
+  }
   const filePaths = await glob(options.pattern || "**", {
     absolute: false,
     ignore: ["**/node_modules", "**/coverage", "**/.git"],
@@ -48,12 +52,16 @@ export async function mkdist(options: MkdistOptions) {
     };
   });
 
-  logger.debug(`Found ${files.length} files to process`);
+  if (options.verbose) {
+    logger.debug(`Found ${files.length} files to process`);
+  }
 
   // Read and normalise TypeScript compiler options for emitting declarations
   options.typescript ||= {};
   if (options.typescript.compilerOptions) {
-    logger.debug("Normalizing TypeScript compiler options...");
+    if (options.verbose) {
+      logger.debug("Normalizing TypeScript compiler options...");
+    }
     options.typescript.compilerOptions = await normalizeCompilerOptions(
       options.typescript.compilerOptions,
     );
@@ -73,11 +81,15 @@ export async function mkdist(options: MkdistOptions) {
   );
 
   // Create loader
-  logger.debug("Creating file loaders...");
+  if (options.verbose) {
+    logger.debug("Creating file loaders...");
+  }
   const { loadFile } = createLoader(options);
 
   // Use loaders to get output files
-  logger.debug("Processing files with loaders...");
+  if (options.verbose) {
+    logger.debug("Processing files with loaders...");
+  }
   const outputs: OutputFile[] = [];
   let processedCount = 0;
 
@@ -93,7 +105,9 @@ export async function mkdist(options: MkdistOptions) {
   );
 
   // Normalize output extensions
-  logger.debug("Normalizing output extensions...");
+  if (options.verbose) {
+    logger.debug("Normalizing output extensions...");
+  }
   const pathConflicts: string[] = [];
 
   for (const output of outputs.filter((o) => o.extension)) {
@@ -120,9 +134,11 @@ export async function mkdist(options: MkdistOptions) {
   // Generate declarations
   const dtsOutputs = outputs.filter((o) => o.declaration && !o.skip);
   if (dtsOutputs.length > 0) {
-    logger.debug(
-      `Generating TypeScript declarations for ${dtsOutputs.length} files...`,
-    );
+    if (options.verbose) {
+      logger.debug(
+        `Generating TypeScript declarations for ${dtsOutputs.length} files...`,
+      );
+    }
 
     // Initialize VFS with original TypeScript source files, not transformed JS
     const vfs = new Map<string, string>();
@@ -156,7 +172,9 @@ export async function mkdist(options: MkdistOptions) {
   }
 
   // Resolve relative imports
-  logger.debug("Resolving relative imports...");
+  if (options.verbose) {
+    logger.debug("Resolving relative imports...");
+  }
   const outPaths = new Set(outputs.map((o) => o.path));
   const resolveId = (from: string, id = "", resolveExtensions: string[]) => {
     if (!id.startsWith(".")) {
@@ -227,7 +245,9 @@ export async function mkdist(options: MkdistOptions) {
 
   // Write outputs
   const outputsToWrite = outputs.filter((o) => !o.skip);
-  logger.debug(`Writing ${outputsToWrite.length} output files...`);
+  if (options.verbose) {
+    logger.debug(`Writing ${outputsToWrite.length} output files...`);
+  }
 
   const writtenFiles: string[] = [];
   const errors: { filename: string; errors: TypeError[] }[] = [];
@@ -275,7 +295,9 @@ export async function mkdist(options: MkdistOptions) {
       logger.error(`... and ${errors.length - 5} more errors`);
     }
   } else {
-    logger.debug("Build completed successfully!");
+    if (options.verbose) {
+      logger.debug("Build completed successfully!");
+    }
   }
 
   return {

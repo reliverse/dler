@@ -9,6 +9,7 @@ type StringArg = BaseArg & {
   type: "string";
   required?: boolean;
   default?: string;
+  allowed?: string[];
   validate?: (value: string) => boolean | string;
 };
 
@@ -16,12 +17,14 @@ type BooleanArg = BaseArg & {
   type: "boolean";
   required?: boolean;
   default?: boolean;
+  allowed?: boolean[];
 };
 
 type NumberArg = BaseArg & {
   type: "number";
   required?: boolean;
   default?: number;
+  allowed?: number[];
   validate?: (value: number) => boolean | string;
 };
 
@@ -29,7 +32,7 @@ export type CmdArgDefinition = StringArg | BooleanArg | NumberArg;
 
 export type CmdArgsSchema = Record<string, CmdArgDefinition>;
 
-export interface CmdCfg {
+export interface CmdMeta {
   name: string;
   description?: string;
   version?: string;
@@ -40,13 +43,13 @@ export interface CmdCfg {
 export interface CmdDefinition<T extends CmdArgsSchema = CmdArgsSchema> {
   handler: CmdHandler<T>;
   args: T;
-  cfg: CmdCfg;
+  meta: CmdMeta;
 }
 
-export type CmdHandler<T extends CmdArgsSchema = CmdArgsSchema> = (
-  args: ParsedArgs<T>,
-  parentArgs?: ParsedArgs<any>,
-) => Promise<void> | void;
+export type CmdHandler<T extends CmdArgsSchema = CmdArgsSchema> = (context: {
+  args: ParsedArgs<T>;
+  parentArgs?: ParsedArgs<any>;
+}) => Promise<void> | void;
 
 // Enhanced type inference for parsed arguments
 type InferArgType<T extends CmdArgDefinition> = T["type"] extends "string"

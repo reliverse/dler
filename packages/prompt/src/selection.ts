@@ -3,8 +3,9 @@ import { symbols } from "./ffi";
 import { encode, toString } from "./utils";
 
 export type SelectionItem = {
-  id: string;
+  value: string;
   label: string;
+  description?: string;
   disabled?: boolean;
 };
 
@@ -51,8 +52,9 @@ export async function selectPrompt(
   const stringifiedItems = JSON.stringify(
     options.options.map((item) => {
       return {
-        id: item.id,
+        value: item.value,
         label: item.label,
+        description: item.description ?? "",
         disabled: item.disabled ?? false,
       };
     }),
@@ -85,8 +87,9 @@ export async function multiselectPrompt(
   const stringifiedItems = JSON.stringify(
     options.options.map((item) => {
       return {
-        id: item.id,
+        value: item.value,
         label: item.label,
+        description: item.description ?? "",
         disabled: item.disabled ?? false,
       };
     }),

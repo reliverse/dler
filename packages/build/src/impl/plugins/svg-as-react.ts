@@ -19,6 +19,8 @@ export const SVGAsReactPlugin: DlerPlugin = {
 
     buildConfig.define["__SVG_AS_REACT__"] = "true";
 
-    logger.debug("SVG as React plugin applied");
+    if (buildConfig.verbose) {
+      logger.debug("SVG as React plugin applied");
+    }
   },
 };

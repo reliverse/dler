@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler-logger",
-  "version": "2.1.0",
+  "version": "2.1.14",
   "private": false,
   "type": "module",
   "description": "@reliverse/dler-logger is a modern and lightweight logging library.",
@@ -22,7 +22,7 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "@reliverse/dler-tsconfig": "workspace:*",
+    "@p/tsconfig": "workspace:*",
     "typescript": "catalog:",
     "@types/bun": "catalog:"
   }

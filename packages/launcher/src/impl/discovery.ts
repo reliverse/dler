@@ -20,16 +20,16 @@ const createLazyMetadataLoader = (filePath: string, cmdName: string) => {
       const module = await import(filePath);
       const definition = module.default;
 
-      if (!definition || !definition.cfg) {
+      if (!definition || !definition.meta) {
         throw new Error("Invalid command definition");
       }
 
       return {
-        name: definition.cfg.name,
-        description: definition.cfg.description,
-        aliases: definition.cfg.aliases,
-        version: definition.cfg.version,
-        examples: definition.cfg.examples,
+        name: definition.meta.name,
+        description: definition.meta.description,
+        aliases: definition.meta.aliases,
+        version: definition.meta.version,
+        examples: definition.meta.examples,
       };
     } catch (error) {
       throw new CommandLoadError(cmdName, error);
@@ -273,8 +273,8 @@ export const validateCommandStructure = (
     typeof def.handler === "function" &&
     typeof def.args === "object" &&
     def.args !== null &&
-    typeof def.cfg === "object" &&
-    def.cfg !== null &&
-    typeof (def.cfg as Record<string, unknown>).name === "string"
+    typeof def.meta === "object" &&
+    def.meta !== null &&
+    typeof (def.meta as Record<string, unknown>).name === "string"
   );
 };

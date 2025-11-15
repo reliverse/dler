@@ -6,10 +6,10 @@ This is an example CLI application demonstrating the usage of `@reliverse/dler-p
 
 - **Command-based architecture** using `@reliverse/dler-launcher`
 - **Interactive prompts** using `@reliverse/dler-prompt`:
+  - `inputPrompt`/`askQuestion` - Text input prompt
   - `selectPrompt` - Single selection from options
   - `multiselectPrompt` - Multiple selections from options
   - `confirmPrompt` - Yes/No confirmation
-  - `askQuestion` - Text input prompt
 
 ## Commands
 
@@ -85,8 +85,8 @@ cli-app/
 ## How It Works
 
 1. **Launcher**: The `runLauncher` function discovers commands from the `./cmds` directory
-2. **Commands**: Each command is in its own directory (`cmds/<cmd-name>/cmd.ts`) and exports a default command definition using `defineCmd`
+2. **Commands**: Each command is in its own directory (`cmds/<cmd-name>/cmd.ts`) and exports a default command definition using `defineCommand`
 3. **Prompts**: Commands use various prompt functions for interactive user input
-4. **Arguments**: Commands define their arguments using `defineCmdArgs` with validation
+4. **Arguments**: Commands define their arguments using `defineArgs` with validation
 
 This example showcases how to build a fully interactive CLI application with a clean command structure and rich user interactions.

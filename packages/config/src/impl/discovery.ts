@@ -1,6 +1,7 @@
 // packages/config/src/discovery.ts
 
 import { dirname, resolve } from "node:path";
+import { createIncludeFilter } from "@reliverse/dler-matcher";
 import { readPackageJSON } from "@reliverse/dler-pkg-tsc";
 import { loadConfig, watchConfig } from "c12";
 
@@ -181,12 +182,19 @@ export const getWorkspacePackages = async (
 // ============================================================================
 
 /**
- * Filter packages based on ignore patterns
+ * Filter packages based on ignore patterns or include filter
  */
 export const filterPackages = (
   packages: { name: string; path: string; pkg: any }[],
   ignore?: string | string[],
+  filter?: string | string[],
 ): { name: string; path: string; pkg: any }[] => {
+  // If filter is provided, use it to include only matching packages (takes precedence over ignore)
+  if (filter) {
+    const includeFilter = createIncludeFilter(filter);
+    return includeFilter(packages);
+  }
+
   if (!ignore) return packages;
 
   const ignorePatterns = Array.isArray(ignore) ? ignore : [ignore];

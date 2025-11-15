@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler-pkg-tsc",
-  "version": "2.1.0",
+  "version": "2.1.14",
   "private": false,
   "type": "module",
   "description": "@reliverse/dler-pkg-tsc is a collection of utils to work with package.json and tsconfig.json files.",
@@ -22,7 +22,7 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "@reliverse/dler-tsconfig": "workspace:*",
+    "@p/tsconfig": "workspace:*",
     "typescript": "catalog:",
     "@types/bun": "catalog:"
   }

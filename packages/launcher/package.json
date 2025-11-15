@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler-launcher",
-  "version": "2.1.0",
+  "version": "2.1.14",
   "private": false,
   "type": "module",
   "exports": {
@@ -24,7 +24,7 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "@reliverse/dler-tsconfig": "workspace:*",
+    "@p/tsconfig": "workspace:*",
     "typescript": "catalog:",
     "@types/bun": "catalog:"
   },

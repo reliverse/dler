@@ -22,6 +22,8 @@ export const WorkerPlugin: DlerPlugin = {
 
     buildConfig.define["__WORKER_SUPPORT__"] = "true";
 
-    logger.debug("Worker plugin applied");
+    if (buildConfig.verbose) {
+      logger.debug("Worker plugin applied");
+    }
   },
 };

@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler-prompt",
-  "version": "2.1.0",
+  "version": "2.1.14",
   "private": false,
   "type": "module",
   "exports": {
@@ -32,9 +32,12 @@
   "bugs": "https://github.com/reliverse/dler/issues",
   "author": "Nazar Kornienko <blefnk@gmail.com>",
   "devDependencies": {
-    "@reliverse/dler-tsconfig": "workspace:*",
+    "@p/tsconfig": "workspace:*",
     "typescript": "catalog:",
     "@types/bun": "catalog:",
     "bun-plugin-dts": "catalog:"
+  },
+  "scripts": {
+    "build": "cd .. && bun dler build --goOnly --filter @reliverse/dler-prompt"
   }
 }

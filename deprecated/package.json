@@ -136,7 +136,9 @@
     "uncrypto": "catalog:",
     "untyped": "catalog:",
     "uploadthing": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@reliverse/dler-launcher": "workspace:*",
+    "@reliverse/dler-prompt": "workspace:*"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",

@@ -22,6 +22,19 @@ export const validateArgValue = (
     );
   }
 
+  // Check if value is in the allowed list
+  if ("allowed" in definition && definition.allowed) {
+    if (!definition.allowed.includes(value as never)) {
+      const allowedValues = definition.allowed
+        .map((v) => (typeof v === "string" ? `"${v}"` : String(v)))
+        .join(", ");
+      throw new ArgumentValidationError(
+        argName,
+        `Value must be one of: ${allowedValues}. Got: ${typeof value === "string" ? `"${value}"` : value}`,
+      );
+    }
+  }
+
   if ("validate" in definition && definition.validate) {
     const result = definition.validate(value as never);
     if (result !== true) {

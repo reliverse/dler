@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler-publish",
-  "version": "2.1.0",
+  "version": "2.1.14",
   "private": false,
   "type": "module",
   "exports": {
@@ -15,6 +15,7 @@
     "@reliverse/dler-config": "workspace:*",
     "@reliverse/dler-logger": "workspace:*",
     "@reliverse/dler-bump": "workspace:*",
+    "@reliverse/dler-colors": "workspace:*",
     "@reliverse/dler-build": "workspace:*"
   },
   "publishConfig": {
@@ -26,7 +27,7 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "@reliverse/dler-tsconfig": "workspace:*",
+    "@p/tsconfig": "workspace:*",
     "typescript": "catalog:",
     "@types/bun": "catalog:"
   }

@@ -1,8 +1,4 @@
-import {
-  defineCmd,
-  defineCmdArgs,
-  defineCmdCfg,
-} from "@reliverse/dler-launcher";
+import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
 import { logger } from "@reliverse/dler-logger";
 import {
   askQuestion,
@@ -11,18 +7,30 @@ import {
   selectPrompt,
 } from "@reliverse/dler-prompt";
 
-export default defineCmd(
-  async (_args) => {
+export default defineCommand({
+  meta: {
+    name: "interactive",
+    description: "Demonstrate all interactive prompt types",
+    examples: ["cli-app interactive", "cli-app interactive --verbose"],
+  },
+  args: defineArgs({
+    verbose: {
+      type: "boolean",
+      description: "Enable verbose output",
+      default: false,
+    },
+  }),
+  run: async () => {
     logger.log("🎯 Interactive Prompt Demo\n");
 
     // Single selection prompt
     const colorOptions = [
-      { id: "red", label: "Red" },
-      { id: "blue", label: "Blue" },
-      { id: "green", label: "Green" },
-      { id: "yellow", label: "Yellow" },
-      { id: "purple", label: "Purple" },
-      { id: "orange", label: "Orange" },
+      { value: "red", label: "Red" },
+      { value: "blue", label: "Blue" },
+      { value: "green", label: "Green" },
+      { value: "yellow", label: "Yellow" },
+      { value: "purple", label: "Purple" },
+      { value: "orange", label: "Orange" },
     ];
     const colorResult = await selectPrompt({
       title: "What's your favorite color?",
@@ -32,18 +40,18 @@ export default defineCmd(
       logger.error("Selection cancelled or error occurred");
       return;
     }
-    const favoriteColor = colorOptions[colorResult.selectedIndex]?.id ?? "";
+    const favoriteColor = colorOptions[colorResult.selectedIndex]?.value ?? "";
     logger.success(`You selected: ${favoriteColor}\n`);
 
     // Multiple selection prompt
     const hobbyOptions = [
-      { id: "reading", label: "Reading" },
-      { id: "gaming", label: "Gaming" },
-      { id: "sports", label: "Sports" },
-      { id: "music", label: "Music" },
-      { id: "cooking", label: "Cooking" },
-      { id: "traveling", label: "Traveling" },
-      { id: "photography", label: "Photography" },
+      { value: "reading", label: "Reading" },
+      { value: "gaming", label: "Gaming" },
+      { value: "sports", label: "Sports" },
+      { value: "music", label: "Music" },
+      { value: "cooking", label: "Cooking" },
+      { value: "traveling", label: "Traveling" },
+      { value: "photography", label: "Photography" },
     ];
     const hobbiesResult = await multiselectPrompt({
       title: "Select your hobbies (use space to toggle, enter to confirm):",
@@ -54,7 +62,7 @@ export default defineCmd(
       return;
     }
     const selectedHobbies = hobbiesResult.selectedIndices.map(
-      (idx) => hobbyOptions[idx]?.id ?? "",
+      (idx) => hobbyOptions[idx]?.value ?? "",
     );
     logger.success(`Selected hobbies: ${selectedHobbies.join(", ")}\n`);
 
@@ -91,16 +99,4 @@ export default defineCmd(
 
     logger.success("🎉 Interactive demo completed!");
   },
-  defineCmdArgs({
-    verbose: {
-      type: "boolean",
-      description: "Enable verbose output",
-      default: false,
-    },
-  }),
-  defineCmdCfg({
-    name: "interactive",
-    description: "Demonstrate all interactive prompt types",
-    examples: ["cli-app interactive", "cli-app interactive --verbose"],
-  }),
-);
+});

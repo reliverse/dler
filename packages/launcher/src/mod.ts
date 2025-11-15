@@ -1,6 +1,7 @@
 // packages/launcher/src/impl/launcher/mod.ts
 
-import { dirname } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { re } from "@reliverse/dler-colors";
 import { writeErrorLines } from "@reliverse/dler-helpers";
@@ -20,7 +21,7 @@ import {
   setRegistry,
 } from "./impl/registry";
 
-export { defineCmd, defineCmdArgs, defineCmdCfg } from "./impl/command";
+export { defineArgs, defineCommand } from "./impl/command";
 export {
   ArgumentValidationError,
   CommandLoadError,
@@ -30,19 +31,22 @@ export {
 export type {
   CmdArgDefinition,
   CmdArgsSchema,
-  CmdCfg,
   CmdDefinition,
   CmdHandler,
   CmdLoader,
+  CmdMeta,
   CmdRegistry,
   DiscoveryResult,
   ParsedArgs,
 } from "./impl/types";
 
+export type PackageManager = "bun" | "npm" | "yarn" | "pnpm";
+
 export interface LauncherOptions {
   cmdsDir?: string;
   onError?: (error: LauncherError) => void;
   verbose?: boolean;
+  supportedPkgManagers?: PackageManager[];
 }
 
 // Get the directory of the file that called runLauncher
@@ -51,11 +55,91 @@ const getCallerDirectory = (importMetaUrl: string): string => {
   return dirname(fileURLToPath(importMetaUrl));
 };
 
+// Detect the current package manager
+const detectPackageManager = (cwd: string): PackageManager => {
+  // Check for Bun runtime
+  if (typeof process.versions.bun !== "undefined") {
+    return "bun";
+  }
+
+  // Check for lock files (order matters - check most specific first)
+  if (existsSync(join(cwd, "pnpm-lock.yaml"))) {
+    return "pnpm";
+  }
+  if (existsSync(join(cwd, "yarn.lock"))) {
+    return "yarn";
+  }
+  if (existsSync(join(cwd, "package-lock.json"))) {
+    return "npm";
+  }
+
+  // Check package.json packageManager field
+  try {
+    const packageJsonPath = join(cwd, "package.json");
+    if (existsSync(packageJsonPath)) {
+      const content = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+      if (content.packageManager) {
+        const pkgManager = content.packageManager.split("@")[0];
+        if (
+          pkgManager === "bun" ||
+          pkgManager === "npm" ||
+          pkgManager === "yarn" ||
+          pkgManager === "pnpm"
+        ) {
+          return pkgManager as PackageManager;
+        }
+      }
+    }
+  } catch {
+    // Ignore errors reading package.json
+  }
+
+  // Check environment variables
+  const userAgent = process.env["npm_config_user_agent"] || "";
+  if (userAgent.includes("pnpm")) {
+    return "pnpm";
+  }
+  if (userAgent.includes("yarn")) {
+    return "yarn";
+  }
+  if (userAgent.includes("npm")) {
+    return "npm";
+  }
+
+  // Default to npm if nothing detected
+  return "npm";
+};
+
 export const runLauncher = async (
   importMetaUrl: string,
   options: LauncherOptions = {},
 ): Promise<void> => {
-  const { cmdsDir = "./cmds", onError, verbose = false } = options;
+  const {
+    cmdsDir = "./cmds",
+    onError,
+    verbose = false,
+    supportedPkgManagers,
+  } = options;
+
+  // Check package manager if filtering is enabled
+  if (supportedPkgManagers && supportedPkgManagers.length > 0) {
+    const callerDir = getCallerDirectory(importMetaUrl);
+    const detectedPkgManager = detectPackageManager(callerDir);
+
+    if (!supportedPkgManagers.includes(detectedPkgManager)) {
+      const errorMessage = `❌ Unsupported package manager: ${detectedPkgManager}. Supported: ${supportedPkgManagers.join(", ")}`;
+      if (onError) {
+        onError(new LauncherError(errorMessage, "UNSUPPORTED_PKG_MANAGER"));
+      } else {
+        writeErrorLines([`\n${re.red.bold(errorMessage)}\n`]);
+      }
+      process.exit(1);
+    }
+
+    if (verbose) {
+      console.debug(`✓ Package manager: ${detectedPkgManager}`);
+    }
+  }
 
   try {
     // Clear registry to force rediscovery (for debugging)
@@ -184,10 +268,10 @@ export const runLauncher = async (
       );
 
       // Execute sub-command with parent args
-      await subCommandDefinition.handler(
-        subCommandParsedArgs as never,
-        parentParsedArgs as never,
-      );
+      await subCommandDefinition.handler({
+        args: subCommandParsedArgs as never,
+        parentArgs: parentParsedArgs as never,
+      });
     } else {
       // Handle single command execution
       const cmdNameOrAlias = argv[0]!;
@@ -210,7 +294,7 @@ export const runLauncher = async (
 
       const { parsedArgs } = parseArgs(argv, definition.args);
 
-      await definition.handler(parsedArgs as never);
+      await definition.handler({ args: parsedArgs as never });
     }
   } catch (error) {
     if (error instanceof LauncherError) {

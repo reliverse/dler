@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler-matcher",
-  "version": "2.1.0",
+  "version": "2.1.14",
   "private": false,
   "type": "module",
   "description": "@reliverse/dler-matcher is a high-performance minimal matcher, with micromatch-level power, zepto-level size, and reliverse-grade dx.",
@@ -22,7 +22,7 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "@reliverse/dler-tsconfig": "workspace:*",
+    "@p/tsconfig": "workspace:*",
     "typescript": "catalog:",
     "@types/bun": "catalog:"
   }

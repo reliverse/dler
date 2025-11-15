@@ -168,6 +168,11 @@ export interface BuildOptions {
   replaceExportsIgnorePackages?: string;
   // Private packages
   allowPrivateBuild?: string | string[];
+  // Package filtering
+  filter?: string | string[];
+  // Build type selection
+  goOnly?: boolean;
+  tsOnly?: boolean;
 }
 
 export interface CacheEntry {
@@ -330,6 +335,7 @@ export interface BunBuildConfig {
   debugDumpServerFiles?: boolean;
   debugNoMinify?: boolean;
   compile?: CompileOptions | boolean;
+  verbose?: boolean;
 }
 
 export interface MkdistOptions {
@@ -345,6 +351,7 @@ export interface MkdistOptions {
     compilerOptions?: any;
   };
   globOptions?: any;
+  verbose?: boolean;
 }
 
 export interface InputFile {

@@ -3,12 +3,14 @@
 import { existsSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { logger } from "@reliverse/dler-logger";
-import type { BuildResult, DlerPlugin } from "../types";
+import type { BuildResult, BunBuildConfig, DlerPlugin } from "../types";
 
 export const BundleAnalyzerPlugin: DlerPlugin = {
   name: "bundle-analyzer",
-  setup: () => {
-    logger.debug("Bundle analyzer plugin registered");
+  setup: (buildConfig?: BunBuildConfig) => {
+    if (buildConfig?.verbose) {
+      logger.debug("Bundle analyzer plugin registered");
+    }
   },
   onBuildEnd: async (result: BuildResult) => {
     if (!result.success || result.skipped) {

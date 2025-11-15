@@ -36,6 +36,8 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
       };
     }
 
-    logger.debug("React Fast Refresh plugin applied");
+    if (buildConfig.verbose) {
+      logger.debug("React Fast Refresh plugin applied");
+    }
   },
 };

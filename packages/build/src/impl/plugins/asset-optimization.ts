@@ -1,7 +1,7 @@
 // packages/build/src/impl/plugins/asset-optimization.ts
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, extname, join } from "node:path";
+import { extname, join } from "node:path";
 import { logger } from "@reliverse/dler-logger";
 import type {
   BuildResult,
@@ -29,7 +29,9 @@ export const AssetOptimizationPlugin: DlerPlugin = {
       ".eot": "file",
     };
 
-    logger.debug("Asset optimization plugin applied");
+    if (buildConfig.verbose) {
+      logger.debug("Asset optimization plugin applied");
+    }
   },
   onBuildEnd: async (result: BuildResult) => {
     if (!result.success || result.skipped) {
@@ -146,20 +148,15 @@ async function optimizeSVG(svgPath: string): Promise<void> {
 
   if (optimized !== content) {
     writeFileSync(svgPath, optimized, "utf-8");
-    logger.debug(`Optimized SVG: ${basename(svgPath)}`);
   }
 }
 
-async function optimizeImage(imagePath: string): Promise<void> {
+async function optimizeImage(_imagePath: string): Promise<void> {
   // Placeholder for image optimization
   // In the future, we would use libraries like sharp or imagemin
-  logger.debug(
-    `Image optimization not implemented for: ${basename(imagePath)}`,
-  );
 }
 
-async function optimizeFont(fontPath: string): Promise<void> {
+async function optimizeFont(_fontPath: string): Promise<void> {
   // Placeholder for font optimization
   // In the future, we would use font optimization libraries
-  logger.debug(`Font optimization not implemented for: ${basename(fontPath)}`);
 }

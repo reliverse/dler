@@ -721,10 +721,6 @@ Finally, a full-featured CLI launcher without the ceremony. `@reliverse/dler-pro
   // If you want per-run() logic, use the run() handler or global hooks
   ```
 
-- **Deprecation Notice**
-  - The legacy `setup` and `cleanup` names are still supported as aliases for per-command hooks, but will be removed in a future major version. Prefer `onCmdInit` and `onCmdExit` going forward.
-  - The `subCommands` property is deprecated as well. Please use `commands` instead. `subCommands` will be removed in a future major version.
-
 - **Dynamic Usage Examples:**
   - The launcher inspects your available commands and their argument definitions, then prints a plausible example CLI invocation for a random command directly in the help output. This helps users understand real-world usage at a glance.
 

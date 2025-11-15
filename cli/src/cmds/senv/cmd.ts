@@ -1,11 +1,7 @@
 // dler senv command. Examples:
 // - `dler senv --action append --name Path --value C:\Users\your-user-name\.local\bin`
 
-import {
-  defineCmd,
-  defineCmdArgs,
-  defineCmdCfg,
-} from "@reliverse/dler-launcher";
+import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
 import { logger } from "@reliverse/dler-logger";
 import fs from "fs/promises";
 
@@ -207,258 +203,254 @@ const persistPosixEditPath = async (
   logger.info(`Persisted ${name} in ${profile}`);
 };
 
-const senvCmdArgs = defineCmdArgs({
-  action: {
-    type: "string",
-    required: true,
-    description: "Operation to perform: list|get|set|append|remove|contains",
+export default defineCommand({
+  meta: {
+    name: "senv",
+    description:
+      "Inspect and modify environment variables (process and user-level)",
+    examples: [
+      "dler senv --action list",
+      "dler senv --action list --name Path",
+      "dler senv --action get --name Path",
+      "dler senv --action set --name Path --value C\\\\bin",
+      "dler senv --action append --name Path --value C\\\\msys64\\\\ucrt64\\\\bin --yes",
+      "dler senv --action contains --name Path --value C\\\\bin",
+    ],
   },
-  name: {
-    type: "string",
-    description: "Environment variable name (optional for list)",
-  },
-  value: {
-    type: "string",
-    description: "Value for set/append/remove/contains",
-  },
-  persist: {
-    type: "boolean",
-    description: "Persist change to user environment (default: true)",
-  },
-  yes: {
-    type: "boolean",
-    description: "Skip interactive confirmation message",
-  },
-});
-
-const senvCmdCfg = defineCmdCfg({
-  name: "senv",
-  description:
-    "Inspect and modify environment variables (process and user-level)",
-  examples: [
-    "dler senv --action list",
-    "dler senv --action list --name Path",
-    "dler senv --action get --name Path",
-    "dler senv --action set --name Path --value C\\\\bin",
-    "dler senv --action append --name Path --value C\\\\msys64\\\\ucrt64\\\\bin --yes",
-    "dler senv --action contains --name Path --value C\\\\bin",
-  ],
-});
-
-const senvCmd = async (args: {
-  action: string;
-  name?: string;
-  value?: string;
-  persist?: boolean;
-  yes?: boolean;
-}): Promise<void> => {
-  try {
-    if (typeof process.versions.bun === "undefined") {
-      logger.error("❌ This command requires Bun runtime. Sorry.");
-      process.exit(1);
-    }
-
-    const { action, name, value } = args;
-    const persist = args.persist ?? true;
-    const yes = args.yes ?? false;
-
-    const allowed = new Set([
-      "list",
-      "get",
-      "set",
-      "append",
-      "remove",
-      "contains",
-    ]);
-    if (!allowed.has(action)) {
-      logger.error(
-        "Unknown action. Allowed: list, get, set, append, remove, contains",
-      );
-      process.exit(2);
-    }
-
-    if (action === "list") {
-      if (name) {
-        logger.log(`${name}=${process.env[name] ?? ""}`);
-      } else {
-        for (const k of Object.keys(process.env).sort()) {
-          logger.log(`${k}=${process.env[k]}`);
-        }
+  args: defineArgs({
+    action: {
+      type: "string",
+      required: true,
+      description: "Operation to perform: list|get|set|append|remove|contains",
+    },
+    name: {
+      type: "string",
+      description: "Environment variable name (optional for list)",
+    },
+    value: {
+      type: "string",
+      description: "Value for set/append/remove/contains",
+    },
+    persist: {
+      type: "boolean",
+      description: "Persist change to user environment (default: true)",
+    },
+    yes: {
+      type: "boolean",
+      description: "Skip interactive confirmation message",
+    },
+  }),
+  run: async ({ args }) => {
+    try {
+      if (typeof process.versions.bun === "undefined") {
+        logger.error("❌ This command requires Bun runtime. Sorry.");
+        process.exit(1);
       }
-      return;
-    }
 
-    if (!name) {
-      logger.error("Name is required for this action");
-      process.exit(2);
-    }
+      const { action, name, value } = args;
+      const persist = args.persist ?? true;
+      const yes = args.yes ?? false;
 
-    if (action === "get") {
-      logger.log(process.env[name] ?? "");
-      return;
-    }
-
-    if (action === "contains") {
-      if (!value) {
-        logger.error("Value required for contains");
+      const allowed = new Set([
+        "list",
+        "get",
+        "set",
+        "append",
+        "remove",
+        "contains",
+      ]);
+      if (!allowed.has(action)) {
+        logger.error(
+          "Unknown action. Allowed: list, get, set, append, remove, contains",
+        );
         process.exit(2);
       }
-      const cur = process.env[name] ?? "";
-      const entries = normalizePathEntries(cur).map(normalizeEntry);
-      const keys = new Set(entries.map(toComparable));
-      process.exit(keys.has(toComparable(value)) ? 0 : 1);
-    }
 
-    if (action === "set") {
-      if (typeof value === "undefined") {
-        logger.error("Value required for set");
-        process.exit(2);
-      }
-      process.env[name] = value;
-      logger.info(`Set ${name} for current process.`);
-
-      if (persist) {
-        if (!yes) {
-          logger.info(
-            "Persisting to user environment (will create backup). Use --yes to skip this message.",
-          );
-        }
-
-        if (isWindows()) {
-          try {
-            await runPowerShellSetUser(name, value);
-            logger.success(`Persisted ${name} to User environment (Windows).`);
-          } catch (e) {
-            logger.error("Failed to persist via PowerShell:");
-            logger.error(String(e));
-          }
+      if (action === "list") {
+        if (name) {
+          logger.log(`${name}=${process.env[name] ?? ""}`);
         } else {
-          try {
-            await persistPosix(name, value);
-          } catch (e) {
-            logger.error("Failed to persist on POSIX:");
-            logger.error(String(e));
+          for (const k of Object.keys(process.env).sort()) {
+            logger.log(`${k}=${process.env[k]}`);
           }
         }
+        return;
       }
-      return;
-    }
 
-    if (!value) {
-      logger.error("Value required for append/remove");
-      process.exit(2);
-    }
+      if (!name) {
+        logger.error("Name is required for this action");
+        process.exit(2);
+      }
 
-    const cur = process.env[name] ?? "";
-    const normalizedValue = normalizeEntry(value);
-    let entries = normalizePathEntries(cur).map(normalizeEntry);
+      if (action === "get") {
+        logger.log(process.env[name] ?? "");
+        return;
+      }
 
-    if (action === "append") {
-      const keySet = new Set(entries.map(toComparable));
-      const targetKey = toComparable(normalizedValue);
+      if (action === "contains") {
+        if (!value) {
+          logger.error("Value required for contains");
+          process.exit(2);
+        }
+        const cur = process.env[name] ?? "";
+        const entries = normalizePathEntries(cur).map(normalizeEntry);
+        const keys = new Set(entries.map(toComparable));
+        process.exit(keys.has(toComparable(value)) ? 0 : 1);
+      }
 
-      if (keySet.has(targetKey)) {
-        logger.info("Entry already present — nothing to do.");
-      } else {
-        entries.push(normalizedValue);
-        entries = uniqueByComparable(entries);
-        const newVal = joinPathEntries(entries);
-        process.env[name] = newVal;
-        logger.info(`Appended to ${name} for current process.`);
+      if (action === "set") {
+        if (typeof value === "undefined") {
+          logger.error("Value required for set");
+          process.exit(2);
+        }
+        process.env[name] = value;
+        logger.info(`Set ${name} for current process.`);
 
         if (persist) {
+          if (!yes) {
+            logger.info(
+              "Persisting to user environment (will create backup). Use --yes to skip this message.",
+            );
+          }
+
           if (isWindows()) {
             try {
-              const userVal = (await runPowerShellGetUser(name)).trim();
-              const userEntries = normalizePathEntries(userVal || "").map(
-                normalizeEntry,
+              await runPowerShellSetUser(name, value);
+              logger.success(
+                `Persisted ${name} to User environment (Windows).`,
               );
-              const uSet = new Set(userEntries.map(toComparable));
-
-              if (!uSet.has(targetKey)) {
-                userEntries.push(normalizedValue);
-                const uniqueEntries = uniqueByComparable(userEntries);
-                const joined = joinPathEntries(uniqueEntries);
-                await runPowerShellSetUser(name, joined);
-                logger.success(`Persisted append to User ${name} (Windows).`);
-              } else {
-                logger.info(
-                  "User-level already contains the entry — no change.",
-                );
-              }
             } catch (e) {
-              logger.error("Failed to persist append on Windows:");
+              logger.error("Failed to persist via PowerShell:");
               logger.error(String(e));
             }
           } else {
             try {
-              await persistPosixEditPath(name, value, "append");
+              await persistPosix(name, value);
             } catch (e) {
-              logger.error("Failed to persist append on POSIX:");
+              logger.error("Failed to persist on POSIX:");
               logger.error(String(e));
             }
           }
         }
+        return;
       }
-      return;
-    }
 
-    if (action === "remove") {
-      const targetKey = toComparable(normalizedValue);
-      const idx = entries.findIndex((e) => toComparable(e) === targetKey);
+      if (!value) {
+        logger.error("Value required for append/remove");
+        process.exit(2);
+      }
 
-      if (idx === -1) {
-        logger.info("Entry not present — nothing to remove.");
-      } else {
-        entries.splice(idx, 1);
-        entries = uniqueByComparable(entries);
-        const newVal = joinPathEntries(entries);
-        process.env[name] = newVal;
-        logger.info(`Removed entry from ${name} for current process.`);
+      const cur = process.env[name] ?? "";
+      const normalizedValue = normalizeEntry(value);
+      let entries = normalizePathEntries(cur).map(normalizeEntry);
 
-        if (persist) {
-          if (isWindows()) {
-            try {
-              const userVal = (await runPowerShellGetUser(name)).trim();
-              const userEntries = normalizePathEntries(userVal || "").map(
-                normalizeEntry,
-              );
-              const i2 = userEntries.findIndex(
-                (e) => toComparable(e) === targetKey,
-              );
+      if (action === "append") {
+        const keySet = new Set(entries.map(toComparable));
+        const targetKey = toComparable(normalizedValue);
 
-              if (i2 >= 0) {
-                userEntries.splice(i2, 1);
-                const uniqueEntries = uniqueByComparable(userEntries);
-                await runPowerShellSetUser(
-                  name,
-                  joinPathEntries(uniqueEntries),
+        if (keySet.has(targetKey)) {
+          logger.info("Entry already present — nothing to do.");
+        } else {
+          entries.push(normalizedValue);
+          entries = uniqueByComparable(entries);
+          const newVal = joinPathEntries(entries);
+          process.env[name] = newVal;
+          logger.info(`Appended to ${name} for current process.`);
+
+          if (persist) {
+            if (isWindows()) {
+              try {
+                const userVal = (await runPowerShellGetUser(name)).trim();
+                const userEntries = normalizePathEntries(userVal || "").map(
+                  normalizeEntry,
                 );
-                logger.success(`Persisted removal to User ${name} (Windows).`);
-              } else {
-                logger.info("User-level did not contain entry — no change.");
+                const uSet = new Set(userEntries.map(toComparable));
+
+                if (!uSet.has(targetKey)) {
+                  userEntries.push(normalizedValue);
+                  const uniqueEntries = uniqueByComparable(userEntries);
+                  const joined = joinPathEntries(uniqueEntries);
+                  await runPowerShellSetUser(name, joined);
+                  logger.success(`Persisted append to User ${name} (Windows).`);
+                } else {
+                  logger.info(
+                    "User-level already contains the entry — no change.",
+                  );
+                }
+              } catch (e) {
+                logger.error("Failed to persist append on Windows:");
+                logger.error(String(e));
               }
-            } catch (e) {
-              logger.error("Failed to persist removal on Windows:");
-              logger.error(String(e));
-            }
-          } else {
-            try {
-              await persistPosixEditPath(name, value, "remove");
-            } catch (e) {
-              logger.error("Failed to persist removal on POSIX:");
-              logger.error(String(e));
+            } else {
+              try {
+                await persistPosixEditPath(name, value, "append");
+              } catch (e) {
+                logger.error("Failed to persist append on POSIX:");
+                logger.error(String(e));
+              }
             }
           }
         }
+        return;
       }
-      return;
-    }
-  } catch (e) {
-    logger.error("Fatal:");
-    logger.error(String(e));
-    process.exit(3);
-  }
-};
 
-export default defineCmd(senvCmd, senvCmdArgs, senvCmdCfg);
+      if (action === "remove") {
+        const targetKey = toComparable(normalizedValue);
+        const idx = entries.findIndex((e) => toComparable(e) === targetKey);
+
+        if (idx === -1) {
+          logger.info("Entry not present — nothing to remove.");
+        } else {
+          entries.splice(idx, 1);
+          entries = uniqueByComparable(entries);
+          const newVal = joinPathEntries(entries);
+          process.env[name] = newVal;
+          logger.info(`Removed entry from ${name} for current process.`);
+
+          if (persist) {
+            if (isWindows()) {
+              try {
+                const userVal = (await runPowerShellGetUser(name)).trim();
+                const userEntries = normalizePathEntries(userVal || "").map(
+                  normalizeEntry,
+                );
+                const i2 = userEntries.findIndex(
+                  (e) => toComparable(e) === targetKey,
+                );
+
+                if (i2 >= 0) {
+                  userEntries.splice(i2, 1);
+                  const uniqueEntries = uniqueByComparable(userEntries);
+                  await runPowerShellSetUser(
+                    name,
+                    joinPathEntries(uniqueEntries),
+                  );
+                  logger.success(
+                    `Persisted removal to User ${name} (Windows).`,
+                  );
+                } else {
+                  logger.info("User-level did not contain entry — no change.");
+                }
+              } catch (e) {
+                logger.error("Failed to persist removal on Windows:");
+                logger.error(String(e));
+              }
+            } else {
+              try {
+                await persistPosixEditPath(name, value, "remove");
+              } catch (e) {
+                logger.error("Failed to persist removal on POSIX:");
+                logger.error(String(e));
+              }
+            }
+          }
+        }
+        return;
+      }
+    } catch (e) {
+      logger.error("Fatal:");
+      logger.error(String(e));
+      process.exit(3);
+    }
+  },
+});

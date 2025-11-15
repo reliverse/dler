@@ -41,17 +41,17 @@ logger.success("Hello, Reliverse!"); // > ✓ Hello, Reliverse!
 
 1. `@reliverse/dler-bump`
 2. `@reliverse/dler-build`
-3. `@reliverse/dler-config`
-4. `@reliverse/dler-helpers`
-5. `@reliverse/dler-colors`
-6. `@reliverse/dler-mapper`
-7. `@reliverse/dler-launcher`
-8. `@reliverse/dler-logger`
+3. `@reliverse/dler-colors`
+4. `@reliverse/dler-config`
+5. `@reliverse/dler-helpers`
+6. `@reliverse/dler-launcher`
+7. `@reliverse/dler-logger`
+8. `@reliverse/dler-mapper`
 9. `@reliverse/dler-matcher`
 10. `@reliverse/dler-pkg-tsc`
 11. `@reliverse/dler-prompt`
-12. `@reliverse/dler-spinner`
-13. `@reliverse/dler-publish`
+12. `@reliverse/dler-publish`
+13. `@reliverse/dler-spinner`
 
 ## Available CLI Commands
 

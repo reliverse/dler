@@ -6,13 +6,15 @@ import type { BunBuildConfig, DlerPlugin } from "../types";
 export class PluginRegistry {
   private plugins = new Map<string, DlerPlugin>();
 
-  register(plugin: DlerPlugin): void {
+  register(plugin: DlerPlugin, verbose?: boolean): void {
     if (this.plugins.has(plugin.name)) {
       logger.warn(`Plugin ${plugin.name} is already registered`);
       return;
     }
     this.plugins.set(plugin.name, plugin);
-    logger.debug(`Registered plugin: ${plugin.name}`);
+    if (verbose) {
+      logger.debug(`Registered plugin: ${plugin.name}`);
+    }
   }
 
   getPlugin(name: string): DlerPlugin | undefined {
@@ -77,7 +79,9 @@ export function applyPlugins(
   for (const plugin of plugins) {
     try {
       plugin.setup(buildConfig);
-      logger.debug(`Applied plugin: ${plugin.name}`);
+      if (buildConfig.verbose) {
+        logger.debug(`Applied plugin: ${plugin.name}`);
+      }
     } catch (error) {
       logger.error(`Failed to apply plugin ${plugin.name}: ${error}`);
     }

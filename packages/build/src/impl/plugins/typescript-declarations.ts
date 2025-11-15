@@ -6,15 +6,18 @@ import { generateDeclarations } from "../dts-generator";
 import type {
   BuildOptions,
   BuildResult,
+  BunBuildConfig,
   DlerPlugin,
   PackageInfo,
 } from "../types";
 
 export const TypeScriptDeclarationsPlugin: DlerPlugin = {
   name: "typescript-declarations",
-  setup: () => {
+  setup: (buildConfig?: BunBuildConfig) => {
     // This plugin will be applied after build
-    logger.debug("TypeScript declarations plugin registered");
+    if (buildConfig?.verbose) {
+      logger.debug("TypeScript declarations plugin registered");
+    }
   },
   onBuildEnd: async (result: BuildResult, buildOptions?: BuildOptions) => {
     if (!result.success || result.skipped) {

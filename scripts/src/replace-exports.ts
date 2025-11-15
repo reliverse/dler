@@ -1,5 +1,3 @@
-#!/usr/bin/env bun
-
 import { resolve } from "node:path";
 import { replaceExportsInPackages } from "./impl/replace-exports";
 

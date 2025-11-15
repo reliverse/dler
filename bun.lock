@@ -12,7 +12,7 @@
     },
     "cli": {
       "name": "@reliverse/dler",
-      "version": "2.1.0",
+      "version": "2.1.13",
       "bin": {
         "dler": "dist/cli.js",
       },
@@ -33,7 +33,7 @@
         "semver": "catalog:",
       },
       "devDependencies": {
-        "@reliverse/dler-tsconfig": "workspace:*",
+        "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "@types/semver": "catalog:",
         "typescript": "catalog:",
@@ -60,6 +60,8 @@
         "@radix-ui/react-select": "catalog:",
         "@radix-ui/react-slot": "catalog:",
         "@reliverse/bleump": "catalog:",
+        "@reliverse/dler-launcher": "workspace:*",
+        "@reliverse/dler-prompt": "workspace:*",
         "@reliverse/pathkit": "catalog:",
         "@reliverse/reglob": "catalog:",
         "@reliverse/relico": "catalog:",
@@ -184,7 +186,7 @@
         "@reliverse/dler-prompt": "workspace:*",
       },
       "devDependencies": {
-        "@reliverse/dler-tsconfig": "workspace:*",
+        "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
       },
     },
@@ -195,7 +197,7 @@
         "native-app": "src/index.ts",
       },
       "devDependencies": {
-        "@reliverse/dler-tsconfig": "workspace:*",
+        "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
       },
     },
@@ -214,7 +216,7 @@
     },
     "packages/build": {
       "name": "@reliverse/dler-build",
-      "version": "2.1.0",
+      "version": "2.1.13",
       "dependencies": {
         "@reliverse/dler-config": "workspace:*",
         "@reliverse/dler-helpers": "workspace:*",
@@ -229,6 +231,7 @@
         "dts-bundle-generator": "catalog:",
         "esbuild": "catalog:",
         "jiti": "catalog:",
+        "lookpath": "catalog:",
         "mlly": "catalog:",
         "pkg-types": "catalog:",
         "semver": "catalog:",
@@ -236,19 +239,19 @@
       },
       "devDependencies": {
         "@microsoft/api-extractor": "catalog:",
-        "@reliverse/dler-tsconfig": "workspace:*",
+        "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
     "packages/bump": {
       "name": "@reliverse/dler-bump",
-      "version": "2.1.0",
+      "version": "2.1.13",
       "dependencies": {
         "semver": "catalog:",
       },
       "devDependencies": {
-        "@reliverse/dler-tsconfig": "workspace:*",
+        "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "@types/semver": "catalog:",
         "typescript": "catalog:",
@@ -256,23 +259,24 @@
     },
     "packages/colors": {
       "name": "@reliverse/dler-colors",
-      "version": "2.1.0",
+      "version": "2.1.13",
       "devDependencies": {
-        "@reliverse/dler-tsconfig": "workspace:*",
+        "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
     "packages/config": {
       "name": "@reliverse/dler-config",
-      "version": "2.1.0",
+      "version": "2.1.13",
       "dependencies": {
+        "@reliverse/dler-matcher": "workspace:*",
         "@reliverse/dler-pkg-tsc": "workspace:*",
         "c12": "catalog:",
         "semver": "catalog:",
       },
       "devDependencies": {
-        "@reliverse/dler-tsconfig": "workspace:*",
+        "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "@types/semver": "catalog:",
         "typescript": "catalog:",
@@ -280,20 +284,20 @@
     },
     "packages/helpers": {
       "name": "@reliverse/dler-helpers",
-      "version": "2.1.0",
+      "version": "2.1.13",
       "dependencies": {
         "@reliverse/dler-matcher": "workspace:*",
         "@reliverse/dler-pkg-tsc": "workspace:*",
       },
       "devDependencies": {
-        "@reliverse/dler-tsconfig": "workspace:*",
+        "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
     "packages/launcher": {
       "name": "@reliverse/dler-launcher",
-      "version": "2.1.0",
+      "version": "2.1.13",
       "dependencies": {
         "@reliverse/dler-colors": "workspace:*",
         "@reliverse/dler-helpers": "workspace:*",
@@ -301,61 +305,61 @@
         "@reliverse/dler-mapper": "workspace:*",
       },
       "devDependencies": {
-        "@reliverse/dler-tsconfig": "workspace:*",
+        "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
     "packages/logger": {
       "name": "@reliverse/dler-logger",
-      "version": "2.1.0",
+      "version": "2.1.13",
       "dependencies": {
         "@reliverse/dler-colors": "workspace:*",
       },
       "devDependencies": {
-        "@reliverse/dler-tsconfig": "workspace:*",
+        "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
     "packages/mapper": {
       "name": "@reliverse/dler-mapper",
-      "version": "2.1.0",
+      "version": "2.1.13",
       "devDependencies": {
-        "@reliverse/dler-tsconfig": "workspace:*",
+        "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
     "packages/matcher": {
       "name": "@reliverse/dler-matcher",
-      "version": "2.1.0",
+      "version": "2.1.13",
       "dependencies": {
         "zeptomatch": "catalog:",
       },
       "devDependencies": {
-        "@reliverse/dler-tsconfig": "workspace:*",
+        "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
     "packages/pkg-tsc": {
       "name": "@reliverse/dler-pkg-tsc",
-      "version": "2.1.0",
+      "version": "2.1.13",
       "dependencies": {
         "pkg-types": "catalog:",
       },
       "devDependencies": {
-        "@reliverse/dler-tsconfig": "workspace:*",
+        "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
     "packages/prompt": {
       "name": "@reliverse/dler-prompt",
-      "version": "2.1.0",
+      "version": "2.1.13",
       "devDependencies": {
-        "@reliverse/dler-tsconfig": "workspace:*",
+        "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "bun-plugin-dts": "catalog:",
         "typescript": "catalog:",
@@ -363,24 +367,25 @@
     },
     "packages/publish": {
       "name": "@reliverse/dler-publish",
-      "version": "2.1.0",
+      "version": "2.1.13",
       "dependencies": {
         "@reliverse/dler-build": "workspace:*",
         "@reliverse/dler-bump": "workspace:*",
+        "@reliverse/dler-colors": "workspace:*",
         "@reliverse/dler-config": "workspace:*",
         "@reliverse/dler-logger": "workspace:*",
         "@reliverse/dler-pkg-tsc": "workspace:*",
         "c12": "catalog:",
       },
       "devDependencies": {
-        "@reliverse/dler-tsconfig": "workspace:*",
+        "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
     "packages/spinner": {
       "name": "@reliverse/dler-spinner",
-      "version": "2.1.0",
+      "version": "2.1.13",
       "dependencies": {
         "@reliverse/dler-colors": "workspace:*",
         "cli-cursor": "catalog:",
@@ -394,13 +399,13 @@
         "strip-ansi": "catalog:",
       },
       "devDependencies": {
-        "@reliverse/dler-tsconfig": "workspace:*",
+        "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
     "packages/tsconfig": {
-      "name": "@reliverse/dler-tsconfig",
+      "name": "@p/tsconfig",
       "version": "0.1.0",
     },
     "scripts": {
@@ -410,7 +415,7 @@
         "@reliverse/dler-helpers": "workspace:*",
       },
       "devDependencies": {
-        "@reliverse/dler-tsconfig": "workspace:*",
+        "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
@@ -440,7 +445,7 @@
     "@reliverse/relinka": "^1.6.1",
     "@reliverse/rematch": "^1.1.0",
     "@reliverse/rempts": "^1.7.66",
-    "@reliverse/rse": "^2.0.0",
+    "@reliverse/rse": "^2.0.5",
     "@reliverse/runtime": "^1.0.3",
     "@rollup/plugin-alias": "^6.0.0",
     "@rollup/plugin-commonjs": "^29.0.0",
@@ -909,6 +914,8 @@
 
     "@oven/bun-windows-x64-baseline": ["@oven/bun-windows-x64-baseline@1.3.2", "", { "os": "win32", "cpu": "x64" }, "sha512-s00T99MjB+xLOWq+t+wVaVBrry+oBOZNiTJijt+bmkp/MJptYS3FGvs7a+nkjLNzoNDoWQcXgKew6AaHES37Bg=="],
 
+    "@p/tsconfig": ["@p/tsconfig@workspace:packages/tsconfig"],
+
     "@parcel/watcher": ["@parcel/watcher@2.5.1", "", { "dependencies": { "detect-libc": "^1.0.3", "is-glob": "^4.0.3", "micromatch": "^4.0.5", "node-addon-api": "^7.0.0" }, "optionalDependencies": { "@parcel/watcher-android-arm64": "2.5.1", "@parcel/watcher-darwin-arm64": "2.5.1", "@parcel/watcher-darwin-x64": "2.5.1", "@parcel/watcher-freebsd-x64": "2.5.1", "@parcel/watcher-linux-arm-glibc": "2.5.1", "@parcel/watcher-linux-arm-musl": "2.5.1", "@parcel/watcher-linux-arm64-glibc": "2.5.1", "@parcel/watcher-linux-arm64-musl": "2.5.1", "@parcel/watcher-linux-x64-glibc": "2.5.1", "@parcel/watcher-linux-x64-musl": "2.5.1", "@parcel/watcher-win32-arm64": "2.5.1", "@parcel/watcher-win32-ia32": "2.5.1", "@parcel/watcher-win32-x64": "2.5.1" } }, "sha512-dfUnCxiN9H4ap84DvD2ubjw+3vUNpstxa0TneY/Paat8a3R4uQZDLSvWjmznAY/DoahqTHl9V46HF/Zs3F29pg=="],
 
     "@parcel/watcher-android-arm64": ["@parcel/watcher-android-arm64@2.5.1", "", { "os": "android", "cpu": "arm64" }, "sha512-KF8+j9nNbUN8vzOFDpRMsaKBHZ/mcjEjMToVMJOhTozkDonQFFrRcfdLWn6yWKCmJKmdVxSgHiYvTCef4/qcBA=="],
@@ -1058,8 +1065,6 @@
     "@reliverse/dler-scripts": ["@reliverse/dler-scripts@workspace:scripts"],
 
     "@reliverse/dler-spinner": ["@reliverse/dler-spinner@workspace:packages/spinner"],
-
-    "@reliverse/dler-tsconfig": ["@reliverse/dler-tsconfig@workspace:packages/tsconfig"],
 
     "@reliverse/dler-v1": ["@reliverse/dler-v1@workspace:deprecated"],
 

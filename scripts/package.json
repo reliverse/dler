@@ -13,7 +13,7 @@
     "@reliverse/dler-helpers": "workspace:*"
   },
   "devDependencies": {
-    "@reliverse/dler-tsconfig": "workspace:*",
+    "@p/tsconfig": "workspace:*",
     "typescript": "catalog:",
     "@types/bun": "catalog:"
   }

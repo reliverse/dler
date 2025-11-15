@@ -2,7 +2,7 @@
   "name": "@reliverse/dler-bump",
   "description": "Bump utils for @reliverse/dler",
   "author": "reliverse",
-  "version": "2.1.0",
+  "version": "2.1.14",
   "private": false,
   "type": "module",
   "exports": {
@@ -27,7 +27,7 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "@reliverse/dler-tsconfig": "workspace:*",
+    "@p/tsconfig": "workspace:*",
     "@types/semver": "catalog:",
     "typescript": "catalog:",
     "@types/bun": "catalog:"

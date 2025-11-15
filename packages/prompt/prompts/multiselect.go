@@ -190,7 +190,7 @@ func Multiselect(jsonData, headerText, footerText string, perPage int) string {
 	json.Unmarshal([]byte(jsonData), &item)
 	data := []interface{}{}
 	for _, val := range item {
-		data = append(data, ListItem{Text: val.Text, Description: val.Description, Disabled: val.Disabled})
+		data = append(data, ListItem{Value: val.Value, Label: val.Label, Description: val.Description, Disabled: val.Disabled})
 	}
 
 	// Find first non-disabled item to start on
@@ -236,14 +236,14 @@ func Multiselect(jsonData, headerText, footerText string, perPage int) string {
 			}
 			if disabled {
 				if t.Description != "" {
-					return common.FontColor(fmt.Sprintf("%s [%d] %s (%s) (disabled)", prefix, gdIndex+1, t.Text, t.Description), "240")
+					return common.FontColor(fmt.Sprintf("%s [%d] %s (%s) (disabled)", prefix, gdIndex+1, t.Label, t.Description), "240")
 				}
-				return common.FontColor(fmt.Sprintf("%s [%d] %s (disabled)", prefix, gdIndex+1, t.Text), "240")
+				return common.FontColor(fmt.Sprintf("%s [%d] %s (disabled)", prefix, gdIndex+1, t.Label), "240")
 			}
 			if t.Description != "" {
-				return common.FontColor(fmt.Sprintf("%s [%d] %s (%s)", prefix, gdIndex+1, t.Text, t.Description), selector.ColorSelected)
+				return common.FontColor(fmt.Sprintf("%s [%d] %s (%s)", prefix, gdIndex+1, t.Label, t.Description), selector.ColorSelected)
 			}
-			return common.FontColor(fmt.Sprintf("%s [%d] %s", prefix, gdIndex+1, t.Text), selector.ColorSelected)
+			return common.FontColor(fmt.Sprintf("%s [%d] %s", prefix, gdIndex+1, t.Label), selector.ColorSelected)
 		},
 		UnSelectedFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
 			t := obj.(ListItem)
@@ -257,14 +257,14 @@ func Multiselect(jsonData, headerText, footerText string, perPage int) string {
 			}
 			if disabled {
 				if t.Description != "" {
-					return common.FontColor(fmt.Sprintf("%s  %d. %s (%s) (disabled)", prefix, gdIndex+1, t.Text, t.Description), "240")
+					return common.FontColor(fmt.Sprintf("%s  %d. %s (%s) (disabled)", prefix, gdIndex+1, t.Label, t.Description), "240")
 				}
-				return common.FontColor(fmt.Sprintf("%s  %d. %s (disabled)", prefix, gdIndex+1, t.Text), "240")
+				return common.FontColor(fmt.Sprintf("%s  %d. %s (disabled)", prefix, gdIndex+1, t.Label), "240")
 			}
 			if t.Description != "" {
-				return common.FontColor(fmt.Sprintf("%s  %d. %s (%s)", prefix, gdIndex+1, t.Text, t.Description), selector.ColorUnSelected)
+				return common.FontColor(fmt.Sprintf("%s  %d. %s (%s)", prefix, gdIndex+1, t.Label, t.Description), selector.ColorUnSelected)
 			}
-			return common.FontColor(fmt.Sprintf("%s  %d. %s", prefix, gdIndex+1, t.Text), selector.ColorUnSelected)
+			return common.FontColor(fmt.Sprintf("%s  %d. %s", prefix, gdIndex+1, t.Label), selector.ColorUnSelected)
 		},
 		FooterFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
 			footer := footerText

@@ -1,12 +1,14 @@
 // packages/build/src/impl/plugins/performance.ts
 
 import { logger } from "@reliverse/dler-logger";
-import type { BuildResult, DlerPlugin } from "../types";
+import type { BuildResult, BunBuildConfig, DlerPlugin } from "../types";
 
 export const PerformancePlugin: DlerPlugin = {
   name: "performance",
-  setup: () => {
-    logger.debug("Performance monitoring plugin registered");
+  setup: (buildConfig?: BunBuildConfig) => {
+    if (buildConfig?.verbose) {
+      logger.debug("Performance monitoring plugin registered");
+    }
   },
   onBuildEnd: async (result: BuildResult) => {
     if (!result.success || result.skipped) {

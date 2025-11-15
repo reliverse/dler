@@ -1,13 +1,10 @@
-import {
-  defineCmd,
-  defineCmdArgs,
-  defineCmdCfg,
-} from "@reliverse/dler-launcher";
+import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
 import { logger } from "@reliverse/dler-logger";
 import {
   askQuestion,
   confirmPrompt,
   multiselectPrompt,
+  type SelectionItem,
   selectPrompt,
   spinnerPrompt,
 } from "@reliverse/dler-prompt";
@@ -22,8 +19,33 @@ interface Todo {
 const todos: Todo[] = [];
 let nextId = 1;
 
-export default defineCmd(
-  async (args) => {
+export default defineCommand({
+  meta: {
+    name: "todo",
+    description: "Interactive todo list manager",
+    examples: [
+      "cli-app todo --action add",
+      "cli-app todo --action list",
+      "cli-app todo --action complete",
+      "cli-app todo --action delete",
+      "cli-app todo --action clear",
+    ],
+  },
+  args: defineArgs({
+    action: {
+      type: "string",
+      description: "Action to perform",
+      required: true,
+      validate: (value: string) => {
+        const validActions = ["add", "list", "complete", "delete", "clear"];
+        if (!validActions.includes(value)) {
+          return `Action must be one of: ${validActions.join(", ")}`;
+        }
+        return true;
+      },
+    },
+  }),
+  run: async ({ args }) => {
     if (args.action === "add") {
       const task = await askQuestion("Enter a new task:");
       if (!task.trim()) {
@@ -32,10 +54,10 @@ export default defineCmd(
       }
 
       const priorityOptions = [
-        { id: "low", label: "low" },
-        { id: "medium", label: "medium" },
-        { id: "high", label: "high" },
-      ];
+        { value: "low", label: "low" },
+        { value: "medium", label: "medium" },
+        { value: "high", label: "high", description: "High priority" },
+      ] satisfies SelectionItem[];
       const priorityResult = await selectPrompt({
         title: "Select priority:",
         options: priorityOptions,
@@ -44,7 +66,7 @@ export default defineCmd(
         logger.error("Priority selection cancelled");
         return;
       }
-      const priority = priorityOptions[priorityResult.selectedIndex]?.id as
+      const priority = priorityOptions[priorityResult.selectedIndex]?.value as
         | "low"
         | "medium"
         | "high";
@@ -90,7 +112,7 @@ export default defineCmd(
       }
 
       const taskOptions = incompleteTodos.map((t) => ({
-        id: String(t.id),
+        value: String(t.id),
         label: `[${t.id}] ${t.task} (${t.priority})`,
       }));
 
@@ -111,7 +133,7 @@ export default defineCmd(
 
       const completedTasks: Todo[] = [];
       for (const idx of selectedResult.selectedIndices) {
-        const taskId = taskOptions[idx]?.id;
+        const taskId = taskOptions[idx]?.value;
         if (taskId) {
           const id = Number.parseInt(taskId, 10);
           const todo = todos.find((t) => t.id === id);
@@ -136,7 +158,7 @@ export default defineCmd(
       }
 
       const taskOptions = todos.map((t) => ({
-        id: String(t.id),
+        value: String(t.id),
         label: `[${t.id}] ${t.task} ${t.completed ? "(completed)" : ""}`,
       }));
 
@@ -170,7 +192,7 @@ export default defineCmd(
 
       const deletedTasks: Todo[] = [];
       for (const idx of selectedResult.selectedIndices) {
-        const taskId = taskOptions[idx]?.id;
+        const taskId = taskOptions[idx]?.value;
         if (taskId) {
           const id = Number.parseInt(taskId, 10);
           const index = todos.findIndex((t) => t.id === id);
@@ -214,29 +236,4 @@ export default defineCmd(
       logger.success(`🗑️  Cleared ${count} task(s).`);
     }
   },
-  defineCmdArgs({
-    action: {
-      type: "string",
-      description: "Action to perform",
-      required: true,
-      validate: (value) => {
-        const validActions = ["add", "list", "complete", "delete", "clear"];
-        if (!validActions.includes(value)) {
-          return `Action must be one of: ${validActions.join(", ")}`;
-        }
-        return true;
-      },
-    },
-  }),
-  defineCmdCfg({
-    name: "todo",
-    description: "Interactive todo list manager",
-    examples: [
-      "cli-app todo --action add",
-      "cli-app todo --action list",
-      "cli-app todo --action complete",
-      "cli-app todo --action delete",
-      "cli-app todo --action clear",
-    ],
-  }),
-);
+});

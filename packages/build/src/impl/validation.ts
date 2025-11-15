@@ -363,17 +363,6 @@ export function validateBuildOptions(options: BuildOptions): ValidationError[] {
     }
   }
 
-  // Validate throw option - warn about future default change
-  if (options.throw === false) {
-    errors.push({
-      field: "throw",
-      message:
-        "throw: false will be deprecated in Bun 1.2 (will default to true)",
-      suggestion:
-        "Consider removing --throw false or explicitly set --throw true",
-    });
-  }
-
   // Validate naming options
   if (options.naming) {
     if (options.naming.chunk && !isValidNamingPattern(options.naming.chunk)) {

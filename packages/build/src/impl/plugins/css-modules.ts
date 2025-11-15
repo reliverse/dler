@@ -21,6 +21,8 @@ export const CSSModulesPlugin: DlerPlugin = {
 
     buildConfig.define["__CSS_MODULES__"] = "true";
 
-    logger.debug("CSS modules plugin applied");
+    if (buildConfig.verbose) {
+      logger.debug("CSS modules plugin applied");
+    }
   },
 };

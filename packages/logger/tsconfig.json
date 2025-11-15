@@ -1,5 +1,5 @@
 {
-  "extends": "@reliverse/dler-tsconfig/strict.json",
+  "extends": "@p/tsconfig/strict.json",
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "./dist",

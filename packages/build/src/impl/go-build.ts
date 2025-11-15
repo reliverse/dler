@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import type { GoBuildOptions } from "@reliverse/dler-config/impl/build";
 import { logger } from "@reliverse/dler-logger";
+import { lookpath } from "lookpath";
 
 // Target platforms: [GOOS, GOARCH, outputSuffix, platformName]
 // platformName is what Node.js process.platform returns
@@ -20,6 +21,62 @@ const DEFAULT_TARGETS = [
 interface GoBuildResult {
   success: boolean;
   errors: string[];
+}
+
+interface DockerCheckResult {
+  available: boolean;
+  reason?: string;
+}
+
+/**
+ * Check if Docker is installed and running
+ */
+async function checkDockerAvailable(): Promise<DockerCheckResult> {
+  // Check if docker command exists
+  const dockerPath = await lookpath("docker");
+  if (!dockerPath) {
+    return {
+      available: false,
+      reason: "Docker is not installed or not in PATH",
+    };
+  }
+
+  // Check if Docker daemon is running by trying to run docker version
+  try {
+    const proc = Bun.spawnSync(["docker", "version"], {
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+
+    if (proc.exitCode !== 0) {
+      const stderr = proc.stderr?.toString() || "";
+      // Check for common Docker daemon not running errors
+      if (
+        stderr.includes("Cannot connect to the Docker daemon") ||
+        stderr.includes("Is the docker daemon running") ||
+        stderr.includes("dockerDesktopLinuxEngine") ||
+        stderr.includes("The system cannot find the file specified")
+      ) {
+        return {
+          available: false,
+          reason: "Docker daemon is not running",
+        };
+      }
+      return {
+        available: false,
+        reason: `Docker check failed: ${stderr.trim()}`,
+      };
+    }
+
+    return { available: true };
+  } catch (error) {
+    return {
+      available: false,
+      reason: `Error checking Docker: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    };
+  }
 }
 
 /**
@@ -145,35 +202,35 @@ async function shouldRebuildGo(
         continue;
       }
 
-      // Check if binary is older than any Go file
+      // Check if Go binary is older than any Go file
       const binaryStats = await stat(binaryPath);
       if (binaryStats.mtimeMs < newestGoFileTime) {
         outdatedBinaries.push(target);
       }
     }
 
-    // Rebuild if any binaries are missing or outdated
+    // Rebuild if any Go binaries are missing or outdated
     if (missingBinaries.length > 0) {
       return {
         rebuild: true,
-        reason: `Missing binaries for: ${missingBinaries.join(", ")}`,
+        reason: `Missing Go binaries for: ${missingBinaries.join(", ")}`,
       };
     }
 
     if (outdatedBinaries.length > 0) {
       return {
         rebuild: true,
-        reason: `Outdated binaries for: ${outdatedBinaries.join(", ")}`,
+        reason: `Outdated Go binaries for: ${outdatedBinaries.join(", ")}`,
       };
     }
 
     // All required binaries exist and are up-to-date
-    return { rebuild: false, reason: "All binaries are up-to-date" };
+    return { rebuild: false, reason: "All Go binaries are up-to-date" };
   } catch (error) {
     // On error, rebuild to be safe
     return {
       rebuild: true,
-      reason: `Error checking binaries: ${
+      reason: `Error checking Go binaries: ${
         error instanceof Error ? error.message : String(error)
       }`,
     };
@@ -287,6 +344,15 @@ async function buildWithXgo(
     const error = `xgo not found at ${XGO}. Please install: go install github.com/crazy-max/xgo@latest`;
     logger.error(`Error: ${error}`);
     return { success: false, errors: [error] };
+  }
+
+  // Check if Docker is available before attempting build
+  const dockerCheck = await checkDockerAvailable();
+  if (!dockerCheck.available) {
+    logger.warn(
+      `⚠️  Skipping Go build: Docker is not installed or not running. Install Docker Desktop and ensure it's running to build Go binaries.`,
+    );
+    return { success: true, errors: [] };
   }
 
   logger.info("Compiling native binaries with xgo...");

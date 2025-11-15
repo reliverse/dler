@@ -5,6 +5,7 @@ import {
   bumpVersion,
   getNextVersion,
 } from "@reliverse/dler-bump";
+import { re } from "@reliverse/dler-colors";
 import type { BaseConfig } from "@reliverse/dler-config/impl/core";
 import {
   filterPackages,
@@ -94,6 +95,7 @@ export interface PublishOptions {
   noSummary?: boolean;
   bunRegistry?: string;
   skipTip2FA?: boolean;
+  filter?: string | string[];
 }
 
 export type {
@@ -771,7 +773,9 @@ async function preparePackageForPublishing(
       }
       if (options.verbose) {
         logger.log(
-          `  Bumping version from ${pkg.version} to ${bumpResult.bumped} (${options.bump})`,
+          re.blue(
+            `  Bumping version from ${re.bold(pkg.version)} to ${re.bold(re.green(bumpResult.bumped))} (${options.bump})`,
+          ),
         );
       }
       pkg.version = bumpResult.bumped;
@@ -844,7 +848,9 @@ async function preparePackageForPublishing(
             if (workspaceVersion) {
               if (options.verbose) {
                 logger.log(
-                  `  Resolving workspace dependency ${depName}: ${version} -> ${workspaceVersion}`,
+                  re.blue(
+                    `  Resolving workspace dependency ${re.bold(depName)}: ${version} -> ${re.green(workspaceVersion)}`,
+                  ),
                 );
               }
               pkg.dependencies[depName] = workspaceVersion;
@@ -852,7 +858,7 @@ async function preparePackageForPublishing(
               // If can't resolve, remove the dependency
               if (options.verbose) {
                 logger.warn(
-                  `  ⚠️  Cannot resolve workspace dependency ${depName}, removing it`,
+                  `  ⚠️  Cannot resolve workspace dependency ${re.bold(depName)}, removing it`,
                 );
               }
               delete pkg.dependencies[depName];
@@ -867,7 +873,9 @@ async function preparePackageForPublishing(
             if (catalogVersion) {
               if (options.verbose) {
                 logger.log(
-                  `  Resolving catalog dependency ${depName}: ${version} -> ${catalogVersion}`,
+                  re.blue(
+                    `  Resolving catalog dependency ${re.bold(depName)}: ${version} -> ${re.green(catalogVersion)}`,
+                  ),
                 );
               }
               pkg.dependencies[depName] = catalogVersion;
@@ -875,7 +883,7 @@ async function preparePackageForPublishing(
               // If can't resolve, remove the dependency
               if (options.verbose) {
                 logger.warn(
-                  `  ⚠️  Cannot resolve catalog dependency ${depName}, removing it`,
+                  `  ⚠️  Cannot resolve catalog dependency ${re.bold(depName)}, removing it`,
                 );
               }
               delete pkg.dependencies[depName];
@@ -970,7 +978,11 @@ export async function publishPackage(
       }
       workspacePackages = await getWorkspacePackages(monorepoRoot);
       if (options.verbose) {
-        logger.log(`  Found ${workspacePackages.length} workspace packages`);
+        logger.log(
+          re.blue(
+            `  Found ${re.bold(workspacePackages.length)} workspace packages`,
+          ),
+        );
       }
     } else if (options.verbose) {
       logger.debug("Not in a monorepo (no root found)");
@@ -1064,7 +1076,9 @@ export async function publishPackage(
               copiedFiles.push(targetPath);
 
               if (options.verbose) {
-                logger.log(`  Copied ${fileName} from monorepo root`);
+                logger.log(
+                  re.blue(`  Copied ${re.bold(fileName)} from monorepo root`),
+                );
                 logger.debug(
                   `Copied ${fileName} from ${sourcePath} to ${targetPath}`,
                 );
@@ -1235,7 +1249,13 @@ export async function publishPackage(
       ) {
         hasShown2FATip = true;
         logger.log(
-          "\n💡 2FA Tip: If you have 2FA enabled on npm and are prompted for a one-time password,\n   check the box 'Do not challenge npm publish operations from your IP address for the next 5 minutes'\n   on the npm login page to avoid repeated authentication prompts during publishing.\n   Use --skip-tip-2fa to skip this message.\n",
+          `\n${re.cyan.bold("💡 2FA Authentication Tip")}\n` +
+            `If you have 2FA enabled on npm, you may be prompted for a one-time password during publishing (on each publish attempt).\n` +
+            `${re.bold("Quick fix:")}\n` +
+            `  When prompted, check the box: "Do not challenge npm publish operations from your IP address for the next 5 minutes"\n` +
+            `${re.bold("Permanent solution:")}\n` +
+            `  https://npmjs.com → Avatar → Account → Modify 2FA → Uncheck "Require two-factor authentication for write actions"\n\n` +
+            `${re.bold(`Use --skip-tip-2fa to skip this information and the 3s wait.\n\n`)}`,
         );
         // Wait 3 seconds to give user time to read the message
         await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -1309,11 +1329,17 @@ export async function publishPackage(
 
         // Display custom log message (npm output is captured internally but never displayed)
         if (options.verbose) {
-          logger.log(`✓ Published ${packageName}@${version || "unknown"}`);
+          logger.log(
+            re.green(
+              `✓ Published ${re.bold(packageName)}@${re.bold(version || "unknown")}`,
+            ),
+          );
         } else {
           // Minimal output in normal mode
           logger.log(
-            `✓ Published ${packageName}${version ? `@${version}` : ""}`,
+            re.green(
+              `✓ Published ${re.bold(packageName)}${version ? `@${re.bold(version)}` : ""}`,
+            ),
           );
         }
       } catch (error) {
@@ -1334,7 +1360,7 @@ export async function publishPackage(
         logger.debug("JSR publishing not implemented, skipping");
       }
       logger.warn(
-        `⚠️  JSR publishing not yet implemented for ${packageName}. Skipping JSR publish.`,
+        `⚠️  JSR publishing not yet implemented for ${re.bold(packageName)}. Skipping JSR publish.`,
       );
     }
 
@@ -1344,7 +1370,7 @@ export async function publishPackage(
         logger.debug("Vercel publishing not implemented, skipping");
       }
       logger.warn(
-        `⚠️  Vercel publishing not yet implemented for ${packageName}. Skipping Vercel publish.`,
+        `⚠️  Vercel publishing not yet implemented for ${re.bold(packageName)}. Skipping Vercel publish.`,
       );
       return {
         success: true,
@@ -1388,7 +1414,7 @@ export async function publishPackage(
     }
 
     // Restore original dependencies and exports if they were modified
-    // Note: We preserve the bumped version even on error, so users can retry without re-bumping
+    // We preserve the bumped version even on error, so users can retry without re-bumping
     if (
       originalDependencies ||
       originalDevDependencies ||
@@ -1424,7 +1450,9 @@ export async function publishPackage(
         await Bun.file(copiedFile).unlink();
         if (options.verbose) {
           const fileName = copiedFile.split(/[/\\]/).pop();
-          logger.log(`  Removed copied file: ${fileName}`);
+          logger.log(
+            re.blue(`  Removed copied file: ${re.bold(fileName || "")}`),
+          );
           logger.debug(`Removed copied file: ${copiedFile}`);
         }
       } catch (error) {
@@ -1450,9 +1478,15 @@ export async function publishAllPackages(
   try {
     if (options.verbose) {
       logger.debug(`Starting publishAllPackages, cwd: ${cwd ?? "current"}`);
-      logger.debug(
-        `Ignore patterns: ${ignore ? (Array.isArray(ignore) ? ignore.join(", ") : ignore) : "none"}`,
-      );
+      if (options.filter) {
+        logger.debug(
+          `Filter patterns: ${Array.isArray(options.filter) ? options.filter.join(", ") : options.filter}`,
+        );
+      } else {
+        logger.debug(
+          `Ignore patterns: ${ignore ? (Array.isArray(ignore) ? ignore.join(", ") : ignore) : "none"}`,
+        );
+      }
     }
 
     // Load dler.ts configuration
@@ -1471,15 +1505,26 @@ export async function publishAllPackages(
     }
 
     // In single-repo mode, skip filterPackages since ignore would leave nothing to publish
-    const isSingleRepo = packages.length === 1 && !ignore;
+    // But if filter is provided, always apply it
+    const isSingleRepo = packages.length === 1 && !ignore && !options.filter;
     const filteredPackages = isSingleRepo
       ? packages
-      : filterPackages(packages, ignore);
+      : filterPackages(packages, ignore, options.filter);
 
     if (options.verbose) {
       logger.debug(
         `After filtering: ${filteredPackages.length} package(s) (single-repo mode: ${isSingleRepo})`,
       );
+      if (options.filter) {
+        const filterPatterns = Array.isArray(options.filter)
+          ? options.filter
+          : [options.filter];
+        logger.info(
+          re.blue(
+            `   Filtering to ${re.bold(filteredPackages.length)} packages matching: ${re.bold(filterPatterns.join(", "))}`,
+          ),
+        );
+      }
     }
 
     if (filteredPackages.length === 0) {
@@ -1493,7 +1538,11 @@ export async function publishAllPackages(
       };
     }
 
-    logger.info(`Found ${filteredPackages.length} package(s) to publish`);
+    logger.info(
+      re.blue(
+        `Found ${re.bold(filteredPackages.length)} package(s) to publish`,
+      ),
+    );
 
     const results: PublishResult[] = [];
     const concurrency = options.concurrency || 3;
@@ -1509,7 +1558,9 @@ export async function publishAllPackages(
       // undefined means no config exists, so enable by default
       if (packageConfig?.enable === false) {
         if (options.verbose) {
-          logger.info(`Skipping ${pkg.name} (disabled in config)`);
+          logger.info(
+            re.yellow(`Skipping ${re.bold(pkg.name)} (disabled in config)`),
+          );
           logger.debug(
             `Package config for ${pkg.name}: ${JSON.stringify(packageConfig)}`,
           );
@@ -1536,13 +1587,17 @@ export async function publishAllPackages(
       };
     }
 
-    logger.info(`Publishing ${packagesToPublish.length} enabled package(s)`);
+    logger.info(
+      re.blue(
+        `Publishing ${re.bold(packagesToPublish.length)} enabled package(s)`,
+      ),
+    );
 
     // Pre-bump all packages to calculate new versions before resolving dependencies
     // This ensures that workspace dependencies resolve to the bumped versions
     const bumpedVersions = new Map<string, string>();
     if (options.verbose) {
-      logger.info("Pre-bumping package versions...");
+      logger.info(re.blue("Pre-bumping package versions..."));
     }
 
     for (const pkg of packagesToPublish) {
@@ -1562,7 +1617,11 @@ export async function publishAllPackages(
           if (nextVersion) {
             bumpedVersions.set(pkg.name, nextVersion);
             if (options.verbose) {
-              logger.log(`  ${pkg.name}: ${pkg.pkg.version} -> ${nextVersion}`);
+              logger.log(
+                re.blue(
+                  `  ${re.bold(pkg.name)}: ${pkg.pkg.version} -> ${re.green.bold(nextVersion)}`,
+                ),
+              );
             }
           } else if (options.verbose) {
             logger.debug(`Failed to calculate next version for ${pkg.name}`);
@@ -1629,7 +1688,7 @@ export async function publishAllPackages(
         }
 
         if (mergedOptions.verbose) {
-          logger.info(`Publishing ${pkg.name}...`);
+          logger.info(re.blue(`Publishing ${re.bold(pkg.name)}...`));
         }
         return await publishPackage(pkg.path, mergedOptions, bumpedVersions);
       });
@@ -1685,8 +1744,8 @@ export async function publishAllPackages(
       );
     }
     logger.error(
-      "Failed to publish packages:",
-      error instanceof Error ? error.message : String(error),
+      re.red("Failed to publish packages:"),
+      re.red(error instanceof Error ? error.message : String(error)),
     );
     return {
       results: [],

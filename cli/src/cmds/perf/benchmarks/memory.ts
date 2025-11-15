@@ -162,8 +162,6 @@ export const getMemoryInfo = (): {
 } => {
   const usage = process.memoryUsage();
 
-  // Note: This is a simplified calculation
-  // In reality, getting accurate system memory info is more complex
   const total = usage.rss * 4; // Rough estimate
   const used = usage.rss;
   const free = total - used;

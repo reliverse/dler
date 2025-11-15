@@ -1,5 +1,3 @@
-#!/usr/bin/env bun
-
 // Simple console logger for the example
 const logger = {
   log: (message: string) => console.log(message),

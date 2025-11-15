@@ -24,7 +24,7 @@
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
-    "@reliverse/dler-tsconfig": "workspace:*",
+    "@p/tsconfig": "workspace:*",
     "@types/bun": "catalog:"
   }
 }

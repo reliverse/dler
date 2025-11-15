@@ -52,6 +52,19 @@ func (m *inputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 	}
 
+	// Handle space key presses - convert KeySpace to KeyRunes
+	if keyMsg, ok := msg.(tea.KeyMsg); ok {
+		if keyMsg.Type == tea.KeySpace {
+			// Convert space key to rune message
+			spaceKeyMsg := tea.KeyMsg{
+				Type:  tea.KeyRunes,
+				Runes: []rune{' '},
+			}
+			_, cmd := m.input.Update(spaceKeyMsg)
+			return m, cmd
+		}
+	}
+
 	_, cmd := m.input.Update(msg)
 	return m, cmd
 }

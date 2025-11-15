@@ -44,27 +44,33 @@ const getArgHelp = (name: string, def: CmdArgsSchema[string]): string => {
     "default" in def && def.default !== undefined
       ? re.gray(` (default: ${def.default})`)
       : "";
+  const allowedVal =
+    "allowed" in def && def.allowed && def.allowed.length > 0
+      ? re.gray(
+          ` (allowed: ${def.allowed.map((v) => (typeof v === "string" ? `"${v}"` : String(v))).join(", ")})`,
+        )
+      : "";
 
-  return `  ${argName} ${argType}\n      ${desc}${defaultVal}`;
+  return `  ${argName} ${argType}\n      ${desc}${defaultVal}${allowedVal}`;
 };
 
 export const generateCommandHelp = async (
   definition: CmdDefinition,
 ): Promise<string> => {
-  const { cfg, args } = definition;
+  const { meta, args } = definition;
 
   const lines: string[] = [
     HELP_TEMPLATES.commandHeader(
-      cfg.name,
-      cfg.description || "No description available",
+      meta.name,
+      meta.description || "No description available",
     ),
   ];
 
-  if (cfg.version) {
-    lines.push(HELP_TEMPLATES.version(cfg.version));
+  if (meta.version) {
+    lines.push(HELP_TEMPLATES.version(meta.version));
   }
 
-  lines.push(HELP_TEMPLATES.usage(cfg.name));
+  lines.push(HELP_TEMPLATES.usage(meta.name));
 
   if (Object.keys(args).length > 0) {
     lines.push(HELP_TEMPLATES.optionsHeader);
@@ -76,9 +82,9 @@ export const generateCommandHelp = async (
     lines.push(HELP_TEMPLATES.requiredNote);
   }
 
-  if (cfg.examples && cfg.examples.length > 0) {
+  if (meta.examples && meta.examples.length > 0) {
     lines.push(HELP_TEMPLATES.examplesHeader);
-    for (const example of cfg.examples) {
+    for (const example of meta.examples) {
       lines.push(`  ${re.cyan(example)}`);
     }
   }
