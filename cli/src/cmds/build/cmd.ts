@@ -22,8 +22,29 @@ const buildCmd = async (args: any): Promise<void> => {
       process.exit(1);
     }
 
+    // Transform Go build CLI args into nested go object
+    const goOptions: any = {};
+    if (args.goProvider) goOptions.provider = args.goProvider;
+    if (args.goTargets) {
+      // Support comma-separated targets string
+      goOptions.targets = args.goTargets;
+    }
+    if (args.goOutputDir) goOptions.outputDir = args.goOutputDir;
+    if (args.goOutputName) goOptions.outputName = args.goOutputName;
+    if (args.goBuildMode) goOptions.buildMode = args.goBuildMode;
+    if (args.goLdflags) goOptions.ldflags = args.goLdflags;
+    if (args.goMainFile) goOptions.mainFile = args.goMainFile;
+    if (args.goVersion) goOptions.goVersion = args.goVersion;
+    if (args.goEnable !== undefined) goOptions.enable = args.goEnable;
+
+    // Construct build options with Go config if any Go options were provided
+    const buildOptionsInput = { ...args } as any;
+    if (Object.keys(goOptions).length > 0) {
+      buildOptionsInput.go = goOptions;
+    }
+
     // Apply presets and validate options
-    const buildOptions = applyPresets(args as any as BuildOptions);
+    const buildOptions = applyPresets(buildOptionsInput as BuildOptions);
     validateAndExit(buildOptions);
 
     const results = await runBuildOnAllPackages(args.ignore, args.cwd, {
@@ -456,6 +477,46 @@ const buildCmdArgs = defineCmdArgs({
     description:
       "Allow building private packages (supports wildcards like @reliverse/* to build all packages starting with @reliverse/)",
   },
+  // Go build options
+  goEnable: {
+    type: "boolean",
+    description: "Enable Go build (default: auto-detected if .go files exist)",
+  },
+  goProvider: {
+    type: "string",
+    description:
+      "Go build provider: xgo (cross-compilation) or native (default: xgo)",
+  },
+  goTargets: {
+    type: "string",
+    description:
+      "Go build targets (e.g., 'linux/amd64' or 'linux/amd64,windows/amd64')",
+  },
+  goOutputDir: {
+    type: "string",
+    description: "Go binary output directory (default: release)",
+  },
+  goOutputName: {
+    type: "string",
+    description: "Go binary name prefix (default: derived from package name)",
+  },
+  goBuildMode: {
+    type: "string",
+    description:
+      "Go build mode: c-shared, c-archive, or exe (default: c-shared)",
+  },
+  goLdflags: {
+    type: "string",
+    description: "Go linker flags (default: '-s -w')",
+  },
+  goMainFile: {
+    type: "string",
+    description: "Main Go file to build (default: main.go)",
+  },
+  goVersion: {
+    type: "string",
+    description: "Go version for xgo (default: 1.20.3)",
+  },
 });
 
 const buildCmdCfg = defineCmdCfg({
@@ -591,6 +652,24 @@ const buildCmdCfg = defineCmdCfg({
     "# Note: dts-bundle-generator is the default provider for better bundling",
     "# mkdist provider offers VFS-based processing with automatic relative import resolution",
     "# Use --dtsProvider to override the default provider",
+    "",
+    "# Go Build Examples:",
+    "dler build --go-provider xgo",
+    "dler build --go-provider native",
+    "dler build --go-targets linux/amd64",
+    "dler build --go-targets 'linux/amd64,windows/amd64,darwin/arm64'",
+    "dler build --go-output-dir release",
+    "dler build --go-output-name my-binary",
+    "dler build --go-build-mode c-shared",
+    "dler build --go-ldflags '-s -w -X main.version=1.0.0'",
+    "dler build --go-main-file main.go",
+    "dler build --go-version 1.21.0",
+    "dler build --go-enable",
+    "",
+    "# Note: Go build is auto-detected if .go files exist in the package",
+    "# Use --go-enable to explicitly enable, or configure in dler.ts",
+    "# Use --go-provider xgo for cross-compilation (requires xgo installed)",
+    "# Use --go-provider native for native builds (limited cross-compilation)",
   ],
 });
 

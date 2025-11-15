@@ -8,6 +8,7 @@ import {
   confirmPrompt,
   multiselectPrompt,
   selectPrompt,
+  spinnerPrompt,
 } from "@reliverse/dler-prompt";
 
 export default defineCmd(
@@ -15,52 +16,84 @@ export default defineCmd(
     logger.log("⚙️  Project Setup Wizard\n");
 
     // Select project type
-    const projectType = await selectPrompt({
+    const projectTypeOptions = [
+      { id: "web-app", label: "Web Application" },
+      { id: "cli-tool", label: "CLI Tool" },
+      { id: "library", label: "Library" },
+      { id: "api-server", label: "API Server" },
+      { id: "desktop-app", label: "Desktop App" },
+    ];
+    const projectTypeResult = await selectPrompt({
       title: "What type of project are you setting up?",
-      options: [
-        { value: "web-app", label: "Web Application" },
-        { value: "cli-tool", label: "CLI Tool" },
-        { value: "library", label: "Library" },
-        { value: "api-server", label: "API Server" },
-        { value: "desktop-app", label: "Desktop App" },
-      ],
+      options: projectTypeOptions,
     });
+    if (projectTypeResult.error || projectTypeResult.selectedIndex === null) {
+      logger.error("Selection cancelled");
+      return;
+    }
+    const projectType =
+      projectTypeOptions[projectTypeResult.selectedIndex]?.id ?? "";
     logger.success(`Project type: ${projectType}\n`);
 
     // Select features
-    const features = await multiselectPrompt({
+    const featureOptions = [
+      { id: "typescript", label: "TypeScript" },
+      { id: "testing", label: "Testing Framework" },
+      { id: "linting", label: "Linting" },
+      { id: "formatting", label: "Code Formatting" },
+      { id: "cicd", label: "CI/CD" },
+      { id: "documentation", label: "Documentation" },
+      { id: "docker", label: "Docker Support" },
+    ];
+    const featuresResult = await multiselectPrompt({
       title: "Select features to include:",
-      options: [
-        { value: "typescript", label: "TypeScript" },
-        { value: "testing", label: "Testing Framework" },
-        { value: "linting", label: "Linting" },
-        { value: "formatting", label: "Code Formatting" },
-        { value: "cicd", label: "CI/CD" },
-        { value: "documentation", label: "Documentation" },
-        { value: "docker", label: "Docker Support" },
-      ],
+      options: featureOptions,
     });
 
-    if (features.length > 0) {
-      logger.success(`Selected features: ${features.join(", ")}\n`);
+    if (featuresResult.error) {
+      logger.error("Selection cancelled");
+      return;
+    }
+
+    const selectedFeatures = featuresResult.selectedIndices.map(
+      (idx) => featureOptions[idx]?.id ?? "",
+    );
+
+    if (selectedFeatures.length > 0) {
+      logger.success(`Selected features: ${selectedFeatures.join(", ")}\n`);
     } else {
       logger.log("No features selected.\n");
     }
 
     // Confirm setup
-    const confirm = await confirmPrompt(
-      `Proceed with setting up a ${projectType} with ${features.length} feature(s)?`,
-      true,
-    );
+    const confirmResult = await confirmPrompt({
+      title: `Proceed with setting up a ${projectType} with ${selectedFeatures.length} feature(s)?`,
+    });
 
-    if (confirm) {
-      logger.success("🚀 Setting up project...\n");
-      // Simulate setup
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      logger.success("✅ Project setup completed!");
-    } else {
+    if (
+      confirmResult.error ||
+      confirmResult.confirmed === null ||
+      !confirmResult.confirmed
+    ) {
       logger.log("❌ Setup cancelled.");
+      return;
     }
+
+    // Use spinner for setup process
+    const setupSpinner = spinnerPrompt({
+      text: "Setting up project...",
+      indicator: "timer",
+      delay: 100,
+    });
+    setupSpinner.start();
+
+    // Simulate setup steps
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    setupSpinner.updateText("Installing dependencies...");
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    setupSpinner.updateText("Configuring project...");
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    setupSpinner.succeed("Project setup completed!");
   },
   defineCmdArgs({
     template: {

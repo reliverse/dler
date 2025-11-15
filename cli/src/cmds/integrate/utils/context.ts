@@ -145,7 +145,7 @@ export const selectTargetPackage = async (
       "1",
     );
 
-    const index = parseInt(answer, 10) - 1;
+    const index = Number.parseInt(answer, 10) - 1;
     if (index >= 0 && index < packages.length) {
       return packages[index]!;
     }

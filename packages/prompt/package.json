@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler-prompt",
-  "version": "2.0.28",
+  "version": "2.1.0",
   "private": false,
   "type": "module",
   "exports": {
@@ -10,12 +10,6 @@
     }
   },
   "description": "",
-  "scripts": {
-    "build": "bun run ./build.mjs",
-    "bw": "bun run ./build.mjs --target windows/amd64",
-    "release": "bumpp --commit --push --tag && npm publish",
-    "prepublishOnly": "bun run build"
-  },
   "files": [
     "dist",
     "release",
@@ -25,6 +19,9 @@
   "keywords": [
     "bun"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT",
   "homepage": "https://github.com/reliverse/dler/tree/main/packages/prompt#readme",
   "repository": {

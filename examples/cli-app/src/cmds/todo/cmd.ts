@@ -9,6 +9,7 @@ import {
   confirmPrompt,
   multiselectPrompt,
   selectPrompt,
+  spinnerPrompt,
 } from "@reliverse/dler-prompt";
 
 interface Todo {
@@ -30,20 +31,29 @@ export default defineCmd(
         return;
       }
 
-      const priority = await selectPrompt({
+      const priorityOptions = [
+        { id: "low", label: "low" },
+        { id: "medium", label: "medium" },
+        { id: "high", label: "high" },
+      ];
+      const priorityResult = await selectPrompt({
         title: "Select priority:",
-        options: [
-          { value: "low", label: "low" },
-          { value: "medium", label: "medium" },
-          { value: "high", label: "high" },
-        ],
+        options: priorityOptions,
       });
+      if (priorityResult.error || priorityResult.selectedIndex === null) {
+        logger.error("Priority selection cancelled");
+        return;
+      }
+      const priority = priorityOptions[priorityResult.selectedIndex]?.id as
+        | "low"
+        | "medium"
+        | "high";
 
       todos.push({
         id: nextId++,
         task: task.trim(),
         completed: false,
-        priority: priority as "low" | "medium" | "high",
+        priority,
       });
 
       logger.success(`✅ Added task: ${task.trim()} (${priority} priority)`);
@@ -80,22 +90,44 @@ export default defineCmd(
       }
 
       const taskOptions = incompleteTodos.map((t) => ({
-        value: String(t.id),
+        id: String(t.id),
         label: `[${t.id}] ${t.task} (${t.priority})`,
       }));
 
-      const selected = await multiselectPrompt({
+      const selectedResult = await multiselectPrompt({
         title: "Select tasks to mark as completed:",
         options: taskOptions,
       });
+      if (selectedResult.error) {
+        logger.error("Selection cancelled");
+        return;
+      }
 
-      for (const taskId of selected) {
-        const id = Number.parseInt(taskId, 10);
-        const todo = todos.find((t) => t.id === id);
-        if (todo) {
-          todo.completed = true;
-          logger.success(`✅ Completed: ${todo.task}`);
+      const completeSpinner = spinnerPrompt({
+        text: "Completing tasks...",
+        indicator: "dots",
+      });
+      completeSpinner.start();
+
+      const completedTasks: Todo[] = [];
+      for (const idx of selectedResult.selectedIndices) {
+        const taskId = taskOptions[idx]?.id;
+        if (taskId) {
+          const id = Number.parseInt(taskId, 10);
+          const todo = todos.find((t) => t.id === id);
+          if (todo) {
+            todo.completed = true;
+            completedTasks.push(todo);
+            await new Promise((resolve) => setTimeout(resolve, 300));
+          }
         }
+      }
+
+      completeSpinner.succeed(
+        `Completed ${selectedResult.selectedIndices.length} task(s)!`,
+      );
+      for (const todo of completedTasks) {
+        logger.success(`✅ Completed: ${todo.task}`);
       }
     } else if (args.action === "delete") {
       if (todos.length === 0) {
@@ -104,33 +136,59 @@ export default defineCmd(
       }
 
       const taskOptions = todos.map((t) => ({
-        value: String(t.id),
+        id: String(t.id),
         label: `[${t.id}] ${t.task} ${t.completed ? "(completed)" : ""}`,
       }));
 
-      const selected = await multiselectPrompt({
+      const selectedResult = await multiselectPrompt({
         title: "Select tasks to delete:",
         options: taskOptions,
       });
+      if (selectedResult.error) {
+        logger.error("Selection cancelled");
+        return;
+      }
 
-      const confirm = await confirmPrompt(
-        `Are you sure you want to delete ${selected.length} task(s)?`,
-        false,
-      );
+      const confirmResult = await confirmPrompt({
+        title: `Are you sure you want to delete ${selectedResult.selectedIndices.length} task(s)?`,
+      });
 
-      if (confirm) {
-        for (const taskId of selected) {
+      if (
+        confirmResult.error ||
+        confirmResult.confirmed === null ||
+        !confirmResult.confirmed
+      ) {
+        logger.log("❌ Deletion cancelled.");
+        return;
+      }
+
+      const deleteSpinner = spinnerPrompt({
+        text: "Deleting tasks...",
+        indicator: "dots",
+      });
+      deleteSpinner.start();
+
+      const deletedTasks: Todo[] = [];
+      for (const idx of selectedResult.selectedIndices) {
+        const taskId = taskOptions[idx]?.id;
+        if (taskId) {
           const id = Number.parseInt(taskId, 10);
           const index = todos.findIndex((t) => t.id === id);
           if (index !== -1) {
             const deleted = todos.splice(index, 1)[0];
             if (deleted) {
-              logger.success(`🗑️  Deleted: ${deleted.task}`);
+              deletedTasks.push(deleted);
+              await new Promise((resolve) => setTimeout(resolve, 300));
             }
           }
         }
-      } else {
-        logger.log("❌ Deletion cancelled.");
+      }
+
+      deleteSpinner.succeed(
+        `Deleted ${selectedResult.selectedIndices.length} task(s)!`,
+      );
+      for (const deleted of deletedTasks) {
+        logger.success(`🗑️  Deleted: ${deleted.task}`);
       }
     } else if (args.action === "clear") {
       if (todos.length === 0) {
@@ -138,18 +196,22 @@ export default defineCmd(
         return;
       }
 
-      const confirm = await confirmPrompt(
-        "Are you sure you want to clear all tasks?",
-        false,
-      );
+      const confirmResult = await confirmPrompt({
+        title: "Are you sure you want to clear all tasks?",
+      });
 
-      if (confirm) {
-        const count = todos.length;
-        todos.length = 0;
-        logger.success(`🗑️  Cleared ${count} task(s).`);
-      } else {
+      if (
+        confirmResult.error ||
+        confirmResult.confirmed === null ||
+        !confirmResult.confirmed
+      ) {
         logger.log("❌ Clear cancelled.");
+        return;
       }
+
+      const count = todos.length;
+      todos.length = 0;
+      logger.success(`🗑️  Cleared ${count} task(s).`);
     }
   },
   defineCmdArgs({

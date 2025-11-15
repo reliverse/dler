@@ -28,15 +28,20 @@ export default defineCmd(
       logger.log("  language: en");
       logger.log("  editor: vscode\n");
     } else if (args.action === "reset") {
-      const theme = await selectPrompt({
+      const themeOptions = [
+        { id: "light", label: "light" },
+        { id: "dark", label: "dark" },
+        { id: "auto", label: "auto" },
+      ];
+      const themeResult = await selectPrompt({
         title: "Select default theme:",
-        options: [
-          { value: "light", label: "light" },
-          { value: "dark", label: "dark" },
-          { value: "auto", label: "auto" },
-        ],
+        options: themeOptions,
       });
-
+      if (themeResult.error || themeResult.selectedIndex === null) {
+        logger.error("Selection cancelled");
+        return;
+      }
+      const theme = themeOptions[themeResult.selectedIndex]?.id ?? "";
       logger.success(`✅ Reset configuration with theme: ${theme}`);
     }
   },

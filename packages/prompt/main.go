@@ -9,8 +9,7 @@ import "C"
 import (
 	"unsafe"
 
-	"github.com/reliverse/dler/packages/prompt/prompt"
-	"github.com/reliverse/dler/packages/prompt/selection"
+	"github.com/reliverse/dler/packages/prompt/prompts"
 )
 
 func ch(str string) *C.char {
@@ -30,18 +29,24 @@ func FreeString(str *C.char) {
 
 //export CreateSelection
 func CreateSelection(jsonData, headerText, footerText *C.char, perPage int) *C.char {
-	result := selection.Selection(str(jsonData), str(headerText), str(footerText), perPage)
+	result := prompts.Selection(str(jsonData), str(headerText), str(footerText), perPage)
 	return ch(result)
 }
 
 //export CreatePrompt
-func CreatePrompt(prompText, echoMode, validateOkPrefix, validateErrPrefix *C.char, required bool, charLimit int) *C.char {
-	result := prompt.Prompt(str(prompText), str(echoMode), str(validateOkPrefix), str(validateErrPrefix), required, charLimit)
+func CreatePrompt(prompText, echoMode, validateOkPrefix, validateErrPrefix, defaultValue *C.char, required bool, charLimit int) *C.char {
+	result := prompts.Input(str(prompText), str(echoMode), str(validateOkPrefix), str(validateErrPrefix), str(defaultValue), required, charLimit)
 	return ch(result)
 }
 
 //export CreateMultiselect
 func CreateMultiselect(jsonData, headerText, footerText *C.char, perPage int) *C.char {
-	result := selection.Multiselect(str(jsonData), str(headerText), str(footerText), perPage)
+	result := prompts.Multiselect(str(jsonData), str(headerText), str(footerText), perPage)
+	return ch(result)
+}
+
+//export CreateConfirm
+func CreateConfirm(promptText, headerText, footerText *C.char) *C.char {
+	result := prompts.Confirm(str(promptText), str(headerText), str(footerText))
 	return ch(result)
 }

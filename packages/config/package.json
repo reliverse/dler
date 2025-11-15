@@ -2,7 +2,7 @@
   "name": "@reliverse/dler-config",
   "description": "Configuration management for @reliverse/dler",
   "author": "reliverse",
-  "version": "2.0.28",
+  "version": "2.1.0",
   "private": false,
   "type": "module",
   "exports": {
@@ -20,6 +20,12 @@
     "semver": "catalog:",
     "@reliverse/dler-pkg-tsc": "workspace:*"
   },
+  "devDependencies": {
+    "@reliverse/dler-tsconfig": "workspace:*",
+    "@types/semver": "catalog:",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:"
+  },
   "keywords": [
     "dler",
     "config",
@@ -33,13 +39,5 @@
     "dist",
     "package.json"
   ],
-  "license": "MIT",
-  "devDependencies": {
-    "@reliverse/dler-logger": "workspace:*",
-    "@reliverse/dler-tsconfig": "workspace:*",
-    "@microsoft/api-extractor": "catalog:",
-    "typescript": "catalog:",
-    "@types/bun": "catalog:",
-    "@types/semver": "catalog:"
-  }
+  "license": "MIT"
 }

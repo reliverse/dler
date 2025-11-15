@@ -33,7 +33,6 @@ _.log
 .DS_Store
 .env
 .idea
-*.dll
 *.exe
 *.lcov
 *.log

@@ -1,6 +1,7 @@
 // packages/build/src/mod.ts
 
 import { existsSync, mkdirSync, statSync } from "node:fs";
+import { readdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import {
   getPackageBuildConfig,
@@ -25,6 +26,7 @@ import { processAssetsForPackage, processCSSForPackage } from "./impl/assets";
 import { BuildCache } from "./impl/cache";
 import { createDebugLogger } from "./impl/debug";
 import { startDevServer } from "./impl/dev-server";
+import { buildGo } from "./impl/go-build";
 import { processHTMLForPackage } from "./impl/html-processor";
 import {
   AssetOptimizationPlugin,
@@ -51,6 +53,7 @@ import type {
 } from "./impl/types";
 import { startWatchMode } from "./impl/watch";
 
+export type { GoBuildOptions } from "@reliverse/dler-config/impl/build";
 export type {
   PackageKind,
   RegistryType,
@@ -68,6 +71,7 @@ export type {
   DtsGeneratorResult,
 } from "./impl/dts-generator";
 export { generateDeclarations } from "./impl/dts-generator";
+export { buildGo } from "./impl/go-build";
 export { applyPresets } from "./impl/presets";
 export type { MkdistDtsOptions } from "./impl/providers/mkdist-dts";
 export type {
@@ -453,6 +457,52 @@ const detectFrontendApp = async (
   return false;
 };
 
+const detectGoProject = async (packagePath: string): Promise<boolean> => {
+  // Quick check: look for main.go in root
+  const mainGoPath = resolve(packagePath, "main.go");
+  if (existsSync(mainGoPath)) {
+    return true;
+  }
+
+  // Check for go.mod (indicates Go project)
+  const goModPath = resolve(packagePath, "go.mod");
+  if (!existsSync(goModPath)) {
+    return false;
+  }
+
+  // If go.mod exists, check for .go files in the project
+  try {
+    const entries = await readdir(packagePath, { withFileTypes: true });
+    for (const entry of entries) {
+      // Check for .go files in root
+      if (entry.isFile() && entry.name.endsWith(".go")) {
+        return true;
+      }
+      // Check common Go directories
+      if (entry.isDirectory()) {
+        const subDirs = ["cmd", "internal", "pkg", "prompts"];
+        if (subDirs.includes(entry.name)) {
+          const subPath = resolve(packagePath, entry.name);
+          try {
+            const subEntries = await readdir(subPath, { recursive: true });
+            if (subEntries.some((name) => name.endsWith(".go"))) {
+              return true;
+            }
+          } catch {
+            // Ignore errors reading subdirectory
+          }
+        }
+      }
+    }
+  } catch {
+    // If we can't read the directory but go.mod exists, assume it's a Go project
+    // This handles edge cases where permissions might be an issue
+    return true;
+  }
+
+  return false;
+};
+
 // ============================================================================
 // Output Directory Resolution
 // ============================================================================
@@ -511,6 +561,9 @@ const resolvePackageInfo = async (
       existsSync(join(packagePath, "public")) &&
       statSync(join(packagePath, "public")).isDirectory();
 
+    // Detect Go project
+    const hasGoFiles = await detectGoProject(packagePath);
+
     const buildConfig = await getPackageBuildConfig(pkg.name, dlerConfig);
 
     // Detect CLI package (has bin field with at least one entry)
@@ -532,6 +585,7 @@ const resolvePackageInfo = async (
       hasPublicDir,
       private: pkg.private === true,
       isCLI,
+      hasGoFiles,
     };
   } catch {
     return null;
@@ -763,6 +817,39 @@ const buildWithMkdist = async (
         logger.warn(
           `⚠️  ${pkg.name}: Error preparing package.json for publishing: ${error instanceof Error ? error.message : String(error)}`,
         );
+      }
+
+      // Build Go binaries if Go files are detected
+      if (pkg.hasGoFiles) {
+        const goConfig = options.go ?? pkg.buildConfig?.go;
+        // Enable by default if Go files are detected and config doesn't explicitly disable it
+        if (goConfig?.enable !== false) {
+          try {
+            logger.info(`🔨 ${pkg.name}: Building Go binaries...`);
+            const goResult = await buildGo(
+              pkg.path,
+              pkg.name,
+              goConfig ?? { enable: true },
+            );
+            if (!goResult.success) {
+              logger.warn(
+                `⚠️  ${pkg.name}: Go build failed: ${goResult.errors.join(", ")}`,
+              );
+              // Don't fail the entire build, just warn
+            } else {
+              logger.success(`✅ ${pkg.name}: Go binaries built successfully`);
+            }
+          } catch (error) {
+            logger.warn(
+              `⚠️  ${pkg.name}: Go build error: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            );
+            // Don't fail the entire build, just warn
+          }
+        } else if (options.verbose) {
+          logger.info(`⏭️  ${pkg.name}: Go build disabled in config`);
+        }
       }
     }
 
@@ -1321,6 +1408,46 @@ export const buildPackage = async (
         buildTime,
         bundleSize,
       };
+    }
+
+    // Build Go binaries if Go files are detected
+    if (pkg.hasGoFiles && result.success) {
+      const goConfig = mergedOptions.go ?? pkg.buildConfig?.go;
+      // Enable by default if Go files are detected and config doesn't explicitly disable it
+      if (goConfig?.enable !== false) {
+        try {
+          logger.info(`🔨 ${pkg.name}: Building Go binaries...`);
+          const goResult = await buildGo(
+            pkg.path,
+            pkg.name,
+            goConfig ?? { enable: true },
+          );
+          if (!goResult.success) {
+            logger.warn(
+              `⚠️  ${pkg.name}: Go build failed: ${goResult.errors.join(", ")}`,
+            );
+            // Don't fail the entire build, just warn
+          } else {
+            logger.success(`✅ ${pkg.name}: Go binaries built successfully`);
+          }
+        } catch (error) {
+          logger.warn(
+            `⚠️  ${pkg.name}: Go build error: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          );
+          // Don't fail the entire build, just warn
+        }
+      } else if (verbose) {
+        logger.info(`⏭️  ${pkg.name}: Go build disabled in config`);
+      }
+    } else if (verbose && pkg.hasGoFiles && !result.success) {
+      logger.info(
+        `⏭️  ${pkg.name}: Skipping Go build (TypeScript build failed)`,
+      );
+    } else if (verbose && !pkg.hasGoFiles) {
+      // Only log in verbose mode to avoid noise
+      logger.debug(`⏭️  ${pkg.name}: No Go files detected`);
     }
 
     // Process assets for frontend apps

@@ -67,6 +67,27 @@ export interface DtsOptions {
   };
 }
 
+export interface GoBuildOptions {
+  /** Whether to enable Go build */
+  enable?: boolean;
+  /** Build provider: xgo (cross-compilation) or native (limited cross-compilation) */
+  provider?: "xgo" | "native";
+  /** Target platforms (e.g., "linux/amd64" or ["linux/amd64", "windows/amd64"]) */
+  targets?: string | string[];
+  /** Output directory for Go binaries (relative to package root, default: "release") */
+  outputDir?: string;
+  /** Output binary name prefix (default: derived from package name) */
+  outputName?: string;
+  /** Go build mode: c-shared, c-archive, or exe */
+  buildMode?: "c-shared" | "c-archive" | "exe";
+  /** Linker flags (default: "-s -w") */
+  ldflags?: string;
+  /** Main Go file to build (default: "main.go") */
+  mainFile?: string;
+  /** Go version for xgo (default: "1.20.3") */
+  goVersion?: string;
+}
+
 export interface PackageBuildConfig {
   enable?: boolean;
   bundler?: "bun" | "mkdist";
@@ -142,6 +163,8 @@ export interface PackageBuildConfig {
   windowsCopyright?: string;
   // Declaration file generation options
   dts?: boolean | DtsOptions;
+  // Go build options
+  go?: GoBuildOptions;
   // Package kind and bin definitions (used for automatic package.json transformations)
   kind?: PackageKind;
   bin?: string;

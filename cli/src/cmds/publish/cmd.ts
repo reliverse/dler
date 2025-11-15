@@ -24,18 +24,40 @@ const publishCmd = async (args: any): Promise<void> => {
       process.exit(1);
     }
 
+    // Reject unsupported auth-type web
+    if (args.authType === "web") {
+      logger.error(
+        "❌ --auth-type web is not supported. Please use --auth-type legacy instead.",
+      );
+      process.exit(1);
+    }
+
+    // When verbose is false, default to silent, no-progress, and no-summary
+    // But allow explicit overrides
+    const isVerbose = args.verbose === true;
+
     const options: PublishOptions = {
       dryRun: args.dryRun,
       tag: args.tag,
       access: args.access as "public" | "restricted",
       otp: args.otp,
-      authType: args.authType as "web" | "legacy",
+      authType: (args.authType as "web" | "legacy") || "legacy",
       verbose: args.verbose,
       bump: (args.bump as BumpType) || "patch",
       concurrency: args.concurrency,
       registry: args.registry as RegistryType,
       kind: args.kind as PackageKind,
       bumpDisable: args.bumpDisable,
+      withNpmLogs: args.withNpmLogs !== undefined ? args.withNpmLogs : true,
+      gzipLevel: args.gzipLevel,
+      ca: args.ca,
+      cafile: args.cafile,
+      ignoreScripts: args.ignoreScripts,
+      silent: args.silent !== undefined ? args.silent : !isVerbose,
+      noProgress: args.noProgress !== undefined ? args.noProgress : !isVerbose,
+      noSummary: args.noSummary !== undefined ? args.noSummary : !isVerbose,
+      bunRegistry: args.bunRegistry,
+      skipTip2FA: args.skipTip2FA,
     };
 
     const results = await publishAllPackages(args.cwd, args.ignore, options);
@@ -44,7 +66,12 @@ const publishCmd = async (args: any): Promise<void> => {
     if (results.warningCount > 0) {
       for (const result of results.results) {
         if (result.warning) {
-          logger.warn(`  ⚠️  ${result.packageName}: ${result.warning}`);
+          // Use logger.log for private package skips, logger.warn for other warnings
+          if (result.warning.includes('"private: true"')) {
+            logger.debug(`  ℹ️  ${result.packageName}: ${result.warning}`);
+          } else {
+            logger.warn(`  ⚠️  ${result.packageName}: ${result.warning}`);
+          }
         }
       }
     }
@@ -119,7 +146,7 @@ const publishCmdArgs = defineCmdArgs({
   },
   authType: {
     type: "string",
-    description: "Authentication method: web or legacy (default: web)",
+    description: "Authentication method: web or legacy (default: legacy)",
   },
   concurrency: {
     type: "number",
@@ -143,6 +170,52 @@ const publishCmdArgs = defineCmdArgs({
     type: "boolean",
     description:
       "Disable version bumping for all published packages, overwrites config (default: false)",
+  },
+  withNpmLogs: {
+    type: "boolean",
+    description:
+      "Display bun publish logs directly to terminal instead of hiding them (default: true)",
+  },
+  gzipLevel: {
+    type: "string",
+    description:
+      "Level of gzip compression when packing (0-9, default: 9). Only applies when packing the package.",
+  },
+  ca: {
+    type: "string",
+    description: "Certificate Authority signing certificate (inline)",
+  },
+  cafile: {
+    type: "string",
+    description: "Path to Certificate Authority certificate file",
+  },
+  ignoreScripts: {
+    type: "boolean",
+    description:
+      "Skip lifecycle scripts during packing and publishing (default: false)",
+  },
+  silent: {
+    type: "boolean",
+    description: "Suppress all output from bun publish (default: false)",
+  },
+  noProgress: {
+    type: "boolean",
+    description: "Hide progress bar from bun publish (default: false)",
+  },
+  noSummary: {
+    type: "boolean",
+    description:
+      "Don't print publish summary from bun publish (default: false)",
+  },
+  bunRegistry: {
+    type: "string",
+    description:
+      "Registry URL for bun publish (overrides .npmrc and bunfig.toml). Note: This is different from dler's --registry option which controls which registry type to use.",
+  },
+  skipTip2FA: {
+    type: "boolean",
+    description:
+      "Skip the 2FA tip message and the 3-second wait when using --with-npm-logs (default: false)",
   },
 });
 

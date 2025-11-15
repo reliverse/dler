@@ -1,4 +1,4 @@
-package selection
+package prompts
 
 import (
 	"encoding/json"
@@ -17,6 +17,7 @@ import (
 type multiselectModel struct {
 	sl         selector.Model
 	selected   map[int]bool
+	items      []ListItem
 	headerText string
 	footerText string
 	canceled   bool
@@ -33,6 +34,10 @@ func (m *multiselectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case " ":
 			// Toggle selection on space
 			currentIndex := m.sl.Index()
+			// Prevent toggling disabled items
+			if currentIndex < len(m.items) && m.items[currentIndex].Disabled {
+				return m, nil
+			}
 			if m.selected[currentIndex] {
 				delete(m.selected, currentIndex)
 			} else {
@@ -47,6 +52,22 @@ func (m *multiselectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Cancel
 			m.canceled = true
 			return m, tea.Quit
+		case "up", "k":
+			// Move up, skipping disabled items
+			_, cmd := m.sl.Update(msg)
+			// After update, check if we're on a disabled item and skip if needed
+			for m.sl.Index() < len(m.items) && m.items[m.sl.Index()].Disabled {
+				_, cmd = m.sl.Update(tea.KeyMsg{Type: tea.KeyUp})
+			}
+			return m, cmd
+		case "down", "j":
+			// Move down, skipping disabled items
+			_, cmd := m.sl.Update(msg)
+			// After update, check if we're on a disabled item and skip if needed
+			for m.sl.Index() < len(m.items) && m.items[m.sl.Index()].Disabled {
+				_, cmd = m.sl.Update(tea.KeyMsg{Type: tea.KeyDown})
+			}
+			return m, cmd
 		}
 	}
 
@@ -121,7 +142,7 @@ func multiselectWaitForTerminalResize(minHeight int, message string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Block until terminal is large enough
 	fd := int(os.Stdout.Fd())
 	for {
@@ -169,12 +190,22 @@ func Multiselect(jsonData, headerText, footerText string, perPage int) string {
 	json.Unmarshal([]byte(jsonData), &item)
 	data := []interface{}{}
 	for _, val := range item {
-		data = append(data, ListItem{Text: val.Text, Description: val.Description})
+		data = append(data, ListItem{Text: val.Text, Description: val.Description, Disabled: val.Disabled})
+	}
+
+	// Find first non-disabled item to start on
+	startIndex := 0
+	for startIndex < len(item) && item[startIndex].Disabled {
+		startIndex++
+	}
+	if startIndex >= len(item) {
+		startIndex = 0
 	}
 
 	selected := make(map[int]bool)
 	m := &multiselectModel{
 		selected:   selected,
+		items:      item,
 		headerText: headerText,
 		footerText: footerText,
 	}
@@ -184,7 +215,7 @@ func Multiselect(jsonData, headerText, footerText string, perPage int) string {
 		PerPage: perPage,
 		HeaderFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
 			selectedCount := 0
-			for range m.selected {
+			for range selected {
 				selectedCount++
 			}
 			header := headerText
@@ -195,9 +226,19 @@ func Multiselect(jsonData, headerText, footerText string, perPage int) string {
 		},
 		SelectedFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
 			t := obj.(ListItem)
+			disabled := t.Disabled
+			if gdIndex < len(item) {
+				disabled = item[gdIndex].Disabled
+			}
 			prefix := " "
-			if m.selected[gdIndex] {
+			if selected[gdIndex] {
 				prefix = "✓"
+			}
+			if disabled {
+				if t.Description != "" {
+					return common.FontColor(fmt.Sprintf("%s [%d] %s (%s) (disabled)", prefix, gdIndex+1, t.Text, t.Description), "240")
+				}
+				return common.FontColor(fmt.Sprintf("%s [%d] %s (disabled)", prefix, gdIndex+1, t.Text), "240")
 			}
 			if t.Description != "" {
 				return common.FontColor(fmt.Sprintf("%s [%d] %s (%s)", prefix, gdIndex+1, t.Text, t.Description), selector.ColorSelected)
@@ -206,9 +247,19 @@ func Multiselect(jsonData, headerText, footerText string, perPage int) string {
 		},
 		UnSelectedFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
 			t := obj.(ListItem)
+			disabled := t.Disabled
+			if gdIndex < len(item) {
+				disabled = item[gdIndex].Disabled
+			}
 			prefix := " "
-			if m.selected[gdIndex] {
+			if selected[gdIndex] {
 				prefix = "✓"
+			}
+			if disabled {
+				if t.Description != "" {
+					return common.FontColor(fmt.Sprintf("%s  %d. %s (%s) (disabled)", prefix, gdIndex+1, t.Text, t.Description), "240")
+				}
+				return common.FontColor(fmt.Sprintf("%s  %d. %s (disabled)", prefix, gdIndex+1, t.Text), "240")
 			}
 			if t.Description != "" {
 				return common.FontColor(fmt.Sprintf("%s  %d. %s (%s)", prefix, gdIndex+1, t.Text, t.Description), selector.ColorUnSelected)
@@ -225,6 +276,13 @@ func Multiselect(jsonData, headerText, footerText string, perPage int) string {
 		FinishedFunc: func(s interface{}) string {
 			return ""
 		},
+	}
+
+	// Set initial index to first non-disabled item
+	if startIndex > 0 {
+		for i := 0; i < startIndex; i++ {
+			m.sl.Update(tea.KeyMsg{Type: tea.KeyDown})
+		}
 	}
 
 	p := tea.NewProgram(m)
@@ -245,7 +303,10 @@ func Multiselect(jsonData, headerText, footerText string, perPage int) string {
 	}
 	indices := []string{}
 	for idx := range m.selected {
-		indices = append(indices, fmt.Sprintf("%d", idx))
+		// Filter out disabled items from results
+		if idx < len(m.items) && !m.items[idx].Disabled {
+			indices = append(indices, fmt.Sprintf("%d", idx))
+		}
 	}
 	result, _ := json.Marshal(&MultiselectResult{
 		SelectedIndices: indices,

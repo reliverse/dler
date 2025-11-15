@@ -1,4 +1,4 @@
-package selection
+package prompts
 
 import (
 	"encoding/json"
@@ -16,7 +16,8 @@ import (
 )
 
 type model struct {
-	sl selector.Model
+	sl    selector.Model
+	items []ListItem
 }
 
 func (m model) Init() tea.Cmd {
@@ -30,7 +31,35 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// a "common.DONE" message when the Enter key is pressed.
 	switch msg {
 	case common.DONE:
+		// Check if current item is disabled, if so, don't allow selection
+		currentIndex := m.sl.Index()
+		if currentIndex < len(m.items) && m.items[currentIndex].Disabled {
+			return m, nil
+		}
 		return m, tea.Quit
+	}
+
+	// Handle navigation - skip disabled items
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "up", "k":
+			// Move up, skipping disabled items
+			_, cmd := m.sl.Update(msg)
+			// After update, check if we're on a disabled item and skip if needed
+			for m.sl.Index() < len(m.items) && m.items[m.sl.Index()].Disabled {
+				_, cmd = m.sl.Update(tea.KeyMsg{Type: tea.KeyUp})
+			}
+			return m, cmd
+		case "down", "j":
+			// Move down, skipping disabled items
+			_, cmd := m.sl.Update(msg)
+			// After update, check if we're on a disabled item and skip if needed
+			for m.sl.Index() < len(m.items) && m.items[m.sl.Index()].Disabled {
+				_, cmd = m.sl.Update(tea.KeyMsg{Type: tea.KeyDown})
+			}
+			return m, cmd
+		}
 	}
 
 	_, cmd := m.sl.Update(msg)
@@ -42,8 +71,9 @@ func (m model) View() string {
 }
 
 type ListItem struct {
-	Text        string `json:"text"`
-	Description string `json:"description"`
+	Text        string `json:"id"`
+	Description string `json:"label"`
+	Disabled    bool   `json:"disabled"`
 }
 
 type Result struct {
@@ -109,7 +139,7 @@ func waitForTerminalResize(minHeight int, message string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Block until terminal is large enough
 	fd := int(os.Stdout.Fd())
 	for {
@@ -157,9 +187,20 @@ func Selection(jsonData, headerText, footerText string, perPage int) string {
 	json.Unmarshal([]byte(jsonData), &item)
 	data := []interface{}{}
 	for _, val := range item {
-		data = append(data, ListItem{Text: val.Text, Description: val.Description})
+		data = append(data, ListItem{Text: val.Text, Description: val.Description, Disabled: val.Disabled})
 	}
+
+	// Find first non-disabled item to start on
+	startIndex := 0
+	for startIndex < len(item) && item[startIndex].Disabled {
+		startIndex++
+	}
+	if startIndex >= len(item) {
+		startIndex = 0
+	}
+
 	m := &model{
+		items: item,
 		sl: selector.Model{
 			Data:    data,
 			PerPage: perPage,
@@ -167,28 +208,55 @@ func Selection(jsonData, headerText, footerText string, perPage int) string {
 			// Select Commit Type:
 			HeaderFunc: selector.DefaultHeaderFuncWithAppend(headerText),
 			// [1] feat (Introducing new features)
-			SelectedFunc: func(m selector.Model, obj interface{}, gdIndex int) string {
+			SelectedFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
 				t := obj.(ListItem)
+				disabled := t.Disabled
+				if gdIndex < len(item) {
+					disabled = item[gdIndex].Disabled
+				}
+				if disabled {
+					if t.Description != "" {
+						return common.FontColor(fmt.Sprintf("[%d] %s (%s) (disabled)", gdIndex+1, t.Text, t.Description), "240")
+					}
+					return common.FontColor(fmt.Sprintf("[%d] %s (disabled)", gdIndex+1, t.Text), "240")
+				}
 				if t.Description != "" {
 					return common.FontColor(fmt.Sprintf("[%d] %s (%s)", gdIndex+1, t.Text, t.Description), selector.ColorSelected)
 				}
 				return common.FontColor(fmt.Sprintf("[%d] %s", gdIndex+1, t.Text), selector.ColorSelected)
 			},
 			// 2. fix (Bug fix)
-			UnSelectedFunc: func(m selector.Model, obj interface{}, gdIndex int) string {
+			UnSelectedFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
 				t := obj.(ListItem)
+				disabled := t.Disabled
+				if gdIndex < len(item) {
+					disabled = item[gdIndex].Disabled
+				}
+				if disabled {
+					if t.Description != "" {
+						return common.FontColor(fmt.Sprintf(" %d. %s (%s) (disabled)", gdIndex+1, t.Text, t.Description), "240")
+					}
+					return common.FontColor(fmt.Sprintf(" %d. %s (disabled)", gdIndex+1, t.Text), "240")
+				}
 				if t.Description != "" {
 					return common.FontColor(fmt.Sprintf(" %d. %s (%s)", gdIndex+1, t.Text, t.Description), selector.ColorUnSelected)
 				}
 				return common.FontColor(fmt.Sprintf(" %d. %s", gdIndex+1, t.Text), selector.ColorUnSelected)
 			},
-			FooterFunc: func(m selector.Model, obj interface{}, gdIndex int) string {
+			FooterFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
 				return common.FontColor(footerText, selector.ColorFooter)
 			},
 			FinishedFunc: func(s interface{}) string {
 				return ""
 			},
 		},
+	}
+
+	// Set initial index to first non-disabled item
+	if startIndex > 0 {
+		for i := 0; i < startIndex; i++ {
+			m.sl.Update(tea.KeyMsg{Type: tea.KeyDown})
+		}
 	}
 
 	p := tea.NewProgram(m)
@@ -201,8 +269,17 @@ func Selection(jsonData, headerText, footerText string, perPage int) string {
 		return string(result)
 	}
 	if !m.sl.Canceled() {
+		selectedIndex := m.sl.Index()
+		// Ensure we didn't select a disabled item
+		if selectedIndex < len(m.items) && m.items[selectedIndex].Disabled {
+			result, _ := json.Marshal(&Result{
+				SelectedIndex: "",
+				Error:         "Cannot select disabled item",
+			})
+			return string(result)
+		}
 		result, _ := json.Marshal(&Result{
-			SelectedIndex: strconv.Itoa(m.sl.Index()),
+			SelectedIndex: strconv.Itoa(selectedIndex),
 			Error:         "",
 		})
 		return string(result)

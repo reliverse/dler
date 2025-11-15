@@ -10,7 +10,6 @@ import {
   hasWorkspaces,
   readPackageJSON,
 } from "@reliverse/dler-pkg-tsc";
-import { confirmPrompt } from "@reliverse/dler-prompt";
 import {
   LOCK_FILE_PATTERNS,
   mergePatterns,
@@ -541,16 +540,11 @@ const displayPreview = (
   logger.log("━".repeat(60));
 };
 
-const askConfirmation = async (force: boolean): Promise<boolean> => {
-  if (force) {
-    return true;
-  }
-
-  try {
-    return await confirmPrompt("Proceed with deletion?", false);
-  } catch {
-    // If prompt fails, default to false for safety
-    return false;
+const checkForceFlag = (force: boolean): void => {
+  if (!force) {
+    throw new Error(
+      "❌ Deletion requires --force flag. Use --force to proceed with deletion.",
+    );
   }
 };
 
@@ -632,12 +626,7 @@ export const runCleanOnAllPackages = async (
       );
 
       if (!dryRun) {
-        const shouldProceed = await askConfirmation(force);
-
-        if (!shouldProceed) {
-          logger.info("❌ Clean cancelled by user");
-          process.exit(0);
-        }
+        checkForceFlag(force);
 
         // Delete files
         const { deletedCount, deletedSize, errors } = await deleteFiles(
@@ -780,12 +769,7 @@ export const runCleanOnAllPackages = async (
     displayPreview(results, lockFilesResult);
 
     if (!dryRun) {
-      const shouldProceed = await askConfirmation(force);
-
-      if (!shouldProceed) {
-        logger.info("❌ Clean cancelled by user");
-        process.exit(0);
-      }
+      checkForceFlag(force);
 
       // Actually delete files
       const cleanedResults = await pMap(

@@ -12,7 +12,7 @@ import {
   LauncherError,
 } from "./impl/errors";
 import { generateCommandHelp, generateGlobalHelp } from "./impl/help";
-import { parseArgs } from "./impl/parser";
+import { kebabCase, parseArgs } from "./impl/parser";
 import {
   clearRegistry,
   getRegistry,
@@ -132,10 +132,26 @@ export const runLauncher = async (
         const isParentArg = Object.keys(parentDefinition.args).some((key) => {
           const def = parentDefinition.args[key];
           if (!def) return false;
+
+          const kebabKey = kebabCase(key);
+
           return (
             arg === `--${key}` ||
             arg === `-${key}` ||
-            (def.aliases && def.aliases.some((alias) => arg === `-${alias}`))
+            arg === `--${kebabKey}` ||
+            arg === `--no-${key}` ||
+            arg === `--no-${kebabKey}` ||
+            (def.aliases &&
+              def.aliases.some((alias) => {
+                const kebabAlias = kebabCase(alias);
+                return (
+                  arg === `-${alias}` ||
+                  arg === `--${alias}` ||
+                  arg === `--${kebabAlias}` ||
+                  arg === `--no-${alias}` ||
+                  arg === `--no-${kebabAlias}`
+                );
+              }))
           );
         });
 

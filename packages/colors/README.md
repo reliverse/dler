@@ -316,7 +316,7 @@ const logger = {
 // Usage
 logger.info("Application started");
 logger.success("Data loaded successfully");
-logger.warning("Cache expired, refreshing data");
+logger.warn("Cache expired, refreshing data");
 logger.error("Failed to connect to database");
 logger.debug("Request payload: " + JSON.stringify({id: 123}));
 ```

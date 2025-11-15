@@ -89,7 +89,8 @@ const cleanCmdArgs = defineCmdArgs({
   },
   force: {
     type: "boolean",
-    description: "Skip confirmation prompt and delete immediately",
+    description:
+      "Required flag to proceed with deletion (no prompts, args-only)",
   },
   verbose: {
     type: "boolean",

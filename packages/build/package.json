@@ -2,7 +2,7 @@
   "name": "@reliverse/dler-build",
   "description": "Build utils for @reliverse/dler",
   "author": "reliverse",
-  "version": "2.0.28",
+  "version": "2.1.0",
   "private": false,
   "type": "module",
   "exports": {
@@ -18,17 +18,23 @@
     "@reliverse/dler-mapper": "workspace:*",
     "@reliverse/dler-matcher": "workspace:*",
     "@reliverse/dler-pkg-tsc": "workspace:*",
-    "autoprefixer": "^10.4.21",
+    "autoprefixer": "catalog:",
     "c12": "catalog:",
-    "cssnano": "^7.1.1",
+    "cssnano": "catalog:",
     "defu": "catalog:",
     "dts-bundle-generator": "catalog:",
-    "esbuild": "^0.25.11",
-    "jiti": "^2.6.1",
-    "mlly": "^1.8.0",
+    "esbuild": "catalog:",
+    "jiti": "catalog:",
+    "mlly": "catalog:",
     "pkg-types": "catalog:",
-    "semver": "^7.7.3",
+    "semver": "catalog:",
     "tinyglobby": "catalog:"
+  },
+  "devDependencies": {
+    "@reliverse/dler-tsconfig": "workspace:*",
+    "@microsoft/api-extractor": "catalog:",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:"
   },
   "publishConfig": {
     "access": "public"
@@ -37,10 +43,5 @@
     "dist",
     "package.json"
   ],
-  "license": "MIT",
-  "devDependencies": {
-    "@reliverse/dler-tsconfig": "workspace:*",
-    "typescript": "catalog:",
-    "@types/bun": "catalog:"
-  }
+  "license": "MIT"
 }

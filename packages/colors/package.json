@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler-colors",
-  "version": "2.0.28",
+  "version": "2.1.0",
   "private": false,
   "type": "module",
   "description": "@reliverse/dler-colors is a themeable, chainable, typed, truecolor-powered, modern terminal styling toolkit. Designed to make your CLI output colorful, accessible, and human-friendly. It gives you a flexible way to apply colors and styles — with reliability and a smart developer experience baked in. Built for humans, not just terminals.",
@@ -10,6 +10,11 @@
       "default": "./src/mod.ts"
     }
   },
+  "devDependencies": {
+    "@reliverse/dler-tsconfig": "workspace:*",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:"
+  },
   "publishConfig": {
     "access": "public"
   },
@@ -18,20 +23,5 @@
     "dist",
     "package.json"
   ],
-  "license": "MIT",
-  "devDependencies": {
-    "@reliverse/dler-tsconfig": "workspace:*",
-    "@microsoft/api-extractor": "catalog:",
-    "typescript": "catalog:",
-    "@types/bun": "catalog:"
-  },
-  "scripts": {
-    "pub": "bun rse publish",
-    "dev": "bun examples/core.ts",
-    "perf": "bun bench:bun && bun size",
-    "latest": "bun rse update && bun install",
-    "size": "bun examples/benchmarks/bundle-size.ts",
-    "bench": "bun examples/benchmarks/performance.ts",
-    "bench:bun": "bun examples/benchmarks/performance.ts --isBun"
-  }
+  "license": "MIT"
 }

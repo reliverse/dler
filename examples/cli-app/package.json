@@ -9,8 +9,8 @@
     "cli-app": "src/cli.ts"
   },
   "scripts": {
-    "build": "dler build --compile --production --target bun --format cjs --bytecode",
-    "dev": "dler build --watch --target bun --format cjs",
+    "build": "bun dler build --compile --production --target bun --format cjs --bytecode",
+    "dev": "bun dler build --watch --target bun --format cjs",
     "start": "node dist/cli.js"
   },
   "keywords": [
@@ -29,8 +29,6 @@
   },
   "devDependencies": {
     "@reliverse/dler-tsconfig": "workspace:*",
-    "@microsoft/api-extractor": "catalog:",
-    "@reliverse/dler": "workspace:*",
     "@types/bun": "catalog:"
   }
 }

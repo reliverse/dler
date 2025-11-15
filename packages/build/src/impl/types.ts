@@ -1,6 +1,7 @@
 // packages/build/src/impl/types.ts
 
 import type {
+  GoBuildOptions,
   PackageBuildConfig,
   PerformanceBudget,
 } from "@reliverse/dler-config/impl/build";
@@ -17,6 +18,7 @@ export interface PackageInfo {
   hasPublicDir?: boolean;
   private?: boolean;
   isCLI?: boolean;
+  hasGoFiles?: boolean;
 }
 
 export interface MinifyOptions {
@@ -159,6 +161,8 @@ export interface BuildOptions {
   strictTsconfig?: boolean;
   // DTS provider
   dtsProvider?: "dts-bundle-generator" | "api-extractor" | "typescript";
+  // Go build options
+  go?: GoBuildOptions;
   // Export replacement
   replaceExports?: boolean;
   replaceExportsIgnorePackages?: string;

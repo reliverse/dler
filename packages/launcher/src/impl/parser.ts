@@ -18,6 +18,7 @@ interface ChainParseResult {
 interface SchemaMetadata {
   aliasMap: Map<string, string>;
   camelCaseCache: Map<string, string>;
+  kebabCaseMap: Map<string, string>;
   defaults: Record<string, unknown>;
   requiredKeys: Set<string>;
   availableKeys: string[];
@@ -26,9 +27,41 @@ interface SchemaMetadata {
 const camelCase = (str: string): string =>
   str.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
 
+export const kebabCase = (str: string): string => {
+  // Convert camelCase/PascalCase to kebab-case
+  // e.g., "skipTip2FA" -> "skip-tip-2fa"
+  if (!str) return str;
+
+  // First, handle lowercase+number+uppercase pattern (e.g., "e2F" -> "e-2F")
+  // This keeps the number with the following uppercase
+  let result = str.replace(
+    /([a-z])([0-9])([A-Z])/g,
+    (_, g1, g2, g3) => `${g1}-${g2}${g3}`,
+  );
+
+  // Then insert hyphens before uppercase letters that follow lowercase/number
+  // But skip if there's already a hyphen (from step 1)
+  result = result.replace(
+    /([a-z0-9])([A-Z])/g,
+    (match, g1, g2, offset, string) => {
+      // Check if there's already a hyphen before this match
+      if (offset > 0 && string[offset - 1] === "-") {
+        return match; // Don't add another hyphen
+      }
+      return `${g1}-${g2}`;
+    },
+  );
+
+  // Handle consecutive capitals before lowercase (e.g., "FA" before "T" -> "FA-T")
+  result = result.replace(/([A-Z]+)([A-Z][a-z])/g, "$1-$2");
+
+  return result.toLowerCase();
+};
+
 const createSchemaMetadata = (schema: CmdArgsSchema): SchemaMetadata => {
   const aliasMap = new Map<string, string>();
   const camelCaseCache = new Map<string, string>();
+  const kebabCaseMap = new Map<string, string>();
   const defaults: Record<string, unknown> = {};
   const requiredKeys = new Set<string>();
   const availableKeys: string[] = [];
@@ -42,6 +75,12 @@ const createSchemaMetadata = (schema: CmdArgsSchema): SchemaMetadata => {
       camelCaseCache.set(key, camelKey);
     }
 
+    // Build kebab-case map: map kebab-case variant back to original key
+    const kebabKey = kebabCase(key);
+    if (kebabKey !== key) {
+      kebabCaseMap.set(kebabKey, key);
+    }
+
     // Handle aliases
     if (def.aliases) {
       for (const alias of def.aliases) {
@@ -50,6 +89,11 @@ const createSchemaMetadata = (schema: CmdArgsSchema): SchemaMetadata => {
         const camelAlias = camelCase(alias);
         if (camelAlias !== alias) {
           camelCaseCache.set(alias, camelAlias);
+        }
+        // Also map kebab-case variant of aliases
+        const kebabAlias = kebabCase(alias);
+        if (kebabAlias !== alias) {
+          kebabCaseMap.set(kebabAlias, key);
         }
       }
     }
@@ -66,6 +110,7 @@ const createSchemaMetadata = (schema: CmdArgsSchema): SchemaMetadata => {
   return {
     aliasMap,
     camelCaseCache,
+    kebabCaseMap,
     defaults,
     requiredKeys,
     availableKeys,
@@ -87,8 +132,14 @@ export const parseArgs = (
   }
 
   // Get pre-computed schema metadata
-  const { aliasMap, camelCaseCache, defaults, requiredKeys, availableKeys } =
-    getSchemaMetadata(schema);
+  const {
+    aliasMap,
+    camelCaseCache,
+    kebabCaseMap,
+    defaults,
+    requiredKeys,
+    availableKeys,
+  } = getSchemaMetadata(schema);
 
   const parsedArgs: Record<string, unknown> = { ...defaults };
 
@@ -98,9 +149,18 @@ export const parseArgs = (
     if (!arg || !arg.startsWith("-")) continue;
 
     const isLongForm = arg.startsWith("--");
-    const flagName = arg.slice(isLongForm ? 2 : 1);
+    let flagName = arg.slice(isLongForm ? 2 : 1);
+    let isNegated = false;
+
+    // Handle --no-* convention for boolean flags
+    if (isLongForm && flagName.startsWith("no-")) {
+      flagName = flagName.slice(3); // Remove "no-" prefix
+      isNegated = true;
+    }
+
     const actualKey =
       aliasMap.get(flagName) ??
+      kebabCaseMap.get(flagName) ??
       camelCaseCache.get(flagName) ??
       camelCase(flagName);
 
@@ -114,6 +174,62 @@ export const parseArgs = (
     }
 
     if (definition.type === "boolean") {
+      // If --no-* convention was used, set to false
+      if (isNegated) {
+        // Check if a value was provided after --no-* flag
+        const nextArg = rawArgs[i + 1];
+        if (nextArg !== undefined && !nextArg.startsWith("-")) {
+          const lowerNext = nextArg.toLowerCase();
+          // If it's a boolean-like value, it's an error
+          if (
+            lowerNext === "true" ||
+            lowerNext === "false" ||
+            lowerNext === "1" ||
+            lowerNext === "0" ||
+            lowerNext === "yes" ||
+            lowerNext === "no" ||
+            lowerNext === "on" ||
+            lowerNext === "off"
+          ) {
+            throw new ArgumentValidationError(
+              flagName,
+              `--no-* flags cannot accept values. Use --${flagName} ${nextArg} instead of --no-${flagName} ${nextArg}`,
+            );
+          }
+          // If it's not a boolean value, treat it as a positional argument
+          // and just set the flag to false (ignore the value)
+        }
+        parsedArgs[actualKey] = false;
+        continue;
+      }
+      // Check if next argument is an explicit boolean value
+      const nextArg = rawArgs[i + 1];
+      if (nextArg !== undefined && !nextArg.startsWith("-")) {
+        // Try to parse as boolean
+        const lowerNext = nextArg.toLowerCase();
+        if (
+          lowerNext === "true" ||
+          lowerNext === "1" ||
+          lowerNext === "yes" ||
+          lowerNext === "on"
+        ) {
+          parsedArgs[actualKey] = true;
+          i++; // Skip the value
+          continue;
+        }
+        if (
+          lowerNext === "false" ||
+          lowerNext === "0" ||
+          lowerNext === "no" ||
+          lowerNext === "off"
+        ) {
+          parsedArgs[actualKey] = false;
+          i++; // Skip the value
+          continue;
+        }
+        // If it's not a recognized boolean value, treat it as a positional argument
+        // and set the flag to true (default behavior)
+      }
       parsedArgs[actualKey] = true;
       continue;
     }

@@ -6,7 +6,6 @@ import {
   defineCmdCfg,
 } from "@reliverse/dler-launcher";
 import { logger } from "@reliverse/dler-logger";
-import { finalizePromptIO } from "@reliverse/dler-prompt";
 import { $ } from "bun";
 import {
   generateAllPackages,
@@ -18,7 +17,6 @@ import { promptMonorepoConfig } from "./impl/prompts";
 const initCmd = async (): Promise<void> => {
   try {
     const config = await promptMonorepoConfig();
-    await finalizePromptIO();
 
     logger.info("\n🔨 Generating monorepo structure...\n");
 

@@ -35,7 +35,11 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Build project
+      - name: Build all packages
+        run: bun run build
+
+      - name: Build prompt package native binaries
+        working-directory: packages/prompt
         run: bun run build --provider xgo
 
       - name: Generate changelog
@@ -47,13 +51,14 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            release/*
-            dist/*
+            packages/prompt/release/*
+            packages/prompt/dist/*
+            packages/*/dist/*
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
-      - name: Publish to npm
-        run: npm publish
+      - name: Publish packages to npm
+        run: bun dler publish
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NPM_TOKEN: ${{secrets.NPM_TOKEN}}

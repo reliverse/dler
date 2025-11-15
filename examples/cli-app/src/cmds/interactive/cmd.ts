@@ -16,40 +16,58 @@ export default defineCmd(
     logger.log("🎯 Interactive Prompt Demo\n");
 
     // Single selection prompt
-    const favoriteColor = await selectPrompt({
+    const colorOptions = [
+      { id: "red", label: "Red" },
+      { id: "blue", label: "Blue" },
+      { id: "green", label: "Green" },
+      { id: "yellow", label: "Yellow" },
+      { id: "purple", label: "Purple" },
+      { id: "orange", label: "Orange" },
+    ];
+    const colorResult = await selectPrompt({
       title: "What's your favorite color?",
-      options: [
-        { value: "red", label: "Red" },
-        { value: "blue", label: "Blue" },
-        { value: "green", label: "Green" },
-        { value: "yellow", label: "Yellow" },
-        { value: "purple", label: "Purple" },
-        { value: "orange", label: "Orange" },
-      ],
+      options: colorOptions,
     });
+    if (colorResult.error || colorResult.selectedIndex === null) {
+      logger.error("Selection cancelled or error occurred");
+      return;
+    }
+    const favoriteColor = colorOptions[colorResult.selectedIndex]?.id ?? "";
     logger.success(`You selected: ${favoriteColor}\n`);
 
     // Multiple selection prompt
-    const hobbies = await multiselectPrompt({
+    const hobbyOptions = [
+      { id: "reading", label: "Reading" },
+      { id: "gaming", label: "Gaming" },
+      { id: "sports", label: "Sports" },
+      { id: "music", label: "Music" },
+      { id: "cooking", label: "Cooking" },
+      { id: "traveling", label: "Traveling" },
+      { id: "photography", label: "Photography" },
+    ];
+    const hobbiesResult = await multiselectPrompt({
       title: "Select your hobbies (use space to toggle, enter to confirm):",
-      options: [
-        { value: "reading", label: "Reading" },
-        { value: "gaming", label: "Gaming" },
-        { value: "sports", label: "Sports" },
-        { value: "music", label: "Music" },
-        { value: "cooking", label: "Cooking" },
-        { value: "traveling", label: "Traveling" },
-        { value: "photography", label: "Photography" },
-      ],
+      options: hobbyOptions,
     });
-    logger.success(`Selected hobbies: ${hobbies.join(", ")}\n`);
+    if (hobbiesResult.error) {
+      logger.error("Selection cancelled or error occurred");
+      return;
+    }
+    const selectedHobbies = hobbiesResult.selectedIndices.map(
+      (idx) => hobbyOptions[idx]?.id ?? "",
+    );
+    logger.success(`Selected hobbies: ${selectedHobbies.join(", ")}\n`);
 
     // Confirmation prompt
-    const wantsNewsletter = await confirmPrompt(
-      "Would you like to subscribe to our newsletter?",
-      true,
-    );
-    if (wantsNewsletter) {
+    const wantsNewsletterResult = await confirmPrompt({
+      title: "Would you like to subscribe to our newsletter?",
+    });
+    if (
+      wantsNewsletterResult.error ||
+      wantsNewsletterResult.confirmed === null
+    ) {
+      logger.log("Confirmation cancelled.\n");
+    } else if (wantsNewsletterResult.confirmed) {
       logger.success("You subscribed to the newsletter!\n");
     } else {
       logger.log("You declined the newsletter subscription.\n");
@@ -60,11 +78,12 @@ export default defineCmd(
     logger.success(`Hello, ${name}!\n`);
 
     // Another confirmation
-    const proceed = await confirmPrompt(
-      "Do you want to proceed with the setup?",
-      false,
-    );
-    if (proceed) {
+    const proceedResult = await confirmPrompt({
+      title: "Do you want to proceed with the setup?",
+    });
+    if (proceedResult.error || proceedResult.confirmed === null) {
+      logger.log("❌ Setup cancelled.\n");
+    } else if (proceedResult.confirmed) {
       logger.success("✅ Setup will proceed!\n");
     } else {
       logger.log("❌ Setup cancelled.\n");
