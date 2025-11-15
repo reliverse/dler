@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "dler": "bun cli/src/cli.ts",
-    "pub": "bun run build && bun dler publish --bumpDisable",
+    "pub": "bun run build && bun dler publish --skip-tip-2fa",
     "build": "bun clean && bun typecheck && bun dler build",
     "clean": "bun dler clean --presets build --force",
     "typecheck": "bun dler tsc --copy-logs",

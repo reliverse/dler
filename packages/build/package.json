@@ -30,12 +30,6 @@
     "semver": "catalog:",
     "tinyglobby": "catalog:"
   },
-  "devDependencies": {
-    "@reliverse/dler-tsconfig": "workspace:*",
-    "@microsoft/api-extractor": "catalog:",
-    "typescript": "catalog:",
-    "@types/bun": "catalog:"
-  },
   "publishConfig": {
     "access": "public"
   },
@@ -43,5 +37,11 @@
     "dist",
     "package.json"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@reliverse/dler-tsconfig": "workspace:*",
+    "@microsoft/api-extractor": "catalog:",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:"
+  }
 }

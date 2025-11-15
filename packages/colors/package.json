@@ -10,11 +10,6 @@
       "default": "./src/mod.ts"
     }
   },
-  "devDependencies": {
-    "@reliverse/dler-tsconfig": "workspace:*",
-    "typescript": "catalog:",
-    "@types/bun": "catalog:"
-  },
   "publishConfig": {
     "access": "public"
   },
@@ -23,5 +18,10 @@
     "dist",
     "package.json"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@reliverse/dler-tsconfig": "workspace:*",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:"
+  }
 }

@@ -20,12 +20,6 @@
     "semver": "catalog:",
     "@reliverse/dler-pkg-tsc": "workspace:*"
   },
-  "devDependencies": {
-    "@reliverse/dler-tsconfig": "workspace:*",
-    "@types/semver": "catalog:",
-    "typescript": "catalog:",
-    "@types/bun": "catalog:"
-  },
   "keywords": [
     "dler",
     "config",
@@ -39,5 +33,11 @@
     "dist",
     "package.json"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@reliverse/dler-tsconfig": "workspace:*",
+    "@types/semver": "catalog:",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:"
+  }
 }

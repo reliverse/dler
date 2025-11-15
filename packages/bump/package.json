@@ -14,12 +14,6 @@
   "dependencies": {
     "semver": "catalog:"
   },
-  "devDependencies": {
-    "@reliverse/dler-tsconfig": "workspace:*",
-    "@types/semver": "catalog:",
-    "typescript": "catalog:",
-    "@types/bun": "catalog:"
-  },
   "keywords": [
     "dler",
     "bump"
@@ -31,5 +25,11 @@
     "dist",
     "package.json"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@reliverse/dler-tsconfig": "workspace:*",
+    "@types/semver": "catalog:",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:"
+  }
 }
