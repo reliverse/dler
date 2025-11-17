@@ -41,16 +41,14 @@ export default defineCommand({
       { value: "api-server", label: "API Server" },
       { value: "desktop-app", label: "Desktop App" },
     ];
-    const projectTypeResult = await selectPrompt({
+    const projectType = await selectPrompt({
       title: "What type of project are you setting up?",
       options: projectTypeOptions,
     });
-    if (projectTypeResult.error || projectTypeResult.selectedIndex === null) {
+    if (projectType === null) {
       logger.error("Selection cancelled");
       return;
     }
-    const projectType =
-      projectTypeOptions[projectTypeResult.selectedIndex]?.value ?? "";
     logger.success(`Project type: ${projectType}\n`);
 
     // Select features
@@ -63,19 +61,15 @@ export default defineCommand({
       { value: "documentation", label: "Documentation" },
       { value: "docker", label: "Docker Support" },
     ];
-    const featuresResult = await multiselectPrompt({
+    const selectedFeatures = await multiselectPrompt({
       title: "Select features to include:",
       options: featureOptions,
     });
 
-    if (featuresResult.error) {
+    if (selectedFeatures === null) {
       logger.error("Selection cancelled");
       return;
     }
-
-    const selectedFeatures = featuresResult.selectedIndices.map(
-      (idx) => featureOptions[idx]?.value ?? "",
-    );
 
     if (selectedFeatures.length > 0) {
       logger.success(`Selected features: ${selectedFeatures.join(", ")}\n`);

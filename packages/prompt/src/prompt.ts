@@ -1,4 +1,5 @@
 import { ptr } from "bun:ffi";
+import { cancel } from "./cancel";
 import { symbols } from "./ffi";
 import { encode, toString } from "./utils";
 
@@ -10,6 +11,7 @@ export type InputPromptOptions = {
   validateOkPrefix?: string;
   validateErrPrefix?: string;
   defaultValue?: string;
+  validate?: (value: string) => boolean | string | null | undefined;
 };
 
 export type PromptResult = {
@@ -20,29 +22,68 @@ export type PromptResult = {
 export async function inputPrompt(
   options: InputPromptOptions,
 ): Promise<PromptResult> {
-  const returnedPtr = symbols.CreatePrompt(
-    ptr(encode(options.title)),
-    ptr(encode(options.echoMode || "normal")),
-    ptr(encode(options.validateOkPrefix || "")),
-    ptr(encode(options.validateErrPrefix || "")),
-    ptr(encode(options.defaultValue || "")),
-    options.required ?? true,
-    options.charLimit || 0,
-  );
-  const { value, error } = JSON.parse(toString(returnedPtr)) as {
-    value: string;
-    error: string;
-  };
-  if (error !== "") {
-    return {
-      value: null,
-      error,
+  const originalTitle = options.title;
+  let promptTitle = originalTitle;
+  let defaultValue = options.defaultValue;
+
+  while (true) {
+    const returnedPtr = symbols.CreatePrompt(
+      ptr(encode(promptTitle)),
+      ptr(encode(options.echoMode || "normal")),
+      ptr(encode(options.validateOkPrefix || "")),
+      ptr(encode(options.validateErrPrefix || "")),
+      ptr(encode(defaultValue || "")),
+      options.required ?? true,
+      options.charLimit || 0,
+    );
+    const { value, error } = JSON.parse(toString(returnedPtr)) as {
+      value: string;
+      error: string;
     };
+    if (error !== "") {
+      if (error === "Cancelled") {
+        cancel(error);
+      }
+      return {
+        value: null,
+        error,
+      };
+    }
+
+    // If no validation function, return immediately
+    if (!options.validate) {
+      return {
+        value,
+        error: null,
+      };
+    }
+
+    // Run validation
+    const validationResult = options.validate(value);
+
+    // Check if validation passed
+    // Valid: true, null, undefined
+    // Invalid: false, string (error message)
+    if (
+      validationResult === true ||
+      validationResult === null ||
+      validationResult === undefined
+    ) {
+      return {
+        value,
+        error: null,
+      };
+    }
+
+    // Validation failed - prepare error message and re-prompt
+    const errorMessage =
+      typeof validationResult === "string" ? validationResult : "Invalid input";
+
+    // Update prompt title to include error message for next iteration
+    promptTitle = `${originalTitle}\n❌ ${errorMessage}`;
+    // Clear defaultValue for re-prompt
+    defaultValue = undefined;
   }
-  return {
-    value,
-    error: null,
-  };
 }
 
 export async function askQuestion(

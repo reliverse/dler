@@ -18,8 +18,12 @@ type setDefaultValueMsg struct {
 }
 
 type inputModel struct {
-	input        *prompt.Model
-	defaultValue string
+	input           *prompt.Model
+	defaultValue    string
+	ctrlCPressedOnce bool
+	ctrlCPressTime   time.Time
+	showCancelMsg    bool
+	canceled         bool
 }
 
 func (m *inputModel) Init() tea.Cmd {
@@ -32,7 +36,36 @@ func (m *inputModel) Init() tea.Cmd {
 	return nil
 }
 
+type inputResetCancelMsg struct{}
+
 func (m *inputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// Handle double Ctrl+C first - must intercept before input sees it
+	if keyMsg, ok := msg.(tea.KeyMsg); ok && keyMsg.String() == "ctrl+c" {
+		now := time.Now()
+		if m.ctrlCPressedOnce && now.Sub(m.ctrlCPressTime) < 2*time.Second {
+			// Second Ctrl+C within 2 seconds - actually cancel
+			m.canceled = true
+			return m, tea.Quit
+		}
+		// First Ctrl+C - show message and set timer
+		// IMPORTANT: Don't pass this to input, return early
+		m.ctrlCPressedOnce = true
+		m.ctrlCPressTime = now
+		m.showCancelMsg = true
+		// Reset after 2 seconds
+		return m, tea.Tick(2*time.Second, func(t time.Time) tea.Msg {
+			return inputResetCancelMsg{}
+		})
+	}
+
+	// Handle reset message
+	if _, ok := msg.(inputResetCancelMsg); ok {
+		// Reset cancel state after timeout
+		m.ctrlCPressedOnce = false
+		m.showCancelMsg = false
+		return m, nil
+	}
+
 	// Handle default value setting
 	if setDefaultMsg, ok := msg.(setDefaultValueMsg); ok {
 		// Simulate typing the default value by sending key messages
@@ -70,7 +103,11 @@ func (m *inputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m inputModel) View() string {
-	return m.input.View()
+	view := m.input.View()
+	if m.showCancelMsg {
+		view += "\n" + common.FontColor("Press Ctrl+C again to exit", "yellow")
+	}
+	return view
 }
 
 func (m inputModel) Value() string {
@@ -181,6 +218,9 @@ func Input(promptText, echoMode, validateOkPrefix, validateErrPrefix, defaultVal
 	}
 
 	m := inputModel{
+		ctrlCPressedOnce: false,
+		showCancelMsg:    false,
+		canceled:         false,
 		input: &prompt.Model{
 			ValidateFunc: prompt.VFNotBlank,
 			Prompt:       promptText,
@@ -219,6 +259,13 @@ func Input(promptText, echoMode, validateOkPrefix, validateErrPrefix, defaultVal
 		result, _ := json.Marshal(&InputResult{
 			Value: "",
 			Error: fmt.Sprintf("%s", err),
+		})
+		return string(result)
+	}
+	if m.canceled {
+		result, _ := json.Marshal(&InputResult{
+			Value: "",
+			Error: "Cancelled",
 		})
 		return string(result)
 	}

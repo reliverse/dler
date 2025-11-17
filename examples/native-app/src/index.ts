@@ -15,46 +15,65 @@ interface AppOptions {
   output?: string;
 }
 
-class NativeApp {
-  private options: AppOptions = {};
+const parseCliArgs = (): AppOptions => {
+  const parsed: AppOptions = {};
+  const args = process.argv.slice(2);
+  let index = 0;
 
-  constructor() {
-    this.parseArgs();
+  while (index < args.length) {
+    const arg = args.at(index);
+
+    switch (arg) {
+      case "-h":
+      case "--help":
+        parsed.help = true;
+        index += 1;
+        break;
+      case "-v":
+      case "--version":
+        parsed.version = true;
+        index += 1;
+        break;
+      case "--verbose":
+        parsed.verbose = true;
+        index += 1;
+        break;
+      case "-n":
+      case "--name": {
+        const value = args.at(index + 1);
+        if (value) {
+          parsed.name = value;
+          index += 2;
+          break;
+        }
+        index += 1;
+        break;
+      }
+      case "-o":
+      case "--output": {
+        const value = args.at(index + 1);
+        if (value) {
+          parsed.output = value;
+          index += 2;
+          break;
+        }
+        index += 1;
+        break;
+      }
+      default:
+        index += 1;
+        break;
+    }
   }
 
-  private parseArgs(): void {
-    const args = process.argv.slice(2);
+  return parsed;
+};
 
-    for (let i = 0; i < args.length; i++) {
-      const arg = args[i];
+class NativeApp {
+  private options: AppOptions;
 
-      switch (arg) {
-        case "--name":
-        case "-n":
-          this.options.name = args[++i];
-          break;
-        case "--version":
-        case "-v":
-          this.options.version = true;
-          break;
-        case "--help":
-        case "-h":
-          this.options.help = true;
-          break;
-        case "--verbose":
-          this.options.verbose = true;
-          break;
-        case "--output":
-        case "-o":
-          this.options.output = args[++i];
-          break;
-        default:
-          if (arg !== undefined && arg.startsWith("-")) {
-            logger.warn(`Unknown option: ${arg}`);
-          }
-          break;
-      }
-    }
+  constructor() {
+    this.options = parseCliArgs();
   }
 
   private showHelp(): void {

@@ -6,7 +6,11 @@ import { join, relative, resolve } from "node:path";
 import { writeErrorLines } from "@reliverse/dler-helpers";
 import { logger } from "@reliverse/dler-logger";
 import pMap from "@reliverse/dler-mapper";
-import { createIgnoreFilter, normalizePatterns } from "@reliverse/dler-matcher";
+import {
+  createIgnoreFilter,
+  createIncludeFilter,
+  normalizePatterns,
+} from "@reliverse/dler-matcher";
 import {
   getWorkspacePatterns,
   hasWorkspaces,
@@ -64,6 +68,7 @@ interface TscOptions {
   autoConcurrency?: boolean;
   skipUnchanged?: boolean;
   buildMode?: boolean;
+  filter?: string | string[];
 }
 
 interface SpawnResult {
@@ -243,7 +248,13 @@ const getWorkspacePackages = async (
 const filterPackages = (
   packages: PackageInfo[],
   ignore?: string | string[],
+  filter?: string | string[],
 ): PackageInfo[] => {
+  if (filter) {
+    const includeFilter = createIncludeFilter(filter);
+    return includeFilter(packages);
+  }
+
   // Always ignore @reliverse/dler-v1 package
   const alwaysIgnored = ["@reliverse/dler-v1"];
 
@@ -834,10 +845,15 @@ export const runTscOnAllPackages = async (
     }
 
     // Apply filters
-    const packages = filterPackages(allPackages, ignore);
-    const ignoredCount = allPackages.length - packages.length;
+    const packages = filterPackages(allPackages, ignore, options.filter);
+    const filteredCount = allPackages.length - packages.length;
 
-    if (ignoredCount > 0) {
+    if (options.filter) {
+      const patterns = normalizePatterns(options.filter);
+      logger.info(
+        `   Filtering to ${packages.length} packages matching: ${patterns.join(", ")}`,
+      );
+    } else if (filteredCount > 0) {
       // Always ignore @reliverse/dler-v1 package
       const alwaysIgnored = ["@reliverse/dler-v1"];
       const combinedIgnore = ignore
@@ -848,7 +864,7 @@ export const runTscOnAllPackages = async (
 
       const patterns = normalizePatterns(combinedIgnore);
       logger.info(
-        `   Ignoring ${ignoredCount} packages matching: ${patterns.join(", ")}`,
+        `   Ignoring ${filteredCount} packages matching: ${patterns.join(", ")}`,
       );
     }
 

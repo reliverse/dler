@@ -1,38 +1,35 @@
 import { ptr } from "bun:ffi";
+import { cancel } from "./cancel";
 import { symbols } from "./ffi";
 import { encode, toString } from "./utils";
 
-export type SelectionItem = {
-  value: string;
+export type SelectionItem<T extends string = string> = {
+  value: T;
   label: string;
-  description?: string;
+  hint?: string;
   disabled?: boolean;
 };
 
-export type SelectPromptOptions = {
+type ExtractValues<T extends readonly SelectionItem[]> = T[number]["value"];
+
+export type SelectPromptOptions<
+  TOptions extends readonly SelectionItem[] = SelectionItem[],
+> = {
   title: string;
-  options: SelectionItem[];
+  options: TOptions;
   perPage?: number;
   headerText?: string;
   footerText?: string;
 };
 
-export type MultiselectPromptOptions = {
+export type MultiselectPromptOptions<
+  TOptions extends readonly SelectionItem[] = SelectionItem[],
+> = {
   title: string;
-  options: SelectionItem[];
+  options: TOptions;
   perPage?: number;
   headerText?: string;
   footerText?: string;
-};
-
-export type SelectionReturn = {
-  selectedIndex: number | null;
-  error: string | null;
-};
-
-export type MultiselectReturn = {
-  selectedIndices: number[];
-  error: string | null;
 };
 
 export type ConfirmPromptOptions = {
@@ -46,15 +43,22 @@ export type ConfirmReturn = {
   error: string | null;
 };
 
-export async function selectPrompt(
-  options: SelectPromptOptions,
-): Promise<SelectionReturn> {
+// Overload signatures for explicit type parameter support
+export function selectPrompt<T extends string>(
+  options: SelectPromptOptions<readonly SelectionItem<T>[]>,
+): Promise<T>;
+export function selectPrompt<const TOptions extends readonly SelectionItem[]>(
+  options: SelectPromptOptions<TOptions>,
+): Promise<ExtractValues<TOptions>>;
+export async function selectPrompt<
+  const TOptions extends readonly SelectionItem[],
+>(options: SelectPromptOptions<TOptions>): Promise<ExtractValues<TOptions>> {
   const stringifiedItems = JSON.stringify(
     options.options.map((item) => {
       return {
         value: item.value,
         label: item.label,
-        description: item.description ?? "",
+        hint: item.hint ?? "",
         disabled: item.disabled ?? false,
       };
     }),
@@ -70,26 +74,39 @@ export async function selectPrompt(
     error: string;
   };
   if (error !== "") {
-    return {
-      selectedIndex: null,
-      error,
-    };
+    if (error === "Cancelled") {
+      cancel(error);
+    }
+    throw new Error(error);
   }
-  return {
-    selectedIndex: Number(selectedIndex),
-    error: null,
-  };
+  const index = Number(selectedIndex);
+  const selectedOption = options.options[index];
+  if (!selectedOption) {
+    throw new Error("Invalid selection index");
+  }
+  return selectedOption.value as ExtractValues<TOptions>;
 }
 
-export async function multiselectPrompt(
-  options: MultiselectPromptOptions,
-): Promise<MultiselectReturn> {
+// Overload signatures for explicit type parameter support
+export function multiselectPrompt<T extends string>(
+  options: MultiselectPromptOptions<readonly SelectionItem<T>[]>,
+): Promise<T[]>;
+export function multiselectPrompt<
+  const TOptions extends readonly SelectionItem[],
+>(
+  options: MultiselectPromptOptions<TOptions>,
+): Promise<ExtractValues<TOptions>[]>;
+export async function multiselectPrompt<
+  const TOptions extends readonly SelectionItem[],
+>(
+  options: MultiselectPromptOptions<TOptions>,
+): Promise<ExtractValues<TOptions>[]> {
   const stringifiedItems = JSON.stringify(
     options.options.map((item) => {
       return {
         value: item.value,
         label: item.label,
-        description: item.description ?? "",
+        hint: item.hint ?? "",
         disabled: item.disabled ?? false,
       };
     }),
@@ -105,15 +122,19 @@ export async function multiselectPrompt(
     error: string;
   };
   if (error !== "") {
-    return {
-      selectedIndices: [],
-      error,
-    };
+    if (error === "Cancelled") {
+      cancel(error);
+    }
+    throw new Error(error);
   }
-  return {
-    selectedIndices: selectedIndices.map((idx) => Number(idx)),
-    error: null,
-  };
+  const indices = selectedIndices.map((idx) => Number(idx));
+  const values = indices
+    .map((index) => options.options[index]?.value)
+    .filter((value): value is ExtractValues<TOptions> => value !== undefined);
+  if (values.length !== indices.length) {
+    throw new Error("Invalid selection indices");
+  }
+  return values;
 }
 
 export async function confirmPrompt(
@@ -129,6 +150,9 @@ export async function confirmPrompt(
     error: string;
   };
   if (error !== "") {
+    if (error === "Cancelled") {
+      cancel(error);
+    }
     return {
       confirmed: null,
       error,

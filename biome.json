@@ -12,6 +12,7 @@
       "!**/.turbo",
       "!**/.vercel",
       "!**/dist",
+      "!**/deprecated",
       "!**/node_modules"
     ],
     "ignoreUnknown": false

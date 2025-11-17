@@ -1,7 +1,9 @@
 import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
 import { logger } from "@reliverse/dler-logger";
 import {
+  exitCancelled,
   inputPrompt,
+  isCancel,
   multiselectPrompt,
   selectPrompt,
   spinnerPrompt,
@@ -24,7 +26,18 @@ export default defineCommand({
     logger.log("🎮 Prompt Playground Demo\n");
 
     // Input prompt - username
-    const usernameResult = await inputPrompt({ title: "Enter username: " });
+    let usernameResult;
+    try {
+      usernameResult = await inputPrompt({ title: "Enter username: " });
+    } catch (error) {
+      if (isCancel(error)) {
+        return exitCancelled("Operation cancelled");
+      }
+      logger.error(
+        `Error: ${error instanceof Error ? error.message : "Input failed"}`,
+      );
+      return;
+    }
     logger.log("Username result:", JSON.stringify(usernameResult, null, 2));
     if (usernameResult.error) {
       logger.error(`Error: ${usernameResult.error}`);
@@ -35,10 +48,21 @@ export default defineCommand({
     }
 
     // Input prompt - password
-    const passwordResult = await inputPrompt({
-      title: "Enter password: ",
-      echoMode: "password",
-    });
+    let passwordResult;
+    try {
+      passwordResult = await inputPrompt({
+        title: "Enter password: ",
+        echoMode: "password",
+      });
+    } catch (error) {
+      if (isCancel(error)) {
+        return exitCancelled("Operation cancelled");
+      }
+      logger.error(
+        `Error: ${error instanceof Error ? error.message : "Input failed"}`,
+      );
+      return;
+    }
     logger.log("Password result:", JSON.stringify(passwordResult, null, 2));
     if (passwordResult.error) {
       logger.error(`Error: ${passwordResult.error}`);
@@ -49,7 +73,22 @@ export default defineCommand({
     }
 
     // Select prompt
-    const commitTypeOptions = [
+    const selectCommitTypeOptions = [
+      { value: "ts", label: "TypeScript" },
+      { value: "js", label: "JavaScript" },
+      { value: "py", label: "Python" },
+      { value: "java", label: "Java" },
+      { value: "cpp", label: "C++" },
+      { value: "c", label: "C" },
+      { value: "rust", label: "Rust" },
+      { value: "go", label: "Go" },
+      { value: "php", label: "PHP" },
+      { value: "ruby", label: "Ruby" },
+      { value: "swift", label: "Swift" },
+      { value: "kotlin", label: "Kotlin" },
+      { value: "scala", label: "Scala" },
+    ];
+    const multiselectCommitTypeOptions = [
       { value: "feat", label: "Introducing new features" },
       { value: "fix", label: "Bug fix" },
       { value: "docs", label: "Writing docs" },
@@ -59,39 +98,45 @@ export default defineCommand({
       { value: "chore", label: "When adding missing tests" },
       { value: "perf", label: "Improving performance" },
     ];
-    const commitTypeResult = await selectPrompt({
-      title: "Select Commit Type: ",
-      options: commitTypeOptions,
-      perPage: 5,
-      footerText: "Footer here",
-    });
-    logger.log("Select result:", JSON.stringify(commitTypeResult, null, 2));
-    if (commitTypeResult.error || commitTypeResult.selectedIndex === null) {
-      logger.error("Selection cancelled or error occurred");
+    let selectedCommitType: string;
+    try {
+      selectedCommitType = await selectPrompt({
+        title: "What is your favorite programming language?",
+        options: selectCommitTypeOptions,
+        perPage: 5,
+        footerText: "Enter to confirm",
+      });
+    } catch (error) {
+      if (isCancel(error)) {
+        return exitCancelled("Operation cancelled");
+      }
+      logger.error(
+        `Error: ${error instanceof Error ? error.message : "Selection failed"}`,
+      );
       return;
     }
-    const selectedCommitType =
-      commitTypeOptions[commitTypeResult.selectedIndex]?.value ?? "";
+    logger.log("Select result:", selectedCommitType);
     logger.success(`Selected commit type: ${selectedCommitType}\n`);
 
     // Multiselect prompt
-    const multiselectResult = await multiselectPrompt({
-      title: "Select Commit Types: ",
-      options: commitTypeOptions,
-      perPage: 5,
-      footerText: "Space: toggle, Enter: confirm",
-    });
-    logger.log(
-      "Multiselect result:",
-      JSON.stringify(multiselectResult, null, 2),
-    );
-    if (multiselectResult.error) {
-      logger.error("Selection cancelled or error occurred");
+    let selectedCommitTypes: string[];
+    try {
+      selectedCommitTypes = await multiselectPrompt({
+        title: "Select Commit Types: ",
+        options: multiselectCommitTypeOptions,
+        perPage: 5,
+        footerText: "Space: toggle, Enter: confirm",
+      });
+    } catch (error) {
+      if (isCancel(error)) {
+        return exitCancelled("Operation cancelled");
+      }
+      logger.error(
+        `Error: ${error instanceof Error ? error.message : "Selection failed"}`,
+      );
       return;
     }
-    const selectedCommitTypes = multiselectResult.selectedIndices.map(
-      (idx) => commitTypeOptions[idx]?.value ?? "",
-    );
+    logger.log("Multiselect result:", selectedCommitTypes);
     logger.success(
       `Selected commit types: ${selectedCommitTypes.join(", ")}\n`,
     );

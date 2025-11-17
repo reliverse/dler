@@ -53,23 +53,68 @@ export default defineCommand({
         return;
       }
 
+      const test = await selectPrompt<"1" | "2" | "3">({
+        title: "Select an item:",
+        options: [
+          { value: "1", label: "Item 1" },
+          { value: "2", label: "Item 2" },
+          { value: "3", label: "Item 3" },
+        ],
+      });
+      switch (test) {
+        case "1":
+          logger.success("Item 1 selected");
+          break;
+        case "2":
+          logger.success("Item 2 selected");
+          break;
+        case "3":
+          logger.success("Item 3 selected");
+          break;
+      }
+
+      const multiTest = await multiselectPrompt<"a" | "b" | "c">({
+        title: "Select multiple items:",
+        options: [
+          { value: "a", label: "Option A" },
+          { value: "b", label: "Option B" },
+          { value: "c", label: "Option C" },
+        ],
+      });
+
+      for (const item of multiTest) {
+        switch (item) {
+          case "a":
+            logger.success("Selected A");
+            break;
+          case "b":
+            logger.success("Selected B");
+            break;
+          case "c":
+            logger.success("Selected C");
+            break;
+        }
+      }
+
       const priorityOptions = [
         { value: "low", label: "low" },
         { value: "medium", label: "medium" },
-        { value: "high", label: "high", description: "High priority" },
-      ] satisfies SelectionItem[];
-      const priorityResult = await selectPrompt({
-        title: "Select priority:",
-        options: priorityOptions,
-      });
-      if (priorityResult.error || priorityResult.selectedIndex === null) {
-        logger.error("Priority selection cancelled");
+        { value: "high", label: "high", hint: "High priority" },
+      ] as const satisfies readonly SelectionItem[];
+      let priority: "low" | "medium" | "high";
+      try {
+        priority = await selectPrompt({
+          title: "Select priority:",
+          options: priorityOptions,
+        });
+      } catch (error) {
+        logger.error(
+          error instanceof Error
+            ? error.message
+            : "Priority selection cancelled",
+        );
         return;
       }
-      const priority = priorityOptions[priorityResult.selectedIndex]?.value as
-        | "low"
-        | "medium"
-        | "high";
 
       todos.push({
         id: nextId++,
@@ -116,12 +161,16 @@ export default defineCommand({
         label: `[${t.id}] ${t.task} (${t.priority})`,
       }));
 
-      const selectedResult = await multiselectPrompt({
-        title: "Select tasks to mark as completed:",
-        options: taskOptions,
-      });
-      if (selectedResult.error) {
-        logger.error("Selection cancelled");
+      let selectedTaskIds: string[];
+      try {
+        selectedTaskIds = await multiselectPrompt({
+          title: "Select tasks to mark as completed:",
+          options: taskOptions,
+        });
+      } catch (error) {
+        logger.error(
+          error instanceof Error ? error.message : "Selection cancelled",
+        );
         return;
       }
 
@@ -132,22 +181,17 @@ export default defineCommand({
       completeSpinner.start();
 
       const completedTasks: Todo[] = [];
-      for (const idx of selectedResult.selectedIndices) {
-        const taskId = taskOptions[idx]?.value;
-        if (taskId) {
-          const id = Number.parseInt(taskId, 10);
-          const todo = todos.find((t) => t.id === id);
-          if (todo) {
-            todo.completed = true;
-            completedTasks.push(todo);
-            await new Promise((resolve) => setTimeout(resolve, 300));
-          }
+      for (const taskId of selectedTaskIds) {
+        const id = Number.parseInt(taskId, 10);
+        const todo = todos.find((t) => t.id === id);
+        if (todo) {
+          todo.completed = true;
+          completedTasks.push(todo);
+          await new Promise((resolve) => setTimeout(resolve, 300));
         }
       }
 
-      completeSpinner.succeed(
-        `Completed ${selectedResult.selectedIndices.length} task(s)!`,
-      );
+      completeSpinner.succeed(`Completed ${selectedTaskIds.length} task(s)!`);
       for (const todo of completedTasks) {
         logger.success(`✅ Completed: ${todo.task}`);
       }
@@ -162,17 +206,21 @@ export default defineCommand({
         label: `[${t.id}] ${t.task} ${t.completed ? "(completed)" : ""}`,
       }));
 
-      const selectedResult = await multiselectPrompt({
-        title: "Select tasks to delete:",
-        options: taskOptions,
-      });
-      if (selectedResult.error) {
-        logger.error("Selection cancelled");
+      let selectedTaskIds: string[];
+      try {
+        selectedTaskIds = await multiselectPrompt({
+          title: "Select tasks to delete:",
+          options: taskOptions,
+        });
+      } catch (error) {
+        logger.error(
+          error instanceof Error ? error.message : "Selection cancelled",
+        );
         return;
       }
 
       const confirmResult = await confirmPrompt({
-        title: `Are you sure you want to delete ${selectedResult.selectedIndices.length} task(s)?`,
+        title: `Are you sure you want to delete ${selectedTaskIds.length} task(s)?`,
       });
 
       if (
@@ -191,24 +239,19 @@ export default defineCommand({
       deleteSpinner.start();
 
       const deletedTasks: Todo[] = [];
-      for (const idx of selectedResult.selectedIndices) {
-        const taskId = taskOptions[idx]?.value;
-        if (taskId) {
-          const id = Number.parseInt(taskId, 10);
-          const index = todos.findIndex((t) => t.id === id);
-          if (index !== -1) {
-            const deleted = todos.splice(index, 1)[0];
-            if (deleted) {
-              deletedTasks.push(deleted);
-              await new Promise((resolve) => setTimeout(resolve, 300));
-            }
+      for (const taskId of selectedTaskIds) {
+        const id = Number.parseInt(taskId, 10);
+        const index = todos.findIndex((t) => t.id === id);
+        if (index !== -1) {
+          const deleted = todos.splice(index, 1)[0];
+          if (deleted) {
+            deletedTasks.push(deleted);
+            await new Promise((resolve) => setTimeout(resolve, 300));
           }
         }
       }
 
-      deleteSpinner.succeed(
-        `Deleted ${selectedResult.selectedIndices.length} task(s)!`,
-      );
+      deleteSpinner.succeed(`Deleted ${selectedTaskIds.length} task(s)!`);
       for (const deleted of deletedTasks) {
         logger.success(`🗑️  Deleted: ${deleted.task}`);
       }

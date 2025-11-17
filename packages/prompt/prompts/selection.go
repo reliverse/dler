@@ -16,14 +16,48 @@ import (
 )
 
 type model struct {
-	sl    selector.Model
-	items []ListItem
+	sl              selector.Model
+	items           []ListItem
+	ctrlCPressedOnce bool
+	ctrlCPressTime   time.Time
+	showCancelMsg    bool
+	canceled         bool
 }
 
 func (m model) Init() tea.Cmd {
 	return nil
 }
+
+type resetCancelMsg struct{}
+
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// Handle double Ctrl+C first - must intercept before selector sees it
+	if keyMsg, ok := msg.(tea.KeyMsg); ok && keyMsg.String() == "ctrl+c" {
+		now := time.Now()
+		if m.ctrlCPressedOnce && now.Sub(m.ctrlCPressTime) < 2*time.Second {
+			// Second Ctrl+C within 2 seconds - actually cancel
+			m.canceled = true
+			return m, tea.Quit
+		}
+		// First Ctrl+C - show message and set timer
+		// IMPORTANT: Don't pass this to selector, return early
+		m.ctrlCPressedOnce = true
+		m.ctrlCPressTime = now
+		m.showCancelMsg = true
+		// Reset after 2 seconds
+		return m, tea.Tick(2*time.Second, func(t time.Time) tea.Msg {
+			return resetCancelMsg{}
+		})
+	}
+
+	// Handle reset message
+	if _, ok := msg.(resetCancelMsg); ok {
+		// Reset cancel state after timeout
+		m.ctrlCPressedOnce = false
+		m.showCancelMsg = false
+		return m, nil
+	}
+
 	// By default, the prompt component will not return a "tea.Quit"
 	// message unless Ctrl+C is pressed.
 	//
@@ -67,14 +101,18 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	return m.sl.View()
+	view := m.sl.View()
+	if m.showCancelMsg {
+		view += "\n" + common.FontColor("Press Ctrl+C again to exit", "yellow")
+	}
+	return view
 }
 
 type ListItem struct {
-	Value       string `json:"value"`
-	Label       string `json:"label"`
-	Description string `json:"description"`
-	Disabled    bool   `json:"disabled"`
+	Value    string `json:"value"`
+	Label    string `json:"label"`
+	Hint     string `json:"hint"`
+	Disabled bool   `json:"disabled"`
 }
 
 type Result struct {
@@ -188,7 +226,7 @@ func Selection(jsonData, headerText, footerText string, perPage int) string {
 	json.Unmarshal([]byte(jsonData), &item)
 	data := []interface{}{}
 	for _, val := range item {
-		data = append(data, ListItem{Value: val.Value, Label: val.Label, Description: val.Description, Disabled: val.Disabled})
+		data = append(data, ListItem{Value: val.Value, Label: val.Label, Hint: val.Hint, Disabled: val.Disabled})
 	}
 
 	// Find first non-disabled item to start on
@@ -201,7 +239,10 @@ func Selection(jsonData, headerText, footerText string, perPage int) string {
 	}
 
 	m := &model{
-		items: item,
+		items:            item,
+		ctrlCPressedOnce: false,
+		showCancelMsg:    false,
+		canceled:         false,
 		sl: selector.Model{
 			Data:    data,
 			PerPage: perPage,
@@ -216,13 +257,13 @@ func Selection(jsonData, headerText, footerText string, perPage int) string {
 					disabled = item[gdIndex].Disabled
 				}
 				if disabled {
-					if t.Description != "" {
-						return common.FontColor(fmt.Sprintf("[%d] %s (%s) (disabled)", gdIndex+1, t.Label, t.Description), "240")
-					}
+				if t.Hint != "" {
+					return common.FontColor(fmt.Sprintf("[%d] %s (%s) (disabled)", gdIndex+1, t.Label, t.Hint), "240")
+				}
 					return common.FontColor(fmt.Sprintf("[%d] %s (disabled)", gdIndex+1, t.Label), "240")
 				}
-				if t.Description != "" {
-					return common.FontColor(fmt.Sprintf("[%d] %s (%s)", gdIndex+1, t.Label, t.Description), selector.ColorSelected)
+				if t.Hint != "" {
+					return common.FontColor(fmt.Sprintf("[%d] %s (%s)", gdIndex+1, t.Label, t.Hint), selector.ColorSelected)
 				}
 				return common.FontColor(fmt.Sprintf("[%d] %s", gdIndex+1, t.Label), selector.ColorSelected)
 			},
@@ -234,13 +275,7 @@ func Selection(jsonData, headerText, footerText string, perPage int) string {
 					disabled = item[gdIndex].Disabled
 				}
 				if disabled {
-					if t.Description != "" {
-						return common.FontColor(fmt.Sprintf(" %d. %s (%s) (disabled)", gdIndex+1, t.Label, t.Description), "240")
-					}
 					return common.FontColor(fmt.Sprintf(" %d. %s (disabled)", gdIndex+1, t.Label), "240")
-				}
-				if t.Description != "" {
-					return common.FontColor(fmt.Sprintf(" %d. %s (%s)", gdIndex+1, t.Label, t.Description), selector.ColorUnSelected)
 				}
 				return common.FontColor(fmt.Sprintf(" %d. %s", gdIndex+1, t.Label), selector.ColorUnSelected)
 			},
@@ -269,7 +304,7 @@ func Selection(jsonData, headerText, footerText string, perPage int) string {
 		})
 		return string(result)
 	}
-	if !m.sl.Canceled() {
+	if !m.canceled && !m.sl.Canceled() {
 		selectedIndex := m.sl.Index()
 		// Ensure we didn't select a disabled item
 		if selectedIndex < len(m.items) && m.items[selectedIndex].Disabled {

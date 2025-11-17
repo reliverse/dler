@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler-helpers",
-  "version": "2.1.14",
+  "version": "2.1.16",
   "private": false,
   "type": "module",
   "description": "@reliverse/dler-helpers is a collection of helper functions for the dler monorepo.",

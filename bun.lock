@@ -5,38 +5,32 @@
     "": {
       "name": "@reliverse/dler-monorepo",
       "devDependencies": {
-        "@biomejs/biome": "^2.3.5",
+        "@biomejs/biome": "^2.3.6",
         "@types/bun": "^1.3.2",
         "ultracite": "^6.3.3",
       },
     },
     "cli": {
       "name": "@reliverse/dler",
-      "version": "2.1.13",
+      "version": "2.1.17",
       "bin": {
         "dler": "dist/cli.js",
       },
       "dependencies": {
-        "@reliverse/dler-build": "workspace:*",
-        "@reliverse/dler-bump": "workspace:*",
-        "@reliverse/dler-helpers": "workspace:*",
-        "@reliverse/dler-launcher": "workspace:*",
-        "@reliverse/dler-logger": "workspace:*",
-        "@reliverse/dler-mapper": "workspace:*",
-        "@reliverse/dler-matcher": "workspace:*",
-        "@reliverse/dler-pkg-tsc": "workspace:*",
-        "@reliverse/dler-prompt": "workspace:*",
-        "@reliverse/dler-publish": "workspace:*",
-        "c12": "catalog:",
-        "clipboardy": "catalog:",
-        "lookpath": "catalog:",
-        "semver": "catalog:",
-      },
-      "devDependencies": {
-        "@p/tsconfig": "workspace:*",
-        "@types/bun": "catalog:",
-        "@types/semver": "catalog:",
-        "typescript": "catalog:",
+        "@reliverse/dler-build": "2.1.16",
+        "@reliverse/dler-bump": "2.1.16",
+        "@reliverse/dler-helpers": "2.1.16",
+        "@reliverse/dler-launcher": "2.1.16",
+        "@reliverse/dler-logger": "2.1.16",
+        "@reliverse/dler-mapper": "2.1.16",
+        "@reliverse/dler-matcher": "2.1.16",
+        "@reliverse/dler-pkg-tsc": "2.1.16",
+        "@reliverse/dler-prompt": "2.1.16",
+        "@reliverse/dler-publish": "2.1.16",
+        "c12": "^3.3.2",
+        "clipboardy": "^5.0.0",
+        "lookpath": "^1.2.3",
+        "semver": "^7.7.3",
       },
     },
     "deprecated": {
@@ -216,7 +210,7 @@
     },
     "packages/build": {
       "name": "@reliverse/dler-build",
-      "version": "2.1.13",
+      "version": "2.1.16",
       "dependencies": {
         "@reliverse/dler-config": "workspace:*",
         "@reliverse/dler-helpers": "workspace:*",
@@ -246,7 +240,7 @@
     },
     "packages/bump": {
       "name": "@reliverse/dler-bump",
-      "version": "2.1.13",
+      "version": "2.1.16",
       "dependencies": {
         "semver": "catalog:",
       },
@@ -259,7 +253,7 @@
     },
     "packages/colors": {
       "name": "@reliverse/dler-colors",
-      "version": "2.1.13",
+      "version": "2.1.16",
       "devDependencies": {
         "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
@@ -268,7 +262,7 @@
     },
     "packages/config": {
       "name": "@reliverse/dler-config",
-      "version": "2.1.13",
+      "version": "2.1.16",
       "dependencies": {
         "@reliverse/dler-matcher": "workspace:*",
         "@reliverse/dler-pkg-tsc": "workspace:*",
@@ -282,9 +276,18 @@
         "typescript": "catalog:",
       },
     },
+    "packages/fs-utils": {
+      "name": "@reliverse/dler-fs-utils",
+      "version": "2.1.16",
+      "devDependencies": {
+        "@p/tsconfig": "workspace:*",
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "packages/helpers": {
       "name": "@reliverse/dler-helpers",
-      "version": "2.1.13",
+      "version": "2.1.16",
       "dependencies": {
         "@reliverse/dler-matcher": "workspace:*",
         "@reliverse/dler-pkg-tsc": "workspace:*",
@@ -297,7 +300,7 @@
     },
     "packages/launcher": {
       "name": "@reliverse/dler-launcher",
-      "version": "2.1.13",
+      "version": "2.1.16",
       "dependencies": {
         "@reliverse/dler-colors": "workspace:*",
         "@reliverse/dler-helpers": "workspace:*",
@@ -312,7 +315,7 @@
     },
     "packages/logger": {
       "name": "@reliverse/dler-logger",
-      "version": "2.1.13",
+      "version": "2.1.16",
       "dependencies": {
         "@reliverse/dler-colors": "workspace:*",
       },
@@ -324,7 +327,7 @@
     },
     "packages/mapper": {
       "name": "@reliverse/dler-mapper",
-      "version": "2.1.13",
+      "version": "2.1.16",
       "devDependencies": {
         "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
@@ -333,7 +336,7 @@
     },
     "packages/matcher": {
       "name": "@reliverse/dler-matcher",
-      "version": "2.1.13",
+      "version": "2.1.16",
       "dependencies": {
         "zeptomatch": "catalog:",
       },
@@ -345,7 +348,7 @@
     },
     "packages/pkg-tsc": {
       "name": "@reliverse/dler-pkg-tsc",
-      "version": "2.1.13",
+      "version": "2.1.16",
       "dependencies": {
         "pkg-types": "catalog:",
       },
@@ -357,7 +360,7 @@
     },
     "packages/prompt": {
       "name": "@reliverse/dler-prompt",
-      "version": "2.1.13",
+      "version": "2.1.16",
       "devDependencies": {
         "@p/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
@@ -367,7 +370,7 @@
     },
     "packages/publish": {
       "name": "@reliverse/dler-publish",
-      "version": "2.1.13",
+      "version": "2.1.16",
       "dependencies": {
         "@reliverse/dler-build": "workspace:*",
         "@reliverse/dler-bump": "workspace:*",
@@ -385,7 +388,7 @@
     },
     "packages/spinner": {
       "name": "@reliverse/dler-spinner",
-      "version": "2.1.13",
+      "version": "2.1.16",
       "dependencies": {
         "@reliverse/dler-colors": "workspace:*",
         "cli-cursor": "catalog:",
@@ -422,10 +425,10 @@
     },
   },
   "catalog": {
-    "@ai-sdk/openai": "^2.0.67",
+    "@ai-sdk/openai": "^2.0.68",
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
-    "@biomejs/biome": "^2.3.5",
+    "@biomejs/biome": "^2.3.6",
     "@hookform/resolvers": "^5.2.2",
     "@libsql/client": "^0.15.15",
     "@mendable/firecrawl-js": "^4.5.0",
@@ -445,7 +448,7 @@
     "@reliverse/relinka": "^1.6.1",
     "@reliverse/rematch": "^1.1.0",
     "@reliverse/rempts": "^1.7.66",
-    "@reliverse/rse": "^2.0.5",
+    "@reliverse/rse": "^2.0.7",
     "@reliverse/runtime": "^1.0.3",
     "@rollup/plugin-alias": "^6.0.0",
     "@rollup/plugin-commonjs": "^29.0.0",
@@ -462,7 +465,7 @@
     "@types/semver": "^7.7.1",
     "@types/shebang-command": "^1.2.2",
     "@types/tar-stream": "^3.1.4",
-    "@typescript/native-preview": "^7.0.0-dev.20251115.1",
+    "@typescript/native-preview": "^7.0.0-dev.20251117.1",
     "@uploadcare/upload-client": "^6.18.0",
     "@vercel/sdk": "^1.17.1",
     "@volar/typescript": "^2.4.23",
@@ -506,7 +509,7 @@
     "jsonrepair": "^3.13.1",
     "ky": "^1.14.0",
     "lookpath": "^1.2.3",
-    "lucide-react": "^0.553.0",
+    "lucide-react": "^0.554.0",
     "magic-string": "^0.30.21",
     "magicast": "^0.5.1",
     "minimatch": "^10.1.1",
@@ -562,7 +565,7 @@
   "packages": {
     "@ai-sdk/gateway": ["@ai-sdk/gateway@2.0.9", "", { "dependencies": { "@ai-sdk/provider": "2.0.0", "@ai-sdk/provider-utils": "3.0.17", "@vercel/oidc": "3.0.3" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-E6x4h5CPPPJ0za1r5HsLtHbeI+Tp3H+YFtcH8G3dSSPFE6w+PZINzB4NxLZmg1QqSeA5HTP3ZEzzsohp0o2GEw=="],
 
-    "@ai-sdk/openai": ["@ai-sdk/openai@2.0.67", "", { "dependencies": { "@ai-sdk/provider": "2.0.0", "@ai-sdk/provider-utils": "3.0.17" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-JhB3fUpY+IxAocyJt2PHuhfNwH+e+rDbZ8Q+d0hgSyNycuPRrV0xutLaf7mgDTvjr5FCrVEkXmM73tJprzZMiA=="],
+    "@ai-sdk/openai": ["@ai-sdk/openai@2.0.68", "", { "dependencies": { "@ai-sdk/provider": "2.0.0", "@ai-sdk/provider-utils": "3.0.17" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-qUSLFkqgUoFArzBwttu0KWVAZYjbsdZGOklSJXpfZ2nDC61yseHxtcnuG8u6tqKnGXDh4eakEgREDWU2sRht7A=="],
 
     "@ai-sdk/provider": ["@ai-sdk/provider@2.0.0", "", { "dependencies": { "json-schema": "^0.4.0" } }, "sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA=="],
 
@@ -642,23 +645,23 @@
 
     "@better-fetch/fetch": ["@better-fetch/fetch@1.1.18", "", {}, "sha512-rEFOE1MYIsBmoMJtQbl32PGHHXuG2hDxvEd7rUHE0vCBoFQVSDqaVs9hkZEtHCxRoY+CljXKFCOuJ8uxqw1LcA=="],
 
-    "@biomejs/biome": ["@biomejs/biome@2.3.5", "", { "optionalDependencies": { "@biomejs/cli-darwin-arm64": "2.3.5", "@biomejs/cli-darwin-x64": "2.3.5", "@biomejs/cli-linux-arm64": "2.3.5", "@biomejs/cli-linux-arm64-musl": "2.3.5", "@biomejs/cli-linux-x64": "2.3.5", "@biomejs/cli-linux-x64-musl": "2.3.5", "@biomejs/cli-win32-arm64": "2.3.5", "@biomejs/cli-win32-x64": "2.3.5" }, "bin": { "biome": "bin/biome" } }, "sha512-HvLhNlIlBIbAV77VysRIBEwp55oM/QAjQEin74QQX9Xb259/XP/D5AGGnZMOyF1el4zcvlNYYR3AyTMUV3ILhg=="],
+    "@biomejs/biome": ["@biomejs/biome@2.3.6", "", { "optionalDependencies": { "@biomejs/cli-darwin-arm64": "2.3.6", "@biomejs/cli-darwin-x64": "2.3.6", "@biomejs/cli-linux-arm64": "2.3.6", "@biomejs/cli-linux-arm64-musl": "2.3.6", "@biomejs/cli-linux-x64": "2.3.6", "@biomejs/cli-linux-x64-musl": "2.3.6", "@biomejs/cli-win32-arm64": "2.3.6", "@biomejs/cli-win32-x64": "2.3.6" }, "bin": { "biome": "bin/biome" } }, "sha512-oqUhWyU6tae0MFsr/7iLe++QWRg+6jtUhlx9/0GmCWDYFFrK366sBLamNM7D9Y+c7YSynUFKr8lpEp1r6Sk7eA=="],
 
-    "@biomejs/cli-darwin-arm64": ["@biomejs/cli-darwin-arm64@2.3.5", "", { "os": "darwin", "cpu": "arm64" }, "sha512-fLdTur8cJU33HxHUUsii3GLx/TR0BsfQx8FkeqIiW33cGMtUD56fAtrh+2Fx1uhiCsVZlFh6iLKUU3pniZREQw=="],
+    "@biomejs/cli-darwin-arm64": ["@biomejs/cli-darwin-arm64@2.3.6", "", { "os": "darwin", "cpu": "arm64" }, "sha512-P4JWE5d8UayBxYe197QJwyW4ZHp0B+zvRIGCusOm1WbxmlhpAQA1zEqQuunHgSIzvyEEp4TVxiKGXNFZPg7r9Q=="],
 
-    "@biomejs/cli-darwin-x64": ["@biomejs/cli-darwin-x64@2.3.5", "", { "os": "darwin", "cpu": "x64" }, "sha512-qpT8XDqeUlzrOW8zb4k3tjhT7rmvVRumhi2657I2aGcY4B+Ft5fNwDdZGACzn8zj7/K1fdWjgwYE3i2mSZ+vOA=="],
+    "@biomejs/cli-darwin-x64": ["@biomejs/cli-darwin-x64@2.3.6", "", { "os": "darwin", "cpu": "x64" }, "sha512-I4rTebj+F/L9K93IU7yTFs8nQ6EhaCOivxduRha4w4WEZK80yoZ8OAdR1F33m4yJ/NfUuTUbP/Wjs+vKjlCoWA=="],
 
-    "@biomejs/cli-linux-arm64": ["@biomejs/cli-linux-arm64@2.3.5", "", { "os": "linux", "cpu": "arm64" }, "sha512-u/pybjTBPGBHB66ku4pK1gj+Dxgx7/+Z0jAriZISPX1ocTO8aHh8x8e7Kb1rB4Ms0nA/SzjtNOVJ4exVavQBCw=="],
+    "@biomejs/cli-linux-arm64": ["@biomejs/cli-linux-arm64@2.3.6", "", { "os": "linux", "cpu": "arm64" }, "sha512-JjYy83eVBnvuINZiqyFO7xx72v8Srh4hsgaacSBCjC22DwM6+ZvnX1/fj8/SBiLuUOfZ8YhU2pfq2Dzakeyg1A=="],
 
-    "@biomejs/cli-linux-arm64-musl": ["@biomejs/cli-linux-arm64-musl@2.3.5", "", { "os": "linux", "cpu": "arm64" }, "sha512-eGUG7+hcLgGnMNl1KHVZUYxahYAhC462jF/wQolqu4qso2MSk32Q+QrpN7eN4jAHAg7FUMIo897muIhK4hXhqg=="],
+    "@biomejs/cli-linux-arm64-musl": ["@biomejs/cli-linux-arm64-musl@2.3.6", "", { "os": "linux", "cpu": "arm64" }, "sha512-oK1NpIXIixbJ/4Tcx40cwiieqah6rRUtMGOHDeK2ToT7yUFVEvXUGRKqH0O4hqZ9tW8TcXNZKfgRH6xrsjVtGg=="],
 
-    "@biomejs/cli-linux-x64": ["@biomejs/cli-linux-x64@2.3.5", "", { "os": "linux", "cpu": "x64" }, "sha512-XrIVi9YAW6ye0CGQ+yax0gLfx+BFOtKaNX74n+xHWla6Cl6huUmcKNO7HPx7BiKnJUzrxXY1qYlm7xMvi08X4g=="],
+    "@biomejs/cli-linux-x64": ["@biomejs/cli-linux-x64@2.3.6", "", { "os": "linux", "cpu": "x64" }, "sha512-ZjPXzy5yN9wusIoX+8Zp4p6cL8r0NzJCXg/4r1KLVveIPXd2jKVlqZ6ZyzEq385WwU3OX5KOwQYLQsOc788waQ=="],
 
-    "@biomejs/cli-linux-x64-musl": ["@biomejs/cli-linux-x64-musl@2.3.5", "", { "os": "linux", "cpu": "x64" }, "sha512-awVuycTPpVTH/+WDVnEEYSf6nbCBHf/4wB3lquwT7puhNg8R4XvonWNZzUsfHZrCkjkLhFH/vCZK5jHatD9FEg=="],
+    "@biomejs/cli-linux-x64-musl": ["@biomejs/cli-linux-x64-musl@2.3.6", "", { "os": "linux", "cpu": "x64" }, "sha512-QvxB8GHQeaO4FCtwJpJjCgJkbHBbWxRHUxQlod+xeaYE6gtJdSkYkuxdKAQUZEOIsec+PeaDAhW9xjzYbwmOFA=="],
 
-    "@biomejs/cli-win32-arm64": ["@biomejs/cli-win32-arm64@2.3.5", "", { "os": "win32", "cpu": "arm64" }, "sha512-DlBiMlBZZ9eIq4H7RimDSGsYcOtfOIfZOaI5CqsWiSlbTfqbPVfWtCf92wNzx8GNMbu1s7/g3ZZESr6+GwM/SA=="],
+    "@biomejs/cli-win32-arm64": ["@biomejs/cli-win32-arm64@2.3.6", "", { "os": "win32", "cpu": "arm64" }, "sha512-YM7hLHpwjdt8R7+O2zS1Vo2cKgqEeptiXB1tWW1rgjN5LlpZovBVKtg7zfwfRrFx3i08aNZThYpTcowpTlczug=="],
 
-    "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.3.5", "", { "os": "win32", "cpu": "x64" }, "sha512-nUmR8gb6yvrKhtRgzwo/gDimPwnO5a4sCydf8ZS2kHIJhEmSmk+STsusr1LHTuM//wXppBawvSQi2xFXJCdgKQ=="],
+    "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.3.6", "", { "os": "win32", "cpu": "x64" }, "sha512-psgNEYgMAobY5h+QHRBVR9xvg2KocFuBKm6axZWB/aD12NWhQjiVFQUjV6wMXhlH4iT0Q9c3yK5JFRiDC/rzHA=="],
 
     "@borewit/text-codec": ["@borewit/text-codec@0.1.1", "", {}, "sha512-5L/uBxmjaCIX5h8Z+uu+kA9BQLkc/Wl06UGR5ajNRxu+/XjonB5i8JpgFMrPj3LXTCPA0pv8yxUvbUi+QthGGA=="],
 
@@ -1045,6 +1048,8 @@
     "@reliverse/dler-colors": ["@reliverse/dler-colors@workspace:packages/colors"],
 
     "@reliverse/dler-config": ["@reliverse/dler-config@workspace:packages/config"],
+
+    "@reliverse/dler-fs-utils": ["@reliverse/dler-fs-utils@workspace:packages/fs-utils"],
 
     "@reliverse/dler-helpers": ["@reliverse/dler-helpers@workspace:packages/helpers"],
 
@@ -1682,7 +1687,7 @@
 
     "lru.min": ["lru.min@1.1.3", "", {}, "sha512-Lkk/vx6ak3rYkRR0Nhu4lFUT2VDnQSxBe8Hbl7f36358p6ow8Bnvr8lrLt98H8J1aGxfhbX4Fs5tYg2+FTwr5Q=="],
 
-    "lucide-react": ["lucide-react@0.553.0", "", { "peerDependencies": { "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-BRgX5zrWmNy/lkVAe0dXBgd7XQdZ3HTf+Hwe3c9WK6dqgnj9h+hxV+MDncM88xDWlCq27+TKvHGE70ViODNILw=="],
+    "lucide-react": ["lucide-react@0.554.0", "", { "peerDependencies": { "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-St+z29uthEJVx0Is7ellNkgTEhaeSoA42I7JjOCBCrc5X6LYMGSv0P/2uS5HDLTExP5tpiqRD2PyUEOS6s9UXA=="],
 
     "magic-string": ["magic-string@0.30.21", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.5" } }, "sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ=="],
 

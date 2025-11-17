@@ -24,7 +24,7 @@ export interface BenchmarkRunnerOptions {
 }
 
 export class BenchmarkRunner {
-  private options: BenchmarkRunnerOptions;
+  readonly options: BenchmarkRunnerOptions;
 
   constructor(options: BenchmarkRunnerOptions) {
     this.options = options;

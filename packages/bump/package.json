@@ -2,7 +2,7 @@
   "name": "@reliverse/dler-bump",
   "description": "Bump utils for @reliverse/dler",
   "author": "reliverse",
-  "version": "2.1.14",
+  "version": "2.1.16",
   "private": false,
   "type": "module",
   "exports": {

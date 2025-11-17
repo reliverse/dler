@@ -32,15 +32,14 @@ export default defineCommand({
       { value: "purple", label: "Purple" },
       { value: "orange", label: "Orange" },
     ];
-    const colorResult = await selectPrompt({
+    const favoriteColor = await selectPrompt({
       title: "What's your favorite color?",
       options: colorOptions,
     });
-    if (colorResult.error || colorResult.selectedIndex === null) {
+    if (favoriteColor === null) {
       logger.error("Selection cancelled or error occurred");
       return;
     }
-    const favoriteColor = colorOptions[colorResult.selectedIndex]?.value ?? "";
     logger.success(`You selected: ${favoriteColor}\n`);
 
     // Multiple selection prompt
@@ -53,17 +52,14 @@ export default defineCommand({
       { value: "traveling", label: "Traveling" },
       { value: "photography", label: "Photography" },
     ];
-    const hobbiesResult = await multiselectPrompt({
+    const selectedHobbies = await multiselectPrompt({
       title: "Select your hobbies (use space to toggle, enter to confirm):",
       options: hobbyOptions,
     });
-    if (hobbiesResult.error) {
+    if (selectedHobbies === null) {
       logger.error("Selection cancelled or error occurred");
       return;
     }
-    const selectedHobbies = hobbiesResult.selectedIndices.map(
-      (idx) => hobbyOptions[idx]?.value ?? "",
-    );
     logger.success(`Selected hobbies: ${selectedHobbies.join(", ")}\n`);
 
     // Confirmation prompt

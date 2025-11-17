@@ -15,10 +15,12 @@ export class PerfCache {
     this.ensureCacheDir();
   }
 
-  private ensureCacheDir(): void {
-    if (!existsSync(this.cacheDir)) {
-      mkdirSync(this.cacheDir, { recursive: true });
+  ensureCacheDir(): void {
+    if (existsSync(this.cacheDir)) {
+      return;
     }
+
+    mkdirSync(this.cacheDir, { recursive: true });
   }
 
   private generateHash(report: PerfReport): string {

@@ -15,14 +15,47 @@ import (
 )
 
 type confirmModel struct {
-	sl selector.Model
+	sl              selector.Model
+	ctrlCPressedOnce bool
+	ctrlCPressTime   time.Time
+	showCancelMsg    bool
+	canceled         bool
 }
 
 func (m confirmModel) Init() tea.Cmd {
 	return nil
 }
 
+type confirmResetCancelMsg struct{}
+
 func (m *confirmModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// Handle double Ctrl+C first - must intercept before selector sees it
+	if keyMsg, ok := msg.(tea.KeyMsg); ok && keyMsg.String() == "ctrl+c" {
+		now := time.Now()
+		if m.ctrlCPressedOnce && now.Sub(m.ctrlCPressTime) < 2*time.Second {
+			// Second Ctrl+C within 2 seconds - actually cancel
+			m.canceled = true
+			return m, tea.Quit
+		}
+		// First Ctrl+C - show message and set timer
+		// IMPORTANT: Don't pass this to selector, return early
+		m.ctrlCPressedOnce = true
+		m.ctrlCPressTime = now
+		m.showCancelMsg = true
+		// Reset after 2 seconds
+		return m, tea.Tick(2*time.Second, func(t time.Time) tea.Msg {
+			return confirmResetCancelMsg{}
+		})
+	}
+
+	// Handle reset message
+	if _, ok := msg.(confirmResetCancelMsg); ok {
+		// Reset cancel state after timeout
+		m.ctrlCPressedOnce = false
+		m.showCancelMsg = false
+		return m, nil
+	}
+
 	switch msg {
 	case common.DONE:
 		return m, tea.Quit
@@ -33,7 +66,11 @@ func (m *confirmModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m confirmModel) View() string {
-	return m.sl.View()
+	view := m.sl.View()
+	if m.showCancelMsg {
+		view += "\n" + common.FontColor("Press Ctrl+C again to exit", "yellow")
+	}
+	return view
 }
 
 type ConfirmResult struct {
@@ -141,8 +178,8 @@ func Confirm(promptText, headerText, footerText string) string {
 
 	// Create Yes/No items
 	data := []interface{}{
-		ListItem{Value: "yes", Label: "Yes", Description: ""},
-		ListItem{Value: "no", Label: "No", Description: ""},
+		ListItem{Value: "yes", Label: "Yes", Hint: ""},
+		ListItem{Value: "no", Label: "No", Hint: ""},
 	}
 
 	header := headerText
@@ -151,6 +188,9 @@ func Confirm(promptText, headerText, footerText string) string {
 	}
 
 	m := &confirmModel{
+		ctrlCPressedOnce: false,
+		showCancelMsg:    false,
+		canceled:         false,
 		sl: selector.Model{
 			Data:       data,
 			PerPage:    2,
@@ -185,7 +225,7 @@ func Confirm(promptText, headerText, footerText string) string {
 		})
 		return string(result)
 	}
-	if !m.sl.Canceled() {
+	if !m.canceled && !m.sl.Canceled() {
 		selectedIndex := m.sl.Index()
 		// Index 0 = Yes, Index 1 = No
 		confirmed := "false"

@@ -38,10 +38,12 @@ export class BuildCache {
     }
   }
 
-  private ensureCacheDirectory(): void {
-    if (!existsSync(this.options.directory)) {
-      mkdirSync(this.options.directory, { recursive: true });
+  ensureCacheDirectory(): void {
+    if (existsSync(this.options.directory)) {
+      return;
     }
+
+    mkdirSync(this.options.directory, { recursive: true });
   }
 
   private getCacheKey(pkg: PackageInfo, options: BuildOptions): string {

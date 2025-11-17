@@ -15,19 +15,51 @@ import (
 )
 
 type multiselectModel struct {
-	sl         selector.Model
-	selected   map[int]bool
-	items      []ListItem
-	headerText string
-	footerText string
-	canceled   bool
+	sl               selector.Model
+	selected         map[int]bool
+	items            []ListItem
+	headerText       string
+	footerText       string
+	canceled         bool
+	ctrlCPressedOnce bool
+	ctrlCPressTime   time.Time
+	showCancelMsg    bool
 }
 
 func (m multiselectModel) Init() tea.Cmd {
 	return nil
 }
 
+type multiselectResetCancelMsg struct{}
+
 func (m *multiselectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// Handle double Ctrl+C first - must intercept before selector sees it
+	if keyMsg, ok := msg.(tea.KeyMsg); ok && keyMsg.String() == "ctrl+c" {
+		now := time.Now()
+		if m.ctrlCPressedOnce && now.Sub(m.ctrlCPressTime) < 2*time.Second {
+			// Second Ctrl+C within 2 seconds - actually cancel
+			m.canceled = true
+			return m, tea.Quit
+		}
+		// First Ctrl+C - show message and set timer
+		// IMPORTANT: Don't pass this to selector, return early
+		m.ctrlCPressedOnce = true
+		m.ctrlCPressTime = now
+		m.showCancelMsg = true
+		// Reset after 2 seconds
+		return m, tea.Tick(2*time.Second, func(t time.Time) tea.Msg {
+			return multiselectResetCancelMsg{}
+		})
+	}
+
+	// Handle reset message
+	if _, ok := msg.(multiselectResetCancelMsg); ok {
+		// Reset cancel state after timeout
+		m.ctrlCPressedOnce = false
+		m.showCancelMsg = false
+		return m, nil
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -47,10 +79,6 @@ func (m *multiselectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case "enter":
 			// Confirm selection
-			return m, tea.Quit
-		case "ctrl+c":
-			// Cancel
-			m.canceled = true
 			return m, tea.Quit
 		case "up", "k":
 			// Move up, skipping disabled items
@@ -76,7 +104,11 @@ func (m *multiselectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m multiselectModel) View() string {
-	return m.sl.View()
+	view := m.sl.View()
+	if m.showCancelMsg {
+		view += "\n" + common.FontColor("Press Ctrl+C again to exit", "yellow")
+	}
+	return view
 }
 
 type MultiselectResult struct {
@@ -190,7 +222,7 @@ func Multiselect(jsonData, headerText, footerText string, perPage int) string {
 	json.Unmarshal([]byte(jsonData), &item)
 	data := []interface{}{}
 	for _, val := range item {
-		data = append(data, ListItem{Value: val.Value, Label: val.Label, Description: val.Description, Disabled: val.Disabled})
+		data = append(data, ListItem{Value: val.Value, Label: val.Label, Hint: val.Hint, Disabled: val.Disabled})
 	}
 
 	// Find first non-disabled item to start on
@@ -204,10 +236,12 @@ func Multiselect(jsonData, headerText, footerText string, perPage int) string {
 
 	selected := make(map[int]bool)
 	m := &multiselectModel{
-		selected:   selected,
-		items:      item,
-		headerText: headerText,
-		footerText: footerText,
+		ctrlCPressedOnce: false,
+		showCancelMsg:    false,
+		selected:         selected,
+		items:            item,
+		headerText:       headerText,
+		footerText:       footerText,
 	}
 
 	m.sl = selector.Model{
@@ -235,13 +269,13 @@ func Multiselect(jsonData, headerText, footerText string, perPage int) string {
 				prefix = "✓"
 			}
 			if disabled {
-				if t.Description != "" {
-					return common.FontColor(fmt.Sprintf("%s [%d] %s (%s) (disabled)", prefix, gdIndex+1, t.Label, t.Description), "240")
+				if t.Hint != "" {
+					return common.FontColor(fmt.Sprintf("%s [%d] %s (%s) (disabled)", prefix, gdIndex+1, t.Label, t.Hint), "240")
 				}
 				return common.FontColor(fmt.Sprintf("%s [%d] %s (disabled)", prefix, gdIndex+1, t.Label), "240")
 			}
-			if t.Description != "" {
-				return common.FontColor(fmt.Sprintf("%s [%d] %s (%s)", prefix, gdIndex+1, t.Label, t.Description), selector.ColorSelected)
+			if t.Hint != "" {
+				return common.FontColor(fmt.Sprintf("%s [%d] %s (%s)", prefix, gdIndex+1, t.Label, t.Hint), selector.ColorSelected)
 			}
 			return common.FontColor(fmt.Sprintf("%s [%d] %s", prefix, gdIndex+1, t.Label), selector.ColorSelected)
 		},
@@ -256,13 +290,7 @@ func Multiselect(jsonData, headerText, footerText string, perPage int) string {
 				prefix = "✓"
 			}
 			if disabled {
-				if t.Description != "" {
-					return common.FontColor(fmt.Sprintf("%s  %d. %s (%s) (disabled)", prefix, gdIndex+1, t.Label, t.Description), "240")
-				}
 				return common.FontColor(fmt.Sprintf("%s  %d. %s (disabled)", prefix, gdIndex+1, t.Label), "240")
-			}
-			if t.Description != "" {
-				return common.FontColor(fmt.Sprintf("%s  %d. %s (%s)", prefix, gdIndex+1, t.Label, t.Description), selector.ColorUnSelected)
 			}
 			return common.FontColor(fmt.Sprintf("%s  %d. %s", prefix, gdIndex+1, t.Label), selector.ColorUnSelected)
 		},

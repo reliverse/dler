@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler-spinner",
-  "version": "2.1.14",
+  "version": "2.1.16",
   "private": false,
   "type": "module",
   "description": "@reliverse/dler-spinner is a modern and lightweight spinner library.",

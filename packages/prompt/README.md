@@ -207,6 +207,63 @@ await main();
 |--------|-------------|
 | `() => { console.log("Operation cancelled"); }` | The function to call when the spinner is cancelled |
 
+**Available inputPrompt options:**
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `title` | `string` | The prompt question/title (required) |
+| `charLimit` | `number` | Maximum character limit for input |
+| `required` | `boolean` | Whether input is required (default: `true`) |
+| `echoMode` | `"normal" \| "password" \| "none"` | Input echo mode (default: `"normal"`) |
+| `validateOkPrefix` | `string` | Prefix to show when validation passes |
+| `validateErrPrefix` | `string` | Prefix to show when validation fails |
+| `defaultValue` | `string` | Default value to pre-fill |
+| `validate` | `(value: string) => boolean \| string \| null \| undefined` | Custom validation function. Returns `true`, `null`, or `undefined` for valid input. Returns `false` or a string (error message) for invalid input. If validation fails, the prompt will re-prompt with the error message. |
+
+**inputPrompt validation examples:**
+
+```ts
+// Simple boolean validation
+const email = await inputPrompt({
+  title: "Enter your email:",
+  validate: (value) => {
+    if (!value.includes("@")) {
+      return "Please enter a valid email address";
+    }
+    return true; // or return null/undefined
+  },
+});
+
+// Regex validation
+const username = await inputPrompt({
+  title: "Enter username:",
+  validate: (value) => {
+    if (!/^[a-z0-9_]+$/.test(value)) {
+      return "Username must contain only lowercase letters, numbers, and underscores";
+    }
+    return true;
+  },
+});
+
+// Multiple validation rules
+const password = await inputPrompt({
+  title: "Enter password:",
+  echoMode: "password",
+  validate: (value) => {
+    if (value.length < 8) {
+      return "Password must be at least 8 characters";
+    }
+    if (!/[A-Z]/.test(value)) {
+      return "Password must contain at least one uppercase letter";
+    }
+    if (!/[0-9]/.test(value)) {
+      return "Password must contain at least one number";
+    }
+    return true;
+  },
+});
+```
+
 ## Launcher
 
 > **Note**: `runMain` is now an alias for `createCli` and is still supported for backward compatibility. The new `createCli` API provides a more intuitive object-based configuration format.

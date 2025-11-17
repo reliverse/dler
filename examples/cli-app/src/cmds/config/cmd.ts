@@ -1,6 +1,6 @@
 import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
 import { logger } from "@reliverse/dler-logger";
-import { selectPrompt } from "@reliverse/dler-prompt";
+import { exitCancelled, isCancel, selectPrompt } from "@reliverse/dler-prompt";
 
 export default defineCommand({
   meta: {
@@ -59,20 +59,25 @@ export default defineCommand({
       logger.log("  language: en");
       logger.log("  editor: vscode\n");
     } else if (args.action === "reset") {
-      const themeOptions = [
-        { value: "light", label: "light" },
-        { value: "dark", label: "dark" },
-        { value: "auto", label: "auto" },
-      ];
-      const themeResult = await selectPrompt({
-        title: "Select default theme:",
-        options: themeOptions,
-      });
-      if (themeResult.error || themeResult.selectedIndex === null) {
-        logger.error("Selection cancelled");
+      let theme: "light" | "dark" | "auto";
+      try {
+        theme = await selectPrompt({
+          title: "Select default theme:",
+          options: [
+            { value: "light", label: "light" },
+            { value: "dark", label: "dark" },
+            { value: "auto", label: "auto" },
+          ],
+        });
+      } catch (error) {
+        if (isCancel(error)) {
+          return exitCancelled("Operation cancelled");
+        }
+        logger.error(
+          error instanceof Error ? error.message : "Selection failed",
+        );
         return;
       }
-      const theme = themeOptions[themeResult.selectedIndex]?.value ?? "";
       logger.success(`✅ Reset configuration with theme: ${theme}`);
     }
   },
