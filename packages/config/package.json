@@ -2,7 +2,7 @@
   "name": "@reliverse/dler-config",
   "description": "Configuration management for @reliverse/dler",
   "author": "reliverse",
-  "version": "2.2.2",
+  "version": "2.2.6",
   "private": false,
   "type": "module",
   "exports": {

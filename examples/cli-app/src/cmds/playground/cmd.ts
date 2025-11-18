@@ -25,6 +25,8 @@ export default defineCommand({
   run: async () => {
     logger.log("🎮 Prompt Playground Demo\n");
 
+    logger.box("Hello! It's great to see you here!");
+
     // Input prompt - username
     let usernameResult: string;
     try {
@@ -94,6 +96,7 @@ export default defineCommand({
         options: selectCommitTypeOptions,
         perPage: 5,
         footerText: "Enter to confirm",
+        initialValue: "rust",
       });
     } catch (error) {
       if (isCancel(error)) {
@@ -119,6 +122,7 @@ export default defineCommand({
         options: multiselectCommitTypeOptions,
         perPage: 5,
         footerText: "Space: toggle, Enter: confirm",
+        initialValue: ["chore", "perf"],
       });
     } catch (error) {
       if (isCancel(error)) {

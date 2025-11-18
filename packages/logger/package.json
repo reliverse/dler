@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler-logger",
-  "version": "2.2.2",
+  "version": "2.2.6",
   "private": false,
   "type": "module",
   "description": "@reliverse/dler-logger is a modern and lightweight logging library.",

@@ -48,7 +48,7 @@ export type MultiselectPromptOptions<
   required?: boolean;
   autocomplete?: boolean;
   defaultValue?: string[];
-  initialValue?: string;
+  initialValue?: string[]; // Array of values to pre-select (preferred over defaultValue if both specified)
 };
 
 export type ConfirmPromptOptions = {
@@ -167,15 +167,20 @@ export async function multiselectPrompt<
     options.headerText ||
     formatPromptText(options.title, options.message) ||
     "Select items: ";
-  const defaultValueJson = JSON.stringify(options.defaultValue ?? []);
+  // Prefer initialValue over defaultValue if both specified
+  const preselectedValues = options.initialValue ?? options.defaultValue ?? [];
+  const preselectedValuesJson = JSON.stringify(preselectedValues);
+  // For cursor position, use first preselected value, or empty string
+  const initialCursorValue =
+    preselectedValues.length > 0 ? preselectedValues[0] : "";
   const returnedPtr = symbols.CreateMultiselect(
     ptr(encode(stringifiedItems)),
     ptr(encode(headerText)),
     ptr(encode(options.footerText || "")),
     options.perPage || 5,
     options.autocomplete ?? true,
-    ptr(encode(defaultValueJson)),
-    ptr(encode(options.initialValue || "")),
+    ptr(encode(preselectedValuesJson)),
+    ptr(encode(initialCursorValue)),
   );
   const { selectedIndices, error } = JSON.parse(toString(returnedPtr)) as {
     selectedIndices: string[];
@@ -250,7 +255,7 @@ export type GroupMultiselectPromptOptions<
   required?: boolean;
   autocomplete?: boolean;
   defaultValue?: string[];
-  initialValue?: string;
+  initialValue?: string[]; // Array of values to pre-select (preferred over defaultValue if both specified)
   selectableGroups?: boolean;
   groupSpacing?: number;
 };
@@ -335,7 +340,12 @@ export async function groupMultiselectPrompt<
     formatPromptText(options.title, options.message) ||
     "Select items: ";
 
-  const defaultValueJson = JSON.stringify(options.defaultValue ?? []);
+  // Prefer initialValue over defaultValue if both specified
+  const preselectedValues = options.initialValue ?? options.defaultValue ?? [];
+  const preselectedValuesJson = JSON.stringify(preselectedValues);
+  // For cursor position, use first preselected value, or empty string
+  const initialCursorValue =
+    preselectedValues.length > 0 ? preselectedValues[0] : "";
 
   const returnedPtr = symbols.CreateGroupMultiselect(
     ptr(encode(stringifiedItems)),
@@ -344,8 +354,8 @@ export async function groupMultiselectPrompt<
     options.perPage || 5,
     options.autocomplete ?? true,
     options.selectableGroups ?? false,
-    ptr(encode(defaultValueJson)),
-    ptr(encode(options.initialValue || "")),
+    ptr(encode(preselectedValuesJson)),
+    ptr(encode(initialCursorValue)),
     options.groupSpacing ?? 0,
   );
   const { selectedIndices, error } = JSON.parse(toString(returnedPtr)) as {

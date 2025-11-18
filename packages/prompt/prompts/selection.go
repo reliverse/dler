@@ -371,27 +371,29 @@ func Selection(jsonData, headerText, footerText string, perPage int, autocomplet
 		minTerminalHeight = 5
 	}
 
-	// Check terminal height before starting
-	fd := int(os.Stdout.Fd())
-	_, height, err := term.GetSize(fd)
-	if err != nil {
-		result, _ := json.Marshal(&Result{
-			SelectedIndex: "",
-			Error:         fmt.Sprintf("failed to get terminal size: %s", err),
-		})
-		return string(result)
-	}
+	var err error
 
-	if height < minTerminalHeight {
-		// Wait for user to resize terminal instead of returning error
-		waitMessage := fmt.Sprintf("⚠️  Terminal height too small!\n   Current: %d lines | Required: %d lines (for perPage=%d)", height, minTerminalHeight, perPage)
-		err = waitForTerminalResize(minTerminalHeight, waitMessage)
-		if err != nil {
+	if shouldValidateTerminalSize() {
+		height, sizeErr := getTerminalHeight()
+		if sizeErr != nil {
 			result, _ := json.Marshal(&Result{
 				SelectedIndex: "",
-				Error:         fmt.Sprintf("failed to wait for terminal resize: %s", err),
+				Error:         fmt.Sprintf("failed to get terminal size: %s", sizeErr),
 			})
 			return string(result)
+		}
+
+		if height < minTerminalHeight {
+			// Wait for user to resize terminal instead of returning error
+			waitMessage := fmt.Sprintf("⚠️  Terminal height too small!\n   Current: %d lines | Required: %d lines (for perPage=%d)", height, minTerminalHeight, perPage)
+			err = waitForTerminalResize(minTerminalHeight, waitMessage)
+			if err != nil {
+				result, _ := json.Marshal(&Result{
+					SelectedIndex: "",
+					Error:         fmt.Sprintf("failed to wait for terminal resize: %s", err),
+				})
+				return string(result)
+			}
 		}
 	}
 
@@ -489,10 +491,9 @@ func Selection(jsonData, headerText, footerText string, perPage int, autocomplet
 	}
 
 	// Set initial index to first non-disabled item
-	if startIndex > 0 {
-		for i := 0; i < startIndex; i++ {
-			m.sl.Update(tea.KeyMsg{Type: tea.KeyDown})
-		}
+	// Add +1 to account for the initial position (selector starts at 0, we need to move to startIndex)
+	for i := 0; i < startIndex+1; i++ {
+		m.sl.Update(tea.KeyMsg{Type: tea.KeyDown})
 	}
 
 	p := tea.NewProgram(m)

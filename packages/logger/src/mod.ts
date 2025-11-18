@@ -61,17 +61,18 @@ const formatBox = (message: string): string => {
   const top = `┌${horizontal}┐`;
   const bottom = `└${horizontal}┘`;
 
-  const content =
+  const contentLines =
     maxWidth === 0
-      ? `│${" ".repeat(width)}│`
-      : lines
-          .map((line) => {
-            const padded = line.padEnd(maxWidth);
-            return `│${" ".repeat(padding)}${padded}${" ".repeat(padding)}│`;
-          })
-          .join("\n");
+      ? [`│${" ".repeat(width)}│`]
+      : lines.map((line) => {
+          const padded = line.padEnd(maxWidth);
+          return `│${" ".repeat(padding)}${padded}${" ".repeat(padding)}│`;
+        });
 
-  return `${top}\n${content}\n${bottom}`;
+  const content = contentLines.join("\n");
+
+  // Ensure content ends with newline before bottom border
+  return `${top}\n${content}\n${bottom}\n`;
 };
 
 // Generic async writer

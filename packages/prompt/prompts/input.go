@@ -18,9 +18,9 @@ type setDefaultValueMsg struct {
 }
 
 type inputModel struct {
-	input           *prompt.Model
-	defaultValue    string
-	initialValue    string
+	input            *prompt.Model
+	defaultValue     string
+	initialValue     string
 	ctrlCPressedOnce bool
 	ctrlCPressTime   time.Time
 	showCancelMsg    bool
@@ -199,27 +199,29 @@ func inputWaitForTerminalResize(minHeight int, message string) error {
 func Input(promptText, echoMode, validateOkPrefix, validateErrPrefix, defaultValue, initialValue string, required bool, charLimit int) string {
 	const minTerminalHeight = 5
 
-	// Check terminal height before starting
-	fd := int(os.Stdout.Fd())
-	_, height, err := term.GetSize(fd)
-	if err != nil {
-		result, _ := json.Marshal(&InputResult{
-			Value: "",
-			Error: fmt.Sprintf("failed to get terminal size: %s", err),
-		})
-		return string(result)
-	}
+	var err error
 
-	if height < minTerminalHeight {
-		// Wait for user to resize terminal instead of returning error
-		waitMessage := fmt.Sprintf("⚠️  Terminal height too small!\n   Current: %d lines | Required: %d lines", height, minTerminalHeight)
-		err = inputWaitForTerminalResize(minTerminalHeight, waitMessage)
-		if err != nil {
+	if shouldValidateTerminalSize() {
+		height, sizeErr := getTerminalHeight()
+		if sizeErr != nil {
 			result, _ := json.Marshal(&InputResult{
 				Value: "",
-				Error: fmt.Sprintf("failed to wait for terminal resize: %s", err),
+				Error: fmt.Sprintf("failed to get terminal size: %s", sizeErr),
 			})
 			return string(result)
+		}
+
+		if height < minTerminalHeight {
+			// Wait for user to resize terminal instead of returning error
+			waitMessage := fmt.Sprintf("⚠️  Terminal height too small!\n   Current: %d lines | Required: %d lines", height, minTerminalHeight)
+			err = inputWaitForTerminalResize(minTerminalHeight, waitMessage)
+			if err != nil {
+				result, _ := json.Marshal(&InputResult{
+					Value: "",
+					Error: fmt.Sprintf("failed to wait for terminal resize: %s", err),
+				})
+				return string(result)
+			}
 		}
 	}
 
@@ -234,7 +236,7 @@ func Input(promptText, echoMode, validateOkPrefix, validateErrPrefix, defaultVal
 			EchoMode:     prompt.EchoNormal,
 		},
 		defaultValue: defaultValue,
-		initialValue:  initialValue,
+		initialValue: initialValue,
 	}
 
 	switch echoMode {

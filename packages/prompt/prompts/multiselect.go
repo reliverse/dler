@@ -319,34 +319,36 @@ func (m *multiselectModel) stepSelector(direction int) bool {
 	return true
 }
 
-func Multiselect(jsonData, headerText, footerText string, perPage int, autocomplete bool, defaultValue, initialValue string) string {
+func Multiselect(jsonData, headerText, footerText string, perPage int, autocomplete bool, preselectedValues, initialCursorValue string) string {
 	// Minimum height: header (1) + perPage items + footer (1) + buffer (2) = perPage + 4
 	minTerminalHeight := perPage + 4
 	if minTerminalHeight < 5 {
 		minTerminalHeight = 5
 	}
 
-	// Check terminal height before starting
-	fd := int(os.Stdout.Fd())
-	_, height, err := term.GetSize(fd)
-	if err != nil {
-		result, _ := json.Marshal(&MultiselectResult{
-			SelectedIndices: []string{},
-			Error:           fmt.Sprintf("failed to get terminal size: %s", err),
-		})
-		return string(result)
-	}
+	var err error
 
-	if height < minTerminalHeight {
-		// Wait for user to resize terminal instead of returning error
-		waitMessage := fmt.Sprintf("⚠️  Terminal height too small!\n   Current: %d lines | Required: %d lines (for perPage=%d)", height, minTerminalHeight, perPage)
-		err = multiselectWaitForTerminalResize(minTerminalHeight, waitMessage)
-		if err != nil {
+	if shouldValidateTerminalSize() {
+		height, sizeErr := getTerminalHeight()
+		if sizeErr != nil {
 			result, _ := json.Marshal(&MultiselectResult{
 				SelectedIndices: []string{},
-				Error:           fmt.Sprintf("failed to wait for terminal resize: %s", err),
+				Error:           fmt.Sprintf("failed to get terminal size: %s", sizeErr),
 			})
 			return string(result)
+		}
+
+		if height < minTerminalHeight {
+			// Wait for user to resize terminal instead of returning error
+			waitMessage := fmt.Sprintf("⚠️  Terminal height too small!\n   Current: %d lines | Required: %d lines (for perPage=%d)", height, minTerminalHeight, perPage)
+			err = multiselectWaitForTerminalResize(minTerminalHeight, waitMessage)
+			if err != nil {
+				result, _ := json.Marshal(&MultiselectResult{
+					SelectedIndices: []string{},
+					Error:           fmt.Sprintf("failed to wait for terminal resize: %s", err),
+				})
+				return string(result)
+			}
 		}
 	}
 
@@ -357,21 +359,21 @@ func Multiselect(jsonData, headerText, footerText string, perPage int, autocompl
 		data = append(data, ListItem{Value: val.Value, Label: val.Label, Hint: val.Hint, Disabled: val.Disabled})
 	}
 
-	// Parse defaultValue (JSON array of strings)
-	defaultValueSet := make(map[string]bool)
-	if defaultValue != "" {
-		var defaultVals []string
-		json.Unmarshal([]byte(defaultValue), &defaultVals)
-		for _, val := range defaultVals {
-			defaultValueSet[val] = true
+	// Parse preselectedValues (JSON array of strings) - used for preselection
+	preselectedSet := make(map[string]bool)
+	if preselectedValues != "" {
+		var preselectedVals []string
+		json.Unmarshal([]byte(preselectedValues), &preselectedVals)
+		for _, val := range preselectedVals {
+			preselectedSet[val] = true
 		}
 	}
 
-	// Determine start index based on initialValue
+	// Determine start index based on initialCursorValue (first preselected value or empty)
 	startIndex := 0
-	if initialValue != "" {
+	if initialCursorValue != "" {
 		for i, it := range item {
-			if it.Value == initialValue && !it.Disabled {
+			if it.Value == initialCursorValue && !it.Disabled {
 				startIndex = i
 				break
 			}
@@ -387,9 +389,9 @@ func Multiselect(jsonData, headerText, footerText string, perPage int, autocompl
 	}
 
 	selected := make(map[int]bool)
-	// Set initial selections based on defaultValue
+	// Set initial selections based on preselectedValues (acts as preselection)
 	for i, it := range item {
-		if !it.Disabled && defaultValueSet[it.Value] {
+		if !it.Disabled && preselectedSet[it.Value] {
 			selected[i] = true
 		}
 	}
@@ -479,10 +481,9 @@ func Multiselect(jsonData, headerText, footerText string, perPage int, autocompl
 	}
 
 	// Set initial index to first non-disabled item
-	if startIndex > 0 {
-		for i := 0; i < startIndex; i++ {
-			m.sl.Update(tea.KeyMsg{Type: tea.KeyDown})
-		}
+	// Add +1 to account for the initial position (selector starts at 0, we need to move to startIndex)
+	for i := 0; i < startIndex+1; i++ {
+		m.sl.Update(tea.KeyMsg{Type: tea.KeyDown})
 	}
 
 	p := tea.NewProgram(m)

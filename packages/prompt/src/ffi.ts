@@ -41,7 +41,15 @@ let symbols: any;
 try {
   symbols = dlopen(location, {
     CreateSelection: {
-      args: [FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.int, FFIType.bool, FFIType.ptr, FFIType.ptr],
+      args: [
+        FFIType.ptr,
+        FFIType.ptr,
+        FFIType.ptr,
+        FFIType.int,
+        FFIType.bool,
+        FFIType.ptr,
+        FFIType.ptr,
+      ],
       returns: FFIType.ptr,
     },
     CreatePrompt: {
@@ -58,7 +66,15 @@ try {
       returns: FFIType.ptr,
     },
     CreateMultiselect: {
-      args: [FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.int, FFIType.bool, FFIType.ptr, FFIType.ptr],
+      args: [
+        FFIType.ptr,
+        FFIType.ptr,
+        FFIType.ptr,
+        FFIType.int,
+        FFIType.bool,
+        FFIType.ptr,
+        FFIType.ptr,
+      ],
       returns: FFIType.ptr,
     },
     CreateConfirm: {

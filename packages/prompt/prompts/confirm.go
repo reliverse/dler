@@ -15,7 +15,7 @@ import (
 )
 
 type confirmModel struct {
-	sl              selector.Model
+	sl               selector.Model
 	ctrlCPressedOnce bool
 	ctrlCPressTime   time.Time
 	showCancelMsg    bool
@@ -152,27 +152,29 @@ func confirmWaitForTerminalResize(minHeight int, message string) error {
 func Confirm(promptText, headerText, footerText string, defaultValue, initialValue string) string {
 	const minTerminalHeight = 5
 
-	// Check terminal height before starting
-	fd := int(os.Stdout.Fd())
-	_, height, err := term.GetSize(fd)
-	if err != nil {
-		result, _ := json.Marshal(&ConfirmResult{
-			Confirmed: "",
-			Error:     fmt.Sprintf("failed to get terminal size: %s", err),
-		})
-		return string(result)
-	}
+	var err error
 
-	if height < minTerminalHeight {
-		// Wait for user to resize terminal instead of returning error
-		waitMessage := fmt.Sprintf("⚠️  Terminal height too small!\n   Current: %d lines | Required: %d lines", height, minTerminalHeight)
-		err = confirmWaitForTerminalResize(minTerminalHeight, waitMessage)
-		if err != nil {
+	if shouldValidateTerminalSize() {
+		height, sizeErr := getTerminalHeight()
+		if sizeErr != nil {
 			result, _ := json.Marshal(&ConfirmResult{
 				Confirmed: "",
-				Error:     fmt.Sprintf("failed to wait for terminal resize: %s", err),
+				Error:     fmt.Sprintf("failed to get terminal size: %s", sizeErr),
 			})
 			return string(result)
+		}
+
+		if height < minTerminalHeight {
+			// Wait for user to resize terminal instead of returning error
+			waitMessage := fmt.Sprintf("⚠️  Terminal height too small!\n   Current: %d lines | Required: %d lines", height, minTerminalHeight)
+			err = confirmWaitForTerminalResize(minTerminalHeight, waitMessage)
+			if err != nil {
+				result, _ := json.Marshal(&ConfirmResult{
+					Confirmed: "",
+					Error:     fmt.Sprintf("failed to wait for terminal resize: %s", err),
+				})
+				return string(result)
+			}
 		}
 	}
 

@@ -61,7 +61,7 @@ export default defineCommand({
       ],
     };
 
-    const initialValues = DEFAULT_ADDONS.filter((addonValue) =>
+    const initialValue = DEFAULT_ADDONS.filter((addonValue) =>
       Object.values(groupedOptions).some((options) =>
         options.some((opt) => opt.value === addonValue),
       ),
@@ -72,7 +72,7 @@ export default defineCommand({
     const response = await groupMultiselectPrompt<Addon>({
       message: "Select addons",
       options: groupedOptions,
-      initialValues,
+      initialValue,
       selectableGroups: false,
     });
 

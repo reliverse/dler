@@ -40,8 +40,8 @@ func CreatePrompt(prompText, echoMode, validateOkPrefix, validateErrPrefix, defa
 }
 
 //export CreateMultiselect
-func CreateMultiselect(jsonData, headerText, footerText *C.char, perPage int, autocomplete bool, defaultValue, initialValue *C.char) *C.char {
-	result := prompts.Multiselect(str(jsonData), str(headerText), str(footerText), perPage, autocomplete, str(defaultValue), str(initialValue))
+func CreateMultiselect(jsonData, headerText, footerText *C.char, perPage int, autocomplete bool, preselectedValues, initialCursorValue *C.char) *C.char {
+	result := prompts.Multiselect(str(jsonData), str(headerText), str(footerText), perPage, autocomplete, str(preselectedValues), str(initialCursorValue))
 	return ch(result)
 }
 
@@ -52,7 +52,7 @@ func CreateConfirm(promptText, headerText, footerText *C.char, defaultValue, ini
 }
 
 //export CreateGroupMultiselect
-func CreateGroupMultiselect(jsonData, headerText, footerText *C.char, perPage int, autocomplete, selectableGroups bool, defaultValue, initialValue *C.char, groupSpacing int) *C.char {
-	result := prompts.GroupMultiselect(str(jsonData), str(headerText), str(footerText), perPage, autocomplete, selectableGroups, str(defaultValue), str(initialValue), groupSpacing)
+func CreateGroupMultiselect(jsonData, headerText, footerText *C.char, perPage int, autocomplete, selectableGroups bool, preselectedValues, initialCursorValue *C.char, groupSpacing int) *C.char {
+	result := prompts.GroupMultiselect(str(jsonData), str(headerText), str(footerText), perPage, autocomplete, selectableGroups, str(preselectedValues), str(initialCursorValue), groupSpacing)
 	return ch(result)
 }

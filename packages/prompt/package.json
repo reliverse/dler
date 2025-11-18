@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler-prompt",
-  "version": "2.2.2",
+  "version": "2.2.6",
   "private": false,
   "type": "module",
   "exports": {
@@ -31,6 +31,10 @@
   },
   "bugs": "https://github.com/reliverse/dler/issues",
   "author": "Nazar Kornienko <blefnk@gmail.com>",
+  "dependencies": {
+    "log-update": "catalog:",
+    "sisteransi": "catalog:"
+  },
   "devDependencies": {
     "@p/tsconfig": "workspace:*",
     "typescript": "catalog:",

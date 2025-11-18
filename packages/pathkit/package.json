@@ -2,7 +2,7 @@
   "name": "@reliverse/dler-pathkit",
   "description": "Path manipulation and resolution utilities for @reliverse/dler",
   "author": "reliverse",
-  "version": "2.2.2",
+  "version": "2.2.6",
   "private": false,
   "type": "module",
   "exports": {

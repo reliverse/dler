@@ -253,8 +253,8 @@ await main();
 | `footerText` | `string` | Optional footer hint (defaults to usage instructions) |
 | `required` | `boolean` | When `false`, cancelling the prompt resolves to `null`; otherwise a cancellation throws `PromptCancelledError` |
 | `autocomplete` | `boolean` | When `true` (default), typing filters/highlights matching options |
-| `defaultValue` | `string[]` | The values that are selected by default (pre-checked items). |
-| `initialValue` | `string` | The value that the cursor starts on (user can navigate away). |
+| `defaultValue` | `string[]` | Array of values to pre-select (pre-checked items that user can unselect). If both `defaultValue` and `initialValue` are specified, `initialValue` is preferred. |
+| `initialValue` | `string[]` | Array of values to pre-select (pre-checked items that user can unselect). Preferred over `defaultValue` if both are specified. The cursor starts on the first preselected value. |
 
 > The resolved value is always an array of the selected option values. When `required` is `false`, the promise can resolve to `null` if the user cancels.
 

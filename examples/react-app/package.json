@@ -20,7 +20,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/react": "^19.2.5",
+    "@types/react": "^19.2.6",
     "@types/react-dom": "^19.2.3",
     "@types/bun": "catalog:"
   }

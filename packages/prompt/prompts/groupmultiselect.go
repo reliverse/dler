@@ -424,34 +424,36 @@ func (m *groupMultiselectModel) stepSelector(direction int) bool {
 	return true
 }
 
-func GroupMultiselect(jsonData, headerText, footerText string, perPage int, autocomplete, selectableGroups bool, defaultValue, initialValue string, groupSpacing int) string {
+func GroupMultiselect(jsonData, headerText, footerText string, perPage int, autocomplete, selectableGroups bool, preselectedValues, initialCursorValue string, groupSpacing int) string {
 	// Minimum height: header (1) + perPage items + footer (1) + buffer (2) = perPage + 4
 	minTerminalHeight := perPage + 4
 	if minTerminalHeight < 5 {
 		minTerminalHeight = 5
 	}
 
-	// Check terminal height before starting
-	fd := int(os.Stdout.Fd())
-	_, height, err := term.GetSize(fd)
-	if err != nil {
-		result, _ := json.Marshal(&GroupMultiselectResult{
-			SelectedIndices: []string{},
-			Error:           fmt.Sprintf("failed to get terminal size: %s", err),
-		})
-		return string(result)
-	}
+	var err error
 
-	if height < minTerminalHeight {
-		// Wait for user to resize terminal instead of returning error
-		waitMessage := fmt.Sprintf("⚠️  Terminal height too small!\n   Current: %d lines | Required: %d lines (for perPage=%d)", height, minTerminalHeight, perPage)
-		err = groupMultiselectWaitForTerminalResize(minTerminalHeight, waitMessage)
-		if err != nil {
+	if shouldValidateTerminalSize() {
+		height, sizeErr := getTerminalHeight()
+		if sizeErr != nil {
 			result, _ := json.Marshal(&GroupMultiselectResult{
 				SelectedIndices: []string{},
-				Error:           fmt.Sprintf("failed to wait for terminal resize: %s", err),
+				Error:           fmt.Sprintf("failed to get terminal size: %s", sizeErr),
 			})
 			return string(result)
+		}
+
+		if height < minTerminalHeight {
+			// Wait for user to resize terminal instead of returning error
+			waitMessage := fmt.Sprintf("⚠️  Terminal height too small!\n   Current: %d lines | Required: %d lines (for perPage=%d)", height, minTerminalHeight, perPage)
+			err = groupMultiselectWaitForTerminalResize(minTerminalHeight, waitMessage)
+			if err != nil {
+				result, _ := json.Marshal(&GroupMultiselectResult{
+					SelectedIndices: []string{},
+					Error:           fmt.Sprintf("failed to wait for terminal resize: %s", err),
+				})
+				return string(result)
+			}
 		}
 	}
 
@@ -462,13 +464,13 @@ func GroupMultiselect(jsonData, headerText, footerText string, perPage int, auto
 		data = append(data, GroupListItem{Value: val.Value, Label: val.Label, Hint: val.Hint, Disabled: val.Disabled, IsGroupHeader: val.IsGroupHeader, GroupName: val.GroupName})
 	}
 
-	// Parse defaultValue (JSON array of strings)
-	defaultValueSet := make(map[string]bool)
-	if defaultValue != "" {
-		var defaultVals []string
-		json.Unmarshal([]byte(defaultValue), &defaultVals)
-		for _, val := range defaultVals {
-			defaultValueSet[val] = true
+	// Parse preselectedValues (JSON array of strings) - used for preselection
+	preselectedSet := make(map[string]bool)
+	if preselectedValues != "" {
+		var preselectedVals []string
+		json.Unmarshal([]byte(preselectedValues), &preselectedVals)
+		for _, val := range preselectedVals {
+			preselectedSet[val] = true
 		}
 	}
 
@@ -501,11 +503,11 @@ func GroupMultiselect(jsonData, headerText, footerText string, perPage int, auto
 		}
 	}
 
-	// Determine start index based on initialValue
+	// Determine start index based on initialCursorValue (first preselected value or empty)
 	startIndex := 0
-	if initialValue != "" {
+	if initialCursorValue != "" {
 		for i, it := range items {
-			if it.Value == initialValue && !it.Disabled && !it.IsGroupHeader {
+			if it.Value == initialCursorValue && !it.Disabled && !it.IsGroupHeader {
 				startIndex = i
 				break
 			}
@@ -530,9 +532,9 @@ func GroupMultiselect(jsonData, headerText, footerText string, perPage int, auto
 	}
 
 	selected := make(map[int]bool)
-	// Set initial selections based on defaultValue
+	// Set initial selections based on preselectedValues (acts as preselection)
 	for i, item := range items {
-		if !item.IsGroupHeader && !item.Disabled && defaultValueSet[item.Value] {
+		if !item.IsGroupHeader && !item.Disabled && preselectedSet[item.Value] {
 			selected[i] = true
 		}
 	}
@@ -750,10 +752,9 @@ func GroupMultiselect(jsonData, headerText, footerText string, perPage int, auto
 	}
 
 	// Set initial index to first non-disabled, selectable item
-	if startIndex > 0 {
-		for i := 0; i < startIndex; i++ {
-			m.sl.Update(tea.KeyMsg{Type: tea.KeyDown})
-		}
+	// Add +1 to account for the initial position (selector starts at 0, we need to move to startIndex)
+	for i := 0; i < startIndex+1; i++ {
+		m.sl.Update(tea.KeyMsg{Type: tea.KeyDown})
 	}
 
 	p := tea.NewProgram(m)
