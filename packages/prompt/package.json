@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler-prompt",
-  "version": "2.1.16",
+  "version": "2.2.2",
   "private": false,
   "type": "module",
   "exports": {

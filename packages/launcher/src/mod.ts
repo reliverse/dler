@@ -163,29 +163,49 @@ export const runLauncher = async (
     }
 
     // Check if this is a sub-command invocation
-    const isSubCommand = argv.length > 1 && !argv[1]!.startsWith("-");
+    // Only treat argv[1] as a sub-command if:
+    // 1. It doesn't start with "-"
+    // 2. The first command is a parent command (has children in hierarchy)
+    // 3. argv[1] is actually a child of that parent command
+    let isSubCommand = false;
+    let parentName: string | undefined;
+    let subCommandName: string | undefined;
+    let parentNode: any;
+    let subCommandNode: any;
 
-    if (isSubCommand) {
-      // Handle sub-command execution using folder-based discovery
-      const parentName = resolveCommand(registry, argv[0]!);
-      const subCommandName = resolveCommand(registry, argv[1]!);
+    if (argv.length > 1 && !argv[1]!.startsWith("-")) {
+      const potentialParentName = resolveCommand(registry, argv[0]!);
+      const potentialParentNode = registry.hierarchy.get(potentialParentName);
 
-      // Check if both parent and sub-command exist in the hierarchy
-      const parentNode = registry.hierarchy.get(parentName);
-      const subCommandNode = registry.hierarchy.get(subCommandName);
-
-      if (!parentNode) {
-        throw new CommandNotFoundError(
-          argv[0]!,
-          Array.from(registry.registry.keys()),
+      // Check if parent exists and has children (is actually a parent command)
+      if (potentialParentNode && potentialParentNode.children.size > 0) {
+        const potentialSubCommandName = resolveCommand(registry, argv[1]!);
+        const potentialSubCommandNode = registry.hierarchy.get(
+          potentialSubCommandName,
         );
-      }
 
-      if (!subCommandNode || subCommandNode.parent !== parentName) {
-        // Get available sub-commands for this parent
-        const availableSubCommands = Array.from(parentNode.children.keys());
-        throw new CommandNotFoundError(subCommandName, availableSubCommands);
+        // Check if argv[1] is actually a child of this parent
+        if (
+          potentialSubCommandNode &&
+          potentialSubCommandNode.parent === potentialParentName
+        ) {
+          isSubCommand = true;
+          parentName = potentialParentName;
+          subCommandName = potentialSubCommandName;
+          parentNode = potentialParentNode;
+          subCommandNode = potentialSubCommandNode;
+        }
       }
+    }
+
+    if (
+      isSubCommand &&
+      parentName &&
+      subCommandName &&
+      parentNode &&
+      subCommandNode
+    ) {
+      // Handle sub-command execution using folder-based discovery
 
       // Load both parent and sub-command definitions
       const parentDefinition = await parentNode.loader();
@@ -226,7 +246,7 @@ export const runLauncher = async (
             arg === `--no-${key}` ||
             arg === `--no-${kebabKey}` ||
             (def.aliases &&
-              def.aliases.some((alias) => {
+              def.aliases.some((alias: string) => {
                 const kebabAlias = kebabCase(alias);
                 return (
                   arg === `-${alias}` ||

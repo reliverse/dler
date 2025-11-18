@@ -119,8 +119,9 @@ async function main() {
   await startPrompt({ title: "Project Setup" });
 
   const name = await inputPrompt({
-    title: "What's your project name?",
-    defaultValue: "my-cool-project",
+    message: "What's your project name?",
+    initialValue: "my-cool-project", // Pre-fills the input field
+    defaultValue: "untitled-project", // Used if user submits empty input
   });
 
   const spinner = createSpinner({
@@ -141,13 +142,12 @@ async function main() {
   // With animated frames and timer
 
   const framework = await selectPrompt({
-    title: "Pick your framework",
+    message: "Pick your framework",
     options: [
       { value: "next", label: "Next.js" },
       { value: "svelte", label: "SvelteKit" },
       { value: "start", label: "TanStack Start" },
     ],
-    defaultValue: "next",
   });
 
   console.log("Your result:", { name, framework });
@@ -211,21 +211,73 @@ await main();
 
 | Option | Type | Description |
 |--------|------|-------------|
-| `title` | `string` | The prompt question/title (required) |
+| `message` | `string` | The prompt message (required) |
+| `title` | `string` | Optional title. When both `title` and `message` are provided, title is shown first, then message (dimmed). When only `message` is provided, it acts as the title. |
 | `charLimit` | `number` | Maximum character limit for input |
-| `required` | `boolean` | Whether input is required (default: `true`) |
+| `required` | `boolean` | Whether input is required (default: `true`). When `false`, cancelling the prompt returns an empty string instead of throwing `PromptCancelledError`. |
 | `echoMode` | `"normal" \| "password" \| "none"` | Input echo mode (default: `"normal"`) |
 | `validateOkPrefix` | `string` | Prefix to show when validation passes |
 | `validateErrPrefix` | `string` | Prefix to show when validation fails |
-| `defaultValue` | `string` | Default value to pre-fill |
+| `defaultValue` | `string` | The value that is used if the user just presses Enter without typing anything. For input prompts, this is returned when the input field is empty. |
+| `initialValue` | `string` | The value that is pre-filled in the input field when the prompt appears (user can edit it). This is different from `defaultValue` - `initialValue` is what the user sees and can modify, while `defaultValue` is what gets returned if they submit an empty input. |
 | `validate` | `(value: string) => boolean \| string \| null \| undefined` | Custom validation function. Returns `true`, `null`, or `undefined` for valid input. Returns `false` or a string (error message) for invalid input. If validation fails, the prompt will re-prompt with the error message. |
+
+> `inputPrompt` returns `Promise<string>`. When `required` is `true` (default), cancellation throws `PromptCancelledError`. When `required` is `false`, cancellation returns an empty string.
+
+**Available selectPrompt options:**
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `message` | `string` | The prompt message (required) |
+| `title` | `string` | Optional title. When both `title` and `message` are provided, title is shown first, then message (dimmed). When only `message` is provided, it acts as the title. |
+| `options` | `readonly SelectionItem[]` | List of items with `value`, `label`, optional `hint`, and optional `disabled` |
+| `perPage` | `number` | How many options to show per page (default: `5`) |
+| `headerText` | `string` | Optional header text (defaults to formatted title/message) |
+| `footerText` | `string` | Optional footer hint |
+| `required` | `boolean` | When `false`, cancelling the prompt resolves to `null` instead of throwing |
+| `autocomplete` | `boolean` | When `true` (default), users can type to jump between matching options |
+| `defaultValue` | `string` | The value that is selected by default (if user presses Enter without changing selection). |
+| `initialValue` | `string` | The value that the cursor starts on (user can navigate away). |
+
+> `selectPrompt` has typed overloads: when `required` is omitted or `true`, it resolves to the selected value; when `required` is `false`, it resolves to either the selected value or `null`.
+
+**Available multiselectPrompt options:**
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `message` | `string` | The prompt message (required) |
+| `title` | `string` | Optional title. When both `title` and `message` are provided, title is shown first, then message (dimmed). When only `message` is provided, it acts as the title. |
+| `options` | `readonly SelectionItem[]` | List of items with `value`, `label`, optional `hint`, and optional `disabled` |
+| `perPage` | `number` | How many options to show per page (default: `5`) |
+| `headerText` | `string` | Optional header text (defaults to formatted title/message) |
+| `footerText` | `string` | Optional footer hint (defaults to usage instructions) |
+| `required` | `boolean` | When `false`, cancelling the prompt resolves to `null`; otherwise a cancellation throws `PromptCancelledError` |
+| `autocomplete` | `boolean` | When `true` (default), typing filters/highlights matching options |
+| `defaultValue` | `string[]` | The values that are selected by default (pre-checked items). |
+| `initialValue` | `string` | The value that the cursor starts on (user can navigate away). |
+
+> The resolved value is always an array of the selected option values. When `required` is `false`, the promise can resolve to `null` if the user cancels.
+
+**Available confirmPrompt options:**
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `message` | `string` | The prompt message (required) |
+| `title` | `string` | Optional title. When both `title` and `message` are provided, title is shown first, then message (dimmed). When only `message` is provided, it acts as the title. |
+| `headerText` | `string` | Optional header text (defaults to formatted title/message) |
+| `footerText` | `string` | Optional footer hint (defaults to navigation instructions) |
+| `required` | `boolean` | When `false`, cancelling returns `defaultValue` or `false` instead of throwing; when `true` (default), cancelling throws `PromptCancelledError` |
+| `defaultValue` | `boolean` | The value that is selected by default (if user presses Enter without changing selection). |
+| `initialValue` | `boolean` | The value that the cursor starts on (user can navigate away). |
+
+> `confirmPrompt` returns `Promise<boolean>`. When `required` is `true` (default), cancellation throws `PromptCancelledError`. When `required` is `false`, cancellation returns `defaultValue` or `false`.
 
 **inputPrompt validation examples:**
 
 ```ts
 // Simple boolean validation
 const email = await inputPrompt({
-  title: "Enter your email:",
+  message: "Enter your email:",
   validate: (value) => {
     if (!value.includes("@")) {
       return "Please enter a valid email address";
@@ -236,7 +288,7 @@ const email = await inputPrompt({
 
 // Regex validation
 const username = await inputPrompt({
-  title: "Enter username:",
+  message: "Enter username:",
   validate: (value) => {
     if (!/^[a-z0-9_]+$/.test(value)) {
       return "Username must contain only lowercase letters, numbers, and underscores";
@@ -247,7 +299,7 @@ const username = await inputPrompt({
 
 // Multiple validation rules
 const password = await inputPrompt({
-  title: "Enter password:",
+  message: "Enter password:",
   echoMode: "password",
   validate: (value) => {
     if (value.length < 8) {
@@ -530,12 +582,12 @@ const main = defineCommand({
     });
 
     const name = await inputPrompt({
-      title: "What's your project name?",
-      placeholder: args.name,
+      message: "What's your project name?",
+      defaultValue: args.name,
     });
 
     const framework = await selectPrompt({
-      title: "Pick your framework",
+      message: "Pick your framework",
       options: [
         { value: "next", label: "Next.js" },
         { value: "svelte", label: "SvelteKit" },
@@ -639,13 +691,13 @@ const mainCommand = defineCommand({
 
     // Ask for the project name, falling back to provided argument or a default.
     const projectName = await inputPrompt({
-      title: "What's your project name?",
-      placeholder: args.name ?? "my-cool-cli",
+      message: "What's your project name?",
+      defaultValue: args.name ?? "my-cool-cli",
     });
 
     // Let the user pick a framework from a select prompt.
     const framework = await selectPrompt({
-      title: "Pick your framework",
+      message: "Pick your framework",
       options: [
         { value: "next", label: "Next.js" },
         { value: "svelte", label: "SvelteKit" },

@@ -1,8 +1,8 @@
 import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
 import { logger } from "@reliverse/dler-logger";
 import {
-  askQuestion,
   confirmPrompt,
+  inputPrompt,
   multiselectPrompt,
   selectPrompt,
 } from "@reliverse/dler-prompt";
@@ -33,7 +33,7 @@ export default defineCommand({
       { value: "orange", label: "Orange" },
     ];
     const favoriteColor = await selectPrompt({
-      title: "What's your favorite color?",
+      message: "What's your favorite color?",
       options: colorOptions,
     });
     if (favoriteColor === null) {
@@ -53,7 +53,7 @@ export default defineCommand({
       { value: "photography", label: "Photography" },
     ];
     const selectedHobbies = await multiselectPrompt({
-      title: "Select your hobbies (use space to toggle, enter to confirm):",
+      message: "Select your hobbies (use space to toggle, enter to confirm):",
       options: hobbyOptions,
     });
     if (selectedHobbies === null) {
@@ -63,33 +63,37 @@ export default defineCommand({
     logger.success(`Selected hobbies: ${selectedHobbies.join(", ")}\n`);
 
     // Confirmation prompt
-    const wantsNewsletterResult = await confirmPrompt({
-      title: "Would you like to subscribe to our newsletter?",
-    });
-    if (
-      wantsNewsletterResult.error ||
-      wantsNewsletterResult.confirmed === null
-    ) {
+    try {
+      const wantsNewsletter = await confirmPrompt({
+        message: "Would you like to subscribe to our newsletter?",
+      });
+      if (wantsNewsletter) {
+        logger.success("You subscribed to the newsletter!\n");
+      } else {
+        logger.log("You declined the newsletter subscription.\n");
+      }
+    } catch {
       logger.log("Confirmation cancelled.\n");
-    } else if (wantsNewsletterResult.confirmed) {
-      logger.success("You subscribed to the newsletter!\n");
-    } else {
-      logger.log("You declined the newsletter subscription.\n");
     }
 
     // Question prompt
-    const name = await askQuestion("What's your name?", "Anonymous");
+    const name = await inputPrompt({
+      message: "What's your name?",
+      defaultValue: "Anonymous",
+    });
     logger.success(`Hello, ${name}!\n`);
 
     // Another confirmation
-    const proceedResult = await confirmPrompt({
-      title: "Do you want to proceed with the setup?",
-    });
-    if (proceedResult.error || proceedResult.confirmed === null) {
-      logger.log("❌ Setup cancelled.\n");
-    } else if (proceedResult.confirmed) {
-      logger.success("✅ Setup will proceed!\n");
-    } else {
+    try {
+      const proceed = await confirmPrompt({
+        message: "Do you want to proceed with the setup?",
+      });
+      if (proceed) {
+        logger.success("✅ Setup will proceed!\n");
+      } else {
+        logger.log("❌ Setup cancelled.\n");
+      }
+    } catch {
       logger.log("❌ Setup cancelled.\n");
     }
 

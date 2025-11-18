@@ -6,9 +6,10 @@ This is an example CLI application demonstrating the usage of `@reliverse/dler-p
 
 - **Command-based architecture** using `@reliverse/dler-launcher`
 - **Interactive prompts** using `@reliverse/dler-prompt`:
-  - `inputPrompt`/`askQuestion` - Text input prompt
+  - `inputPrompt` - Text input prompt
   - `selectPrompt` - Single selection from options
   - `multiselectPrompt` - Multiple selections from options
+  - `groupMultiselectPrompt` - Multiple selections with grouped options
   - `confirmPrompt` - Yes/No confirmation
 
 ## Commands
@@ -50,6 +51,13 @@ bun src/index.ts config get --key theme
 bun src/index.ts config reset
 ```
 
+### `addons`
+Demonstrates grouped multiselect prompt for selecting project addons.
+
+```bash
+bun src/index.ts addons
+```
+
 ## Development
 
 ```bash
@@ -76,7 +84,9 @@ cli-app/
 │       │   └── cmd.ts
 │       ├── todo/
 │       │   └── cmd.ts
-│       └── config/
+│       ├── config/
+│       │   └── cmd.ts
+│       └── addons/
 │           └── cmd.ts
 ├── package.json
 └── tsconfig.json

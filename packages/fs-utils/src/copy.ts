@@ -1,6 +1,5 @@
 import { dirname, join } from "node:path";
 import { ensureDir, pathExists, remove } from "./dir";
-import { writeFile } from "./file";
 import {
   fsLStat,
   fsReaddir,
@@ -10,7 +9,7 @@ import {
   fsSymlink,
 } from "./internal/fs";
 import { toPathString } from "./internal/path";
-import type { CopyOptions, PathLike } from "./types";
+import type { CopyOptions, MoveOptions, PathLike } from "./types";
 
 const shouldCopyEntry = async (
   path: string,
@@ -40,7 +39,8 @@ const copyFile = async (
     return;
   }
 
-  await writeFile(destination, Bun.file(source));
+  // Use Bun.write() directly for optimal performance (uses copy_file_range/sendfile)
+  await Bun.write(destination, Bun.file(source));
 };
 
 const copySymlink = async (
@@ -122,7 +122,7 @@ export const copy = async (
 export const move = async (
   from: PathLike,
   to: PathLike,
-  options?: { readonly overwrite?: boolean },
+  options?: MoveOptions,
 ): Promise<void> => {
   const source = toPathString(from);
   const destination = toPathString(to);

@@ -2,7 +2,7 @@
   "name": "@reliverse/dler-fs-utils",
   "description": "Bun-first fs-extra style helpers (copy, ensure*, output*) for @reliverse/dler",
   "author": "reliverse",
-  "version": "2.1.16",
+  "version": "2.2.2",
   "private": false,
   "type": "module",
   "exports": {
@@ -11,7 +11,6 @@
       "default": "./src/mod.ts"
     }
   },
-  "dependencies": {},
   "publishConfig": {
     "access": "public"
   },

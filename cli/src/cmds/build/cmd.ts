@@ -6,7 +6,10 @@ import {
   runBuildOnAllPackages,
   validateAndExit,
 } from "@reliverse/dler-build";
-import { replaceExportsInPackages } from "@reliverse/dler-helpers";
+import {
+  clearLoggerInternalsInPackages,
+  replaceExportsInPackages,
+} from "@reliverse/dler-helpers";
 import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
 import { logger } from "@reliverse/dler-logger";
 
@@ -362,6 +365,16 @@ export default defineCommand({
       description:
         "Packages to ignore when replacing exports (supports glob patterns like @reliverse/*)",
     },
+    loggerClearInternals: {
+      type: "boolean",
+      description:
+        "Remove logger.internal() and logInternal() calls from built dist files (default: false)",
+    },
+    loggerClearInternalsIgnorePackages: {
+      type: "string",
+      description:
+        "Packages to ignore when clearing logger internals (supports glob patterns like @reliverse/*)",
+    },
     cache: {
       type: "boolean",
       description: "Enable build cache (default: true)",
@@ -647,6 +660,78 @@ export default defineCommand({
           ignorePackages: args.replaceExportsIgnorePackages,
           verbose: args.verbose,
         });
+      }
+
+      // Clear logger internals if enabled (default: false, only when explicitly requested)
+      const shouldClearLoggerInternals = args.loggerClearInternals === true;
+      if (shouldClearLoggerInternals) {
+        if (buildOptions.watch) {
+          if (args.verbose) {
+            logger.warn(
+              "\n⚠️  --loggerClearInternals is not supported in watch mode (skipped)",
+            );
+          }
+        } else {
+          if (args.verbose) {
+            logger.info(
+              "\n🧹 Clearing logger.internal() and logInternal() calls from dist files...",
+            );
+          }
+
+          // Extract package information from build results
+          const allResults = results.results;
+          const successfulResults = allResults.filter(
+            (result) => result.success && !result.skipped,
+          );
+          const packages = successfulResults.map((result) => ({
+            name: result.package.name,
+            outputDir: result.package.outputDir,
+            path: result.package.path,
+          }));
+
+          if (args.verbose) {
+            logger.info(
+              `   Found ${allResults.length} build result(s), ${successfulResults.length} successful package(s) to process`,
+            );
+          }
+
+          if (packages.length > 0) {
+            const clearResult = await clearLoggerInternalsInPackages({
+              packages,
+              ignorePackages: args.loggerClearInternalsIgnorePackages,
+              verbose: args.verbose,
+              onLog: args.verbose ? (msg) => logger.info(msg) : undefined,
+            });
+
+            if (args.verbose) {
+              logger.info(
+                `\n✅ Logger internals cleared: Updated ${clearResult.updated} file(s), skipped ${clearResult.skipped} package(s)`,
+              );
+              if (
+                clearResult.files.length > 0 &&
+                clearResult.files.length <= 10
+              ) {
+                logger.info(
+                  `   Files updated: ${clearResult.files.join(", ")}`,
+                );
+              } else if (clearResult.files.length > 10) {
+                logger.info(
+                  `   Files updated: ${clearResult.files.slice(0, 10).join(", ")} ... and ${clearResult.files.length - 10} more`,
+                );
+              }
+            } else {
+              logger.info(
+                `✅ Logger internals cleared: ${clearResult.updated} file(s) updated`,
+              );
+            }
+          } else {
+            if (args.verbose) {
+              logger.warn(
+                "   ⚠️  No successful packages found to process (all packages were skipped or failed)",
+              );
+            }
+          }
+        }
       }
 
       logger.success("\n✅ All packages built successfully!");

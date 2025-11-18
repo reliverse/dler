@@ -1,3 +1,4 @@
+export { clearLoggerInternalsInPackages } from "./impl/clear-logger-internals";
 export { replaceExportsInPackages } from "./impl/replace-exports";
 export {
   cd,

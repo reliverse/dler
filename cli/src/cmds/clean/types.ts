@@ -3,6 +3,7 @@
 export interface CleanOptions {
   presets?: string;
   custom?: string;
+  filter?: string | string[];
   ignore?: string | string[];
   cwd?: string;
   subdirs?: boolean;

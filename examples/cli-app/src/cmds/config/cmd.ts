@@ -61,14 +61,19 @@ export default defineCommand({
     } else if (args.action === "reset") {
       let theme: "light" | "dark" | "auto";
       try {
-        theme = await selectPrompt({
-          title: "Select default theme:",
+        const result = await selectPrompt({
+          message: "Select default theme:",
           options: [
             { value: "light", label: "light" },
             { value: "dark", label: "dark" },
             { value: "auto", label: "auto" },
           ],
         });
+        if (result === null) {
+          logger.error("Selection cancelled");
+          return;
+        }
+        theme = result;
       } catch (error) {
         if (isCancel(error)) {
           return exitCancelled("Operation cancelled");

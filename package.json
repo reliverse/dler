@@ -7,7 +7,8 @@
   "scripts": {
     "dler": "bun cli/src/cli.ts",
     "pub": "bun run build && bun dler publish --skip-tip-2fa",
-    "build": "bun clean && bun typecheck && bun dler build",
+    "pub:minor": "bun pub --bump minor",
+    "build": "bun clean && bun typecheck && bun dler build --loggerClearInternals",
     "clean": "bun dler clean --presets build --force",
     "typecheck": "bun dler tsc --copy-logs",
     "check": "bun format && bun typecheck",
@@ -20,7 +21,6 @@
   "workspaces": {
     "packages": [
       "cli",
-      "deprecated",
       "examples/*",
       "packages/*",
       "scripts"
@@ -102,7 +102,7 @@
       "execa": "^9.6.0",
       "file-type": "^21.1.0",
       "fix-dts-default-cjs-exports": "^1.0.1",
-      "glob": "^11.0.3",
+      "glob": "^12.0.0",
       "globby": "^16.0.0",
       "gpt-tokenizer": "^3.4.0",
       "gradient-string": "^3.0.0",

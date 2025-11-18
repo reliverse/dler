@@ -3,6 +3,7 @@
 interface BaseArg {
   description?: string;
   aliases?: string[];
+  positional?: boolean;
 }
 
 type StringArg = BaseArg & {

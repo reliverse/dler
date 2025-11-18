@@ -51,3 +51,6 @@ relinter.json
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 start-runtime
 tests-runtime
+
+# AI
+.claude/

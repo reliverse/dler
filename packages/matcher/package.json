@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler-matcher",
-  "version": "2.1.16",
+  "version": "2.2.2",
   "private": false,
   "type": "module",
   "description": "@reliverse/dler-matcher is a high-performance minimal matcher, with micromatch-level power, zepto-level size, and reliverse-grade dx.",

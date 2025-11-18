@@ -149,7 +149,7 @@ func confirmWaitForTerminalResize(minHeight int, message string) error {
 	return nil
 }
 
-func Confirm(promptText, headerText, footerText string) string {
+func Confirm(promptText, headerText, footerText string, defaultValue, initialValue string) string {
 	const minTerminalHeight = 5
 
 	// Check terminal height before starting
@@ -187,6 +187,18 @@ func Confirm(promptText, headerText, footerText string) string {
 		header = promptText
 	}
 
+	// Determine start index based on initialValue or defaultValue
+	startIndex := 0
+	if initialValue == "true" {
+		startIndex = 0 // Yes
+	} else if initialValue == "false" {
+		startIndex = 1 // No
+	} else if defaultValue == "true" {
+		startIndex = 0 // Yes
+	} else if defaultValue == "false" {
+		startIndex = 1 // No
+	}
+
 	m := &confirmModel{
 		ctrlCPressedOnce: false,
 		showCancelMsg:    false,
@@ -216,6 +228,13 @@ func Confirm(promptText, headerText, footerText string) string {
 		},
 	}
 
+	// Set initial index
+	if startIndex > 0 {
+		for i := 0; i < startIndex; i++ {
+			m.sl.Update(tea.KeyMsg{Type: tea.KeyDown})
+		}
+	}
+
 	p := tea.NewProgram(m)
 	err = p.Start()
 	if err != nil {
@@ -227,6 +246,15 @@ func Confirm(promptText, headerText, footerText string) string {
 	}
 	if !m.canceled && !m.sl.Canceled() {
 		selectedIndex := m.sl.Index()
+		// If user didn't change selection from initial position and defaultValue is provided, use it
+		if defaultValue != "" && selectedIndex == startIndex {
+			// Use defaultValue
+			result, _ := json.Marshal(&ConfirmResult{
+				Confirmed: defaultValue,
+				Error:     "",
+			})
+			return string(result)
+		}
 		// Index 0 = Yes, Index 1 = No
 		confirmed := "false"
 		if selectedIndex == 0 {

@@ -18,6 +18,9 @@ export default defineCommand({
       "dler clean --presets db,frontend --dry-run",
       "dler clean --presets deps --deleteLockFiles",
       "dler clean --subdirs --presets build-tools",
+      'dler clean --filter "@reliverse/dler-prompt,@reliverse/dler-build"',
+      'dler clean --filter "@reliverse/dler-*"',
+      "dler clean --filter cli,packages/build",
       "dler clean --ignore '@reliverse/*'",
       "dler clean --presets frontend --verbose",
       "dler clean --presets all --dry-run --verbose",
@@ -38,6 +41,11 @@ export default defineCommand({
       "dler clean --custom '*.tmp,*.cache'  # Clean temporary and cache files",
       "dler clean --custom 'build/,coverage/' # Clean build and coverage directories",
       "dler clean --presets build --custom '*.log' # Combine presets and custom patterns",
+      "",
+      "# Filter Examples:",
+      'dler clean --filter "@reliverse/dler-*" --presets build   # Clean build artifacts in matching packages',
+      "dler clean --filter cli,packages/build --presets all     # Clean all artifacts in specific packages",
+      'dler clean --filter "@reliverse/dler-prompt" --custom "*.log"  # Clean log files in specific package',
       "",
       "# Monorepo Examples:",
       "dler clean                           # Clean dist/ in all packages",
@@ -61,6 +69,16 @@ export default defineCommand({
     ],
   },
   args: defineArgs({
+    filter: {
+      type: "string",
+      description:
+        "Package(s) to include (supports wildcards and comma-separated values like '@reliverse/dler-prompt,@reliverse/dler-build'). Takes precedence over --ignore when both are provided.",
+    },
+    ignore: {
+      type: "string",
+      description:
+        "Package(s) to ignore (supports wildcards like @reliverse/*)",
+    },
     presets: {
       type: "string",
       description:
@@ -70,11 +88,6 @@ export default defineCommand({
       type: "string",
       description:
         "Comma-separated custom patterns to clean (e.g., 'dist/,*.log,node_modules/')",
-    },
-    ignore: {
-      type: "string",
-      description:
-        "Package(s) to ignore (supports wildcards like @reliverse/*)",
     },
     cwd: {
       type: "string",

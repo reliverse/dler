@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
+	"unicode"
 
 	"github.com/mritd/bubbles/common"
 
@@ -15,15 +17,18 @@ import (
 )
 
 type multiselectModel struct {
-	sl               selector.Model
-	selected         map[int]bool
-	items            []ListItem
-	headerText       string
-	footerText       string
-	canceled         bool
-	ctrlCPressedOnce bool
-	ctrlCPressTime   time.Time
-	showCancelMsg    bool
+	sl                    selector.Model
+	selected              map[int]bool
+	items                 []ListItem
+	headerText            string
+	footerText            string
+	canceled              bool
+	ctrlCPressedOnce      bool
+	ctrlCPressTime        time.Time
+	showCancelMsg         bool
+	autocompleteEnabled   bool
+	autocompleteBuffer    string
+	autocompleteLastInput time.Time
 }
 
 func (m multiselectModel) Init() tea.Cmd {
@@ -62,6 +67,9 @@ func (m *multiselectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		if m.handleAutocompleteKey(msg) {
+			return m, nil
+		}
 		switch msg.String() {
 		case " ":
 			// Toggle selection on space
@@ -187,7 +195,131 @@ func multiselectWaitForTerminalResize(minHeight int, message string) error {
 	return nil
 }
 
-func Multiselect(jsonData, headerText, footerText string, perPage int) string {
+func (m *multiselectModel) handleAutocompleteKey(msg tea.KeyMsg) bool {
+	if !m.autocompleteEnabled || len(m.items) == 0 {
+		return false
+	}
+	switch msg.Type {
+	case tea.KeyRunes:
+		if len(msg.Runes) == 0 {
+			return false
+		}
+		if !m.autocompleteLastInput.IsZero() && time.Since(m.autocompleteLastInput) > autocompleteResetTimeout {
+			m.autocompleteBuffer = ""
+		}
+		r := msg.Runes[0]
+		if unicode.IsSpace(r) {
+			return false
+		}
+		if unicode.IsDigit(r) && m.autocompleteBuffer == "" {
+			return false
+		}
+		if !isAutocompleteRune(r) {
+			return false
+		}
+		m.autocompleteLastInput = time.Now()
+		m.autocompleteBuffer += strings.ToLower(string(msg.Runes))
+		m.focusAutocompleteMatch()
+		return true
+	case tea.KeyBackspace:
+		if m.autocompleteBuffer == "" {
+			return false
+		}
+		m.autocompleteBuffer = trimLastRune(m.autocompleteBuffer)
+		m.autocompleteLastInput = time.Now()
+		if m.autocompleteBuffer == "" {
+			return true
+		}
+		m.focusAutocompleteMatch()
+		return true
+	case tea.KeyEsc:
+		if m.autocompleteBuffer == "" {
+			return false
+		}
+		m.autocompleteBuffer = ""
+		m.autocompleteLastInput = time.Time{}
+		return true
+	default:
+		return false
+	}
+}
+
+func (m *multiselectModel) focusAutocompleteMatch() {
+	if m.autocompleteBuffer == "" {
+		return
+	}
+	idx := m.findAutocompleteMatch()
+	if idx >= 0 {
+		m.moveSelectorTo(idx)
+	}
+}
+
+func (m *multiselectModel) findAutocompleteMatch() int {
+	if m.autocompleteBuffer == "" || len(m.items) == 0 {
+		return -1
+	}
+	query := strings.ToLower(m.autocompleteBuffer)
+	total := len(m.items)
+	start := m.sl.Index()
+	for offset := 0; offset < total; offset++ {
+		idx := (start + offset) % total
+		if idx < 0 || idx >= total {
+			continue
+		}
+		item := m.items[idx]
+		if item.Disabled {
+			continue
+		}
+		label := strings.ToLower(item.Label)
+		hint := strings.ToLower(item.Hint)
+		value := strings.ToLower(item.Value)
+		if strings.Contains(label, query) || (item.Hint != "" && strings.Contains(hint, query)) || strings.Contains(value, query) {
+			return idx
+		}
+	}
+	return -1
+}
+
+func (m *multiselectModel) moveSelectorTo(target int) {
+	if target < 0 || target >= len(m.items) {
+		return
+	}
+	guard := 0
+	for m.sl.Index() != target && guard < len(m.items)*2 {
+		if m.sl.Index() < target {
+			if !m.stepSelector(1) {
+				break
+			}
+		} else {
+			if !m.stepSelector(-1) {
+				break
+			}
+		}
+		guard++
+	}
+}
+
+func (m *multiselectModel) stepSelector(direction int) bool {
+	key := tea.KeyMsg{Type: tea.KeyDown}
+	if direction < 0 {
+		key = tea.KeyMsg{Type: tea.KeyUp}
+	}
+	prev := m.sl.Index()
+	m.sl.Update(key)
+	if m.sl.Index() == prev {
+		return false
+	}
+	for m.sl.Index() < len(m.items) && m.items[m.sl.Index()].Disabled {
+		prev = m.sl.Index()
+		m.sl.Update(key)
+		if m.sl.Index() == prev {
+			return false
+		}
+	}
+	return true
+}
+
+func Multiselect(jsonData, headerText, footerText string, perPage int, autocomplete bool, defaultValue, initialValue string) string {
 	// Minimum height: header (1) + perPage items + footer (1) + buffer (2) = perPage + 4
 	minTerminalHeight := perPage + 4
 	if minTerminalHeight < 5 {
@@ -225,26 +357,43 @@ func Multiselect(jsonData, headerText, footerText string, perPage int) string {
 		data = append(data, ListItem{Value: val.Value, Label: val.Label, Hint: val.Hint, Disabled: val.Disabled})
 	}
 
-	// Find first non-disabled item to start on
-	startIndex := 0
-	for startIndex < len(item) && item[startIndex].Disabled {
-		startIndex++
+	// Parse defaultValue (JSON array of strings)
+	defaultValueSet := make(map[string]bool)
+	if defaultValue != "" {
+		var defaultVals []string
+		json.Unmarshal([]byte(defaultValue), &defaultVals)
+		for _, val := range defaultVals {
+			defaultValueSet[val] = true
+		}
 	}
-	if startIndex >= len(item) {
-		startIndex = 0
+
+	// Determine start index based on initialValue
+	startIndex := 0
+	if initialValue != "" {
+		for i, it := range item {
+			if it.Value == initialValue && !it.Disabled {
+				startIndex = i
+				break
+			}
+		}
+	} else {
+		// Find first non-disabled item to start on
+		for startIndex < len(item) && item[startIndex].Disabled {
+			startIndex++
+		}
+		if startIndex >= len(item) {
+			startIndex = 0
+		}
 	}
 
 	selected := make(map[int]bool)
-	m := &multiselectModel{
-		ctrlCPressedOnce: false,
-		showCancelMsg:    false,
-		selected:         selected,
-		items:            item,
-		headerText:       headerText,
-		footerText:       footerText,
+	// Set initial selections based on defaultValue
+	for i, it := range item {
+		if !it.Disabled && defaultValueSet[it.Value] {
+			selected[i] = true
+		}
 	}
-
-	m.sl = selector.Model{
+	sl := selector.Model{
 		Data:    data,
 		PerPage: perPage,
 		HeaderFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
@@ -304,6 +453,29 @@ func Multiselect(jsonData, headerText, footerText string, perPage int) string {
 		FinishedFunc: func(s interface{}) string {
 			return ""
 		},
+	}
+
+	m := &multiselectModel{
+		ctrlCPressedOnce:    false,
+		showCancelMsg:       false,
+		selected:            selected,
+		items:               item,
+		headerText:          headerText,
+		footerText:          footerText,
+		autocompleteEnabled: autocomplete,
+		autocompleteBuffer:  "",
+		sl:                  sl,
+	}
+
+	m.sl.FooterFunc = func(sl selector.Model, obj interface{}, gdIndex int) string {
+		footer := footerText
+		if footer == "" {
+			footer = "Space: toggle, Enter: confirm"
+		}
+		if m.autocompleteEnabled {
+			footer = formatAutocompleteFooter(footer, m.autocompleteBuffer)
+		}
+		return common.FontColor(footer, selector.ColorFooter)
 	}
 
 	// Set initial index to first non-disabled item

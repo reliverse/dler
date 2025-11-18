@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler-helpers",
-  "version": "2.1.16",
+  "version": "2.2.2",
   "private": false,
   "type": "module",
   "description": "@reliverse/dler-helpers is a collection of helper functions for the dler monorepo.",
@@ -14,6 +14,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@reliverse/dler-fs-utils": "workspace:*",
     "@reliverse/dler-matcher": "workspace:*",
     "@reliverse/dler-pkg-tsc": "workspace:*"
   },

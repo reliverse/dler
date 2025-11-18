@@ -1,8 +1,8 @@
 import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
 import { logger } from "@reliverse/dler-logger";
 import {
-  askQuestion,
   confirmPrompt,
+  inputPrompt,
   multiselectPrompt,
   type SelectionItem,
   selectPrompt,
@@ -47,14 +47,17 @@ export default defineCommand({
   }),
   run: async ({ args }) => {
     if (args.action === "add") {
-      const task = await askQuestion("Enter a new task:");
+      const task = await inputPrompt({
+        message: "Enter a new task:",
+        required: false,
+      });
       if (!task.trim()) {
         logger.error("Task cannot be empty!");
         return;
       }
 
       const test = await selectPrompt<"1" | "2" | "3">({
-        title: "Select an item:",
+        message: "Select an item:",
         options: [
           { value: "1", label: "Item 1" },
           { value: "2", label: "Item 2" },
@@ -74,13 +77,18 @@ export default defineCommand({
       }
 
       const multiTest = await multiselectPrompt<"a" | "b" | "c">({
-        title: "Select multiple items:",
+        message: "Select multiple items:",
         options: [
           { value: "a", label: "Option A" },
           { value: "b", label: "Option B" },
           { value: "c", label: "Option C" },
         ],
       });
+
+      if (multiTest === null) {
+        logger.error("Selection cancelled");
+        return;
+      }
 
       for (const item of multiTest) {
         switch (item) {
@@ -103,10 +111,15 @@ export default defineCommand({
       ] as const satisfies readonly SelectionItem[];
       let priority: "low" | "medium" | "high";
       try {
-        priority = await selectPrompt({
-          title: "Select priority:",
+        const result = await selectPrompt({
+          message: "Select priority:",
           options: priorityOptions,
         });
+        if (result === null) {
+          logger.error("Priority selection cancelled");
+          return;
+        }
+        priority = result;
       } catch (error) {
         logger.error(
           error instanceof Error
@@ -163,10 +176,15 @@ export default defineCommand({
 
       let selectedTaskIds: string[];
       try {
-        selectedTaskIds = await multiselectPrompt({
-          title: "Select tasks to mark as completed:",
+        const result = await multiselectPrompt({
+          message: "Select tasks to mark as completed:",
           options: taskOptions,
         });
+        if (result === null) {
+          logger.error("Selection cancelled");
+          return;
+        }
+        selectedTaskIds = result;
       } catch (error) {
         logger.error(
           error instanceof Error ? error.message : "Selection cancelled",
@@ -208,10 +226,15 @@ export default defineCommand({
 
       let selectedTaskIds: string[];
       try {
-        selectedTaskIds = await multiselectPrompt({
-          title: "Select tasks to delete:",
+        const result = await multiselectPrompt({
+          message: "Select tasks to delete:",
           options: taskOptions,
         });
+        if (result === null) {
+          logger.error("Selection cancelled");
+          return;
+        }
+        selectedTaskIds = result;
       } catch (error) {
         logger.error(
           error instanceof Error ? error.message : "Selection cancelled",
@@ -219,15 +242,16 @@ export default defineCommand({
         return;
       }
 
-      const confirmResult = await confirmPrompt({
-        title: `Are you sure you want to delete ${selectedTaskIds.length} task(s)?`,
-      });
+      try {
+        const confirmed = await confirmPrompt({
+          message: `Are you sure you want to delete ${selectedTaskIds.length} task(s)?`,
+        });
 
-      if (
-        confirmResult.error ||
-        confirmResult.confirmed === null ||
-        !confirmResult.confirmed
-      ) {
+        if (!confirmed) {
+          logger.log("❌ Deletion cancelled.");
+          return;
+        }
+      } catch {
         logger.log("❌ Deletion cancelled.");
         return;
       }
@@ -261,15 +285,16 @@ export default defineCommand({
         return;
       }
 
-      const confirmResult = await confirmPrompt({
-        title: "Are you sure you want to clear all tasks?",
-      });
+      try {
+        const confirmed = await confirmPrompt({
+          message: "Are you sure you want to clear all tasks?",
+        });
 
-      if (
-        confirmResult.error ||
-        confirmResult.confirmed === null ||
-        !confirmResult.confirmed
-      ) {
+        if (!confirmed) {
+          logger.log("❌ Clear cancelled.");
+          return;
+        }
+      } catch {
         logger.log("❌ Clear cancelled.");
         return;
       }

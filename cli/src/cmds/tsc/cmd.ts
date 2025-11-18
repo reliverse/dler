@@ -35,15 +35,16 @@ export default defineCommand({
     ],
   },
   args: defineArgs({
-    ignore: {
-      type: "string",
-      description:
-        "Package(s) to ignore (supports wildcards like @reliverse/*)",
-    },
     filter: {
       type: "string",
       description:
         "Package(s) to include (supports wildcards and comma-separated values like '@reliverse/dler-prompt,@reliverse/dler-build'). Takes precedence over --ignore when both are provided.",
+      positional: true,
+    },
+    ignore: {
+      type: "string",
+      description:
+        "Package(s) to ignore (supports wildcards like @reliverse/*)",
     },
     cwd: {
       type: "string",

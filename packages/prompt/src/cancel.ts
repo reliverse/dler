@@ -1,7 +1,3 @@
-import type { PromptResult } from "./prompt";
-
-export type { PromptResult };
-
 /**
  * Custom error class for prompt cancellations
  */
@@ -27,15 +23,6 @@ export function cancel(message = "Cancelled"): never {
  */
 export function isCancel(error: unknown): error is PromptCancelledError {
   return error instanceof PromptCancelledError;
-}
-
-/**
- * Checks if a PromptResult indicates a cancellation
- * @param result - The PromptResult to check
- * @returns `true` if the result indicates cancellation, `false` otherwise
- */
-export function isCancelResult(result: PromptResult): boolean {
-  return result.error === "Cancelled";
 }
 
 /**

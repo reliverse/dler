@@ -58,7 +58,7 @@ export const kebabCase = (str: string): string => {
   return result.toLowerCase();
 };
 
-const createSchemaMetadata = (schema: CmdArgsSchema): SchemaMetadata => {
+const createSchemaMetadata = (schema: Record<string, any>): SchemaMetadata => {
   const aliasMap = new Map<string, string>();
   const camelCaseCache = new Map<string, string>();
   const kebabCaseMap = new Map<string, string>();
@@ -104,7 +104,7 @@ const createSchemaMetadata = (schema: CmdArgsSchema): SchemaMetadata => {
       if ("allowed" in def && def.allowed) {
         if (!def.allowed.includes(def.default as never)) {
           const allowedValues = def.allowed
-            .map((v) => (typeof v === "string" ? `"${v}"` : String(v)))
+            .map((v: unknown) => (typeof v === "string" ? `"${v}"` : String(v)))
             .join(", ");
           throw new ArgumentValidationError(
             key,
@@ -129,7 +129,7 @@ const createSchemaMetadata = (schema: CmdArgsSchema): SchemaMetadata => {
   };
 };
 
-const getSchemaMetadata = (schema: CmdArgsSchema): SchemaMetadata => {
+const getSchemaMetadata = (schema: Record<string, any>): SchemaMetadata => {
   return createSchemaMetadata(schema);
 };
 
@@ -143,6 +143,25 @@ export const parseArgs = (
     throw new ArgumentValidationError("command", "No command provided");
   }
 
+  // Collect positional argument keys in order
+  const positionalKeys = Object.entries(schema)
+    .filter(([, def]) => (def as any).positional === true)
+    .map(([key]) => key);
+
+  return parseArgsWithPositionalSupport(
+    cmdName,
+    rawArgs,
+    schema,
+    positionalKeys,
+  );
+};
+
+const parseArgsWithPositionalSupport = (
+  cmdName: string,
+  rawArgs: string[],
+  schema: Record<string, any>,
+  positionalKeys: string[],
+): ParseResult => {
   // Get pre-computed schema metadata
   const {
     aliasMap,
@@ -154,11 +173,43 @@ export const parseArgs = (
   } = getSchemaMetadata(schema);
 
   const parsedArgs: Record<string, unknown> = { ...defaults };
+  let positionalIndex = 0;
 
   // Single-pass argument parsing
   for (let i = 0; i < rawArgs.length; i++) {
     const arg = rawArgs[i];
-    if (!arg || !arg.startsWith("-")) continue;
+
+    // Handle positional arguments (non-flag arguments)
+    if (!arg || !arg.startsWith("-")) {
+      if (!arg) continue;
+
+      // This is a positional argument
+      if (positionalIndex < positionalKeys.length) {
+        const positionalKey = positionalKeys[positionalIndex]!;
+        const definition = schema[positionalKey];
+
+        let value: string | number = arg;
+        if (definition.type === "number") {
+          value = Number(arg);
+          if (Number.isNaN(value)) {
+            throw new ArgumentValidationError(
+              positionalKey,
+              `Expected number for positional argument "${positionalKey}", got "${arg}"`,
+            );
+          }
+        }
+
+        validateArgValue(positionalKey, value, definition);
+        parsedArgs[positionalKey] = value;
+        positionalIndex++;
+      } else {
+        throw new ArgumentValidationError(
+          `positional_${positionalIndex}`,
+          `Too many positional arguments. Expected ${positionalKeys.length}, got at least ${positionalIndex + 1}`,
+        );
+      }
+      continue;
+    }
 
     const isLongForm = arg.startsWith("--");
     let flagName = arg.slice(isLongForm ? 2 : 1);

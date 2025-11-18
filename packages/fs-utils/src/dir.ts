@@ -1,24 +1,27 @@
 import { dirname, join } from "node:path";
 import {
-  fsAccess,
-  fsConstants,
   fsLStat,
   fsMkdir,
   fsReaddir,
   fsRm,
+  fsStat,
   fsUnlink,
 } from "./internal/fs";
 import { toPathString } from "./internal/path";
-import type { ListFilesOptions, PathLike } from "./types";
+import type {
+  EmptyDirOptions,
+  ListFilesOptions,
+  PathLike,
+  ReaddirOptions,
+  SizeOfOptions,
+} from "./types";
 
 export const pathExists = async (path: PathLike): Promise<boolean> => {
-  try {
-    await fsAccess(toPathString(path), fsConstants.F_OK);
+  const pathStr = toPathString(path);
+  const file = Bun.file(pathStr);
 
-    return true;
-  } catch {
-    return false;
-  }
+  // Bun.file().exists() is always available and optimized
+  return file.exists();
 };
 
 export const ensureDir = async (path: PathLike): Promise<void> => {
@@ -37,7 +40,10 @@ export const remove = async (
   });
 };
 
-export const emptyDir = async (path: PathLike): Promise<void> => {
+export const emptyDir = async (
+  path: PathLike,
+  options?: EmptyDirOptions,
+): Promise<void> => {
   const target = toPathString(path);
   await ensureDir(target);
 
@@ -45,6 +51,14 @@ export const emptyDir = async (path: PathLike): Promise<void> => {
 
   for (const entry of entries) {
     const entryPath = join(target, entry.name);
+
+    if (options?.filter) {
+      const shouldKeep = await options.filter(entryPath);
+
+      if (shouldKeep) {
+        continue;
+      }
+    }
 
     if (entry.isDirectory()) {
       await remove(entryPath);
@@ -55,22 +69,44 @@ export const emptyDir = async (path: PathLike): Promise<void> => {
   }
 };
 
-export const sizeOf = async (path: PathLike): Promise<number> => {
+export const sizeOf = async (
+  path: PathLike,
+  options?: SizeOfOptions,
+): Promise<number> => {
   const target = toPathString(path);
-  const stats = await fsLStat(target);
+  const stats = options?.followSymlinks
+    ? await fsStat(target)
+    : await fsLStat(target);
 
   if (stats.isDirectory()) {
     let total = 0;
     const entries = await fsReaddir(target, { withFileTypes: true });
 
     for (const entry of entries) {
-      total += await sizeOf(join(target, entry.name));
+      total += await sizeOf(join(target, entry.name), options);
     }
 
     return total;
   }
 
   return stats.size;
+};
+
+export const readdir = async (
+  path: PathLike,
+  options?: ReaddirOptions,
+): Promise<string[]> => {
+  const target = toPathString(path);
+
+  if (options?.withFileTypes) {
+    const entries = await fsReaddir(target, { withFileTypes: true });
+
+    return entries.map((entry) => entry.name);
+  }
+
+  const entries = await fsReaddir(target);
+
+  return entries;
 };
 
 export const readdirRecursive = async (
@@ -126,9 +162,16 @@ export const ensureFile = async (path: PathLike): Promise<void> => {
     await ensureDir(dir);
   }
 
-  if (await pathExists(fullPath)) {
-    return;
-  }
+  // Try to write directly, catch EEXIST if file already exists
+  // This avoids an extra syscall (pathExists check)
+  try {
+    await Bun.write(fullPath, "");
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
 
-  await Bun.write(fullPath, "");
+    // If file already exists, that's fine
+    if (code !== "EEXIST") {
+      throw error;
+    }
+  }
 };

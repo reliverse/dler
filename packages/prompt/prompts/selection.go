@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/mritd/bubbles/common"
 
@@ -16,12 +19,15 @@ import (
 )
 
 type model struct {
-	sl              selector.Model
-	items           []ListItem
-	ctrlCPressedOnce bool
-	ctrlCPressTime   time.Time
-	showCancelMsg    bool
-	canceled         bool
+	sl                    selector.Model
+	items                 []ListItem
+	ctrlCPressedOnce      bool
+	ctrlCPressTime        time.Time
+	showCancelMsg         bool
+	canceled              bool
+	autocompleteEnabled   bool
+	autocompleteBuffer    string
+	autocompleteLastInput time.Time
 }
 
 func (m model) Init() tea.Cmd {
@@ -76,6 +82,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Handle navigation - skip disabled items
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		if m.handleAutocompleteKey(msg) {
+			return m, nil
+		}
 		switch msg.String() {
 		case "up", "k":
 			// Move up, skipping disabled items
@@ -119,6 +128,8 @@ type Result struct {
 	SelectedIndex string `json:"selectedIndex"`
 	Error         string `json:"error"`
 }
+
+const autocompleteResetTimeout = 1500 * time.Millisecond
 
 type waitForResizeModel struct {
 	minHeight int
@@ -191,7 +202,169 @@ func waitForTerminalResize(minHeight int, message string) error {
 	return nil
 }
 
-func Selection(jsonData, headerText, footerText string, perPage int) string {
+func (m *model) handleAutocompleteKey(msg tea.KeyMsg) bool {
+	if !m.autocompleteEnabled || len(m.items) == 0 {
+		return false
+	}
+	switch msg.Type {
+	case tea.KeyRunes:
+		if len(msg.Runes) == 0 {
+			return false
+		}
+		if !m.autocompleteLastInput.IsZero() && time.Since(m.autocompleteLastInput) > autocompleteResetTimeout {
+			m.autocompleteBuffer = ""
+		}
+		r := msg.Runes[0]
+		if unicode.IsSpace(r) {
+			return false
+		}
+		if unicode.IsDigit(r) && m.autocompleteBuffer == "" {
+			return false
+		}
+		if !isAutocompleteRune(r) {
+			return false
+		}
+		m.autocompleteLastInput = time.Now()
+		m.autocompleteBuffer += strings.ToLower(string(msg.Runes))
+		m.focusAutocompleteMatch()
+		return true
+	case tea.KeyBackspace:
+		if m.autocompleteBuffer == "" {
+			return false
+		}
+		m.autocompleteBuffer = trimLastRune(m.autocompleteBuffer)
+		m.autocompleteLastInput = time.Now()
+		if m.autocompleteBuffer == "" {
+			return true
+		}
+		m.focusAutocompleteMatch()
+		return true
+	case tea.KeyEsc:
+		if m.autocompleteBuffer == "" {
+			return false
+		}
+		m.autocompleteBuffer = ""
+		m.autocompleteLastInput = time.Time{}
+		return true
+	default:
+		return false
+	}
+}
+
+func (m *model) focusAutocompleteMatch() {
+	if m.autocompleteBuffer == "" {
+		return
+	}
+	idx := m.findAutocompleteMatch()
+	if idx >= 0 {
+		m.moveSelectorTo(idx)
+	}
+}
+
+func (m *model) findAutocompleteMatch() int {
+	if m.autocompleteBuffer == "" || len(m.items) == 0 {
+		return -1
+	}
+	query := strings.ToLower(m.autocompleteBuffer)
+	total := len(m.items)
+	start := m.sl.Index()
+	for offset := 0; offset < total; offset++ {
+		idx := (start + offset) % total
+		if idx < 0 || idx >= total {
+			continue
+		}
+		item := m.items[idx]
+		if item.Disabled {
+			continue
+		}
+		label := strings.ToLower(item.Label)
+		hint := strings.ToLower(item.Hint)
+		value := strings.ToLower(item.Value)
+		if strings.Contains(label, query) || (item.Hint != "" && strings.Contains(hint, query)) || strings.Contains(value, query) {
+			return idx
+		}
+	}
+	return -1
+}
+
+func (m *model) moveSelectorTo(target int) {
+	if target < 0 || target >= len(m.items) {
+		return
+	}
+	guard := 0
+	for m.sl.Index() != target && guard < len(m.items)*2 {
+		if m.sl.Index() < target {
+			if !m.stepSelector(1) {
+				break
+			}
+		} else {
+			if !m.stepSelector(-1) {
+				break
+			}
+		}
+		guard++
+	}
+}
+
+func (m *model) stepSelector(direction int) bool {
+	key := tea.KeyMsg{Type: tea.KeyDown}
+	if direction < 0 {
+		key = tea.KeyMsg{Type: tea.KeyUp}
+	}
+	prev := m.sl.Index()
+	m.sl.Update(key)
+	if m.sl.Index() == prev {
+		return false
+	}
+	for m.sl.Index() < len(m.items) && m.items[m.sl.Index()].Disabled {
+		prev = m.sl.Index()
+		m.sl.Update(key)
+		if m.sl.Index() == prev {
+			return false
+		}
+	}
+	return true
+}
+
+func trimLastRune(value string) string {
+	if value == "" {
+		return value
+	}
+	_, size := utf8.DecodeLastRuneInString(value)
+	if size <= 0 || size > len(value) {
+		return ""
+	}
+	return value[:len(value)-size]
+}
+
+func isAutocompleteRune(r rune) bool {
+	if unicode.IsLetter(r) {
+		return true
+	}
+	if unicode.IsDigit(r) {
+		return true
+	}
+	switch r {
+	case '-', '_', '.', '/', '+', '#':
+		return true
+	default:
+		return false
+	}
+}
+
+func formatAutocompleteFooter(base, buffer string) string {
+	hint := "Type to search"
+	if buffer != "" {
+		hint = fmt.Sprintf("Filter: %s", buffer)
+	}
+	base = strings.TrimSpace(base)
+	if base == "" {
+		return hint
+	}
+	return fmt.Sprintf("%s  |  %s", base, hint)
+}
+
+func Selection(jsonData, headerText, footerText string, perPage int, autocomplete bool, defaultValue, initialValue string) string {
 	// Minimum height: header (1) + perPage items + footer (1) + buffer (2) = perPage + 4
 	minTerminalHeight := perPage + 4
 	if minTerminalHeight < 5 {
@@ -229,63 +402,90 @@ func Selection(jsonData, headerText, footerText string, perPage int) string {
 		data = append(data, ListItem{Value: val.Value, Label: val.Label, Hint: val.Hint, Disabled: val.Disabled})
 	}
 
-	// Find first non-disabled item to start on
+	// Determine start index based on initialValue or defaultValue
 	startIndex := 0
-	for startIndex < len(item) && item[startIndex].Disabled {
-		startIndex++
-	}
-	if startIndex >= len(item) {
-		startIndex = 0
+
+	// If initialValue is provided, find the matching item
+	if initialValue != "" {
+		for i, it := range item {
+			if it.Value == initialValue && !it.Disabled {
+				startIndex = i
+				break
+			}
+		}
+	} else if defaultValue != "" {
+		// If no initialValue but defaultValue is provided, use it
+		for i, it := range item {
+			if it.Value == defaultValue && !it.Disabled {
+				startIndex = i
+				break
+			}
+		}
+	} else {
+		// Otherwise, find first non-disabled item
+		for startIndex < len(item) && item[startIndex].Disabled {
+			startIndex++
+		}
+		if startIndex >= len(item) {
+			startIndex = 0
+		}
 	}
 
-	m := &model{
-		items:            item,
-		ctrlCPressedOnce: false,
-		showCancelMsg:    false,
-		canceled:         false,
-		sl: selector.Model{
-			Data:    data,
-			PerPage: perPage,
-			// Use the arrow keys to navigate: ↓ ↑ → ←
-			// Select Commit Type:
-			HeaderFunc: selector.DefaultHeaderFuncWithAppend(headerText),
-			// [1] feat (Introducing new features)
-			SelectedFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
-				t := obj.(ListItem)
-				disabled := t.Disabled
-				if gdIndex < len(item) {
-					disabled = item[gdIndex].Disabled
-				}
-				if disabled {
+	sl := selector.Model{
+		Data:       data,
+		PerPage:    perPage,
+		HeaderFunc: selector.DefaultHeaderFuncWithAppend(headerText),
+		SelectedFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
+			t := obj.(ListItem)
+			disabled := t.Disabled
+			if gdIndex < len(item) {
+				disabled = item[gdIndex].Disabled
+			}
+			if disabled {
 				if t.Hint != "" {
 					return common.FontColor(fmt.Sprintf("[%d] %s (%s) (disabled)", gdIndex+1, t.Label, t.Hint), "240")
 				}
-					return common.FontColor(fmt.Sprintf("[%d] %s (disabled)", gdIndex+1, t.Label), "240")
-				}
-				if t.Hint != "" {
-					return common.FontColor(fmt.Sprintf("[%d] %s (%s)", gdIndex+1, t.Label, t.Hint), selector.ColorSelected)
-				}
-				return common.FontColor(fmt.Sprintf("[%d] %s", gdIndex+1, t.Label), selector.ColorSelected)
-			},
-			// 2. fix (Bug fix)
-			UnSelectedFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
-				t := obj.(ListItem)
-				disabled := t.Disabled
-				if gdIndex < len(item) {
-					disabled = item[gdIndex].Disabled
-				}
-				if disabled {
-					return common.FontColor(fmt.Sprintf(" %d. %s (disabled)", gdIndex+1, t.Label), "240")
-				}
-				return common.FontColor(fmt.Sprintf(" %d. %s", gdIndex+1, t.Label), selector.ColorUnSelected)
-			},
-			FooterFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
-				return common.FontColor(footerText, selector.ColorFooter)
-			},
-			FinishedFunc: func(s interface{}) string {
-				return ""
-			},
+				return common.FontColor(fmt.Sprintf("[%d] %s (disabled)", gdIndex+1, t.Label), "240")
+			}
+			if t.Hint != "" {
+				return common.FontColor(fmt.Sprintf("[%d] %s (%s)", gdIndex+1, t.Label, t.Hint), selector.ColorSelected)
+			}
+			return common.FontColor(fmt.Sprintf("[%d] %s", gdIndex+1, t.Label), selector.ColorSelected)
 		},
+		UnSelectedFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
+			t := obj.(ListItem)
+			disabled := t.Disabled
+			if gdIndex < len(item) {
+				disabled = item[gdIndex].Disabled
+			}
+			if disabled {
+				return common.FontColor(fmt.Sprintf(" %d. %s (disabled)", gdIndex+1, t.Label), "240")
+			}
+			return common.FontColor(fmt.Sprintf(" %d. %s", gdIndex+1, t.Label), selector.ColorUnSelected)
+		},
+		FooterFunc: func(sl selector.Model, obj interface{}, gdIndex int) string {
+			return common.FontColor(footerText, selector.ColorFooter)
+		},
+		FinishedFunc: func(s interface{}) string {
+			return ""
+		},
+	}
+
+	m := &model{
+		items:               item,
+		ctrlCPressedOnce:    false,
+		showCancelMsg:       false,
+		canceled:            false,
+		autocompleteEnabled: autocomplete,
+		autocompleteBuffer:  "",
+		sl:                  sl,
+	}
+
+	m.sl.FooterFunc = func(sl selector.Model, obj interface{}, gdIndex int) string {
+		if !m.autocompleteEnabled {
+			return common.FontColor(footerText, selector.ColorFooter)
+		}
+		return common.FontColor(formatAutocompleteFooter(footerText, m.autocompleteBuffer), selector.ColorFooter)
 	}
 
 	// Set initial index to first non-disabled item
@@ -313,6 +513,20 @@ func Selection(jsonData, headerText, footerText string, perPage int) string {
 				Error:         "Cannot select disabled item",
 			})
 			return string(result)
+		}
+		// If user didn't change selection from initial position and defaultValue is provided, use it
+		if defaultValue != "" && selectedIndex == startIndex {
+			selectedValue := m.items[selectedIndex].Value
+			// If defaultValue is different from what's currently selected, find and use it
+			if defaultValue != selectedValue {
+				// Find defaultValue in items
+				for i, it := range m.items {
+					if it.Value == defaultValue && !it.Disabled {
+						selectedIndex = i
+						break
+					}
+				}
+			}
 		}
 		result, _ := json.Marshal(&Result{
 			SelectedIndex: strconv.Itoa(selectedIndex),

@@ -1,5 +1,6 @@
 import {
   access,
+  appendFile,
   constants,
   link,
   lstat,
@@ -16,6 +17,7 @@ import {
 } from "node:fs/promises";
 
 export const fsAccess = access;
+export const fsAppendFile = appendFile;
 export const fsConstants = constants;
 export const fsLink = link;
 export const fsLStat = lstat;

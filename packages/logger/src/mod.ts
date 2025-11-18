@@ -19,19 +19,23 @@ const textEncoder = new TextEncoder();
 const LOG_COLORS = {
   log: re.white,
   error: re.red,
+  fatal: re.red,
   warn: re.yellow,
   info: re.blue,
   success: re.green,
   debug: re.gray,
+  box: re.white,
 } as const;
 
 const LOG_SYMBOLS = {
   log: "│  ",
   error: "✖  ",
+  fatal: "☠  ",
   warn: "⚠  ",
   info: "■  ",
   success: "✓  ",
   debug: "✱  ",
+  box: "",
 } as const;
 
 type LogLevel = keyof typeof LOG_COLORS;
@@ -46,6 +50,29 @@ const formatMessage = (...args: unknown[]): string =>
 // Generic prefixed message creator
 const createPrefixedMessage = (level: LogLevel, message: string): string =>
   `${LOG_SYMBOLS[level]}${message}`;
+
+// Box formatter - wraps text in a box
+const formatBox = (message: string): string => {
+  const lines = message.split("\n");
+  const maxWidth = Math.max(0, ...lines.map((line) => line.length));
+  const padding = 2;
+  const width = maxWidth + padding * 2;
+  const horizontal = "─".repeat(width);
+  const top = `┌${horizontal}┐`;
+  const bottom = `└${horizontal}┘`;
+
+  const content =
+    maxWidth === 0
+      ? `│${" ".repeat(width)}│`
+      : lines
+          .map((line) => {
+            const padded = line.padEnd(maxWidth);
+            return `│${" ".repeat(padding)}${padded}${" ".repeat(padding)}│`;
+          })
+          .join("\n");
+
+  return `${top}\n${content}\n${bottom}`;
+};
 
 // Generic async writer
 const writeAsync = async (text: string, isError = false): Promise<void> => {
@@ -102,15 +129,21 @@ function createLogMethod(
   if (isAsync) {
     return async (...args: unknown[]): Promise<void> => {
       const message = formatMessage(...args);
-      const prefixedMessage = createPrefixedMessage(level, message);
-      await writeColoredAsync(prefixedMessage, LOG_COLORS[level], isError);
+      const formattedMessage =
+        level === "box"
+          ? formatBox(message)
+          : createPrefixedMessage(level, message);
+      await writeColoredAsync(formattedMessage, LOG_COLORS[level], isError);
     };
   }
 
   return (...args: unknown[]): void => {
     const message = formatMessage(...args);
-    const prefixedMessage = createPrefixedMessage(level, message);
-    writeColoredSync(prefixedMessage, LOG_COLORS[level], isError);
+    const formattedMessage =
+      level === "box"
+        ? formatBox(message)
+        : createPrefixedMessage(level, message);
+    writeColoredSync(formattedMessage, LOG_COLORS[level], isError);
   };
 }
 
@@ -137,49 +170,59 @@ function createRawMethod(
 interface LoggerBase {
   log: (...args: unknown[]) => void | Promise<void>;
   error: (...args: unknown[]) => void | Promise<void>;
+  fatal: (...args: unknown[]) => void | Promise<void>;
   warn: (...args: unknown[]) => void | Promise<void>;
   info: (...args: unknown[]) => void | Promise<void>;
   success: (...args: unknown[]) => void | Promise<void>;
   debug: (...args: unknown[]) => void | Promise<void>;
+  box: (...args: unknown[]) => void | Promise<void>;
   raw: (...args: unknown[]) => void | Promise<void>;
 }
 
 interface LoggerAsync extends LoggerBase {
   log: (...args: unknown[]) => Promise<void>;
   error: (...args: unknown[]) => Promise<void>;
+  fatal: (...args: unknown[]) => Promise<void>;
   warn: (...args: unknown[]) => Promise<void>;
   info: (...args: unknown[]) => Promise<void>;
   success: (...args: unknown[]) => Promise<void>;
   debug: (...args: unknown[]) => Promise<void>;
+  box: (...args: unknown[]) => Promise<void>;
   raw: (...args: unknown[]) => Promise<void>;
 }
 
 interface Logger extends LoggerBase {
   log: (...args: unknown[]) => void;
   error: (...args: unknown[]) => void;
+  fatal: (...args: unknown[]) => void;
   warn: (...args: unknown[]) => void;
   info: (...args: unknown[]) => void;
   success: (...args: unknown[]) => void;
   debug: (...args: unknown[]) => void;
+  box: (...args: unknown[]) => void;
   raw: (...args: unknown[]) => void;
 }
 
 export const loggerAsync: LoggerAsync = {
   log: createLogMethod("log", true),
   error: createLogMethod("error", true, true),
+  fatal: createLogMethod("fatal", true, true),
   warn: createLogMethod("warn", true),
   info: createLogMethod("info", true),
   success: createLogMethod("success", true),
   debug: createLogMethod("debug", true),
+  box: createLogMethod("box", true),
   raw: createRawMethod(true),
 };
 
 export const logger: Logger = {
   log: createLogMethod("log", false),
   error: createLogMethod("error", false, true),
+  fatal: createLogMethod("fatal", false, true),
   warn: createLogMethod("warn", false),
   info: createLogMethod("info", false),
   success: createLogMethod("success", false),
   debug: createLogMethod("debug", false),
+  box: createLogMethod("box", false),
   raw: createRawMethod(false),
 };

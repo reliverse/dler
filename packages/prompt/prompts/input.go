@@ -20,6 +20,7 @@ type setDefaultValueMsg struct {
 type inputModel struct {
 	input           *prompt.Model
 	defaultValue    string
+	initialValue    string
 	ctrlCPressedOnce bool
 	ctrlCPressTime   time.Time
 	showCancelMsg    bool
@@ -27,10 +28,10 @@ type inputModel struct {
 }
 
 func (m *inputModel) Init() tea.Cmd {
-	// Send default value as a message if provided
-	if m.defaultValue != "" {
+	// Send initial value as a message if provided (pre-fills the input field)
+	if m.initialValue != "" {
 		return func() tea.Msg {
-			return setDefaultValueMsg{value: m.defaultValue}
+			return setDefaultValueMsg{value: m.initialValue}
 		}
 	}
 	return nil
@@ -111,7 +112,12 @@ func (m inputModel) View() string {
 }
 
 func (m inputModel) Value() string {
-	return m.input.Value()
+	value := m.input.Value()
+	// If value is empty and defaultValue is provided, return defaultValue
+	if value == "" && m.defaultValue != "" {
+		return m.defaultValue
+	}
+	return value
 }
 
 type InputResult struct {
@@ -190,7 +196,7 @@ func inputWaitForTerminalResize(minHeight int, message string) error {
 	return nil
 }
 
-func Input(promptText, echoMode, validateOkPrefix, validateErrPrefix, defaultValue string, required bool, charLimit int) string {
+func Input(promptText, echoMode, validateOkPrefix, validateErrPrefix, defaultValue, initialValue string, required bool, charLimit int) string {
 	const minTerminalHeight = 5
 
 	// Check terminal height before starting
@@ -228,6 +234,7 @@ func Input(promptText, echoMode, validateOkPrefix, validateErrPrefix, defaultVal
 			EchoMode:     prompt.EchoNormal,
 		},
 		defaultValue: defaultValue,
+		initialValue:  initialValue,
 	}
 
 	switch echoMode {

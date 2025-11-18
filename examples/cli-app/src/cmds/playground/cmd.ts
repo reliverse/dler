@@ -26,9 +26,9 @@ export default defineCommand({
     logger.log("🎮 Prompt Playground Demo\n");
 
     // Input prompt - username
-    let usernameResult;
+    let usernameResult: string;
     try {
-      usernameResult = await inputPrompt({ title: "Enter username: " });
+      usernameResult = await inputPrompt({ message: "Enter username: " });
     } catch (error) {
       if (isCancel(error)) {
         return exitCancelled("Operation cancelled");
@@ -39,19 +39,13 @@ export default defineCommand({
       return;
     }
     logger.log("Username result:", JSON.stringify(usernameResult, null, 2));
-    if (usernameResult.error) {
-      logger.error(`Error: ${usernameResult.error}`);
-      return;
-    }
-    if (usernameResult.value) {
-      logger.success(`Username: ${usernameResult.value}\n`);
-    }
+    logger.success(`Username: ${usernameResult}\n`);
 
     // Input prompt - password
-    let passwordResult;
+    let passwordResult: string;
     try {
       passwordResult = await inputPrompt({
-        title: "Enter password: ",
+        message: "Enter password: ",
         echoMode: "password",
       });
     } catch (error) {
@@ -64,13 +58,7 @@ export default defineCommand({
       return;
     }
     logger.log("Password result:", JSON.stringify(passwordResult, null, 2));
-    if (passwordResult.error) {
-      logger.error(`Error: ${passwordResult.error}`);
-      return;
-    }
-    if (passwordResult.value) {
-      logger.success("Password entered successfully\n");
-    }
+    logger.success("Password entered successfully\n");
 
     // Select prompt
     const selectCommitTypeOptions = [
@@ -102,6 +90,7 @@ export default defineCommand({
     try {
       selectedCommitType = await selectPrompt({
         title: "What is your favorite programming language?",
+        message: "This is a multiselect prompt",
         options: selectCommitTypeOptions,
         perPage: 5,
         footerText: "Enter to confirm",
@@ -115,6 +104,10 @@ export default defineCommand({
       );
       return;
     }
+    if (selectedCommitType === null) {
+      logger.warn("No selection made");
+      return;
+    }
     logger.log("Select result:", selectedCommitType);
     logger.success(`Selected commit type: ${selectedCommitType}\n`);
 
@@ -122,7 +115,7 @@ export default defineCommand({
     let selectedCommitTypes: string[];
     try {
       selectedCommitTypes = await multiselectPrompt({
-        title: "Select Commit Types: ",
+        message: "Select Commit Types: ",
         options: multiselectCommitTypeOptions,
         perPage: 5,
         footerText: "Space: toggle, Enter: confirm",

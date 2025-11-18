@@ -42,7 +42,7 @@ export default defineCommand({
       { value: "desktop-app", label: "Desktop App" },
     ];
     const projectType = await selectPrompt({
-      title: "What type of project are you setting up?",
+      message: "What type of project are you setting up?",
       options: projectTypeOptions,
     });
     if (projectType === null) {
@@ -62,7 +62,7 @@ export default defineCommand({
       { value: "docker", label: "Docker Support" },
     ];
     const selectedFeatures = await multiselectPrompt({
-      title: "Select features to include:",
+      message: "Select features to include:",
       options: featureOptions,
     });
 
@@ -78,15 +78,16 @@ export default defineCommand({
     }
 
     // Confirm setup
-    const confirmResult = await confirmPrompt({
-      title: `Proceed with setting up a ${projectType} with ${selectedFeatures.length} feature(s)?`,
-    });
+    try {
+      const confirmed = await confirmPrompt({
+        message: `Proceed with setting up a ${projectType} with ${selectedFeatures.length} feature(s)?`,
+      });
 
-    if (
-      confirmResult.error ||
-      confirmResult.confirmed === null ||
-      !confirmResult.confirmed
-    ) {
+      if (!confirmed) {
+        logger.log("❌ Setup cancelled.");
+        return;
+      }
+    } catch {
       logger.log("❌ Setup cancelled.");
       return;
     }
