@@ -1,4 +1,4 @@
-import { runLauncher } from "@reliverse/dler-launcher";
+import { runLauncher } from "@reliverse/rempts";
 
 await runLauncher(import.meta.url, {
   cmdsDir: "./cmds",

@@ -2,8 +2,8 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { logger } from "@reliverse/dler-logger";
-import { readTSConfig } from "@reliverse/dler-pkg-tsc";
+import { logger } from "@reliverse/relinka";
+import { readTSConfig } from "@reliverse/typerso";
 import type { PackageInfo } from "./types";
 
 export interface TSConfigValidationResult {

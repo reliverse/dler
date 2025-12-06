@@ -2,7 +2,7 @@
 
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { extname, join, resolve } from "node:path";
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 import type {
   BundleAnalysisResult,
   DuplicateInfo,
@@ -189,19 +189,31 @@ export class BundleAnalyzer {
       const dependencies = new Set<string>();
 
       // Extract ES6 imports
-      let match;
-      while ((match = importRegex.exec(content)) !== null) {
-        dependencies.add(match[1]!);
+      let match: RegExpExecArray | null;
+      match = importRegex.exec(content);
+      while (match !== null) {
+        if (match[1]) {
+          dependencies.add(match[1]);
+        }
+        match = importRegex.exec(content);
       }
 
       // Extract CommonJS requires
-      while ((match = requireRegex.exec(content)) !== null) {
-        dependencies.add(match[1]!);
+      match = requireRegex.exec(content);
+      while (match !== null) {
+        if (match[1]) {
+          dependencies.add(match[1]);
+        }
+        match = requireRegex.exec(content);
       }
 
       // Extract dynamic imports
-      while ((match = dynamicImportRegex.exec(content)) !== null) {
-        dependencies.add(match[1]!);
+      match = dynamicImportRegex.exec(content);
+      while (match !== null) {
+        if (match[1]) {
+          dependencies.add(match[1]);
+        }
+        match = dynamicImportRegex.exec(content);
       }
 
       // Convert to ModuleInfo

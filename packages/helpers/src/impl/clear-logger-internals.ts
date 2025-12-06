@@ -1,7 +1,7 @@
 // packages/helpers/src/impl/clear-logger-internals.ts
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { readdirRecursive } from "@reliverse/dler-fs-utils";
+import { readdirRecursive } from "@reliverse/relifso";
 
 interface ClearLoggerInternalsOptions {
   packages: Array<{ name: string; outputDir: string; path: string }>;

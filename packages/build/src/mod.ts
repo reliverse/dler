@@ -6,26 +6,26 @@ import { join, resolve } from "node:path";
 import {
   getPackageBuildConfig,
   mergeBuildOptions,
-} from "@reliverse/dler-config/impl/build";
-import type { DlerConfig } from "@reliverse/dler-config/impl/core";
+} from "@reliverse/config/impl/build";
+import type { DlerConfig } from "@reliverse/config/impl/core";
 import {
   findMonorepoRoot,
   loadDlerConfig,
-} from "@reliverse/dler-config/impl/discovery";
-import { writeErrorLines } from "@reliverse/dler-helpers";
-import { logger } from "@reliverse/dler-logger";
-import pMap from "@reliverse/dler-mapper";
+} from "@reliverse/config/impl/discovery";
+import { writeErrorLines } from "@reliverse/helpers";
+import pMap from "@reliverse/mapkit";
 import {
   createIgnoreFilter,
   createIncludeFilter,
   normalizePatterns,
-} from "@reliverse/dler-matcher";
+} from "@reliverse/matcha";
+import { relinka } from "@reliverse/relinka";
 import {
   getWorkspacePatterns,
   preparePackageJsonForPublishing,
   readPackageJSON,
   readTSConfig,
-} from "@reliverse/dler-pkg-tsc";
+} from "@reliverse/typerso";
 import { processAssetsForPackage, processCSSForPackage } from "./impl/assets";
 import { BuildCache } from "./impl/cache";
 import { createDebugLogger } from "./impl/debug";
@@ -57,19 +57,19 @@ import type {
 } from "./impl/types";
 import { startWatchMode } from "./impl/watch";
 
-export type { GoBuildOptions } from "@reliverse/dler-config/impl/build";
+export type { GoBuildOptions } from "@reliverse/config/impl/build";
 export type {
   PackageKind,
   RegistryType,
-} from "@reliverse/dler-config/impl/publish";
-export type { PreparePackageJsonOptions } from "@reliverse/dler-pkg-tsc";
+} from "@reliverse/config/impl/publish";
+export type { PreparePackageJsonOptions } from "@reliverse/typerso";
 export {
   addBinFieldToPackageJson,
   extractPackageName,
   parseBinArgument,
   preparePackageJsonForPublishing,
   transformExportsForBuild,
-} from "@reliverse/dler-pkg-tsc";
+} from "@reliverse/typerso";
 export type {
   DtsGeneratorOptions,
   DtsGeneratorResult,
@@ -123,7 +123,7 @@ const formatBytes = (bytes: number): string => {
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+  return `${parseFloat((bytes / k ** i).toFixed(1))} ${sizes[i]}`;
 };
 
 // ============================================================================
@@ -700,7 +700,7 @@ const compileToExecutable = async (
   // Use the original source entry point for compilation
   const entryPoint = pkg.entryPoints[0];
   if (!entryPoint) {
-    logger.warn(`⚠️  ${pkg.name}: No entry point found for compilation`);
+    await relinka.warn(`⚠️  ${pkg.name}: No entry point found for compilation`);
     return;
   }
 
@@ -721,7 +721,9 @@ const compileToExecutable = async (
     mkdirSync(pkg.outputDir, { recursive: true });
   }
 
-  logger.info(`🔨 Compiling ${pkg.name} to executable: ${executablePath}`);
+  await relinka.info(
+    `🔨 Compiling ${pkg.name} to executable: ${executablePath}`,
+  );
 
   try {
     const buildConfig: any = {
@@ -758,7 +760,7 @@ const compileToExecutable = async (
 
       await cmd.cwd(pkg.path).quiet();
     } catch (error) {
-      logger.error(`❌ Bun CLI compilation failed: ${error}`);
+      await relinka.error(`❌ Bun CLI compilation failed: ${error}`);
       throw error;
     }
 
@@ -768,11 +770,11 @@ const compileToExecutable = async (
     }
 
     const stats = statSync(executablePath);
-    logger.success(
+    await relinka.success(
       `✅ ${pkg.name}: Executable created (${formatBytes(stats.size)})`,
     );
   } catch (error) {
-    logger.error(`❌ ${pkg.name}: Compilation failed - ${error}`);
+    await relinka.error(`❌ ${pkg.name}: Compilation failed - ${error}`);
     throw error;
   }
 };
@@ -850,14 +852,16 @@ const buildWithMkdist = async (
         });
 
         if (!prepResult.success && options.verbose) {
-          logger.warn(
+          await relinka.warn(
             `⚠️  ${pkg.name}: Failed to prepare package.json for publishing: ${prepResult.error}`,
           );
         } else if (options.verbose) {
-          logger.info(`📦 ${pkg.name}: Package.json prepared for publishing`);
+          await relinka.info(
+            `📦 ${pkg.name}: Package.json prepared for publishing`,
+          );
         }
       } catch (error) {
-        logger.warn(
+        await relinka.warn(
           `⚠️  ${pkg.name}: Error preparing package.json for publishing: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
@@ -868,22 +872,24 @@ const buildWithMkdist = async (
         // Enable by default if Go files are detected and config doesn't explicitly disable it
         if (goConfig?.enable !== false) {
           try {
-            logger.info(`🔨 ${pkg.name}: Building Go binaries...`);
+            await relinka.info(`🔨 ${pkg.name}: Building Go binaries...`);
             const goResult = await buildGo(
               pkg.path,
               pkg.name,
               goConfig ?? { enable: true },
             );
             if (!goResult.success) {
-              logger.warn(
+              await relinka.warn(
                 `⚠️  ${pkg.name}: Go build failed: ${goResult.errors.join(", ")}`,
               );
               // Don't fail the entire build, just warn
             } else {
-              logger.success(`✅ ${pkg.name}: Go binaries built successfully`);
+              await relinka.success(
+                `✅ ${pkg.name}: Go binaries built successfully`,
+              );
             }
           } catch (error) {
-            logger.warn(
+            await relinka.warn(
               `⚠️  ${pkg.name}: Go build error: ${
                 error instanceof Error ? error.message : String(error)
               }`,
@@ -891,11 +897,13 @@ const buildWithMkdist = async (
             // Don't fail the entire build, just warn
           }
         } else if (options.verbose) {
-          logger.info(`⏭️  ${pkg.name}: Go build disabled in config`);
+          await relinka.info(`⏭️  ${pkg.name}: Go build disabled in config`);
         }
       } else if (options.tsOnly && pkg.hasGoFiles) {
         if (options.verbose) {
-          logger.info(`⏭️  ${pkg.name}: Skipping Go build (--ts-only flag set)`);
+          await relinka.info(
+            `⏭️  ${pkg.name}: Skipping Go build (--ts-only flag set)`,
+          );
         }
       }
     }
@@ -915,7 +923,9 @@ const buildWithMkdist = async (
     const buildTime = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    logger.error(`❌ ${pkg.name}: mkdist build failed - ${errorMessage}`);
+    await relinka.error(
+      `❌ ${pkg.name}: mkdist build failed - ${errorMessage}`,
+    );
 
     return {
       package: pkg,
@@ -960,7 +970,7 @@ export const buildPackage = async (
     const goConfig = mergedOptions.go ?? pkg.buildConfig?.go;
     if (goConfig?.enable !== false) {
       try {
-        logger.info(`🔨 ${pkg.name}: Building Go binaries...`);
+        await relinka.info(`🔨 ${pkg.name}: Building Go binaries...`);
         const goResult = await buildGo(
           pkg.path,
           pkg.name,
@@ -978,7 +988,7 @@ export const buildPackage = async (
             bundleSize: 0,
           };
         }
-        logger.success(`✅ ${pkg.name}: Go binaries built successfully`);
+        await relinka.success(`✅ ${pkg.name}: Go binaries built successfully`);
       } catch (error) {
         return {
           package: pkg,
@@ -1153,7 +1163,7 @@ export const buildPackage = async (
 
   if (pkg.entryPoints.length === 0) {
     if (verbose) {
-      logger.info(`⏭️  Skipping ${pkg.name} (no entry points found)`);
+      await relinka.info(`⏭️  Skipping ${pkg.name} (no entry points found)`);
     }
     return {
       package: pkg,
@@ -1189,15 +1199,15 @@ export const buildPackage = async (
         } else {
           // Log warnings but continue
           for (const warning of validationResult.warnings) {
-            logger.warn(`⚠️  ${pkg.name}: ${warning}`);
+            await relinka.warn(`⚠️  ${pkg.name}: ${warning}`);
           }
           for (const error of validationResult.errors) {
-            logger.warn(`⚠️  ${pkg.name}: ${error}`);
+            await relinka.warn(`⚠️  ${pkg.name}: ${error}`);
           }
         }
       } else if (validationResult.warnings.length > 0 && verbose) {
         for (const warning of validationResult.warnings) {
-          logger.warn(`⚠️  ${pkg.name}: ${warning}`);
+          await relinka.warn(`⚠️  ${pkg.name}: ${warning}`);
         }
       }
     } catch (error) {
@@ -1212,7 +1222,7 @@ export const buildPackage = async (
           buildTime: 0,
         };
       } else {
-        logger.warn(
+        await relinka.warn(
           `⚠️  ${pkg.name}: TSConfig validation failed: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
@@ -1224,7 +1234,7 @@ export const buildPackage = async (
     const cacheEntry = await cache.get(pkg, mergedOptions);
     if (cacheEntry) {
       if (verbose) {
-        logger.info(
+        await relinka.info(
           `⚡ ${pkg.name}: Using cache (${cacheEntry.buildTime}ms, ${formatBytes(cacheEntry.bundleSize)})`,
         );
       }
@@ -1243,7 +1253,7 @@ export const buildPackage = async (
   }
 
   if (verbose) {
-    logger.info(`🔨 Building ${pkg.name}...`);
+    await relinka.info(`🔨 Building ${pkg.name}...`);
   }
 
   // Debug logging
@@ -1257,7 +1267,7 @@ export const buildPackage = async (
     // Validate build options
     const validation = validateBuildConfig(mergedOptions);
     if (!validation.valid) {
-      logger.warn(
+      await relinka.warn(
         `⚠️  ${pkg.name}: Invalid build options - ${validation.errors.join(", ")}`,
       );
     }
@@ -1274,7 +1284,7 @@ export const buildPackage = async (
 
     // Debug logging for native app
     if (pkg.name === "@reliverse/native-app-example") {
-      logger.info(
+      await relinka.info(
         `🔍 Debug: target=${validTarget}, format=${validFormat}, bytecode=${bytecode}`,
       );
     }
@@ -1440,7 +1450,7 @@ export const buildPackage = async (
 
     // Debug logging for native app
     if (pkg.name === "@reliverse/native-app-example") {
-      logger.info(
+      await relinka.info(
         `🔍 Final build config: ${JSON.stringify(buildConfig, null, 2)}`,
       );
     }
@@ -1494,14 +1504,14 @@ export const buildPackage = async (
         });
 
       if (verbose) {
-        logger.error(`❌ ${pkg.name}: Build failed (${buildTime}ms)`);
+        await relinka.error(`❌ ${pkg.name}: Build failed (${buildTime}ms)`);
         for (const error of errors) {
-          logger.error(`   ${error}`);
+          await relinka.error(`   ${error}`);
         }
         if (warnings.length > 0) {
-          logger.warn(`   Warnings:`);
+          await relinka.warn(`   Warnings:`);
           for (const warning of warnings) {
-            logger.warn(`   ${warning}`);
+            await relinka.warn(`   ${warning}`);
           }
         }
       }
@@ -1531,22 +1541,24 @@ export const buildPackage = async (
       // Enable by default if Go files are detected and config doesn't explicitly disable it
       if (goConfig?.enable !== false) {
         try {
-          logger.info(`🔨 ${pkg.name}: Building Go binaries...`);
+          await relinka.info(`🔨 ${pkg.name}: Building Go binaries...`);
           const goResult = await buildGo(
             pkg.path,
             pkg.name,
             goConfig ?? { enable: true },
           );
           if (!goResult.success) {
-            logger.warn(
+            await relinka.warn(
               `⚠️  ${pkg.name}: Go build failed: ${goResult.errors.join(", ")}`,
             );
             // Don't fail the entire build, just warn
           } else {
-            logger.success(`✅ ${pkg.name}: Go binaries built successfully`);
+            await relinka.success(
+              `✅ ${pkg.name}: Go binaries built successfully`,
+            );
           }
         } catch (error) {
-          logger.warn(
+          await relinka.warn(
             `⚠️  ${pkg.name}: Go build error: ${
               error instanceof Error ? error.message : String(error)
             }`,
@@ -1554,19 +1566,21 @@ export const buildPackage = async (
           // Don't fail the entire build, just warn
         }
       } else if (verbose) {
-        logger.info(`⏭️  ${pkg.name}: Go build disabled in config`);
+        await relinka.info(`⏭️  ${pkg.name}: Go build disabled in config`);
       }
     } else if (mergedOptions.tsOnly && pkg.hasGoFiles && result.success) {
       if (verbose) {
-        logger.info(`⏭️  ${pkg.name}: Skipping Go build (--ts-only flag set)`);
+        await relinka.info(
+          `⏭️  ${pkg.name}: Skipping Go build (--ts-only flag set)`,
+        );
       }
     } else if (verbose && pkg.hasGoFiles && !result.success) {
-      logger.info(
+      await relinka.info(
         `⏭️  ${pkg.name}: Skipping Go build (TypeScript build failed)`,
       );
     } else if (verbose && !pkg.hasGoFiles) {
       // Only log in verbose mode to avoid noise
-      logger.debug(`⏭️  ${pkg.name}: No Go files detected`);
+      await relinka.debug(`⏭️  ${pkg.name}: No Go files detected`);
     }
 
     // Process assets for frontend apps
@@ -1583,7 +1597,9 @@ export const buildPackage = async (
           publicPath: publicPath || "/",
         });
       } catch (error) {
-        logger.warn(`⚠️  ${pkg.name}: Asset processing failed - ${error}`);
+        await relinka.warn(
+          `⚠️  ${pkg.name}: Asset processing failed - ${error}`,
+        );
       }
     }
 
@@ -1607,7 +1623,7 @@ export const buildPackage = async (
             mergedOptions,
           );
         } catch (error) {
-          logger.warn(
+          await relinka.warn(
             `⚠️  ${pkg.name}: Plugin ${plugin.name} onBuildEnd failed - ${error}`,
           );
         }
@@ -1641,21 +1657,23 @@ export const buildPackage = async (
         });
 
         if (!prepResult.success) {
-          logger.warn(
+          await relinka.warn(
             `⚠️  ${pkg.name}: Failed to prepare package.json for publishing: ${prepResult.error}`,
           );
         } else if (verbose) {
-          logger.info(`📦 ${pkg.name}: Package.json prepared for publishing`);
+          await relinka.info(
+            `📦 ${pkg.name}: Package.json prepared for publishing`,
+          );
         }
       } catch (error) {
-        logger.warn(
+        await relinka.warn(
           `⚠️  ${pkg.name}: Error preparing package.json for publishing: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     }
 
     if (verbose) {
-      logger.success(
+      await relinka.success(
         `✅ ${pkg.name}: Built successfully (${buildTime}ms, ${formatBytes(bundleSize)})`,
       );
     }
@@ -1676,7 +1694,7 @@ export const buildPackage = async (
     const buildTime = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    logger.error(`❌ ${pkg.name}: Build failed - ${errorMessage}`);
+    await relinka.error(`❌ ${pkg.name}: Build failed - ${errorMessage}`);
 
     return {
       package: pkg,
@@ -1722,7 +1740,7 @@ const collectAllResults = async (
 
   // Log progress for package processing
   if (!verbose) {
-    logger.info(`Building ${packages.length} packages...`);
+    await relinka.info(`Building ${packages.length} packages...`);
   }
 
   try {
@@ -1730,7 +1748,7 @@ const collectAllResults = async (
       packages,
       async (pkg, index) => {
         if (!verbose) {
-          logger.info(
+          await relinka.info(
             `Building ${pkg.name} (${index + 1}/${packages.length})...`,
           );
         }
@@ -1778,7 +1796,7 @@ const collectAllResults = async (
         }
 
         if (verbose) {
-          logger.error(
+          void relinka.error(
             `❌ ${pkg.name}: Aggregate error - ${err instanceof Error ? err.message : String(err)}`,
           );
         }
@@ -1831,7 +1849,10 @@ const collectAllResults = async (
 // Output Formatting
 // ============================================================================
 
-const formatOutput = (summary: BuildSummary, verbose: boolean): void => {
+const formatOutput = async (
+  summary: BuildSummary,
+  verbose: boolean,
+): Promise<void> => {
   const {
     totalPackages,
     failedPackages,
@@ -1843,35 +1864,37 @@ const formatOutput = (summary: BuildSummary, verbose: boolean): void => {
   } = summary;
 
   // Summary header
-  logger.log("━".repeat(60));
-  logger.log(`📦 Build Summary:`);
-  logger.log(`   Total packages: ${totalPackages}`);
-  logger.log(`   ✅ Built: ${successfulPackages}`);
-  logger.log(`   ❌ Failed: ${failedPackages}`);
-  logger.log(`   ⏭️  Skipped: ${skippedPackages}`);
+  await relinka.log("━".repeat(60));
+  await relinka.log(`📦 Build Summary:`);
+  await relinka.log(`   Total packages: ${totalPackages}`);
+  await relinka.log(`   ✅ Built: ${successfulPackages}`);
+  await relinka.log(`   ❌ Failed: ${failedPackages}`);
+  await relinka.log(`   ⏭️  Skipped: ${skippedPackages}`);
   if (cacheHits > 0) {
-    logger.log(`   ⚡ Cache hits: ${cacheHits}`);
+    await relinka.log(`   ⚡ Cache hits: ${cacheHits}`);
   }
-  logger.log(`   ⏱️  Total time: ${totalBuildTime}ms`);
-  logger.log(`   📦 Total size: ${formatBytes(totalBundleSize)}`);
-  logger.log("━".repeat(60));
+  await relinka.log(`   ⏱️  Total time: ${totalBuildTime}ms`);
+  await relinka.log(`   📦 Total size: ${formatBytes(totalBundleSize)}`);
+  await relinka.log("━".repeat(60));
 
   // Failed packages
   const failed = summary.results.filter((r) => !r.success && !r.skipped);
 
   if (failed.length > 0) {
-    logger.error("\n❌ Failed Packages:\n");
+    await relinka.error("\n❌ Failed Packages:\n");
 
     for (const result of failed) {
-      logger.error(`📦 ${result.package.name} (${result.buildTime}ms)`);
-      logger.error(`   Entry points: ${result.package.entryPoints.join(", ")}`);
-      logger.error(`   Output dir: ${result.package.outputDir}`);
+      await relinka.error(`📦 ${result.package.name} (${result.buildTime}ms)`);
+      await relinka.error(
+        `   Entry points: ${result.package.entryPoints.join(", ")}`,
+      );
+      await relinka.error(`   Output dir: ${result.package.outputDir}`);
 
       if (result.errors.length > 0) {
-        logger.error("   ─".repeat(30));
+        await relinka.error("   ─".repeat(30));
         const errorLines = result.errors.map((error) => `   ${error}`);
         writeErrorLines(errorLines);
-        logger.error("");
+        await relinka.error("");
       }
     }
   }
@@ -1881,17 +1904,17 @@ const formatOutput = (summary: BuildSummary, verbose: boolean): void => {
     const successful = summary.results.filter((r) => r.success && !r.skipped);
 
     if (successful.length > 0) {
-      logger.success("\n✅ Successful Packages:\n");
+      await relinka.success("\n✅ Successful Packages:\n");
       for (const result of successful) {
         const sizeInfo = result.bundleSize
           ? `, ${formatBytes(result.bundleSize)}`
           : "";
         const cacheInfo = result.cacheHit ? " (cached)" : "";
-        logger.success(
+        await relinka.success(
           `   • ${result.package.name} (${result.buildTime}ms${sizeInfo})${cacheInfo}`,
         );
         if (result.warnings.length > 0) {
-          logger.log(`     Warnings: ${result.warnings.length}`);
+          await relinka.log(`     Warnings: ${result.warnings.length}`);
         }
       }
     }
@@ -1900,13 +1923,13 @@ const formatOutput = (summary: BuildSummary, verbose: boolean): void => {
     const skipped = summary.results.filter((r) => r.skipped);
 
     if (skipped.length > 0) {
-      logger.info("\n⏭️  Skipped Packages (no entry points):\n");
+      await relinka.info("\n⏭️  Skipped Packages (no entry points):\n");
       for (const result of skipped) {
-        logger.info(`   • ${result.package.name}`);
+        await relinka.info(`   • ${result.package.name}`);
       }
     }
 
-    logger.log("");
+    await relinka.log("");
   }
 };
 
@@ -1936,7 +1959,7 @@ export const runBuildOnAllPackages = async (
 
   // Log discovery start
   if (verbose) {
-    logger.info("🔍 Discovering workspace packages...");
+    await relinka.info("🔍 Discovering workspace packages...");
   }
 
   // Execute the main logic
@@ -1945,55 +1968,59 @@ export const runBuildOnAllPackages = async (
     const allPackages = await getWorkspacePackages(cwd);
 
     if (verbose) {
-      logger.info(`   Found ${allPackages.length} packages`);
+      await relinka.info(`   Found ${allPackages.length} packages`);
 
       // Check if dler config was loaded
       const dlerConfig = await loadDlerConfig(cwd);
       if (dlerConfig?.build) {
-        logger.info("   📋 Using dler.ts configuration");
+        await relinka.info("   📋 Using dler.ts configuration");
         if (dlerConfig.build.global) {
-          logger.info("     Global config: ✅");
+          await relinka.info("     Global config: ✅");
         }
         if (dlerConfig.build.packages) {
-          logger.info(
+          await relinka.info(
             `     Package configs: ${Object.keys(dlerConfig.build.packages).length}`,
           );
         }
         if (dlerConfig.build.patterns) {
-          logger.info(
+          await relinka.info(
             `     Pattern configs: ${dlerConfig.build.patterns.length}`,
           );
         }
       } else {
-        logger.info("   ⚙️  No dler.ts found, using default configuration");
+        await relinka.info(
+          "   ⚙️  No dler.ts found, using default configuration",
+        );
       }
 
-      logger.info("   Packages found:");
+      await relinka.info("   Packages found:");
       for (const pkg of allPackages) {
         const entryStatus = pkg.entryPoints.length > 0 ? "✅" : "⏭️";
         const configSource = pkg.buildConfig ? "📋" : "⚙️";
         const frontendStatus = pkg.isFrontendApp ? "🌐" : "📦";
         const htmlStatus = pkg.hasHtmlEntry ? "📄" : "";
         const cliStatus = pkg.isCLI ? "⚡" : "";
-        logger.info(
+        await relinka.info(
           `     ${entryStatus} ${configSource} ${frontendStatus}${htmlStatus}${cliStatus} ${pkg.name} (${pkg.entryPoints.length} entry points)`,
         );
         if (pkg.entryPoints.length > 0) {
-          logger.info(`       Entry points: ${pkg.entryPoints.join(", ")}`);
-          logger.info(`       Output dir: ${pkg.outputDir}`);
+          await relinka.info(
+            `       Entry points: ${pkg.entryPoints.join(", ")}`,
+          );
+          await relinka.info(`       Output dir: ${pkg.outputDir}`);
           if (pkg.isFrontendApp) {
-            logger.info(`       Type: Frontend app`);
-            if (pkg.hasHtmlEntry) logger.info(`       HTML entry: ✅`);
-            if (pkg.hasPublicDir) logger.info(`       Public dir: ✅`);
+            await relinka.info(`       Type: Frontend app`);
+            if (pkg.hasHtmlEntry) await relinka.info(`       HTML entry: ✅`);
+            if (pkg.hasPublicDir) await relinka.info(`       Public dir: ✅`);
           } else if (pkg.isCLI) {
-            logger.info(
+            await relinka.info(
               `       Type: CLI${pkg.entryPoints.length > 1 ? " (with library exports)" : ""}`,
             );
           } else {
-            logger.info(`       Type: Library`);
+            await relinka.info(`       Type: Library`);
           }
           if (pkg.buildConfig) {
-            logger.info(
+            await relinka.info(
               `       Build config: ${JSON.stringify(pkg.buildConfig, null, 2)
                 .split("\n")
                 .map((line) => `         ${line}`)
@@ -2002,7 +2029,7 @@ export const runBuildOnAllPackages = async (
           }
         }
       }
-      logger.info("");
+      await relinka.info("");
     }
 
     // Apply filters
@@ -2016,7 +2043,7 @@ export const runBuildOnAllPackages = async (
 
     if (filter) {
       const patterns = normalizePatterns(filter);
-      logger.info(
+      await relinka.info(
         `   Filtering to ${packages.length} packages matching: ${patterns.join(", ")}`,
       );
     } else if (filteredCount > 0) {
@@ -2029,13 +2056,13 @@ export const runBuildOnAllPackages = async (
         : alwaysIgnored;
 
       const patterns = normalizePatterns(combinedIgnore);
-      logger.info(
+      await relinka.info(
         `   Ignoring ${filteredCount} packages matching: ${patterns.join(", ")}`,
       );
     }
 
     const { concurrency = DEFAULT_CONCURRENCY, stopOnError = false } = options;
-    logger.info(
+    await relinka.info(
       `   Building ${packages.length} packages (concurrency: ${concurrency}, stopOnError: ${stopOnError})...\n`,
     );
 
@@ -2047,13 +2074,13 @@ export const runBuildOnAllPackages = async (
         );
 
         if (frontendPackages.length === 0) {
-          logger.warn("⚠️  No frontend packages found for dev server");
-          logger.info(
+          await relinka.warn("⚠️  No frontend packages found for dev server");
+          await relinka.info(
             "   Dev server works best with packages that have HTML entry points",
           );
         }
 
-        logger.info(
+        await relinka.info(
           `🚀 Starting dev server for ${frontendPackages.length} frontend packages...`,
         );
 
@@ -2069,7 +2096,7 @@ export const runBuildOnAllPackages = async (
             // This will keep the process alive for dev server mode
           });
         } catch (error) {
-          logger.error(`❌ Failed to start dev server: ${error}`);
+          await relinka.error(`❌ Failed to start dev server: ${error}`);
           throw error;
         }
       }
@@ -2079,13 +2106,13 @@ export const runBuildOnAllPackages = async (
     }
 
     if (verbose) {
-      logger.info("🚀 Starting build process...\n");
+      await relinka.info("🚀 Starting build process...\n");
     }
 
     const summary = await collectAllResults(packages, options, cache);
 
     // Display results
-    formatOutput(summary, verbose);
+    await formatOutput(summary, verbose);
 
     return summary;
   })();

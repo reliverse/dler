@@ -1,6 +1,9 @@
-import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
-import { logger } from "@reliverse/dler-logger";
-import { groupMultiselectPrompt } from "@reliverse/dler-prompt";
+import { logger } from "@reliverse/relinka";
+import {
+  defineArgs,
+  defineCommand,
+  groupMultiselectPrompt,
+} from "@reliverse/rempts";
 
 type Addon =
   | "pwa"

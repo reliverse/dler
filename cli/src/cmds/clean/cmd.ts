@@ -1,8 +1,8 @@
 // apps/dler/src/cmds/clean/cmd.ts
 
-import { replaceExportsInPackages } from "@reliverse/dler-helpers";
-import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
-import { logger } from "@reliverse/dler-logger";
+import { replaceExportsInPackages } from "@reliverse/helpers";
+import { logger } from "@reliverse/relinka";
+import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { runCleanOnAllPackages } from "./impl";
 
 export default defineCommand({
@@ -18,7 +18,7 @@ export default defineCommand({
       "dler clean --presets db,frontend --dry-run",
       "dler clean --presets deps --deleteLockFiles",
       "dler clean --subdirs --presets build-tools",
-      'dler clean --filter "@reliverse/dler-prompt,@reliverse/dler-build"',
+      'dler clean --filter "@reliverse/rempts,@reliverse/build"',
       'dler clean --filter "@reliverse/dler-*"',
       "dler clean --filter cli,packages/build",
       "dler clean --ignore '@reliverse/*'",
@@ -45,7 +45,7 @@ export default defineCommand({
       "# Filter Examples:",
       'dler clean --filter "@reliverse/dler-*" --presets build   # Clean build artifacts in matching packages',
       "dler clean --filter cli,packages/build --presets all     # Clean all artifacts in specific packages",
-      'dler clean --filter "@reliverse/dler-prompt" --custom "*.log"  # Clean log files in specific package',
+      'dler clean --filter "@reliverse/rempts" --custom "*.log"  # Clean log files in specific package',
       "",
       "# Monorepo Examples:",
       "dler clean                           # Clean dist/ in all packages",
@@ -72,7 +72,7 @@ export default defineCommand({
     filter: {
       type: "string",
       description:
-        "Package(s) to include (supports wildcards and comma-separated values like '@reliverse/dler-prompt,@reliverse/dler-build'). Takes precedence over --ignore when both are provided.",
+        "Package(s) to include (supports wildcards and comma-separated values like '@reliverse/rempts,@reliverse/build'). Takes precedence over --ignore when both are provided.",
     },
     ignore: {
       type: "string",

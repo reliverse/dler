@@ -8,9 +8,9 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join, resolve } from "node:path";
-import type { DtsOptions } from "@reliverse/dler-config/impl/build";
-import { logger } from "@reliverse/dler-logger";
-import { readTSConfig } from "@reliverse/dler-pkg-tsc";
+import type { DtsOptions } from "@reliverse/config/impl/build";
+import { logger } from "@reliverse/relinka";
+import { readTSConfig } from "@reliverse/typerso";
 import type {
   CompilationOptions,
   EntryPointConfig,
@@ -476,8 +476,8 @@ async function generateWithDtsBundleGenerator(
 
       // Calculate relative path from package root, removing 'src/' prefix
       let relativePath = entryPoint.filePath
-        .replace(pkg.path + "/", "")
-        .replace(pkg.path + "\\", "");
+        .replace(`${pkg.path}/`, "")
+        .replace(`${pkg.path}\\`, "");
       // Remove 'src/' prefix if it exists (handle both forward and backward slashes)
       if (relativePath.startsWith("src/") || relativePath.startsWith("src\\")) {
         relativePath = relativePath.substring(4);

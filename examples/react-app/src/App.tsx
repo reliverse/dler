@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import { Counter } from "./components/Counter";
 import { FeatureShowcase } from "./components/FeatureShowcase";
 import ModernFeatures from "./components/ModernFeatures";
@@ -24,24 +25,28 @@ const App: React.FC = () => {
         <button
           className={activeTab === "modern" ? "active" : ""}
           onClick={() => setActiveTab("modern")}
+          type="button"
         >
           🚀 Modern Features
         </button>
         <button
           className={activeTab === "features" ? "active" : ""}
           onClick={() => setActiveTab("features")}
+          type="button"
         >
           ✨ Features
         </button>
         <button
           className={activeTab === "counter" ? "active" : ""}
           onClick={() => setActiveTab("counter")}
+          type="button"
         >
           🔢 Counter
         </button>
         <button
           className={activeTab === "todos" ? "active" : ""}
           onClick={() => setActiveTab("todos")}
+          type="button"
         >
           📝 Todos
         </button>

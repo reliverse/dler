@@ -1,6 +1,6 @@
 // packages/build/src/impl/plugins/react-refresh.ts
 
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 import type { BunBuildConfig, DlerPlugin } from "../types";
 
 export const ReactRefreshPlugin: DlerPlugin = {
@@ -23,7 +23,7 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
 }`;
 
     if (buildConfig.banner) {
-      buildConfig.banner = refreshRuntime + "\n" + buildConfig.banner;
+      buildConfig.banner = `${refreshRuntime}\n${buildConfig.banner}`;
     } else {
       buildConfig.banner = refreshRuntime;
     }

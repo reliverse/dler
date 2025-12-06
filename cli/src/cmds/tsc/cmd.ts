@@ -2,8 +2,8 @@
 
 // Note on `bun publish` and `bun tsc`: we don't display npm/tsc raw output, because both are not reliable for concurrent display, so we display them on our own.
 
-import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
+import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { runTscOnAllPackages } from "./impl";
 
 export default defineCommand({
@@ -12,10 +12,10 @@ export default defineCommand({
     description: "Run TypeScript type checking on all workspace packages",
     examples: [
       "dler tsc",
-      'dler tsc --filter "@reliverse/dler-prompt,@reliverse/dler-build"',
+      'dler tsc --filter "@reliverse/rempts,@reliverse/build"',
       'dler tsc --ignore "@reliverse/*"',
-      'dler tsc --ignore "@reliverse/dler-colors" --ignore "@reliverse/dler-v1"',
-      'dler tsc --ignore "@reliverse/dler-colors @reliverse/dler-v1"',
+      'dler tsc --ignore "@reliverse/relico" --ignore "@reliverse/dler-v1"',
+      'dler tsc --ignore "@reliverse/relico @reliverse/dler-v1"',
       "dler tsc --cwd /path/to/monorepo",
       "dler tsc --cwd /path/to/monorepo --ignore @reliverse/*",
       "dler tsc --concurrency 8",
@@ -38,7 +38,7 @@ export default defineCommand({
     filter: {
       type: "string",
       description:
-        "Package(s) to include (supports wildcards and comma-separated values like '@reliverse/dler-prompt,@reliverse/dler-build'). Takes precedence over --ignore when both are provided.",
+        "Package(s) to include (supports wildcards and comma-separated values like '@reliverse/rempts,@reliverse/build'). Takes precedence over --ignore when both are provided.",
       positional: true,
     },
     ignore: {
@@ -66,7 +66,9 @@ export default defineCommand({
     },
     copyLogs: {
       type: "boolean",
-      description: "Copy failed package logs to clipboard (default: false)",
+      description:
+        "Copy failed package logs to clipboard (default: true, skipped in CI)",
+      default: true,
     },
     cache: {
       type: "boolean",
@@ -99,12 +101,16 @@ export default defineCommand({
         process.exit(1);
       }
 
+      // Skip copying in CI environment
+      const isCI = process.env.CI === "true" || !process.stdout.isTTY;
+      const shouldCopyLogs = args.copyLogs !== false && !isCI;
+
       const results = await runTscOnAllPackages(args.ignore, args.cwd, {
         filter: args.filter,
         concurrency: args.concurrency,
         stopOnError: args.stopOnError,
         verbose: args.verbose,
-        copyLogs: args.copyLogs,
+        copyLogs: shouldCopyLogs,
         cache: args.cache,
         incremental: args.incremental,
         autoConcurrency: args.autoConcurrency,

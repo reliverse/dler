@@ -1,0 +1,19 @@
+{
+  "extends": "@reliverse/tsconfig/strict.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "./dist",
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": false,
+    "noEmit": false
+  },
+  "include": [
+    "src/**/*",
+    "bench/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

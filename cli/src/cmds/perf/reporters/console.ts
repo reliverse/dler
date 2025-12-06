@@ -1,6 +1,6 @@
 // apps/dler/src/cmds/perf/reporters/console.ts
 
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 import type {
   BenchmarkResult,
   BundleAnalysisResult,
@@ -237,8 +237,10 @@ export class ConsoleReporter {
       logger.log("\n🔄 Build Order:");
       const levels = result.dependencies.levels;
       for (let i = 0; i < levels.length; i++) {
-        const level = levels[i]!;
-        logger.log(`   Level ${i + 1}: ${level.join(", ")}`);
+        const level = levels[i];
+        if (level) {
+          logger.log(`   Level ${i + 1}: ${level.join(", ")}`);
+        }
       }
     }
 

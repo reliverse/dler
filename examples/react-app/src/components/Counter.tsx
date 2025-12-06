@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 
 export const Counter: React.FC = () => {
   const [count, setCount] = useState(0);
@@ -33,9 +34,12 @@ export const Counter: React.FC = () => {
         </div>
 
         <div className="form-group">
-          <label className="form-label">Step size:</label>
+          <label className="form-label" htmlFor="step-input">
+            Step size:
+          </label>
           <input
             className="form-input"
+            id="step-input"
             max="10"
             min="1"
             onChange={(e) => setStep(Number(e.target.value))}
@@ -53,13 +57,13 @@ export const Counter: React.FC = () => {
             flexWrap: "wrap",
           }}
         >
-          <button className="btn btn-primary" onClick={decrement}>
+          <button className="btn btn-primary" onClick={decrement} type="button">
             -{step}
           </button>
-          <button className="btn btn-secondary" onClick={reset}>
+          <button className="btn btn-secondary" onClick={reset} type="button">
             Reset
           </button>
-          <button className="btn btn-primary" onClick={increment}>
+          <button className="btn btn-primary" onClick={increment} type="button">
             +{step}
           </button>
         </div>

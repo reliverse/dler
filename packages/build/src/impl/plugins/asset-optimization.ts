@@ -2,7 +2,7 @@
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 import type {
   BuildResult,
   BunBuildConfig,

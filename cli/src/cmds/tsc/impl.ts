@@ -3,19 +3,19 @@
 import { existsSync } from "node:fs";
 import { cpus } from "node:os";
 import { join, relative, resolve } from "node:path";
-import { writeErrorLines } from "@reliverse/dler-helpers";
-import { logger } from "@reliverse/dler-logger";
-import pMap from "@reliverse/dler-mapper";
+import { writeErrorLines } from "@reliverse/helpers";
+import pMap from "@reliverse/mapkit";
 import {
   createIgnoreFilter,
   createIncludeFilter,
   normalizePatterns,
-} from "@reliverse/dler-matcher";
+} from "@reliverse/matcha";
+import { logger } from "@reliverse/relinka";
 import {
   getWorkspacePatterns,
   hasWorkspaces,
   readPackageJSON,
-} from "@reliverse/dler-pkg-tsc";
+} from "@reliverse/typerso";
 import clipboard from "clipboardy";
 import { TscCache } from "./cache";
 import type { PackageDiscoveryResult } from "./types";
@@ -384,7 +384,7 @@ const filterOutputLines = (
     // Extract file path from error line and convert to full path
     const match = line.match(/^(.+?)\(/);
 
-    if (match && match[1]) {
+    if (match?.[1]) {
       const relativePath = match[1];
       const fullPath = resolve(packagePath, relativePath);
       const normalizedFilePath = resolve(fullPath);
@@ -698,7 +698,7 @@ const collectFailedPackageLogs = (summary: TscSummary): string => {
     logs.push(
       `   Errors: ${result.filteredErrors}, Warnings: ${result.filteredWarnings}`,
     );
-    logs.push("   " + "─".repeat(30));
+    logs.push(`   ${"─".repeat(30)}`);
 
     if (result.filteredOutput.trim()) {
       const lines = result.filteredOutput

@@ -20,20 +20,44 @@ export const calculateStatistics = (values: number[]): Statistics => {
   const sorted = [...values].sort((a, b) => a - b);
   const n = values.length;
 
-  const min = sorted[0]!;
-  const max = sorted[n - 1]!;
+  const first = sorted[0];
+  const last = sorted[n - 1];
+  if (first === undefined || last === undefined) {
+    return {
+      min: 0,
+      max: 0,
+      mean: 0,
+      median: 0,
+      p95: 0,
+      p99: 0,
+      variance: 0,
+      standardDeviation: 0,
+      coefficientOfVariation: 0,
+    };
+  }
+
+  const min = first;
+  const max = last;
   const mean = values.reduce((sum, val) => sum + val, 0) / n;
 
-  const median =
+  const medianValue =
     n % 2 === 0
-      ? (sorted[n / 2 - 1]! + sorted[n / 2]!) / 2
-      : sorted[Math.floor(n / 2)]!;
+      ? (() => {
+          const lower = sorted[n / 2 - 1];
+          const upper = sorted[n / 2];
+          if (lower === undefined || upper === undefined) return 0;
+          return (lower + upper) / 2;
+        })()
+      : (() => {
+          const mid = sorted[Math.floor(n / 2)];
+          return mid ?? 0;
+        })();
+  const median = medianValue;
 
   const p95 = percentile(sorted, 0.95);
   const p99 = percentile(sorted, 0.99);
 
-  const variance =
-    values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / n;
+  const variance = values.reduce((sum, val) => sum + (val - mean) ** 2, 0) / n;
   const standardDeviation = Math.sqrt(variance);
   const coefficientOfVariation = mean === 0 ? 0 : standardDeviation / mean;
 
@@ -52,18 +76,26 @@ export const calculateStatistics = (values: number[]): Statistics => {
 
 export const percentile = (sorted: number[], p: number): number => {
   if (sorted.length === 0) return 0;
-  if (sorted.length === 1) return sorted[0]!;
+  const first = sorted[0];
+  if (sorted.length === 1) return first ?? 0;
+  if (first === undefined) return 0;
 
   const index = p * (sorted.length - 1);
   const lower = Math.floor(index);
   const upper = Math.ceil(index);
 
+  const lowerValue = sorted[lower];
+  if (lowerValue === undefined) return 0;
+
   if (lower === upper) {
-    return sorted[lower]!;
+    return lowerValue;
   }
 
+  const upperValue = sorted[upper];
+  if (upperValue === undefined) return lowerValue;
+
   const weight = index - lower;
-  return sorted[lower]! * (1 - weight) + sorted[upper]! * weight;
+  return lowerValue * (1 - weight) + upperValue * weight;
 };
 
 export const calculateMemoryGrowth = (
@@ -117,7 +149,7 @@ export const calculateConfidenceInterval = (
 
   const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
   const variance =
-    values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+    values.reduce((sum, val) => sum + (val - mean) ** 2, 0) /
     (values.length - 1);
   const standardError = Math.sqrt(variance / values.length);
 

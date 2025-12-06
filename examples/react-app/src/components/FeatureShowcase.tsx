@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 
 interface Feature {
   title: string;
@@ -61,7 +62,7 @@ const features: Feature[] = [
 
 export const FeatureShowcase: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [animationKey, setAnimationKey] = useState(0);
+  const [_animationKey, setAnimationKey] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -230,6 +231,7 @@ export const FeatureShowcase: React.FC = () => {
           <button
             className="btn btn-primary"
             onClick={() => setAnimationKey((prev) => prev + 1)}
+            type="button"
           >
             🔄 Trigger Re-render
           </button>

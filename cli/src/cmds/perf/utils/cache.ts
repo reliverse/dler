@@ -3,6 +3,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { logger } from "@reliverse/relinka";
 import type { CacheEntry, CacheOptions, PerfReport } from "../types";
 
 export class PerfCache {
@@ -66,7 +67,7 @@ export class PerfCache {
       writeFileSync(cachePath, JSON.stringify(entry, null, 2));
     } catch (error) {
       // Silently fail cache operations
-      console.warn("Failed to save performance cache:", error);
+      logger.warn("Failed to save performance cache:", error);
     }
   }
 
@@ -97,16 +98,13 @@ export class PerfCache {
           ) {
             return entry.report;
           }
-        } catch {
-          // Skip invalid cache files
-          continue;
-        }
+        } catch {}
       }
 
       return null;
     } catch (error) {
       // Silently fail cache operations
-      console.warn("Failed to load performance cache:", error);
+      logger.warn("Failed to load performance cache:", error);
       return null;
     }
   }
@@ -149,15 +147,12 @@ export class PerfCache {
               hash: entry.hash,
             });
           }
-        } catch {
-          // Skip invalid cache files
-          continue;
-        }
+        } catch {}
       }
 
       return baselines.sort((a, b) => b.timestamp - a.timestamp);
     } catch (error) {
-      console.warn("Failed to list performance baselines:", error);
+      logger.warn("Failed to list performance baselines:", error);
       return [];
     }
   }
@@ -179,7 +174,7 @@ export class PerfCache {
         }
       }
     } catch (error) {
-      console.warn("Failed to clear performance cache:", error);
+      logger.warn("Failed to clear performance cache:", error);
     }
   }
 
@@ -201,13 +196,10 @@ export class PerfCache {
           if (this.isExpired(entry)) {
             Bun.write(cachePath, "");
           }
-        } catch {
-          // Skip invalid cache files
-          continue;
-        }
+        } catch {}
       }
     } catch (error) {
-      console.warn("Failed to cleanup performance cache:", error);
+      logger.warn("Failed to cleanup performance cache:", error);
     }
   }
 

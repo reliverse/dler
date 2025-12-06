@@ -1,6 +1,6 @@
 // packages/build/src/impl/type-guards.ts
 
-import type { PackageBuildConfig } from "@reliverse/dler-config/impl/build";
+import type { PackageBuildConfig } from "@reliverse/config/impl/build";
 import type {
   BuildOptions,
   JSXOptions,

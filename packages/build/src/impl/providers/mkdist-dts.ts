@@ -1,6 +1,6 @@
 // packages/build/src/impl/providers/mkdist-dts.ts
 
-import type { DtsOptions } from "@reliverse/dler-config/impl/build";
+import type { DtsOptions } from "@reliverse/config/impl/build";
 import type { PackageInfo } from "../types";
 import { getDeclarations as getMkdistDeclarations } from "./mkdist/utils/dts";
 

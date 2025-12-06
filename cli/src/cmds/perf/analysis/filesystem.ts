@@ -2,7 +2,7 @@
 
 import { existsSync, statSync } from "node:fs";
 import { extname, join, resolve } from "node:path";
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 import type {
   DirectorySize,
   FileSize,

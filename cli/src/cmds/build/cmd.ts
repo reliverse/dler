@@ -1,17 +1,18 @@
 // apps/dler/src/cmds/build/cmd.ts
 
-import type { BuildOptions } from "@reliverse/dler-build";
+import type { BuildOptions } from "@reliverse/build";
 import {
   applyPresets,
   runBuildOnAllPackages,
   validateAndExit,
-} from "@reliverse/dler-build";
+} from "@reliverse/build";
+import type { GoBuildOptions } from "@reliverse/config/impl/build";
 import {
   clearLoggerInternalsInPackages,
   replaceExportsInPackages,
-} from "@reliverse/dler-helpers";
-import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
-import { logger } from "@reliverse/dler-logger";
+} from "@reliverse/helpers";
+import { logger } from "@reliverse/relinka";
+import { defineArgs, defineCommand } from "@reliverse/rempts";
 
 export default defineCommand({
   meta: {
@@ -20,11 +21,11 @@ export default defineCommand({
       "Build all workspace packages using configurable bundler (mkdist for libraries, bun for apps) with dler.ts configuration. Auto-detects frontend apps and libraries. Supports presets: --production, --dev, --library, --react, --node, --monorepo.",
     examples: [
       "dler build",
-      'dler build --filter "@reliverse/dler-prompt,@reliverse/dler-build"',
+      'dler build --filter "@reliverse/rempts,@reliverse/build"',
       'dler build --filter "@reliverse/dler-*"',
       'dler build --ignore "@reliverse/*"',
-      'dler build --ignore "@reliverse/dler-colors" --ignore "@reliverse/dler-v1"',
-      'dler build --ignore "@reliverse/dler-colors @reliverse/dler-v1"',
+      'dler build --ignore "@reliverse/relico" --ignore "@reliverse/dler-v1"',
+      'dler build --ignore "@reliverse/relico @reliverse/dler-v1"',
       "dler build --cwd /path/to/monorepo",
       "dler build --cwd /path/to/monorepo --ignore @reliverse/*",
       "dler build --concurrency 8",
@@ -188,7 +189,7 @@ export default defineCommand({
     filter: {
       type: "string",
       description:
-        "Package(s) to include (supports wildcards and comma-separated values like '@reliverse/dler-prompt,@reliverse/dler-build'). Takes precedence over --ignore when both are provided.",
+        "Package(s) to include (supports wildcards and comma-separated values like '@reliverse/rempts,@reliverse/build'). Takes precedence over --ignore when both are provided.",
     },
     cwd: {
       type: "string",
@@ -612,22 +613,34 @@ export default defineCommand({
       }
 
       // Transform Go build CLI args into nested go object
-      const goOptions: any = {};
-      if (args.goProvider) goOptions.provider = args.goProvider;
+      const goOptions: Partial<GoBuildOptions> = {};
+      if (args.goProvider) {
+        if (args.goProvider === "xgo" || args.goProvider === "native") {
+          goOptions.provider = args.goProvider;
+        }
+      }
       if (args.goTargets) {
         // Support comma-separated targets string
         goOptions.targets = args.goTargets;
       }
       if (args.goOutputDir) goOptions.outputDir = args.goOutputDir;
       if (args.goOutputName) goOptions.outputName = args.goOutputName;
-      if (args.goBuildMode) goOptions.buildMode = args.goBuildMode;
+      if (args.goBuildMode) {
+        if (
+          args.goBuildMode === "c-shared" ||
+          args.goBuildMode === "c-archive" ||
+          args.goBuildMode === "exe"
+        ) {
+          goOptions.buildMode = args.goBuildMode;
+        }
+      }
       if (args.goLdflags) goOptions.ldflags = args.goLdflags;
       if (args.goMainFile) goOptions.mainFile = args.goMainFile;
       if (args.goVersion) goOptions.goVersion = args.goVersion;
       if (args.goEnable !== undefined) goOptions.enable = args.goEnable;
 
       // Construct build options with Go config if any Go options were provided
-      const buildOptionsInput = { ...args } as any;
+      const buildOptionsInput = { ...args } as Partial<BuildOptions>;
       if (Object.keys(goOptions).length > 0) {
         buildOptionsInput.go = goOptions;
       }

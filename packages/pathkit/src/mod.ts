@@ -1,4 +1,4 @@
-import fs from "node:fs/promises";
+import * as fs from "node:fs/promises";
 import type { PlatformPath } from "node:path";
 
 import {

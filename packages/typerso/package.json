@@ -1,0 +1,29 @@
+{
+  "name": "@reliverse/typerso",
+  "version": "2.2.6",
+  "private": false,
+  "type": "module",
+  "description": "@reliverse/typerso is a collection of utils to work with package.json and tsconfig.json files.",
+  "exports": {
+    ".": {
+      "types": "./src/mod.ts",
+      "default": "./src/mod.ts"
+    }
+  },
+  "dependencies": {
+    "pkg-types": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@reliverse/tsconfig": "workspace:*",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:"
+  }
+}

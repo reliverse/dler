@@ -62,10 +62,11 @@ export class MemoryProfiler {
     }
 
     const endMemory = process.memoryUsage();
+    const lastSnapshot = this.snapshots[this.snapshots.length - 1];
+    const firstSnapshot = this.snapshots[0];
     const duration =
-      this.snapshots.length > 0
-        ? this.snapshots[this.snapshots.length - 1]!.timestamp -
-          this.snapshots[0]!.timestamp
+      this.snapshots.length > 0 && lastSnapshot && firstSnapshot
+        ? lastSnapshot.timestamp - firstSnapshot.timestamp
         : 0;
 
     const snapshot: MemorySnapshot = {
@@ -91,8 +92,10 @@ export class MemoryProfiler {
   getMemoryGrowth(): number {
     if (this.snapshots.length < 2) return 0;
 
-    const first = this.snapshots[0]!.memory;
-    const last = this.snapshots[this.snapshots.length - 1]!.memory;
+    const first = this.snapshots[0]?.memory;
+    const last = this.snapshots[this.snapshots.length - 1]?.memory;
+
+    if (!first || !last) return 0;
 
     return last.rss - first.rss;
   }
@@ -142,7 +145,17 @@ export const measureMemoryUsage = (
         await fn();
       } finally {
         const snapshot = profiler.stop();
-        resolve(snapshot!);
+        if (snapshot) {
+          resolve(snapshot);
+        } else {
+          resolve({
+            before: getCurrentMemoryUsage(),
+            after: getCurrentMemoryUsage(),
+            peak: getCurrentMemoryUsage(),
+            growth: 0,
+            duration: 0,
+          });
+        }
       }
     };
 
@@ -181,7 +194,7 @@ export const formatMemoryUsage = (usage: MemoryUsage): string => {
     const k = 1024;
     const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+    return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
   };
 
   return `RSS: ${format(usage.rss)}, Heap: ${format(usage.heapUsed)}/${format(usage.heapTotal)}, External: ${format(usage.external)}`;
@@ -205,13 +218,24 @@ export const detectMemoryLeaks = (
   }
 
   const rssValues = snapshots.map((s) => s.memory.rss);
-  const growthRate =
-    (rssValues[rssValues.length - 1]! - rssValues[0]!) / snapshots.length;
+  const lastValue = rssValues[rssValues.length - 1];
+  const firstValue = rssValues[0];
+  if (lastValue === undefined || firstValue === undefined) {
+    return {
+      hasLeak: false,
+      severity: "low",
+      growthRate: 0,
+      suggestion: "Need more snapshots to detect leaks",
+    };
+  }
+  const growthRate = (lastValue - firstValue) / snapshots.length;
 
   // Simple heuristic: if memory grows consistently, it might be a leak
-  const isConsistentGrowth = rssValues.every(
-    (val, i) => i === 0 || val >= rssValues[i - 1]! * 0.95,
-  );
+  const isConsistentGrowth = rssValues.every((val, i) => {
+    if (i === 0) return true;
+    const prevValue = rssValues[i - 1];
+    return prevValue !== undefined && val >= prevValue * 0.95;
+  });
 
   const hasLeak = isConsistentGrowth && growthRate > 1024 * 1024; // 1MB per snapshot
 

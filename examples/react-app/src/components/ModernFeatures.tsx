@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import "./ModernFeatures.css";
 
 // Example of CSS Modules usage
@@ -13,6 +14,7 @@ const ReactIcon = () => (
     width="24"
     xmlns="http://www.w3.org/2000/svg"
   >
+    <title>React Icon</title>
     <path
       d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
       fill="currentColor"
@@ -171,6 +173,7 @@ const ModernFeatures: React.FC = () => {
             className={`${styles.navButton} ${activeFeature === feature.id ? styles.active : ""}`}
             key={feature.id}
             onClick={() => setActiveFeature(feature.id)}
+            type="button"
           >
             {feature.title}
           </button>

@@ -9,9 +9,7 @@
     "cli-app": "src/cli.ts"
   },
   "scripts": {
-    "build": "bun dler build --compile --production --target bun --format cjs --bytecode",
-    "dev": "bun dler build --watch --target bun --format cjs",
-    "start": "node dist/cli.js"
+    "dev": "bun examples/cli-app/src/cli.ts"
   },
   "keywords": [
     "cli",
@@ -23,12 +21,11 @@
   "author": "reliverse",
   "license": "MIT",
   "dependencies": {
-    "@reliverse/dler-launcher": "workspace:*",
-    "@reliverse/dler-prompt": "workspace:*",
-    "@reliverse/dler-logger": "workspace:*"
+    "@reliverse/rempts": "workspace:*",
+    "@reliverse/relinka": "workspace:*"
   },
   "devDependencies": {
-    "@p/tsconfig": "workspace:*",
+    "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:"
   }
 }

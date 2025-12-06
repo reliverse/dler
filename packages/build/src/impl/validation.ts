@@ -1,6 +1,6 @@
 // packages/build/src/impl/validation.ts
 
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 import type { BuildOptions } from "./types";
 
 export interface ValidationError {

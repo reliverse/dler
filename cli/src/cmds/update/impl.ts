@@ -1,8 +1,8 @@
-import { logger } from "@reliverse/dler-logger";
-import pMap from "@reliverse/dler-mapper";
+import pMap from "@reliverse/mapkit";
+import path from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
+import { logger } from "@reliverse/relinka";
 import { Glob } from "bun";
-import fs from "fs/promises";
-import path from "path";
 
 import {
   applyVersionUpdate,
@@ -29,9 +29,7 @@ interface UpdateArgs {
 export async function validatePackageJson(): Promise<string> {
   const packageJsonPath = path.resolve(process.cwd(), "package.json");
 
-  try {
-    await fs.access(packageJsonPath);
-  } catch {
+  if (!(await fs.pathExists(packageJsonPath))) {
     logger.error("No package.json found in current directory");
     process.exit(1);
   }
@@ -82,7 +80,7 @@ export async function prepareAllUpdateCandidates(): Promise<{
   for (const packageJsonPath of packageJsonFiles) {
     try {
       const packageJson = JSON.parse(
-        await fs.readFile(packageJsonPath, "utf8"),
+        await fs.readFile(packageJsonPath, { encoding: "utf8" }),
       );
       const { map } = collectTargetDependencies(packageJson);
 
@@ -154,7 +152,7 @@ export async function updatePackageJsonFileDirectly(
 
   try {
     const packageJson = JSON.parse(
-      await fs.readFile(packageJsonPath, "utf8"),
+      await fs.readFile(packageJsonPath, { encoding: "utf8" }),
     ) as Record<string, any>;
     const updatedPackageJson = { ...packageJson };
 
@@ -206,8 +204,8 @@ export async function updatePackageJsonFileDirectly(
 
     await fs.writeFile(
       packageJsonPath,
-      JSON.stringify(updatedPackageJson, null, 2) + "\n",
-      "utf8",
+      `${JSON.stringify(updatedPackageJson, null, 2)}\n`,
+      { encoding: "utf8" },
     );
 
     return updatesToApply.length;

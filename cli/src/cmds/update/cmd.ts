@@ -1,9 +1,9 @@
 // The command philosophy is: "Find all package.json files, update everything you find, skip only non-updateable specifiers (workspace:, catalog:, npm:, etc.)"
 
-import { getCurrentWorkingDirectory } from "@reliverse/dler-helpers";
-import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
-import { logger } from "@reliverse/dler-logger";
-import path from "path";
+import { getCurrentWorkingDirectory } from "@reliverse/helpers";
+import path from "@reliverse/pathkit";
+import { logger } from "@reliverse/relinka";
+import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { msgs } from "../const";
 import {
   checkPackageUpdatesForFile,
@@ -21,15 +21,15 @@ export default defineCommand({
       "Update all dependencies to their latest versions across all package.json files. Supports selective updates with glob patterns and comprehensive filtering options.",
     examples: [
       "dler update",
-      "dler update --install",
+      "dler update --no-install",
       "dler update --dryRun",
       "dler update --name @types/* --name react*",
       'dler update --ignore "eslint-*" --ignore "@babel/*"',
       "dler update --no-allowMajor",
       "dler update --details",
       "dler update --ignoreFields peerDependencies",
-      "dler update --dryRun --install",
-      "dler update --name react --name react-dom --install",
+      "dler update --dryRun --no-install",
+      "dler update --name react --name react-dom",
       "dler update --ignore @types/* --allowMajor",
     ],
   },
@@ -37,7 +37,7 @@ export default defineCommand({
     ci: {
       type: "boolean",
       description: msgs.args.ci,
-      default: !process.stdout.isTTY || !!process.env["CI"],
+      default: !process.stdout.isTTY || !!process.env.CI,
     },
     cwd: {
       type: "string",
@@ -60,7 +60,8 @@ export default defineCommand({
     },
     install: {
       type: "boolean",
-      description: "Run install after updating",
+      description: "Run install after updating (default: true)",
+      default: true,
       aliases: ["i"],
     },
     allowMajor: {
@@ -195,7 +196,7 @@ export default defineCommand({
         await handleInstallation();
       } else {
         logger.log(
-          "Run 'bun install' to apply the changes (use --install to do this automatically)",
+          "Run 'bun install' to apply the changes (use --no-install to skip automatic installation)",
         );
       }
     } catch (error) {

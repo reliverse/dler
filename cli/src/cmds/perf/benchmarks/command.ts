@@ -144,7 +144,8 @@ const parseCommand = (command: string): string[] => {
   let quoteChar = "";
 
   for (let i = 0; i < command.length; i++) {
-    const char = command[i]!;
+    const char = command[i];
+    if (!char) continue;
 
     if (char === '"' || char === "'") {
       if (!inQuotes) {

@@ -1,7 +1,7 @@
 // apps/dler/src/cmds/perf/reporters/json.ts
 
 import { writeFileSync } from "node:fs";
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 import type { PerfReport } from "../types";
 
 export class JsonReporter {
@@ -22,7 +22,7 @@ export class JsonReporter {
         logger.error(`Failed to save JSON report: ${error}`);
       }
     } else {
-      console.log(json);
+      logger.raw(json);
     }
   }
 

@@ -1,6 +1,6 @@
 // packages/build/src/impl/debug.ts
 
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 import type {
   BuildOptions,
   BuildResult,
@@ -203,7 +203,7 @@ function formatBytes(bytes: number): string {
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+  return `${parseFloat((bytes / k ** i).toFixed(1))} ${sizes[i]}`;
 }
 
 export function createDebugLogger(options: BuildOptions): DebugLogger {

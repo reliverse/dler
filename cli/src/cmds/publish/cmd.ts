@@ -1,14 +1,14 @@
 // Note on `bun publish` and `bun tsc`: we don't display npm/tsc raw output, because both are not reliable for concurrent display, so we display them on our own.
 
-import type { BumpType } from "@reliverse/dler-bump";
-import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
-import { logger } from "@reliverse/dler-logger";
+import type { BumpType } from "@reliverse/bump";
 import {
   type PackageKind,
   type PublishOptions,
   publishAllPackages,
   type RegistryType,
-} from "@reliverse/dler-publish";
+} from "@reliverse/publish";
+import { logger } from "@reliverse/relinka";
+import { defineArgs, defineCommand } from "@reliverse/rempts";
 
 export default defineCommand({
   meta: {
@@ -17,11 +17,11 @@ export default defineCommand({
       "Publish packages to npm, JSR, Vercel, or multiple registries. Supports version bumping, dist-tags, access control, and concurrent publishing. Works with dler.ts configuration for per-package settings.",
     examples: [
       "dler publish",
-      'dler publish --filter "@reliverse/dler-prompt,@reliverse/dler-build"',
+      'dler publish --filter "@reliverse/rempts,@reliverse/build"',
       'dler publish --filter "@reliverse/dler-*"',
       'dler publish --ignore "@reliverse/*"',
-      'dler publish --ignore "@reliverse/dler-colors" --ignore "@reliverse/dler-v1"',
-      'dler publish --ignore "@reliverse/dler-colors @reliverse/dler-v1"',
+      'dler publish --ignore "@reliverse/relico" --ignore "@reliverse/dler-v1"',
+      'dler publish --ignore "@reliverse/relico @reliverse/dler-v1"',
       "dler publish --cwd /path/to/monorepo",
       "dler publish --cwd /path/to/monorepo --ignore @reliverse/*",
       "dler publish --bump minor",
@@ -77,7 +77,7 @@ export default defineCommand({
     filter: {
       type: "string",
       description:
-        "Package(s) to include (supports wildcards and comma-separated values like '@reliverse/dler-prompt,@reliverse/dler-build'). Takes precedence over --ignore when both are provided.",
+        "Package(s) to include (supports wildcards and comma-separated values like '@reliverse/rempts,@reliverse/build'). Takes precedence over --ignore when both are provided.",
     },
     cwd: {
       type: "string",

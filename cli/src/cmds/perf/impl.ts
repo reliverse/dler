@@ -2,7 +2,7 @@
 
 import { existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 import { analyzeBundle } from "./analysis/bundle";
 import { analyzeFileSystem } from "./analysis/filesystem";
 import { analyzeMonorepo } from "./analysis/monorepo";

@@ -1,7 +1,7 @@
 // packages/build/src/impl/plugins/typescript-declarations.ts
 
-import type { DtsOptions } from "@reliverse/dler-config/impl/build";
-import { logger } from "@reliverse/dler-logger";
+import type { DtsOptions } from "@reliverse/config/impl/build";
+import { logger } from "@reliverse/relinka";
 import { generateDeclarations } from "../dts-generator";
 import type {
   BuildOptions,

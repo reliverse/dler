@@ -1,6 +1,6 @@
 // packages/build/src/impl/plugins/svg-as-react.ts
 
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 import type { BunBuildConfig, DlerPlugin } from "../types";
 
 export const SVGAsReactPlugin: DlerPlugin = {
@@ -17,7 +17,7 @@ export const SVGAsReactPlugin: DlerPlugin = {
       buildConfig.define = {};
     }
 
-    buildConfig.define["__SVG_AS_REACT__"] = "true";
+    buildConfig.define.__SVG_AS_REACT__ = "true";
 
     if (buildConfig.verbose) {
       logger.debug("SVG as React plugin applied");

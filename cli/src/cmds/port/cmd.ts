@@ -1,5 +1,5 @@
-import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
+import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { killPort } from "./impl";
 
 export default defineCommand({
@@ -51,8 +51,8 @@ export default defineCommand({
           logger.info("Port check functionality coming soon!");
           break;
         default:
-          console.log("Usage: dler port --port <port> --action <action>");
-          console.log("Example: dler port --port 3000 --action kill");
+          logger.log("Usage: dler port --port <port> --action <action>");
+          logger.log("Example: dler port --port 3000 --action kill");
           break;
       }
     } catch (error) {

@@ -141,8 +141,8 @@ export function augmentWithDiagnostics(
     for (const diagnostic of result.diagnostics) {
       const filename = diagnostic.file?.fileName;
       if (filename && filename in output && output[filename]) {
-        output[filename]!.errors = output[filename]!.errors || [];
-        output[filename]!.errors!.push(
+        output[filename]!.errors = output[filename]?.errors || [];
+        output[filename]?.errors?.push(
           new TypeError(ts.formatDiagnostics([diagnostic], tsHost), {
             cause: diagnostic,
           }),

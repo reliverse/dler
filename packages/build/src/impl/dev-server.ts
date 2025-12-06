@@ -2,7 +2,7 @@
 
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
-import { logger } from "@reliverse/dler-logger";
+import { relinka } from "@reliverse/relinka";
 import type { BuildOptions, DevServerOptions, PackageInfo } from "./types";
 
 interface DevServerConfig {
@@ -38,7 +38,7 @@ export class DevServer {
 
   async start(): Promise<void> {
     if (this.server) {
-      logger.warn("Dev server is already running");
+      await relinka.warn("Dev server is already running");
       return;
     }
 
@@ -117,14 +117,14 @@ export class DevServer {
       });
 
       const url = `http://${this.config.host}:${this.config.port}`;
-      logger.success(`🚀 Dev server running at ${url}`);
+      await relinka.success(`🚀 Dev server running at ${url}`);
 
       // Start file watching for HMR
       if (this.config.hmr) {
         await this.startFileWatching();
       }
     } catch (error) {
-      logger.error(`Failed to start dev server: ${error}`);
+      await relinka.error(`Failed to start dev server: ${error}`);
       throw error;
     }
   }
@@ -141,7 +141,7 @@ export class DevServer {
     }
     this.watchers.clear();
 
-    logger.info("Dev server stopped");
+    await relinka.info("Dev server stopped");
   }
 
   private async serveIndexHtml(): Promise<Response> {
@@ -214,7 +214,7 @@ export class DevServer {
         headers: { "Content-Type": contentType },
       });
     } catch (error) {
-      logger.error(`Error serving file ${filePath}: ${error}`);
+      await relinka.error(`Error serving file ${filePath}: ${error}`);
       return null;
     }
   }
@@ -336,7 +336,7 @@ export class DevServer {
       }
     }
 
-    logger.info("👀 File watching started for HMR");
+    await relinka.info("👀 File watching started for HMR");
   }
 
   private async watchFile(filePath: string, pkg: PackageInfo): Promise<void> {
@@ -352,13 +352,13 @@ export class DevServer {
       });
 
       watcher.on("error", (error) => {
-        logger.warn(`File watcher error for ${filePath}: ${error.message}`);
+        void relinka.warn(`File watcher error for ${filePath}: ${error.message}`);
         this.watchers.delete(filePath);
       });
 
       this.watchers.set(filePath, watcher);
     } catch (error) {
-      logger.warn(`Failed to watch file ${filePath}: ${error}`);
+      void relinka.warn(`Failed to watch file ${filePath}: ${error}`);
     }
   }
 
@@ -382,18 +382,19 @@ export class DevServer {
       );
 
       watcher.on("error", (error) => {
-        logger.warn(`Directory watcher error for ${dirPath}: ${error.message}`);
+        void relinka.warn(`Directory watcher error for ${dirPath}: ${error.message}`);
         this.watchers.delete(dirPath);
       });
 
       this.watchers.set(dirPath, watcher);
     } catch (error) {
-      logger.warn(`Failed to watch directory ${dirPath}: ${error}`);
+      void relinka.warn(`Failed to watch directory ${dirPath}: ${error}`);
     }
   }
 
   private handleFileChange(filePath: string, pkg: PackageInfo): void {
-    logger.info(`📝 File changed: ${filePath}`);
+    // Fire-and-forget logging for concurrent file changes
+    void relinka.info(`📝 File changed: ${filePath}`);
 
     // Add package to rebuild queue
     this.rebuildQueue.add(pkg.name);
@@ -417,7 +418,7 @@ export class DevServer {
 
     this.rebuildQueue.clear();
 
-    logger.info(`🔄 Rebuilding ${packagesToRebuild.length} packages...`);
+    await relinka.info(`🔄 Rebuilding ${packagesToRebuild.length} packages...`);
 
     for (const pkg of packagesToRebuild) {
       try {
@@ -426,19 +427,19 @@ export class DevServer {
         const result = await buildPackage(pkg, this.options);
 
         if (result.success) {
-          logger.success(`✅ ${pkg.name}: Rebuilt successfully`);
+          await relinka.success(`✅ ${pkg.name}: Rebuilt successfully`);
           this.notifyClients("reload");
         } else {
-          logger.error(`❌ ${pkg.name}: Rebuild failed`);
+          await relinka.error(`❌ ${pkg.name}: Rebuild failed`);
           for (const error of result.errors) {
-            logger.error(`   ${error}`);
+            await relinka.error(`   ${error}`);
           }
           this.notifyClients("error", {
             message: `Build failed: ${result.errors.join(", ")}`,
           });
         }
       } catch (error) {
-        logger.error(`❌ ${pkg.name}: Rebuild error - ${error}`);
+        await relinka.error(`❌ ${pkg.name}: Rebuild error - ${error}`);
         this.notifyClients("error", { message: `Build error: ${error}` });
       }
     }
@@ -456,13 +457,13 @@ export class DevServer {
           this.notifyClients("reload");
           break;
       }
-    } catch (error) {
+    } catch (_error) {
       // Ignore invalid messages
     }
   }
 
   private notifyClients(type: string, data?: any): void {
-    if (this.server && this.server.publish) {
+    if (this.server?.publish) {
       const message = JSON.stringify({ type, data, timestamp: Date.now() });
       this.server.publish("hmr", message);
     }

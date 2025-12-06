@@ -9,20 +9,22 @@
     "dler": "dist/cli.js"
   },
   "dependencies": {
-    "c12": "^3.3.2",
-    "semver": "^7.7.3",
-    "lookpath": "^1.2.3",
-    "clipboardy": "^5.0.0",
-    "@reliverse/dler-publish": "^2.2.5",
-    "@reliverse/dler-bump": "^2.2.5",
-    "@reliverse/dler-build": "^2.2.5",
-    "@reliverse/dler-logger": "^2.2.5",
-    "@reliverse/dler-matcher": "^2.2.5",
-    "@reliverse/dler-launcher": "^2.2.5",
-    "@reliverse/dler-prompt": "^2.2.5",
-    "@reliverse/dler-helpers": "^2.2.5",
-    "@reliverse/dler-pkg-tsc": "^2.2.5",
-    "@reliverse/dler-mapper": "^2.2.5"
+    "c12": "catalog:",
+    "semver": "catalog:",
+    "lookpath": "catalog:",
+    "clipboardy": "catalog:",
+    "@reliverse/config": "workspace:*",
+    "@reliverse/publish": "workspace:*",
+    "@reliverse/bump": "workspace:*",
+    "@reliverse/build": "workspace:*",
+    "@reliverse/relinka": "workspace:*",
+    "@reliverse/matcha": "workspace:*",
+    "@reliverse/rempts": "workspace:*",
+    "@reliverse/helpers": "workspace:*",
+    "@reliverse/typerso": "workspace:*",
+    "@reliverse/relifso": "workspace:*",
+    "@reliverse/mapkit": "workspace:*",
+    "@reliverse/pathkit": "workspace:*"
   },
   "keywords": [
     "dler",
@@ -35,5 +37,9 @@
     "dist",
     "package.json"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@reliverse/tsconfig": "workspace:*",
+    "@types/semver": "catalog:"
+  }
 }

@@ -1,6 +1,6 @@
 // packages/build/src/impl/plugins/css-modules.ts
 
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 import type { BunBuildConfig, DlerPlugin } from "../types";
 
 export const CSSModulesPlugin: DlerPlugin = {
@@ -19,7 +19,7 @@ export const CSSModulesPlugin: DlerPlugin = {
       buildConfig.define = {};
     }
 
-    buildConfig.define["__CSS_MODULES__"] = "true";
+    buildConfig.define.__CSS_MODULES__ = "true";
 
     if (buildConfig.verbose) {
       logger.debug("CSS modules plugin applied");

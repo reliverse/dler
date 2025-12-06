@@ -4,7 +4,7 @@ import type {
   GoBuildOptions,
   PackageBuildConfig,
   PerformanceBudget,
-} from "@reliverse/dler-config/impl/build";
+} from "@reliverse/config/impl/build";
 
 export interface PackageInfo {
   name: string;

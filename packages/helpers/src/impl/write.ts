@@ -26,7 +26,7 @@ export const writeJsonFile = async (
   path: string,
   data: unknown,
 ): Promise<void> => {
-  await Bun.write(path, JSON.stringify(data, null, 2) + "\n");
+  await Bun.write(path, `${JSON.stringify(data, null, 2)}\n`);
 };
 
 export const writeTextFile = async (

@@ -1,14 +1,20 @@
 {
-  "name": "@p/tsconfig",
-  "version": "0.1.0",
-  "private": true,
-  "description": "Shared TypeScript configuration",
+  "name": "@reliverse/tsconfig",
+  "version": "2.2.6",
+  "private": false,
+  "type": "module",
+  "author": "reliverse",
+  "description": "Shared TypeScript configuration for Reliverse packages",
   "exports": {
-    "./base.json": "./base.json",
-    "./strict.json": "./strict.json"
+    "./base.json": "./src/base.json",
+    "./strict.json": "./src/strict.json"
   },
   "files": [
-    "base.json",
-    "strict.json"
-  ]
+    "src",
+    "package.json"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
 }

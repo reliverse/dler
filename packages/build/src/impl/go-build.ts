@@ -4,8 +4,8 @@ import { existsSync } from "node:fs";
 import { mkdir, readdir, rename, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import type { GoBuildOptions } from "@reliverse/dler-config/impl/build";
-import { logger } from "@reliverse/dler-logger";
+import type { GoBuildOptions } from "@reliverse/config/impl/build";
+import { logger } from "@reliverse/relinka";
 import { lookpath } from "lookpath";
 
 // Target platforms: [GOOS, GOARCH, outputSuffix, platformName]
@@ -517,7 +517,7 @@ export async function buildGo(
   const effectiveConfig = config ?? { enable: true };
 
   // Derive output name from package name if not specified
-  // Strip org name (e.g., "@reliverse/dler-prompt" -> "dler-prompt")
+  // Strip org name (e.g., "@reliverse/rempts" -> "rempts")
   const outputName =
     effectiveConfig.outputName ??
     packageName.replace(/^@[^/]+\//, "").replace(/[^a-zA-Z0-9-]/g, "-");

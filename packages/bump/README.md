@@ -1,14 +1,14 @@
-# 🪸 reliverse dler-bump • powerful version bumping
+# 🪸 reliverse bump • powerful version bumping
 
-> @reliverse/dler-bump is a powerful version bumping tool for javascript and typescript libraries.
+> @reliverse/bump is a powerful version bumping tool for javascript and typescript libraries.
 
-[sponsor](https://github.com/sponsors/blefnk) — [discord](https://discord.gg/pb8ukbwpsj) — [repo](https://github.com/reliverse/dler-bump) — [npm](https://npmjs.com/@reliverse/dler-bump) — [docs](https://docs.reliverse.org/reliverse/dler-bump)
+[sponsor](https://github.com/sponsors/blefnk) — [discord](https://discord.gg/pb8ukbwpsj) — [repo](https://github.com/reliverse/bump) — [npm](https://npmjs.com/@reliverse/bump) — [docs](https://docs.reliverse.org/reliverse/bump)
 
 ## Installation
 
 ```bash
 # bun — pnpm — yarn — npm
-bun add -D @reliverse/dler-bump
+bun add -D @reliverse/bump
 ```
 
 ## Features
@@ -47,7 +47,7 @@ That's it! Follow the prompts to:
 ### Programmatic Mode
 
 ```ts
-import { bumpVersionWithAnalysis } from "@reliverse/dler-bump";
+import { bumpVersionWithAnalysis } from "@reliverse/bump";
 
 // Patch bump
 await bumpVersionWithAnalysis(
@@ -172,7 +172,7 @@ import {
   getCurrentVersion,
   type BumpMode,
   type FileAnalysis
-} from "@reliverse/dler-bump";
+} from "@reliverse/bump";
 
 // First analyze files
 const currentVersion = await getCurrentVersion("package.json");
@@ -327,7 +327,7 @@ const bumpTypes: BumpMode[] = ["patch", "minor", "major", "auto", "manual"];
 
 const main = defineCommand({
   meta: {
-    name: "dler-bump",
+    name: "bump",
     description:
       "Allows you to bump the version of your project interactively.",
   },

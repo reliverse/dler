@@ -1,8 +1,8 @@
 // packages/config/src/discovery.ts
 
 import { dirname, resolve } from "node:path";
-import { createIncludeFilter } from "@reliverse/dler-matcher";
-import { readPackageJSON } from "@reliverse/dler-pkg-tsc";
+import { createIncludeFilter } from "@reliverse/matcha";
+import { readPackageJSON } from "@reliverse/typerso";
 import { loadConfig, watchConfig } from "c12";
 
 // ============================================================================
@@ -245,7 +245,7 @@ export const loadDlerConfig = async <T extends Record<string, any> = any>(
     });
 
     return config || null;
-  } catch (error) {
+  } catch (_error) {
     // Return null for config loading errors (file not found, etc.)
     return null;
   }

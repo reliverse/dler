@@ -1,8 +1,8 @@
-import { logger } from "@reliverse/dler-logger";
-import zeptomatch from "@reliverse/dler-matcher";
+import zeptomatch from "@reliverse/matcha";
+import path from "@reliverse/pathkit";
+import fs from "@reliverse/relifso";
+import { logger } from "@reliverse/relinka";
 import { $ } from "bun";
-import fs from "fs/promises";
-import path from "path";
 import semver from "semver";
 
 export interface UpdateResult {
@@ -244,7 +244,7 @@ export function applyVersionUpdate(
       if (!(pkg as any).workspaces.catalogs[catalogName])
         (pkg as any).workspaces.catalogs[catalogName] = {};
       (pkg as any).workspaces.catalogs[catalogName][depName] = newVersion;
-      if ((pkg as any).catalogs && (pkg as any).catalogs[catalogName]) {
+      if ((pkg as any).catalogs?.[catalogName]) {
         (pkg as any).catalogs[catalogName][depName] = newVersion;
       }
     }
@@ -446,7 +446,7 @@ export async function updatePackageJsonFile(
 
   try {
     const packageJson = JSON.parse(
-      await fs.readFile(packageJsonPath, "utf8"),
+      await fs.readFile(packageJsonPath, { encoding: "utf8" }),
     ) as Record<string, any>;
     const updatedPackageJson = { ...packageJson };
 
@@ -496,8 +496,8 @@ export async function updatePackageJsonFile(
 
     await fs.writeFile(
       packageJsonPath,
-      JSON.stringify(updatedPackageJson, null, 2) + "\n",
-      "utf8",
+      `${JSON.stringify(updatedPackageJson, null, 2)}\n`,
+      { encoding: "utf8" },
     );
 
     return updatesToApply.length;
@@ -582,7 +582,7 @@ export function displayStructuredUpdateResults(
       if (!byCategory.has(category)) {
         byCategory.set(category, []);
       }
-      byCategory.get(category)!.push(result);
+      byCategory.get(category)?.push(result);
     }
 
     // Show up-to-date dependencies

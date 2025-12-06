@@ -1,11 +1,12 @@
-import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 import {
   confirmPrompt,
+  defineArgs,
+  defineCommand,
   multiselectPrompt,
   selectPrompt,
   spinnerPrompt,
-} from "@reliverse/dler-prompt";
+} from "@reliverse/rempts";
 
 export default defineCommand({
   meta: {

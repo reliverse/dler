@@ -1,11 +1,11 @@
 # CLI App Example
 
-This is an example CLI application demonstrating the usage of `@reliverse/dler-prompt` and `@reliverse/dler-launcher` packages.
+This is an example CLI application demonstrating the usage of `@reliverse/rempts` and `@reliverse/rempts` packages.
 
 ## Features
 
-- **Command-based architecture** using `@reliverse/dler-launcher`
-- **Interactive prompts** using `@reliverse/dler-prompt`:
+- **Command-based architecture** using `@reliverse/rempts`
+- **Interactive prompts** using `@reliverse/rempts`:
   - `inputPrompt` - Text input prompt
   - `selectPrompt` - Single selection from options
   - `multiselectPrompt` - Multiple selections from options

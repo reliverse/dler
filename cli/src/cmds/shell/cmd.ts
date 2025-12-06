@@ -1,5 +1,5 @@
-import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
+import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { $ } from "bun";
 
 export default defineCommand({
@@ -32,13 +32,19 @@ export default defineCommand({
 
       if (error instanceof Error) {
         // Check if it's a ShellError with exit code
+        interface ShellError extends Error {
+          exitCode?: number;
+          stdout?: { toString(): string };
+          stderr?: { toString(): string };
+        }
+        const shellError = error as ShellError;
         if ("exitCode" in error) {
-          logger.error(`Exit code: ${(error as any).exitCode}`);
-          if ((error as any).stdout) {
-            logger.error(`STDOUT: ${(error as any).stdout.toString()}`);
+          logger.error(`Exit code: ${shellError.exitCode ?? "unknown"}`);
+          if (shellError.stdout) {
+            logger.error(`STDOUT: ${shellError.stdout.toString()}`);
           }
-          if ((error as any).stderr) {
-            logger.error(`STDERR: ${(error as any).stderr.toString()}`);
+          if (shellError.stderr) {
+            logger.error(`STDERR: ${shellError.stderr.toString()}`);
           }
         } else {
           logger.error(error.message);

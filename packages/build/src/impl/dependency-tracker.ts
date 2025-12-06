@@ -3,7 +3,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 
 export interface DependencyInfo {
   filePath: string;
@@ -71,9 +71,10 @@ export class DependencyTracker {
     // Extract import/require statements
     const importRegex =
       /(?:import\s+.*?\s+from\s+['"]([^'"]+)['"]|require\s*\(\s*['"]([^'"]+)['"]\s*\)|import\s*\(\s*['"]([^'"]+)['"]\s*\))/g;
-    let match;
+    let match: RegExpExecArray | null;
 
-    while ((match = importRegex.exec(content)) !== null) {
+    match = importRegex.exec(content);
+    while (match !== null) {
       const importPath = match[1] || match[2] || match[3];
       if (importPath && typeof importPath === "string") {
         const resolvedPath = this.resolveImportPath(importPath, dir);
@@ -81,11 +82,13 @@ export class DependencyTracker {
           dependencies.push(resolvedPath);
         }
       }
+      match = importRegex.exec(content);
     }
 
     // Extract dynamic imports (already captured in main regex, but just to be explicit)
     const dynamicImportRegex = /import\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
-    while ((match = dynamicImportRegex.exec(content)) !== null) {
+    match = dynamicImportRegex.exec(content);
+    while (match !== null) {
       const importPath = match[1];
       if (importPath) {
         const resolvedPath = this.resolveImportPath(importPath, dir);
@@ -93,6 +96,7 @@ export class DependencyTracker {
           dependencies.push(resolvedPath);
         }
       }
+      match = dynamicImportRegex.exec(content);
     }
 
     return [...new Set(dependencies)]; // Remove duplicates

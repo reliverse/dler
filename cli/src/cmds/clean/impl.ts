@@ -2,14 +2,14 @@
 
 import { existsSync, rmSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { logger } from "@reliverse/dler-logger";
-import pMap from "@reliverse/dler-mapper";
-import { createIgnoreFilter, normalizePatterns } from "@reliverse/dler-matcher";
+import pMap from "@reliverse/mapkit";
+import { createIgnoreFilter, normalizePatterns } from "@reliverse/matcha";
+import { logger } from "@reliverse/relinka";
 import {
   getWorkspacePatterns,
   hasWorkspaces,
   readPackageJSON,
-} from "@reliverse/dler-pkg-tsc";
+} from "@reliverse/typerso";
 import {
   LOCK_FILE_PATTERNS,
   mergePatterns,
@@ -286,7 +286,7 @@ const findMatchingFiles = (
       } catch (error) {
         // Ignore glob errors
         if (process.env.DEBUG) {
-          console.warn(`Glob error for pattern ${pattern}:`, error);
+          logger.warn(`Glob error for pattern ${pattern}:`, error);
         }
       }
     }
@@ -477,7 +477,7 @@ const formatBytes = (bytes: number): string => {
   const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+  return `${parseFloat((bytes / k ** i).toFixed(1))} ${sizes[i]}`;
 };
 
 const displayPreview = (
@@ -502,7 +502,7 @@ const displayPreview = (
     const byCategory = result.files.reduce(
       (acc, file) => {
         if (!acc[file.category]) acc[file.category] = [];
-        acc[file.category]!.push(file);
+        acc[file.category]?.push(file);
         return acc;
       },
       {} as Record<string, FileMatch[]>,
@@ -516,7 +516,7 @@ const displayPreview = (
 
       if (files.length <= 5) {
         for (const file of files) {
-          const relativePath = file.path.replace(result.package.path + "/", "");
+          const relativePath = file.path.replace(`${result.package.path}/`, "");
           logger.log(`     • ${relativePath}`);
         }
       } else {
@@ -655,7 +655,7 @@ export const runCleanOnAllPackages = async (
         };
 
         // Display final summary
-        logger.log("\n" + "━".repeat(60));
+        logger.log(`\n${"━".repeat(60)}`);
         logger.log("📊 Clean Summary:");
         logger.log(
           `   Files ${dryRun ? "would be" : ""} deleted: ${summary.deletedFiles}`,
@@ -699,7 +699,7 @@ export const runCleanOnAllPackages = async (
           ],
         };
 
-        logger.log("\n" + "━".repeat(60));
+        logger.log(`\n${"━".repeat(60)}`);
         logger.log("📊 Clean Summary:");
         logger.log(`   Files would be deleted: ${summary.deletedFiles}`);
         logger.log(
@@ -816,7 +816,7 @@ export const runCleanOnAllPackages = async (
       };
 
       // Display final summary
-      logger.log("\n" + "━".repeat(60));
+      logger.log(`\n${"━".repeat(60)}`);
       logger.log("📊 Clean Summary:");
       logger.log(`   Packages processed: ${summary.processedPackages}`);
       logger.log(
@@ -866,7 +866,7 @@ export const runCleanOnAllPackages = async (
     };
 
     // Display final summary
-    logger.log("\n" + "━".repeat(60));
+    logger.log(`\n${"━".repeat(60)}`);
     logger.log("📊 Clean Summary:");
     logger.log(`   Packages processed: ${summary.processedPackages}`);
     logger.log(`   Files would be deleted: ${summary.deletedFiles}`);

@@ -1,6 +1,6 @@
 // packages/build/src/impl/plugins/worker.ts
 
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 import type { BunBuildConfig, DlerPlugin } from "../types";
 
 export const WorkerPlugin: DlerPlugin = {
@@ -20,7 +20,7 @@ export const WorkerPlugin: DlerPlugin = {
       buildConfig.define = {};
     }
 
-    buildConfig.define["__WORKER_SUPPORT__"] = "true";
+    buildConfig.define.__WORKER_SUPPORT__ = "true";
 
     if (buildConfig.verbose) {
       logger.debug("Worker plugin applied");

@@ -1,8 +1,16 @@
 // apps/dler/src/cmds/perf/reporters/html.ts
 
 import { writeFileSync } from "node:fs";
-import { logger } from "@reliverse/dler-logger";
-import type { PerfReport } from "../types";
+import { logger } from "@reliverse/relinka";
+import type {
+  Bottleneck,
+  CircularDependency,
+  DirectorySize,
+  FileSize,
+  FileTypeDistribution,
+  ModuleInfo,
+  PerfReport,
+} from "../types";
 import {
   formatBytes,
   formatDuration,
@@ -27,7 +35,7 @@ export class HtmlReporter {
         logger.error(`Failed to save HTML report: ${error}`);
       }
     } else {
-      console.log(html);
+      logger.raw(html);
     }
   }
 
@@ -302,7 +310,7 @@ export class HtmlReporter {
 
   private generateFileTable(
     title: string,
-    files: any[],
+    files: FileSize[],
     headers: string[],
   ): string {
     if (files.length === 0) return "";
@@ -322,10 +330,10 @@ export class HtmlReporter {
                           .map(
                             (file) => `
                             <tr>
-                                <td class="file-path">${this.truncatePath(file.path || file.name, 50)}</td>
+                                <td class="file-path">${this.truncatePath(file.path, 50)}</td>
                                 <td>${formatBytes(file.size)}</td>
                                 <td>${formatPercentage(file.percentage || 0, 100)}</td>
-                                <td>${file.type || (file.isExternal ? "External" : "Internal")}</td>
+                                <td>${file.type}</td>
                             </tr>
                         `,
                           )
@@ -338,7 +346,7 @@ export class HtmlReporter {
 
   private generateModuleTable(
     title: string,
-    modules: any[],
+    modules: ModuleInfo[],
     headers: string[],
   ): string {
     if (modules.length === 0) return "";
@@ -374,7 +382,12 @@ export class HtmlReporter {
 
   private generateDuplicateTable(
     title: string,
-    duplicates: any[],
+    duplicates: Array<{
+      name: string;
+      count: number;
+      totalSize: number;
+      locations: string[];
+    }>,
     headers: string[],
   ): string {
     if (duplicates.length === 0) return "";
@@ -410,7 +423,7 @@ export class HtmlReporter {
 
   private generateDirectoryTable(
     title: string,
-    directories: any[],
+    directories: DirectorySize[],
     headers: string[],
   ): string {
     if (directories.length === 0) return "";
@@ -446,7 +459,7 @@ export class HtmlReporter {
 
   private generateFileTypeTable(
     title: string,
-    types: any[],
+    types: FileTypeDistribution[],
     headers: string[],
   ): string {
     if (types.length === 0) return "";
@@ -505,7 +518,9 @@ export class HtmlReporter {
         </div>`;
   }
 
-  private generateCircularDependenciesSection(circular: any[]): string {
+  private generateCircularDependenciesSection(
+    circular: CircularDependency[],
+  ): string {
     if (circular.length === 0) return "";
 
     return `
@@ -526,7 +541,7 @@ export class HtmlReporter {
         </div>`;
   }
 
-  private generateBottlenecksSection(bottlenecks: any[]): string {
+  private generateBottlenecksSection(bottlenecks: Bottleneck[]): string {
     if (bottlenecks.length === 0) return "";
 
     return `

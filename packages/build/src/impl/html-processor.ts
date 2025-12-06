@@ -2,7 +2,7 @@
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 import type { PackageInfo } from "./types";
 
 export interface HTMLProcessorOptions {
@@ -229,7 +229,7 @@ export class HTMLProcessor {
           }
         }
       }
-    } catch (error) {
+    } catch (_error) {
       // Ignore directory read errors
     }
 

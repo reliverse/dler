@@ -1,21 +1,16 @@
 // dler senv command. Examples:
 // - `dler senv --action append --name Path --value C:\Users\your-user-name\.local\bin`
 
-import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
-import { logger } from "@reliverse/dler-logger";
-import fs from "fs/promises";
+import fs from "@reliverse/relifso";
+import { logger } from "@reliverse/relinka";
+import { defineArgs, defineCommand } from "@reliverse/rempts";
 
 const isWindows = (): boolean =>
   (globalThis as any).Bun?.platform?.() === "win32" ||
   process.platform === "win32";
 
 const fileExists = async (path: string): Promise<boolean> => {
-  try {
-    await fs.access(path);
-    return true;
-  } catch {
-    return false;
-  }
+  return await fs.pathExists(path);
 };
 
 const normalizePathEntries = (raw: string): string[] => {
@@ -62,7 +57,7 @@ const backupFile = async (path: string): Promise<void> => {
     const now = new Date().toISOString().replace(/[:.]/g, "-");
     const random = Math.random().toString(36).substring(2, 8);
     const bak = `${path}.bak.${now}.${random}`;
-    await fs.copyFile(path, bak);
+    await fs.copy(path, bak);
     logger.info(`Backup created: ${bak}`);
   } catch (error) {
     logger.warn(`Failed to create backup for ${path}: ${error}`);
@@ -140,11 +135,11 @@ const persistPosix = async (name: string, value: string): Promise<void> => {
     }
 
     await backupFile(profile);
-    const content = await fs.readFile(profile, "utf8");
+    const content = await fs.readFile(profile, { encoding: "utf8" });
 
     const newContent = re.test(content)
       ? content.replace(re, `export ${name}="${value}"`)
-      : content + `\n# added by dler senv\nexport ${name}="${value}"\n`;
+      : `${content}\n# added by dler senv\nexport ${name}="${value}"\n`;
 
     await fs.writeFile(profile, newContent);
     logger.info(`Updated ${profile}`);
@@ -172,7 +167,9 @@ const persistPosixEditPath = async (
   await backupFile(profile);
 
   const exists = await fileExists(profile);
-  const content = exists ? await fs.readFile(profile, "utf8") : "";
+  const content = exists
+    ? await fs.readFile(profile, { encoding: "utf8" })
+    : "";
 
   const match = content.match(re);
   const current = match ? match[1] : process.env[name] || "";
@@ -197,7 +194,7 @@ const persistPosixEditPath = async (
 
   const next = re.test(content)
     ? content.replace(re, `export ${name}="${newVal}"`)
-    : content + `\n# added by dler senv\nexport ${name}="${newVal}"\n`;
+    : `${content}\n# added by dler senv\nexport ${name}="${newVal}"\n`;
 
   await fs.writeFile(profile, next);
   logger.info(`Persisted ${name} in ${profile}`);

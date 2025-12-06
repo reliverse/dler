@@ -1,6 +1,6 @@
 // packages/build/src/impl/plugins/index.ts
 
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 import type { BunBuildConfig, DlerPlugin } from "../types";
 
 export class PluginRegistry {

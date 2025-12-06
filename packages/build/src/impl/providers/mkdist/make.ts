@@ -1,7 +1,7 @@
 import fsp from "node:fs/promises";
 import { basename, dirname, extname, join, resolve } from "node:path";
 
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 import defu from "defu";
 import type { TSConfig } from "pkg-types";
 import { glob } from "tinyglobby";
@@ -91,7 +91,7 @@ export async function mkdist(options: MkdistOptions) {
     logger.debug("Processing files with loaders...");
   }
   const outputs: OutputFile[] = [];
-  let processedCount = 0;
+  let _processedCount = 0;
 
   // Process files
   await Promise.all(
@@ -100,7 +100,7 @@ export async function mkdist(options: MkdistOptions) {
       if (result) {
         outputs.push(...result);
       }
-      processedCount++;
+      _processedCount++;
     }),
   );
 
@@ -157,7 +157,7 @@ export async function mkdist(options: MkdistOptions) {
     const getDeclarationsResult = await getDeclarations(vfs, options);
     Object.assign(declarations, getDeclarationsResult);
 
-    let dtsProcessed = 0;
+    let _dtsProcessed = 0;
     for (const output of dtsOutputs) {
       // Look up using normalized path (forward slashes)
       const normalizedPath = output.srcPath.replace(/\\/g, "/");
@@ -167,7 +167,7 @@ export async function mkdist(options: MkdistOptions) {
         output.errors = result.errors;
       }
 
-      dtsProcessed++;
+      _dtsProcessed++;
     }
   }
 
@@ -251,7 +251,7 @@ export async function mkdist(options: MkdistOptions) {
 
   const writtenFiles: string[] = [];
   const errors: { filename: string; errors: TypeError[] }[] = [];
-  let writtenCount = 0;
+  let _writtenCount = 0;
 
   // Write files with progress tracking
   await Promise.all(
@@ -275,7 +275,7 @@ export async function mkdist(options: MkdistOptions) {
         });
       }
 
-      writtenCount++;
+      _writtenCount++;
     }),
   );
 

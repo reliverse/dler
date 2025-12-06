@@ -129,10 +129,10 @@ export const getPresetDescription = (presets: string[]): string => {
   }
 
   if (categories.length === 1) {
-    return categories[0]!.description;
+    return categories[0]?.description ?? "No description available";
   }
 
-  return categories.map((cat) => cat!.name).join(", ");
+  return categories.map((cat) => cat?.name).join(", ");
 };
 
 export const mergePatterns = (

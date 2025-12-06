@@ -27,31 +27,31 @@ dler [command] [options]
 Both CLI and framework packages work independently, you're not required to install both.
 
 ```bash
-bun add @reliverse/dler-logger
+bun add @reliverse/relinka
 ```
 
 ## Framework Usage
 
 ```ts
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 logger.success("Hello, Reliverse!"); // > ✓ Hello, Reliverse!
 ```
 
 ## Available Packages
 
-1. `@reliverse/dler-bump`
-2. `@reliverse/dler-build`
-3. `@reliverse/dler-config`
-4. `@reliverse/dler-helpers`
-5. `@reliverse/dler-colors`
-6. `@reliverse/dler-mapper`
-7. `@reliverse/dler-launcher`
-8. `@reliverse/dler-logger`
-9. `@reliverse/dler-matcher`
-10. `@reliverse/dler-pkg-tsc`
-11. `@reliverse/dler-prompt`
+1. `@reliverse/bump`
+2. `@reliverse/build`
+3. `@reliverse/config`
+4. `@reliverse/helpers`
+5. `@reliverse/relico`
+6. `@reliverse/mapkit`
+7. `@reliverse/rempts`
+8. `@reliverse/relinka`
+9. `@reliverse/matcha`
+10. `@reliverse/typerso`
+11. `@reliverse/rempts`
 12. `@reliverse/dler-spinner`
-13. `@reliverse/dler-publish`
+13. `@reliverse/publish`
 
 ## Available CLI Commands
 

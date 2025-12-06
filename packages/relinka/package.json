@@ -1,0 +1,32 @@
+{
+  "name": "@reliverse/relinka",
+  "version": "2.2.6",
+  "private": false,
+  "type": "module",
+  "description": "@reliverse/relinka is a modern and lightweight logging library.",
+  "exports": {
+    ".": {
+      "types": "./src/mod.ts",
+      "default": "./src/mod.ts"
+    }
+  },
+  "dependencies": {
+    "@reliverse/relico": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@reliverse/tsconfig": "workspace:*",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:"
+  },
+  "scripts": {
+    "perf": "bun bench/perf.ts"
+  }
+}

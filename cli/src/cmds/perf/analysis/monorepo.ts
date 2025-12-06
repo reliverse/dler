@@ -2,13 +2,13 @@
 
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { logger } from "@reliverse/dler-logger";
-import { createIgnoreFilter } from "@reliverse/dler-matcher";
+import { createIgnoreFilter } from "@reliverse/matcha";
+import { logger } from "@reliverse/relinka";
 import {
   getWorkspacePatterns,
   hasWorkspaces,
   readPackageJSON,
-} from "@reliverse/dler-pkg-tsc";
+} from "@reliverse/typerso";
 import type {
   Bottleneck,
   CircularDependency,
@@ -436,8 +436,10 @@ export class MonorepoAnalyzer {
     // Find circular dependencies
     const circularDeps = this.findCircularDependencies();
     for (const circular of circularDeps) {
+      const firstPackage = circular.packages[0];
+      if (!firstPackage) continue;
       bottlenecks.push({
-        package: circular.packages[0]!,
+        package: firstPackage,
         type: "circular-dependency",
         impact: circular.packages.length,
         suggestion: `Resolve circular dependency: ${circular.cycle.join(" → ")}`,

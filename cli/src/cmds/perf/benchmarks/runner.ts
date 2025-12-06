@@ -1,7 +1,7 @@
 // apps/dler/src/cmds/perf/benchmarks/runner.ts
 
-import { logger } from "@reliverse/dler-logger";
-import pMap from "@reliverse/dler-mapper";
+import pMap from "@reliverse/mapkit";
+import { logger } from "@reliverse/relinka";
 import type { BenchmarkResult, Measurement, MemoryStats } from "../types";
 import { formatProgress } from "../utils/formatter";
 
@@ -193,9 +193,11 @@ export class BenchmarkRunner {
       arrayBuffers: calculateMemoryAverage(arrayBuffersValues),
     };
 
+    const lastRss = rssValues[rssValues.length - 1];
+    const firstRss = rssValues[0];
     const growth =
-      rssValues.length > 1
-        ? rssValues[rssValues.length - 1]! - rssValues[0]!
+      rssValues.length > 1 && lastRss !== undefined && firstRss !== undefined
+        ? lastRss - firstRss
         : 0;
 
     return {

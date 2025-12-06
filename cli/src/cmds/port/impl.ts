@@ -1,5 +1,5 @@
 import { platform } from "node:os";
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
 import { $ } from "bun";
 
 /**
@@ -116,7 +116,7 @@ export async function killPort(port: number): Promise<void> {
 
         logger.success(`🎉 Finished killing processes on port ${port}`);
         return;
-      } catch (error) {
+      } catch (_error) {
         // If netstat fails, try using PowerShell instead
         try {
           // Check both TCP and UDP with PowerShell
@@ -329,7 +329,7 @@ export async function killPort(port: number): Promise<void> {
             }
           }
         }
-      } catch (error) {
+      } catch (_error) {
         // lsof returns exit code 1 when no processes are found, which is normal
         logger.success(`✅ No processes found using port ${port}`);
         return;

@@ -2,7 +2,7 @@
 
 import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { logger } from "@reliverse/dler-logger";
+import { relinka } from "@reliverse/relinka";
 import type { BuildOptions, PackageInfo } from "./types";
 
 export interface WatchOptions extends BuildOptions {
@@ -35,7 +35,7 @@ export class FileWatcher {
   }
 
   async start(): Promise<void> {
-    logger.info(
+    await relinka.info(
       `👀 Starting file watcher for ${this.packages.length} packages...`,
     );
 
@@ -45,7 +45,7 @@ export class FileWatcher {
       await this.watchPackage(pkg);
     }
 
-    logger.success("✅ File watching started");
+    await relinka.success("✅ File watching started");
   }
 
   async stop(): Promise<void> {
@@ -53,7 +53,7 @@ export class FileWatcher {
       try {
         watcher.close();
       } catch (error) {
-        logger.warn(`Failed to close watcher for ${path}: ${error}`);
+        await relinka.warn(`Failed to close watcher for ${path}: ${error}`);
       }
     }
     this.watchers.clear();
@@ -63,7 +63,7 @@ export class FileWatcher {
       this.rebuildTimeout = null;
     }
 
-    logger.info("File watching stopped");
+    await relinka.info("File watching stopped");
   }
 
   private async watchPackage(pkg: PackageInfo): Promise<void> {
@@ -106,13 +106,13 @@ export class FileWatcher {
       });
 
       watcher.on("error", (error) => {
-        logger.warn(`File watcher error for ${filePath}: ${error.message}`);
+        void relinka.warn(`File watcher error for ${filePath}: ${error.message}`);
         this.watchers.delete(filePath);
       });
 
       this.watchers.set(filePath, watcher);
     } catch (error) {
-      logger.warn(`Failed to watch file ${filePath}: ${error}`);
+      void relinka.warn(`Failed to watch file ${filePath}: ${error}`);
     }
   }
 
@@ -136,13 +136,13 @@ export class FileWatcher {
       );
 
       watcher.on("error", (error) => {
-        logger.warn(`Directory watcher error for ${dirPath}: ${error.message}`);
+        void relinka.warn(`Directory watcher error for ${dirPath}: ${error.message}`);
         this.watchers.delete(dirPath);
       });
 
       this.watchers.set(dirPath, watcher);
     } catch (error) {
-      logger.warn(`Failed to watch directory ${dirPath}: ${error}`);
+      void relinka.warn(`Failed to watch directory ${dirPath}: ${error}`);
     }
   }
 
@@ -152,7 +152,8 @@ export class FileWatcher {
       return;
     }
 
-    logger.info(`📝 File changed: ${filePath}`);
+    // Fire-and-forget logging for concurrent file changes
+    void relinka.info(`📝 File changed: ${filePath}`);
 
     // Add package to rebuild queue
     this.rebuildQueue.add(pkg.name);
@@ -198,11 +199,11 @@ export class FileWatcher {
     this.rebuildQueue.clear();
 
     if (this.options.incremental) {
-      logger.info(
+      await relinka.info(
         `🔄 Incrementally rebuilding ${packagesToRebuild.length} packages...`,
       );
     } else {
-      logger.info(`🔄 Rebuilding ${packagesToRebuild.length} packages...`);
+      await relinka.info(`🔄 Rebuilding ${packagesToRebuild.length} packages...`);
     }
 
     // Build packages in parallel for better performance
@@ -213,16 +214,16 @@ export class FileWatcher {
         const result = await buildPackage(pkg, this.options);
 
         if (result.success) {
-          logger.success(`✅ ${pkg.name}: Rebuilt successfully`);
+          await relinka.success(`✅ ${pkg.name}: Rebuilt successfully`);
         } else {
-          logger.error(`❌ ${pkg.name}: Rebuild failed`);
+          await relinka.error(`❌ ${pkg.name}: Rebuild failed`);
           for (const error of result.errors) {
-            logger.error(`   ${error}`);
+            await relinka.error(`   ${error}`);
           }
         }
         return result;
       } catch (error) {
-        logger.error(`❌ ${pkg.name}: Rebuild error - ${error}`);
+        await relinka.error(`❌ ${pkg.name}: Rebuild error - ${error}`);
         return null;
       }
     });
@@ -239,7 +240,7 @@ export async function startWatchMode(
 
   // Handle graceful shutdown
   const shutdown = async () => {
-    logger.info("\n🛑 Shutting down watch mode...");
+    await relinka.info("\n🛑 Shutting down watch mode...");
     await watcher.stop();
     process.exit(0);
   };

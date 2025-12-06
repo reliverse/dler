@@ -1,26 +1,22 @@
 import { resolve } from "node:path";
-import { transformExportsForBuild } from "@reliverse/dler-build";
-import {
-  type BumpType,
-  bumpVersion,
-  getNextVersion,
-} from "@reliverse/dler-bump";
-import { re } from "@reliverse/dler-colors";
-import type { BaseConfig } from "@reliverse/dler-config/impl/core";
+import { transformExportsForBuild } from "@reliverse/build";
+import { type BumpType, bumpVersion, getNextVersion } from "@reliverse/bump";
+import type { BaseConfig } from "@reliverse/config/impl/core";
 import {
   filterPackages,
   findMonorepoRoot,
   getWorkspacePackages,
   loadDlerConfig,
-} from "@reliverse/dler-config/impl/discovery";
+} from "@reliverse/config/impl/discovery";
 import {
   getPackagePublishConfig,
   mergePublishOptions,
   type PackageKind,
   type RegistryType,
-} from "@reliverse/dler-config/impl/publish";
-import { logger } from "@reliverse/dler-logger";
-import { readPackageJSON, writePackageJSON } from "@reliverse/dler-pkg-tsc";
+} from "@reliverse/config/impl/publish";
+import { re } from "@reliverse/relico";
+import { logger } from "@reliverse/relinka";
+import { readPackageJSON, writePackageJSON } from "@reliverse/typerso";
 
 // ============================================================================
 // Constants
@@ -101,7 +97,7 @@ export interface PublishOptions {
 export type {
   PackageKind,
   RegistryType,
-} from "@reliverse/dler-config/impl/publish";
+} from "@reliverse/config/impl/publish";
 
 // ============================================================================
 // Types
@@ -656,7 +652,7 @@ async function resolveCatalogVersion(
           logger.debug(`Checking root path: ${possibleRoot}`);
         }
         const rootPkg = await readPackageJSON(possibleRoot);
-        if (rootPkg && rootPkg.workspaces) {
+        if (rootPkg?.workspaces) {
           // Handle both array format and object format for workspaces
           const workspaces = rootPkg.workspaces;
           if (

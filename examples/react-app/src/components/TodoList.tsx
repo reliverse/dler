@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 
 interface Todo {
   id: number;
@@ -63,7 +64,7 @@ export const TodoList: React.FC = () => {
             type="text"
             value={newTodo}
           />
-          <button className="btn btn-primary" onClick={addTodo}>
+          <button className="btn btn-primary" onClick={addTodo} type="button">
             Add
           </button>
         </div>
@@ -113,6 +114,7 @@ export const TodoList: React.FC = () => {
                   fontSize: "0.8rem",
                   marginLeft: "0.5rem",
                 }}
+                type="button"
               >
                 Delete
               </button>

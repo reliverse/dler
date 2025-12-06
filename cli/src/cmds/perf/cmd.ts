@@ -14,8 +14,8 @@
 //   dler perf build --save
 //   dler perf build --compare
 
-import { defineArgs, defineCommand } from "@reliverse/dler-launcher";
-import { logger } from "@reliverse/dler-logger";
+import { logger } from "@reliverse/relinka";
+import { defineArgs, defineCommand } from "@reliverse/rempts";
 import { runPerfAnalysis } from "./impl";
 import { createConsoleReporter } from "./reporters/console";
 import { createHtmlReporter } from "./reporters/html";

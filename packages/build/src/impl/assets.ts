@@ -8,7 +8,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
-import { logger } from "@reliverse/dler-logger";
+import { relinka } from "@reliverse/relinka";
 import type { AssetOptions, PackageInfo } from "./types";
 
 export interface AssetProcessor {
@@ -61,7 +61,7 @@ export class DefaultAssetProcessor implements AssetProcessor {
     const publicOutputDir = join(outputDir, publicPath.replace(/^\//, ""));
     await this.copyDirectory(publicDir, publicOutputDir);
 
-    logger.info(`📁 Copied public assets to ${publicOutputDir}`);
+    await relinka.info(`📁 Copied public assets to ${publicOutputDir}`);
   }
 
   private async copyAdditionalFiles(
@@ -85,7 +85,7 @@ export class DefaultAssetProcessor implements AssetProcessor {
         mkdirSync(dirname(destPath), { recursive: true });
 
         copyFileSync(sourcePath, destPath);
-        logger.info(`📄 Copied ${filePattern} to ${destPath}`);
+        await relinka.info(`📄 Copied ${filePattern} to ${destPath}`);
       }
     }
   }
@@ -116,7 +116,7 @@ export class DefaultAssetProcessor implements AssetProcessor {
   ): Promise<void> {
     // This is a placeholder for image optimization
     // In the future, we would use libraries like sharp or imagemin
-    logger.info("🖼️  Image optimization is not yet implemented");
+    await relinka.info("🖼️  Image optimization is not yet implemented");
   }
 }
 
@@ -140,7 +140,9 @@ export class CSSProcessor {
       return;
     }
 
-    logger.info(`🎨 Processing ${cssFiles.length} CSS files for chunking`);
+    await relinka.info(
+      `🎨 Processing ${cssFiles.length} CSS files for chunking`,
+    );
 
     try {
       // Read all CSS files
@@ -158,13 +160,13 @@ export class CSSProcessor {
       for (const [chunkName, content] of Object.entries(chunks)) {
         const chunkPath = join(outputDir, `${chunkName}.css`);
         writeFileSync(chunkPath, content, "utf-8");
-        logger.info(`   📄 Created CSS chunk: ${chunkName}.css`);
+        await relinka.info(`   📄 Created CSS chunk: ${chunkName}.css`);
       }
 
       // Update original files to reference chunks
       await this.updateCSSReferences(cssFiles, chunks, outputDir);
     } catch (error) {
-      logger.warn(`CSS chunking failed: ${error}`);
+      await relinka.warn(`CSS chunking failed: ${error}`);
     }
   }
 
@@ -183,7 +185,7 @@ export class CSSProcessor {
       if (!commonStyles.has(commonPrefix)) {
         commonStyles.set(commonPrefix, []);
       }
-      commonStyles.get(commonPrefix)!.push(content);
+      commonStyles.get(commonPrefix)?.push(content);
     }
 
     // Create chunks
@@ -233,7 +235,7 @@ export class CSSProcessor {
   ): Promise<void> {
     // This would update HTML files to reference the new CSS chunks
     // For now, we'll just log what would be updated
-    logger.info(
+    await relinka.info(
       `   📝 Would update ${cssFiles.length} CSS files to reference chunks`,
     );
   }
@@ -264,7 +266,7 @@ export class AssetManifest {
       timestamp: Date.now(),
     };
     writeFileSync(manifestPath, JSON.stringify(manifestData, null, 2));
-    logger.info(`📋 Asset manifest written to ${manifestPath}`);
+    await relinka.info(`📋 Asset manifest written to ${manifestPath}`);
   }
 
   async loadManifest(outputDir: string): Promise<void> {
@@ -275,7 +277,7 @@ export class AssetManifest {
         this.manifest = manifestData.files || {};
         this.reverseManifest = manifestData.reverse || {};
       } catch (error) {
-        logger.warn(`Failed to load asset manifest: ${error}`);
+        await relinka.warn(`Failed to load asset manifest: ${error}`);
       }
     }
   }
