@@ -124,11 +124,15 @@ export function applyPresets(options: BuildOptions): BuildOptions {
   }
 
   // Handle JSX options
-  if ((result as any).jsxRuntime || (result as any).jsxImportSource) {
+  interface BuildOptionsWithJSX extends BuildOptions {
+    jsxRuntime?: "automatic" | "classic";
+    jsxImportSource?: string;
+  }
+  const resultWithJSX = result as BuildOptionsWithJSX;
+  if (resultWithJSX.jsxRuntime || resultWithJSX.jsxImportSource) {
     result.jsx = {
-      runtime:
-        ((result as any).jsxRuntime as "automatic" | "classic") || "automatic",
-      importSource: (result as any).jsxImportSource,
+      runtime: resultWithJSX.jsxRuntime || "automatic",
+      importSource: resultWithJSX.jsxImportSource,
     };
   }
 

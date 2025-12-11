@@ -8,60 +8,65 @@ import type {
   NamingOptions,
 } from "./types";
 
-export function isBuildOptions(obj: any): obj is BuildOptions {
-  return obj && typeof obj === "object";
+export function isBuildOptions(obj: unknown): obj is BuildOptions {
+  return typeof obj === "object" && obj !== null;
 }
 
-export function isPackageBuildConfig(obj: any): obj is PackageBuildConfig {
-  return obj && typeof obj === "object";
+export function isPackageBuildConfig(obj: unknown): obj is PackageBuildConfig {
+  return typeof obj === "object" && obj !== null;
 }
 
-export function isMinifyOptions(obj: any): obj is MinifyOptions {
+export function isMinifyOptions(obj: unknown): obj is MinifyOptions {
   if (typeof obj === "boolean") return true;
   if (!obj || typeof obj !== "object") return false;
 
+  const opts = obj as Record<string, unknown>;
   return (
-    obj.whitespace === undefined ||
-    (typeof obj.whitespace === "boolean" && obj.syntax === undefined) ||
-    (typeof obj.syntax === "boolean" && obj.identifiers === undefined) ||
-    typeof obj.identifiers === "boolean"
+    opts.whitespace === undefined ||
+    (typeof opts.whitespace === "boolean" && opts.syntax === undefined) ||
+    (typeof opts.syntax === "boolean" && opts.identifiers === undefined) ||
+    typeof opts.identifiers === "boolean"
   );
 }
 
-export function isJSXOptions(obj: any): obj is JSXOptions {
+export function isJSXOptions(obj: unknown): obj is JSXOptions {
   if (!obj || typeof obj !== "object") return false;
 
+  const opts = obj as Record<string, unknown>;
   return (
-    obj.runtime === undefined ||
-    ((obj.runtime === "automatic" || obj.runtime === "classic") &&
-      obj.importSource === undefined) ||
-    typeof obj.importSource === "string"
+    opts.runtime === undefined ||
+    ((opts.runtime === "automatic" || opts.runtime === "classic") &&
+      opts.importSource === undefined) ||
+    typeof opts.importSource === "string"
   );
 }
 
-export function isNamingOptions(obj: any): obj is NamingOptions {
+export function isNamingOptions(obj: unknown): obj is NamingOptions {
   if (!obj || typeof obj !== "object") return false;
 
+  const opts = obj as Record<string, unknown>;
   return (
-    obj.chunk === undefined ||
-    (typeof obj.chunk === "string" && obj.entry === undefined) ||
-    (typeof obj.entry === "string" && obj.asset === undefined) ||
-    typeof obj.asset === "string"
+    opts.chunk === undefined ||
+    (typeof opts.chunk === "string" && opts.entry === undefined) ||
+    (typeof opts.entry === "string" && opts.asset === undefined) ||
+    typeof opts.asset === "string"
   );
 }
 
 export function isValidTarget(
-  target: any,
+  target: unknown,
 ): target is "browser" | "bun" | "node" {
   return target === "browser" || target === "bun" || target === "node";
 }
 
-export function isValidFormat(format: any): format is "esm" | "cjs" | "iife" {
+export function isValidFormat(
+  format: unknown,
+): format is "esm" | "cjs" | "iife" {
   return format === "esm" || format === "cjs" || format === "iife";
 }
 
 export function isValidSourcemap(
-  sourcemap: any,
+  sourcemap: unknown,
 ): sourcemap is "none" | "linked" | "inline" | "external" {
   return (
     sourcemap === "none" ||
@@ -71,33 +76,35 @@ export function isValidSourcemap(
   );
 }
 
-export function isValidLoader(loader: any): loader is "js" {
+export function isValidLoader(loader: unknown): loader is "js" {
   const validLoaders = ["js"];
-  return validLoaders.includes(loader);
+  return typeof loader === "string" && validLoaders.includes(loader);
 }
 
 export function isValidEnv(
-  env: any,
+  env: unknown,
 ): env is "inline" | "disable" | `${string}*` {
   if (typeof env !== "string") return false;
   return env === "inline" || env === "disable" || env.endsWith("*");
 }
 
 export function isValidPackages(
-  packages: any,
+  packages: unknown,
 ): packages is "bundle" | "external" {
   return packages === "bundle" || packages === "external";
 }
 
-export function isStringArray(arr: any): arr is string[] {
+export function isStringArray(arr: unknown): arr is string[] {
   return Array.isArray(arr) && arr.every((item) => typeof item === "string");
 }
 
-export function isStringOrStringArray(value: any): value is string | string[] {
+export function isStringOrStringArray(
+  value: unknown,
+): value is string | string[] {
   return typeof value === "string" || isStringArray(value);
 }
 
-export function validateBuildConfig(config: any): {
+export function validateBuildConfig(config: unknown): {
   valid: boolean;
   errors: string[];
 } {
@@ -193,8 +200,10 @@ export function validateBuildConfig(config: any): {
   return { valid: errors.length === 0, errors };
 }
 
-export function sanitizeBuildConfig(config: any): BuildOptions {
-  const sanitized: any = { ...config };
+export function sanitizeBuildConfig(config: unknown): BuildOptions {
+  const sanitized: Record<string, unknown> = {
+    ...(config as Record<string, unknown>),
+  };
 
   // Sanitize target
   if (sanitized.target && !isValidTarget(sanitized.target)) {

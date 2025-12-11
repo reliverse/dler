@@ -8,6 +8,7 @@ import {
   applyVersionUpdate,
   checkPackageUpdate,
   collectTargetDependencies,
+  type DependencyInfo,
   type PackageCheckOptions,
   prepareDependenciesForUpdate,
   runInstallCommand,
@@ -39,7 +40,7 @@ export async function validatePackageJson(): Promise<string> {
 
 export async function prepareAllUpdateCandidates(): Promise<{
   packageJsonFiles: string[];
-  fileDepsMap: Map<string, Record<string, any>>;
+  fileDepsMap: Map<string, Record<string, DependencyInfo>>;
 }> {
   // Find ALL package.json files in the project using Bun's Glob
   const glob = new Glob("**/package.json");
@@ -75,7 +76,7 @@ export async function prepareAllUpdateCandidates(): Promise<{
   logger.debug(`Found ${packageJsonFiles.length} package.json files`);
 
   // Process each package.json file independently
-  const fileDepsMap = new Map<string, Record<string, any>>();
+  const fileDepsMap = new Map<string, Record<string, DependencyInfo>>();
 
   for (const packageJsonPath of packageJsonFiles) {
     try {
@@ -98,7 +99,7 @@ export async function prepareAllUpdateCandidates(): Promise<{
 }
 
 export async function checkPackageUpdatesForFile(
-  fileDepsMap: Record<string, any>,
+  fileDepsMap: Record<string, DependencyInfo>,
   args: UpdateArgs,
 ): Promise<UpdateResult[]> {
   const options: PackageCheckOptions = {
@@ -143,7 +144,7 @@ export async function checkPackageUpdatesForFile(
 
 export async function updatePackageJsonFileDirectly(
   packageJsonPath: string,
-  fileDepsMap: Record<string, any>,
+  fileDepsMap: Record<string, DependencyInfo>,
   updatesToApply: UpdateResult[],
   savePrefix: string,
   fieldsToIgnore: string[] = [],
@@ -153,7 +154,7 @@ export async function updatePackageJsonFileDirectly(
   try {
     const packageJson = JSON.parse(
       await fs.readFile(packageJsonPath, { encoding: "utf8" }),
-    ) as Record<string, any>;
+    ) as Record<string, unknown>;
     const updatedPackageJson = { ...packageJson };
 
     for (const update of updatesToApply) {

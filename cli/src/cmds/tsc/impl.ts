@@ -220,8 +220,11 @@ const getWorkspacePackages = async (
   );
 
   const packages = packageResults
-    .filter((result) => result.pkgInfo !== null)
-    .map((result) => result.pkgInfo!);
+    .filter(
+      (result): result is { packagePath: string; pkgInfo: PackageInfo } =>
+        result.pkgInfo !== null,
+    )
+    .map((result) => result.pkgInfo);
 
   // Filter out the monorepo root to prevent checking it
   const filteredPackages = packages.filter((pkg) => {

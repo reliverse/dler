@@ -61,6 +61,11 @@ export function getNextVersion(
  * Check if a version is a prerelease
  */
 export function isPrerelease(version: string): boolean {
+  // Fast path: prerelease versions always contain a hyphen
+  // This avoids expensive parsing for most non-prerelease versions
+  if (!version.includes("-")) {
+    return false;
+  }
   const parsed = parse(version);
   return parsed ? parsed.prerelease.length > 0 : false;
 }

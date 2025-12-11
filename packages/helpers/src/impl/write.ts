@@ -12,13 +12,9 @@ export const writeError = (text: string): void => {
 };
 
 export const writeErrorLines = (lines: string[]): void => {
-  // Pre-allocate string buffer for better performance
-  const buffer = new Array(lines.length + 1);
-  for (let i = 0; i < lines.length; i++) {
-    buffer[i] = lines[i];
-  }
-  buffer[lines.length] = "";
-  const encoded = textEncoder.encode(buffer.join("\n"));
+  // Use join directly - it's optimized in modern JS engines
+  // Adding newline at the end for consistency
+  const encoded = textEncoder.encode(`${lines.join("\n")}\n`);
   Bun.write(Bun.stderr, encoded);
 };
 

@@ -1,13 +1,15 @@
 // packages/build/src/impl/providers/mkdist-dts.ts
 
 import type { DtsOptions } from "@reliverse/config/impl/build";
+import type { TSConfig } from "pkg-types";
 import type { PackageInfo } from "../types";
 import { getDeclarations as getMkdistDeclarations } from "./mkdist/utils/dts";
 
 export interface MkdistDtsOptions {
   addRelativeDeclarationExtensions?: boolean;
   pattern?: string;
-  globOptions?: object;
+  globOptions?: Record<string, unknown>;
+  [key: string]: unknown;
 }
 
 export interface DeclarationOutput {
@@ -35,7 +37,9 @@ export async function getDeclarations(
 /**
  * Normalize TypeScript compiler options for declaration generation
  */
-export async function normalizeCompilerOptions(options: any): Promise<any> {
+export async function normalizeCompilerOptions(
+  options: TSConfig["compilerOptions"],
+): Promise<import("typescript").CompilerOptions> {
   const ts = await import("typescript").then((r) => r.default || r);
   return ts.convertCompilerOptionsFromJson(options, process.cwd()).options;
 }

@@ -16,9 +16,16 @@ interface ClearResult {
   files: string[];
 }
 
+// Cache for compiled regex patterns
+const patternCache = new Map<string, RegExp>();
+
 function matchesPattern(str: string, pattern: string): boolean {
   if (pattern.includes("*")) {
-    const regex = new RegExp(`^${pattern.replace(/\*/g, ".*")}$`);
+    let regex = patternCache.get(pattern);
+    if (!regex) {
+      regex = new RegExp(`^${pattern.replace(/\*/g, ".*")}$`);
+      patternCache.set(pattern, regex);
+    }
     return regex.test(str);
   }
   return str === pattern;
@@ -33,6 +40,10 @@ function shouldIgnorePackage(
   return patterns.some((pattern) => matchesPattern(packageName, pattern));
 }
 
+// Compiled regex patterns for logger internals detection
+const LOGGER_INTERNAL_REGEX = /logger\.internal\s*\(/;
+const LOG_INTERNAL_REGEX = /logInternal\s*\(/;
+
 function clearLoggerInternalsInFile(filePath: string): boolean {
   const content = readFileSync(filePath, "utf-8");
   const lines = content.split("\n");
@@ -41,8 +52,8 @@ function clearLoggerInternalsInFile(filePath: string): boolean {
 
   for (const line of lines) {
     // Check if line contains logger.internal( or logInternal(
-    // Match patterns: logger.internal(, logInternal(, with optional whitespace
-    if (/logger\.internal\s*\(/.test(line) || /logInternal\s*\(/.test(line)) {
+    // Using pre-compiled regex for better performance
+    if (LOGGER_INTERNAL_REGEX.test(line) || LOG_INTERNAL_REGEX.test(line)) {
       hasChanges = true;
       // Skip this line
       continue;

@@ -26,7 +26,7 @@ xgo **requires Docker** to work. Docker provides the isolated environments neede
 3. Ensure Docker is running (you'll see the Docker icon in the system tray)
 4. Verify installation:
 
-   ```powershell
+   ```bash
    docker --version
    docker ps
    ```

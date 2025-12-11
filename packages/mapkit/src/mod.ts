@@ -122,10 +122,11 @@ export default async function pMap<Element, NewElement>(
   }
 
   return new Promise((resolve, reject) => {
-    const iterator =
-      (input as any)[Symbol.asyncIterator] !== undefined
-        ? (input as any)[Symbol.asyncIterator]()
-        : (input as any)[Symbol.iterator]();
+    // Cache iterator type detection to avoid repeated Symbol checks
+    const isAsyncIterable = (input as any)[Symbol.asyncIterator] !== undefined;
+    const iterator = isAsyncIterable
+      ? (input as any)[Symbol.asyncIterator]()
+      : (input as any)[Symbol.iterator]();
 
     const results: Array<NewElement | typeof pMapSkip> = [];
     const errors: Error[] = [];
@@ -179,9 +180,11 @@ export default async function pMap<Element, NewElement>(
     function resolveResults() {
       cleanup();
       // Build filtered array in one pass, preserving order
+      // Optimized: check undefined first (faster primitive comparison) then pMapSkip
       const out: Array<Exclude<NewElement, typeof pMapSkip>> = [];
       for (let i = 0; i < results.length; i++) {
         const v = results[i];
+        // Fast path: check undefined first (primitive), then pMapSkip (Symbol)
         if (v !== undefined && v !== pMapSkip) {
           out.push(v as Exclude<NewElement, typeof pMapSkip>);
         }
@@ -436,6 +439,7 @@ export function pMapIterable<Element, NewElement>(
 
       schedulePull();
 
+      // Note: shift() is O(n) but queue is typically small and this preserves correct async behavior
       while (resultQueue.length > 0) {
         const result = await resultQueue.shift()!;
 

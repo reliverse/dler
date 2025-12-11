@@ -1,0 +1,33 @@
+Version Parsing Performance
+parseVersion (valid) | avg=20.71us | min=12.10us | max=206.50us | p95=34.60us | p99=55.50us | ops/s=48 286
+parseVersion (single valid) | avg=0.98us | min=0.40us | max=13.20us | p95=2.00us | p99=7.20us | ops/s=1 025 536
+parseVersion (invalid) | avg=2.83us | min=1.60us | max=39.20us | p95=4.10us | p99=12.40us | ops/s=353 469
+parseVersion (edge cases) | avg=2.38us | min=1.00us | max=15.90us | p95=7.00us | p99=11.70us | ops/s=419 393
+
+Version Bumping Performance
+bumpVersion (major) | avg=10.68us | min=4.40us | max=58.40us | p95=20.20us | p99=28.60us | ops/s=93 621
+bumpVersion (minor) | avg=9.79us | min=4.10us | max=37.50us | p95=18.20us | p99=26.30us | ops/s=102 097
+bumpVersion (patch) | avg=10.12us | min=3.90us | max=36.20us | p95=19.50us | p99=27.30us | ops/s=98 860
+bumpVersion (prerelease) | avg=10.39us | min=5.00us | max=1.81ms | p95=15.30us | p99=36.40us | ops/s=96 288
+getNextVersion (major) | avg=5.81us | min=3.80us | max=75.50us | p95=10.80us | p99=16.90us | ops/s=172 164
+getNextVersion (minor) | avg=5.42us | min=3.80us | max=67.60us | p95=10.50us | p99=12.60us | ops/s=184 454
+getNextVersion (patch) | avg=5.91us | min=3.80us | max=47.50us | p95=10.80us | p99=19.70us | ops/s=169 202
+getNextVersion (prerelease) | avg=9.41us | min=5.20us | max=1.01ms | p95=15.10us | p99=26.60us | ops/s=106 244
+bumpVersion (single patch) | avg=0.76us | min=0.40us | max=39.80us | p95=1.00us | p99=4.90us | ops/s=1 315 963
+getNextVersion (single minor) | avg=0.71us | min=0.40us | max=8.50us | p95=1.10us | p99=5.40us | ops/s=1 416 431
+bumpVersion (complex scenarios) | avg=4.34us | min=3.00us | max=28.20us | p95=9.20us | p99=10.50us | ops/s=230 394
+
+Version Query Performance
+isPrerelease (all versions) | avg=2.95us | min=2.00us | max=59.50us | p95=6.20us | p99=11.50us | ops/s=339 132
+isPrerelease (single prerelease) | avg=0.85us | min=0.50us | max=57.70us | p95=1.00us | p99=6.00us | ops/s=1 179 941
+isPrerelease (single release) | avg=0.20us | min=0.10us | max=12.10us | p95=0.30us | p99=0.40us | ops/s=5 107 252
+getReleaseType (all versions) | avg=3.57us | min=2.30us | max=95.60us | p95=8.30us | p99=11.60us | ops/s=279 752
+getReleaseType (single major) | avg=0.41us | min=0.20us | max=12.90us | p95=0.60us | p99=1.50us | ops/s=2 455 796
+getReleaseType (single minor) | avg=0.35us | min=0.20us | max=6.20us | p95=0.50us | p99=1.10us | ops/s=2 834 467
+getReleaseType (single patch) | avg=0.37us | min=0.20us | max=9.10us | p95=0.50us | p99=1.10us | ops/s=2 738 976
+version queries (combined) | avg=6.30us | min=4.10us | max=98.20us | p95=12.90us | p99=17.60us | ops/s=158 755
+
+Summary:
+Total benchmarks: 23
+Average ops/s: 909 847
+Total operations: 23 000

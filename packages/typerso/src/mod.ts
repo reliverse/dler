@@ -10,6 +10,8 @@ import {
   writeTSConfig,
 } from "pkg-types";
 
+export type { PackageJson };
+
 export {
   readPackageJSON,
   writePackageJSON,

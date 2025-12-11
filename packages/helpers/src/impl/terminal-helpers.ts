@@ -46,11 +46,13 @@ export async function rm(target: string): Promise<void> {
   }
 }
 
+// Module-level cache for current working directory
+let cachedCWD: null | string = null;
+
 /**
  * Returns the current working directory.
  */
 export function getCurrentWorkingDirectory(useCache = true): string {
-  let cachedCWD: null | string = null;
   if (useCache && cachedCWD) {
     return cachedCWD;
   }

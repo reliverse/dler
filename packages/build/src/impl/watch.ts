@@ -1,9 +1,12 @@
 // packages/build/src/impl/watch.ts
 
+import type { FSWatcher } from "node:fs";
 import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { relinka } from "@reliverse/relinka";
+import { DEFAULT_DEBOUNCE_MS, DEFAULT_IGNORE_PATTERNS } from "./constants";
 import type { BuildOptions, PackageInfo } from "./types";
+import { RebuildQueueProcessor } from "./utils/rebuild-queue";
 
 export interface WatchOptions extends BuildOptions {
   debounceMs?: number;
@@ -12,26 +15,24 @@ export interface WatchOptions extends BuildOptions {
 }
 
 export class FileWatcher {
-  private watchers: Map<string, any> = new Map();
-  private rebuildQueue: Set<string> = new Set();
-  private rebuildTimeout: NodeJS.Timeout | null = null;
+  private watchers: Map<string, FSWatcher> = new Map();
+  private rebuildQueue: RebuildQueueProcessor;
   private options: WatchOptions;
   private packages: PackageInfo[];
 
   constructor(packages: PackageInfo[], options: WatchOptions) {
     this.packages = packages;
     this.options = {
-      debounceMs: options.debounceMs ?? 300,
-      ignorePatterns: options.ignorePatterns ?? [
-        "node_modules/**",
-        "dist/**",
-        ".git/**",
-        "**/*.log",
-        "**/.DS_Store",
-      ],
+      debounceMs: options.debounceMs ?? DEFAULT_DEBOUNCE_MS,
+      ignorePatterns: options.ignorePatterns ?? [...DEFAULT_IGNORE_PATTERNS],
       incremental: options.incremental ?? true,
       ...options,
     };
+    this.rebuildQueue = new RebuildQueueProcessor(packages, {
+      debounceMs: this.options.debounceMs,
+      incremental: this.options.incremental,
+      buildOptions: this.options,
+    });
   }
 
   async start(): Promise<void> {
@@ -53,15 +54,14 @@ export class FileWatcher {
       try {
         watcher.close();
       } catch (error) {
-        await relinka.warn(`Failed to close watcher for ${path}: ${error}`);
+        await relinka.warn(
+          `Failed to close watcher for ${path}: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
     this.watchers.clear();
 
-    if (this.rebuildTimeout) {
-      clearTimeout(this.rebuildTimeout);
-      this.rebuildTimeout = null;
-    }
+    this.rebuildQueue.clear();
 
     await relinka.info("File watching stopped");
   }
@@ -106,7 +106,9 @@ export class FileWatcher {
       });
 
       watcher.on("error", (error) => {
-        void relinka.warn(`File watcher error for ${filePath}: ${error.message}`);
+        void relinka.warn(
+          `File watcher error for ${filePath}: ${error.message}`,
+        );
         this.watchers.delete(filePath);
       });
 
@@ -136,7 +138,9 @@ export class FileWatcher {
       );
 
       watcher.on("error", (error) => {
-        void relinka.warn(`Directory watcher error for ${dirPath}: ${error.message}`);
+        void relinka.warn(
+          `Directory watcher error for ${dirPath}: ${error.message}`,
+        );
         this.watchers.delete(dirPath);
       });
 
@@ -157,15 +161,6 @@ export class FileWatcher {
 
     // Add package to rebuild queue
     this.rebuildQueue.add(pkg.name);
-
-    // Debounce rebuilds
-    if (this.rebuildTimeout) {
-      clearTimeout(this.rebuildTimeout);
-    }
-
-    this.rebuildTimeout = setTimeout(() => {
-      this.processRebuildQueue();
-    }, this.options.debounceMs);
   }
 
   private shouldIgnoreFile(filePath: string): boolean {
@@ -187,48 +182,6 @@ export class FileWatcher {
     }
 
     return false;
-  }
-
-  private async processRebuildQueue(): Promise<void> {
-    if (this.rebuildQueue.size === 0) return;
-
-    const packagesToRebuild = Array.from(this.rebuildQueue)
-      .map((name) => this.packages.find((pkg) => pkg.name === name))
-      .filter(Boolean) as PackageInfo[];
-
-    this.rebuildQueue.clear();
-
-    if (this.options.incremental) {
-      await relinka.info(
-        `🔄 Incrementally rebuilding ${packagesToRebuild.length} packages...`,
-      );
-    } else {
-      await relinka.info(`🔄 Rebuilding ${packagesToRebuild.length} packages...`);
-    }
-
-    // Build packages in parallel for better performance
-    const buildPromises = packagesToRebuild.map(async (pkg) => {
-      try {
-        // Import buildPackage dynamically to avoid circular dependency
-        const { buildPackage } = await import("../mod");
-        const result = await buildPackage(pkg, this.options);
-
-        if (result.success) {
-          await relinka.success(`✅ ${pkg.name}: Rebuilt successfully`);
-        } else {
-          await relinka.error(`❌ ${pkg.name}: Rebuild failed`);
-          for (const error of result.errors) {
-            await relinka.error(`   ${error}`);
-          }
-        }
-        return result;
-      } catch (error) {
-        await relinka.error(`❌ ${pkg.name}: Rebuild error - ${error}`);
-        return null;
-      }
-    });
-
-    await Promise.all(buildPromises);
   }
 }
 

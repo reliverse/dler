@@ -44,5 +44,8 @@
     "@microsoft/api-extractor": "catalog:",
     "typescript": "catalog:",
     "@types/bun": "catalog:"
+  },
+  "scripts": {
+    "perf": "bun bench/perf.ts"
   }
 }

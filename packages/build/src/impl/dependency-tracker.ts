@@ -68,7 +68,8 @@ export class DependencyTracker {
     const dependencies: string[] = [];
     const dir = resolve(filePath, "..");
 
-    // Extract import/require statements
+    // Extract import/require statements (including dynamic imports)
+    // Single regex captures all import types: static imports, require(), and dynamic import()
     const importRegex =
       /(?:import\s+.*?\s+from\s+['"]([^'"]+)['"]|require\s*\(\s*['"]([^'"]+)['"]\s*\)|import\s*\(\s*['"]([^'"]+)['"]\s*\))/g;
     let match: RegExpExecArray | null;
@@ -85,19 +86,8 @@ export class DependencyTracker {
       match = importRegex.exec(content);
     }
 
-    // Extract dynamic imports (already captured in main regex, but just to be explicit)
-    const dynamicImportRegex = /import\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
-    match = dynamicImportRegex.exec(content);
-    while (match !== null) {
-      const importPath = match[1];
-      if (importPath) {
-        const resolvedPath = this.resolveImportPath(importPath, dir);
-        if (resolvedPath && existsSync(resolvedPath)) {
-          dependencies.push(resolvedPath);
-        }
-      }
-      match = dynamicImportRegex.exec(content);
-    }
+    // Note: Dynamic imports are already captured in the main regex above,
+    // so we don't need a separate regex pass
 
     return [...new Set(dependencies)]; // Remove duplicates
   }

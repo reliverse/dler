@@ -143,7 +143,26 @@ function getFileType(ext: string): string {
   return typeMap[ext] || "Unknown";
 }
 
-function generateRecommendations(analysis: any): void {
+interface BundleAnalysis {
+  package: string;
+  timestamp: string;
+  files: Array<{
+    name: string;
+    size: number;
+    type: string;
+    gzippedSize?: number;
+  }>;
+  totals: {
+    totalSize: number;
+    totalFiles: number;
+    jsFiles: number;
+    cssFiles: number;
+    assetFiles: number;
+  };
+  recommendations: string[];
+}
+
+function generateRecommendations(analysis: BundleAnalysis): void {
   const { totals, files } = analysis;
 
   // Check bundle size
@@ -155,10 +174,10 @@ function generateRecommendations(analysis: any): void {
   }
 
   // Check for large individual files
-  const largeFiles = files.filter((f: any) => f.size > 500 * 1024); // 500KB
+  const largeFiles = files.filter((f) => f.size > 500 * 1024); // 500KB
   if (largeFiles.length > 0) {
     analysis.recommendations.push(
-      `Large files detected: ${largeFiles.map((f: any) => f.name).join(", ")}. Consider optimizing or splitting.`,
+      `Large files detected: ${largeFiles.map((f) => f.name).join(", ")}. Consider optimizing or splitting.`,
     );
   }
 
@@ -172,11 +191,11 @@ function generateRecommendations(analysis: any): void {
   // Check JS/CSS ratio
   if (totals.jsFiles > 0 && totals.cssFiles > 0) {
     const jsSize = files
-      .filter((f: any) => f.type.includes("JavaScript"))
-      .reduce((sum: number, f: any) => sum + f.size, 0);
+      .filter((f) => f.type.includes("JavaScript"))
+      .reduce((sum, f) => sum + f.size, 0);
     const cssSize = files
-      .filter((f: any) => f.type.includes("CSS"))
-      .reduce((sum: number, f: any) => sum + f.size, 0);
+      .filter((f) => f.type.includes("CSS"))
+      .reduce((sum, f) => sum + f.size, 0);
 
     if (cssSize > jsSize) {
       analysis.recommendations.push(
@@ -187,7 +206,7 @@ function generateRecommendations(analysis: any): void {
 
   // Check for duplicate file types
   const fileTypes = new Map<string, number>();
-  files.forEach((f: any) => {
+  files.forEach((f) => {
     fileTypes.set(f.type, (fileTypes.get(f.type) || 0) + 1);
   });
 

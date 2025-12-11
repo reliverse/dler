@@ -13,6 +13,7 @@
     "semver": "catalog:",
     "lookpath": "catalog:",
     "clipboardy": "catalog:",
+    "@reliverse/datetime": "workspace:*",
     "@reliverse/config": "workspace:*",
     "@reliverse/publish": "workspace:*",
     "@reliverse/bump": "workspace:*",

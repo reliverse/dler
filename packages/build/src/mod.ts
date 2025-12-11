@@ -28,9 +28,16 @@ import {
 } from "@reliverse/typerso";
 import { processAssetsForPackage, processCSSForPackage } from "./impl/assets";
 import { BuildCache } from "./impl/cache";
+import {
+  ALWAYS_IGNORED_PACKAGES,
+  FRONTEND_FRAMEWORKS,
+  FRONTEND_HTML_PATTERNS,
+  GO_PROJECT_DIRS,
+  JS_ENTRY_PATTERNS,
+  LIBRARY_ENTRY_PATTERNS,
+} from "./impl/constants";
 import { createDebugLogger } from "./impl/debug";
 import { startDevServer } from "./impl/dev-server";
-import { buildGo } from "./impl/go-build";
 import { processHTMLForPackage } from "./impl/html-processor";
 import {
   AssetOptimizationPlugin,
@@ -52,9 +59,20 @@ import type {
   BuildResult,
   BuildSummary,
   DlerPlugin,
+  MinifyOptions,
   MkdistOptions,
   PackageInfo,
 } from "./impl/types";
+import {
+  handleGoBuild,
+  handleGoOnlyBuild,
+} from "./impl/utils/go-build-handler";
+import {
+  extractErrors,
+  extractWarnings,
+  formatLogMessages,
+} from "./impl/utils/log-extraction";
+import { filterPrivatePackages } from "./impl/utils/package-filtering";
 import { startWatchMode } from "./impl/watch";
 
 export type { GoBuildOptions } from "@reliverse/config/impl/build";
@@ -90,7 +108,7 @@ export {
 export type { BuildOptions } from "./impl/types";
 export { validateAndExit } from "./impl/validation";
 
-const DEFAULT_CONCURRENCY = 5;
+import { DEFAULT_CONCURRENCY } from "./impl/constants";
 
 // ============================================================================
 // Plugin System Initialization
@@ -216,13 +234,45 @@ const getWorkspacePackages = async (cwd?: string): Promise<PackageInfo[]> => {
 };
 
 // Cache for package.json reads to avoid multiple file system calls
-const packageJsonCache = new Map<string, any>();
+interface PackageJsonCache {
+  name?: string;
+  bin?: string | Record<string, string>;
+  build?: {
+    entrypoints?: string | string[];
+  };
+  exports?: unknown;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  private?: boolean;
+}
+
+const packageJsonCache = new Map<string, PackageJsonCache>();
+
+// Cache for entry point detection results
+const entryPointCache = new Map<string, string[]>();
+
+// Helper to check if path contains build artifacts
+const isBuildArtifact = (path: string): boolean => {
+  return (
+    path.includes("/dist/") ||
+    path.includes("/build/") ||
+    path.includes("\\dist\\") ||
+    path.includes("\\build\\")
+  );
+};
 
 // ============================================================================
 // Entry Point Detection
 // ============================================================================
 
 const detectEntryPoints = async (packagePath: string): Promise<string[]> => {
+  // Check cache first
+  const cached = entryPointCache.get(packagePath);
+  if (cached !== undefined) {
+    return cached;
+  }
+
   // Use cached package.json if available
   let pkg = packageJsonCache.get(packagePath);
   if (!pkg) {
@@ -231,7 +281,10 @@ const detectEntryPoints = async (packagePath: string): Promise<string[]> => {
       packageJsonCache.set(packagePath, pkg);
     }
   }
-  if (!pkg) return [];
+  if (!pkg) {
+    entryPointCache.set(packagePath, []);
+    return [];
+  }
 
   const entryPoints: string[] = [];
 
@@ -240,24 +293,18 @@ const detectEntryPoints = async (packagePath: string): Promise<string[]> => {
     const entrypoints = Array.isArray(pkg.build.entrypoints)
       ? pkg.build.entrypoints
       : [pkg.build.entrypoints];
-    return entrypoints.map((ep: string) => resolve(packagePath, ep));
+    const result = entrypoints.map((ep: string) => resolve(packagePath, ep));
+    entryPointCache.set(packagePath, result);
+    return result;
   }
 
   // 2. Parse package.json "exports" field
   if (pkg.exports) {
-    const extractFromExports = (exports: any, basePath = ""): void => {
+    const extractFromExports = (exports: unknown, basePath = ""): void => {
       if (typeof exports === "string") {
         const fullPath = resolve(packagePath, basePath, exports);
-        if (existsSync(fullPath)) {
-          // Filter out build artifacts to avoid circular issues
-          if (
-            !fullPath.includes("/dist/") &&
-            !fullPath.includes("/build/") &&
-            !fullPath.includes("\\dist\\") &&
-            !fullPath.includes("\\build\\")
-          ) {
-            entryPoints.push(fullPath);
-          }
+        if (existsSync(fullPath) && !isBuildArtifact(fullPath)) {
+          entryPoints.push(fullPath);
         }
       } else if (typeof exports === "object" && exports !== null) {
         for (const [key, value] of Object.entries(exports)) {
@@ -280,16 +327,8 @@ const detectEntryPoints = async (packagePath: string): Promise<string[]> => {
           } else if (typeof value === "string") {
             // Handle direct string values in export conditions
             const fullPath = resolve(packagePath, basePath, value);
-            if (existsSync(fullPath)) {
-              // Filter out build artifacts to avoid circular issues
-              if (
-                !fullPath.includes("/dist/") &&
-                !fullPath.includes("/build/") &&
-                !fullPath.includes("\\dist\\") &&
-                !fullPath.includes("\\build\\")
-              ) {
-                entryPoints.push(fullPath);
-              }
+            if (existsSync(fullPath) && !isBuildArtifact(fullPath)) {
+              entryPoints.push(fullPath);
             }
           }
         }
@@ -307,61 +346,39 @@ const detectEntryPoints = async (packagePath: string): Promise<string[]> => {
 
   // If we found entries from exports and/or bin, return them
   if (entryPoints.length > 0) {
-    return [...new Set(entryPoints)];
+    const result = [...new Set(entryPoints)];
+    entryPointCache.set(packagePath, result);
+    return result;
   }
 
   // 3. Check for frontend app patterns (HTML files)
-  const frontendPatterns = [
-    "index.html",
-    "public/index.html",
-    "src/index.html",
-    "app.html",
-    "public/app.html",
-  ];
-
-  for (const pattern of frontendPatterns) {
+  for (const pattern of FRONTEND_HTML_PATTERNS) {
     const fullPath = resolve(packagePath, pattern);
     if (existsSync(fullPath)) {
       // For HTML files, also look for associated JS/TS entry points
       const jsEntryPoints = await detectJSEntryPoints(packagePath);
-      return [fullPath, ...jsEntryPoints];
+      const result = [fullPath, ...jsEntryPoints];
+      entryPointCache.set(packagePath, result);
+      return result;
     }
   }
 
   // 4. Fallback to common library patterns
-  const commonPatterns = [
-    "src/index.ts",
-    "src/mod.ts",
-    "index.ts",
-    "src/index.js",
-    "src/mod.js",
-    "index.js",
-  ];
-
-  for (const pattern of commonPatterns) {
+  for (const pattern of LIBRARY_ENTRY_PATTERNS) {
     const fullPath = resolve(packagePath, pattern);
     if (existsSync(fullPath)) {
+      entryPointCache.set(packagePath, [fullPath]);
       return [fullPath];
     }
   }
 
+  entryPointCache.set(packagePath, []);
   return [];
 };
 
 const detectJSEntryPoints = async (packagePath: string): Promise<string[]> => {
-  const jsPatterns = [
-    "src/main.ts",
-    "src/main.js",
-    "src/index.ts",
-    "src/index.js",
-    "main.ts",
-    "main.js",
-    "index.ts",
-    "index.js",
-  ];
-
   const entryPoints: string[] = [];
-  for (const pattern of jsPatterns) {
+  for (const pattern of JS_ENTRY_PATTERNS) {
     const fullPath = resolve(packagePath, pattern);
     if (existsSync(fullPath)) {
       entryPoints.push(fullPath);
@@ -373,7 +390,7 @@ const detectJSEntryPoints = async (packagePath: string): Promise<string[]> => {
 
 const detectBinEntryPoints = async (
   packagePath: string,
-  pkg: any,
+  pkg: PackageJsonCache,
 ): Promise<string[]> => {
   if (!pkg.bin) return [];
 
@@ -419,18 +436,10 @@ const detectBinEntryPoints = async (
 
 const detectFrontendApp = async (
   packagePath: string,
-  pkg: any,
+  pkg: PackageJsonCache,
 ): Promise<boolean> => {
   // Check for HTML files
-  const htmlPatterns = [
-    "index.html",
-    "public/index.html",
-    "src/index.html",
-    "app.html",
-    "public/app.html",
-  ];
-
-  for (const pattern of htmlPatterns) {
+  for (const pattern of FRONTEND_HTML_PATTERNS) {
     const fullPath = resolve(packagePath, pattern);
     if (existsSync(fullPath)) {
       return true;
@@ -438,15 +447,13 @@ const detectFrontendApp = async (
   }
 
   // Check for frontend framework dependencies
-  const frontendFrameworks = ["react", "preact", "solid-js", "lit", "alpinejs"];
-
   const allDeps = {
     ...pkg.dependencies,
     ...pkg.devDependencies,
     ...pkg.peerDependencies,
   };
 
-  for (const framework of frontendFrameworks) {
+  for (const framework of FRONTEND_FRAMEWORKS) {
     if (allDeps[framework]) {
       return true;
     }
@@ -484,8 +491,11 @@ const detectGoProject = async (packagePath: string): Promise<boolean> => {
       }
       // Check common Go directories
       if (entry.isDirectory()) {
-        const subDirs = ["cmd", "internal", "pkg", "prompts"];
-        if (subDirs.includes(entry.name)) {
+        if (
+          GO_PROJECT_DIRS.includes(
+            entry.name as (typeof GO_PROJECT_DIRS)[number],
+          )
+        ) {
           const subPath = resolve(packagePath, entry.name);
           try {
             const subEntries = await readdir(subPath, { recursive: true });
@@ -611,81 +621,20 @@ const filterPackages = (
     const includeFilter = createIncludeFilter(filter);
     const filteredPackages = includeFilter(packages);
 
-    // Filter out private packages unless explicitly allowed
-    if (!allowPrivateBuild) {
-      return filteredPackages.filter((pkg) => pkg.private !== true);
-    }
-
-    // Normalize allowPrivateBuild to array
-    const allowedPatterns = Array.isArray(allowPrivateBuild)
-      ? allowPrivateBuild
-      : [allowPrivateBuild];
-
-    // Create a filter to check if a package name matches allowed patterns
-    const isAllowed = (pkgName: string): boolean => {
-      for (const pattern of allowedPatterns) {
-        // Simple glob pattern matching
-        if (pattern.includes("*")) {
-          const regexPattern = pattern.replace(/\*/g, ".*");
-          if (new RegExp(`^${regexPattern}$`).test(pkgName)) {
-            return true;
-          }
-        } else if (pkgName === pattern) {
-          return true;
-        }
-      }
-      return false;
-    };
-
-    // Filter: allow if not private OR if private and explicitly allowed
-    return filteredPackages.filter(
-      (pkg) => pkg.private !== true || isAllowed(pkg.name),
-    );
+    return filterPrivatePackages(filteredPackages, allowPrivateBuild);
   }
-
-  // Always ignore @reliverse/dler-v1 package
-  const alwaysIgnored = ["@reliverse/dler-v1"];
 
   // Combine user-provided ignore patterns with always ignored packages
   const combinedIgnore = ignore
     ? Array.isArray(ignore)
-      ? [...alwaysIgnored, ...ignore]
-      : [...alwaysIgnored, ignore]
-    : alwaysIgnored;
+      ? [...ALWAYS_IGNORED_PACKAGES, ...ignore]
+      : [...ALWAYS_IGNORED_PACKAGES, ignore]
+    : ALWAYS_IGNORED_PACKAGES;
 
   const ignoreFilter = createIgnoreFilter(combinedIgnore);
   const filteredPackages = ignoreFilter(packages);
 
-  // Filter out private packages unless explicitly allowed
-  if (!allowPrivateBuild) {
-    return filteredPackages.filter((pkg) => pkg.private !== true);
-  }
-
-  // Normalize allowPrivateBuild to array
-  const allowedPatterns = Array.isArray(allowPrivateBuild)
-    ? allowPrivateBuild
-    : [allowPrivateBuild];
-
-  // Create a filter to check if a package name matches allowed patterns
-  const isAllowed = (pkgName: string): boolean => {
-    for (const pattern of allowedPatterns) {
-      // Simple glob pattern matching
-      if (pattern.includes("*")) {
-        const regexPattern = pattern.replace(/\*/g, ".*");
-        if (new RegExp(`^${regexPattern}$`).test(pkgName)) {
-          return true;
-        }
-      } else if (pkgName === pattern) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  // Filter: allow if not private OR if private and explicitly allowed
-  return filteredPackages.filter(
-    (pkg) => pkg.private !== true || isAllowed(pkg.name),
-  );
+  return filterPrivatePackages(filteredPackages, allowPrivateBuild);
 };
 
 // ============================================================================
@@ -800,7 +749,6 @@ const buildWithMkdist = async (
     // srcDir is relative to rootDir, so we pass 'src' to scan the src directory
     const mkdistOptions: MkdistOptions & {
       declaration?: boolean;
-      esbuild?: any;
     } = {
       srcDir: "src",
       distDir: pkg.outputDir,
@@ -867,45 +815,7 @@ const buildWithMkdist = async (
       }
 
       // Build Go binaries if Go files are detected (skip if tsOnly is set)
-      if (!options.tsOnly && pkg.hasGoFiles) {
-        const goConfig = options.go ?? pkg.buildConfig?.go;
-        // Enable by default if Go files are detected and config doesn't explicitly disable it
-        if (goConfig?.enable !== false) {
-          try {
-            await relinka.info(`🔨 ${pkg.name}: Building Go binaries...`);
-            const goResult = await buildGo(
-              pkg.path,
-              pkg.name,
-              goConfig ?? { enable: true },
-            );
-            if (!goResult.success) {
-              await relinka.warn(
-                `⚠️  ${pkg.name}: Go build failed: ${goResult.errors.join(", ")}`,
-              );
-              // Don't fail the entire build, just warn
-            } else {
-              await relinka.success(
-                `✅ ${pkg.name}: Go binaries built successfully`,
-              );
-            }
-          } catch (error) {
-            await relinka.warn(
-              `⚠️  ${pkg.name}: Go build error: ${
-                error instanceof Error ? error.message : String(error)
-              }`,
-            );
-            // Don't fail the entire build, just warn
-          }
-        } else if (options.verbose) {
-          await relinka.info(`⏭️  ${pkg.name}: Go build disabled in config`);
-        }
-      } else if (options.tsOnly && pkg.hasGoFiles) {
-        if (options.verbose) {
-          await relinka.info(
-            `⏭️  ${pkg.name}: Skipping Go build (--ts-only flag set)`,
-          );
-        }
-      }
+      await handleGoBuild(pkg, options, options.verbose ?? false);
     }
 
     // Return BuildResult
@@ -966,49 +876,15 @@ export const buildPackage = async (
       };
     }
 
-    // Build Go binaries
-    const goConfig = mergedOptions.go ?? pkg.buildConfig?.go;
-    if (goConfig?.enable !== false) {
-      try {
-        await relinka.info(`🔨 ${pkg.name}: Building Go binaries...`);
-        const goResult = await buildGo(
-          pkg.path,
-          pkg.name,
-          goConfig ?? { enable: true },
-        );
-        if (!goResult.success) {
-          return {
-            package: pkg,
-            success: false,
-            skipped: false,
-            output: `Go build failed: ${goResult.errors.join(", ")}`,
-            errors: goResult.errors,
-            warnings: [],
-            buildTime: Date.now() - startTime,
-            bundleSize: 0,
-          };
-        }
-        await relinka.success(`✅ ${pkg.name}: Go binaries built successfully`);
-      } catch (error) {
-        return {
-          package: pkg,
-          success: false,
-          skipped: false,
-          output: `Go build error: ${error instanceof Error ? error.message : String(error)}`,
-          errors: [error instanceof Error ? error.message : String(error)],
-          warnings: [],
-          buildTime: Date.now() - startTime,
-          bundleSize: 0,
-        };
-      }
-    }
-
+    const goResult = await handleGoOnlyBuild(pkg, mergedOptions);
     return {
       package: pkg,
-      success: true,
+      success: goResult.success,
       skipped: false,
-      output: "Go binaries built successfully",
-      errors: [],
+      output: goResult.success
+        ? "Go binaries built successfully"
+        : `Go build failed: ${goResult.errors.join(", ")}`,
+      errors: goResult.errors,
       warnings: [],
       buildTime: Date.now() - startTime,
       bundleSize: 0,
@@ -1327,7 +1203,7 @@ export const buildPackage = async (
       buildConfig.minify = minify;
     } else if (typeof minify === "object" && minify !== null) {
       // Validate minify object structure matches Bun API
-      const validMinify: any = {};
+      const validMinify: MinifyOptions = {};
       if (minify.whitespace !== undefined)
         validMinify.whitespace = minify.whitespace;
       if (minify.syntax !== undefined) validMinify.syntax = minify.syntax;
@@ -1483,25 +1359,8 @@ export const buildPackage = async (
     }
 
     if (!result.success) {
-      const errors = result.logs
-        .filter((log) => log.level === "error")
-        .map((log) => {
-          // Add file path and line number context if available
-          if ("position" in log && log.position) {
-            return `${log.message} (${log.position.file}:${log.position.line}:${log.position.column})`;
-          }
-          return log.message;
-        });
-
-      const warnings = result.logs
-        .filter((log) => log.level === "warning")
-        .map((log) => {
-          // Add file path and line number context if available
-          if ("position" in log && log.position) {
-            return `${log.message} (${log.position.file}:${log.position.line}:${log.position.column})`;
-          }
-          return log.message;
-        });
+      const errors = extractErrors(result.logs);
+      const warnings = extractWarnings(result.logs);
 
       if (verbose) {
         await relinka.error(`❌ ${pkg.name}: Build failed (${buildTime}ms)`);
@@ -1520,14 +1379,7 @@ export const buildPackage = async (
         package: pkg,
         success: false,
         skipped: false,
-        output: result.logs
-          .map((log) => {
-            if ("position" in log && log.position) {
-              return `${log.message} (${log.position.file}:${log.position.line}:${log.position.column})`;
-            }
-            return log.message;
-          })
-          .join("\n"),
+        output: formatLogMessages(result.logs),
         errors,
         warnings,
         buildTime,
@@ -1536,51 +1388,12 @@ export const buildPackage = async (
     }
 
     // Build Go binaries if Go files are detected (skip if tsOnly is set)
-    if (!mergedOptions.tsOnly && pkg.hasGoFiles && result.success) {
-      const goConfig = mergedOptions.go ?? pkg.buildConfig?.go;
-      // Enable by default if Go files are detected and config doesn't explicitly disable it
-      if (goConfig?.enable !== false) {
-        try {
-          await relinka.info(`🔨 ${pkg.name}: Building Go binaries...`);
-          const goResult = await buildGo(
-            pkg.path,
-            pkg.name,
-            goConfig ?? { enable: true },
-          );
-          if (!goResult.success) {
-            await relinka.warn(
-              `⚠️  ${pkg.name}: Go build failed: ${goResult.errors.join(", ")}`,
-            );
-            // Don't fail the entire build, just warn
-          } else {
-            await relinka.success(
-              `✅ ${pkg.name}: Go binaries built successfully`,
-            );
-          }
-        } catch (error) {
-          await relinka.warn(
-            `⚠️  ${pkg.name}: Go build error: ${
-              error instanceof Error ? error.message : String(error)
-            }`,
-          );
-          // Don't fail the entire build, just warn
-        }
-      } else if (verbose) {
-        await relinka.info(`⏭️  ${pkg.name}: Go build disabled in config`);
-      }
-    } else if (mergedOptions.tsOnly && pkg.hasGoFiles && result.success) {
-      if (verbose) {
-        await relinka.info(
-          `⏭️  ${pkg.name}: Skipping Go build (--ts-only flag set)`,
-        );
-      }
-    } else if (verbose && pkg.hasGoFiles && !result.success) {
+    if (result.success) {
+      await handleGoBuild(pkg, mergedOptions, verbose);
+    } else if (verbose && pkg.hasGoFiles) {
       await relinka.info(
         `⏭️  ${pkg.name}: Skipping Go build (TypeScript build failed)`,
       );
-    } else if (verbose && !pkg.hasGoFiles) {
-      // Only log in verbose mode to avoid noise
-      await relinka.debug(`⏭️  ${pkg.name}: No Go files detected`);
     }
 
     // Process assets for frontend apps
@@ -1612,11 +1425,9 @@ export const buildPackage = async (
               package: pkg,
               success: true,
               skipped: false,
-              output: result.logs.map((log) => log.message).join("\n"),
+              output: formatLogMessages(result.logs),
               errors: [],
-              warnings: result.logs
-                .filter((log) => log.level === "warning")
-                .map((log) => log.message),
+              warnings: extractWarnings(result.logs),
               buildTime,
               bundleSize,
             },
@@ -1682,11 +1493,9 @@ export const buildPackage = async (
       package: pkg,
       success: true,
       skipped: false,
-      output: result.logs.map((log) => log.message).join("\n"),
+      output: formatLogMessages(result.logs),
       errors: [],
-      warnings: result.logs
-        .filter((log) => log.level === "warning")
-        .map((log) => log.message),
+      warnings: extractWarnings(result.logs),
       buildTime,
       bundleSize,
     };
@@ -2047,13 +1856,11 @@ export const runBuildOnAllPackages = async (
         `   Filtering to ${packages.length} packages matching: ${patterns.join(", ")}`,
       );
     } else if (filteredCount > 0) {
-      // Always ignore @reliverse/dler-v1 package
-      const alwaysIgnored = ["@reliverse/dler-v1"];
       const combinedIgnore = ignore
         ? Array.isArray(ignore)
-          ? [...alwaysIgnored, ...ignore]
-          : [...alwaysIgnored, ignore]
-        : alwaysIgnored;
+          ? [...ALWAYS_IGNORED_PACKAGES, ...ignore]
+          : [...ALWAYS_IGNORED_PACKAGES, ignore]
+        : ALWAYS_IGNORED_PACKAGES;
 
       const patterns = normalizePatterns(combinedIgnore);
       await relinka.info(

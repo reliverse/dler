@@ -1,0 +1,43 @@
+Regex Operations Performance
+pattern matching (exact) | avg=0.67us | min=0.20us | max=15.80us | p95=0.90us | p99=5.40us | ops/s=1 499 026
+pattern matching (wildcard) | avg=2.37us | min=0.80us | max=31.50us | p95=5.30us | p99=14.30us | ops/s=422 172
+clear logger internals (100 lines) | avg=19.60us | min=8.40us | max=67.60us | p95=36.50us | p99=48.80us | ops/s=51 031
+clear logger internals (1000 lines) | avg=107.89us | min=76.80us | max=2.32ms | p95=164.90us | p99=272.90us | ops/s=9 268
+replace exports in package.json | avg=2.35us | min=1.10us | max=105.50us | p95=3.50us | p99=21.90us | ops/s=425 840
+regex operations (combined) | avg=15.24us | min=9.00us | max=1.10ms | p95=22.20us | p99=33.70us | ops/s=65 610
+
+Write Operations Performance
+writeLine (single) | avg=1.56us | min=0.40us | max=28.10us | p95=3.40us | p99=9.80us | ops/s=641 067
+writeError (single) | avg=1.87us | min=0.40us | max=31.50us | p95=4.20us | p99=10.10us | ops/s=533 846
+writeErrorLines (10 lines) | avg=1.74us | min=0.50us | max=59.40us | p95=5.00us | p99=8.50us | ops/s=575 838
+writeErrorLines (50 lines) | avg=3.14us | min=1.30us | max=61.20us | p95=5.80us | p99=14.80us | ops/s=318 837
+writeErrorLines (100 lines) | avg=4.34us | min=1.70us | max=57.10us | p95=10.90us | p99=19.00us | ops/s=230 558
+writeJsonFile (small) | avg=293.76us | min=163.10us | max=3.39ms | p95=482.30us | p99=564.10us | ops/s=3 404
+writeJsonFile (medium) | avg=321.27us | min=179.00us | max=2.07ms | p95=535.70us | p99=641.10us | ops/s=3 113
+writeTextFile (small) | avg=307.97us | min=184.90us | max=1.41ms | p95=504.00us | p99=607.60us | ops/s=3 247
+writeTextFile (medium) | avg=327.07us | min=187.60us | max=985.60us | p95=568.10us | p99=684.30us | ops/s=3 057
+writeTextFile (large) | avg=4.00ms | min=204.80us | max=26.78ms | p95=13.80ms | p99=15.66ms | ops/s=250
+
+Terminal Helpers Performance
+getCurrentWorkingDirectory (cached) | avg=0.31us | min=0.00us | max=15.40us | p95=0.60us | p99=1.10us | ops/s=3 253 090
+getCurrentWorkingDirectory (uncached) | avg=2.82us | min=2.00us | max=17.00us | p95=3.50us | p99=9.50us | ops/s=355 088
+handleError (Error instance) | avg=0.27us | min=0.00us | max=24.60us | p95=0.40us | p99=0.70us | ops/s=3 684 598
+handleError (non-Error) | avg=0.26us | min=0.00us | max=39.70us | p95=0.30us | p99=0.70us | ops/s=3 909 304
+handleError (string) | avg=0.22us | min=0.00us | max=10.30us | p95=0.30us | p99=0.50us | ops/s=4 559 964
+handleError (null) | avg=0.19us | min=0.00us | max=9.30us | p95=0.30us | p99=0.40us | ops/s=5 159 959
+terminal helpers (combined) | avg=2.28us | min=2.00us | max=11.30us | p95=2.40us | p99=5.20us | ops/s=438 116
+
+File Operations Performance
+read file (small, 100 bytes) | avg=45.93us | min=33.40us | max=158.20us | p95=63.20us | p99=77.90us | ops/s=21 772
+read file (medium, 1KB) | avg=45.67us | min=33.00us | max=155.30us | p95=64.80us | p99=101.00us | ops/s=21 896
+read file (large, 10KB) | avg=46.65us | min=38.50us | max=136.50us | p95=63.20us | p99=78.70us | ops/s=21 435
+write file (small, 100 bytes) | avg=282.50us | min=156.70us | max=1.30ms | p95=503.50us | p99=592.40us | ops/s=3 540
+write file (medium, 1KB) | avg=328.85us | min=171.30us | max=2.50ms | p95=605.10us | p99=773.00us | ops/s=3 041
+write file (large, 10KB) | avg=4.48ms | min=175.80us | max=21.39ms | p95=13.17ms | p99=14.57ms | ops/s=223
+process file (read+write, small) | avg=1.00ms | min=615.60us | max=2.49ms | p95=1.35ms | p99=1.56ms | ops/s=996
+process file (read+write, medium) | avg=1.03ms | min=706.90us | max=3.17ms | p95=1.35ms | p99=1.49ms | ops/s=968
+
+Summary:
+Total benchmarks: 31
+Average ops/s: 845 811
+Total operations: 31 000

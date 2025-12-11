@@ -2,8 +2,23 @@ import zeptomatch from "@reliverse/matcha";
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { logger } from "@reliverse/relinka";
+import type { PackageJson } from "@reliverse/typerso";
 import { $ } from "bun";
 import semver from "semver";
+
+interface PackageJsonWithCatalogs extends PackageJson {
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+  workspaces?: {
+    packages?: string[];
+    catalog?: Record<string, string>;
+    catalogs?: Record<string, Record<string, string>>;
+  };
+  catalog?: Record<string, string>;
+  catalogs?: Record<string, Record<string, string>>;
+}
 
 export interface UpdateResult {
   package: string;
@@ -98,7 +113,7 @@ export function isSemverCompatible(
  * Collect ALL dependencies from package.json.
  * Returns a map of dependency name to its version and all locations where it appears.
  */
-export function collectTargetDependencies(pkg: any): {
+export function collectTargetDependencies(pkg: PackageJsonWithCatalogs): {
   map: Record<string, DependencyInfo>;
 } {
   const map: Record<string, DependencyInfo> = {};
@@ -199,7 +214,7 @@ export function collectTargetDependencies(pkg: any): {
  * Apply a version update into all relevant places in package.json for a dependency.
  */
 export function applyVersionUpdate(
-  pkg: any,
+  pkg: PackageJsonWithCatalogs,
   depName: string,
   newVersion: string,
   locations: Set<string>,
@@ -223,14 +238,17 @@ export function applyVersionUpdate(
 
   // For catalogs, update both workspaces.* and top-level if present
   const ensureWorkspaces = () => {
-    if (!(pkg as any).workspaces) (pkg as any).workspaces = {};
+    if (!pkg.workspaces) pkg.workspaces = {};
   };
 
   if (locations.has("catalog")) {
     ensureWorkspaces();
-    if (!(pkg as any).workspaces.catalog) (pkg as any).workspaces.catalog = {};
-    (pkg as any).workspaces.catalog[depName] = newVersion;
-    if ((pkg as any).catalog) (pkg as any).catalog[depName] = newVersion;
+    const workspaces = pkg.workspaces;
+    if (workspaces) {
+      if (!workspaces.catalog) workspaces.catalog = {};
+      workspaces.catalog[depName] = newVersion;
+    }
+    if (pkg.catalog) pkg.catalog[depName] = newVersion;
   }
 
   for (const loc of locations) {
@@ -239,13 +257,15 @@ export function applyVersionUpdate(
       const catalogName = (match[1] ?? "") as string;
       if (!catalogName) continue;
       ensureWorkspaces();
-      if (!(pkg as any).workspaces.catalogs)
-        (pkg as any).workspaces.catalogs = {};
-      if (!(pkg as any).workspaces.catalogs[catalogName])
-        (pkg as any).workspaces.catalogs[catalogName] = {};
-      (pkg as any).workspaces.catalogs[catalogName][depName] = newVersion;
-      if ((pkg as any).catalogs?.[catalogName]) {
-        (pkg as any).catalogs[catalogName][depName] = newVersion;
+      const workspaces = pkg.workspaces;
+      if (workspaces) {
+        if (!workspaces.catalogs) workspaces.catalogs = {};
+        if (!workspaces.catalogs[catalogName])
+          workspaces.catalogs[catalogName] = {};
+        workspaces.catalogs[catalogName][depName] = newVersion;
+      }
+      if (pkg.catalogs?.[catalogName]) {
+        pkg.catalogs[catalogName][depName] = newVersion;
       }
     }
   }
@@ -334,7 +354,11 @@ export async function checkPackageUpdate(
  */
 export function prepareDependenciesForUpdate(
   allDepsMap: Record<string, DependencyInfo>,
-  args: any,
+  args: {
+    name?: string[];
+    ignore?: string[];
+    ignoreFields?: string[];
+  },
 ): string[] {
   // Filter dependencies based on name and ignore parameters
   const depsToUpdate = Object.keys(allDepsMap);
@@ -447,7 +471,7 @@ export async function updatePackageJsonFile(
   try {
     const packageJson = JSON.parse(
       await fs.readFile(packageJsonPath, { encoding: "utf8" }),
-    ) as Record<string, any>;
+    ) as PackageJsonWithCatalogs;
     const updatedPackageJson = { ...packageJson };
 
     for (const update of updatesToApply) {
@@ -515,7 +539,7 @@ export async function updatePackageJsonFile(
 export function displayStructuredUpdateResults(
   results: UpdateResult[],
   packageJsonFiles: string[],
-  fileDepsMap: Map<string, Record<string, any>>,
+  fileDepsMap: Map<string, Record<string, DependencyInfo>>,
   showDetails = false,
 ): void {
   const toUpdate = results.filter((r) => r.updated && !r.error);

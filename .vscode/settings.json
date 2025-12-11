@@ -1,7 +1,4 @@
 {
-  "typescript.enablePromptUseWorkspaceTsdk": true,
-  "typescript.preferences.importModuleSpecifier": "project-relative",
-  "openMultipleFiles.limit": 400,
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.biome": "explicit",

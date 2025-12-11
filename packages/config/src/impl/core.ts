@@ -51,10 +51,17 @@ export const resolvePackageConfig = <T extends Record<string, any>>(
   // 2. Check for pattern matches
   if (config.patterns) {
     for (const { pattern, config: patternConfig } of config.patterns) {
-      // Simple glob pattern matching
+      // Optimized glob pattern matching: cache the pattern replacement
+      // to avoid doing it twice (once for includes, once for regex)
+      const regexPattern = pattern.replace(/\*/g, ".*");
+      const patternWithoutWildcards = pattern.replace(/\*/g, "");
+
+      // Try simple includes check first (faster for simple patterns)
+      // Then verify with regex for accuracy
       if (
-        packageName.includes(pattern.replace(/\*/g, "")) ||
-        new RegExp(pattern.replace(/\*/g, ".*")).test(packageName)
+        (patternWithoutWildcards &&
+          packageName.includes(patternWithoutWildcards)) ||
+        new RegExp(regexPattern).test(packageName)
       ) {
         // If enable is explicitly false, return undefined to skip this package
         // enable defaults to true when not specified

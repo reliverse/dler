@@ -5,6 +5,7 @@ import type {
   PackageBuildConfig,
   PerformanceBudget,
 } from "@reliverse/config/impl/build";
+import type { TSConfig } from "pkg-types";
 
 export interface PackageInfo {
   name: string;
@@ -207,7 +208,7 @@ export type Loader = MkdistLoader;
 
 export interface BunPlugin {
   name: string;
-  setup: (build: any) => void;
+  setup: (build: unknown) => void;
 }
 
 export interface BuildArtifact {
@@ -279,8 +280,8 @@ export interface DlerPlugin {
   setup: (build: BunBuildConfig) => void;
   onBuildStart?: () => void;
   onBuildEnd?: (result: BuildResult, buildOptions?: BuildOptions) => void;
-  onResolve?: (args: any) => any;
-  onLoad?: (args: any) => any;
+  onResolve?: (args: unknown) => unknown;
+  onLoad?: (args: unknown) => unknown;
 }
 
 export interface CompileOptions {
@@ -348,10 +349,11 @@ export interface MkdistOptions {
   cleanDist?: boolean;
   addRelativeDeclarationExtensions?: boolean;
   typescript?: {
-    compilerOptions?: any;
+    compilerOptions?: TSConfig["compilerOptions"];
   };
-  globOptions?: any;
+  globOptions?: Record<string, unknown>;
   verbose?: boolean;
+  [key: string]: unknown;
 }
 
 export interface InputFile {
@@ -384,8 +386,8 @@ export interface CreateLoaderOptions {
   declaration?: boolean;
   format?: "esm" | "cjs";
   ext?: string;
-  esbuild?: any;
-  [key: string]: any;
+  esbuild?: Record<string, unknown>;
+  [key: string]: unknown;
 }
 
 export interface LoaderContext {

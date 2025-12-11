@@ -1,0 +1,32 @@
+Core Matching Performance
+match (single pattern) | avg=1.02us | min=0.30us | max=21.70us | p95=2.40us | p99=8.20us | ops/s=977 995
+matchAny (multiple patterns) | avg=1.69us | min=0.60us | max=16.90us | p95=4.90us | p99=8.90us | ops/s=592 136
+matchAll (multiple patterns) | avg=0.97us | min=0.40us | max=17.50us | p95=2.20us | p99=8.10us | ops/s=1 035 090
+match (multiple paths) | avg=2.53us | min=1.00us | max=31.20us | p95=7.10us | p99=10.90us | ops/s=395 163
+match (complex patterns) | avg=0.54us | min=0.20us | max=26.40us | p95=1.30us | p99=4.00us | ops/s=1 841 282
+
+Matcher Creation Performance
+createMatcher (single) | avg=0.47us | min=0.20us | max=11.00us | p95=1.20us | p99=5.40us | ops/s=2 134 927
+createMatchers (multiple) | avg=3.33us | min=1.30us | max=22.70us | p95=9.10us | p99=14.40us | ops/s=300 643
+createMatcher (reuse) | avg=0.92us | min=0.30us | max=18.40us | p95=1.40us | p99=5.10us | ops/s=1 090 988
+createMatcher (with options) | avg=0.66us | min=0.20us | max=14.40us | p95=1.00us | p99=6.10us | ops/s=1 504 438
+
+Pattern Compilation Performance
+compile (single pattern) | avg=0.39us | min=0.20us | max=10.40us | p95=0.70us | p99=3.40us | ops/s=2 535 497
+compileAny (multiple patterns) | avg=0.82us | min=0.40us | max=16.90us | p95=1.90us | p99=6.40us | ops/s=1 225 791
+compile (complex patterns) | avg=0.38us | min=0.10us | max=19.10us | p95=0.50us | p99=4.80us | ops/s=2 621 919
+compile (reuse compiled) | avg=0.60us | min=0.30us | max=15.30us | p95=1.20us | p99=5.30us | ops/s=1 664 170
+
+Filtering Operations Performance
+filter (include patterns) | avg=1.23us | min=0.70us | max=14.20us | p95=2.50us | p99=8.30us | ops/s=812 414
+exclude (ignore patterns) | avg=1.16us | min=0.50us | max=12.80us | p95=3.00us | p99=8.30us | ops/s=858 369
+createIgnoreFilter | avg=7.76us | min=4.20us | max=48.30us | p95=15.80us | p99=23.40us | ops/s=128 819
+createIncludeFilter | avg=5.55us | min=4.40us | max=42.10us | p95=9.50us | p99=14.10us | ops/s=180 242
+normalizePatterns (string) | avg=0.64us | min=0.30us | max=14.60us | p95=1.40us | p99=5.90us | ops/s=1 553 036
+normalizePatterns (array) | avg=0.94us | min=0.40us | max=14.60us | p95=1.80us | p99=7.60us | ops/s=1 059 996
+filtering (complex chain) | avg=2.16us | min=1.00us | max=18.30us | p95=6.50us | p99=11.80us | ops/s=461 979
+
+Summary:
+Total benchmarks: 20
+Average ops/s: 1 148 745
+Total operations: 20 000

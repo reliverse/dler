@@ -63,7 +63,7 @@ export interface DtsOptions {
   mkdist?: {
     addRelativeDeclarationExtensions?: boolean;
     pattern?: string;
-    globOptions?: object;
+    globOptions?: Record<string, unknown>;
   };
 }
 

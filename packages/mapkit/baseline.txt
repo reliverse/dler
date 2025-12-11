@@ -1,0 +1,32 @@
+pMap Performance
+pMap (sync, small array) | avg=17.91us | min=4.30us | max=107.20us | p95=38.00us | p99=65.60us | ops/s=55 820
+pMap (sync, medium array) | avg=85.06us | min=39.10us | max=2.67ms | p95=121.40us | p99=172.70us | ops/s=11 757
+pMap (sync, large array) | avg=368.29us | min=260.30us | max=1.94ms | p95=558.80us | p99=1.07ms | ops/s=2 715
+pMap (async, concurrency=5) | avg=316.19ms | min=301.85ms | max=351.85ms | p95=336.52ms | p99=345.65ms | ops/s=3
+pMap (async, unlimited) | avg=15.97ms | min=1.59ms | max=27.83ms | p95=25.73ms | p99=27.54ms | ops/s=63
+pMap (with skip) | avg=51.88us | min=26.80us | max=1.64ms | p95=79.00us | p99=100.20us | ops/s=19 277
+pMap (async iterable) | avg=55.96us | min=39.40us | max=1.24ms | p95=89.20us | p99=131.10us | ops/s=17 870
+pMap (promise values) | avg=43.84us | min=28.40us | max=1.62ms | p95=70.70us | p99=93.70us | ops/s=22 810
+
+pMapIterable Performance
+pMapIterable (sync, small array) | avg=7.67us | min=4.30us | max=64.10us | p95=14.60us | p99=26.40us | ops/s=130 393
+pMapIterable (sync, medium array) | avg=47.23us | min=9.80us | max=1.64ms | p95=70.00us | p99=106.80us | ops/s=21 175
+pMapIterable (sync, large array) | avg=741.29us | min=31.50us | max=40.80ms | p95=929.90us | p99=1.74ms | ops/s=1 349
+pMapIterable (async, concurrency=5) | avg=880.25us | min=422.00us | max=33.69ms | p95=643.10us | p99=1.90ms | ops/s=1 136
+pMapIterable (backpressure) | avg=449.65us | min=193.00us | max=11.38ms | p95=435.60us | p99=1.99ms | ops/s=2 224
+pMapIterable (with skip) | avg=59.93us | min=30.20us | max=10.96ms | p95=139.90us | p99=199.40us | ops/s=16 686
+pMapIterable (async iterable input) | avg=6.88us | min=2.60us | max=672.00us | p95=12.10us | p99=36.30us | ops/s=145 387
+
+Edge Cases Performance
+pMap (empty array) | avg=2.72us | min=1.10us | max=64.00us | p95=5.30us | p99=12.30us | ops/s=367 498
+pMap (single item) | avg=2.44us | min=1.40us | max=147.30us | p95=3.40us | p99=6.60us | ops/s=409 651
+pMap (concurrency=1) | avg=800.96ms | min=771.10ms | max=857.10ms | p95=841.27ms | p99=857.10ms | ops/s=1
+pMap (all skipped) | avg=26.01us | min=15.20us | max=1.28ms | p95=36.60us | p99=47.70us | ops/s=38 449
+pMap (stopOnError=false) | avg=31.80us | min=19.40us | max=1.40ms | p95=53.80us | p99=79.10us | ops/s=31 444
+pMap (aborted) | avg=34.79us | min=20.30us | max=1.72ms | p95=57.20us | p99=94.60us | ops/s=28 743
+pMapIterable (early termination) | avg=23.09us | min=13.60us | max=1.48ms | p95=35.40us | p99=48.80us | ops/s=43 309
+
+Summary:
+Total benchmarks: 22
+Average ops/s: 62 171
+Total operations: 17 450

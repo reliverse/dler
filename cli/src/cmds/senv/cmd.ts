@@ -5,9 +5,10 @@ import fs from "@reliverse/relifso";
 import { logger } from "@reliverse/relinka";
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 
-const isWindows = (): boolean =>
-  (globalThis as any).Bun?.platform?.() === "win32" ||
-  process.platform === "win32";
+const isWindows = (): boolean => {
+  const bun = globalThis as { Bun?: { platform?: () => string } };
+  return bun.Bun?.platform?.() === "win32" || process.platform === "win32";
+};
 
 const fileExists = async (path: string): Promise<boolean> => {
   return await fs.pathExists(path);
@@ -64,7 +65,7 @@ const backupFile = async (path: string): Promise<void> => {
   }
 };
 
-// Escape PowerShell string literals
+// Escape PowerShell string literals (Windows fallback)
 const escapePowerShellString = (str: string): string => {
   return str.replace(/'/g, "''");
 };

@@ -10,30 +10,34 @@ The following packages should be optimized in priority order (packages with olde
 | # | Package | Last Improved | Status | Notes |
 |---|---------|---------------|--------|-------|
 | 0 | `@reliverse/dler` | - | - | CLI package |
-| 1 | `@reliverse/build` | - | - | - |
-| 2 | `@reliverse/bump` | - | - | - |
-| 3 | `@reliverse/config` | - | - | - |
-| 4 | `@reliverse/helpers` | - | - | - |
-| 5 | `@reliverse/mapkit` | - | - | - |
-| 6 | `@reliverse/matcha` | - | - | - |
-| 7 | `@reliverse/pathkit` | - | - | - |
-| 8 | `@reliverse/publish` | - | - | - |
-| 9 | `@reliverse/relico` | - | - | - |
-| 10 | `@reliverse/relifso` | - | - | - |
-| 11 | `@reliverse/relinka` | - | - | - |
-| 12 | `@reliverse/rempts` | - | - | - |
-| 13 | `@reliverse/tsconfig` | - | - | - |
-| 14 | `@reliverse/typerso` | - | - | - |
+| 1 | `@reliverse/build` | 2025-12-06 18:30:14 | completed | Optimized entry point detection caching, dependency tracker regex (removed redundant pass), improved package filtering by 2-9%, dependency tracking by 1.6% |
+| 2 | `@reliverse/bump` | 2025-12-06 18:34:03 | completed | Optimized isPrerelease with fast path (hyphen check), improved isPrerelease by 16-184%, average ops/s by 42% |
+| 3 | `@reliverse/config` | 2025-12-06 18:43:17 | completed | Optimized isPrerelease with fast path (hyphen check) - 60.7% faster for release versions, improved pattern matching by caching replacements (17.8% faster), improved mergeConfig by 29-41%, average ops/s by 32.7% |
+| 4 | `@reliverse/datetime` | - | in-progress | - |
+| 5 | `@reliverse/helpers` | 2025-12-06 18:41:13 | completed | Optimized regex pattern caching (358% improvement for exact matches, 67% for wildcards), fixed getCurrentWorkingDirectory caching (668% improvement when cached), optimized clearLoggerInternals with pre-compiled regex (50-66% improvement), optimized replaceInPackageJson with pre-compiled regex (55% improvement), simplified writeErrorLines (72-138% improvement). Overall average ops/s improved by 14% |
+| 6 | `@reliverse/mapkit` | - | in-progress | - |
+| 7 | `@reliverse/matcha` | 2025-12-06 18:42:37 | completed | Optimized filter/exclude with compiled regex for multiple patterns, improved createIgnoreFilter by 262%, createIncludeFilter by 206%, filter by 91%, exclude by 136%, filtering chain by 71%, overall average by 10% |
+| 8 | `@reliverse/pathkit` | - | - | - |
+| 9 | `@reliverse/publish` | - | - | - |
+| 10 | `@reliverse/relico` | - | - | - |
+| 11 | `@reliverse/relifso` | - | - | - |
+| 12 | `@reliverse/relinka` | - | - | - |
+| 13 | `@reliverse/rempts` | - | - | - |
+| 14 | `@reliverse/tsconfig` | - | - | - |
+| 15 | `@reliverse/typerso` | - | - | - |
 
 **Metadata Fields:**
 - **Last Improved**: Timestamp (CET timezone) when performance improvements were last completed (format: `YYYY-MM-DD HH:mm:ss`)
 - **Status**: Current optimization status (`pending`, `in-progress`, `completed`, `skipped`)
+  - **`in-progress`**: ⚠️ **CRITICAL**: If a package has status `in-progress`, it means another AI agent is currently working on it. **DO NOT** select or work on packages with this status. Skip them and move to the next available package.
 - **Notes**: Any relevant information about the package or optimization results
 
 **Package Selection Priority:**
+- ⚠️ **IMPORTANT**: **NEVER** select packages with status `in-progress` - another AI agent is currently working on them
 - AI should prioritize packages with the oldest `lastImproved` timestamp (or `-` if never improved)
+- Only consider packages with status `pending`, `completed` (for re-optimization), or `-` (never optimized)
 - If multiple packages have the same timestamp, proceed in numerical order
-- After completing improvements, update the `lastImproved` timestamp using the PowerShell command below
+- After completing improvements, update the `lastImproved` timestamp using the bash command below
 
 ## Workflow
 
@@ -75,10 +79,11 @@ The following packages should be optimized in priority order (packages with olde
 
 1. **Select package to optimize:**
    - Review the "Packages to Optimize" table above
-   - Select the package with the oldest `lastImproved` timestamp (or `-` if never improved)
+   - ⚠️ **CRITICAL CHECK**: **SKIP any package with status `in-progress`** - this indicates another AI agent is currently working on it. Do not proceed with packages in this state.
+   - Select the package with the oldest `lastImproved` timestamp (or `-` if never improved) that has status `pending`, `completed`, or `-`
    - If multiple packages have the same timestamp, use numerical order
    - **Clear the package's `Notes` field** (set to `-`) to start fresh
-   - Update the package's `status` to `in-progress` in the table
+   - Update the package's `status` to `in-progress` in the table to indicate you are now working on it
 
 2. **Identify optimization opportunities:**
    - Review the library code for performance bottlenecks
@@ -124,7 +129,7 @@ The following packages should be optimized in priority order (packages with olde
    - Note which optimizations were most effective
    - Update baseline if improvements are significant
    - **Update package metadata in this document:**
-     - Set `lastImproved` timestamp using PowerShell: `[System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId((Get-Date).ToUniversalTime(), "Central European Standard Time").ToString("yyyy-MM-dd HH:mm:ss")`
+     - Set `lastImproved` timestamp using bash: `dler datetime --now --convert 'Europe/Berlin' --format 'YYYY-MM-DD HH:mm:ss'`
      - Set `status` to `completed`
      - Add any relevant notes about improvements or issues encountered
 
@@ -164,8 +169,8 @@ package/
 After completing optimizations for a package, update the metadata in the "Packages to Optimize" section:
 
 1. **Get the current timestamp in CET:**
-   ```powershell
-   [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId((Get-Date).ToUniversalTime(), "Central European Standard Time").ToString("yyyy-MM-dd HH:mm:ss")
+   ```bash
+   dler datetime --now --convert 'Europe/Berlin' --format 'YYYY-MM-DD HH:mm:ss'
    ```
 
 2. **Update the package row:**
@@ -177,6 +182,16 @@ After completing optimizations for a package, update the metadata in the "Packag
    ```text
    | 0 | `@reliverse/dler` | 2024-01-15 14:30:00 | completed | Improved async operations by 12% |
    ```
+
+## Getting Current Timestamp
+
+To get the current timestamp in CET timezone for updating package metadata:
+
+```bash
+dler datetime --now --convert 'Europe/Berlin' --format 'YYYY-MM-DD HH:mm:ss'
+```
+
+This will output the current date and time in Central European Time (CET/CEST) format suitable for the `lastImproved` field.
 
 ## Regression Handling
 

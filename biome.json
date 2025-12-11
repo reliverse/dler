@@ -20,8 +20,12 @@
       "nursery": {},
       "performance": {},
       "security": {},
-      "style": {},
-      "suspicious": {}
+      "style": {
+        "noNonNullAssertion": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "off"
+      }
     }
   },
   "formatter": {

@@ -42,17 +42,18 @@ logger.success("Hello, Reliverse!"); // > ✓ Hello, Reliverse!
 1. `@reliverse/build`
 2. `@reliverse/bump`
 3. `@reliverse/config`
-4. `@reliverse/helpers`
-5. `@reliverse/mapkit`
-6. `@reliverse/matcha`
-7. `@reliverse/pathkit`
-8. `@reliverse/publish`
-9. `@reliverse/relico`
-10. `@reliverse/relifso`
-11. `@reliverse/relinka`
-12. `@reliverse/rempts`
-13. `@reliverse/tsconfig`
-14. `@reliverse/typerso`
+4. `@reliverse/datetime`
+5. `@reliverse/helpers`
+6. `@reliverse/mapkit`
+7. `@reliverse/matcha`
+8. `@reliverse/pathkit`
+9. `@reliverse/publish`
+10. `@reliverse/relico`
+11. `@reliverse/relifso`
+12. `@reliverse/relinka`
+13. `@reliverse/rempts`
+14. `@reliverse/tsconfig`
+15. `@reliverse/typerso`
 
 ## Available CLI Commands
 
@@ -60,15 +61,12 @@ All `@reliverse/dler` v2+ commands support both monorepo (recommended) and singl
 
 1. `dler build` can build packages as libraries, frontends (experimental), or standalone apps (experimental; already includes Bun, so the user doesn't even need to install it). Handles not only building, but also package.json modification, and other build-related tasks. Supports dler.ts configuration for per-package settings.
 2. `dler clean` nicely cleans up the codebase, with presets and with support for custom paths.
-3. `dler init` automatically generates a monorepo and the requested packages.
-4. `dler integrate` automatically installs and configures integrations like Next.js, Ultracite/Biome, etc.
-5. `dler perf` runs performance benchmarks for the requested target.
-6. `dler publish` publishes all packages to npm and jsr (soon). Handles version bumping, and different validations. Supports dler.ts configuration for per-package settings.
-7. `dler senv` helps you manage system environment variables easily. Example: `dler senv --action append --name Path --value C:\Users\your-user-name\.local\bin` (on Windows it automates the following steps: System Properties →
+3. `dler publish` publishes all packages to npm and jsr (soon). Handles version bumping, and different validations. Supports dler.ts configuration for per-package settings.
+4. `dler senv` helps you manage system environment variables easily. Example: `dler senv --action append --name Path --value C:\Users\your-user-name\.local\bin` (on Windows it automates the following steps: System Properties →
   Environment Variables → Edit User PATH → New → Add the path). The command is especially useful for Windows users, when you have too many vars so OS will not allow you to add more.
-8. `dler shell` uses Bun's `$`, making it handy for running cross-platform custom terminal commands.
-9. `dler tsc` finds TypeScript errors across all monorepo packages and shows only real ones (unlike the native `tsc`, which sometimes shows errors of its dependencies). It also has a `--copy-logs` flag that copies errors/warnings straight to your clipboard (with an inserted prompt for fixing them), so you can just hit Ctrl/Cmd+V and send it to AI.
-10. `dler update` updates the dependencies of all packages to the latest version (yes, even across the monorepo).
+5. `dler tsc` finds TypeScript errors across all monorepo packages and shows only real ones (unlike the native `tsc`, which sometimes shows errors of its dependencies). It also has a `--copy-logs` flag that copies errors/warnings straight to your clipboard (with an inserted prompt for fixing them), so you can just hit Ctrl/Cmd+V and send it to AI.
+6. `dler biome` runs biome check on all packages, provides compact biome's output, copies errors/warnings to clipboard (with an inserted prompt for fixing them).
+7. `dler update` updates the dependencies of all packages to the latest version (yes, even across the monorepo).
 
 ## v2 Docs
 

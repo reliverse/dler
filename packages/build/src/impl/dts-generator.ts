@@ -15,6 +15,7 @@ import type {
   CompilationOptions,
   EntryPointConfig,
 } from "dts-bundle-generator";
+import type { TSConfig } from "pkg-types";
 import { getDeclarations, type MkdistDtsOptions } from "./providers/mkdist-dts";
 import type { PackageInfo } from "./types";
 
@@ -178,10 +179,10 @@ function resolveDtsOutputDir(
  * Based on Rslib's approach
  */
 function enforceDeclarationOptions(
-  tsconfig: any,
+  tsconfig: TSConfig,
   dtsOptions: DtsOptions,
   format: string,
-): any {
+): TSConfig {
   const enforced = {
     ...tsconfig,
     compilerOptions: {
@@ -225,7 +226,7 @@ async function generateBundlelessDeclarations(
   pkg: PackageInfo,
   _dtsOptions: DtsOptions,
   outputDir: string,
-  tsconfig: any,
+  tsconfig: TSConfig,
 ): Promise<DtsGeneratorResult> {
   try {
     // Use TypeScript Compiler API
@@ -285,11 +286,11 @@ async function generateBundledDeclarations(
   pkg: PackageInfo,
   dtsOptions: DtsOptions,
   outputDir: string,
-  tsconfig: any,
+  tsconfig: TSConfig,
 ): Promise<DtsGeneratorResult> {
   try {
     // Check if API Extractor is available
-    let apiExtractor;
+    let apiExtractor: typeof import("@microsoft/api-extractor");
     try {
       apiExtractor = await import("@microsoft/api-extractor");
     } catch {
@@ -413,11 +414,11 @@ async function generateWithDtsBundleGenerator(
   pkg: PackageInfo,
   dtsOptions: DtsOptions,
   outputDir: string,
-  _tsconfig: any,
+  _tsconfig: TSConfig,
 ): Promise<DtsGeneratorResult> {
   try {
     // Check if dts-bundle-generator is available
-    let dtsBundleGenerator;
+    let dtsBundleGenerator: typeof import("dts-bundle-generator");
     try {
       dtsBundleGenerator = await import("dts-bundle-generator");
     } catch {
@@ -530,7 +531,7 @@ async function generateWithMkdist(
   pkg: PackageInfo,
   dtsOptions: DtsOptions,
   outputDir: string,
-  _tsconfig: any,
+  _tsconfig: TSConfig,
 ): Promise<DtsGeneratorResult> {
   try {
     // Ensure output directory exists
@@ -750,7 +751,9 @@ export async function generateWithTsgo(
       "⚠️  tsgo support is experimental and not yet implemented, falling back to TypeScript Compiler API",
     );
 
-    return await generateBundlelessDeclarations(pkg, dtsOptions, outputDir, {});
+    return await generateBundlelessDeclarations(pkg, dtsOptions, outputDir, {
+      compilerOptions: {},
+    });
   } catch (error) {
     return {
       success: false,

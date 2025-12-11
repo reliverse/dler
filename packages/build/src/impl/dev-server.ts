@@ -1,9 +1,16 @@
 // packages/build/src/impl/dev-server.ts
 
+import type { FSWatcher } from "node:fs";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
 import { relinka } from "@reliverse/relinka";
+import {
+  DEFAULT_DEBOUNCE_MS,
+  DEFAULT_DEV_SERVER_HOST,
+  DEFAULT_DEV_SERVER_PORT,
+} from "./constants";
 import type { BuildOptions, DevServerOptions, PackageInfo } from "./types";
+import { RebuildQueueProcessor } from "./utils/rebuild-queue";
 
 interface DevServerConfig {
   port: number;
@@ -13,13 +20,11 @@ interface DevServerConfig {
 }
 
 export class DevServer {
-  private server: any = null;
+  private server: ReturnType<typeof Bun.serve> | null = null;
   private config: DevServerConfig;
   private packages: PackageInfo[];
-  private options: BuildOptions;
-  private watchers: Map<string, any> = new Map();
-  private rebuildQueue: Set<string> = new Set();
-  private rebuildTimeout: NodeJS.Timeout | null = null;
+  private watchers: Map<string, FSWatcher> = new Map();
+  private rebuildQueue: RebuildQueueProcessor;
 
   constructor(
     packages: PackageInfo[],
@@ -27,13 +32,25 @@ export class DevServer {
     devServerOptions?: DevServerOptions,
   ) {
     this.packages = packages;
-    this.options = options;
     this.config = {
-      port: devServerOptions?.port ?? 3000,
-      host: devServerOptions?.host ?? "localhost",
+      port: devServerOptions?.port ?? DEFAULT_DEV_SERVER_PORT,
+      host: devServerOptions?.host ?? DEFAULT_DEV_SERVER_HOST,
       hmr: devServerOptions?.hmr ?? true,
       publicDir: options.publicAssets ?? "public",
     };
+    this.rebuildQueue = new RebuildQueueProcessor(packages, {
+      debounceMs: DEFAULT_DEBOUNCE_MS,
+      buildOptions: { ...options },
+      onRebuildComplete: (result) => {
+        if (result.success) {
+          this.notifyClients("reload");
+        } else {
+          this.notifyClients("error", {
+            message: `Build failed: ${result.errors.join(", ")}`,
+          });
+        }
+      },
+    });
   }
 
   async start(): Promise<void> {
@@ -352,7 +369,9 @@ export class DevServer {
       });
 
       watcher.on("error", (error) => {
-        void relinka.warn(`File watcher error for ${filePath}: ${error.message}`);
+        void relinka.warn(
+          `File watcher error for ${filePath}: ${error.message}`,
+        );
         this.watchers.delete(filePath);
       });
 
@@ -382,7 +401,9 @@ export class DevServer {
       );
 
       watcher.on("error", (error) => {
-        void relinka.warn(`Directory watcher error for ${dirPath}: ${error.message}`);
+        void relinka.warn(
+          `Directory watcher error for ${dirPath}: ${error.message}`,
+        );
         this.watchers.delete(dirPath);
       });
 
@@ -398,54 +419,12 @@ export class DevServer {
 
     // Add package to rebuild queue
     this.rebuildQueue.add(pkg.name);
-
-    // Debounce rebuilds
-    if (this.rebuildTimeout) {
-      clearTimeout(this.rebuildTimeout);
-    }
-
-    this.rebuildTimeout = setTimeout(() => {
-      this.processRebuildQueue();
-    }, 300);
   }
 
-  private async processRebuildQueue(): Promise<void> {
-    if (this.rebuildQueue.size === 0) return;
-
-    const packagesToRebuild = Array.from(this.rebuildQueue)
-      .map((name) => this.packages.find((pkg) => pkg.name === name))
-      .filter(Boolean) as PackageInfo[];
-
-    this.rebuildQueue.clear();
-
-    await relinka.info(`🔄 Rebuilding ${packagesToRebuild.length} packages...`);
-
-    for (const pkg of packagesToRebuild) {
-      try {
-        // Import buildPackage dynamically to avoid circular dependency
-        const { buildPackage } = await import("../mod");
-        const result = await buildPackage(pkg, this.options);
-
-        if (result.success) {
-          await relinka.success(`✅ ${pkg.name}: Rebuilt successfully`);
-          this.notifyClients("reload");
-        } else {
-          await relinka.error(`❌ ${pkg.name}: Rebuild failed`);
-          for (const error of result.errors) {
-            await relinka.error(`   ${error}`);
-          }
-          this.notifyClients("error", {
-            message: `Build failed: ${result.errors.join(", ")}`,
-          });
-        }
-      } catch (error) {
-        await relinka.error(`❌ ${pkg.name}: Rebuild error - ${error}`);
-        this.notifyClients("error", { message: `Build error: ${error}` });
-      }
-    }
-  }
-
-  private handleHMRMessage(ws: any, message: any): void {
+  private handleHMRMessage(
+    ws: { send: (data: string) => void },
+    message: string | Buffer,
+  ): void {
     try {
       const data = JSON.parse(message.toString());
 
@@ -462,7 +441,7 @@ export class DevServer {
     }
   }
 
-  private notifyClients(type: string, data?: any): void {
+  private notifyClients(type: string, data?: Record<string, unknown>): void {
     if (this.server?.publish) {
       const message = JSON.stringify({ type, data, timestamp: Date.now() });
       this.server.publish("hmr", message);

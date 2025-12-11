@@ -18,6 +18,9 @@
     "package.json"
   ],
   "license": "MIT",
+  "scripts": {
+    "perf": "bun bench/perf.ts"
+  },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
     "typescript": "catalog:",

@@ -20,6 +20,7 @@
         "@reliverse/build": "workspace:*",
         "@reliverse/bump": "workspace:*",
         "@reliverse/config": "workspace:*",
+        "@reliverse/datetime": "workspace:*",
         "@reliverse/helpers": "workspace:*",
         "@reliverse/mapkit": "workspace:*",
         "@reliverse/matcha": "workspace:*",
@@ -134,6 +135,15 @@
         "@reliverse/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "@types/semver": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
+    "packages/datetime": {
+      "name": "@reliverse/datetime",
+      "version": "2.2.6",
+      "devDependencies": {
+        "@reliverse/tsconfig": "workspace:*",
+        "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
@@ -286,7 +296,7 @@
     },
   },
   "catalog": {
-    "@ai-sdk/openai": "^2.0.77",
+    "@ai-sdk/openai": "^2.0.79",
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
     "@biomejs/biome": "^2.3.8",
@@ -320,7 +330,7 @@
     "@types/semver": "^7.7.1",
     "@types/shebang-command": "^1.2.2",
     "@types/tar-stream": "^3.1.4",
-    "@typescript/native-preview": "^7.0.0-dev.20251206.1",
+    "@typescript/native-preview": "^7.0.0-dev.20251207.1",
     "@uploadcare/upload-client": "^6.18.2",
     "@vercel/sdk": "^1.18.1",
     "@volar/typescript": "^2.4.26",
@@ -513,6 +523,8 @@
     "@reliverse/cli-app-example": ["@reliverse/cli-app-example@workspace:examples/cli-app"],
 
     "@reliverse/config": ["@reliverse/config@workspace:packages/config"],
+
+    "@reliverse/datetime": ["@reliverse/datetime@workspace:packages/datetime"],
 
     "@reliverse/dler": ["@reliverse/dler@workspace:cli"],
 

@@ -103,7 +103,20 @@ export const filter = (
   patterns: string[],
   inputs: string[],
   options: MatchOptions = {},
-): string[] => inputs.filter((input) => matchAny(patterns, input, options));
+): string[] => {
+  // Optimize: use compiled regex for multiple patterns to avoid repeated function calls
+  if (patterns.length > 1) {
+    const regex = compileAny(patterns, options);
+    return inputs.filter((input) => regex.test(input));
+  }
+  // Fast path: single pattern
+  if (patterns.length === 1) {
+    const pattern = patterns[0];
+    if (pattern === undefined) return [];
+    return inputs.filter((input) => zeptomatch(pattern, input, options));
+  }
+  return [];
+};
 
 /**
  * Filter an array of strings, excluding those that match glob patterns
@@ -116,7 +129,20 @@ export const exclude = (
   patterns: string[],
   inputs: string[],
   options: MatchOptions = {},
-): string[] => inputs.filter((input) => !matchAny(patterns, input, options));
+): string[] => {
+  // Optimize: use compiled regex for multiple patterns to avoid repeated function calls
+  if (patterns.length > 1) {
+    const regex = compileAny(patterns, options);
+    return inputs.filter((input) => !regex.test(input));
+  }
+  // Fast path: single pattern
+  if (patterns.length === 1) {
+    const pattern = patterns[0];
+    if (pattern === undefined) return inputs;
+    return inputs.filter((input) => !zeptomatch(pattern, input, options));
+  }
+  return inputs;
+};
 
 // ============================================================================
 // Compilation Functions
@@ -169,13 +195,23 @@ export const createIgnoreFilter = (
   options: MatcherOptions = {},
 ) => {
   const patterns = normalizePatterns(ignorePatterns);
-  const matchers = createMatchers(patterns, options);
-
-  return <T extends { name: string }>(items: T[]): T[] =>
-    items.filter((item) => {
-      const shouldIgnore = matchers.some((matcher) => matcher(item.name));
-      return !shouldIgnore;
-    });
+  // Optimize: use compiled regex for multiple patterns
+  if (patterns.length > 1) {
+    const regex = compileAny(patterns, options);
+    return <T extends { name: string }>(items: T[]): T[] =>
+      items.filter((item) => !regex.test(item.name));
+  }
+  // Fast path: single pattern
+  if (patterns.length === 1) {
+    const pattern = patterns[0];
+    if (pattern === undefined) {
+      return <T extends { name: string }>(items: T[]): T[] => items;
+    }
+    return <T extends { name: string }>(items: T[]): T[] =>
+      items.filter((item) => !zeptomatch(pattern, item.name, options));
+  }
+  // No patterns: return all items
+  return <T extends { name: string }>(items: T[]): T[] => items;
 };
 
 /**
@@ -189,10 +225,23 @@ export const createIncludeFilter = (
   options: MatcherOptions = {},
 ) => {
   const patterns = normalizePatterns(includePatterns);
-  const matchers = createMatchers(patterns, options);
-
-  return <T extends { name: string }>(items: T[]): T[] =>
-    items.filter((item) => matchers.some((matcher) => matcher(item.name)));
+  // Optimize: use compiled regex for multiple patterns
+  if (patterns.length > 1) {
+    const regex = compileAny(patterns, options);
+    return <T extends { name: string }>(items: T[]): T[] =>
+      items.filter((item) => regex.test(item.name));
+  }
+  // Fast path: single pattern
+  if (patterns.length === 1) {
+    const pattern = patterns[0];
+    if (pattern === undefined) {
+      return <T extends { name: string }>(_items: T[]): T[] => [];
+    }
+    return <T extends { name: string }>(items: T[]): T[] =>
+      items.filter((item) => zeptomatch(pattern, item.name, options));
+  }
+  // No patterns: return empty array
+  return <T extends { name: string }>(_items: T[]): T[] => [];
 };
 
 // ============================================================================
