@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/relico",
-  "version": "2.2.6",
+  "version": "2.2.7",
   "private": false,
   "type": "module",
   "description": "@reliverse/relico is a themeable, chainable, typed, truecolor-powered, modern terminal styling toolkit. Designed to make your CLI output colorful, accessible, and human-friendly. It gives you a flexible way to apply colors and styles — with reliability and a smart developer experience baked in. Built for humans, not just terminals.",

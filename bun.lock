@@ -7,12 +7,12 @@
       "devDependencies": {
         "@biomejs/biome": "^2.3.10",
         "@types/bun": "^1.3.5",
-        "ultracite": "^6.4.3",
+        "ultracite": "^6.5.0",
       },
     },
     "cli": {
       "name": "@reliverse/dler",
-      "version": "2.2.6",
+      "version": "2.2.8",
       "bin": {
         "dler": "dist/cli.js",
       },
@@ -427,7 +427,7 @@
     "tinyglobby": "^0.2.15",
     "ts-morph": "^27.0.2",
     "typescript": "^5.9.3",
-    "ultracite": "^6.4.3",
+    "ultracite": "^6.5.0",
     "uncrypto": "^0.1.3",
     "untyped": "^2.0.0",
     "uploadthing": "^7.7.4",
@@ -975,7 +975,7 @@
 
     "ufo": ["ufo@1.6.1", "", {}, "sha512-9a4/uxlTWJ4+a5i0ooc1rU7C7YOw3wT+UGqdeNNHWnOF9qcMBgLRS+4IYUqbczewFx4mLEig6gawh7X6mFlEkA=="],
 
-    "ultracite": ["ultracite@6.4.3", "", { "dependencies": { "@clack/prompts": "^0.11.0", "@trpc/server": "^11.8.0", "deepmerge": "^4.3.1", "glob": "^13.0.0", "jsonc-parser": "^3.3.1", "nypm": "^0.6.2", "picocolors": "^1.1.1", "trpc-cli": "^0.12.1", "zod": "^4.1.13" }, "bin": { "ultracite": "dist/index.js" } }, "sha512-rBhb6noQRuybBgGmI8J4fQBQZ/oQYe4khWrjbU3mxcAPTpBXWH2A4Uz1m/nq+GFa7/LBGDfXHAu43AW2tid00A=="],
+    "ultracite": ["ultracite@6.5.0", "", { "dependencies": { "@clack/prompts": "^0.11.0", "@trpc/server": "^11.8.0", "deepmerge": "^4.3.1", "glob": "^13.0.0", "jsonc-parser": "^3.3.1", "nypm": "^0.6.2", "picocolors": "^1.1.1", "trpc-cli": "^0.12.1", "zod": "^4.1.13" }, "bin": { "ultracite": "dist/index.js" } }, "sha512-HrXvM0CX/S3t5HEoepWQ6kpMVD9mzNB5X0k/T7zvNObQ6X9+s1pAE4efDR3Nc4KwqDiemK/bwI7pgPApT7Fktw=="],
 
     "undici-types": ["undici-types@7.16.0", "", {}, "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw=="],
 

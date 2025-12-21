@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/mapkit",
-  "version": "2.2.6",
+  "version": "2.2.7",
   "private": false,
   "type": "module",
   "exports": {
@@ -18,12 +18,12 @@
     "package.json"
   ],
   "license": "MIT",
-  "scripts": {
-    "perf": "bun bench/perf.ts"
-  },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
     "typescript": "catalog:",
     "@types/bun": "catalog:"
+  },
+  "scripts": {
+    "perf": "bun bench/perf.ts"
   }
 }

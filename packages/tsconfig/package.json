@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/tsconfig",
-  "version": "2.2.6",
+  "version": "2.2.7",
   "private": false,
   "type": "module",
   "author": "reliverse",
@@ -10,7 +10,7 @@
     "./strict.json": "./src/strict.json"
   },
   "files": [
-    "src",
+    "dist",
     "package.json"
   ],
   "license": "MIT",
