@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/matcha",
-  "version": "2.2.7",
+  "version": "2.2.8",
   "private": false,
   "type": "module",
   "description": "@reliverse/matcha is a high-performance minimal matcher, with micromatch-level power, zepto-level size, and reliverse-grade dx.",

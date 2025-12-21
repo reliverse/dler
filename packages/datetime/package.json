@@ -2,7 +2,7 @@
   "name": "@reliverse/datetime",
   "description": "DateTime manipulation and formatting utilities for Reliverse ecosystem",
   "author": "reliverse",
-  "version": "2.2.7",
+  "version": "2.2.8",
   "private": false,
   "type": "module",
   "main": "./src/mod.ts",

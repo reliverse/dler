@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/typerso",
-  "version": "2.2.7",
+  "version": "2.2.8",
   "private": false,
   "type": "module",
   "description": "@reliverse/typerso is a collection of utils to work with package.json and tsconfig.json files.",
