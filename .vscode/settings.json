@@ -11,5 +11,6 @@
     "MD022": false,
     "MD033": false,
     "MD041": false
-  }
+  },
+  "files.autoSave": "afterDelay"
 }
