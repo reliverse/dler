@@ -1,5 +1,7 @@
 import * as fs from "node:fs/promises";
-import type { PlatformPath } from "node:path";
+import type { posix } from "node:path";
+
+type PlatformPath = typeof posix;
 
 import {
   type GetFileImportsExportsOptions,
