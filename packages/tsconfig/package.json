@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@reliverse/tsconfig",
   "version": "2.2.9",
   "private": false,
@@ -6,15 +7,10 @@
   "author": "reliverse",
   "description": "Shared TypeScript configuration for Reliverse packages",
   "exports": {
-    "./base.json": "./src/base.json",
-    "./base.json": "./src/base.json"
+    "./base.json": "./base.json",
+    "./internal.json": "./internal.json"
   },
   "files": [
-    "dist",
-    "package.json"
-  ],
-  "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  }
+    "*.json"
+  ]
 }

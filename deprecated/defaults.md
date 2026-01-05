@@ -181,6 +181,39 @@ The `dler.ts` config file is optional and can be used to override the defaults. 
 | `native-app` | none |
 | `cli` | npm, none |
 
+## Environment Variables (.env) Support
+
+The publish command automatically loads environment variables from `.env` files:
+
+1. **Monorepo root** (if detected): `.env` and `.env.local`
+2. **Current working directory**: `.env` and `.env.local`
+
+### Supported Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `NPM_CONFIG_TOKEN` or `NPM_TOKEN` | npm authentication token | Yes (for publishing) |
+| `NPM_CONFIG_OTP` | One-time password for 2FA | Only if 2FA enabled |
+| `NPM_CONFIG_REGISTRY` | Custom npm registry URL | Optional |
+| `CI` | Set to `true` for CI environments | Optional |
+| `DEBUG` | Enable debug logging | Optional |
+| `TMPDIR` | Custom temporary directory | Optional |
+
+### Example .env file
+
+```bash
+# Get your token from: https://www.npmjs.com/ → Account → Access Tokens → Generate New Token
+NPM_CONFIG_TOKEN=your_npm_token_here
+
+# Only needed if your npm account has 2FA enabled
+NPM_CONFIG_OTP=your_otp_here
+
+# Optional configurations
+CI=false
+DEBUG=false
+TMPDIR=/tmp
+```
+
 ## Entry Point Detection Defaults
 
 The build command automatically detects entry points in the following order:

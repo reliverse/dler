@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/publish",
-  "version": "2.2.8",
+  "version": "2.2.9",
   "private": false,
   "type": "module",
   "exports": {
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "c12": "catalog:",
+    "dotenv": "catalog:",
     "@reliverse/typerso": "workspace:*",
     "@reliverse/config": "workspace:*",
     "@reliverse/relinka": "workspace:*",

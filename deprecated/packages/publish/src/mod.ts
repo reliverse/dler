@@ -17,6 +17,7 @@ import {
 import { re } from "@reliverse/relico";
 import { logger } from "@reliverse/relinka";
 import { readPackageJSON, writePackageJSON } from "@reliverse/typerso";
+import { config } from "dotenv";
 
 // ============================================================================
 // Constants
@@ -241,7 +242,7 @@ async function runBunPublishCommand(
         );
       }
       throw new Error(
-        "2FA authentication required. The publish command cannot read OTP input when output is captured. Please either:\n  1. Set NPM_CONFIG_TOKEN environment variable with your npm token (note: .env files are not automatically loaded - export it in your shell or use a tool like dotenv-cli), or\n  2. Use --with-npm-logs flag to allow interactive OTP input.",
+        "2FA authentication required. The publish command cannot read OTP input when output is captured. Please either:\n  1. Set NPM_CONFIG_TOKEN environment variable with your npm token (.env files are automatically loaded), or\n  2. Use --with-npm-logs flag to allow interactive OTP input.",
       );
     }
 
@@ -1297,7 +1298,7 @@ export async function publishPackage(
               );
             }
             throw new Error(
-              "2FA authentication required. The publish command cannot read OTP input when output is captured. Please either:\n  1. Set NPM_CONFIG_TOKEN environment variable with your npm token (note: .env files are not automatically loaded - export it in your shell or use a tool like dotenv-cli), or\n  2. Use --with-npm-logs flag to allow interactive OTP input.",
+              "2FA authentication required. The publish command cannot read OTP input when output is captured. Please either:\n  1. Set NPM_CONFIG_TOKEN environment variable with your npm token (.env files are automatically loaded), or\n  2. Use --with-npm-logs flag to allow interactive OTP input.",
             );
           }
           throw new Error(
@@ -1472,6 +1473,18 @@ export async function publishAllPackages(
   options: PublishOptions = {},
 ): Promise<PublishAllResult> {
   try {
+    // Load .env files from monorepo root and current working directory
+    const monorepoRoot = cwd
+      ? resolve(cwd)
+      : await findMonorepoRoot(process.cwd());
+    if (monorepoRoot) {
+      config({ path: resolve(monorepoRoot, ".env") });
+      config({ path: resolve(monorepoRoot, ".env.local") });
+    }
+    // Also load from current working directory
+    config({ path: resolve(process.cwd(), ".env") });
+    config({ path: resolve(process.cwd(), ".env.local") });
+
     if (options.verbose) {
       logger.debug(`Starting publishAllPackages, cwd: ${cwd ?? "current"}`);
       if (options.filter) {

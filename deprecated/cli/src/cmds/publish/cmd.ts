@@ -14,7 +14,7 @@ export default defineCommand({
   meta: {
     name: "publish",
     description:
-      "Publish packages to npm, JSR, Vercel, or multiple registries. Supports version bumping, dist-tags, access control, and concurrent publishing. Works with dler.ts configuration for per-package settings.",
+      "Publish packages to npm, JSR, Vercel, or multiple registries. Supports version bumping, dist-tags, access control, and concurrent publishing. Automatically loads .env files for authentication. Works with dler.ts configuration for per-package settings.",
     examples: [
       "dler publish",
       'dler publish --filter "@reliverse/rempts,@reliverse/build"',
@@ -60,6 +60,12 @@ export default defineCommand({
       "#     patterns: [{ pattern: '*example*', config: { dryRun: true, registry: 'vercel', kind: 'browser-app' } }]",
       "#   }",
       "# }",
+      "",
+      "# Environment Variables (.env support):",
+      "# The publish command automatically loads .env files from monorepo root and cwd:",
+      "# - NPM_CONFIG_TOKEN or NPM_TOKEN: npm authentication token",
+      "# - NPM_CONFIG_OTP: One-time password for 2FA",
+      "# Create .env file: cp .env.example .env && edit .env",
       "",
       "# Note: Make sure to run 'dler build' first to:",
       "# - Generate dist folders and declaration files",

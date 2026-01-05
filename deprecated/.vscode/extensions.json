@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    "typescriptteam.native-preview",
+    "biomejs.biome",
+    "aaron-bond.better-comments",
+    "chunsen.bracket-select",
+    "davidanson.vscode-markdownlint",
+    "fabiospampinato.vscode-open-multiple-files",
+    "oven.bun-vscode",
+    "usernamehw.errorlens",
+    "usernamehw.remove-empty-lines",
+    "yoavbls.pretty-ts-errors",
+    "yzhang.markdown-all-in-one"
+  ]
+}

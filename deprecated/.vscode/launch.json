@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "bun",
+      "request": "launch",
+      "name": "Debug dler",
+      "program": "${workspaceFolder}/src/mod.ts",
+      "args": ["--dev"],
+      "cwd": "${workspaceFolder}",
+      "env": {},
+      "strictEnv": false,
+      "stopOnEntry": false,
+      "noDebug": false,
+      "runtime": "bun",
+      "runtimeArgs": []
+    }
+  ]
+}

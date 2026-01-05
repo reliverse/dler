@@ -1,0 +1,10 @@
+{
+  "name": "dler",
+  "private": true,
+  "type": "module",
+  "scripts": {},
+  "devDependencies": {
+    "@types/bun": "catalog:core",
+    "tsdown": "catalog:build"
+  }
+}

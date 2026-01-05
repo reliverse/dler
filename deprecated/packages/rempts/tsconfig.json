@@ -1,9 +1,16 @@
 {
-  "extends": "@reliverse/tsconfig/strict.json",
+  "extends": "@reliverse/tsconfig/base.json",
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "./dist"
   },
-  "include": ["src/**/*", "test.ts", "test-simple.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src/**/*",
+    "test.ts",
+    "test-simple.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

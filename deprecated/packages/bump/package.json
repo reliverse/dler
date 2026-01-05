@@ -2,7 +2,7 @@
   "name": "@reliverse/bump",
   "description": "Bump utils for Reliverse ecosystem",
   "author": "reliverse",
-  "version": "2.2.9",
+  "version": "2.2.10",
   "private": false,
   "type": "module",
   "exports": {
