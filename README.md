@@ -165,4 +165,4 @@ bun --filter <package-name> <script>
 
 ## License
 
-Licensed under [MIT](LICENSE) © 2025 [Nazar Kornienko (blefnk)](https://github.com/blefnk), [Bleverse](https://bleverse.com), [Reliverse](https://github.com/reliverse)
+Licensed under [MIT](LICENSE) © 2026 [Nazar Kornienko (blefnk)](https://github.com/blefnk), [Bleverse](https://bleverse.com), [Reliverse](https://github.com/reliverse)

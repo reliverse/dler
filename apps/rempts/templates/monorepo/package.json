@@ -1,0 +1,30 @@
+{
+  "name": "{{name}}",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "{{description}}",
+  "author": "{{author}}",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "postinstall": "bun dler generate",
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "turbo run build && changeset publish"
+  },
+  "devDependencies": {
+    "@reliverse/tsconfig": "workspace:*",
+    "@changesets/cli": "^2.27.0",
+    "@types/bun": "latest",
+    "turbo": "latest",
+    "typescript": "^5.0.0"
+  }
+}

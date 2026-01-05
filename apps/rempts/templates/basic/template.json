@@ -1,0 +1,31 @@
+{
+  "name": "rempts-basic",
+  "description": "Basic Rempts CLI template",
+  "variables": [
+    {
+      "name": "projectName",
+      "message": "Project name",
+      "type": "string",
+      "default": "my-rempts-cli"
+    },
+    {
+      "name": "description",
+      "message": "Project description",
+      "type": "string",
+      "default": "A CLI built with Rempts"
+    },
+    {
+      "name": "author",
+      "message": "Author name",
+      "type": "string",
+      "default": ""
+    }
+  ],
+  "files": {
+    "exclude": [
+      "node_modules/**",
+      ".git/**",
+      "template.json"
+    ]
+  }
+}

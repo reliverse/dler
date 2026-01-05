@@ -1,0 +1,26 @@
+{
+  "extends": "@reliverse/tsconfig/base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./",
+    "baseUrl": "./",
+    "allowImportingTsExtensions": false,
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "./.dler/commands.gen": [
+        "./.dler/commands.gen.ts"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".dler/commands.gen.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

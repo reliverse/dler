@@ -1,0 +1,79 @@
+{
+  "name": "@reliverse/dler",
+  "version": "2.3.0",
+  "type": "module",
+  "description": "@reliverse/dler is a framework which helps TypeScript and JavaScript developers create their libraries and CLI tools. It provides ready-to-use primitives, so you don't have to write them from scratch.",
+  "bin": {
+    "dler": "./dist/cli.js"
+  },
+  "module": "./dist/mod.js",
+  "types": "./dist/mod.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/mod.js",
+      "types": "./dist/mod.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "author": "blefnk",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reliverse/rempts.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/reliverse/rempts/issues"
+  },
+  "homepage": "https://github.com/reliverse/rempts#readme",
+  "keywords": [
+    "rempts",
+    "cli",
+    "toolchain",
+    "bun",
+    "typescript",
+    "build-tool",
+    "development"
+  ],
+  "scripts": {
+    "dev": "bun run src/cli.ts",
+    "build": "bun run scripts/build.ts && bun run tsc",
+    "build:standalone": "bun run scripts/build.ts --compile",
+    "build:binaries": "bun run scripts/release-binaries.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "bun run build"
+  },
+  "dependencies": {
+    "@reliverse/rempts-core": "workspace:*",
+    "@reliverse/rempts-generator": "workspace:*",
+    "@reliverse/rempts-utils": "workspace:*",
+    "@reliverse/relico": "workspace:*",
+    "@reliverse/datetime": "workspace:*",
+    "@reliverse/config": "workspace:*",
+    "@reliverse/publish": "workspace:*",
+    "@reliverse/bump": "workspace:*",
+    "@reliverse/build": "workspace:*",
+    "@reliverse/relinka": "workspace:*",
+    "@reliverse/matcha": "workspace:*",
+    "@reliverse/rempts": "workspace:*",
+    "@reliverse/helpers": "workspace:*",
+    "@reliverse/typerso": "workspace:*",
+    "@reliverse/relifso": "workspace:*",
+    "@reliverse/mapkit": "workspace:*",
+    "@reliverse/pathkit": "workspace:*",
+    "c12": "catalog:",
+    "semver": "catalog:",
+    "lookpath": "catalog:",
+    "clipboardy": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@reliverse/tsconfig": "workspace:*",
+    "@types/semver": "catalog:",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}

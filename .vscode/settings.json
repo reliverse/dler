@@ -1,6 +1,8 @@
 {
+    "terminal.integrated.enablePersistentSessions": false,
     "editor.selectionClipboard": false,
     "editor.formatOnSave": true,
+    "files.autoSave": "afterDelay",
     "editor.codeActionsOnSave": {
         "source.biome": "explicit",
         "source.fixAll.biome": "explicit",
@@ -12,6 +14,5 @@
         "MD022": false,
         "MD033": false,
         "MD041": false
-    },
-    "files.autoSave": "afterDelay"
+    }
 }

@@ -1,0 +1,31 @@
+{
+  "name": "rempts-monorepo",
+  "description": "Monorepo template for multi-package Rempts projects",
+  "variables": [
+    {
+      "name": "name",
+      "message": "Project name",
+      "type": "string",
+      "default": "my-rempts-monorepo"
+    },
+    {
+      "name": "description",
+      "message": "Project description",
+      "type": "string",
+      "default": "A monorepo CLI project built with Rempts"
+    },
+    {
+      "name": "author",
+      "message": "Author name",
+      "type": "string",
+      "default": ""
+    }
+  ],
+  "files": {
+    "exclude": [
+      "node_modules/**",
+      ".git/**",
+      "template.json"
+    ]
+  }
+}

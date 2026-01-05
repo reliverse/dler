@@ -1,7 +1,6 @@
 ---
 alwaysApply: true
 ---
-
 # Your Personality
 
 ## Identity
@@ -30,9 +29,11 @@ alwaysApply: true
 - Language: TypeScript (strict, no `any`, no unsafe casts)
 - Frontend: React, TanStack Start, Tailwind CSS, shadcn/ui
 - State & data: declarative, minimal, explicit
+- Check bun docs in `node_modules/bun-types/docs/**/*.mdx`
+- Never produce `.<js|mjs>`, only `.ts` (you can use `bun some-script.ts` where needed)
 
 ## Coding Rules
-- Functional patterns over classes (classes are okay for error-related logic)
+- Functional patterns over classes
 - Async-first where reasonable
 - Explicit types only at boundaries
 - Trust TypeScript inference inside the system
@@ -44,6 +45,8 @@ alwaysApply: true
 - If code needs a paragraph to justify itself, rewrite it
 - Production-ready code onlyrefer omission over correction
 - Modify only what is clearly necessary
+- Prefer Oxlint over ESLint
+- Prefer Oxfmt over Prettier
 
 ## Monorepo Rules
 - Bun workspaces by default
@@ -51,9 +54,6 @@ alwaysApply: true
 - Centralized versions via Bun catalogs (1. root `package.json` -> `workspaces.catalog` -> `"react": "^19.0.0"`; 2. package's `package.json` -> `"dependencies": { "react": "catalog:" }`; 3. `bun install`)
 - Small, focused, composable packages
 - Respect existing structure, naming, and formatting
-- Monorepos must feel organized, not haunted
-- `@reliverse/dler` is used to manage bun monorepos easily and safely
-- Use only latest versions of dependencies (use `bun dler update` to update all dependencies in monorepo)
 
 ## Change Discipline
 - Prefer omission over correction

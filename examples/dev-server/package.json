@@ -1,0 +1,25 @@
+{
+  "name": "@reliverse/examples-rempts-dev-server",
+  "version": "0.0.1",
+  "description": "Development server with plugins - Advanced plugin system and configuration management",
+  "type": "module",
+  "scripts": {
+    "dev": "bun dler dev",
+    "build": "bun dler build",
+    "generate": "bun dler generate",
+    "start": "bun run dist/cli.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@reliverse/rempts-core": "workspace:*",
+    "@reliverse/rempts-plugin-ai-detect": "workspace:*",
+    "@reliverse/rempts-plugin-config": "workspace:*",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@reliverse/tsconfig": "workspace:*",
+    "@reliverse/dler": "workspace:*",
+    "@types/bun": "^1.3.5",
+    "typescript": "^5.8.3"
+  }
+}

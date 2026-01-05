@@ -1,0 +1,33 @@
+{
+  "name": "@{{name}}/core",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Core functionality for {{name}}",
+  "author": "{{author}}",
+  "license": "MIT",
+  "main": "./dist/mod.js",
+  "types": "./dist/mod.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/mod.js",
+      "types": "./dist/mod.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "bun scripts/build.ts && bun run tsc",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@reliverse/rempts-core": "latest",
+    "@{{name}}/utils": "workspace:*",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@reliverse/tsconfig": "workspace:*",
+    "@reliverse/rempts-test": "latest",
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  }
+}

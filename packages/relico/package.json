@@ -1,27 +1,62 @@
 {
   "name": "@reliverse/relico",
-  "version": "2.2.9",
-  "private": false,
+  "version": "2.3.0",
+  "description": "@reliverse/relico is a themeable, chainable, typed, truecolor-powered, modern terminal styling toolkit. Designed to make your CLI output colorful, accessible, and human-friendly. It gives you a flexible way to apply colors and styles, with reliability and a smart developer experience baked in. Built for humans, not just terminals.",
   "type": "module",
-  "description": "@reliverse/relico is a themeable, chainable, typed, truecolor-powered, modern terminal styling toolkit. Designed to make your CLI output colorful, accessible, and human-friendly. It gives you a flexible way to apply colors and styles — with reliability and a smart developer experience baked in. Built for humans, not just terminals.",
+  "module": "./dist/mod.js",
+  "types": "./dist/mod.d.ts",
   "exports": {
     ".": {
-      "types": "./src/mod.ts",
-      "default": "./src/mod.ts"
+      "types": "./dist/mod.d.ts",
+      "import": "./dist/mod.js"
     }
   },
+  "files": [
+    "dist",
+    "README.md",
+    "package.json"
+  ],
+  "scripts": {
+    "build": "bun scripts/build.ts && bun run tsc",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "bun run build"
+  },
+  "keywords": [
+    "rempts",
+    "cli",
+    "utilities",
+    "prompts",
+    "spinner",
+    "terminal"
+  ],
+  "author": "blefnk",
+  "license": "MIT",
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {},
-  "files": [
-    "dist",
-    "package.json"
-  ],
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reliverse/rempts.git",
+    "directory": "packages/utils"
+  },
+  "bugs": {
+    "url": "https://github.com/reliverse/rempts/issues"
+  },
+  "homepage": "https://github.com/reliverse/rempts#readme",
+  "dependencies": {
+    "@standard-schema/spec": "^1.0.0",
+    "@standard-schema/utils": "^0.3.0"
+  },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
-    "typescript": "catalog:core",
-    "@types/bun": "catalog:core"
+    "@types/bun": "latest",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "bun": ">=1.3.5"
+  },
+  "engines": {
+    "bun": ">=1.3.5"
   }
 }

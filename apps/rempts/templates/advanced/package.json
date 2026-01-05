@@ -1,0 +1,42 @@
+{
+  "name": "{{name}}",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "{{description}}",
+  "author": "{{author}}",
+  "license": "{{license}}",
+  "bin": {
+    "{{name}}": "./dist/mod.js"
+  },
+  "scripts": {
+    "postinstall": "bun dler generate",
+    "dev": "bun run src/mod.ts",
+    "build": "bun dler build",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "prepare": "bun run build"
+  },
+  "dependencies": {
+    "@reliverse/rempts-core": "latest",
+    "@reliverse/rempts-utils": "latest",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@reliverse/tsconfig": "workspace:*",
+    "@reliverse/rempts-test": "latest",
+    "@types/bun": "latest",
+    "rempts": "latest",
+    "typescript": "^5.0.0"
+  },
+  "rempts": {
+    "entry": "./src/mod.ts",
+    "outDir": "./dist",
+    "external": [
+      "@reliverse/rempts-core",
+      "@reliverse/rempts-utils",
+      "zod"
+    ]
+  }
+}

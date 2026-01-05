@@ -1,0 +1,62 @@
+{
+  "name": "@reliverse/rempts-utils",
+  "version": "0.2.0",
+  "description": "Built-in utilities for Rempts CLI framework - prompts, spinners, and colors",
+  "type": "module",
+  "module": "./dist/mod.js",
+  "types": "./dist/mod.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/mod.d.ts",
+      "import": "./dist/mod.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "package.json"
+  ],
+  "scripts": {
+    "build": "bun scripts/build.ts && bun run tsc",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "bun run build"
+  },
+  "keywords": [
+    "rempts",
+    "cli",
+    "utilities",
+    "prompts",
+    "spinner",
+    "terminal"
+  ],
+  "author": "blefnk",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reliverse/rempts.git",
+    "directory": "packages/utils"
+  },
+  "bugs": {
+    "url": "https://github.com/reliverse/rempts/issues"
+  },
+  "homepage": "https://github.com/reliverse/rempts#readme",
+  "dependencies": {
+    "@standard-schema/spec": "^1.0.0",
+    "@standard-schema/utils": "^0.3.0"
+  },
+  "devDependencies": {
+    "@reliverse/tsconfig": "workspace:*",
+    "@types/bun": "latest",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "bun": ">=1.3.5"
+  },
+  "engines": {
+    "bun": ">=1.3.5"
+  }
+}

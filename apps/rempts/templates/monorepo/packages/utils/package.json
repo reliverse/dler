@@ -1,0 +1,27 @@
+{
+  "name": "@{{name}}/utils",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Shared utilities for {{name}}",
+  "author": "{{author}}",
+  "license": "MIT",
+  "main": "./dist/mod.js",
+  "types": "./dist/mod.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/mod.js",
+      "types": "./dist/mod.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "bun scripts/build.ts && bun run tsc",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@reliverse/tsconfig": "workspace:*",
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  }
+}

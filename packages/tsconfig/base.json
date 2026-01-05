@@ -9,7 +9,7 @@
     "allowJs": true,
     "checkJs": true,
     "target": "ESNext",
-    "module": "ESNext",
+    "module": "preserve",
     "moduleResolution": "bundler",
     "lib": [
       "ESNext"
@@ -29,12 +29,5 @@
     "types": [
       "bun"
     ]
-  },
-  "exclude": [
-    "node_modules",
-    "build",
-    "dist",
-    ".next",
-    ".expo"
-  ]
+  }
 }

@@ -1,0 +1,22 @@
+{
+  "name": "@reliverse/examples-rempts-hello-world",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "generate": "bun rempts generate",
+    "dev": "bun rempts dev",
+    "build": "bun rempts build",
+    "typecheck": "tsc --noEmit",
+    "cli": "bun cli.ts"
+  },
+  "dependencies": {
+    "@reliverse/rempts-core": "workspace:*",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@reliverse/tsconfig": "workspace:*",
+    "@reliverse/dler": "workspace:*",
+    "@types/bun": "^1.3.5",
+    "typescript": "^5.8.3"
+  }
+}

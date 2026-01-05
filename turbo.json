@@ -3,32 +3,42 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
+    },
+    "typecheck": {
+      "dependsOn": [
+        "^build",
+        "^typecheck"
+      ]
     },
     "dev": {
       "persistent": true,
       "cache": false
     },
-    "typecheck": {
-      "dependsOn": ["^typecheck"]
+    "generate": {
+      "outputs": [
+        ".dler/**"
+      ]
     },
     "test": {
-      "dependsOn": ["^test"]
+      "dependsOn": [
+        "^test"
+      ]
     },
     "format": {
-      "dependsOn": ["^format"]
-    },
-    "format:fix": {
-      "dependsOn": ["^format:fix"]
+      "dependsOn": [
+        "^format"
+      ]
     },
     "lint": {
-      "dependsOn": ["^lint"]
-    },
-    "lint:fix": {
-      "dependsOn": ["^lint:fix"]
-    },
-    "clean": {
-      "dependsOn": ["^clean"]
+      "dependsOn": [
+        "^lint"
+      ]
     }
   }
 }

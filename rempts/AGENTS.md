@@ -1,0 +1,241 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+Rempts is a minimal, type-safe CLI framework for Bun with an advanced plugin system. It's a monorepo managed with Bun workspaces and Turborepo.
+
+### Key Packages
+
+- **@reliverse/rempts-core** - Core CLI framework with type-safe command definitions and plugin system
+- **@reliverse/rempts-utils** - Shared utilities (colors, prompts, spinners, validation)
+- **@reliverse/rempts-test** - Testing utilities for CLI applications
+- **@reliverse/rempts-generator** - TypeScript type generation from CLI commands
+- **rempts** - CLI toolchain for development and building
+- **rempts** - Project scaffolding tool
+- **@reliverse/rempts-plugin-ai-detect** - Plugin for detecting AI coding assistants
+- **@reliverse/rempts-plugin-config** - Plugin for loading and merging configuration files
+
+## Development Commands
+
+### Root Level
+```bash
+bun run build    # Build all packages via Turbo
+bun test         # Run all tests
+bun run clean    # Clean build artifacts
+bun run release  # Release packages
+```
+
+### Package Level
+```bash
+bun run build      # Build package and generate types
+bun test           # Run package tests
+bun run typecheck # Type check without emitting
+```
+
+### Running Single Tests
+```bash
+bun test path/to/test.test.ts  # Run specific test file
+bun test -t "test name"         # Run tests matching pattern
+```
+
+## Architecture & Code Patterns
+
+### Module System
+- Pure ESM modules (all packages have `"type": "module"`)
+- TypeScript with `"moduleResolution": "bundler"`
+- Use named exports, avoid default exports
+
+### Project Structure
+All Rempts projects must follow this structure for reliable type generation:
+
+```bash
+my-cli/
+├── cli.ts              # Main CLI entry point
+├── commands/           # Command definitions (REQUIRED)
+│   ├── command1.ts     # Individual command files
+│   └── command2.ts     # Each command as default export
+├── .dler/            # Generated files (auto-created)
+│   └── commands.gen.ts # Generated TypeScript types
+├── dler.config.ts     # Rempts configuration
+├── package.json        # Project dependencies
+└── tsconfig.json       # TypeScript configuration
+```
+
+**Required Configuration**: All `dler.config.ts` files must include:
+```typescript
+export default defineConfig({
+  // ... other config
+  commands: {
+    directory: './commands'
+  }
+})
+```
+
+### Command Definition Pattern
+Commands in Rempts use a type-safe builder pattern:
+
+```typescript
+import { defineCommand, option } from '@reliverse/rempts-core'
+import { z } from 'zod'
+
+const command = defineCommand({
+  name: 'command-name',
+  description: 'Command description',
+  options: {
+    flagName: option(
+      z.string().optional(),
+      { description: 'Flag description', short: 'f' }
+    )
+  },
+  handler: async ({ flags, positional, shell, env, cwd, prompt, spinner, colors, context }) => {
+    // Implementation with full type safety
+    console.log(flags.flagName) // TypeScript knows the type
+    console.log(positional[0]) // Access positional args
+    
+    // Access plugin store if available
+    if (context?.store.someData) {
+      console.log(context.store.someData)
+    }
+  }
+});
+
+export default command
+```
+
+### Package Exports
+Each package uses explicit exports in package.json:
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/mod.ts"
+    }
+  }
+}
+```
+
+### Build System
+- Custom build scripts in `scripts/build.ts` for each package
+- Turbo manages inter-package dependencies
+- TypeScript compilation only for type declarations (Bun runs .ts directly)
+
+### Testing Patterns
+- Use Bun's built-in test runner
+- Test files use `.test.ts` suffix
+- @reliverse/rempts-test provides CLI-specific testing utilities
+- Mock commands and capture output using test helpers
+
+## Important Conventions
+
+- **Always use Bun** instead of npm/yarn/pnpm (overrides user preference)
+- **Always use ESM** - no CommonJS
+- **File naming**: Always use kebab-case (e.g., `my-command.ts`)
+- **Imports**: Always use `.js` extensions for local imports (ESM requirement)
+- **Type exports**: Export types explicitly for better tree-shaking
+
+## Common Tasks
+
+### Adding a New Command
+1. Create command file in `commands/` directory (e.g., `commands/my-command.ts`)
+2. Use `defineCommand` from @reliverse/rempts-core
+3. Export as default export
+4. Import and register in `cli.ts`
+5. Run `bun run generate` to update types
+6. Add tests using @reliverse/rempts-test utilities
+
+**Note**: All Rempts projects must use a `commands/` directory structure for reliable type generation.
+
+### Creating a New Package
+1. Create directory under `packages/`
+2. Add package.json with ESM configuration
+3. Add to root workspace in package.json
+4. Configure build script following existing patterns
+5. Add to Turbo pipeline if needed
+
+### Running Examples
+```bash
+cd examples/[example-name]
+bun run src/mod.ts [command]
+```
+
+## Type Safety
+
+Rempts emphasizes type safety throughout:
+- Command flags are fully typed via Zod schemas
+- Plugin stores provide compile-time type safety
+- Validation schemas integrate with TypeScript
+- Builder pattern ensures compile-time safety
+- Test utilities provide typed mocks and assertions
+
+## Plugin System
+
+### Creating Plugins
+
+```typescript
+import { createPlugin } from '@reliverse/rempts-core/plugin'
+
+interface MyStore {
+  count: number
+  data: string[]
+}
+
+export const myPlugin = createPlugin<MyStore>({
+  name: 'my-plugin',
+  store: {
+    count: 0,
+    data: []
+  },
+  beforeCommand({ store }) {
+    store.count++ // Type-safe!
+  }
+})
+```
+
+### Using Plugins
+
+```typescript
+import { createCLI } from '@reliverse/rempts-core'
+import { aiAgentPlugin } from '@reliverse/rempts-plugin-ai-detect'
+import { configMergerPlugin } from '@reliverse/rempts-plugin-config'
+
+const cli = await createCLI({
+  name: 'my-cli',
+  version: '1.0.0',
+  plugins: [
+    aiAgentPlugin({ verbose: true }),
+    configMergerPlugin({ sources: ['.myrc.json'] }),
+    myPlugin
+  ] as const // Use 'as const' for better type inference
+})
+```
+
+## Configuration
+
+Projects use `dler.config.ts` for configuration:
+
+```typescript
+import { defineConfig } from '@reliverse/rempts-core'
+
+export default defineConfig({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'My CLI tool',
+  build: {
+    entry: 'src/mod.ts',
+    outdir: 'dist',
+    targets: ['node16', 'bun'],
+    compress: true
+  },
+  dev: {
+    watch: true,
+    inspect: false
+  },
+  plugins: [
+    // Plugin configuration
+  ]
+})
+```
