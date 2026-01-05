@@ -1,6 +1,7 @@
 import { defineCommand, option } from '@reliverse/rempts-core'
 import { z } from 'zod'
 import { loadConfig } from '../utils/config'
+import { relico } from '@reliverse/relico'
 
 const serveCommand = defineCommand({
   name: 'serve',

@@ -68,7 +68,7 @@ All `@reliverse/dler` v2+ commands support both monorepo (recommended) and singl
 6. `dler biome` runs biome check on all packages, provides compact biome's output, copies errors/warnings to clipboard (with an inserted prompt for fixing them).
 7. `dler update` updates the dependencies of all packages to the latest version (yes, even across the monorepo).
 
-## Environment Variables (.env) Support
+## Publish Environment Variables (.env) Support
 
 The `dler publish` command automatically loads environment variables from `.env` files for authentication and configuration:
 

@@ -3,23 +3,23 @@
   "version": "0.4.0",
   "type": "module",
   "description": "Minimal, type-safe CLI framework for Bun",
-  "module": "./dist/mod.js",
-  "types": "./dist/mod.d.ts",
+  "module": "./src/mod.ts",
+  "types": "./src/mod.ts",
   "exports": {
     ".": {
-      "types": "./dist/mod.d.ts",
+      "types": "./src/mod.ts",
       "import": "./src/mod.ts"
     },
     "./plugin": {
-      "types": "./dist/plugin/mod.d.ts",
+      "types": "./src/plugin/mod.ts",
       "import": "./src/plugin/mod.ts"
     },
     "./utils": {
-      "types": "./dist/utils/mod.d.ts",
+      "types": "./src/utils/mod.ts",
       "import": "./src/utils/mod.ts"
     },
     "./generated": {
-      "types": "./dist/generated.d.ts",
+      "types": "./src/generated.ts",
       "import": "./src/generated.ts"
     }
   },

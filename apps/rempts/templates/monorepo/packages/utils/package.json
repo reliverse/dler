@@ -6,11 +6,11 @@
   "author": "{{author}}",
   "license": "MIT",
   "main": "./dist/mod.js",
-  "types": "./dist/mod.d.ts",
+  "types": "./src/mod.ts",
   "exports": {
     ".": {
-      "import": "./dist/mod.js",
-      "types": "./dist/mod.d.ts"
+      "import": "./src/mod.ts",
+      "types": "./src/mod.ts"
     }
   },
   "scripts": {

@@ -4,14 +4,14 @@
   "type": "module",
   "description": "Scaffold new Rempts CLI projects with ease",
   "bin": {
-    "rempts": "./dist/cli.js"
+    "rempts": "./src/cli.ts"
   },
-  "module": "./dist/mod.js",
-  "types": "./dist/mod.d.ts",
+  "module": "./src/mod.ts",
+  "types": "./src/mod.ts",
   "exports": {
     ".": {
-      "import": "./dist/mod.js",
-      "types": "./dist/mod.d.ts"
+      "import": "./src/mod.ts",
+      "types": "./src/mod.ts"
     }
   },
   "files": [

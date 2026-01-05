@@ -2,6 +2,7 @@ import { defineCommand, option } from '@reliverse/rempts-core'
 import { z } from 'zod'
 import { logger, formatTable } from '@{{name}}/utils'
 import type { AnalyzeResult } from '../types'
+import { relico } from '@reliverse/relico'
 
 const analyzeCommand = defineCommand({
   name: 'analyze',

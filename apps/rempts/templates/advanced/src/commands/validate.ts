@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { loadConfig } from '../utils/config'
 import { validateFiles } from '../utils/validator'
 import { glob } from '../utils/glob'
+import { relico } from '@reliverse/relico'
 
 const validateCommand = defineCommand({
   name: 'validate',

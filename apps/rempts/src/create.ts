@@ -1,6 +1,7 @@
 import type { HandlerArgs } from '@reliverse/rempts-core'
 import { createProject } from './create-project'
 import path from 'node:path'
+import { relico } from '@reliverse/relico'
 
 interface CreateOptions {
   name?: string

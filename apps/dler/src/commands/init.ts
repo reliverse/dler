@@ -1,6 +1,7 @@
 import { defineCommand, option } from '@reliverse/rempts-core'
 import { z } from 'zod'
 import { spawn } from 'node:child_process'
+import { relico } from '@reliverse/relico'
 
 export default defineCommand({
   name: 'init',

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { loadConfig } from '@reliverse/rempts-core'
 import { $ } from 'bun'
 import { existsSync } from 'node:fs'
+import { relico } from '@reliverse/relico'
 
 export default defineCommand({
   name: 'release',

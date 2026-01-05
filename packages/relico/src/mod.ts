@@ -58,7 +58,7 @@ function stripAnsi(text: string): string {
     return text.replace(/\x1b\[[0-9;]*m/g, '')
 }
 
-export const rc: Colors = {
+export const relico: Colors = {
     // Basic colors
     black: createColorFunction(colorCodes.black),
     red: createColorFunction(colorCodes.red),

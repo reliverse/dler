@@ -1,5 +1,6 @@
 import { defineCommand, option } from '@reliverse/rempts-core'
 import { z } from 'zod'
+import { relico } from '@reliverse/relico'
 
 const greetCommand = defineCommand({
   name: 'greet' as const,

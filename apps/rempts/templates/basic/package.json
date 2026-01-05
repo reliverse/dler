@@ -5,7 +5,7 @@
   "description": "{{description}}",
   "author": "{{author}}",
   "bin": {
-    "{{name}}": "./dist/mod.js"
+    "{{name}}": "./src/mod.ts"
   },
   "scripts": {
     "postinstall": "bun dler generate",

@@ -6,7 +6,7 @@
   "main": "src/mod.ts",
   "exports": {
     ".": {
-      "types": "./dist/mod.d.ts",
+      "types": "./src/mod.ts",
       "default": "./src/mod.ts"
     }
   },

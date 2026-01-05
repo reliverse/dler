@@ -5,6 +5,7 @@ import { loadConfig } from '@reliverse/rempts-core'
 import { findEntry } from '../utils/find-entry'
 import path from 'node:path'
 import { existsSync } from 'node:fs'
+import { relico } from '@reliverse/relico'
 
 export default defineCommand({
   name: 'dev',

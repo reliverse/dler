@@ -1,5 +1,6 @@
 import { defineCommand, option } from '@reliverse/rempts-core'
 import { z } from 'zod'
+import { relico } from '@reliverse/relico'
 
 export default defineCommand({
   name: 'deploy' as const,

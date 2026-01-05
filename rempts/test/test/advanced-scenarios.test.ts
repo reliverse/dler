@@ -2,6 +2,7 @@ import { test, expect } from 'bun:test'
 import { defineCommand, option, SchemaError } from '@reliverse/rempts-core'
 import { z } from 'zod'
 import { testCommand, expectCommand, mockPromptResponses, mockShellCommands, mockInteractive, mockValidationAttempts, mergeTestOptions } from '../src/mod'
+import { relico } from '@reliverse/relico'
 
 test('complex validation scenario with Standard Schema', async () => {
   const userSchema = z.object({

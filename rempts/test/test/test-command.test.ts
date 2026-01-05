@@ -3,6 +3,7 @@ import { defineCommand, option } from '@reliverse/rempts-core'
 import { z } from 'zod'
 import { testCommand, expectCommand } from '../src/mod'
 import { mockPromptResponses, mockShellCommands, mockInteractive } from '../src/helpers'
+import { relico } from '@reliverse/relico'
 
 test('testCommand - basic command execution', async () => {
   const command = defineCommand({

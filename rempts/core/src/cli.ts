@@ -8,6 +8,7 @@ import type { RemptsPlugin, MergeStores, PluginConfig } from './plugin/types'
 import { CommandContext, createEnvironmentInfo } from './plugin/context'
 import { GLOBAL_FLAGS, type GlobalFlags } from './global-flags'
 import { getTuiRenderer } from './tui/registry'
+import { relico } from '@reliverse/relico'
 import { loadGeneratedStores } from './generated'
 
 export async function createCLI<

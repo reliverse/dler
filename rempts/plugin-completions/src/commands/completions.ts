@@ -4,6 +4,7 @@ import { generateBash, generateZsh, generateFish } from '../generators/mod'
 import { loadMetadata, getCLIName } from '../utils/metadata'
 import { getInstallInstructions } from '../utils/instructions'
 import type { CompletionsPluginOptions } from '../types'
+import { relico } from '@reliverse/relico'
 
 export default function completionsCommand(pluginOptions: CompletionsPluginOptions) {
   return defineCommand({

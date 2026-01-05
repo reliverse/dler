@@ -3,12 +3,12 @@
   "version": "0.2.0",
   "description": "Built-in utilities for Rempts CLI framework - prompts, spinners, and colors",
   "type": "module",
-  "module": "./dist/mod.js",
-  "types": "./dist/mod.d.ts",
+  "module": "./src/mod.ts",
+  "types": "./src/mod.ts",
   "exports": {
     ".": {
-      "types": "./dist/mod.d.ts",
-      "import": "./dist/mod.js"
+      "types": "./src/mod.ts",
+      "import": "./src/mod.ts"
     }
   },
   "files": [

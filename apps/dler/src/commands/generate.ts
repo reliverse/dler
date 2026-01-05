@@ -1,10 +1,10 @@
-import { relico } from "@reliverse/relico";
 import { defineCommand, option } from '@reliverse/rempts-core'
 import { Generator } from '@reliverse/rempts-generator'
 import { z } from 'zod'
 import { join } from 'node:path'
 import { isCommandFile } from '@reliverse/rempts-generator'
 import { loadConfig } from '@reliverse/rempts-core'
+import { relico } from '@reliverse/relico'
 
 export default defineCommand({
   name: 'generate',

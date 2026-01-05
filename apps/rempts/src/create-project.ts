@@ -1,6 +1,7 @@
 import type { RemptsUtils } from '@reliverse/rempts-utils'
 import { processTemplate, resolveTemplateSource, isLocalTemplate, getBundledTemplatePath } from './template-engine'
 import type { CreateOptions } from './types'
+import { relico } from '@reliverse/relico'
 
 interface CreateProjectOptions extends CreateOptions {
   name: string

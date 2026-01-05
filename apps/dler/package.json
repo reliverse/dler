@@ -4,14 +4,14 @@
   "type": "module",
   "description": "@reliverse/dler is a framework which helps TypeScript and JavaScript developers create their libraries and CLI tools. It provides ready-to-use primitives, so you don't have to write them from scratch.",
   "bin": {
-    "dler": "./dist/cli.js"
+    "dler": "./src/cli.ts"
   },
-  "module": "./dist/mod.js",
-  "types": "./dist/mod.d.ts",
+  "module": "./src/mod.ts",
+  "types": "./src/mod.ts",
   "exports": {
     ".": {
-      "import": "./dist/mod.js",
-      "types": "./dist/mod.d.ts"
+      "import": "./src/mod.ts",
+      "types": "./src/mod.ts"
     }
   },
   "files": [

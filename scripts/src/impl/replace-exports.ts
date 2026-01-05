@@ -1,6 +1,7 @@
 // packages/helpers/src/impl/replace-exports.ts
 
 import { readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { Glob } from "bun";
 
 interface ReplaceExportsOptions {
@@ -51,6 +52,29 @@ function replaceInPackageJson(
       hasChanges = true;
     }
 
+    // Replace ./src/*.ts → ./dist/*.js (for import)
+    const importPattern = /"import":\s*"\.\/src\/([^"]+)\.ts"/g;
+    if (importPattern.test(content)) {
+      importPattern.lastIndex = 0;
+      updated = updated.replace(importPattern, '"import": "./dist/$1.js"');
+      hasChanges = true;
+    }
+
+    // Replace ./src/*.ts → ./dist/*.js (for module)
+    const modulePattern = /"module":\s*"\.\/src\/([^"]+)\.ts"/g;
+    if (modulePattern.test(content)) {
+      modulePattern.lastIndex = 0;
+      updated = updated.replace(modulePattern, '"module": "./dist/$1.js"');
+      hasChanges = true;
+    }
+
+    // Replace ./src/*.ts → ./dist/*.js (for bin)
+    const binPattern = /"bin":\s*\{\s*"([^"]+)":\s*"\.\/src\/([^"]+)\.ts"/g;
+    updated = updated.replace(binPattern, (match, binName, fileName) => {
+      hasChanges = true;
+      return `"bin": {\n    "${binName}": "./dist/${fileName}.js"`;
+    });
+
     // Replace ./src/*.ts → ./dist/*.d.ts (for types)
     const typesPattern = /"types":\s*"\.\/src\/([^"]+)\.ts"/g;
     if (typesPattern.test(content)) {
@@ -65,6 +89,36 @@ function replaceInPackageJson(
       if (!fileName.startsWith("dist/")) {
         hasChanges = true;
         return `"default": "./dist/${fileName}"`;
+      }
+      return match;
+    });
+
+    // Replace ./file.js → ./dist/file.js (if not already in dist/) for import
+    const rootImportJsPattern = /"import":\s*"\.\/([^"]+\.js)"/g;
+    updated = updated.replace(rootImportJsPattern, (match, fileName) => {
+      if (!fileName.startsWith("dist/")) {
+        hasChanges = true;
+        return `"import": "./dist/${fileName}"`;
+      }
+      return match;
+    });
+
+    // Replace ./file.js → ./dist/file.js (if not already in dist/) for module
+    const rootModuleJsPattern = /"module":\s*"\.\/([^"]+\.js)"/g;
+    updated = updated.replace(rootModuleJsPattern, (match, fileName) => {
+      if (!fileName.startsWith("dist/")) {
+        hasChanges = true;
+        return `"module": "./dist/${fileName}"`;
+      }
+      return match;
+    });
+
+    // Replace ./file.js → ./dist/file.js (if not already in dist/) for bin
+    const rootBinJsPattern = /"bin":\s*\{\s*"([^"]+)":\s*"\.\/([^"]+\.js)"/g;
+    updated = updated.replace(rootBinJsPattern, (match, binName, fileName) => {
+      if (!fileName.startsWith("dist/")) {
+        hasChanges = true;
+        return `"bin": {\n    "${binName}": "./dist/${fileName}"`;
       }
       return match;
     });
@@ -95,6 +149,29 @@ function replaceInPackageJson(
       hasChanges = true;
     }
 
+    // Replace ./dist/*.js → ./src/*.ts (for import)
+    const distImportJsPattern = /"import":\s*"\.\/dist\/([^"]+)\.js"/g;
+    if (distImportJsPattern.test(content)) {
+      distImportJsPattern.lastIndex = 0;
+      updated = updated.replace(distImportJsPattern, '"import": "./src/$1.ts"');
+      hasChanges = true;
+    }
+
+    // Replace ./dist/*.js → ./src/*.ts (for module)
+    const distModuleJsPattern = /"module":\s*"\.\/dist\/([^"]+)\.js"/g;
+    if (distModuleJsPattern.test(content)) {
+      distModuleJsPattern.lastIndex = 0;
+      updated = updated.replace(distModuleJsPattern, '"module": "./src/$1.ts"');
+      hasChanges = true;
+    }
+
+    // Replace ./dist/*.js → ./src/*.ts (for bin)
+    const distBinJsPattern = /"bin":\s*\{\s*"([^"]+)":\s*"\.\/dist\/([^"]+)\.js"/g;
+    updated = updated.replace(distBinJsPattern, (match, binName, fileName) => {
+      hasChanges = true;
+      return `"bin": {\n    "${binName}": "./src/${fileName}.ts"`;
+    });
+
     // Replace ./dist/*.d.ts → ./src/*.ts (for types)
     const distDtsPattern = /"types":\s*"\.\/dist\/([^"]+)\.d\.ts"/g;
     if (distDtsPattern.test(content)) {
@@ -110,6 +187,39 @@ function replaceInPackageJson(
         const baseName = fileName.replace(/\.js$/, "");
         hasChanges = true;
         return `"default": "./src/${baseName}.ts"`;
+      }
+      return match;
+    });
+
+    // Replace ./file.js → ./src/file.ts (if not already in src/ or dist/) for import
+    const rootImportJsPattern = /"import":\s*"\.\/([^"]+\.js)"/g;
+    updated = updated.replace(rootImportJsPattern, (match, fileName) => {
+      if (!fileName.startsWith("src/") && !fileName.startsWith("dist/")) {
+        const baseName = fileName.replace(/\.js$/, "");
+        hasChanges = true;
+        return `"import": "./src/${baseName}.ts"`;
+      }
+      return match;
+    });
+
+    // Replace ./file.js → ./src/file.ts (if not already in src/ or dist/) for module
+    const rootModuleJsPattern = /"module":\s*"\.\/([^"]+\.js)"/g;
+    updated = updated.replace(rootModuleJsPattern, (match, fileName) => {
+      if (!fileName.startsWith("src/") && !fileName.startsWith("dist/")) {
+        const baseName = fileName.replace(/\.js$/, "");
+        hasChanges = true;
+        return `"module": "./src/${baseName}.ts"`;
+      }
+      return match;
+    });
+
+    // Replace ./file.js → ./src/file.ts (if not already in src/ or dist/) for bin
+    const rootBinJsPattern = /"bin":\s*\{\s*"([^"]+)":\s*"\.\/([^"]+\.js)"/g;
+    updated = updated.replace(rootBinJsPattern, (match, binName, fileName) => {
+      if (!fileName.startsWith("src/") && !fileName.startsWith("dist/")) {
+        const baseName = fileName.replace(/\.js$/, "");
+        hasChanges = true;
+        return `"bin": {\n    "${binName}": "./src/${baseName}.ts"`;
       }
       return match;
     });
@@ -148,7 +258,7 @@ export async function replaceExportsInPackages(
 
   for await (const file of glob.scan({ cwd, onlyFiles: true })) {
     if (!file.includes("node_modules/")) {
-      packageJsonFiles.push(file);
+      packageJsonFiles.push(resolve(cwd, file));
     }
   }
 

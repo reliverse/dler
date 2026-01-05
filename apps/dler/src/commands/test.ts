@@ -5,6 +5,7 @@ import { spawn } from 'node:child_process'
 import { readdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
+import { relico } from '@reliverse/relico'
 
 export default defineCommand({
   name: 'test',

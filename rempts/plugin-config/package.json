@@ -12,10 +12,10 @@
   "author": "bun dler Team",
   "license": "MIT",
   "main": "./src/mod.ts",
-  "types": "./dist/mod.d.ts",
+  "types": "./src/mod.ts",
   "exports": {
     ".": {
-      "types": "./dist/mod.d.ts",
+      "types": "./src/mod.ts",
       "default": "./src/mod.ts"
     }
   },

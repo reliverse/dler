@@ -6,6 +6,7 @@ import { loadConfig } from '@reliverse/rempts-core'
 import { findEntry } from '../utils/find-entry'
 import { $ } from 'bun'
 import path from 'node:path'
+import { relico } from '@reliverse/relico'
 
 export default defineCommand({
   name: 'build',
