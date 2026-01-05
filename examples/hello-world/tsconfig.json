@@ -8,20 +8,9 @@
     "emitDeclarationOnly": true,
     "declarationDir": "./dist",
     "paths": {
-      "~commands/*": [
-        "./.dler/commands.gen.ts"
-      ]
+      "~commands/*": ["./.dler/commands.gen.ts"]
     }
   },
-  "include": [
-    ".dler/**/*.ts",
-    "**/*.ts",
-    "**/*.tsx"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.test.ts",
-    "**/*.spec.ts"
-  ]
+  "include": [".dler/**/*.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

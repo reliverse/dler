@@ -63,10 +63,7 @@ export function getCurrentWorkingDirectory(useCache = true): string {
     }
     return currentDirectory;
   } catch (error) {
-    console.error(
-      "Error getting current working directory:",
-      handleError(error),
-    );
+    console.error("Error getting current working directory:", handleError(error));
     throw error;
   }
 }

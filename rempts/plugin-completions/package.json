@@ -2,6 +2,21 @@
   "name": "@reliverse/rempts-plugin-completions",
   "version": "0.1.0",
   "description": "Shell completions plugin for Rempts CLI framework",
+  "keywords": [
+    "bash",
+    "cli",
+    "completions",
+    "fish",
+    "rempts",
+    "shell",
+    "zsh"
+  ],
+  "license": "MIT",
+  "author": "bun dler Team",
+  "files": [
+    "dist",
+    "src"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -9,10 +24,6 @@
       "default": "./src/mod.ts"
     }
   },
-  "files": [
-    "dist",
-    "src"
-  ],
   "scripts": {
     "build": "bun run scripts/build.ts && bun run tsc",
     "typecheck": "tsc --noEmit"
@@ -25,16 +36,5 @@
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
     "typescript": "^5.8.3"
-  },
-  "keywords": [
-    "rempts",
-    "cli",
-    "completions",
-    "bash",
-    "zsh",
-    "fish",
-    "shell"
-  ],
-  "author": "bun dler Team",
-  "license": "MIT"
+  }
 }

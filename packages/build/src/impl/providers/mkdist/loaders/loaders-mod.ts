@@ -17,9 +17,7 @@ export function resolveLoader(loader: LoaderName | Loader) {
   return loader;
 }
 
-export function resolveLoaders(
-  loadersParam: (LoaderName | Loader)[] = defaultLoaders,
-) {
+export function resolveLoaders(loadersParam: (LoaderName | Loader)[] = defaultLoaders) {
   return loadersParam
     .map((loaderName) => {
       const _loader = resolveLoader(loaderName);
@@ -28,7 +26,5 @@ export function resolveLoaders(
       }
       return _loader;
     })
-    .filter(
-      (loader): loader is Loader => loader !== null && loader !== undefined,
-    );
+    .filter((loader): loader is Loader => loader !== null && loader !== undefined);
 }

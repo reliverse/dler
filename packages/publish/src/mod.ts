@@ -41,14 +41,7 @@ export interface PackagePublishConfig {
   authType?: "web" | "legacy";
   concurrency?: number;
   verbose?: boolean;
-  bump?:
-    | "major"
-    | "minor"
-    | "patch"
-    | "premajor"
-    | "preminor"
-    | "prepatch"
-    | "prerelease";
+  bump?: "major" | "minor" | "patch" | "premajor" | "preminor" | "prepatch" | "prerelease";
   bumpDisable?: boolean;
   registry?: RegistryType;
   kind?: PackageKind;
@@ -95,10 +88,7 @@ export interface PublishOptions {
   filter?: string | string[];
 }
 
-export type {
-  PackageKind,
-  RegistryType,
-} from "@reliverse/config/impl/publish";
+export type { PackageKind, RegistryType } from "@reliverse/config/impl/publish";
 
 // ============================================================================
 // Types
@@ -128,9 +118,7 @@ async function runBunPublishCommand(
       logger.debug(`Spawning bun publish command: bun ${args.join(" ")}`);
       logger.debug(`Working directory: ${packagePath}`);
       if (withNpmLogs) {
-        logger.debug(
-          "With npm logs enabled - output will be displayed directly",
-        );
+        logger.debug("With npm logs enabled - output will be displayed directly");
       }
     }
 
@@ -233,9 +221,7 @@ async function runBunPublishCommand(
       combinedOutput.includes("failed to read OTP input") ||
       combinedOutput.includes("use your security key for authentication")
     ) {
-      const hasToken = !!(
-        process.env.NPM_CONFIG_TOKEN || process.env.NPM_TOKEN
-      );
+      const hasToken = !!(process.env.NPM_CONFIG_TOKEN || process.env.NPM_TOKEN);
       if (hasToken) {
         throw new Error(
           "2FA authentication required. NPM_CONFIG_TOKEN is set but authentication failed. Please verify:\n  1. The token is valid and not expired\n  2. The token has publish permissions\n  3. Use --with-npm-logs flag to allow interactive OTP input if token authentication is not working",
@@ -303,16 +289,12 @@ function validateKindRegistryCombination(
 
   const allowedRegistries = allowedCombinations[kind];
   if (verbose) {
-    logger.debug(
-      `Allowed registries for kind "${kind}": ${allowedRegistries.join(", ")}`,
-    );
+    logger.debug(`Allowed registries for kind "${kind}": ${allowedRegistries.join(", ")}`);
   }
 
   if (!allowedRegistries.includes(registry)) {
     if (verbose) {
-      logger.debug(
-        `Validation failed: registry "${registry}" not allowed for kind "${kind}"`,
-      );
+      logger.debug(`Validation failed: registry "${registry}" not allowed for kind "${kind}"`);
     }
     return {
       valid: false,
@@ -347,10 +329,7 @@ export interface PublishAllResult {
 /**
  * Check if dist folder exists and has content
  */
-async function validateDistFolder(
-  packagePath: string,
-  verbose?: boolean,
-): Promise<boolean> {
+async function validateDistFolder(packagePath: string, verbose?: boolean): Promise<boolean> {
   const distPath = resolve(packagePath, "dist");
   if (verbose) {
     logger.debug(`Checking dist folder at: ${distPath}`);
@@ -359,9 +338,7 @@ async function validateDistFolder(
     const stat = await Bun.file(distPath).stat();
     const isValid = stat.isDirectory();
     if (verbose) {
-      logger.debug(
-        `Dist folder ${isValid ? "exists and is a directory" : "is not a directory"}`,
-      );
+      logger.debug(`Dist folder ${isValid ? "exists and is a directory" : "is not a directory"}`);
     }
     return isValid;
   } catch (error) {
@@ -426,8 +403,7 @@ function validatePackageJsonFields(
   // Check for exports field (should exist)
   // The publish command will transform /src/ paths to /dist/ automatically
   // Skip exports requirement for packages with bin field
-  const hasBinField =
-    pkg.bin && typeof pkg.bin === "object" && Object.keys(pkg.bin).length > 0;
+  const hasBinField = pkg.bin && typeof pkg.bin === "object" && Object.keys(pkg.bin).length > 0;
 
   if (verbose) {
     logger.debug(`Has bin field: ${hasBinField}`);
@@ -442,9 +418,7 @@ function validatePackageJsonFields(
   if (!pkg.publishConfig) {
     errors.push("Missing 'publishConfig' field - Run 'dler build' to add it.");
   } else if (!pkg.publishConfig.access) {
-    errors.push(
-      "Missing 'publishConfig.access' field - Run 'dler build' to add it.",
-    );
+    errors.push("Missing 'publishConfig.access' field - Run 'dler build' to add it.");
   } else if (verbose) {
     logger.debug(`PublishConfig access: ${pkg.publishConfig.access}`);
   }
@@ -452,9 +426,7 @@ function validatePackageJsonFields(
   // For CLI packages, check for bin field
   if (kind === "cli") {
     if (!pkg.bin) {
-      errors.push(
-        "CLI package missing 'bin' field - Run 'dler build' to add it.",
-      );
+      errors.push("CLI package missing 'bin' field - Run 'dler build' to add it.");
     } else if (typeof pkg.bin === "object") {
       const binEntries = Object.keys(pkg.bin);
       if (verbose) {
@@ -507,26 +479,20 @@ async function restoreOriginalDependencies(
       // Restore original dependencies (only if they existed)
       if (originalDependencies !== undefined) {
         if (verbose) {
-          logger.debug(
-            `Restoring ${Object.keys(originalDependencies).length} dependencies`,
-          );
+          logger.debug(`Restoring ${Object.keys(originalDependencies).length} dependencies`);
         }
         pkg.dependencies = originalDependencies;
       }
       if (originalDevDependencies !== undefined) {
         if (verbose) {
-          logger.debug(
-            `Restoring ${Object.keys(originalDevDependencies).length} devDependencies`,
-          );
+          logger.debug(`Restoring ${Object.keys(originalDevDependencies).length} devDependencies`);
         }
         pkg.devDependencies = originalDevDependencies;
       }
       // Restore original scripts if they existed
       if (originalScripts !== undefined) {
         if (verbose) {
-          logger.debug(
-            `Restoring ${Object.keys(originalScripts).length} scripts`,
-          );
+          logger.debug(`Restoring ${Object.keys(originalScripts).length} scripts`);
         }
         pkg.scripts = originalScripts;
       }
@@ -602,9 +568,7 @@ async function resolveWorkspaceVersion(
     const workspacePkg = workspacePackages.find((pkg) => pkg.name === depName);
     if (workspacePkg?.pkg?.version) {
       if (verbose) {
-        logger.debug(
-          `Resolved workspace version for ${depName}: ${workspacePkg.pkg.version}`,
-        );
+        logger.debug(`Resolved workspace version for ${depName}: ${workspacePkg.pkg.version}`);
       }
       return workspacePkg.pkg.version;
     }
@@ -656,19 +620,13 @@ async function resolveCatalogVersion(
         if (rootPkg?.workspaces) {
           // Handle both array format and object format for workspaces
           const workspaces = rootPkg.workspaces;
-          if (
-            typeof workspaces === "object" &&
-            workspaces !== null &&
-            "catalog" in workspaces
-          ) {
+          if (typeof workspaces === "object" && workspaces !== null && "catalog" in workspaces) {
             const catalog = (workspaces as any).catalog;
             if (catalog && typeof catalog === "object") {
               const catalogVersion = catalog[depName];
               if (catalogVersion) {
                 if (verbose) {
-                  logger.debug(
-                    `Resolved catalog version for ${depName}: ${catalogVersion}`,
-                  );
+                  logger.debug(`Resolved catalog version for ${depName}: ${catalogVersion}`);
                 }
                 return catalogVersion;
               } else if (verbose) {
@@ -739,9 +697,7 @@ async function preparePackageForPublishing(
 
     // Create a backup of the original package.json
     const originalPkg = { ...pkg };
-    const originalExports = pkg.exports
-      ? JSON.parse(JSON.stringify(pkg.exports))
-      : undefined;
+    const originalExports = pkg.exports ? JSON.parse(JSON.stringify(pkg.exports)) : undefined;
 
     if (options.verbose) {
       logger.debug("Created backup of original package.json");
@@ -804,9 +760,7 @@ async function preparePackageForPublishing(
         ? { ...pkg.devDependencies }
         : undefined;
     const originalScripts =
-      pkg.scripts && Object.keys(pkg.scripts).length > 0
-        ? { ...pkg.scripts }
-        : undefined;
+      pkg.scripts && Object.keys(pkg.scripts).length > 0 ? { ...pkg.scripts } : undefined;
 
     if (options.verbose) {
       logger.debug(
@@ -960,9 +914,7 @@ export async function publishPackage(
   let originalExports: any = null;
 
   // Fetch workspace packages once for efficient dependency resolution
-  let workspacePackages:
-    | Array<{ name: string; path: string; pkg: any }>
-    | undefined;
+  let workspacePackages: Array<{ name: string; path: string; pkg: any }> | undefined;
   let monorepoRoot: string | null = null;
   try {
     if (options.verbose) {
@@ -975,11 +927,7 @@ export async function publishPackage(
       }
       workspacePackages = await getWorkspacePackages(monorepoRoot);
       if (options.verbose) {
-        logger.log(
-          re.blue(
-            `  Found ${re.bold(workspacePackages.length)} workspace packages`,
-          ),
-        );
+        logger.log(re.blue(`  Found ${re.bold(workspacePackages.length)} workspace packages`));
       }
     } else if (options.verbose) {
       logger.debug("Not in a monorepo (no root found)");
@@ -1073,17 +1021,11 @@ export async function publishPackage(
               copiedFiles.push(targetPath);
 
               if (options.verbose) {
-                logger.log(
-                  re.blue(`  Copied ${re.bold(fileName)} from monorepo root`),
-                );
-                logger.debug(
-                  `Copied ${fileName} from ${sourcePath} to ${targetPath}`,
-                );
+                logger.log(re.blue(`  Copied ${re.bold(fileName)} from monorepo root`));
+                logger.debug(`Copied ${fileName} from ${sourcePath} to ${targetPath}`);
               }
             } else if (options.verbose) {
-              logger.debug(
-                `${fileName} already exists in package, skipping copy`,
-              );
+              logger.debug(`${fileName} already exists in package, skipping copy`);
             }
           } else if (options.verbose) {
             logger.debug(`${fileName} not found in monorepo root`);
@@ -1111,9 +1053,7 @@ export async function publishPackage(
     );
     if (!pkgValidation.valid) {
       if (options.verbose) {
-        logger.debug(
-          `Package validation failed with ${pkgValidation.errors.length} error(s)`,
-        );
+        logger.debug(`Package validation failed with ${pkgValidation.errors.length} error(s)`);
       }
       return {
         success: false,
@@ -1163,9 +1103,7 @@ export async function publishPackage(
     }
 
     if (options.verbose) {
-      logger.debug(
-        `Package prepared successfully, version: ${prepResult.version}`,
-      );
+      logger.debug(`Package prepared successfully, version: ${prepResult.version}`);
     }
 
     // Store original package and dependencies for potential restoration
@@ -1239,11 +1177,7 @@ export async function publishPackage(
 
       // Display 2FA tip before first publish when using --with-npm-logs (unless skipped)
       // Only skip if explicitly set to true
-      if (
-        options.withNpmLogs &&
-        options.skipTip2FA !== true &&
-        !hasShown2FATip
-      ) {
+      if (options.withNpmLogs && options.skipTip2FA !== true && !hasShown2FATip) {
         hasShown2FATip = true;
         logger.log(
           `\n${re.cyan.bold("💡 2FA Authentication Tip")}\n` +
@@ -1270,9 +1204,7 @@ export async function publishPackage(
           // Parse output for error information
           const errorOutput = result.stderr || result.stdout;
           if (options.verbose) {
-            logger.debug(
-              `Publish command failed with exit code ${result.exitCode}`,
-            );
+            logger.debug(`Publish command failed with exit code ${result.exitCode}`);
             logger.debug(`Error output: ${errorOutput}`);
           }
           // Check for OTP requirement message
@@ -1289,9 +1221,7 @@ export async function publishPackage(
             errorOutput.includes("failed to read OTP input") ||
             errorOutput.includes("use your security key for authentication")
           ) {
-            const hasToken = !!(
-              process.env.NPM_CONFIG_TOKEN || process.env.NPM_TOKEN
-            );
+            const hasToken = !!(process.env.NPM_CONFIG_TOKEN || process.env.NPM_TOKEN);
             if (hasToken) {
               throw new Error(
                 "2FA authentication required. NPM_CONFIG_TOKEN is set but authentication failed. Please verify:\n  1. The token is valid and not expired\n  2. The token has publish permissions\n  3. Use --with-npm-logs flag to allow interactive OTP input if token authentication is not working",
@@ -1316,8 +1246,7 @@ export async function publishPackage(
 
         // Extract published version if available
         const versionMatch =
-          output.match(/published\s+([^\s]+)/i) ||
-          output.match(/@([0-9]+\.[0-9]+\.[0-9]+)/);
+          output.match(/published\s+([^\s]+)/i) || output.match(/@([0-9]+\.[0-9]+\.[0-9]+)/);
         const version = versionMatch ? versionMatch[1] : rootPackage?.version;
 
         if (options.verbose) {
@@ -1327,23 +1256,17 @@ export async function publishPackage(
         // Display custom log message (npm output is captured internally but never displayed)
         if (options.verbose) {
           logger.log(
-            re.green(
-              `✓ Published ${re.bold(packageName)}@${re.bold(version || "unknown")}`,
-            ),
+            re.green(`✓ Published ${re.bold(packageName)}@${re.bold(version || "unknown")}`),
           );
         } else {
           // Minimal output in normal mode
           logger.log(
-            re.green(
-              `✓ Published ${re.bold(packageName)}${version ? `@${re.bold(version)}` : ""}`,
-            ),
+            re.green(`✓ Published ${re.bold(packageName)}${version ? `@${re.bold(version)}` : ""}`),
           );
         }
       } catch (error) {
         if (options.verbose) {
-          logger.debug(
-            `Publish error: ${error instanceof Error ? error.message : String(error)}`,
-          );
+          logger.debug(`Publish error: ${error instanceof Error ? error.message : String(error)}`);
         }
         throw new Error(
           `Failed to publish ${packageName}: ${error instanceof Error ? error.message : String(error)}`,
@@ -1378,12 +1301,7 @@ export async function publishPackage(
     }
 
     // Restore original dependencies and exports after successful publishing
-    if (
-      originalDependencies ||
-      originalDevDependencies ||
-      originalScripts ||
-      originalExports
-    ) {
+    if (originalDependencies || originalDevDependencies || originalScripts || originalExports) {
       if (options.verbose) {
         logger.debug("Restoring original package.json...");
       }
@@ -1412,12 +1330,7 @@ export async function publishPackage(
 
     // Restore original dependencies and exports if they were modified
     // We preserve the bumped version even on error, so users can retry without re-bumping
-    if (
-      originalDependencies ||
-      originalDevDependencies ||
-      originalScripts ||
-      originalExports
-    ) {
+    if (originalDependencies || originalDevDependencies || originalScripts || originalExports) {
       if (options.verbose) {
         logger.debug("Restoring original package.json after error...");
       }
@@ -1447,9 +1360,7 @@ export async function publishPackage(
         await Bun.file(copiedFile).unlink();
         if (options.verbose) {
           const fileName = copiedFile.split(/[/\\]/).pop();
-          logger.log(
-            re.blue(`  Removed copied file: ${re.bold(fileName || "")}`),
-          );
+          logger.log(re.blue(`  Removed copied file: ${re.bold(fileName || "")}`));
           logger.debug(`Removed copied file: ${copiedFile}`);
         }
       } catch (error) {
@@ -1474,9 +1385,7 @@ export async function publishAllPackages(
 ): Promise<PublishAllResult> {
   try {
     // Load .env files from monorepo root and current working directory
-    const monorepoRoot = cwd
-      ? resolve(cwd)
-      : await findMonorepoRoot(process.cwd());
+    const monorepoRoot = cwd ? resolve(cwd) : await findMonorepoRoot(process.cwd());
     if (monorepoRoot) {
       config({ path: resolve(monorepoRoot, ".env") });
       config({ path: resolve(monorepoRoot, ".env.local") });
@@ -1525,9 +1434,7 @@ export async function publishAllPackages(
         `After filtering: ${filteredPackages.length} package(s) (single-repo mode: ${isSingleRepo})`,
       );
       if (options.filter) {
-        const filterPatterns = Array.isArray(options.filter)
-          ? options.filter
-          : [options.filter];
+        const filterPatterns = Array.isArray(options.filter) ? options.filter : [options.filter];
         logger.info(
           re.blue(
             `   Filtering to ${re.bold(filteredPackages.length)} packages matching: ${re.bold(filterPatterns.join(", "))}`,
@@ -1547,11 +1454,7 @@ export async function publishAllPackages(
       };
     }
 
-    logger.info(
-      re.blue(
-        `Found ${re.bold(filteredPackages.length)} package(s) to publish`,
-      ),
-    );
+    logger.info(re.blue(`Found ${re.bold(filteredPackages.length)} package(s) to publish`));
 
     const results: PublishResult[] = [];
     const concurrency = options.concurrency || 3;
@@ -1567,12 +1470,8 @@ export async function publishAllPackages(
       // undefined means no config exists, so enable by default
       if (packageConfig?.enable === false) {
         if (options.verbose) {
-          logger.info(
-            re.yellow(`Skipping ${re.bold(pkg.name)} (disabled in config)`),
-          );
-          logger.debug(
-            `Package config for ${pkg.name}: ${JSON.stringify(packageConfig)}`,
-          );
+          logger.info(re.yellow(`Skipping ${re.bold(pkg.name)} (disabled in config)`));
+          logger.debug(`Package config for ${pkg.name}: ${JSON.stringify(packageConfig)}`);
         }
         return false;
       }
@@ -1580,9 +1479,7 @@ export async function publishAllPackages(
     });
 
     if (options.verbose) {
-      logger.debug(
-        `After enable filter: ${packagesToPublish.length} package(s) enabled`,
-      );
+      logger.debug(`After enable filter: ${packagesToPublish.length} package(s) enabled`);
     }
 
     if (packagesToPublish.length === 0) {
@@ -1596,11 +1493,7 @@ export async function publishAllPackages(
       };
     }
 
-    logger.info(
-      re.blue(
-        `Publishing ${re.bold(packagesToPublish.length)} enabled package(s)`,
-      ),
-    );
+    logger.info(re.blue(`Publishing ${re.bold(packagesToPublish.length)} enabled package(s)`));
 
     // Pre-bump all packages to calculate new versions before resolving dependencies
     // This ensures that workspace dependencies resolve to the bumped versions
@@ -1611,8 +1504,7 @@ export async function publishAllPackages(
 
     for (const pkg of packagesToPublish) {
       const mergedOptions = mergePublishOptions(options, pkg.name, dlerConfig);
-      const bumpType =
-        mergedOptions.bump || (mergedOptions.bumpDisable ? undefined : "patch");
+      const bumpType = mergedOptions.bump || (mergedOptions.bumpDisable ? undefined : "patch");
 
       if (options.verbose) {
         logger.debug(
@@ -1647,9 +1539,7 @@ export async function publishAllPackages(
         // If not bumping, use current version
         bumpedVersions.set(pkg.name, pkg.pkg.version);
         if (options.verbose) {
-          logger.debug(
-            `Using current version for ${pkg.name}: ${pkg.pkg.version}`,
-          );
+          logger.debug(`Using current version for ${pkg.name}: ${pkg.pkg.version}`);
         }
       }
     }
@@ -1661,9 +1551,7 @@ export async function publishAllPackages(
     // Process packages with controlled concurrency
     const totalBatches = Math.ceil(packagesToPublish.length / concurrency);
     if (options.verbose) {
-      logger.debug(
-        `Processing ${totalBatches} batch(es) with concurrency ${concurrency}`,
-      );
+      logger.debug(`Processing ${totalBatches} batch(es) with concurrency ${concurrency}`);
     }
 
     for (let i = 0; i < packagesToPublish.length; i += concurrency) {
@@ -1678,11 +1566,7 @@ export async function publishAllPackages(
 
       const batchPromises = batch.map(async (pkg) => {
         // Merge CLI options with dler.ts configuration for this package
-        const mergedOptions = mergePublishOptions(
-          options,
-          pkg.name,
-          dlerConfig,
-        );
+        const mergedOptions = mergePublishOptions(options, pkg.name, dlerConfig);
 
         // Ensure default bump value is preserved if not explicitly set
         // Precedence: defaults > config > CLI args
@@ -1691,9 +1575,7 @@ export async function publishAllPackages(
         }
 
         if (options.verbose) {
-          logger.debug(
-            `Merged options for ${pkg.name}: ${JSON.stringify(mergedOptions)}`,
-          );
+          logger.debug(`Merged options for ${pkg.name}: ${JSON.stringify(mergedOptions)}`);
         }
 
         if (mergedOptions.verbose) {
@@ -1717,9 +1599,7 @@ export async function publishAllPackages(
       const hasBatchErrors = batchResults.some((r) => !r.success);
       if (hasBatchErrors) {
         if (options.verbose) {
-          logger.debug(
-            `Batch ${batchNumber} had errors, stopping processing of remaining batches`,
-          );
+          logger.debug(`Batch ${batchNumber} had errors, stopping processing of remaining batches`);
         }
         break;
       }
@@ -1748,9 +1628,7 @@ export async function publishAllPackages(
     };
   } catch (error) {
     if (options.verbose) {
-      logger.debug(
-        `Publish all failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      logger.debug(`Publish all failed: ${error instanceof Error ? error.message : String(error)}`);
     }
     logger.error(
       re.red("Failed to publish packages:"),

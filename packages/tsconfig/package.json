@@ -3,14 +3,14 @@
   "name": "@reliverse/tsconfig",
   "version": "2.2.9",
   "private": false,
-  "type": "module",
-  "author": "reliverse",
   "description": "Shared TypeScript configuration for Reliverse packages",
+  "author": "reliverse",
+  "files": [
+    "*.json"
+  ],
+  "type": "module",
   "exports": {
     "./base.json": "./base.json",
     "./internal.json": "./internal.json"
-  },
-  "files": [
-    "*.json"
-  ]
+  }
 }

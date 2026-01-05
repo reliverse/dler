@@ -1,19 +1,23 @@
 {
   "name": "@reliverse/rempts-plugin-ai-detect",
   "version": "0.4.0",
-  "type": "module",
   "description": "AI agent detection plugin for Rempts - detects Claude, Cursor, Copilot and other AI coding assistants",
   "keywords": [
-    "rempts",
-    "cli",
-    "plugin",
     "ai",
     "claude",
+    "cli",
+    "copilot",
     "cursor",
-    "copilot"
+    "plugin",
+    "rempts"
   ],
-  "author": "bun dler Team",
   "license": "MIT",
+  "author": "bun dler Team",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "type": "module",
   "main": "./src/mod.ts",
   "types": "./src/mod.ts",
   "exports": {
@@ -22,10 +26,6 @@
       "default": "./src/mod.ts"
     }
   },
-  "files": [
-    "dist",
-    "src"
-  ],
   "scripts": {
     "build": "bun run scripts/build.ts",
     "typecheck": "tsc --noEmit",

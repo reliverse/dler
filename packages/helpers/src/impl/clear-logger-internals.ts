@@ -31,12 +31,8 @@ function matchesPattern(str: string, pattern: string): boolean {
   return str === pattern;
 }
 
-function shouldIgnorePackage(
-  packageName: string,
-  ignorePackages: string | string[],
-): boolean {
-  const patterns =
-    typeof ignorePackages === "string" ? [ignorePackages] : ignorePackages;
+function shouldIgnorePackage(packageName: string, ignorePackages: string | string[]): boolean {
+  const patterns = typeof ignorePackages === "string" ? [ignorePackages] : ignorePackages;
   return patterns.some((pattern) => matchesPattern(packageName, pattern));
 }
 
@@ -103,9 +99,7 @@ export async function clearLoggerInternalsInPackages(
     // outputDir is already an absolute path from the build system
     const outputDir = pkg.outputDir;
     if (!existsSync(outputDir)) {
-      log(
-        `   ⏭️  Skipping ${pkg.name} (dist directory not found: ${outputDir})`,
-      );
+      log(`   ⏭️  Skipping ${pkg.name} (dist directory not found: ${outputDir})`);
       skippedCount++;
       continue;
     }
@@ -146,9 +140,7 @@ export async function clearLoggerInternalsInPackages(
   }
 
   if (verbose) {
-    log(
-      `\n   Summary: Updated ${updatedCount} file(s), skipped ${skippedCount} package(s)`,
-    );
+    log(`\n   Summary: Updated ${updatedCount} file(s), skipped ${skippedCount} package(s)`);
   }
 
   return {

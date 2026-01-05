@@ -24,10 +24,7 @@ const createTestPackage = (baseDir: string): string => {
     },
   };
 
-  writeFileSync(
-    join(pkgDir, "package.json"),
-    JSON.stringify(packageJson, null, 2),
-  );
+  writeFileSync(join(pkgDir, "package.json"), JSON.stringify(packageJson, null, 2));
 
   const tsconfig = {
     compilerOptions: {
@@ -36,10 +33,7 @@ const createTestPackage = (baseDir: string): string => {
     },
   };
 
-  writeFileSync(
-    join(pkgDir, "tsconfig.json"),
-    JSON.stringify(tsconfig, null, 2),
-  );
+  writeFileSync(join(pkgDir, "tsconfig.json"), JSON.stringify(tsconfig, null, 2));
 
   writeFileSync(join(srcDir, "index.ts"), "export const main = () => {};");
 
@@ -55,9 +49,7 @@ interface PackageInfo {
 }
 
 // Simulate package info resolution
-const resolvePackageInfo = async (
-  packagePath: string,
-): Promise<PackageInfo | null> => {
+const resolvePackageInfo = async (packagePath: string): Promise<PackageInfo | null> => {
   const { readPackageJSON, readTSConfig } = await import("@reliverse/typerso");
   const { resolve } = await import("node:path");
   const { existsSync } = await import("node:fs");

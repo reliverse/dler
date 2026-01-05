@@ -1,10 +1,4 @@
-import {
-  formatCustom,
-  formatDate,
-  formatDuration,
-  formatISO,
-  formatRFC2822,
-} from "../../src/mod";
+import { formatCustom, formatDate, formatDuration, formatISO, formatRFC2822 } from "../../src/mod";
 import type { BenchmarkResult } from "../perf";
 
 const testDate = new Date("2024-01-15T10:30:45.123Z");

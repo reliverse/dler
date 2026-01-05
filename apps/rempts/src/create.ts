@@ -1,57 +1,59 @@
-import type { HandlerArgs } from '@reliverse/rempts-core'
-import { createProject } from './create-project'
-import path from 'node:path'
-import { relico } from '@reliverse/relico'
+import type { HandlerArgs } from "@reliverse/rempts-core";
+import { createProject } from "./create-project";
+import path from "node:path";
+import { relico } from "@reliverse/relico";
 
 interface CreateOptions {
-  name?: string
-  template: string
-  dir?: string
-  git: boolean
-  install: boolean
-  offline?: boolean
+  name?: string;
+  template: string;
+  dir?: string;
+  git: boolean;
+  install: boolean;
+  offline?: boolean;
 }
 
 export async function create(context: HandlerArgs<CreateOptions>) {
-  const { flags, positional, prompt, spinner, colors, shell } = context
+  const { flags, positional, prompt, spinner, colors, shell } = context;
 
   // Get project name
-  let projectName = positional[0] || flags.name
+  let projectName = positional[0] || flags.name;
   if (!projectName) {
-    projectName = await prompt('Project name:', {
+    projectName = await prompt("Project name:", {
       validate: (value) => {
-        if (!value) return 'Project name is required'
+        if (!value) return "Project name is required";
         if (!/^[a-z0-9-]+$/.test(value)) {
-          return 'Project name must only contain lowercase letters, numbers, and hyphens'
+          return "Project name must only contain lowercase letters, numbers, and hyphens";
         }
-        return true
-      }
-    })
+        return true;
+      },
+    });
   } else if (!/^[a-z0-9-]+$/.test(projectName)) {
-    console.error(relico.red('Project name must only contain lowercase letters, numbers, and hyphens'))
-    process.exit(1)
+    console.error(
+      relico.red("Project name must only contain lowercase letters, numbers, and hyphens"),
+    );
+    process.exit(1);
   }
 
   // Get directory
-  const projectDir = flags.dir || path.join(process.cwd(), projectName!)
+  const projectDir = flags.dir || path.join(process.cwd(), projectName!);
 
   // Confirm details
-  console.log()
-  console.log(relico.bold('Creating Rempts project:'))
-  console.log(relico.dim('  Name:     ') + relico.cyan(projectName!))
-  console.log(relico.dim('  Template: ') + relico.cyan(flags.template))
-  console.log(relico.dim('  Location: ') + relico.cyan(projectDir))
-  console.log(relico.dim('  Git:      ') + relico.cyan(flags.git ? 'Yes' : 'No'))
-  console.log(relico.dim('  Install:  ') + relico.cyan(flags.install ? 'Yes' : 'No'))
-  console.log()
+  console.log();
+  console.log(relico.bold("Creating Rempts project:"));
+  console.log(relico.dim("  Name:     ") + relico.cyan(projectName!));
+  console.log(relico.dim("  Template: ") + relico.cyan(flags.template));
+  console.log(relico.dim("  Location: ") + relico.cyan(projectDir));
+  console.log(relico.dim("  Git:      ") + relico.cyan(flags.git ? "Yes" : "No"));
+  console.log(relico.dim("  Install:  ") + relico.cyan(flags.install ? "Yes" : "No"));
+  console.log();
 
-  const confirmed = await prompt.confirm('Continue?', { default: true })
+  const confirmed = await prompt.confirm("Continue?", { default: true });
   if (!confirmed) {
-    console.log(relico.red('Cancelled'))
-    process.exit(1)
+    console.log(relico.red("Cancelled"));
+    process.exit(1);
   }
 
-  console.log()
+  console.log();
 
   // Create project
   await createProject({
@@ -64,21 +66,21 @@ export async function create(context: HandlerArgs<CreateOptions>) {
     prompt,
     spinner,
     colors,
-    shell
-  })
+    shell,
+  });
 
   // Success message
-  console.log()
-  console.log(relico.green('✨ Project created successfully!'))
-  console.log()
-  console.log('Next steps:')
-  console.log(relico.gray(`  cd ${path.relative(process.cwd(), projectDir)}`))
+  console.log();
+  console.log(relico.green("✨ Project created successfully!"));
+  console.log();
+  console.log("Next steps:");
+  console.log(relico.gray(`  cd ${path.relative(process.cwd(), projectDir)}`));
 
   if (!flags.install) {
-    console.log(relico.gray(`  bun install`))
+    console.log(relico.gray(`  bun install`));
   }
 
-  console.log(relico.gray(`  bun run dev`))
+  console.log(relico.gray(`  bun run dev`));
 
-  console.log()
+  console.log();
 }

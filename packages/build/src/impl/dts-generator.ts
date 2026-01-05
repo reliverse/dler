@@ -1,20 +1,11 @@
 // packages/build/src/impl/dts-generator.ts
 
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { DtsOptions } from "@reliverse/config/impl/build";
 import { logger } from "@reliverse/relinka";
 import { readTSConfig } from "@reliverse/typerso";
-import type {
-  CompilationOptions,
-  EntryPointConfig,
-} from "dts-bundle-generator";
+import type { CompilationOptions, EntryPointConfig } from "dts-bundle-generator";
 import type { TSConfig } from "pkg-types";
 import { getDeclarations, type MkdistDtsOptions } from "./providers/mkdist-dts";
 import type { PackageInfo } from "./types";
@@ -69,53 +60,24 @@ export async function generateDeclarations(
     }
 
     // Enforce required compiler options for declaration generation
-    const enforcedOptions = enforceDeclarationOptions(
-      tsconfig,
-      dtsOptions,
-      format,
-    );
+    const enforcedOptions = enforceDeclarationOptions(tsconfig, dtsOptions, format);
 
     // Route to appropriate provider
     const provider = dtsOptions.provider || "dts-bundle-generator"; // Default
 
     switch (provider) {
       case "dts-bundle-generator":
-        return await generateWithDtsBundleGenerator(
-          pkg,
-          dtsOptions,
-          dtsOutputDir,
-          enforcedOptions,
-        );
+        return await generateWithDtsBundleGenerator(pkg, dtsOptions, dtsOutputDir, enforcedOptions);
       case "api-extractor":
-        return await generateBundledDeclarations(
-          pkg,
-          dtsOptions,
-          dtsOutputDir,
-          enforcedOptions,
-        );
+        return await generateBundledDeclarations(pkg, dtsOptions, dtsOutputDir, enforcedOptions);
       case "typescript":
-        return await generateBundlelessDeclarations(
-          pkg,
-          dtsOptions,
-          dtsOutputDir,
-          enforcedOptions,
-        );
+        return await generateBundlelessDeclarations(pkg, dtsOptions, dtsOutputDir, enforcedOptions);
       case "mkdist":
-        return await generateWithMkdist(
-          pkg,
-          dtsOptions,
-          dtsOutputDir,
-          enforcedOptions,
-        );
+        return await generateWithMkdist(pkg, dtsOptions, dtsOutputDir, enforcedOptions);
       default:
         // Fallback for backwards compatibility
         if (dtsOptions.bundle) {
-          return await generateBundledDeclarations(
-            pkg,
-            dtsOptions,
-            dtsOutputDir,
-            enforcedOptions,
-          );
+          return await generateBundledDeclarations(pkg, dtsOptions, dtsOutputDir, enforcedOptions);
         } else {
           return await generateBundlelessDeclarations(
             pkg,
@@ -136,9 +98,7 @@ export async function generateDeclarations(
     } else {
       logger.warn(`⚠️  Declaration generation failed for ${pkg.name}:`);
       logger.warn(`  Error: ${errorMessage}`);
-      logger.warn(
-        `  Provider: ${dtsOptions.provider || "dts-bundle-generator"}`,
-      );
+      logger.warn(`  Provider: ${dtsOptions.provider || "dts-bundle-generator"}`);
       logger.warn(`  Output directory: ${outputDir}`);
       return { success: true };
     }
@@ -203,16 +163,13 @@ function enforceDeclarationOptions(
   if (dtsOptions.autoExtension !== false) {
     switch (format) {
       case "cjs":
-        enforced.compilerOptions.declarationDir =
-          enforced.compilerOptions.declarationDir || "dist";
+        enforced.compilerOptions.declarationDir = enforced.compilerOptions.declarationDir || "dist";
         break;
       case "esm":
-        enforced.compilerOptions.declarationDir =
-          enforced.compilerOptions.declarationDir || "dist";
+        enforced.compilerOptions.declarationDir = enforced.compilerOptions.declarationDir || "dist";
         break;
       default:
-        enforced.compilerOptions.declarationDir =
-          enforced.compilerOptions.declarationDir || "dist";
+        enforced.compilerOptions.declarationDir = enforced.compilerOptions.declarationDir || "dist";
     }
   }
 
@@ -234,9 +191,7 @@ async function generateBundlelessDeclarations(
 
     // Create program
     const program = ts.createProgram(
-      pkg.entryPoints.filter(
-        (ep) => ep.endsWith(".ts") && !ep.endsWith(".d.ts"),
-      ),
+      pkg.entryPoints.filter((ep) => ep.endsWith(".ts") && !ep.endsWith(".d.ts")),
       {
         ...tsconfig.compilerOptions,
         outDir: outputDir,
@@ -262,9 +217,7 @@ async function generateBundlelessDeclarations(
     // Get generated files
     const generatedFiles = getGeneratedDeclarationFiles(outputDir);
 
-    logger.info(
-      `✅ Generated ${generatedFiles.length} declaration files for ${pkg.name}`,
-    );
+    logger.info(`✅ Generated ${generatedFiles.length} declaration files for ${pkg.name}`);
 
     return {
       success: true,
@@ -316,8 +269,7 @@ async function generateBundledDeclarations(
     const apiExtractorConfig = createApiExtractorConfig(pkg, outputDir);
 
     // Run API Extractor
-    const extractorConfig =
-      apiExtractor.ExtractorConfig.loadFileAndPrepare(apiExtractorConfig);
+    const extractorConfig = apiExtractor.ExtractorConfig.loadFileAndPrepare(apiExtractorConfig);
     const extractorResult = apiExtractor.Extractor.invoke(extractorConfig, {
       localBuild: true,
       showVerboseMessages: false,
@@ -367,10 +319,7 @@ function createApiExtractorConfig(pkg: PackageInfo, outputDir: string): string {
     },
     dtsRollup: {
       enabled: true,
-      untrimmedFilePath: join(
-        outputDir,
-        `${pkg.name.split("/").pop() || "index"}.d.ts`,
-      ),
+      untrimmedFilePath: join(outputDir, `${pkg.name.split("/").pop() || "index"}.d.ts`),
     },
     tsdocMetadata: {
       enabled: false,
@@ -424,8 +373,7 @@ async function generateWithDtsBundleGenerator(
     } catch {
       return {
         success: false,
-        error:
-          "dts-bundle-generator not found. Install dts-bundle-generator for this provider.",
+        error: "dts-bundle-generator not found. Install dts-bundle-generator for this provider.",
       };
     }
 
@@ -455,8 +403,7 @@ async function generateWithDtsBundleGenerator(
     // Prepare configuration
     const config: CompilationOptions = {
       preferredConfigPath:
-        dtsOptions.dtsBundleGenerator?.preferredConfigPath ||
-        join(pkg.path, "tsconfig.json"),
+        dtsOptions.dtsBundleGenerator?.preferredConfigPath || join(pkg.path, "tsconfig.json"),
       ...dtsOptions.dtsBundleGenerator,
     };
 
@@ -495,9 +442,7 @@ async function generateWithDtsBundleGenerator(
       writeFileSync(destPath, content);
       generatedFiles.push(destPath);
 
-      logger.info(
-        `✅ Generated declaration file: ${destPath} (${content.length} bytes)`,
-      );
+      logger.info(`✅ Generated declaration file: ${destPath} (${content.length} bytes)`);
     }
 
     if (generatedFiles.length === 0) {
@@ -580,13 +525,7 @@ async function generateWithMkdist(
     const mkdistOptions: MkdistDtsOptions = dtsOptions.mkdist || {};
 
     // Generate declarations using mkdist's VFS approach
-    const declarations = await getDeclarations(
-      vfs,
-      pkg,
-      dtsOptions,
-      outputDir,
-      mkdistOptions,
-    );
+    const declarations = await getDeclarations(vfs, pkg, dtsOptions, outputDir, mkdistOptions);
 
     // Write generated declarations to output directory
     const generatedFiles: string[] = [];
@@ -626,9 +565,7 @@ async function generateWithMkdist(
         }
       }
 
-      logger.info(
-        `✅ Generated declaration file: ${destPath} (${result.contents.length} bytes)`,
-      );
+      logger.info(`✅ Generated declaration file: ${destPath} (${result.contents.length} bytes)`);
     }
 
     if (generatedFiles.length === 0) {
@@ -651,16 +588,12 @@ async function generateWithMkdist(
       }
 
       // Check if declarations were generated but not written
-      const declarationFiles = Array.from(vfs.keys()).filter((key) =>
-        key.endsWith(".d.ts"),
-      );
+      const declarationFiles = Array.from(vfs.keys()).filter((key) => key.endsWith(".d.ts"));
       if (declarationFiles.length > 0) {
         diagnosticInfo.push(
           `Generated ${declarationFiles.length} declaration files in VFS but failed to write them`,
         );
-        diagnosticInfo.push(
-          `Declaration files: ${declarationFiles.join(", ")}`,
-        );
+        diagnosticInfo.push(`Declaration files: ${declarationFiles.join(", ")}`);
       } else {
         diagnosticInfo.push("No declaration files were generated in VFS");
       }

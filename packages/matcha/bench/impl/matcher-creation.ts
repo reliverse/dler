@@ -11,12 +11,7 @@ const patterns = [
   "**/*.{ts,tsx}",
 ];
 
-const testInputs = [
-  "src/mod.ts",
-  "test/index.test.ts",
-  "dist/index.js",
-  "packages/foo/src/mod.ts",
-];
+const testInputs = ["src/mod.ts", "test/index.test.ts", "dist/index.js", "packages/foo/src/mod.ts"];
 
 export async function benchmarkMatcherCreation(
   benchmark: (

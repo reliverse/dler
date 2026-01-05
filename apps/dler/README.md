@@ -58,6 +58,7 @@ dler dev -- --help
 ```
 
 Development options:
+
 - `--entry, -e` - Entry file (defaults to auto-detect)
 - `--watch, -w` - Watch for changes (default: true)
 - `--inspect, -i` - Enable debugger
@@ -107,11 +108,13 @@ dler generate --output ./types/commands.gen.ts
 ```
 
 Generate options:
+
 - `--commandsDir` - Commands directory to scan (default: commands)
 - `--output, -o` - Output file path (default: ./commands.gen.ts)
 - `--watch, -w` - Watch for changes and regenerate
 
 The generator creates type-safe command definitions with:
+
 - Autocomplete for command names and options
 - Type safety at compile time
 - IntelliSense for command metadata
@@ -148,6 +151,7 @@ dler init --no-git --no-install
 ```
 
 Init options:
+
 - `--name, -n` - Project name
 - `--template, -t` - Project template (basic/advanced/monorepo)
 - `--dir, -d` - Directory to create project in
@@ -174,6 +178,7 @@ dler test --all
 ```
 
 Test options:
+
 - `--pattern, -p` - Test file patterns
 - `--watch, -w` - Watch for changes
 - `--coverage, -c` - Generate coverage report
@@ -203,6 +208,7 @@ dler release --all
 ```
 
 Release options:
+
 - `--version, -v` - Version to release (patch/minor/major/x.y.z)
 - `--tag, -t` - Git tag format
 - `--npm` - Publish to npm
@@ -240,6 +246,7 @@ dler build --targets all
 ```
 
 Supported platforms:
+
 - `darwin-arm64` - macOS Apple Silicon
 - `darwin-x64` - macOS Intel
 - `linux-arm64` - Linux ARM64
@@ -256,7 +263,7 @@ import { defineConfig } from '@reliverse/dler'
 export default defineConfig({
   name: 'my-cli',
   version: '1.0.0',
-  
+
   build: {
     entry: './src/cli.ts',
     outdir: './dist',
@@ -265,7 +272,7 @@ export default defineConfig({
     minify: true,
     external: ['some-native-module']
   },
-  
+
   dev: {
     watch: true,
     inspect: false

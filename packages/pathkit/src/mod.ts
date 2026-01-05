@@ -86,9 +86,7 @@ type ImportExtType = "js" | "ts" | "none";
 function normalizeWindowsPath(input = ""): string {
   if (!input) return input;
 
-  return input
-    .replace(/\\/g, SLASH)
-    .replace(DRIVE_LETTER_START_RE, (r) => r.toUpperCase());
+  return input.replace(/\\/g, SLASH).replace(DRIVE_LETTER_START_RE, (r) => r.toUpperCase());
 }
 
 /**
@@ -202,9 +200,7 @@ const normalize = (path: string): string => {
   if (path.length === 0) {
     if (isPathAbsolute) return SLASH;
 
-    return trailingSeparator && originalPath.length > 0 && originalPath !== DOT
-      ? "./"
-      : DOT;
+    return trailingSeparator && originalPath.length > 0 && originalPath !== DOT ? "./" : DOT;
   }
 
   if (trailingSeparator && !path.endsWith(SLASH)) {
@@ -333,15 +329,9 @@ const relative = (from: string, to: string): string => {
 
   if (resolvedFrom === resolvedTo) return EMPTY;
 
-  const fromSegments = resolvedFrom
-    .replace(ROOT_FOLDER_RE, "$1")
-    .split(SLASH)
-    .filter(Boolean);
+  const fromSegments = resolvedFrom.replace(ROOT_FOLDER_RE, "$1").split(SLASH).filter(Boolean);
 
-  const toSegments = resolvedTo
-    .replace(ROOT_FOLDER_RE, "$1")
-    .split(SLASH)
-    .filter(Boolean);
+  const toSegments = resolvedTo.replace(ROOT_FOLDER_RE, "$1").split(SLASH).filter(Boolean);
 
   // handle different drive letters on windows
   if (
@@ -367,9 +357,7 @@ const relative = (from: string, to: string): string => {
     commonSegments++;
   }
 
-  const upSegments = Array(fromSegments.length - commonSegments).fill(
-    DOUBLE_DOT,
-  );
+  const upSegments = Array(fromSegments.length - commonSegments).fill(DOUBLE_DOT);
   const downSegments = toSegments.slice(commonSegments);
 
   const result = [...upSegments, ...downSegments].join(SLASH);
@@ -404,9 +392,7 @@ const dirname = (p: string): string => {
  */
 const format = (p: FormatInputPathObject): string => {
   if (typeof p !== "object" || p === null) {
-    throw new TypeError(
-      'Parameter "pathObject" must be an object, not null or other type.',
-    );
+    throw new TypeError('Parameter "pathObject" must be an object, not null or other type.');
   }
 
   const dir = p.dir || p.root || "";
@@ -520,32 +506,23 @@ function normalizeAliases(aliases: Record<string, string>): NormalizedRecord {
   const sortedAliasesEntries = Object.entries(aliases)
     .map(
       ([key, value]) =>
-        [normalizeWindowsPath(key), normalizeWindowsPath(value)] as [
-          string,
-          string,
-        ],
+        [normalizeWindowsPath(key), normalizeWindowsPath(value)] as [string, string],
     )
     .sort(([a], [b]) => compareAliases(a, b));
 
-  const sortedAliases: Record<string, string> =
-    Object.fromEntries(sortedAliasesEntries);
+  const sortedAliases: Record<string, string> = Object.fromEntries(sortedAliasesEntries);
 
   // resolve nested aliases
   for (const key in sortedAliases) {
     for (const aliasPrefix in sortedAliases) {
-      if (
-        aliasPrefix === key ||
-        key.startsWith(aliasPrefix + SLASH) ||
-        key === aliasPrefix
-      )
+      if (aliasPrefix === key || key.startsWith(aliasPrefix + SLASH) || key === aliasPrefix)
         continue;
 
       const value = sortedAliases[key];
       if (value?.startsWith(aliasPrefix)) {
         const nextChar = value[aliasPrefix.length];
         if (nextChar === undefined || nextChar === SLASH) {
-          sortedAliases[key] =
-            sortedAliases[aliasPrefix] + value.slice(aliasPrefix.length);
+          sortedAliases[key] = sortedAliases[aliasPrefix] + value.slice(aliasPrefix.length);
         }
       }
     }
@@ -570,9 +547,7 @@ function resolveAlias(path: string, aliases: Record<string, string>): string {
 
   for (const [alias, to] of Object.entries(normalizedAliases)) {
     const effectiveAlias = alias.endsWith(SLASH) ? alias : alias + SLASH;
-    const effectivePath = normalizedPath.endsWith(SLASH)
-      ? normalizedPath
-      : normalizedPath + SLASH;
+    const effectivePath = normalizedPath.endsWith(SLASH) ? normalizedPath : normalizedPath + SLASH;
 
     if (effectivePath.startsWith(effectiveAlias)) {
       return join(to, normalizedPath.slice(alias.length));
@@ -589,19 +564,14 @@ function resolveAlias(path: string, aliases: Record<string, string>): string {
 /**
  * finds all alias paths that could resolve to the given path
  */
-function reverseResolveAlias(
-  path: string,
-  aliases: Record<string, string>,
-): string[] {
+function reverseResolveAlias(path: string, aliases: Record<string, string>): string[] {
   const normalizedPath = normalizeWindowsPath(path);
   const normalizedAliases = normalizeAliases(aliases);
   const matches: string[] = [];
 
   for (const [alias, to] of Object.entries(normalizedAliases)) {
     const effectiveTo = to.endsWith(SLASH) ? to : to + SLASH;
-    const effectivePath = normalizedPath.endsWith(SLASH)
-      ? normalizedPath
-      : normalizedPath + SLASH;
+    const effectivePath = normalizedPath.endsWith(SLASH) ? normalizedPath : normalizedPath + SLASH;
 
     if (effectivePath.startsWith(effectiveTo)) {
       matches.push(join(alias, normalizedPath.slice(to.length)));
@@ -661,10 +631,7 @@ const findAliasMatch = (
       logInternal(`  - checking wildcard match for: ${aliasRoot}`);
 
       if (importPath === aliasRoot || importPath.startsWith(`${aliasRoot}/`)) {
-        const suffix =
-          importPath === aliasRoot
-            ? ""
-            : importPath.slice(aliasRoot.length + 1);
+        const suffix = importPath === aliasRoot ? "" : importPath.slice(aliasRoot.length + 1);
 
         const targetPaths = paths[aliasKey];
         if (targetPaths?.[0]) {
@@ -800,11 +767,7 @@ async function convertStringAliasRelative({
 /**
  * replaces all occurrences of a string while tracking position
  */
-function replaceAllInString(
-  original: string,
-  searchValue: string,
-  replaceValue: string,
-): string {
+function replaceAllInString(original: string, searchValue: string, replaceValue: string): string {
   let currentPosition = 0;
   let result = "";
 
@@ -834,9 +797,7 @@ async function processFile(
   displayLogsOnlyFor?: string[],
   displayLogs = false,
 ): Promise<{ from: string; to: string }[]> {
-  const shouldLog =
-    displayLogs &&
-    (!displayLogsOnlyFor || displayLogsOnlyFor.includes(filePath));
+  const shouldLog = displayLogs && (!displayLogsOnlyFor || displayLogsOnlyFor.includes(filePath));
   const log = (msg: string) => shouldLog && filteredLogger(msg);
 
   const content = await fs.readFile(filePath, "utf-8");
@@ -845,9 +806,7 @@ async function processFile(
   const matches = Array.from(content.matchAll(IMPORT_EXPORT_REGEX));
 
   // ensure aliastoreplace has the wildcard pattern if it doesn't already
-  const normalizedAlias = aliasToReplace.endsWith("/*")
-    ? aliasToReplace
-    : `${aliasToReplace}/*`;
+  const normalizedAlias = aliasToReplace.endsWith("/*") ? aliasToReplace : `${aliasToReplace}/*`;
 
   // Get the base alias without wildcard for comparison
   const baseAlias = aliasToReplace.replace("/*", "");
@@ -897,9 +856,7 @@ async function processFile(
 
     // For "none" mode, ensure we remove any extension from the relative path
     const finalPath =
-      pathExtFilter === "none"
-        ? relPath.replace(/\.(ts|js|tsx|jsx|mjs|cjs)$/, "")
-        : relPath;
+      pathExtFilter === "none" ? relPath.replace(/\.(ts|js|tsx|jsx|mjs|cjs)$/, "") : relPath;
 
     if (importPath !== finalPath) {
       changes.push({ from: importPath, to: finalPath });
@@ -945,8 +902,7 @@ async function processAllFiles({
 }): Promise<{ file: string; changes: { from: string; to: string }[] }[]> {
   try {
     const entries = await fs.readdir(srcDir, { withFileTypes: true });
-    const results: { file: string; changes: { from: string; to: string }[] }[] =
-      [];
+    const results: { file: string; changes: { from: string; to: string }[] }[] = [];
 
     await Promise.all(
       entries.map(async (entry) => {
@@ -1008,9 +964,7 @@ async function convertImportsAliasToRelative({
   displayLogsOnlyFor?: string[];
   displayLogs?: boolean;
 }): Promise<{ file: string; changes: { from: string; to: string }[] }[]> {
-  const normalizedAlias = aliasToReplace.endsWith("/*")
-    ? aliasToReplace
-    : `${aliasToReplace}/*`;
+  const normalizedAlias = aliasToReplace.endsWith("/*") ? aliasToReplace : `${aliasToReplace}/*`;
 
   // regularLogger(
   //   `Converting aliased imports starting with '${aliasToReplace}' to relative paths in "${targetDir}"...`,
@@ -1068,11 +1022,7 @@ async function convertImportsExt({
   const toExtStr = extTo === "none" ? "" : `.${extTo}`;
 
   // Normalize alias to handle both @ and @/* formats
-  const normalizedAlias = alias
-    ? alias.endsWith("/*")
-      ? alias
-      : `${alias}/*`
-    : undefined;
+  const normalizedAlias = alias ? (alias.endsWith("/*") ? alias : `${alias}/*`) : undefined;
   const aliasPrefix = normalizedAlias?.replace("/*", "");
 
   // match import/export statements with the specified extension
@@ -1129,8 +1079,7 @@ async function convertImportsExt({
 
   try {
     const entries = await fs.readdir(targetDir, { withFileTypes: true });
-    const results: { file: string; changes: { from: string; to: string }[] }[] =
-      [];
+    const results: { file: string; changes: { from: string; to: string }[] }[] = [];
 
     await Promise.all(
       entries.map(async (entry) => {
@@ -1172,16 +1121,13 @@ async function convertImportsExt({
 
             if (extFrom === "none") {
               // Only add extension if path doesn't already have one
-              replacementPath = /\.[^/]+$/.test(importPath)
-                ? importPath
-                : importPath + toExtStr;
+              replacementPath = /\.[^/]+$/.test(importPath) ? importPath : importPath + toExtStr;
             } else if (extTo === "none") {
               // removing extension
               replacementPath = importPath.slice(0, -fromExtStr.length);
             } else {
               // replacing one extension with another
-              replacementPath =
-                importPath.slice(0, -fromExtStr.length) + toExtStr;
+              replacementPath = importPath.slice(0, -fromExtStr.length) + toExtStr;
             }
 
             // skip if the path doesn't actually change
@@ -1279,10 +1225,7 @@ function stripPathSegments(path: string, count = 1, alias = ""): string {
     }
   }
 
-  while (
-    pathSegments.length > 0 &&
-    (pathSegments[0] === DOT || pathSegments[0] === DOUBLE_DOT)
-  ) {
+  while (pathSegments.length > 0 && (pathSegments[0] === DOT || pathSegments[0] === DOUBLE_DOT)) {
     const preserved = pathSegments.shift();
     if (preserved) {
       leadingPreservedSegments.push(preserved);
@@ -1298,10 +1241,7 @@ function stripPathSegments(path: string, count = 1, alias = ""): string {
   logInternal(`  ${JSON.stringify(remainingBodySegments)}`);
 
   const pathRoot = parsed.root;
-  const effectiveSegments = [
-    ...leadingPreservedSegments,
-    ...remainingBodySegments,
-  ];
+  const effectiveSegments = [...leadingPreservedSegments, ...remainingBodySegments];
   logInternal(`  - effective segments: ${JSON.stringify(effectiveSegments)}`);
 
   let result: string;
@@ -1340,8 +1280,7 @@ async function stripPathSegmentsInDirectory({
 }): Promise<{ file: string; changes: { from: string; to: string }[] }[]> {
   try {
     const entries = await fs.readdir(targetDir, { withFileTypes: true });
-    const results: { file: string; changes: { from: string; to: string }[] }[] =
-      [];
+    const results: { file: string; changes: { from: string; to: string }[] }[] = [];
 
     await Promise.all(
       entries.map(async (entry) => {
@@ -1385,11 +1324,7 @@ async function stripPathSegmentsInDirectory({
             }
 
             logInternal(`  Processing import/export: ${importPath}`);
-            const strippedPath = stripPathSegments(
-              importPath,
-              segmentsToStrip,
-              alias,
-            );
+            const strippedPath = stripPathSegments(importPath, segmentsToStrip, alias);
 
             if (importPath === strippedPath) {
               logInternal(`  - no changes needed for ${importPath}`);
@@ -1483,9 +1418,7 @@ function attachPathSegments(
   let alias = "";
   let pathWithoutAlias = basePath;
   if (preserveAlias && position === "before") {
-    const aliasMatch = new RegExp(`^${preserveAlias.replace("*", ".*")}`).exec(
-      basePath,
-    );
+    const aliasMatch = new RegExp(`^${preserveAlias.replace("*", ".*")}`).exec(basePath);
     if (aliasMatch) {
       alias = aliasMatch[0];
       pathWithoutAlias = basePath.slice(alias.length);
@@ -1495,9 +1428,7 @@ function attachPathSegments(
   // Handle absolute paths and preserve root if requested
   const isAbsolute = IS_ABSOLUTE_RE.test(pathWithoutAlias);
   const root = preserveRoot && isAbsolute ? SLASH : "";
-  const pathWithoutRoot = isAbsolute
-    ? pathWithoutAlias.slice(1)
-    : pathWithoutAlias;
+  const pathWithoutRoot = isAbsolute ? pathWithoutAlias.slice(1) : pathWithoutAlias;
 
   // Join segments with proper slashes
   const joinedSegments = validSegments.join(SLASH);
@@ -1541,8 +1472,7 @@ async function attachPathSegmentsInDirectory({
 }): Promise<{ file: string; changes: { from: string; to: string }[] }[]> {
   try {
     const entries = await fs.readdir(targetDir, { withFileTypes: true });
-    const results: { file: string; changes: { from: string; to: string }[] }[] =
-      [];
+    const results: { file: string; changes: { from: string; to: string }[] }[] = [];
 
     await Promise.all(
       entries.map(async (entry) => {
@@ -1576,11 +1506,7 @@ async function attachPathSegmentsInDirectory({
             // skip if path doesn't need processing
             if (!importPath.includes(SLASH)) continue;
 
-            const modifiedPath = attachPathSegments(
-              importPath,
-              segments,
-              options,
-            );
+            const modifiedPath = attachPathSegments(importPath, segments, options);
 
             // skip if no change
             if (importPath === modifiedPath) continue;
@@ -1609,9 +1535,7 @@ async function attachPathSegmentsInDirectory({
     );
 
     if (results.length > 0 && displayLogs) {
-      regularLogger(
-        () => "\n[attachPathSegmentsInDirectory] Summary of changes:",
-      );
+      regularLogger(() => "\n[attachPathSegmentsInDirectory] Summary of changes:");
       for (const { file, changes } of results) {
         const displayPath = relative(targetDir, file) || basename(file);
         regularLogger(() => `  in ${displayPath}:`);
@@ -1683,8 +1607,7 @@ const _platforms = {
  */
 const mix = (
   platformDefault: "posix" | "win32" | "currentSystem" = "currentSystem",
-): PlatformPath &
-  typeof _pathBase & { posix: PlatformPath; win32: PlatformPath } => {
+): PlatformPath & typeof _pathBase & { posix: PlatformPath; win32: PlatformPath } => {
   const actualDefault =
     platformDefault === "currentSystem"
       ? globalThis.process?.platform === "win32"
@@ -1692,8 +1615,7 @@ const mix = (
         : "posix"
       : platformDefault;
 
-  const defaultPathObject =
-    actualDefault === "win32" ? _platforms.win32 : _platforms.posix;
+  const defaultPathObject = actualDefault === "win32" ? _platforms.win32 : _platforms.posix;
 
   return new Proxy(defaultPathObject, {
     get(target, prop) {
@@ -1710,15 +1632,12 @@ const mix = (
       }
       return undefined;
     },
-  }) as unknown as PlatformPath &
-    typeof _pathBase & { posix: PlatformPath; win32: PlatformPath };
+  }) as unknown as PlatformPath & typeof _pathBase & { posix: PlatformPath; win32: PlatformPath };
 };
 
-const path: PlatformPath &
-  typeof _pathBase & { posix: PlatformPath; win32: PlatformPath } = mix();
+const path: PlatformPath & typeof _pathBase & { posix: PlatformPath; win32: PlatformPath } = mix();
 const win32 = _platforms.win32;
-const delimiter: ";" | ":" =
-  globalThis.process?.platform === "win32" ? ";" : (":" as const);
+const delimiter: ";" | ":" = globalThis.process?.platform === "win32" ? ";" : (":" as const);
 
 export type {
   PlatformPath,

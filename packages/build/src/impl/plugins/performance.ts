@@ -18,9 +18,7 @@ export const PerformancePlugin: DlerPlugin = {
     try {
       await checkPerformanceBudgets(result);
     } catch (error) {
-      logger.warn(
-        `Failed to check performance budgets for ${result.package.name}: ${error}`,
-      );
+      logger.warn(`Failed to check performance budgets for ${result.package.name}: ${error}`);
     }
   },
 };
@@ -62,9 +60,7 @@ async function checkPerformanceBudgets(result: BuildResult): Promise<void> {
       logger.warn(`   ${warning}`);
     }
   } else {
-    logger.info(
-      `✅ Performance budget met for ${pkg.name} (${formatBytes(bundleSize)})`,
-    );
+    logger.info(`✅ Performance budget met for ${pkg.name} (${formatBytes(bundleSize)})`);
   }
 }
 

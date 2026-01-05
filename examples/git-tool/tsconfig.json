@@ -5,13 +5,8 @@
     "allowImportingTsExtensions": false,
     "skipLibCheck": true,
     "paths": {
-      "~commands/*": [
-        "./.dler/commands.gen.ts"
-      ]
+      "~commands/*": ["./.dler/commands.gen.ts"]
     }
   },
-  "include": [
-    ".dler/**/*.ts",
-    "**/*.ts"
-  ]
+  "include": [".dler/**/*.ts", "**/*.ts"]
 }

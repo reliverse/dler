@@ -38,7 +38,6 @@ You want **micromatch/picomatch features** in a **zeptomatch-sized**(🔜) packa
   - `[abc]` - Matches any single character from the set
   - `[a-z]` - Matches any single character in the range
   - `[!abc]` or `[^abc]` - Matches any single character not in the set
-  
 - **Brace Expansion**
   - `{a,b,c}` - Matches any of the comma-separated patterns
   - Nested braces supported: `{a,{b,c}}` expands correctly
@@ -57,7 +56,6 @@ You want **micromatch/picomatch features** in a **zeptomatch-sized**(🔜) packa
 - **Dot File Handling**
   - By default, `*` won't match files starting with a dot
   - Explicit dot matching with `.*.js` or setting `dot: true` option
-  
 - **Path Handling**
   - Automatic path normalization (converts backslashes to forward slashes)
   - Proper handling of path separators in globstar patterns

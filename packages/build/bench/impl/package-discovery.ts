@@ -1,8 +1,5 @@
 import { resolve } from "node:path";
-import {
-  findMonorepoRoot,
-  loadDlerConfig,
-} from "@reliverse/config/impl/discovery";
+import { findMonorepoRoot, loadDlerConfig } from "@reliverse/config/impl/discovery";
 import { getWorkspacePatterns, readPackageJSON } from "@reliverse/typerso";
 import type { BenchmarkResult } from "../perf";
 
@@ -35,9 +32,7 @@ const discoverPackages = async (cwd?: string): Promise<number> => {
     if (pattern.includes("*")) {
       // Pattern with wildcards - use glob
       const glob = new Bun.Glob(pattern);
-      const matches = Array.from(
-        glob.scanSync({ cwd: monorepoRoot, onlyFiles: false }),
-      );
+      const matches = Array.from(glob.scanSync({ cwd: monorepoRoot, onlyFiles: false }));
       count += matches.length;
     } else {
       // Direct package path

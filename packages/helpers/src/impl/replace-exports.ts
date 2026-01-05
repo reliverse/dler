@@ -31,12 +31,8 @@ function matchesPattern(str: string, pattern: string): boolean {
   return str === pattern;
 }
 
-function shouldIgnorePackage(
-  packageName: string,
-  ignorePackages: string | string[],
-): boolean {
-  const patterns =
-    typeof ignorePackages === "string" ? [ignorePackages] : ignorePackages;
+function shouldIgnorePackage(packageName: string, ignorePackages: string | string[]): boolean {
+  const patterns = typeof ignorePackages === "string" ? [ignorePackages] : ignorePackages;
   return patterns.some((pattern) => matchesPattern(packageName, pattern));
 }
 
@@ -50,10 +46,7 @@ const DIST_DTS_PATTERN_JS_TO_TS = /"types":\s*"\.\/dist\/([^"]+)\.d\.ts"/g;
 const ROOT_JS_PATTERN_JS_TO_TS = /"default":\s*"\.\/([^"]+\.js)"/g;
 const ROOT_DTS_PATTERN_JS_TO_TS = /"types":\s*"\.\/([^"]+\.d\.ts)"/g;
 
-function replaceInPackageJson(
-  filePath: string,
-  direction: "ts-to-js" | "js-to-ts",
-): boolean {
+function replaceInPackageJson(filePath: string, direction: "ts-to-js" | "js-to-ts"): boolean {
   const content = readFileSync(filePath, "utf-8");
 
   if (direction === "ts-to-js") {
@@ -65,10 +58,7 @@ function replaceInPackageJson(
     DEFAULT_PATTERN_TS_TO_JS.lastIndex = 0;
     if (DEFAULT_PATTERN_TS_TO_JS.test(content)) {
       DEFAULT_PATTERN_TS_TO_JS.lastIndex = 0;
-      updated = updated.replace(
-        DEFAULT_PATTERN_TS_TO_JS,
-        '"default": "./dist/$1.js"',
-      );
+      updated = updated.replace(DEFAULT_PATTERN_TS_TO_JS, '"default": "./dist/$1.js"');
       hasChanges = true;
     }
 
@@ -76,10 +66,7 @@ function replaceInPackageJson(
     TYPES_PATTERN_TS_TO_JS.lastIndex = 0;
     if (TYPES_PATTERN_TS_TO_JS.test(content)) {
       TYPES_PATTERN_TS_TO_JS.lastIndex = 0;
-      updated = updated.replace(
-        TYPES_PATTERN_TS_TO_JS,
-        '"types": "./dist/$1.d.ts"',
-      );
+      updated = updated.replace(TYPES_PATTERN_TS_TO_JS, '"types": "./dist/$1.d.ts"');
       hasChanges = true;
     }
 
@@ -115,10 +102,7 @@ function replaceInPackageJson(
     DIST_JS_PATTERN_JS_TO_TS.lastIndex = 0;
     if (DIST_JS_PATTERN_JS_TO_TS.test(content)) {
       DIST_JS_PATTERN_JS_TO_TS.lastIndex = 0;
-      updated = updated.replace(
-        DIST_JS_PATTERN_JS_TO_TS,
-        '"default": "./src/$1.ts"',
-      );
+      updated = updated.replace(DIST_JS_PATTERN_JS_TO_TS, '"default": "./src/$1.ts"');
       hasChanges = true;
     }
 
@@ -126,10 +110,7 @@ function replaceInPackageJson(
     DIST_DTS_PATTERN_JS_TO_TS.lastIndex = 0;
     if (DIST_DTS_PATTERN_JS_TO_TS.test(content)) {
       DIST_DTS_PATTERN_JS_TO_TS.lastIndex = 0;
-      updated = updated.replace(
-        DIST_DTS_PATTERN_JS_TO_TS,
-        '"types": "./src/$1.ts"',
-      );
+      updated = updated.replace(DIST_DTS_PATTERN_JS_TO_TS, '"types": "./src/$1.ts"');
       hasChanges = true;
     }
 
@@ -167,11 +148,7 @@ function replaceInPackageJson(
 export async function replaceExportsInPackages(
   options: ReplaceExportsOptions = {},
 ): Promise<ReplaceResult> {
-  const {
-    direction = "ts-to-js",
-    cwd = process.cwd(),
-    ignorePackages,
-  } = options;
+  const { direction = "ts-to-js", cwd = process.cwd(), ignorePackages } = options;
 
   const glob = new Glob("**/package.json");
   const packageJsonFiles: string[] = [];

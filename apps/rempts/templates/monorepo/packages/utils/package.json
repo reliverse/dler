@@ -1,16 +1,16 @@
 {
   "name": "@{{name}}/utils",
   "version": "0.1.0",
-  "type": "module",
   "description": "Shared utilities for {{name}}",
-  "author": "{{author}}",
   "license": "MIT",
+  "author": "{{author}}",
+  "type": "module",
   "main": "./dist/mod.js",
   "types": "./src/mod.ts",
   "exports": {
     ".": {
-      "import": "./src/mod.ts",
-      "types": "./src/mod.ts"
+      "types": "./src/mod.ts",
+      "import": "./src/mod.ts"
     }
   },
   "scripts": {

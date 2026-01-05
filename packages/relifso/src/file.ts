@@ -41,9 +41,7 @@ const toBunWritable = async (input: FileInput): Promise<BunWritable> => {
   return new Uint8Array(input as unknown as ArrayBuffer);
 };
 
-const toNodeWritable = async (
-  input: FileInput,
-): Promise<string | NodeJS.ArrayBufferView> => {
+const toNodeWritable = async (input: FileInput): Promise<string | NodeJS.ArrayBufferView> => {
   if (typeof input === "string") {
     return input;
   }
@@ -126,10 +124,7 @@ export async function readFile(
   }
 }
 
-export const readJson = async <T>(
-  path: PathLike,
-  _options?: ReadFileOptions,
-): Promise<T> => {
+export const readJson = async <T>(path: PathLike, _options?: ReadFileOptions): Promise<T> => {
   // Use Bun.file().json() for optimal performance (native JSON parsing)
   // Options are ignored as Bun.file().json() doesn't support them
   const file = Bun.file(toPathString(path));
@@ -151,8 +146,7 @@ export const writeFile = async (
   options?: WriteFileOptions,
 ): Promise<void> => {
   const encoding = options?.encoding;
-  const hasSpecialOptions =
-    options?.mode !== undefined || options?.signal !== undefined;
+  const hasSpecialOptions = options?.mode !== undefined || options?.signal !== undefined;
 
   // Handle encoding conversion for string input
   // UTF-8 is the default and handled by Bun.write() directly (fastest)
@@ -185,11 +179,7 @@ export const writeFile = async (
   // No encoding conversion needed
   if (!hasSpecialOptions) {
     // Fast path: Bun.write() accepts these types directly and uses optimized syscalls
-    if (
-      typeof input === "string" ||
-      input instanceof Uint8Array ||
-      input instanceof Blob
-    ) {
+    if (typeof input === "string" || input instanceof Uint8Array || input instanceof Blob) {
       await Bun.write(destination, input);
       return;
     }

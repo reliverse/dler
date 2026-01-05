@@ -9,7 +9,7 @@
       "milliseconds": 1000
     }
   },
-  "lsp":  {
+  "lsp": {
     "biome": {
       "settings": {
         "require_config_file": true

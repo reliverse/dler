@@ -2,23 +2,23 @@
  * Plugin system public API
  */
 
-export * from './types'
-export { PluginManager } from './manager'
-export { PluginContext, CommandContext, createEnvironmentInfo } from './context'
+export * from "./types";
+export { PluginManager } from "./manager";
+export { PluginContext, CommandContext, createEnvironmentInfo } from "./context";
 
 // Plugin development utilities
-export { createPlugin, createTestPlugin, composePlugins } from './create'
+export { createPlugin, createTestPlugin, composePlugins } from "./create";
 
 // Plugin testing utilities
-export { 
-  createMockPluginContext, 
-  createMockCommandContext, 
-  testPluginHooks, 
-  assertPluginBehavior 
-} from './testing'
+export {
+  createMockPluginContext,
+  createMockCommandContext,
+  testPluginHooks,
+  assertPluginBehavior,
+} from "./testing";
 
 // Re-export for convenience
-export type { 
+export type {
   RemptsPlugin,
   PluginFactory,
   PluginConfig,
@@ -27,5 +27,5 @@ export type {
   CommandResult,
   PathInfo,
   EnvironmentInfo,
-  Middleware
-} from './types'
+  Middleware,
+} from "./types";

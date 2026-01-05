@@ -25,19 +25,12 @@ function matchesPattern(str: string, pattern: string): boolean {
   return str === pattern;
 }
 
-function shouldIgnorePackage(
-  packageName: string,
-  ignorePackages: string | string[],
-): boolean {
-  const patterns =
-    typeof ignorePackages === "string" ? [ignorePackages] : ignorePackages;
+function shouldIgnorePackage(packageName: string, ignorePackages: string | string[]): boolean {
+  const patterns = typeof ignorePackages === "string" ? [ignorePackages] : ignorePackages;
   return patterns.some((pattern) => matchesPattern(packageName, pattern));
 }
 
-function replaceInPackageJson(
-  filePath: string,
-  direction: "ts-to-js" | "js-to-ts",
-): boolean {
+function replaceInPackageJson(filePath: string, direction: "ts-to-js" | "js-to-ts"): boolean {
   const content = readFileSync(filePath, "utf-8");
 
   if (direction === "ts-to-js") {
@@ -247,11 +240,7 @@ function replaceInPackageJson(
 export async function replaceExportsInPackages(
   options: ReplaceExportsOptions = {},
 ): Promise<ReplaceResult> {
-  const {
-    direction = "ts-to-js",
-    cwd = process.cwd(),
-    ignorePackages,
-  } = options;
+  const { direction = "ts-to-js", cwd = process.cwd(), ignorePackages } = options;
 
   const glob = new Glob("**/package.json");
   const packageJsonFiles: string[] = [];

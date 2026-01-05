@@ -1,9 +1,20 @@
 {
   "name": "@reliverse/config",
-  "description": "Configuration management for Reliverse ecosystem",
-  "author": "reliverse",
   "version": "2.2.9",
   "private": false,
+  "description": "Configuration management for Reliverse ecosystem",
+  "keywords": [
+    "build",
+    "config",
+    "dler",
+    "publish"
+  ],
+  "license": "MIT",
+  "author": "reliverse",
+  "files": [
+    "dist",
+    "package.json"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -15,33 +26,22 @@
       "default": "./src/impl/*.ts"
     }
   },
-  "dependencies": {
-    "c12": "catalog:",
-    "semver": "catalog:",
-    "@reliverse/matcha": "workspace:*",
-    "@reliverse/typerso": "workspace:*"
-  },
-  "keywords": [
-    "dler",
-    "config",
-    "build",
-    "publish"
-  ],
   "publishConfig": {
     "access": "public"
   },
-  "files": [
-    "dist",
-    "package.json"
-  ],
-  "license": "MIT",
-  "devDependencies": {
-    "@reliverse/tsconfig": "workspace:*",
-    "@types/semver": "catalog:",
-    "typescript": "catalog:",
-    "@types/bun": "catalog:"
-  },
   "scripts": {
     "perf": "bun bench/perf.ts"
+  },
+  "dependencies": {
+    "@reliverse/matcha": "workspace:*",
+    "@reliverse/typerso": "workspace:*",
+    "c12": "catalog:",
+    "semver": "catalog:"
+  },
+  "devDependencies": {
+    "@reliverse/tsconfig": "workspace:*",
+    "@types/bun": "catalog:",
+    "@types/semver": "catalog:",
+    "typescript": "catalog:"
   }
 }

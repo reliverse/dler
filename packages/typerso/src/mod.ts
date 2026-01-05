@@ -29,9 +29,7 @@ export const readPackageJSONSafe = async (path: string) => {
   }
 };
 
-export const hasWorkspaces = (
-  packageJson: PackageJson | null | undefined,
-): boolean =>
+export const hasWorkspaces = (packageJson: PackageJson | null | undefined): boolean =>
   !!(
     packageJson &&
     typeof packageJson === "object" &&
@@ -42,9 +40,7 @@ export const hasWorkspaces = (
     Array.isArray(packageJson.workspaces.packages)
   );
 
-export const getWorkspacePatterns = (
-  packageJson: PackageJson | null | undefined,
-): string[] => {
+export const getWorkspacePatterns = (packageJson: PackageJson | null | undefined): string[] => {
   if (
     packageJson &&
     typeof packageJson === "object" &&
@@ -106,9 +102,7 @@ export function parseBinArgument(binArg: string): Record<string, string> {
  * Transform exports field to point to built files instead of source files
  * This converts source paths (src/*.ts) to built paths (dist/*.js, dist/*.d.ts)
  */
-export function transformExportsForBuild(
-  exports: PackageJson["exports"],
-): PackageJson["exports"] {
+export function transformExportsForBuild(exports: PackageJson["exports"]): PackageJson["exports"] {
   if (typeof exports === "string") {
     // Simple string export - convert .ts to .js and src/ to dist/
     return exports.replace(/\.ts$/, ".js").replace(/^\.\/src\//, "./dist/");
@@ -154,9 +148,7 @@ export function transformExportsForBuild(
         updated[key] = updatedValue;
       } else if (typeof value === "string") {
         // Direct string value - convert .ts to .js and src/ to dist/
-        updated[key] = value
-          .replace(/\.ts$/, ".js")
-          .replace(/^\.\/src\//, "./dist/");
+        updated[key] = value.replace(/\.ts$/, ".js").replace(/^\.\/src\//, "./dist/");
       } else {
         updated[key] = value;
       }

@@ -1,16 +1,16 @@
 {
   "name": "@{{name}}/core",
   "version": "0.1.0",
-  "type": "module",
   "description": "Core functionality for {{name}}",
-  "author": "{{author}}",
   "license": "MIT",
+  "author": "{{author}}",
+  "type": "module",
   "main": "./dist/mod.js",
   "types": "./src/mod.ts",
   "exports": {
     ".": {
-      "import": "./src/mod.ts",
-      "types": "./src/mod.ts"
+      "types": "./src/mod.ts",
+      "import": "./src/mod.ts"
     }
   },
   "scripts": {
@@ -25,8 +25,8 @@
     "zod": "^3.22.0"
   },
   "devDependencies": {
-    "@reliverse/tsconfig": "workspace:*",
     "@reliverse/rempts-test": "latest",
+    "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "latest",
     "typescript": "^5.0.0"
   }

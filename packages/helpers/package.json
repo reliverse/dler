@@ -2,8 +2,13 @@
   "name": "@reliverse/helpers",
   "version": "2.2.13",
   "private": false,
-  "type": "module",
   "description": "@reliverse/helpers is a collection of helper functions for the dler monorepo.",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "type": "module",
   "exports": {
     ".": {
       "types": "./src/mod.ts",
@@ -13,22 +18,17 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
-    "@reliverse/relifso": "workspace:*",
-    "@reliverse/matcha": "workspace:*",
-    "@reliverse/typerso": "workspace:*"
-  },
-  "files": [
-    "dist",
-    "package.json"
-  ],
-  "license": "MIT",
-  "devDependencies": {
-    "@reliverse/tsconfig": "workspace:*",
-    "typescript": "catalog:",
-    "@types/bun": "catalog:"
-  },
   "scripts": {
     "perf": "bun bench/perf.ts"
+  },
+  "dependencies": {
+    "@reliverse/matcha": "workspace:*",
+    "@reliverse/relifso": "workspace:*",
+    "@reliverse/typerso": "workspace:*"
+  },
+  "devDependencies": {
+    "@reliverse/tsconfig": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
   }
 }

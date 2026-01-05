@@ -1,90 +1,78 @@
-import { defineCommand, option } from '@reliverse/rempts-core'
-import { z } from 'zod'
-import { relico } from '@reliverse/relico'
+import { defineCommand, option } from "@reliverse/rempts-core";
+import { z } from "zod";
+import { relico } from "@reliverse/relico";
 
 // Type for the merged plugin stores
 type DevServerStore = {
   metrics: {
-    recordEvent: (name: string, data?: any) => void
-  }
-  config: any
-}
+    recordEvent: (name: string, data?: any) => void;
+  };
+  config: any;
+};
 
 const buildCommand = defineCommand({
-  name: 'build',
-  description: 'Build for production',
+  name: "build",
+  description: "Build for production",
   options: {
-    output: option(
-      z.string().default('dist'),
-      {
-        description: 'Output directory',
-        short: 'o'
-      }
-    ),
-    minify: option(
-      z.boolean().default(true),
-      {
-        description: 'Minify output',
-        short: 'm'
-      }
-    ),
-    sourcemap: option(
-      z.boolean().default(false),
-      {
-        description: 'Generate source maps',
-        short: 's'
-      }
-    ),
-    target: option(
-      z.enum(['node', 'bun', 'browser']).default('node'),
-      {
-        description: 'Build target',
-        short: 't'
-      }
-    )
+    output: option(z.string().default("dist"), {
+      description: "Output directory",
+      short: "o",
+    }),
+    minify: option(z.boolean().default(true), {
+      description: "Minify output",
+      short: "m",
+    }),
+    sourcemap: option(z.boolean().default(false), {
+      description: "Generate source maps",
+      short: "s",
+    }),
+    target: option(z.enum(["node", "bun", "browser"]).default("node"), {
+      description: "Build target",
+      short: "t",
+    }),
   },
   handler: async ({ flags, spinner, colors, context }) => {
-    const { output, minify, sourcemap, target } = flags
+    const { output, minify, sourcemap, target } = flags;
 
-    const buildSpinner = spinner('Building for production...')
+    const buildSpinner = spinner("Building for production...");
 
     // Simulate build process
     const steps = [
-      'Compiling TypeScript...',
-      'Bundling modules...',
-      'Optimizing assets...',
-      'Generating source maps...',
-      'Writing output...'
-    ]
+      "Compiling TypeScript...",
+      "Bundling modules...",
+      "Optimizing assets...",
+      "Generating source maps...",
+      "Writing output...",
+    ];
 
     for (let i = 0; i < steps.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 500))
-      buildSpinner.update(steps[i]!)
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      buildSpinner.update(steps[i]!);
     }
 
-    buildSpinner.succeed(`Build completed successfully`)
+    buildSpinner.succeed(`Build completed successfully`);
 
-    console.log(relico.green(`✓ Output: ${output}`))
-    console.log(relico.green(`✓ Target: ${target}`))
-    console.log(relico.green(`✓ Minified: ${minify ? 'Yes' : 'No'}`))
-    console.log(relico.green(`✓ Source maps: ${sourcemap ? 'Yes' : 'No'}`))
+    console.log(relico.green(`✓ Output: ${output}`));
+    console.log(relico.green(`✓ Target: ${target}`));
+    console.log(relico.green(`✓ Minified: ${minify ? "Yes" : "No"}`));
+    console.log(relico.green(`✓ Source maps: ${sourcemap ? "Yes" : "No"}`));
 
     // Access plugin context - now properly typed!
     if (context?.store) {
-      if ('metrics' in context.store) {
-        context.store.metrics.recordEvent('build_completed', {
+      if ("metrics" in context.store) {
+        context.store.metrics.recordEvent("build_completed", {
           output,
           minify,
           sourcemap,
-          target
-        })
+          target,
+        });
       }
 
-      if ('config' in context.store) {
-        console.log(relico.dim(`Build config: ${JSON.stringify(context.store.config, null, 2)}`))
+      if ("config" in context.store) {
+        console.log(relico.dim(`Build config: ${JSON.stringify(context.store.config, null, 2)}`));
       }
     }
-  }
-})
+  },
+});
 
-export default buildCommand
+export default buildCommand;

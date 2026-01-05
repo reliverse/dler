@@ -1,7 +1,4 @@
-import {
-  getCurrentWorkingDirectory,
-  handleError,
-} from "../../src/impl/terminal-helpers";
+import { getCurrentWorkingDirectory, handleError } from "../../src/impl/terminal-helpers";
 import type { BenchmarkResult } from "../perf";
 
 // Mock error objects

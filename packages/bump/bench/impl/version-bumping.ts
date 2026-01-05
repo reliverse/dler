@@ -1,14 +1,7 @@
 import { bumpVersion, getNextVersion } from "../../src/mod";
 import type { BenchmarkResult } from "../perf";
 
-const testVersions = [
-  "1.0.0",
-  "2.3.4",
-  "10.20.30",
-  "0.1.0",
-  "1.2.3-beta.1",
-  "2.0.0-alpha.5",
-];
+const testVersions = ["1.0.0", "2.3.4", "10.20.30", "0.1.0", "1.2.3-beta.1", "2.0.0-alpha.5"];
 
 const bumpTypes = ["major", "minor", "patch", "prerelease"] as const;
 

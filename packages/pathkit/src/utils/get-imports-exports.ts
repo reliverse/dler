@@ -71,10 +71,7 @@ export function getFileImportsExports(
   }
 
   // helper to determine real file extension
-  function getRealFileExtension(
-    path: string,
-    pathType: ImportExportInfo["pathType"],
-  ): string {
+  function getRealFileExtension(path: string, pathType: ImportExportInfo["pathType"]): string {
     // For bare imports and aliases, we can't determine the real extension
     if (pathType === "bare" || pathType === "alias") {
       return "";
@@ -117,11 +114,9 @@ export function getFileImportsExports(
     staticExport:
       /export\s+(?:type\s+)?(?:\{[^}]*\}|\*(?:\s+as\s+\w+)?)\s+from\s+['"]([^'"]+)['"]/g,
     // default exports without from
-    defaultExport:
-      /export\s+default\s+(?:\w+|\{[^}]*\}|class\s+\w+|function\s+\w+)/g,
+    defaultExport: /export\s+default\s+(?:\w+|\{[^}]*\}|class\s+\w+|function\s+\w+)/g,
     // named exports without from
-    namedExport:
-      /export\s+(?:const|let|var|function|class|enum|interface|type)\s+(\w+)/g,
+    namedExport: /export\s+(?:const|let|var|function|class|enum|interface|type)\s+(\w+)/g,
   };
 
   // helper to determine path type
@@ -129,20 +124,17 @@ export function getFileImportsExports(
     if (path.startsWith(".")) return "relative";
     if (path.startsWith("/")) return "absolute";
     if (path.startsWith("@") || path.startsWith("~")) return "alias";
-    if (path.startsWith("http://") || path.startsWith("https://"))
-      return "module";
+    if (path.startsWith("http://") || path.startsWith("https://")) return "module";
     return "bare";
   }
 
   // helper to extract specifiers from import/export statements
   function extractSpecifiers(statement: string): ImportExportSpecifier[] {
     const specifiers: ImportExportSpecifier[] = [];
-    const isTypeOnly =
-      statement.includes("import type") || statement.includes("export type");
+    const isTypeOnly = statement.includes("import type") || statement.includes("export type");
 
     // handle namespace imports/exports (import * as name / export * as name)
-    const namespaceMatch =
-      /(?:import|export)\s+(?:type\s+)?\*\s+as\s+(\w+)/.exec(statement);
+    const namespaceMatch = /(?:import|export)\s+(?:type\s+)?\*\s+as\s+(\w+)/.exec(statement);
     if (namespaceMatch?.[1]) {
       specifiers.push({
         type: "namespace",
@@ -153,9 +145,7 @@ export function getFileImportsExports(
     }
 
     // handle default imports (import name from ...)
-    const defaultMatch = /import\s+(?:type\s+)?(\w+)(?:\s*,|\s+from)/.exec(
-      statement,
-    );
+    const defaultMatch = /import\s+(?:type\s+)?(\w+)(?:\s*,|\s+from)/.exec(statement);
     if (defaultMatch?.[1] && !statement.includes("{")) {
       specifiers.push({
         type: "default",
@@ -220,8 +210,7 @@ export function getFileImportsExports(
         kind: "import",
         source,
         pathType,
-        pathTypeSymbol:
-          pathType === "alias" ? /^[@~]/.exec(source)?.[0] : undefined,
+        pathTypeSymbol: pathType === "alias" ? /^[@~]/.exec(source)?.[0] : undefined,
         isTypeOnly: match[0].includes("import type"),
         specifiers: extractSpecifiers(match[0]),
         start: match.index ?? 0,
@@ -248,8 +237,7 @@ export function getFileImportsExports(
         kind: "import",
         source,
         pathType,
-        pathTypeSymbol:
-          pathType === "alias" ? /^[@~]/.exec(source)?.[0] : undefined,
+        pathTypeSymbol: pathType === "alias" ? /^[@~]/.exec(source)?.[0] : undefined,
         isTypeOnly: false,
         specifiers: [],
         start: match.index ?? 0,
@@ -279,8 +267,7 @@ export function getFileImportsExports(
         kind: "export",
         source,
         pathType,
-        pathTypeSymbol:
-          pathType === "alias" ? /^[@~]/.exec(source)?.[0] : undefined,
+        pathTypeSymbol: pathType === "alias" ? /^[@~]/.exec(source)?.[0] : undefined,
         isTypeOnly: match[0].includes("export type"),
         specifiers: extractSpecifiers(match[0]),
         start: match.index ?? 0,
@@ -340,19 +327,14 @@ export function getFileImportsExports(
 
   // apply limit per type if specified
   if (limitPerType) {
-    const groupedByType = results.reduce<Record<string, ImportExportInfo[]>>(
-      (acc, curr) => {
-        const key = `${curr.kind}-${curr.pathType || "none"}`;
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(curr);
-        return acc;
-      },
-      {},
-    );
+    const groupedByType = results.reduce<Record<string, ImportExportInfo[]>>((acc, curr) => {
+      const key = `${curr.kind}-${curr.pathType || "none"}`;
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(curr);
+      return acc;
+    }, {});
 
-    return Object.values(groupedByType).flatMap((group) =>
-      group.slice(0, limitPerType),
-    );
+    return Object.values(groupedByType).flatMap((group) => group.slice(0, limitPerType));
   }
 
   return results;

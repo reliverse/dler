@@ -125,6 +125,7 @@ console.log(list([
 ## API Reference
 
 ### Colors
+
 - `relico.red(text)` - Red text
 - `relico.green(text)` - Green text
 - `relico.blue(text)` - Blue text
@@ -136,12 +137,14 @@ console.log(list([
 - `relico.underline(text)` - Underlined text
 
 ### Prompts
+
 - `prompt(options)` - Text input prompt
 - `confirm(options)` - Yes/no confirmation
 - `select(options)` - Single selection from list
 - `multiselect(options)` - Multiple selection from list
 
 ### Spinners
+
 - `spinner(options)` - Create a new spinner instance
 - `spinner.start(message)` - Start spinning with message
 - `spinner.success(message)` - Stop with success message
@@ -149,6 +152,7 @@ console.log(list([
 - `spinner.stop()` - Stop spinning
 
 ### Formatting
+
 - `table(data, options)` - Format data as table
 - `list(items, options)` - Format items as list
 - `tree(data, options)` - Format hierarchical data as tree

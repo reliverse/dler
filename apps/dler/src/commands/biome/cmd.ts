@@ -19,8 +19,7 @@ export default defineCommand({
   args: defineArgs({
     cwd: {
       type: "string",
-      description:
-        "Working directory to run biome from (default: current directory)",
+      description: "Working directory to run biome from (default: current directory)",
     },
     verbose: {
       type: "boolean",
@@ -28,8 +27,7 @@ export default defineCommand({
     },
     copyLogs: {
       type: "boolean",
-      description:
-        "Copy diagnostics to clipboard (default: true, skipped in CI)",
+      description: "Copy diagnostics to clipboard (default: true, skipped in CI)",
       default: true,
     },
   }),

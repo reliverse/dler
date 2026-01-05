@@ -1,16 +1,9 @@
 // apps/dler/src/cmds/build/cmd.ts
 
 import type { BuildOptions } from "@reliverse/build";
-import {
-  applyPresets,
-  runBuildOnAllPackages,
-  validateAndExit,
-} from "@reliverse/build";
+import { applyPresets, runBuildOnAllPackages, validateAndExit } from "@reliverse/build";
 import type { GoBuildOptions } from "@reliverse/config/impl/build";
-import {
-  clearLoggerInternalsInPackages,
-  replaceExportsInPackages,
-} from "@reliverse/helpers";
+import { clearLoggerInternalsInPackages, replaceExportsInPackages } from "@reliverse/helpers";
 import { logger } from "@reliverse/relinka";
 import { defineArgs, defineCommand } from "@reliverse/rempts";
 
@@ -183,8 +176,7 @@ export default defineCommand({
   args: defineArgs({
     ignore: {
       type: "string",
-      description:
-        "Package(s) to ignore (supports wildcards like @reliverse/*)",
+      description: "Package(s) to ignore (supports wildcards like @reliverse/*)",
     },
     filter: {
       type: "string",
@@ -201,8 +193,7 @@ export default defineCommand({
     },
     stopOnError: {
       type: "boolean",
-      description:
-        "Stop on first error instead of collecting all errors (default: false)",
+      description: "Stop on first error instead of collecting all errors (default: false)",
     },
     verbose: {
       type: "boolean",
@@ -243,8 +234,7 @@ export default defineCommand({
     },
     sourcemap: {
       type: "string",
-      description:
-        "Sourcemap option: none, linked, inline, or external (default: none)",
+      description: "Sourcemap option: none, linked, inline, or external (default: none)",
     },
     splitting: {
       type: "boolean",
@@ -252,13 +242,11 @@ export default defineCommand({
     },
     external: {
       type: "string",
-      description:
-        "External packages to exclude from bundle (supports wildcards)",
+      description: "External packages to exclude from bundle (supports wildcards)",
     },
     bytecode: {
       type: "boolean",
-      description:
-        "Generate bytecode for faster cold starts (requires format: cjs, target: bun)",
+      description: "Generate bytecode for faster cold starts (requires format: cjs, target: bun)",
     },
     drop: {
       type: "string",
@@ -266,8 +254,7 @@ export default defineCommand({
     },
     packages: {
       type: "string",
-      description:
-        "How to handle dependencies: bundle or external (default: bundle)",
+      description: "How to handle dependencies: bundle or external (default: bundle)",
     },
     publicPath: {
       type: "string",
@@ -279,8 +266,7 @@ export default defineCommand({
     },
     define: {
       type: "string",
-      description:
-        'Define global constants (JSON format, e.g., \'{"__VERSION__":"1.0.0"}\')',
+      description: 'Define global constants (JSON format, e.g., \'{"__VERSION__":"1.0.0"}\')',
     },
     naming: {
       type: "string",
@@ -288,8 +274,7 @@ export default defineCommand({
     },
     env: {
       type: "string",
-      description:
-        "Environment variable handling: inline, disable, or prefix like PUBLIC_*",
+      description: "Environment variable handling: inline, disable, or prefix like PUBLIC_*",
     },
     banner: {
       type: "string",
@@ -321,18 +306,15 @@ export default defineCommand({
     },
     production: {
       type: "boolean",
-      description:
-        "Enable production mode (minify=true, sourcemap=none, env=inline)",
+      description: "Enable production mode (minify=true, sourcemap=none, env=inline)",
     },
     dev: {
       type: "boolean",
-      description:
-        "Enable development mode (watch=true, sourcemap=linked, env=disable)",
+      description: "Enable development mode (watch=true, sourcemap=linked, env=disable)",
     },
     library: {
       type: "boolean",
-      description:
-        "Enable library mode (packages=external, bundler=mkdist, generateTypes=true)",
+      description: "Enable library mode (packages=external, bundler=mkdist, generateTypes=true)",
     },
     react: {
       type: "boolean",
@@ -344,8 +326,7 @@ export default defineCommand({
     },
     monorepo: {
       type: "boolean",
-      description:
-        "Enable monorepo preset (concurrency=auto, validateTsconfig=true)",
+      description: "Enable monorepo preset (concurrency=auto, validateTsconfig=true)",
     },
     compile: {
       type: "boolean",
@@ -358,8 +339,7 @@ export default defineCommand({
     },
     replaceExports: {
       type: "boolean",
-      description:
-        "Replace exports from ./dist/*.js to ./src/*.ts after build (default: false)",
+      description: "Replace exports from ./dist/*.js to ./src/*.ts after build (default: false)",
     },
     replaceExportsIgnorePackages: {
       type: "string",
@@ -407,23 +387,19 @@ export default defineCommand({
     },
     maxConfigDepth: {
       type: "number",
-      description:
-        "Maximum depth to search for dler.ts config files (default: 3)",
+      description: "Maximum depth to search for dler.ts config files (default: 3)",
     },
     entryNaming: {
       type: "string",
-      description:
-        "Naming pattern for entry files (e.g., '[dir]/[name].[ext]')",
+      description: "Naming pattern for entry files (e.g., '[dir]/[name].[ext]')",
     },
     chunkNaming: {
       type: "string",
-      description:
-        "Naming pattern for chunk files (e.g., '[name]-[hash].[ext]')",
+      description: "Naming pattern for chunk files (e.g., '[name]-[hash].[ext]')",
     },
     assetNaming: {
       type: "string",
-      description:
-        "Naming pattern for asset files (e.g., '[name]-[hash].[ext]')",
+      description: "Naming pattern for asset files (e.g., '[name]-[hash].[ext]')",
     },
     noBundle: {
       type: "boolean",
@@ -553,8 +529,7 @@ export default defineCommand({
     },
     goTargets: {
       type: "string",
-      description:
-        "Go build targets (comma-separated, e.g., 'linux/amd64,windows/amd64')",
+      description: "Go build targets (comma-separated, e.g., 'linux/amd64,windows/amd64')",
     },
     goOutputDir: {
       type: "string",
@@ -566,8 +541,7 @@ export default defineCommand({
     },
     goBuildMode: {
       type: "string",
-      description:
-        "Go build mode: default, c-shared, or c-archive (default: default)",
+      description: "Go build mode: default, c-shared, or c-archive (default: default)",
     },
     goLdflags: {
       type: "string",
@@ -583,13 +557,11 @@ export default defineCommand({
     },
     goOnly: {
       type: "boolean",
-      description:
-        "Skip TypeScript builds and only build Go binaries (default: false)",
+      description: "Skip TypeScript builds and only build Go binaries (default: false)",
     },
     tsOnly: {
       type: "boolean",
-      description:
-        "Skip Go builds and only build TypeScript/JavaScript (default: false)",
+      description: "Skip Go builds and only build TypeScript/JavaScript (default: false)",
     },
     goEnable: {
       type: "boolean",
@@ -606,9 +578,7 @@ export default defineCommand({
 
       // Validate mutually exclusive flags
       if (args.goOnly && args.tsOnly) {
-        logger.error(
-          "❌ --go-only and --ts-only cannot be used together. Please use only one.",
-        );
+        logger.error("❌ --go-only and --ts-only cannot be used together. Please use only one.");
         process.exit(1);
       }
 
@@ -663,9 +633,7 @@ export default defineCommand({
       const shouldReplaceExports = args.replaceExports === true;
       if (shouldReplaceExports && !buildOptions.watch) {
         if (args.verbose) {
-          logger.info(
-            "\n📝 Replacing exports from ./src/*.ts to ./dist/*.js after build...",
-          );
+          logger.info("\n📝 Replacing exports from ./src/*.ts to ./dist/*.js after build...");
         }
         await replaceExportsInPackages({
           direction: "ts-to-js",
@@ -680,9 +648,7 @@ export default defineCommand({
       if (shouldClearLoggerInternals) {
         if (buildOptions.watch) {
           if (args.verbose) {
-            logger.warn(
-              "\n⚠️  --loggerClearInternals is not supported in watch mode (skipped)",
-            );
+            logger.warn("\n⚠️  --loggerClearInternals is not supported in watch mode (skipped)");
           }
         } else {
           if (args.verbose) {
@@ -720,22 +686,15 @@ export default defineCommand({
               logger.info(
                 `\n✅ Logger internals cleared: Updated ${clearResult.updated} file(s), skipped ${clearResult.skipped} package(s)`,
               );
-              if (
-                clearResult.files.length > 0 &&
-                clearResult.files.length <= 10
-              ) {
-                logger.info(
-                  `   Files updated: ${clearResult.files.join(", ")}`,
-                );
+              if (clearResult.files.length > 0 && clearResult.files.length <= 10) {
+                logger.info(`   Files updated: ${clearResult.files.join(", ")}`);
               } else if (clearResult.files.length > 10) {
                 logger.info(
                   `   Files updated: ${clearResult.files.slice(0, 10).join(", ")} ... and ${clearResult.files.length - 10} more`,
                 );
               }
             } else {
-              logger.info(
-                `✅ Logger internals cleared: ${clearResult.updated} file(s) updated`,
-              );
+              logger.info(`✅ Logger internals cleared: ${clearResult.updated} file(s) updated`);
             }
           } else {
             if (args.verbose) {

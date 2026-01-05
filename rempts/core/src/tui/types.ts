@@ -1,4 +1,4 @@
-import type { RenderResult } from '../types'
+import type { RenderResult } from "../types";
 
 /**
  * Options passed to the TUI renderer when rendering a component
@@ -7,22 +7,22 @@ export interface TuiRendererOptions {
   /**
    * Exit on Ctrl+C (default: true)
    */
-  exitOnCtrlC?: boolean
+  exitOnCtrlC?: boolean;
 
   /**
    * Target frames per second (default: 30)
    */
-  targetFps?: number
+  targetFps?: number;
 
   /**
    * Enable mouse movement events (default: true)
    */
-  enableMouseMovement?: boolean
+  enableMouseMovement?: boolean;
 
   /**
    * Additional renderer-specific options
    */
-  [key: string]: unknown
+  [key: string]: unknown;
 }
 
 /**
@@ -32,7 +32,7 @@ export interface TuiRenderContext {
   /**
    * Renderer-specific options
    */
-  rendererOptions?: TuiRendererOptions
+  rendererOptions?: TuiRendererOptions;
 }
 
 /**
@@ -46,21 +46,21 @@ export interface TuiRenderer {
    * @param context Rendering context and options
    * @returns Promise that resolves when rendering completes
    */
-  render(component: RenderResult, context: TuiRenderContext): Promise<unknown>
+  render(component: RenderResult, context: TuiRenderContext): Promise<unknown>;
 }
 
 /**
  * Global TUI renderer instance
  * Set by calling registerTuiRenderer()
  */
-let globalRenderer: TuiRenderer | null = null
+let globalRenderer: TuiRenderer | null = null;
 
 /**
  * Register a TUI renderer globally
  * @param renderer The renderer implementation
  */
 export function registerTuiRenderer(renderer: TuiRenderer): void {
-  globalRenderer = renderer
+  globalRenderer = renderer;
 }
 
 /**
@@ -68,12 +68,12 @@ export function registerTuiRenderer(renderer: TuiRenderer): void {
  * @returns The registered renderer, or null if none registered
  */
 export function getTuiRenderer(): TuiRenderer | null {
-  return globalRenderer
+  return globalRenderer;
 }
 
 /**
  * Clear the registered TUI renderer (mainly for testing)
  */
 export function clearTuiRenderer(): void {
-  globalRenderer = null
+  globalRenderer = null;
 }

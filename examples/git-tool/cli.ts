@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from "@reliverse/rempts-core";
 
-const cli = await createCLI()
+const cli = await createCLI();
 
 await cli.load({
-  branch: () => import('./commands/branch'),
-  pr: () => import('./commands/pr'),
-  sync: () => import('./commands/sync'),
-  status: () => import('./commands/status')
-})
+  branch: () => import("./commands/branch"),
+  pr: () => import("./commands/pr"),
+  sync: () => import("./commands/sync"),
+  status: () => import("./commands/status"),
+});
 
-await cli.run()
+await cli.run();

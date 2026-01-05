@@ -5,16 +5,8 @@
     "outDir": "./dist",
     "declaration": true,
     "emitDeclarationOnly": true,
-    "types": [
-      "bun"
-    ]
+    "types": ["bun"]
   },
-  "include": [
-    "./src/**/*"
-  ],
-  "exclude": [
-    "./dist",
-    "./node_modules",
-    "**/*.test.ts"
-  ]
+  "include": ["./src/**/*"],
+  "exclude": ["./dist", "./node_modules", "**/*.test.ts"]
 }

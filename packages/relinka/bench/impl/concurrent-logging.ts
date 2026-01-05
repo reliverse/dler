@@ -16,9 +16,7 @@ export async function benchmarkConcurrentLogging(
       "concurrent async (10 parallel)",
       async () => {
         await Promise.all(
-          Array.from({ length: 10 }, (_, i) =>
-            relinka.info(`Concurrent message ${i}`),
-          ),
+          Array.from({ length: 10 }, (_, i) => relinka.info(`Concurrent message ${i}`)),
         );
       },
       100,
@@ -31,9 +29,7 @@ export async function benchmarkConcurrentLogging(
       "concurrent async (50 parallel)",
       async () => {
         await Promise.all(
-          Array.from({ length: 50 }, (_, i) =>
-            relinka.info(`Concurrent message ${i}`),
-          ),
+          Array.from({ length: 50 }, (_, i) => relinka.info(`Concurrent message ${i}`)),
         );
       },
       100,
@@ -46,9 +42,7 @@ export async function benchmarkConcurrentLogging(
       "concurrent async (100 parallel)",
       async () => {
         await Promise.all(
-          Array.from({ length: 100 }, (_, i) =>
-            relinka.info(`Concurrent message ${i}`),
-          ),
+          Array.from({ length: 100 }, (_, i) => relinka.info(`Concurrent message ${i}`)),
         );
       },
       50,
@@ -62,9 +56,7 @@ export async function benchmarkConcurrentLogging(
       async () => {
         await Promise.all([
           ...Array.from({ length: 5 }, () => relinka.info("Info message")),
-          ...Array.from({ length: 5 }, () =>
-            relinka.success("Success message"),
-          ),
+          ...Array.from({ length: 5 }, () => relinka.success("Success message")),
           ...Array.from({ length: 5 }, () => relinka.warn("Warning message")),
           ...Array.from({ length: 5 }, () => relinka.error("Error message")),
         ]);

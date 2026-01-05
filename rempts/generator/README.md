@@ -87,7 +87,7 @@ export default defineCommand({
   description: 'Deploy your application',
   alias: 'd',
   options: {
-    env: option(z.string(), { 
+    env: option(z.string(), {
       description: 'Environment to deploy to',
       short: 'e'
     }),

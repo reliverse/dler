@@ -5,14 +5,18 @@ This directory contains example Rempts CLI applications demonstrating various fe
 ## Examples Overview
 
 ### hello-world
+
 The absolute simplest possible Rempts CLI with a single command. Perfect starting point to understand the basics.
+
 - Basic command definition
 - Simple flag handling
 - Minimal configuration
 - Type generation for enhanced DX
 
 ### task-runner
+
 A practical task automation CLI showcasing validation and interactivity patterns.
+
 - Schema validation with Zod
 - Interactive prompts and confirmations
 - Progress indicators and spinners
@@ -20,7 +24,9 @@ A practical task automation CLI showcasing validation and interactivity patterns
 - Conditional flows based on options
 
 ### git-tool
+
 A Git workflow helper demonstrating command organization and external tool integration.
+
 - Nested command structure
 - Command aliases
 - Integration with external tools (git)
@@ -28,7 +34,9 @@ A Git workflow helper demonstrating command organization and external tool integ
 - Colored output for status
 
 ### dev-server
+
 A development server CLI showcasing advanced plugin system and configuration management.
+
 - Plugin system with lifecycle hooks
 - Type-safe plugin context
 - Configuration management
@@ -63,6 +71,7 @@ bun cli.ts
 ```
 
 All examples include:
+
 - `dler.config.ts` - Configuration with required `commands.directory`
 - `commands/` directory - All command definitions (REQUIRED structure)
 - `.dler/commands.gen.ts` - Generated TypeScript definitions (auto-created)
@@ -84,6 +93,7 @@ Each example builds on the previous concepts and introduces new patterns.
 ## Key Concepts
 
 ### Schema-Driven Options
+
 Rempts uses Standard Schema for validation, allowing you to use any compatible validation library:
 
 ```typescript
@@ -101,6 +111,7 @@ export default defineCommand({
 ```
 
 ### Command Organization
+
 For larger CLIs, organize commands in a clear structure:
 
 ```typescript
@@ -113,6 +124,7 @@ export const commands = [
 ```
 
 ### Interactive Prompts
+
 Create engaging CLI experiences with built-in prompts:
 
 ```typescript
@@ -122,6 +134,7 @@ const confirmed = await prompt.confirm('Continue?')
 ```
 
 ### Plugin System
+
 Extend functionality with type-safe plugins:
 
 ```typescript
@@ -148,15 +161,15 @@ export default defineConfig({
   name: 'my-cli',
   version: '1.0.0',
   description: 'My awesome CLI',
-  
+
   // REQUIRED: commands directory
   commands: {
     directory: './commands'
   },
-  
+
   // REQUIRED: plugins array (can be empty)
   plugins: [],
-  
+
   build: {
     entry: './cli.ts',
     outdir: './dist',
@@ -165,7 +178,7 @@ export default defineConfig({
     minify: false,        // Default: false
     sourcemap: true       // Default: true
   },
-  
+
   dev: {
     watch: true,
     inspect: false
@@ -174,6 +187,7 @@ export default defineConfig({
 ```
 
 Build commands:
+
 ```bash
 # Build for current platform
 bun run build
@@ -189,6 +203,7 @@ rempts build --minify --sourcemap
 ```
 
 The Rempts CLI handles:
+
 - Hot reload in development (`rempts dev`)
 - Standalone executable creation with Bun's `--compile` flag
 - Multi-platform builds

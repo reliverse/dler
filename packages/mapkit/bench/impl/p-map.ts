@@ -2,8 +2,7 @@ import pMap, { pMapSkip } from "../../src/mod";
 import type { BenchmarkResult } from "../perf";
 
 // Helper to create async delay
-const delay = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Helper to create sync mapper
 const syncMapper = (x: number): number => x * 2;

@@ -1,38 +1,41 @@
 # Suggest and apply improvements with benchmarks
 
 ## Purpose
+
 This command guides the AI to improve a package library's performance using a systematic benchmarking approach. The goal is to ensure optimizations are measurable and don't introduce regressions.
 
 ## Packages to Optimize
 
 The following packages should be optimized in priority order (packages with older `lastImproved` timestamps should be prioritized):
 
-| # | Package | Last Improved | Status | Notes |
-|---|---------|---------------|--------|-------|
-| 0 | `@reliverse/dler` | - | - | - |
-| 1 | `@reliverse/build` | - | - | - |
-| 2 | `@reliverse/bump` | - | - | - |
-| 3 | `@reliverse/config` | - | - | - |
-| 4 | `@reliverse/datetime` | - | - | - |
-| 5 | `@reliverse/helpers` | - | - | - |
-| 6 | `@reliverse/mapkit` | - | - | - |
-| 7 | `@reliverse/matcha` | - | - | - |
-| 8 | `@reliverse/pathkit` | - | - | - |
-| 9 | `@reliverse/publish` | - | - | - |
-| 10 | `@reliverse/relico` | - | - | - |
-| 11 | `@reliverse/relifso` | - | - | - |
-| 12 | `@reliverse/relinka` | - | - | - |
-| 13 | `@reliverse/rempts` | - | - | - |
-| 14 | `@reliverse/tsconfig` | - | - | - |
-| 15 | `@reliverse/typerso` | - | - | - |
+| #   | Package               | Last Improved | Status | Notes |
+| --- | --------------------- | ------------- | ------ | ----- |
+| 0   | `@reliverse/dler`     | -             | -      | -     |
+| 1   | `@reliverse/build`    | -             | -      | -     |
+| 2   | `@reliverse/bump`     | -             | -      | -     |
+| 3   | `@reliverse/config`   | -             | -      | -     |
+| 4   | `@reliverse/datetime` | -             | -      | -     |
+| 5   | `@reliverse/helpers`  | -             | -      | -     |
+| 6   | `@reliverse/mapkit`   | -             | -      | -     |
+| 7   | `@reliverse/matcha`   | -             | -      | -     |
+| 8   | `@reliverse/pathkit`  | -             | -      | -     |
+| 9   | `@reliverse/publish`  | -             | -      | -     |
+| 10  | `@reliverse/relico`   | -             | -      | -     |
+| 11  | `@reliverse/relifso`  | -             | -      | -     |
+| 12  | `@reliverse/relinka`  | -             | -      | -     |
+| 13  | `@reliverse/rempts`   | -             | -      | -     |
+| 14  | `@reliverse/tsconfig` | -             | -      | -     |
+| 15  | `@reliverse/typerso`  | -             | -      | -     |
 
 **Metadata Fields:**
+
 - **Last Improved**: Timestamp (CET timezone) when performance improvements were last completed (format: `YYYY-MM-DD HH:mm:ss`)
 - **Status**: Current optimization status (`pending`, `in-progress`, `completed`, `skipped`)
   - **`in-progress`**: ⚠️ **CRITICAL**: If a package has status `in-progress`, it means another AI agent is currently working on it. **DO NOT** select or work on packages with this status. Skip them and move to the next available package.
 - **Notes**: Any relevant information about the package or optimization results
 
 **Package Selection Priority:**
+
 - ⚠️ **IMPORTANT**: **NEVER** select packages with status `in-progress` - another AI agent is currently working on them
 - AI should prioritize packages with the oldest `lastImproved` timestamp (or `-` if never improved)
 - Only consider packages with status `pending`, `completed` (for re-optimization), or `-` (never optimized)
@@ -169,6 +172,7 @@ package/
 After completing optimizations for a package, update the metadata in the "Packages to Optimize" section:
 
 1. **Get the current timestamp in CET:**
+
    ```bash
    dler datetime --now --convert 'Europe/Berlin' --format 'YYYY-MM-DD HH:mm:ss'
    ```
@@ -196,6 +200,7 @@ This will output the current date and time in Central European Time (CET/CEST) f
 ## Regression Handling
 
 If a benchmark shows regression >10%:
+
 1. **Immediately identify the optimization** that caused the regression
 2. **Revert the specific code changes** using git or by restoring the previous version
 3. **Re-run benchmarks** to confirm the regression is resolved

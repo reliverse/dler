@@ -1,38 +1,38 @@
-import { useState } from 'react'
+import { useState } from "react";
 
 export interface FormFieldProps {
-  label: string
-  name: string
-  placeholder?: string
-  required?: boolean
-  value?: string
-  onChange?: (value: string) => void
-  onSubmit?: (value: string) => void
+  label: string;
+  name: string;
+  placeholder?: string;
+  required?: boolean;
+  value?: string;
+  onChange?: (value: string) => void;
+  onSubmit?: (value: string) => void;
 }
 
-export function FormField({ 
-  label, 
-  name, 
-  placeholder, 
+export function FormField({
+  label,
+  name,
+  placeholder,
   required,
-  value: initialValue = '',
+  value: initialValue = "",
   onChange,
-  onSubmit
+  onSubmit,
 }: FormFieldProps) {
-  const [value, setValue] = useState(initialValue)
-  
+  const [value, setValue] = useState(initialValue);
+
   const handleInput = (newValue: string) => {
-    setValue(newValue)
-    onChange?.(newValue)
-  }
-  
+    setValue(newValue);
+    onChange?.(newValue);
+  };
+
   const handleSubmit = (submittedValue: string) => {
-    onSubmit?.(submittedValue)
-  }
-  
+    onSubmit?.(submittedValue);
+  };
+
   return (
-    <box style={{ flexDirection: 'column', marginBottom: 1 }}>
-      <text content={`${label}${required ? ' *' : ''}`} />
+    <box style={{ flexDirection: "column", marginBottom: 1 }}>
+      <text content={`${label}${required ? " *" : ""}`} />
       <box title={label} border height={3} style={{ marginTop: 0.5 }}>
         <input
           placeholder={placeholder}
@@ -43,5 +43,5 @@ export function FormField({
         />
       </box>
     </box>
-  )
+  );
 }

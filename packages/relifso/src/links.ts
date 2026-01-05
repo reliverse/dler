@@ -59,10 +59,7 @@ const resolveSymlinkType = async (
   }
 };
 
-export const ensureLink = async (
-  from: PathLike,
-  to: PathLike,
-): Promise<void> => {
+export const ensureLink = async (from: PathLike, to: PathLike): Promise<void> => {
   const source = toPathString(from);
   const destination = toPathString(to);
 

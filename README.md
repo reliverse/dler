@@ -63,7 +63,7 @@ All `@reliverse/dler` v2+ commands support both monorepo (recommended) and singl
 2. `dler clean` nicely cleans up the codebase, with presets and with support for custom paths.
 3. `dler publish` publishes all packages to npm and jsr (soon). Handles version bumping, and different validations. Automatically loads .env files for authentication. Supports dler.ts configuration for per-package settings.
 4. `dler senv` helps you manage system environment variables easily. Example: `dler senv --action append --name Path --value C:\Users\your-user-name\.local\bin` (on Windows it automates the following steps: System Properties →
-  Environment Variables → Edit User PATH → New → Add the path). The command is especially useful for Windows users, when you have too many vars so OS will not allow you to add more.
+   Environment Variables → Edit User PATH → New → Add the path). The command is especially useful for Windows users, when you have too many vars so OS will not allow you to add more.
 5. `dler tsc` finds TypeScript errors across all monorepo packages and shows only real ones (unlike the native `tsc`, which sometimes shows errors of its dependencies). It also has a `--copy-logs` flag that copies errors/warnings straight to your clipboard (with an inserted prompt for fixing them), so you can just hit Ctrl/Cmd+V and send it to AI.
 6. `dler biome` runs biome check on all packages, provides compact biome's output, copies errors/warnings to clipboard (with an inserted prompt for fixing them).
 7. `dler update` updates the dependencies of all packages to the latest version (yes, even across the monorepo).

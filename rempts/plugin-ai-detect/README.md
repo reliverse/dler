@@ -44,7 +44,7 @@ interface AIDetectPluginOptions {
    * Additional custom AI agents to detect
    */
   customAgents?: AIAgentInfo[]
-  
+
   /**
    * Whether to log detection results
    * Default: false
@@ -95,10 +95,10 @@ The plugin provides the following typed properties in the command context store:
 interface AIDetectStore {
   /** Whether any AI agent was detected */
   isAIAgent: boolean
-  
+
   /** List of detected AI agent names */
   aiAgents: string[]
-  
+
   /** Environment variables that triggered detection */
   aiAgentEnvVars: string[]
 }

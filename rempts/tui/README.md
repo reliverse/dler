@@ -128,9 +128,9 @@ import { useKeyboard, useTimeline, useTerminalDimensions } from '@reliverse/remp
 function InteractiveTUI({ command }) {
   const [count, setCount] = useState(0)
   const { width, height } = useTerminalDimensions()
-  
+
   const timeline = useTimeline({ duration: 2000 })
-  
+
   useKeyboard((key) => {
     if (key.name === 'q') {
       process.exit(0)
@@ -139,7 +139,7 @@ function InteractiveTUI({ command }) {
       setCount(prev => prev + 1)
     }
   })
-  
+
   useEffect(() => {
     timeline.add({ count: 0 }, {
       count: 100,
@@ -147,7 +147,7 @@ function InteractiveTUI({ command }) {
       onUpdate: (anim) => setCount(anim.targets[0].count)
     })
   }, [])
-  
+
   return (
     <box title="Interactive Demo" style={{ border: true, padding: 2 }}>
       <text>Count: {count}</text>
@@ -165,7 +165,7 @@ function InteractiveTUI({ command }) {
 A container component for building forms with keyboard navigation.
 
 ```typescript
-<Form 
+<Form
   title="My Form"
   onSubmit={(values) => console.log(values)}
   onCancel={() => process.exit(0)}
@@ -175,6 +175,7 @@ A container component for building forms with keyboard navigation.
 ```
 
 **Props:**
+
 - `title: string` - Form title
 - `onSubmit: (values: Record<string, any>) => void` - Submit handler
 - `onCancel?: () => void` - Cancel handler (optional)
@@ -196,6 +197,7 @@ A text input field with label and validation.
 ```
 
 **Props:**
+
 - `label: string` - Field label
 - `name: string` - Field name
 - `placeholder?: string` - Placeholder text
@@ -221,6 +223,7 @@ A dropdown selection field.
 ```
 
 **Props:**
+
 - `label: string` - Field label
 - `name: string` - Field name
 - `options: SelectOption[]` - Available options
@@ -232,14 +235,15 @@ A dropdown selection field.
 A progress bar component for showing completion status.
 
 ```typescript
-<ProgressBar 
-  value={75} 
-  label="Upload Progress" 
-  color="#00ff00" 
+<ProgressBar
+  value={75}
+  label="Upload Progress"
+  color="#00ff00"
 />
 ```
 
 **Props:**
+
 - `value: number` - Progress value (0-100)
 - `label?: string` - Progress label
 - `color?: string` - Progress bar color
@@ -328,6 +332,7 @@ const plugin = tuiPlugin({
 ```
 
 **Options:**
+
 - `renderer?: CliRendererConfig` - OpenTUI renderer configuration
 - `theme?: 'light' | 'dark' | ThemeConfig` - Theme configuration
 - `autoForm?: boolean` - Enable auto-form generation (disabled for now)
@@ -351,6 +356,7 @@ function MyComponent() {
 ```
 
 Available components:
+
 - `<box>` - Container with borders and layout
 - `<text>` - Text display with styling
 - `<input>` - Text input field

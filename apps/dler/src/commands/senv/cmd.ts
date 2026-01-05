@@ -84,10 +84,7 @@ const runPowerShellGetUser = async (name: string): Promise<string> => {
   return text.trim();
 };
 
-const runPowerShellSetUser = async (
-  name: string,
-  value: string,
-): Promise<void> => {
+const runPowerShellSetUser = async (name: string, value: string): Promise<void> => {
   const safeName = escapePowerShellString(name);
   const safeValue = escapePowerShellString(value);
   const command = `[Environment]::SetEnvironmentVariable('${safeName}', '${safeValue}', 'User')`;
@@ -127,10 +124,7 @@ const persistPosix = async (name: string, value: string): Promise<void> => {
     const exists = await fileExists(profile);
 
     if (!exists) {
-      await fs.writeFile(
-        profile,
-        `# created by dler senv\nexport ${name}="${value}"\n`,
-      );
+      await fs.writeFile(profile, `# created by dler senv\nexport ${name}="${value}"\n`);
       logger.info(`Wrote new ${profile}`);
       return;
     }
@@ -168,9 +162,7 @@ const persistPosixEditPath = async (
   await backupFile(profile);
 
   const exists = await fileExists(profile);
-  const content = exists
-    ? await fs.readFile(profile, { encoding: "utf8" })
-    : "";
+  const content = exists ? await fs.readFile(profile, { encoding: "utf8" }) : "";
 
   const match = content.match(re);
   const current = match ? match[1] : process.env[name] || "";
@@ -204,8 +196,7 @@ const persistPosixEditPath = async (
 export default defineCommand({
   meta: {
     name: "senv",
-    description:
-      "Inspect and modify environment variables (process and user-level)",
+    description: "Inspect and modify environment variables (process and user-level)",
     examples: [
       "dler senv --action list",
       "dler senv --action list --name Path",
@@ -249,18 +240,9 @@ export default defineCommand({
       const persist = args.persist ?? true;
       const yes = args.yes ?? false;
 
-      const allowed = new Set([
-        "list",
-        "get",
-        "set",
-        "append",
-        "remove",
-        "contains",
-      ]);
+      const allowed = new Set(["list", "get", "set", "append", "remove", "contains"]);
       if (!allowed.has(action)) {
-        logger.error(
-          "Unknown action. Allowed: list, get, set, append, remove, contains",
-        );
+        logger.error("Unknown action. Allowed: list, get, set, append, remove, contains");
         process.exit(2);
       }
 
@@ -314,9 +296,7 @@ export default defineCommand({
           if (isWindows()) {
             try {
               await runPowerShellSetUser(name, value);
-              logger.success(
-                `Persisted ${name} to User environment (Windows).`,
-              );
+              logger.success(`Persisted ${name} to User environment (Windows).`);
             } catch (e) {
               logger.error("Failed to persist via PowerShell:");
               logger.error(String(e));
@@ -359,9 +339,7 @@ export default defineCommand({
             if (isWindows()) {
               try {
                 const userVal = (await runPowerShellGetUser(name)).trim();
-                const userEntries = normalizePathEntries(userVal || "").map(
-                  normalizeEntry,
-                );
+                const userEntries = normalizePathEntries(userVal || "").map(normalizeEntry);
                 const uSet = new Set(userEntries.map(toComparable));
 
                 if (!uSet.has(targetKey)) {
@@ -371,9 +349,7 @@ export default defineCommand({
                   await runPowerShellSetUser(name, joined);
                   logger.success(`Persisted append to User ${name} (Windows).`);
                 } else {
-                  logger.info(
-                    "User-level already contains the entry — no change.",
-                  );
+                  logger.info("User-level already contains the entry — no change.");
                 }
               } catch (e) {
                 logger.error("Failed to persist append on Windows:");
@@ -409,23 +385,14 @@ export default defineCommand({
             if (isWindows()) {
               try {
                 const userVal = (await runPowerShellGetUser(name)).trim();
-                const userEntries = normalizePathEntries(userVal || "").map(
-                  normalizeEntry,
-                );
-                const i2 = userEntries.findIndex(
-                  (e) => toComparable(e) === targetKey,
-                );
+                const userEntries = normalizePathEntries(userVal || "").map(normalizeEntry);
+                const i2 = userEntries.findIndex((e) => toComparable(e) === targetKey);
 
                 if (i2 >= 0) {
                   userEntries.splice(i2, 1);
                   const uniqueEntries = uniqueByComparable(userEntries);
-                  await runPowerShellSetUser(
-                    name,
-                    joinPathEntries(uniqueEntries),
-                  );
-                  logger.success(
-                    `Persisted removal to User ${name} (Windows).`,
-                  );
+                  await runPowerShellSetUser(name, joinPathEntries(uniqueEntries));
+                  logger.success(`Persisted removal to User ${name} (Windows).`);
                 } else {
                   logger.info("User-level did not contain entry — no change.");
                 }

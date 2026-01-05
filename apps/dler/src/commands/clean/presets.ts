@@ -68,12 +68,7 @@ export const PRESET_CATEGORIES: Record<string, PresetCategory> = {
   },
 };
 
-export const LOCK_FILE_PATTERNS = [
-  "bun.lock",
-  "yarn.lock",
-  "package-lock.json",
-  "pnpm-lock.yaml",
-];
+export const LOCK_FILE_PATTERNS = ["bun.lock", "yarn.lock", "package-lock.json", "pnpm-lock.yaml"];
 
 export const parsePresets = (presetsString?: string): string[] => {
   if (!presetsString) {
@@ -115,14 +110,10 @@ export const getPresetPatterns = (presets: string[]): string[] => {
 };
 
 export const getPresetOrder = (presets: string[]): number[] =>
-  presets
-    .map((preset) => PRESET_CATEGORIES[preset]?.order ?? 999)
-    .sort((a, b) => a - b);
+  presets.map((preset) => PRESET_CATEGORIES[preset]?.order ?? 999).sort((a, b) => a - b);
 
 export const getPresetDescription = (presets: string[]): string => {
-  const categories = presets
-    .map((preset) => PRESET_CATEGORIES[preset])
-    .filter(Boolean);
+  const categories = presets.map((preset) => PRESET_CATEGORIES[preset]).filter(Boolean);
 
   if (categories.length === 0) {
     return "No valid presets selected";
@@ -135,10 +126,7 @@ export const getPresetDescription = (presets: string[]): string => {
   return categories.map((cat) => cat?.name).join(", ");
 };
 
-export const mergePatterns = (
-  presets: string[],
-  customPatterns: string[],
-): string[] => {
+export const mergePatterns = (presets: string[], customPatterns: string[]): string[] => {
   const presetPatterns = getPresetPatterns(presets);
   const allPatterns = [...presetPatterns, ...customPatterns];
 
@@ -146,13 +134,8 @@ export const mergePatterns = (
   return [...new Set(allPatterns)];
 };
 
-export const validatePatterns = (
-  presets: string[],
-  customPatterns: string[],
-): void => {
+export const validatePatterns = (presets: string[], customPatterns: string[]): void => {
   if (presets.length === 0 && customPatterns.length === 0) {
-    throw new Error(
-      "❌ At least one of --presets or --custom must be provided",
-    );
+    throw new Error("❌ At least one of --presets or --custom must be provided");
   }
 };

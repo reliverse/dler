@@ -2,6 +2,11 @@
   "name": "@reliverse/mapkit",
   "version": "2.2.9",
   "private": false,
+  "license": "MIT",
+  "files": [
+    "dist",
+    "package.json"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -12,18 +17,13 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {},
-  "files": [
-    "dist",
-    "package.json"
-  ],
-  "license": "MIT",
-  "devDependencies": {
-    "@reliverse/tsconfig": "workspace:*",
-    "typescript": "catalog:",
-    "@types/bun": "catalog:"
-  },
   "scripts": {
     "perf": "bun bench/perf.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@reliverse/tsconfig": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
   }
 }

@@ -11,9 +11,7 @@
     "target": "ESNext",
     "module": "preserve",
     "moduleResolution": "bundler",
-    "lib": [
-      "ESNext"
-    ],
+    "lib": ["ESNext"],
     "verbatimModuleSyntax": true,
     "strict": true,
     "skipLibCheck": true,
@@ -26,8 +24,6 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
-    "types": [
-      "bun"
-    ]
+    "types": ["bun"]
   }
 }

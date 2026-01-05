@@ -68,7 +68,7 @@ await bumpVersionWithAnalysis(
 await bumpVersionWithAnalysis(
   "manual",          // bumpType
   ["package.json"],  // files to bump
-  { 
+  {
     dryRun: false,
     customVersion: "1.2.3" // overrides bumpSet if provided
   },
@@ -166,7 +166,7 @@ The tool performs deep analysis of your files to:
 ## Advanced Programmatic Example
 
 ```ts
-import { 
+import {
   bumpVersionWithAnalysis,
   analyzeFiles,
   getCurrentVersion,

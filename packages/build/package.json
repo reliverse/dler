@@ -1,9 +1,14 @@
 {
   "name": "@reliverse/build",
-  "description": "Build utils for Reliverse ecosystem",
-  "author": "reliverse",
   "version": "2.2.9",
   "private": false,
+  "description": "Build utils for Reliverse ecosystem",
+  "license": "MIT",
+  "author": "reliverse",
+  "files": [
+    "dist",
+    "package.json"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -11,12 +16,18 @@
       "default": "./src/mod.ts"
     }
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "perf": "bun bench/perf.ts"
+  },
   "dependencies": {
     "@reliverse/config": "workspace:*",
     "@reliverse/helpers": "workspace:*",
-    "@reliverse/relinka": "workspace:*",
     "@reliverse/mapkit": "workspace:*",
     "@reliverse/matcha": "workspace:*",
+    "@reliverse/relinka": "workspace:*",
     "@reliverse/typerso": "workspace:*",
     "autoprefixer": "catalog:",
     "c12": "catalog:",
@@ -31,21 +42,10 @@
     "semver": "catalog:",
     "tinyglobby": "catalog:"
   },
-  "publishConfig": {
-    "access": "public"
-  },
-  "files": [
-    "dist",
-    "package.json"
-  ],
-  "license": "MIT",
   "devDependencies": {
-    "@reliverse/tsconfig": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "typescript": "catalog:",
-    "@types/bun": "catalog:"
-  },
-  "scripts": {
-    "perf": "bun bench/perf.ts"
+    "@reliverse/tsconfig": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
   }
 }

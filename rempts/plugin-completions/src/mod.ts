@@ -1,2 +1,2 @@
-export { completionsPlugin } from './plugin'
-export type { CompletionsPluginOptions, ShellType } from './types'
+export { completionsPlugin } from "./plugin";
+export type { CompletionsPluginOptions, ShellType } from "./types";

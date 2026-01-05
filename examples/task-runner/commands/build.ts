@@ -1,136 +1,128 @@
-import { defineCommand, option } from '@reliverse/rempts-core'
-import { z } from 'zod'
-import { relico } from '@reliverse/relico'
+import { defineCommand, option } from "@reliverse/rempts-core";
+import { z } from "zod";
+import { relico } from "@reliverse/relico";
 
 export default defineCommand({
-  name: 'build' as const,
-  description: 'Build project with validation and transformation',
+  name: "build" as const,
+  description: "Build project with validation and transformation",
   options: {
     // Environment with validation
-    env: option(
-      z.enum(['development', 'staging', 'production'])
-        .default('development'),
-      {
-        short: 'e',
-        description: 'Build environment'
-      }
-    ),
+    env: option(z.enum(["development", "staging", "production"]).default("development"), {
+      short: "e",
+      description: "Build environment",
+    }),
 
     // Output directory with validation
-    outdir: option(
-      z.string()
-        .min(1, 'Output directory cannot be empty')
-        .default('dist'),
-      {
-        short: 'o',
-        description: 'Output directory'
-      }
-    ),
+    outdir: option(z.string().min(1, "Output directory cannot be empty").default("dist"), {
+      short: "o",
+      description: "Output directory",
+    }),
 
     // Configuration file with JSON parsing
     config: option(
-      z.string()
+      z
+        .string()
         .transform((val) => {
           try {
-            return JSON.parse(val)
+            return JSON.parse(val);
           } catch {
-            throw new Error('Invalid JSON configuration')
+            throw new Error("Invalid JSON configuration");
           }
         })
         .optional(),
       {
-        short: 'c',
-        description: 'JSON configuration object'
-      }
+        short: "c",
+        description: "JSON configuration object",
+      },
     ),
 
     // Memory limit with size parsing
     memory: option(
-      z.string()
-        .regex(/^\d+[kmg]?$/i, 'Memory must be a number with optional unit (k, m, g)')
+      z
+        .string()
+        .regex(/^\d+[kmg]?$/i, "Memory must be a number with optional unit (k, m, g)")
         .transform((val) => {
-          const num = parseInt(val)
-          const unit = val.slice(-1).toLowerCase()
-          const multipliers = { k: 1024, m: 1024 * 1024, g: 1024 * 1024 * 1024 }
-          return num * (multipliers[unit as keyof typeof multipliers] || 1)
+          const num = parseInt(val);
+          const unit = val.slice(-1).toLowerCase();
+          const multipliers = { k: 1024, m: 1024 * 1024, g: 1024 * 1024 * 1024 };
+          return num * (multipliers[unit as keyof typeof multipliers] || 1);
         })
-        .default('512m'),
+        .default("512m"),
       {
-        short: 'm',
-        description: 'Memory limit (e.g., 512m, 2g)'
-      }
+        short: "m",
+        description: "Memory limit (e.g., 512m, 2g)",
+      },
     ),
 
     // Variables with key=value parsing
     variables: option(
-      z.string()
+      z
+        .string()
         .transform((val) => {
-          const vars: Record<string, string> = {}
-          val.split(',').forEach(pair => {
-            const [key, value] = pair.split('=')
+          const vars: Record<string, string> = {};
+          val.split(",").forEach((pair) => {
+            const [key, value] = pair.split("=");
             if (key && value) {
-              vars[key.trim()] = value.trim()
+              vars[key.trim()] = value.trim();
             }
-          })
-          return vars
+          });
+          return vars;
         })
         .optional(),
       {
-        short: 'v',
-        description: 'Environment variables (key1=value1,key2=value2)'
-      }
+        short: "v",
+        description: "Environment variables (key1=value1,key2=value2)",
+      },
     ),
 
     // Watch mode
-    watch: option(
-      z.coerce.boolean().default(false),
-      {
-        short: 'w',
-        description: 'Watch for changes'
-      }
-    )
+    watch: option(z.coerce.boolean().default(false), {
+      short: "w",
+      description: "Watch for changes",
+    }),
   },
 
   handler: async ({ flags, colors, spinner }) => {
-    const spin = spinner('Building project...')
+    const spin = spinner("Building project...");
 
     try {
       // Simulate build process
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      spin.update('Validating configuration...')
-      await new Promise(resolve => setTimeout(resolve, 500))
+      spin.update("Validating configuration...");
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       if (flags.config) {
-        spin.update('Applying custom configuration...')
-        await new Promise(resolve => setTimeout(resolve, 300))
+        spin.update("Applying custom configuration...");
+        await new Promise((resolve) => setTimeout(resolve, 300));
       }
 
-      spin.update('Compiling assets...')
-      await new Promise(resolve => setTimeout(resolve, 800))
+      spin.update("Compiling assets...");
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
-      spin.succeed(`Build completed successfully!`)
+      spin.succeed(`Build completed successfully!`);
 
-      console.log(relico.bold('\nBuild Summary:'))
-      console.log(`  Environment: ${relico.cyan(flags.env)}`)
-      console.log(`  Output: ${relico.cyan(flags.outdir)}`)
-      console.log(`  Memory: ${relico.cyan(flags.memory.toString())} bytes`)
+      console.log(relico.bold("\nBuild Summary:"));
+      console.log(`  Environment: ${relico.cyan(flags.env)}`);
+      console.log(`  Output: ${relico.cyan(flags.outdir)}`);
+      console.log(`  Memory: ${relico.cyan(flags.memory.toString())} bytes`);
 
       if (flags.config) {
-        console.log(`  Config: ${relico.cyan(JSON.stringify(flags.config, null, 2))}`)
+        console.log(`  Config: ${relico.cyan(JSON.stringify(flags.config, null, 2))}`);
       }
 
       if (flags.variables) {
-        console.log(`  Variables: ${relico.cyan(Object.keys(flags.variables).length.toString())} set`)
+        console.log(
+          `  Variables: ${relico.cyan(Object.keys(flags.variables).length.toString())} set`,
+        );
       }
 
       if (flags.watch) {
-        console.log(relico.yellow('\n👀 Watching for changes...'))
+        console.log(relico.yellow("\n👀 Watching for changes..."));
       }
-
     } catch (error) {
-      spin.fail('Build failed')
-      console.error(relico.red(`Error: ${error instanceof Error ? error.message : String(error)}`))
+      spin.fail("Build failed");
+      console.error(relico.red(`Error: ${error instanceof Error ? error.message : String(error)}`));
     }
-  }
-})
+  },
+});

@@ -3,42 +3,21 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        "dist/**"
-      ]
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
     },
     "typecheck": {
-      "dependsOn": [
-        "^build",
-        "^typecheck"
-      ]
+      "dependsOn": ["^build", "^typecheck"]
     },
     "dev": {
       "persistent": true,
       "cache": false
     },
     "generate": {
-      "outputs": [
-        ".dler/**"
-      ]
+      "outputs": [".dler/**"]
     },
     "test": {
-      "dependsOn": [
-        "^test"
-      ]
-    },
-    "format": {
-      "dependsOn": [
-        "^format"
-      ]
-    },
-    "lint": {
-      "dependsOn": [
-        "^lint"
-      ]
+      "dependsOn": ["^test"]
     }
   }
 }

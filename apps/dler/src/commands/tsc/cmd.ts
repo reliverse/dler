@@ -43,8 +43,7 @@ export default defineCommand({
     },
     ignore: {
       type: "string",
-      description:
-        "Package(s) to ignore (supports wildcards like @reliverse/*)",
+      description: "Package(s) to ignore (supports wildcards like @reliverse/*)",
     },
     cwd: {
       type: "string",
@@ -52,13 +51,11 @@ export default defineCommand({
     },
     concurrency: {
       type: "number",
-      description:
-        "Number of packages to check concurrently (default: CPU cores)",
+      description: "Number of packages to check concurrently (default: CPU cores)",
     },
     stopOnError: {
       type: "boolean",
-      description:
-        "Stop on first error instead of collecting all errors (default: false)",
+      description: "Stop on first error instead of collecting all errors (default: false)",
     },
     verbose: {
       type: "boolean",
@@ -66,8 +63,7 @@ export default defineCommand({
     },
     copyLogs: {
       type: "boolean",
-      description:
-        "Copy failed package logs to clipboard (default: true, skipped in CI)",
+      description: "Copy failed package logs to clipboard (default: true, skipped in CI)",
       default: true,
     },
     cache: {
@@ -80,13 +76,11 @@ export default defineCommand({
     },
     autoConcurrency: {
       type: "boolean",
-      description:
-        "Auto-detect optimal concurrency based on CPU cores (default: false)",
+      description: "Auto-detect optimal concurrency based on CPU cores (default: false)",
     },
     skipUnchanged: {
       type: "boolean",
-      description:
-        "Skip packages with no changes since last check (default: true)",
+      description: "Skip packages with no changes since last check (default: true)",
     },
     buildMode: {
       type: "boolean",

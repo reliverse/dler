@@ -106,14 +106,8 @@ export async function benchmarkRelativeTime(
   // Benchmark formatRelativeTime with timestamp inputs
   results.push(
     await benchmark("formatRelativeTime (timestamp inputs)", () => {
-      formatRelativeTime(
-        testDates[0]?.getTime() ?? baseDate.getTime(),
-        baseDate,
-      );
-      formatRelativeTime(
-        testDates[1]?.getTime() ?? baseDate.getTime(),
-        baseDate,
-      );
+      formatRelativeTime(testDates[0]?.getTime() ?? baseDate.getTime(), baseDate);
+      formatRelativeTime(testDates[1]?.getTime() ?? baseDate.getTime(), baseDate);
     }),
   );
 

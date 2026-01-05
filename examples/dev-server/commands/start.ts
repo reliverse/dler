@@ -1,80 +1,68 @@
-import { defineCommand, option } from '@reliverse/rempts-core'
-import { z } from 'zod'
-import { relico } from '@reliverse/relico'
+import { defineCommand, option } from "@reliverse/rempts-core";
+import { z } from "zod";
+import { relico } from "@reliverse/relico";
 
 const startCommand = defineCommand({
-  name: 'start',
-  description: 'Start development server with hot reload',
+  name: "start",
+  description: "Start development server with hot reload",
   options: {
-    port: option(
-      z.number().min(1000).max(65535).default(3000),
-      {
-        description: 'Port to run the server on',
-        short: 'p'
-      }
-    ),
-    host: option(
-      z.string().default('localhost'),
-      {
-        description: 'Host to bind the server to',
-        short: 'h'
-      }
-    ),
-    watch: option(
-      z.boolean().default(true),
-      {
-        description: 'Enable file watching and hot reload',
-        short: 'w'
-      }
-    ),
-    open: option(
-      z.boolean().default(false),
-      {
-        description: 'Open browser automatically',
-        short: 'o'
-      }
-    )
+    port: option(z.number().min(1000).max(65535).default(3000), {
+      description: "Port to run the server on",
+      short: "p",
+    }),
+    host: option(z.string().default("localhost"), {
+      description: "Host to bind the server to",
+      short: "h",
+    }),
+    watch: option(z.boolean().default(true), {
+      description: "Enable file watching and hot reload",
+      short: "w",
+    }),
+    open: option(z.boolean().default(false), {
+      description: "Open browser automatically",
+      short: "o",
+    }),
   },
   handler: async ({ flags, spinner, colors, context }) => {
-    const { port, host, watch, open } = flags
+    const { port, host, watch, open } = flags;
 
-    const startSpinner = spinner('Starting development server...')
+    const startSpinner = spinner("Starting development server...");
 
     // Simulate server startup
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    startSpinner.succeed(`Server started on ${relico.cyan(`http://${host}:${port}`)}`)
+    startSpinner.succeed(`Server started on ${relico.cyan(`http://${host}:${port}`)}`);
 
     if (watch) {
-      console.log(relico.green('✓ File watching enabled'))
+      console.log(relico.green("✓ File watching enabled"));
     }
 
     if (open) {
-      console.log(relico.blue('→ Opening browser...'))
+      console.log(relico.blue("→ Opening browser..."));
       // In a real implementation, you'd open the browser here
     }
 
     // Access plugin context
-    if (context?.store && 'metrics' in context.store) {
-      context.store.metrics.recordEvent('server_started', { port, host })
+    if (context?.store && "metrics" in context.store) {
+      context.store.metrics.recordEvent("server_started", { port, host });
     }
 
-    console.log(relico.dim('\nPress Ctrl+C to stop the server'))
+    console.log(relico.dim("\nPress Ctrl+C to stop the server"));
 
     // Simulate long-running server
-    if (context?.store && 'config' in context.store) {
-      console.log(relico.dim(`Config loaded: ${JSON.stringify(context.store.config, null, 2)}`))
+    if (context?.store && "config" in context.store) {
+      console.log(relico.dim(`Config loaded: ${JSON.stringify(context.store.config, null, 2)}`));
     }
 
     // Keep the process alive
-    process.on('SIGINT', () => {
-      console.log(relico.yellow('\nShutting down server...'))
-      process.exit(0)
-    })
+    process.on("SIGINT", () => {
+      console.log(relico.yellow("\nShutting down server..."));
+      process.exit(0);
+    });
 
     // Simulate server running
-    await new Promise(() => { }) // Never resolves
-  }
-})
+    await new Promise(() => {}); // Never resolves
+  },
+});
 
-export default startCommand
+export default startCommand;

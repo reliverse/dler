@@ -190,10 +190,7 @@ export const getPackageBuildConfig = async (
   packageName: string,
   dlerConfig: { build?: BuildConfig } | null,
 ): Promise<PackageBuildConfig | undefined> => {
-  return resolvePackageConfig<PackageBuildConfig>(
-    packageName,
-    dlerConfig?.build,
-  );
+  return resolvePackageConfig<PackageBuildConfig>(packageName, dlerConfig?.build);
 };
 
 // ============================================================================

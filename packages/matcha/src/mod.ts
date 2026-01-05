@@ -29,11 +29,8 @@ interface MatcherOptions {
  * @param options - Optional configuration
  * @returns True if the pattern matches the input
  */
-export const match = (
-  pattern: string,
-  input: string,
-  options: MatchOptions = {},
-): boolean => zeptomatch(pattern, input, options);
+export const match = (pattern: string, input: string, options: MatchOptions = {}): boolean =>
+  zeptomatch(pattern, input, options);
 
 /**
  * Check if a glob pattern matches a path (alias for match)
@@ -61,10 +58,8 @@ export const createMatcher =
  * @param options - Optional configuration
  * @returns Array of matcher functions
  */
-export const createMatchers = (
-  patterns: string[],
-  options: MatcherOptions = {},
-) => patterns.map((pattern) => createMatcher(pattern, options));
+export const createMatchers = (patterns: string[], options: MatcherOptions = {}) =>
+  patterns.map((pattern) => createMatcher(pattern, options));
 
 /**
  * Test if any of the patterns match the input
@@ -73,11 +68,8 @@ export const createMatchers = (
  * @param options - Optional configuration
  * @returns True if any pattern matches
  */
-export const matchAny = (
-  patterns: string[],
-  input: string,
-  options: MatchOptions = {},
-): boolean => patterns.some((pattern) => zeptomatch(pattern, input, options));
+export const matchAny = (patterns: string[], input: string, options: MatchOptions = {}): boolean =>
+  patterns.some((pattern) => zeptomatch(pattern, input, options));
 
 /**
  * Test if all patterns match the input
@@ -86,11 +78,8 @@ export const matchAny = (
  * @param options - Optional configuration
  * @returns True if all patterns match
  */
-export const matchAll = (
-  patterns: string[],
-  input: string,
-  options: MatchOptions = {},
-): boolean => patterns.every((pattern) => zeptomatch(pattern, input, options));
+export const matchAll = (patterns: string[], input: string, options: MatchOptions = {}): boolean =>
+  patterns.every((pattern) => zeptomatch(pattern, input, options));
 
 /**
  * Filter an array of strings based on glob patterns
@@ -154,10 +143,8 @@ export const exclude = (
  * @param options - Optional configuration
  * @returns Compiled regular expression
  */
-export const compile = (
-  pattern: string,
-  options: CompileOptions = {},
-): RegExp => zeptomatch.compile(pattern, options);
+export const compile = (pattern: string, options: CompileOptions = {}): RegExp =>
+  zeptomatch.compile(pattern, options);
 
 /**
  * Compile multiple glob patterns to a single regular expression
@@ -165,10 +152,8 @@ export const compile = (
  * @param options - Optional configuration
  * @returns Compiled regular expression that matches any of the patterns
  */
-export const compileAny = (
-  patterns: string[],
-  options: CompileOptions = {},
-): RegExp => zeptomatch.compile(patterns, options);
+export const compileAny = (patterns: string[], options: CompileOptions = {}): RegExp =>
+  zeptomatch.compile(patterns, options);
 
 // ============================================================================
 // Utility Functions

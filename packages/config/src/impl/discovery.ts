@@ -12,9 +12,7 @@ import { loadConfig, watchConfig } from "c12";
 /**
  * Find monorepo root by looking for package.json with workspaces field
  */
-export const findMonorepoRoot = async (
-  cwd?: string,
-): Promise<string | null> => {
+export const findMonorepoRoot = async (cwd?: string): Promise<string | null> => {
   let currentDir = cwd || process.cwd();
   const maxDepth = 10;
   let depth = 0;

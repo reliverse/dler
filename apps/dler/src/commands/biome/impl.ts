@@ -195,10 +195,7 @@ const formatDiagnostic = (diag: BiomeDiagnostic, cwd: string): string => {
   return `${relativePath}:${diag.line}:${diag.column}${rulePart}\n   × ${diag.message}${suggestionPart}`;
 };
 
-const formatFilteredOutput = (
-  diagnostics: BiomeDiagnostic[],
-  cwd: string,
-): string => {
+const formatFilteredOutput = (diagnostics: BiomeDiagnostic[], cwd: string): string => {
   const lines: string[] = [];
 
   // Group by rule
@@ -249,9 +246,7 @@ const collectBiomeLogs = (result: BiomeResult, cwd: string): string => {
   }
 
   for (const [rule, ruleDiags] of byRule) {
-    logs.push(
-      `🔍 ${rule} (${ruleDiags.length} occurrence${ruleDiags.length > 1 ? "s" : ""})`,
-    );
+    logs.push(`🔍 ${rule} (${ruleDiags.length} occurrence${ruleDiags.length > 1 ? "s" : ""})`);
     logs.push(`   ${"─".repeat(30)}`);
 
     // Show rule description once (from first diagnostic)
@@ -277,10 +272,7 @@ const collectBiomeLogs = (result: BiomeResult, cwd: string): string => {
   return logs.join("\n");
 };
 
-const copyLogsToClipboard = async (
-  result: BiomeResult,
-  cwd: string,
-): Promise<void> => {
+const copyLogsToClipboard = async (result: BiomeResult, cwd: string): Promise<void> => {
   try {
     const logs = collectBiomeLogs(result, cwd);
 
@@ -329,20 +321,14 @@ const formatOutput = (result: BiomeResult, cwd: string): void => {
     }
 
     for (const [rule, ruleDiags] of byRule) {
-      logger.error(
-        `🔍 ${rule} (${ruleDiags.length} occurrence${ruleDiags.length > 1 ? "s" : ""})`,
-      );
+      logger.error(`🔍 ${rule} (${ruleDiags.length} occurrence${ruleDiags.length > 1 ? "s" : ""})`);
       logger.error(`   ${"─".repeat(30)}`);
 
       // Show rule description once (from first diagnostic)
       const firstDiag = ruleDiags[0];
       if (firstDiag) {
         const severityIcon =
-          firstDiag.severity === "error"
-            ? "×"
-            : firstDiag.severity === "warning"
-              ? "⚠"
-              : "ℹ";
+          firstDiag.severity === "error" ? "×" : firstDiag.severity === "warning" ? "⚠" : "ℹ";
         logger.error(`   ${severityIcon} ${firstDiag.message}`);
         if (firstDiag.suggestion) {
           logger.info(`   i ${firstDiag.suggestion}`);
@@ -365,9 +351,7 @@ const formatOutput = (result: BiomeResult, cwd: string): void => {
 // Main Entry Point
 // ============================================================================
 
-export const runBiomeCheck = async (
-  options: BiomeOptions = {},
-): Promise<BiomeResult> => {
+export const runBiomeCheck = async (options: BiomeOptions = {}): Promise<BiomeResult> => {
   const { verbose = false, copyLogs = false, cwd = process.cwd() } = options;
   const startTime = Date.now();
 
@@ -381,10 +365,7 @@ export const runBiomeCheck = async (
     const { stdout, stderr } = await runBiomeCommand(resolvedCwd);
     const output = stdout + stderr;
 
-    const { diagnostics, errors, warnings, infos } = parseBiomeOutput(
-      output,
-      resolvedCwd,
-    );
+    const { diagnostics, errors, warnings, infos } = parseBiomeOutput(output, resolvedCwd);
 
     const filteredOutput = formatFilteredOutput(diagnostics, resolvedCwd);
 

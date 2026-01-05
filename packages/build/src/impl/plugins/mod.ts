@@ -47,10 +47,7 @@ export { TypeScriptDeclarationsPlugin } from "./typescript-declarations";
 export { WorkerPlugin } from "./worker";
 
 // Plugin utilities
-export function createPlugin(
-  name: string,
-  setup: (build: BunBuildConfig) => void,
-): DlerPlugin {
+export function createPlugin(name: string, setup: (build: BunBuildConfig) => void): DlerPlugin {
   return {
     name,
     setup,
@@ -72,10 +69,7 @@ export function loadPlugins(pluginNames: string[]): DlerPlugin[] {
   return plugins;
 }
 
-export function applyPlugins(
-  plugins: DlerPlugin[],
-  buildConfig: BunBuildConfig,
-): void {
+export function applyPlugins(plugins: DlerPlugin[], buildConfig: BunBuildConfig): void {
   for (const plugin of plugins) {
     try {
       plugin.setup(buildConfig);

@@ -78,10 +78,7 @@ export function isNonSemverSpecifier(versionSpec: string): boolean {
  * Check if a version update is semver-compatible with the current version range
  * Note: Returns false for exact versions (handled separately in checkPackageUpdate)
  */
-export function isSemverCompatible(
-  currentVersionRange: string,
-  latestVersion: string,
-): boolean {
+export function isSemverCompatible(currentVersionRange: string, latestVersion: string): boolean {
   try {
     // Skip npm aliases entirely
     if (isNpmAlias(currentVersionRange)) {
@@ -94,10 +91,7 @@ export function isSemverCompatible(
     }
 
     // If the current version range is exact (no prefix), be conservative
-    if (
-      !currentVersionRange.startsWith("^") &&
-      !currentVersionRange.startsWith("~")
-    ) {
+    if (!currentVersionRange.startsWith("^") && !currentVersionRange.startsWith("~")) {
       return false;
     }
 
@@ -260,8 +254,7 @@ export function applyVersionUpdate(
       const workspaces = pkg.workspaces;
       if (workspaces) {
         if (!workspaces.catalogs) workspaces.catalogs = {};
-        if (!workspaces.catalogs[catalogName])
-          workspaces.catalogs[catalogName] = {};
+        if (!workspaces.catalogs[catalogName]) workspaces.catalogs[catalogName] = {};
         workspaces.catalogs[catalogName][depName] = newVersion;
       }
       if (pkg.catalogs?.[catalogName]) {
@@ -274,12 +267,8 @@ export function applyVersionUpdate(
 /**
  * Fallback function to fetch package version directly from npm registry
  */
-export async function fetchVersionFromRegistry(
-  packageName: string,
-): Promise<string> {
-  const response = await fetch(
-    `https://registry.npmjs.org/${packageName}/latest`,
-  );
+export async function fetchVersionFromRegistry(packageName: string): Promise<string> {
+  const response = await fetch(`https://registry.npmjs.org/${packageName}/latest`);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
   }
@@ -295,9 +284,7 @@ export async function getLatestVersion(packageName: string): Promise<string> {
     // Use Bun's built-in fetch to get the latest version from npm registry
     return await fetchVersionFromRegistry(packageName);
   } catch (error) {
-    throw new Error(
-      `Failed to get latest version for ${packageName}: ${error}`,
-    );
+    throw new Error(`Failed to get latest version for ${packageName}: ${error}`);
   }
 }
 
@@ -320,8 +307,7 @@ export async function checkPackageUpdate(
     const latest = await getLatestVersion(packageName);
     const cleanCurrent = versionSpec.replace(/^[\^~]/, "");
     let isCompatible = isSemverCompatible(versionSpec, latest);
-    const isExact =
-      !versionSpec.startsWith("^") && !versionSpec.startsWith("~");
+    const isExact = !versionSpec.startsWith("^") && !versionSpec.startsWith("~");
 
     // Allow updates to latest version: exact versions always, and major updates when enabled (default)
     if (isExact || (!isCompatible && options.allowMajor)) {
@@ -383,9 +369,7 @@ export function prepareDependenciesForUpdate(
     });
 
     // Show helpful info about pattern matching
-    const exactMatches = filteredDeps.filter((dep) =>
-      namePatterns.includes(dep),
-    );
+    const exactMatches = filteredDeps.filter((dep) => namePatterns.includes(dep));
     const patternMatches = filteredDeps.length - exactMatches.length;
 
     if (patternMatches > 0) {
@@ -395,9 +379,7 @@ export function prepareDependenciesForUpdate(
     }
 
     if (filteredDeps.length === 0) {
-      logger.warn(
-        `No dependencies found matching patterns: ${namePatterns.join(", ")}`,
-      );
+      logger.warn(`No dependencies found matching patterns: ${namePatterns.join(", ")}`);
     }
   } else {
     // Update all dependencies, respecting ignore list (supports glob patterns)
@@ -420,9 +402,7 @@ export function prepareDependenciesForUpdate(
     // Show info about ignored packages
     const ignoredCount = depsToUpdate.length - filteredDeps.length;
     if (ignoredCount > 0 && ignoreList.length > 0) {
-      logger.debug(
-        `Ignored ${ignoredCount} dependencies matching ignore patterns`,
-      );
+      logger.debug(`Ignored ${ignoredCount} dependencies matching ignore patterns`);
     }
   }
 
@@ -432,9 +412,7 @@ export function prepareDependenciesForUpdate(
     filteredDeps = filteredDeps.filter((dep) => {
       const locations = allDepsMap[dep]?.locations || new Set<string>();
       // Check if any of the dependency's locations should be ignored
-      return !Array.from(locations).some((location) =>
-        ignoreFields.includes(location),
-      );
+      return !Array.from(locations).some((location) => ignoreFields.includes(location));
     });
 
     const ignoredFieldsCount = depsToUpdate.length - filteredDeps.length;
@@ -498,31 +476,20 @@ export async function updatePackageJsonFile(
           newVersion = `>=${update.latestVersion}`;
         } else {
           newVersion =
-            savePrefix === "none"
-              ? update.latestVersion
-              : `${savePrefix}${update.latestVersion}`;
+            savePrefix === "none" ? update.latestVersion : `${savePrefix}${update.latestVersion}`;
         }
       } else {
         // For other dependency types, use the standard prefix
         newVersion =
-          savePrefix === "none"
-            ? update.latestVersion
-            : `${savePrefix}${update.latestVersion}`;
+          savePrefix === "none" ? update.latestVersion : `${savePrefix}${update.latestVersion}`;
       }
 
-      applyVersionUpdate(
-        updatedPackageJson,
-        update.package,
-        newVersion,
-        locations,
-      );
+      applyVersionUpdate(updatedPackageJson, update.package, newVersion, locations);
     }
 
-    await fs.writeFile(
-      packageJsonPath,
-      `${JSON.stringify(updatedPackageJson, null, 2)}\n`,
-      { encoding: "utf8" },
-    );
+    await fs.writeFile(packageJsonPath, `${JSON.stringify(updatedPackageJson, null, 2)}\n`, {
+      encoding: "utf8",
+    });
 
     return updatesToApply.length;
   } catch (error) {
@@ -544,9 +511,7 @@ export function displayStructuredUpdateResults(
 ): void {
   const toUpdate = results.filter((r) => r.updated && !r.error);
   const errors = results.filter((r) => r.error);
-  const upToDate = results.filter(
-    (r) => !r.updated && !r.error && r.semverCompatible,
-  );
+  const upToDate = results.filter((r) => !r.updated && !r.error && r.semverCompatible);
 
   // Show errors first
   if (errors.length > 0) {
@@ -594,9 +559,7 @@ export function displayStructuredUpdateResults(
   for (const [filePath, fileResults] of resultsByFile.entries()) {
     // Show relative path from user's cwd
     const relativePath =
-      filePath !== "unknown"
-        ? path.relative(process.cwd(), filePath)
-        : "unknown";
+      filePath !== "unknown" ? path.relative(process.cwd(), filePath) : "unknown";
     logger.info(`${relativePath}`);
 
     // Group by dependency category
@@ -610,9 +573,7 @@ export function displayStructuredUpdateResults(
     }
 
     // Show up-to-date dependencies
-    const upToDateInFile = fileResults.filter(
-      (r) => !r.updated && !r.error && r.semverCompatible,
-    );
+    const upToDateInFile = fileResults.filter((r) => !r.updated && !r.error && r.semverCompatible);
     if (upToDateInFile.length > 0) {
       logger.log(`  * ${upToDateInFile.length} deps are already up to date`);
     }
@@ -623,21 +584,19 @@ export function displayStructuredUpdateResults(
       logger.log(`  * ${toUpdateInFile.length} deps can be updated:`);
 
       // Sort categories for consistent display
-      const sortedCategories = Array.from(byCategory.entries()).sort(
-        ([a], [b]) => {
-          // Order: catalog, dependencies, devDependencies, peerDependencies, optionalDependencies
-          const order = {
-            catalog: 0,
-            dependencies: 1,
-            devDependencies: 2,
-            peerDependencies: 3,
-            optionalDependencies: 4,
-          };
-          const aOrder = order[a as keyof typeof order] ?? 999;
-          const bOrder = order[b as keyof typeof order] ?? 999;
-          return aOrder - bOrder;
-        },
-      );
+      const sortedCategories = Array.from(byCategory.entries()).sort(([a], [b]) => {
+        // Order: catalog, dependencies, devDependencies, peerDependencies, optionalDependencies
+        const order = {
+          catalog: 0,
+          dependencies: 1,
+          devDependencies: 2,
+          peerDependencies: 3,
+          optionalDependencies: 4,
+        };
+        const aOrder = order[a as keyof typeof order] ?? 999;
+        const bOrder = order[b as keyof typeof order] ?? 999;
+        return aOrder - bOrder;
+      });
 
       for (const [category, updates] of sortedCategories) {
         const categoryUpdates = updates.filter((r) => r.updated && !r.error);

@@ -2,6 +2,11 @@
   "name": "@reliverse/publish",
   "version": "2.2.9",
   "private": false,
+  "license": "MIT",
+  "files": [
+    "dist",
+    "package.json"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -9,27 +14,22 @@
       "default": "./src/mod.ts"
     }
   },
-  "dependencies": {
-    "c12": "catalog:",
-    "dotenv": "catalog:",
-    "@reliverse/typerso": "workspace:*",
-    "@reliverse/config": "workspace:*",
-    "@reliverse/relinka": "workspace:*",
-    "@reliverse/bump": "workspace:*",
-    "@reliverse/relico": "workspace:*",
-    "@reliverse/build": "workspace:*"
-  },
   "publishConfig": {
     "access": "public"
   },
-  "files": [
-    "dist",
-    "package.json"
-  ],
-  "license": "MIT",
+  "dependencies": {
+    "@reliverse/build": "workspace:*",
+    "@reliverse/bump": "workspace:*",
+    "@reliverse/config": "workspace:*",
+    "@reliverse/relico": "workspace:*",
+    "@reliverse/relinka": "workspace:*",
+    "@reliverse/typerso": "workspace:*",
+    "c12": "catalog:",
+    "dotenv": "catalog:"
+  },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
-    "typescript": "catalog:",
-    "@types/bun": "catalog:"
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
   }
 }

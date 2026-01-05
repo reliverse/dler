@@ -1,11 +1,6 @@
 export type PathLike = string | URL;
 
-export type FileInput =
-  | string
-  | ArrayBuffer
-  | SharedArrayBuffer
-  | NodeJS.ArrayBufferView
-  | Blob;
+export type FileInput = string | ArrayBuffer | SharedArrayBuffer | NodeJS.ArrayBufferView | Blob;
 
 export type FileEncoding =
   | "utf8"

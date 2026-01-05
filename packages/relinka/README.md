@@ -42,6 +42,7 @@ await relinka.error("File processing failed");
 ## When to Use Sync vs Async
 
 ### Use `logger` (Synchronous) when:
+
 - ✅ Sequential logging (like CLI tools with ordered output)
 - ✅ Small, frequent console writes
 - ✅ Error reporting that needs to maintain order
@@ -49,6 +50,7 @@ await relinka.error("File processing failed");
 - ✅ CLI tools where output order is critical
 
 ### Use `relinka` (Asynchronous) when:
+
 - ✅ Logging from multiple concurrent async operations
 - ✅ High-frequency logging where you don't want to block
 - ✅ Large log outputs that could slow down execution
@@ -63,17 +65,17 @@ await relinka.error("File processing failed");
 
 Both `logger` and `relinka` support the following log levels:
 
-| Level | Symbol | Color | Description |
-|-------|--------|-------|-------------|
-| `log` | `│  ` | White | General logging |
-| `error` | `✖  ` | Red | Error messages |
-| `fatal` | `☠  ` | Red | Fatal errors |
-| `warn` | `⚠  ` | Yellow | Warning messages |
-| `info` | `■  ` | Blue | Informational messages |
-| `success` | `✓  ` | Green | Success messages |
-| `debug` | `✱  ` | Gray | Debug messages |
-| `box` | - | White | Box-formatted messages |
-| `raw` | - | - | Raw output (no formatting) |
+| Level     | Symbol | Color  | Description                |
+| --------- | ------ | ------ | -------------------------- |
+| `log`     | `│  `  | White  | General logging            |
+| `error`   | `✖  `  | Red    | Error messages             |
+| `fatal`   | `☠  `  | Red    | Fatal errors               |
+| `warn`    | `⚠  `  | Yellow | Warning messages           |
+| `info`    | `■  `  | Blue   | Informational messages     |
+| `success` | `✓  `  | Green  | Success messages           |
+| `debug`   | `✱  `  | Gray   | Debug messages             |
+| `box`     | -      | White  | Box-formatted messages     |
+| `raw`     | -      | -      | Raw output (no formatting) |
 
 ### Usage Patterns
 
@@ -144,7 +146,7 @@ import { logger } from "@reliverse/relinka";
 
 async function buildProject() {
   logger.info("Starting build process...");
-  
+
   try {
     // Build steps
     logger.success("Build completed successfully");
@@ -169,7 +171,7 @@ async function processFiles(files: string[]) {
       await relinka.success(`Completed ${file}`);
     })
   );
-  
+
   // Writes happen in background, maintaining order
   await relinka.info("All files processed");
 }
@@ -257,4 +259,3 @@ MIT
 ## Related Packages
 
 - [@reliverse/relico](https://github.com/reliverse/relico) - Color utilities used by relinka
-

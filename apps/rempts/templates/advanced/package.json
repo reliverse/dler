@@ -1,13 +1,13 @@
 {
   "name": "{{name}}",
   "version": "0.1.0",
-  "type": "module",
   "description": "{{description}}",
-  "author": "{{author}}",
   "license": "{{license}}",
+  "author": "{{author}}",
   "bin": {
     "{{name}}": "./src/mod.ts"
   },
+  "type": "module",
   "scripts": {
     "postinstall": "bun dler generate",
     "dev": "bun run src/mod.ts",
@@ -24,8 +24,8 @@
     "zod": "^3.22.0"
   },
   "devDependencies": {
-    "@reliverse/tsconfig": "workspace:*",
     "@reliverse/rempts-test": "latest",
+    "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "latest",
     "rempts": "latest",
     "typescript": "^5.0.0"

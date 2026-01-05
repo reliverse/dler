@@ -1,8 +1,4 @@
-import {
-  getAvailableTimezones,
-  getTimezoneOffset,
-  toTimezone,
-} from "../../src/mod";
+import { getAvailableTimezones, getTimezoneOffset, toTimezone } from "../../src/mod";
 import type { BenchmarkResult } from "../perf";
 
 const testDate = new Date("2024-01-15T10:30:45.123Z");

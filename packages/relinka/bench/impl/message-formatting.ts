@@ -26,13 +26,7 @@ export async function benchmarkMessageFormatting(
 
   results.push(
     await benchmark("sync multiple args (5)", () => {
-      logger.info(
-        "Failed to connect to",
-        "localhost",
-        "on port",
-        3000,
-        "with error",
-      );
+      logger.info("Failed to connect to", "localhost", "on port", 3000, "with error");
     }),
   );
 
@@ -58,13 +52,7 @@ export async function benchmarkMessageFormatting(
 
   results.push(
     await benchmark("async multiple args (5)", async () => {
-      await relinka.info(
-        "Failed to connect to",
-        "localhost",
-        "on port",
-        3000,
-        "with error",
-      );
+      await relinka.info("Failed to connect to", "localhost", "on port", 3000, "with error");
     }),
   );
 

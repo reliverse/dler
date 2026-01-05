@@ -82,17 +82,11 @@ export const pMapSkip = Symbol("skip");
  * from `mapkit` in `input` order, excluding `pMapSkip`.
  */
 export default async function pMap<Element, NewElement>(
-  input:
-    | AsyncIterable<Element | Promise<Element>>
-    | Iterable<Element | Promise<Element>>,
+  input: AsyncIterable<Element | Promise<Element>> | Iterable<Element | Promise<Element>>,
   mapkit: mapkit<Element, NewElement>,
   options: Options = {},
 ): Promise<Array<Exclude<NewElement, typeof pMapSkip>>> {
-  const {
-    concurrency = Number.POSITIVE_INFINITY,
-    stopOnError = true,
-    signal,
-  } = options;
+  const { concurrency = Number.POSITIVE_INFINITY, stopOnError = true, signal } = options;
 
   if (
     !("Symbol" in globalThis) ||
@@ -206,10 +200,7 @@ export default async function pMap<Element, NewElement>(
       resolveResults();
     }
 
-    async function startmapkit(
-      valueOrPromise: Element | Promise<Element>,
-      index: number,
-    ) {
+    async function startmapkit(valueOrPromise: Element | Promise<Element>, index: number) {
       try {
         const item = await valueOrPromise;
         const result = await mapkit(item, index);
@@ -293,14 +284,11 @@ export default async function pMap<Element, NewElement>(
  * order, excluding `pMapSkip`.
  */
 export function pMapIterable<Element, NewElement>(
-  input:
-    | AsyncIterable<Element | Promise<Element>>
-    | Iterable<Element | Promise<Element>>,
+  input: AsyncIterable<Element | Promise<Element>> | Iterable<Element | Promise<Element>>,
   mapkit: mapkit<Element, NewElement>,
   options: IterableOptions = {},
 ): AsyncIterable<Exclude<NewElement, typeof pMapSkip>> {
-  const { concurrency = Number.POSITIVE_INFINITY, backpressure = concurrency } =
-    options;
+  const { concurrency = Number.POSITIVE_INFINITY, backpressure = concurrency } = options;
 
   if (
     !("Symbol" in globalThis) ||
@@ -383,11 +371,7 @@ export function pMapIterable<Element, NewElement>(
 
         (async () => {
           try {
-            while (
-              !isDone &&
-              runningCount < concurrency &&
-              resultQueue.length < backpressure
-            ) {
+            while (!isDone && runningCount < concurrency && resultQueue.length < backpressure) {
               let next:
                 | IteratorResult<Element | Promise<Element>>
                 | Promise<IteratorResult<Element | Promise<Element>>>;

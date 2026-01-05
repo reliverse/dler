@@ -21,10 +21,7 @@ export function parseVersion(version: string): string | null {
 /**
  * Bump a version string according to the specified type
  */
-export function bumpVersion(
-  currentVersion: string,
-  type: BumpType,
-): VersionInfo | null {
+export function bumpVersion(currentVersion: string, type: BumpType): VersionInfo | null {
   const parsed = parse(currentVersion);
   if (!parsed) {
     return null;
@@ -45,10 +42,7 @@ export function bumpVersion(
 /**
  * Get the next version for a given type without bumping
  */
-export function getNextVersion(
-  currentVersion: string,
-  type: BumpType,
-): string | null {
+export function getNextVersion(currentVersion: string, type: BumpType): string | null {
   const parsed = parse(currentVersion);
   if (!parsed) {
     return null;
@@ -73,9 +67,7 @@ export function isPrerelease(version: string): boolean {
 /**
  * Get the release type of a version (major, minor, patch)
  */
-export function getReleaseType(
-  version: string,
-): "major" | "minor" | "patch" | null {
+export function getReleaseType(version: string): "major" | "minor" | "patch" | null {
   const parsed = parse(version);
   if (!parsed) {
     return null;

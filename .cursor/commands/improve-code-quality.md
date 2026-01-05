@@ -1,38 +1,41 @@
 # Improve code quality (clarity, DRY, modularity)
 
 ## Purpose
+
 This command guides the AI to improve a package library's code quality using a systematic refactoring approach. The goal is to enhance code clarity, reduce duplication (DRY), improve modularity, and maintainability while ensuring functionality remains intact.
 
 ## Packages to Improve
 
 The following packages should be improved in priority order (packages with older `lastImproved` timestamps should be prioritized):
 
-| # | Package | Last Improved | Status | Notes |
-|---|---------|---------------|--------|-------|
-| 0 | `@reliverse/dler` | - | - | - |
-| 1 | `@reliverse/build` | - | - | - |
-| 2 | `@reliverse/bump` | - | - | - |
-| 3 | `@reliverse/config` | - | - | - |
-| 4 | `@reliverse/datetime` | - | - | - |
-| 5 | `@reliverse/helpers` | - | - | - |
-| 6 | `@reliverse/mapkit` | - | - | - |
-| 7 | `@reliverse/matcha` | - | - | - |
-| 8 | `@reliverse/pathkit` | - | - | - |
-| 9 | `@reliverse/publish` | - | - | - |
-| 10 | `@reliverse/relico` | - | - | - |
-| 11 | `@reliverse/relifso` | - | - | - |
-| 12 | `@reliverse/relinka` | - | - | - |
-| 13 | `@reliverse/rempts` | - | - | - |
-| 14 | `@reliverse/tsconfig` | - | - | - |
-| 15 | `@reliverse/typerso` | - | - | - |
+| #   | Package               | Last Improved | Status | Notes |
+| --- | --------------------- | ------------- | ------ | ----- |
+| 0   | `@reliverse/dler`     | -             | -      | -     |
+| 1   | `@reliverse/build`    | -             | -      | -     |
+| 2   | `@reliverse/bump`     | -             | -      | -     |
+| 3   | `@reliverse/config`   | -             | -      | -     |
+| 4   | `@reliverse/datetime` | -             | -      | -     |
+| 5   | `@reliverse/helpers`  | -             | -      | -     |
+| 6   | `@reliverse/mapkit`   | -             | -      | -     |
+| 7   | `@reliverse/matcha`   | -             | -      | -     |
+| 8   | `@reliverse/pathkit`  | -             | -      | -     |
+| 9   | `@reliverse/publish`  | -             | -      | -     |
+| 10  | `@reliverse/relico`   | -             | -      | -     |
+| 11  | `@reliverse/relifso`  | -             | -      | -     |
+| 12  | `@reliverse/relinka`  | -             | -      | -     |
+| 13  | `@reliverse/rempts`   | -             | -      | -     |
+| 14  | `@reliverse/tsconfig` | -             | -      | -     |
+| 15  | `@reliverse/typerso`  | -             | -      | -     |
 
 **Metadata Fields:**
+
 - **Last Improved**: Timestamp (CET timezone) when code quality improvements were last completed (format: `YYYY-MM-DD HH:mm:ss`)
 - **Status**: Current improvement status (`pending`, `in-progress`, `completed`, `skipped`)
   - **`in-progress`**: ⚠️ **CRITICAL**: If a package has status `in-progress`, it means another AI agent is currently working on it. **DO NOT** select or work on packages with this status. Skip them and move to the next available package.
 - **Notes**: Any relevant information about the package or improvement results
 
 **Package Selection Priority:**
+
 - ⚠️ **IMPORTANT**: **NEVER** select packages with status `in-progress` - another AI agent is currently working on them
 - AI should prioritize packages with the oldest `lastImproved` timestamp (or `-` if never improved)
 - Only consider packages with status `pending`, `completed` (for re-improvement), or `-` (never improved)
@@ -187,6 +190,7 @@ The following packages should be improved in priority order (packages with older
 ## Code Quality Improvement Checklist
 
 ### Clarity Improvements
+
 - [ ] Variable and function names are descriptive and follow naming conventions
 - [ ] Complex logic is broken down into smaller, understandable pieces
 - [ ] Functions have a single, clear responsibility
@@ -196,6 +200,7 @@ The following packages should be improved in priority order (packages with older
 - [ ] Nesting is minimized (early returns, guard clauses)
 
 ### DRY Improvements
+
 - [ ] Duplicated code blocks are extracted into reusable functions
 - [ ] Similar patterns are unified into shared utilities
 - [ ] Type definitions are not duplicated
@@ -204,6 +209,7 @@ The following packages should be improved in priority order (packages with older
 - [ ] Common operations are abstracted into helpers
 
 ### Modularity Improvements
+
 - [ ] Files are focused and not overly large
 - [ ] Functions are appropriately sized and focused
 - [ ] Modules have clear boundaries and responsibilities
@@ -213,6 +219,7 @@ The following packages should be improved in priority order (packages with older
 - [ ] Exports are explicit and minimal
 
 ### Type Safety
+
 - [ ] No use of `any` type (unless absolutely necessary)
 - [ ] Types are properly defined and used
 - [ ] Type inference is leveraged where appropriate
@@ -220,6 +227,7 @@ The following packages should be improved in priority order (packages with older
 - [ ] Generic types are used appropriately
 
 ### Consistency
+
 - [ ] Code follows project coding standards
 - [ ] Patterns are consistent across the codebase
 - [ ] Error handling is uniform
@@ -253,6 +261,7 @@ The following packages should be improved in priority order (packages with older
 After completing improvements for a package, update the metadata in the "Packages to Improve" section:
 
 1. **Get the current timestamp in CET:**
+
    ```bash
    dler datetime --now --convert 'Europe/Berlin' --format 'YYYY-MM-DD HH:mm:ss'
    ```

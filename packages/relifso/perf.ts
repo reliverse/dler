@@ -154,9 +154,7 @@ function printBenchmarkResult(result: BenchmarkResult): void {
     `p99: ${formatTime(result.p99Time).padStart(8)}`,
   ].join(" | ");
   const ops = `${result.opsPerSec.toLocaleString().padStart(8)} ops/s`;
-  const throughput = result.throughput
-    ? ` | ${result.throughput.padStart(12)}`
-    : "";
+  const throughput = result.throughput ? ` | ${result.throughput.padStart(12)}` : "";
 
   console.log(`  ${name} ${stats} | ${ops}${throughput}`);
 }
@@ -649,10 +647,7 @@ async function benchmarkAdvancedOperations(): Promise<BenchmarkResult[]> {
     if (i % 5 === 0) {
       await fs.ensureDir(join(largeScanDir, `dir${i}`));
       for (let j = 0; j < 5; j++) {
-        await fs.writeFile(
-          join(largeScanDir, `dir${i}`, `nested${j}.txt`),
-          "test",
-        );
+        await fs.writeFile(join(largeScanDir, `dir${i}`, `nested${j}.txt`), "test");
       }
     }
   }
@@ -770,35 +765,22 @@ function printSummary(allResults: BenchmarkResult[]): void {
 
   const totalOps = allResults.reduce((sum, r) => sum + r.opsPerSec, 0);
   const avgOps = Math.round(totalOps / allResults.length);
-  const fastest = allResults.reduce((max, r) =>
-    r.opsPerSec > max.opsPerSec ? r : max,
-  );
-  const slowest = allResults.reduce((min, r) =>
-    r.opsPerSec < min.opsPerSec ? r : min,
-  );
+  const fastest = allResults.reduce((max, r) => (r.opsPerSec > max.opsPerSec ? r : max));
+  const slowest = allResults.reduce((min, r) => (r.opsPerSec < min.opsPerSec ? r : min));
 
   console.log(`  Total benchmarks: ${allResults.length}`);
   console.log(`  Average ops/sec: ${avgOps.toLocaleString()}`);
-  console.log(
-    `  Fastest: ${fastest.name} (${fastest.opsPerSec.toLocaleString()} ops/s)`,
-  );
-  console.log(
-    `  Slowest: ${slowest.name} (${slowest.opsPerSec.toLocaleString()} ops/s)`,
-  );
+  console.log(`  Fastest: ${fastest.name} (${fastest.opsPerSec.toLocaleString()} ops/s)`);
+  console.log(`  Slowest: ${slowest.name} (${slowest.opsPerSec.toLocaleString()} ops/s)`);
 
   // Group by category
   const fileOps = allResults.filter(
     (r) => r.name.includes("readFile") || r.name.includes("writeFile"),
   );
   const dirOps = allResults.filter(
-    (r) =>
-      r.name.includes("Dir") ||
-      r.name.includes("remove") ||
-      r.name.includes("pathExists"),
+    (r) => r.name.includes("Dir") || r.name.includes("remove") || r.name.includes("pathExists"),
   );
-  const copyOps = allResults.filter(
-    (r) => r.name.includes("copy") || r.name.includes("move"),
-  );
+  const copyOps = allResults.filter((r) => r.name.includes("copy") || r.name.includes("move"));
 
   if (fileOps.length > 0) {
     const avgFileOps = Math.round(
@@ -808,21 +790,15 @@ function printSummary(allResults: BenchmarkResult[]): void {
   }
 
   if (dirOps.length > 0) {
-    const avgDirOps = Math.round(
-      dirOps.reduce((sum, r) => sum + r.opsPerSec, 0) / dirOps.length,
-    );
-    console.log(
-      `  Directory operations avg: ${avgDirOps.toLocaleString()} ops/s`,
-    );
+    const avgDirOps = Math.round(dirOps.reduce((sum, r) => sum + r.opsPerSec, 0) / dirOps.length);
+    console.log(`  Directory operations avg: ${avgDirOps.toLocaleString()} ops/s`);
   }
 
   if (copyOps.length > 0) {
     const avgCopyOps = Math.round(
       copyOps.reduce((sum, r) => sum + r.opsPerSec, 0) / copyOps.length,
     );
-    console.log(
-      `  Copy/move operations avg: ${avgCopyOps.toLocaleString()} ops/s`,
-    );
+    console.log(`  Copy/move operations avg: ${avgCopyOps.toLocaleString()} ops/s`);
   }
 }
 

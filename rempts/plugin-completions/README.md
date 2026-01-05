@@ -64,11 +64,13 @@ my-cli completions -s fish -o my-cli.fish
 #### Bash
 
 **Option 1 - Current session:**
+
 ```bash
 source <(my-cli completions --shell bash)
 ```
 
 **Option 2 - Save to completion directory:**
+
 ```bash
 my-cli completions --shell bash > /etc/bash_completion.d/my-cli
 # Or on macOS with Homebrew:
@@ -76,6 +78,7 @@ my-cli completions --shell bash > $(brew --prefix)/etc/bash_completion.d/my-cli
 ```
 
 **Option 3 - Add to ~/.bashrc:**
+
 ```bash
 echo 'source <(my-cli completions --shell bash)' >> ~/.bashrc
 source ~/.bashrc
@@ -84,11 +87,13 @@ source ~/.bashrc
 #### Zsh
 
 **Option 1 - Current session:**
+
 ```bash
 source <(my-cli completions --shell zsh)
 ```
 
 **Option 2 - User completion directory:**
+
 ```bash
 mkdir -p ~/.zsh/completions
 my-cli completions --shell zsh > ~/.zsh/completions/_my-cli
@@ -99,6 +104,7 @@ autoload -U compinit && compinit
 ```
 
 **Option 3 - System-wide:**
+
 ```bash
 sudo my-cli completions --shell zsh > /usr/local/share/zsh/site-functions/_my-cli
 # Restart your shell
@@ -107,12 +113,14 @@ sudo my-cli completions --shell zsh > /usr/local/share/zsh/site-functions/_my-cl
 #### Fish
 
 **User completions:**
+
 ```bash
 my-cli completions --shell fish > ~/.config/fish/completions/my-cli.fish
 # Completions will be available in new fish sessions
 ```
 
 **System-wide:**
+
 ```bash
 sudo my-cli completions --shell fish > /usr/share/fish/vendor_completions.d/my-cli.fish
 ```
@@ -166,6 +174,7 @@ export default defineCommand({
 The completions plugin will generate:
 
 **Bash:**
+
 ```bash
 # Provides enum completions for --environment
 if [[ "$prev" == "--environment" || "$prev" == "-e" ]]; then
@@ -175,6 +184,7 @@ fi
 ```
 
 **Zsh:**
+
 ```zsh
 # Provides enum completions with descriptions
 "(-e --environment)"{-e,--environment}[Target environment]:(development staging production)
@@ -182,6 +192,7 @@ fi
 ```
 
 **Fish:**
+
 ```fish
 # Provides enum completions with conditions
 complete -c my-cli -n '__fish_seen_subcommand_from deploy' \

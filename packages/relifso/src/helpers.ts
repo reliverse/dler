@@ -4,10 +4,7 @@ import { fsStat, fsUtimes } from "./internal/fs";
 import { toPathString } from "./internal/path";
 import type { PathLike, ReadLinesOptions, TouchOptions } from "./types";
 
-export const touch = async (
-  path: PathLike,
-  options?: TouchOptions | Date,
-): Promise<void> => {
+export const touch = async (path: PathLike, options?: TouchOptions | Date): Promise<void> => {
   const target = toPathString(path);
 
   await ensureFile(target);
@@ -27,10 +24,7 @@ export const touch = async (
   await fsUtimes(target, atime, mtime);
 };
 
-export const readLines = async (
-  path: PathLike,
-  options?: ReadLinesOptions,
-): Promise<string[]> => {
+export const readLines = async (path: PathLike, options?: ReadLinesOptions): Promise<string[]> => {
   const text = await readFile(path, { encoding: "utf8" });
   const lines = text.split(/\r?\n/);
 

@@ -70,13 +70,7 @@ export const GO_PROJECT_DIRS = ["cmd", "internal", "pkg", "prompts"] as const;
 /**
  * Frontend framework package names
  */
-export const FRONTEND_FRAMEWORKS = [
-  "react",
-  "preact",
-  "solid-js",
-  "lit",
-  "alpinejs",
-] as const;
+export const FRONTEND_FRAMEWORKS = ["react", "preact", "solid-js", "lit", "alpinejs"] as const;
 
 /**
  * Default ignore patterns for file watching

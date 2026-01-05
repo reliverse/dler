@@ -1,46 +1,46 @@
-import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
-import { createCLI } from '../src/cli'
-import { loadConfig } from '../src/config-loader'
-import { writeFile, unlink } from 'fs/promises'
-import { join } from 'path'
+import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { createCLI } from "../src/cli";
+import { loadConfig } from "../src/config-loader";
+import { writeFile, unlink } from "fs/promises";
+import { join } from "path";
 
-describe('Config Auto-Loading', () => {
-  const originalCwd = process.cwd()
+describe("Config Auto-Loading", () => {
+  const originalCwd = process.cwd();
 
   beforeEach(() => {
     // Change to a temporary directory for testing
-    process.chdir('/tmp')
-  })
+    process.chdir("/tmp");
+  });
 
   afterEach(async () => {
     // Clean up test files
     try {
-      await unlink('dler.config.ts')
-    } catch { }
+      await unlink("dler.config.ts");
+    } catch {}
     try {
-      await unlink('dler.config.js')
-    } catch { }
-    process.chdir(originalCwd)
-  })
+      await unlink("dler.config.js");
+    } catch {}
+    process.chdir(originalCwd);
+  });
 
-  test('loadConfig loads from dler.config.ts', async () => {
+  test("loadConfig loads from dler.config.ts", async () => {
     const configContent = `
 export default {
   name: 'test-cli',
   version: '1.0.0',
   description: 'Test CLI'
 }
-`
-    await writeFile('dler.config.ts', configContent)
+`;
+    await writeFile("dler.config.ts", configContent);
 
-    const config = await loadConfig()
+    const config = await loadConfig();
 
-    expect(config.name).toBe('test-cli')
-    expect(config.version).toBe('1.0.0')
-    expect(config.description).toBe('Test CLI')
-  })
+    expect(config.name).toBe("test-cli");
+    expect(config.version).toBe("1.0.0");
+    expect(config.description).toBe("Test CLI");
+  });
 
-  test('loadConfig loads from dler.config.js', async () => {
+  test("loadConfig loads from dler.config.js", async () => {
     const configContent = `
 export default {
   name: 'test-cli-js',
@@ -48,22 +48,22 @@ export default {
   description: 'Test CLI JS',
   plugins: []
 }
-`
-    await writeFile('dler.config.js', configContent)
+`;
+    await writeFile("dler.config.js", configContent);
     // Note: .js config is loaded, .ts takes precedence if exists
-    const config = await loadConfig()
+    const config = await loadConfig();
 
     // Both .js and .ts files may exist, .ts takes precedence
-    expect(config.name).toBeDefined()
-  })
+    expect(config.name).toBeDefined();
+  });
 
-  test('loadConfig throws error when no config found', async () => {
+  test("loadConfig throws error when no config found", async () => {
     await expect(async () => {
-      await loadConfig()
-    }).toThrow(/No configuration file found/)
-  })
+      await loadConfig();
+    }).toThrow(/No configuration file found/);
+  });
 
-  test('createCLI auto-loads config when no override provided', async () => {
+  test("createCLI auto-loads config when no override provided", async () => {
     const configContent = `
 export default {
   name: 'auto-test-cli',
@@ -71,18 +71,18 @@ export default {
   description: 'Auto-loaded CLI',
   plugins: []
 }
-`
-    await writeFile('dler.config.ts', configContent)
+`;
+    await writeFile("dler.config.ts", configContent);
 
-    const cli = await createCLI()
+    const cli = await createCLI();
 
     // Test that CLI was created successfully
-    expect(cli).toBeDefined()
-    expect(typeof cli.run).toBe('function')
-    expect(typeof cli.command).toBe('function')
-  })
+    expect(cli).toBeDefined();
+    expect(typeof cli.run).toBe("function");
+    expect(typeof cli.command).toBe("function");
+  });
 
-  test('createCLI merges override with loaded config', async () => {
+  test("createCLI merges override with loaded config", async () => {
     const configContent = `
 export default {
   name: 'merge-test-cli',
@@ -90,31 +90,31 @@ export default {
   description: 'Merge test CLI',
   plugins: []
 }
-`
-    await writeFile('dler.config.ts', configContent)
+`;
+    await writeFile("dler.config.ts", configContent);
 
     const cli = await createCLI({
-      description: 'Overridden description'
-    })
+      description: "Overridden description",
+    });
 
     // Test that CLI was created successfully
-    expect(cli).toBeDefined()
-  })
+    expect(cli).toBeDefined();
+  });
 
-  test('createCLI throws helpful error when no config and no override', async () => {
+  test("createCLI throws helpful error when no config and no override", async () => {
     await expect(async () => {
-      await createCLI()
-    }).toThrow(/No configuration file found/)
-  })
+      await createCLI();
+    }).toThrow(/No configuration file found/);
+  });
 
-  test('createCLI works with override when no config file', async () => {
+  test("createCLI works with override when no config file", async () => {
     const cli = await createCLI({
-      name: 'override-cli',
-      version: '5.0.0',
-      description: 'Override CLI',
-      plugins: []
-    })
+      name: "override-cli",
+      version: "5.0.0",
+      description: "Override CLI",
+      plugins: [],
+    });
 
-    expect(cli).toBeDefined()
-  })
-})
+    expect(cli).toBeDefined();
+  });
+});

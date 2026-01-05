@@ -5,17 +5,9 @@ import { cpus } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { writeErrorLines } from "@reliverse/helpers";
 import pMap from "@reliverse/mapkit";
-import {
-  createIgnoreFilter,
-  createIncludeFilter,
-  normalizePatterns,
-} from "@reliverse/matcha";
+import { createIgnoreFilter, createIncludeFilter, normalizePatterns } from "@reliverse/matcha";
 import { logger } from "@reliverse/relinka";
-import {
-  getWorkspacePatterns,
-  hasWorkspaces,
-  readPackageJSON,
-} from "@reliverse/typerso";
+import { getWorkspacePatterns, hasWorkspaces, readPackageJSON } from "@reliverse/typerso";
 import clipboard from "clipboardy";
 import { lookpath } from "lookpath";
 import { TscCache } from "./cache";
@@ -110,9 +102,7 @@ const findMonorepoRoot = async (startDir?: string): Promise<string | null> => {
   return null;
 };
 
-const resolvePackageInfo = async (
-  packagePath: string,
-): Promise<PackageInfo | null> => {
+const resolvePackageInfo = async (packagePath: string): Promise<PackageInfo | null> => {
   const pkgJsonPath = join(packagePath, "package.json");
   const tsConfigPath = join(packagePath, "tsconfig.json");
 
@@ -143,9 +133,7 @@ const resolvePackageInfo = async (
   }
 };
 
-const getWorkspacePackages = async (
-  cwd?: string,
-): Promise<PackageDiscoveryResult> => {
+const getWorkspacePackages = async (cwd?: string): Promise<PackageDiscoveryResult> => {
   const startTime = Date.now();
   const monorepoRoot = await findMonorepoRoot(cwd);
 
@@ -222,8 +210,7 @@ const getWorkspacePackages = async (
 
   const packages = packageResults
     .filter(
-      (result): result is { packagePath: string; pkgInfo: PackageInfo } =>
-        result.pkgInfo !== null,
+      (result): result is { packagePath: string; pkgInfo: PackageInfo } => result.pkgInfo !== null,
     )
     .map((result) => result.pkgInfo);
 
@@ -294,9 +281,7 @@ const hasProjectReferences = async (packagePath: string): Promise<boolean> => {
   }
 };
 
-const findTscExecutable = async (
-  packagePath: string,
-): Promise<string | null> => {
+const findTscExecutable = async (packagePath: string): Promise<string | null> => {
   // First, try to find local tsc in node_modules/.bin/tsc
   const localTscPath = join(packagePath, "node_modules", ".bin", "tsc");
   if (existsSync(localTscPath)) {
@@ -335,11 +320,7 @@ const runTscCommand = async (
   } = {},
 ): Promise<SpawnResult> => {
   try {
-    const {
-      incremental = true,
-      buildMode = false,
-      tscExecutable: providedTsc,
-    } = options;
+    const { incremental = true, buildMode = false, tscExecutable: providedTsc } = options;
 
     // Find tsc executable (local first, then global) if not provided
     const tscExecutable = providedTsc ?? (await findTscExecutable(packagePath));
@@ -398,9 +379,7 @@ const runTscCommand = async (
 // Output Filtering
 // ============================================================================
 
-const countErrorsAndWarnings = (
-  output: string,
-): { errors: number; warnings: number } => {
+const countErrorsAndWarnings = (output: string): { errors: number; warnings: number } => {
   const lines = output.split("\n");
   let errors = 0;
   let warnings = 0;
@@ -418,11 +397,7 @@ const countErrorsAndWarnings = (
   return { errors, warnings };
 };
 
-const filterOutputLines = (
-  output: string,
-  packagePath: string,
-  monorepoRoot: string,
-): string => {
+const filterOutputLines = (output: string, packagePath: string, monorepoRoot: string): string => {
   const lines = output.split("\n");
   const filtered: string[] = [];
   const normalizedPackagePath = resolve(packagePath);
@@ -476,23 +451,16 @@ interface RequiredDependencies {
   hasTypesBun: boolean;
 }
 
-const checkRequiredDependencies = async (
-  packagePath: string,
-): Promise<RequiredDependencies> => {
+const checkRequiredDependencies = async (packagePath: string): Promise<RequiredDependencies> => {
   try {
     const pkg = await readPackageJSON(packagePath);
     if (!pkg) {
       return { hasTypeScript: false, hasTypesBun: false };
     }
 
-    const deps =
-      pkg.dependencies && typeof pkg.dependencies === "object"
-        ? pkg.dependencies
-        : {};
+    const deps = pkg.dependencies && typeof pkg.dependencies === "object" ? pkg.dependencies : {};
     const devDeps =
-      pkg.devDependencies && typeof pkg.devDependencies === "object"
-        ? pkg.devDependencies
-        : {};
+      pkg.devDependencies && typeof pkg.devDependencies === "object" ? pkg.devDependencies : {};
 
     const hasTypeScript = "typescript" in deps || "typescript" in devDeps;
     const hasTypesBun = "@types/bun" in deps || "@types/bun" in devDeps;
@@ -513,12 +481,7 @@ const runTscOnPackage = async (
     buildMode?: boolean;
   } = {},
 ): Promise<TscResult> => {
-  const {
-    verbose = false,
-    cache,
-    incremental = true,
-    buildMode = false,
-  } = options;
+  const { verbose = false, cache, incremental = true, buildMode = false } = options;
   const startTime = Date.now();
 
   if (!pkg.hasTsConfig) {
@@ -541,9 +504,7 @@ const runTscOnPackage = async (
   }
 
   // Validate that package has required dependencies in package.json if it has tsconfig.json
-  const { hasTypeScript, hasTypesBun } = await checkRequiredDependencies(
-    pkg.path,
-  );
+  const { hasTypeScript, hasTypesBun } = await checkRequiredDependencies(pkg.path);
 
   if (!hasTypeScript || !hasTypesBun) {
     const missing: string[] = [];
@@ -603,14 +564,8 @@ const runTscOnPackage = async (
       const normalizedPackagePath = resolve(pkg.path);
       const normalizedMonorepoRoot = resolve(monorepoRoot);
 
-      const relativeToPackage = relative(
-        normalizedPackagePath,
-        normalizedTscPath,
-      );
-      const relativeToMonorepo = relative(
-        normalizedMonorepoRoot,
-        normalizedTscPath,
-      );
+      const relativeToPackage = relative(normalizedPackagePath, normalizedTscPath);
+      const relativeToMonorepo = relative(normalizedMonorepoRoot, normalizedTscPath);
 
       let source: string;
       if (normalizedTscPath.startsWith(normalizedPackagePath)) {
@@ -677,9 +632,7 @@ const runTscOnPackage = async (
       errorMessage.includes("Executable not found")
     ) {
       if (verbose) {
-        logger.info(
-          `⏭️  Skipping ${pkg.name} (TypeScript not installed in this package)`,
-        );
+        logger.info(`⏭️  Skipping ${pkg.name} (TypeScript not installed in this package)`);
       }
       return {
         package: pkg,
@@ -742,9 +695,7 @@ const collectAllResults = async (
       packages,
       async (pkg, index) => {
         if (!verbose) {
-          logger.info(
-            `Processing ${pkg.name} (${index + 1}/${packages.length})...`,
-          );
+          logger.info(`Processing ${pkg.name} (${index + 1}/${packages.length})...`);
         }
         return runTscOnPackage(pkg, monorepoRoot, {
           verbose,
@@ -759,19 +710,11 @@ const collectAllResults = async (
       },
     );
 
-    const failedPackages = tscResults.filter(
-      (r) => !r.success && !r.skipped,
-    ).length;
+    const failedPackages = tscResults.filter((r) => !r.success && !r.skipped).length;
     const successfulPackages = tscResults.filter((r) => r.success).length;
     const skippedPackages = tscResults.filter((r) => r.skipped).length;
-    const totalErrors = tscResults.reduce(
-      (sum, r) => sum + r.filteredErrors,
-      0,
-    );
-    const totalWarnings = tscResults.reduce(
-      (sum, r) => sum + r.filteredWarnings,
-      0,
-    );
+    const totalErrors = tscResults.reduce((sum, r) => sum + r.filteredErrors, 0);
+    const totalWarnings = tscResults.reduce((sum, r) => sum + r.filteredWarnings, 0);
 
     return {
       totalPackages: packages.length,
@@ -813,19 +756,11 @@ const collectAllResults = async (
         };
       });
 
-      const failedPackages = tscResults.filter(
-        (r) => !r.success && !r.skipped,
-      ).length;
+      const failedPackages = tscResults.filter((r) => !r.success && !r.skipped).length;
       const successfulPackages = tscResults.filter((r) => r.success).length;
       const skippedPackages = tscResults.filter((r) => r.skipped).length;
-      const totalErrors = tscResults.reduce(
-        (sum, r) => sum + r.filteredErrors,
-        0,
-      );
-      const totalWarnings = tscResults.reduce(
-        (sum, r) => sum + r.filteredWarnings,
-        0,
-      );
+      const totalErrors = tscResults.reduce((sum, r) => sum + r.filteredErrors, 0);
+      const totalWarnings = tscResults.reduce((sum, r) => sum + r.filteredWarnings, 0);
 
       return {
         totalPackages: packages.length,
@@ -865,9 +800,7 @@ const collectFailedPackageLogs = (summary: TscSummary): string => {
 
   for (const result of failed) {
     logs.push(`📦 ${result.package.name}`);
-    logs.push(
-      `   Errors: ${result.filteredErrors}, Warnings: ${result.filteredWarnings}`,
-    );
+    logs.push(`   Errors: ${result.filteredErrors}, Warnings: ${result.filteredWarnings}`);
     logs.push(`   ${"─".repeat(30)}`);
 
     if (result.filteredOutput.trim()) {
@@ -912,8 +845,7 @@ const copyLogsToClipboard = async (summary: TscSummary): Promise<void> => {
 // ============================================================================
 
 const formatOutput = (summary: TscSummary, verbose: boolean): void => {
-  const { totalPackages, failedPackages, successfulPackages, skippedPackages } =
-    summary;
+  const { totalPackages, failedPackages, successfulPackages, skippedPackages } = summary;
 
   // Summary header
   logger.log("━".repeat(60));
@@ -934,9 +866,7 @@ const formatOutput = (summary: TscSummary, verbose: boolean): void => {
 
     for (const result of failed) {
       logger.error(`📦 ${result.package.name}`);
-      logger.error(
-        `   Errors: ${result.filteredErrors}, Warnings: ${result.filteredWarnings}`,
-      );
+      logger.error(`   Errors: ${result.filteredErrors}, Warnings: ${result.filteredWarnings}`);
 
       if (result.filteredOutput.trim()) {
         logger.error("   ─".repeat(30));
@@ -1003,9 +933,7 @@ export const runTscOnAllPackages = async (
     const { packages: allPackages, discoveryTime } = discoveryResult;
 
     if (verbose) {
-      logger.info(
-        `   Found ${allPackages.length} packages (${discoveryTime}ms)`,
-      );
+      logger.info(`   Found ${allPackages.length} packages (${discoveryTime}ms)`);
       logger.info("   Packages found:");
       for (const pkg of allPackages) {
         const configStatus = pkg.hasTsConfig ? "✅" : "⏭️";
@@ -1020,9 +948,7 @@ export const runTscOnAllPackages = async (
 
     if (options.filter) {
       const patterns = normalizePatterns(options.filter);
-      logger.info(
-        `   Filtering to ${packages.length} packages matching: ${patterns.join(", ")}`,
-      );
+      logger.info(`   Filtering to ${packages.length} packages matching: ${patterns.join(", ")}`);
     } else if (filteredCount > 0) {
       // Always ignore @reliverse/dler-v1 package
       const alwaysIgnored = ["@reliverse/dler-v1"];
@@ -1033,9 +959,7 @@ export const runTscOnAllPackages = async (
         : alwaysIgnored;
 
       const patterns = normalizePatterns(combinedIgnore);
-      logger.info(
-        `   Ignoring ${filteredCount} packages matching: ${patterns.join(", ")}`,
-      );
+      logger.info(`   Ignoring ${filteredCount} packages matching: ${patterns.join(", ")}`);
     }
 
     // Auto-detect concurrency if requested
@@ -1053,12 +977,7 @@ export const runTscOnAllPackages = async (
       logger.info("🚀 Starting TypeScript checks...\n");
     }
 
-    const summary = await collectAllResults(
-      packages,
-      discoveryResult.monorepoRoot,
-      options,
-      cache,
-    );
+    const summary = await collectAllResults(packages, discoveryResult.monorepoRoot, options, cache);
 
     // Display results
     formatOutput(summary, verbose);

@@ -6,21 +6,10 @@
     "baseUrl": "./",
     "allowImportingTsExtensions": false,
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "./.dler/commands.gen": [
-        "./.dler/commands.gen.ts"
-      ]
+      "@/*": ["./*"],
+      "./.dler/commands.gen": ["./.dler/commands.gen.ts"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    ".dler/commands.gen.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["**/*.ts", "**/*.tsx", ".dler/commands.gen.ts"],
+  "exclude": ["node_modules", "dist"]
 }

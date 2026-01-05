@@ -1,116 +1,104 @@
-import { defineCommand, option } from '@reliverse/rempts-core'
-import { z } from 'zod'
-import { relico } from '@reliverse/relico'
+import { defineCommand, option } from "@reliverse/rempts-core";
+import { z } from "zod";
+import { relico } from "@reliverse/relico";
 
 export default defineCommand({
-  name: 'sync' as const,
-  description: 'Sync with upstream repository',
-  alias: 'pull',
+  name: "sync" as const,
+  description: "Sync with upstream repository",
+  alias: "pull",
   options: {
     // Remote name
-    remote: option(
-      z.string().default('origin'),
-      {
-        short: 'r',
-        description: 'Remote name to sync with'
-      }
-    ),
+    remote: option(z.string().default("origin"), {
+      short: "r",
+      description: "Remote name to sync with",
+    }),
 
     // Branch to sync
-    branch: option(
-      z.string().optional(),
-      {
-        short: 'b',
-        description: 'Branch to sync (defaults to current branch)'
-      }
-    ),
+    branch: option(z.string().optional(), {
+      short: "b",
+      description: "Branch to sync (defaults to current branch)",
+    }),
 
     // Force sync
-    force: option(
-      z.coerce.boolean().default(false),
-      {
-        short: 'f',
-        description: 'Force sync even if there are conflicts'
-      }
-    ),
+    force: option(z.coerce.boolean().default(false), {
+      short: "f",
+      description: "Force sync even if there are conflicts",
+    }),
 
     // Rebase instead of merge
-    rebase: option(
-      z.coerce.boolean().default(false),
-      {
-        description: 'Use rebase instead of merge'
-      }
-    ),
+    rebase: option(z.coerce.boolean().default(false), {
+      description: "Use rebase instead of merge",
+    }),
 
     // Prune remote branches
-    prune: option(
-      z.coerce.boolean().default(false),
-      {
-        short: 'p',
-        description: 'Remove remote-tracking branches that no longer exist'
-      }
-    )
+    prune: option(z.coerce.boolean().default(false), {
+      short: "p",
+      description: "Remove remote-tracking branches that no longer exist",
+    }),
   },
 
   handler: async ({ flags, colors, spinner, shell, prompt }) => {
-    const spin = spinner('Syncing with remote...')
+    const spin = spinner("Syncing with remote...");
 
     try {
       // Get current branch if not specified
-      const currentBranch = flags.branch || (await shell`git branch --show-current`).stdout.toString().trim()
+      const currentBranch =
+        flags.branch || (await shell`git branch --show-current`).stdout.toString().trim();
 
       // Check if we have uncommitted changes
-      const { stdout: status } = await shell`git status --porcelain`
+      const { stdout: status } = await shell`git status --porcelain`;
       if (status.toString().trim() && !flags.force) {
         const stashChanges = await prompt.confirm(
-          'You have uncommitted changes. Stash them before syncing?',
-          { default: true }
-        )
+          "You have uncommitted changes. Stash them before syncing?",
+          { default: true },
+        );
 
         if (stashChanges) {
-          spin.update('Stashing changes...')
-          await shell`git stash push -m "Auto-stash before sync"`
-          console.log(relico.yellow('📦 Changes stashed'))
+          spin.update("Stashing changes...");
+          await shell`git stash push -m "Auto-stash before sync"`;
+          console.log(relico.yellow("📦 Changes stashed"));
         }
       }
 
       // Fetch latest changes
-      spin.update('Fetching latest changes...')
-      await shell`git fetch ${flags.remote}`
+      spin.update("Fetching latest changes...");
+      await shell`git fetch ${flags.remote}`;
 
       if (flags.prune) {
-        spin.update('Pruning remote branches...')
-        await shell`git remote prune ${flags.remote}`
-        console.log(relico.green('🧹 Pruned remote branches'))
+        spin.update("Pruning remote branches...");
+        await shell`git remote prune ${flags.remote}`;
+        console.log(relico.green("🧹 Pruned remote branches"));
       }
 
       // Check if there are incoming changes
-      const { stdout: behind } = await shell`git rev-list --count HEAD..${flags.remote}/${currentBranch}`
-      const { stdout: ahead } = await shell`git rev-list --count ${flags.remote}/${currentBranch}..HEAD`
+      const { stdout: behind } =
+        await shell`git rev-list --count HEAD..${flags.remote}/${currentBranch}`;
+      const { stdout: ahead } =
+        await shell`git rev-list --count ${flags.remote}/${currentBranch}..HEAD`;
 
-      const behindCount = parseInt(behind.toString().trim())
-      const aheadCount = parseInt(ahead.toString().trim())
+      const behindCount = parseInt(behind.toString().trim());
+      const aheadCount = parseInt(ahead.toString().trim());
 
       if (behindCount === 0 && aheadCount === 0) {
-        spin.succeed('✅ Already up to date')
-        console.log(relico.green('No changes to sync'))
-        return
+        spin.succeed("✅ Already up to date");
+        console.log(relico.green("No changes to sync"));
+        return;
       }
 
-      console.log(relico.bold('\n📊 Sync Status:'))
-      console.log(`  Behind: ${relico.red(String(behindCount))} commits`)
-      console.log(`  Ahead: ${relico.green(String(aheadCount))} commits`)
+      console.log(relico.bold("\n📊 Sync Status:"));
+      console.log(`  Behind: ${relico.red(String(behindCount))} commits`);
+      console.log(`  Ahead: ${relico.green(String(aheadCount))} commits`);
 
       if (behindCount > 0) {
         // Pull changes
-        spin.update('Pulling changes...')
+        spin.update("Pulling changes...");
 
         if (flags.rebase) {
-          await shell`git pull --rebase ${flags.remote} ${currentBranch}`
-          console.log(relico.green('✅ Rebased successfully'))
+          await shell`git pull --rebase ${flags.remote} ${currentBranch}`;
+          console.log(relico.green("✅ Rebased successfully"));
         } else {
-          await shell`git pull ${flags.remote} ${currentBranch}`
-          console.log(relico.green('✅ Merged successfully'))
+          await shell`git pull ${flags.remote} ${currentBranch}`;
+          console.log(relico.green("✅ Merged successfully"));
         }
       }
 
@@ -118,48 +106,44 @@ export default defineCommand({
         // Push local changes
         const pushChanges = await prompt.confirm(
           `Push ${aheadCount} local commits to ${flags.remote}?`,
-          { default: true }
-        )
+          { default: true },
+        );
 
         if (pushChanges) {
-          spin.update('Pushing changes...')
-          await shell`git push ${flags.remote} ${currentBranch}`
-          console.log(relico.green('✅ Pushed successfully'))
+          spin.update("Pushing changes...");
+          await shell`git push ${flags.remote} ${currentBranch}`;
+          console.log(relico.green("✅ Pushed successfully"));
         }
       }
 
       // Restore stashed changes if any
-      const { stdout: stashList } = await shell`git stash list`
-      if (stashList.includes('Auto-stash before sync')) {
-        const restoreStash = await prompt.confirm(
-          'Restore stashed changes?',
-          { default: true }
-        )
+      const { stdout: stashList } = await shell`git stash list`;
+      if (stashList.includes("Auto-stash before sync")) {
+        const restoreStash = await prompt.confirm("Restore stashed changes?", { default: true });
 
         if (restoreStash) {
-          spin.update('Restoring stashed changes...')
-          await shell`git stash pop`
-          console.log(relico.green('✅ Stashed changes restored'))
+          spin.update("Restoring stashed changes...");
+          await shell`git stash pop`;
+          console.log(relico.green("✅ Stashed changes restored"));
         }
       }
 
-      spin.succeed('✅ Sync completed successfully!')
+      spin.succeed("✅ Sync completed successfully!");
 
       // Show final status
-      const { stdout: finalStatus } = await shell`git status -sb`
-      console.log(relico.bold('\n📋 Final Status:'))
-      console.log(relico.dim(finalStatus.toString()))
-
+      const { stdout: finalStatus } = await shell`git status -sb`;
+      console.log(relico.bold("\n📋 Final Status:"));
+      console.log(relico.dim(finalStatus.toString()));
     } catch (error) {
-      spin.fail('Sync failed')
-      console.error(relico.red(`Error: ${error instanceof Error ? error.message : String(error)}`))
+      spin.fail("Sync failed");
+      console.error(relico.red(`Error: ${error instanceof Error ? error.message : String(error)}`));
 
       // Check if there are conflicts
-      const { stdout: conflictStatus } = await shell`git status --porcelain`
-      if (conflictStatus.includes('UU') || conflictStatus.includes('AA')) {
-        console.log(relico.yellow('\n⚠️  Merge conflicts detected. Resolve them and try again.'))
-        console.log(relico.dim('Use "git status" to see conflicted files'))
+      const { stdout: conflictStatus } = await shell`git status --porcelain`;
+      if (conflictStatus.includes("UU") || conflictStatus.includes("AA")) {
+        console.log(relico.yellow("\n⚠️  Merge conflicts detected. Resolve them and try again."));
+        console.log(relico.dim('Use "git status" to see conflicted files'));
       }
     }
-  }
-})
+  },
+});

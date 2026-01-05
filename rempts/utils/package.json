@@ -2,6 +2,30 @@
   "name": "@reliverse/rempts-utils",
   "version": "0.2.0",
   "description": "Built-in utilities for Rempts CLI framework - prompts, spinners, and colors",
+  "keywords": [
+    "cli",
+    "prompts",
+    "rempts",
+    "spinner",
+    "terminal",
+    "utilities"
+  ],
+  "homepage": "https://github.com/reliverse/rempts#readme",
+  "bugs": {
+    "url": "https://github.com/reliverse/rempts/issues"
+  },
+  "license": "MIT",
+  "author": "blefnk",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reliverse/rempts.git",
+    "directory": "packages/utils"
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md"
+  ],
   "type": "module",
   "module": "./src/mod.ts",
   "types": "./src/mod.ts",
@@ -11,39 +35,15 @@
       "import": "./src/mod.ts"
     }
   },
-  "files": [
-    "dist",
-    "README.md",
-    "package.json"
-  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "bun scripts/build.ts && bun run tsc",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "bun run build"
   },
-  "keywords": [
-    "rempts",
-    "cli",
-    "utilities",
-    "prompts",
-    "spinner",
-    "terminal"
-  ],
-  "author": "blefnk",
-  "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/reliverse/rempts.git",
-    "directory": "packages/utils"
-  },
-  "bugs": {
-    "url": "https://github.com/reliverse/rempts/issues"
-  },
-  "homepage": "https://github.com/reliverse/rempts#readme",
   "dependencies": {
     "@standard-schema/spec": "^1.0.0",
     "@standard-schema/utils": "^0.3.0"

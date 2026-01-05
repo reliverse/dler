@@ -59,8 +59,7 @@ export const resolvePackageConfig = <T extends Record<string, any>>(
       // Try simple includes check first (faster for simple patterns)
       // Then verify with regex for accuracy
       if (
-        (patternWithoutWildcards &&
-          packageName.includes(patternWithoutWildcards)) ||
+        (patternWithoutWildcards && packageName.includes(patternWithoutWildcards)) ||
         new RegExp(regexPattern).test(packageName)
       ) {
         // If enable is explicitly false, return undefined to skip this package

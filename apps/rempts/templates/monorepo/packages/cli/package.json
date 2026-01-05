@@ -1,13 +1,13 @@
 {
   "name": "@{{name}}/cli",
   "version": "0.1.0",
-  "type": "module",
   "description": "CLI for {{name}}",
-  "author": "{{author}}",
   "license": "MIT",
+  "author": "{{author}}",
   "bin": {
     "{{name}}": "./src/mod.ts"
   },
+  "type": "module",
   "scripts": {
     "postinstall": "bun dler generate",
     "dev": "bun run src/mod.ts",
@@ -22,8 +22,8 @@
     "@{{name}}/utils": "workspace:*"
   },
   "devDependencies": {
-    "@reliverse/tsconfig": "workspace:*",
     "@reliverse/rempts-test": "latest",
+    "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "latest",
     "rempts": "latest",
     "typescript": "^5.0.0"

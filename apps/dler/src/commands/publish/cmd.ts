@@ -77,8 +77,7 @@ export default defineCommand({
   args: defineArgs({
     ignore: {
       type: "string",
-      description:
-        "Package(s) to ignore (supports wildcards like @reliverse/*)",
+      description: "Package(s) to ignore (supports wildcards like @reliverse/*)",
     },
     filter: {
       type: "string",
@@ -104,8 +103,7 @@ export default defineCommand({
     },
     dryRun: {
       type: "boolean",
-      description:
-        "Simulate publishing without actually publishing (default: false)",
+      description: "Simulate publishing without actually publishing (default: false)",
     },
     otp: {
       type: "string",
@@ -125,13 +123,11 @@ export default defineCommand({
     },
     registry: {
       type: "string",
-      description:
-        "Registry to publish to: npm, jsr, vercel, npm-jsr, or none (default: npm)",
+      description: "Registry to publish to: npm, jsr, vercel, npm-jsr, or none (default: npm)",
     },
     kind: {
       type: "string",
-      description:
-        "Package kind: library, browser-app, native-app, or cli (default: library)",
+      description: "Package kind: library, browser-app, native-app, or cli (default: library)",
     },
     bumpDisable: {
       type: "boolean",
@@ -158,8 +154,7 @@ export default defineCommand({
     },
     ignoreScripts: {
       type: "boolean",
-      description:
-        "Skip lifecycle scripts during packing and publishing (default: false)",
+      description: "Skip lifecycle scripts during packing and publishing (default: false)",
     },
     silent: {
       type: "boolean",
@@ -171,8 +166,7 @@ export default defineCommand({
     },
     noSummary: {
       type: "boolean",
-      description:
-        "Don't print publish summary from bun publish (default: false)",
+      description: "Don't print publish summary from bun publish (default: false)",
     },
     bunRegistry: {
       type: "string",
@@ -186,8 +180,7 @@ export default defineCommand({
     },
     stopOnError: {
       type: "boolean",
-      description:
-        "Stop on first error instead of collecting all errors (default: false)",
+      description: "Stop on first error instead of collecting all errors (default: false)",
     },
   }),
   run: async ({ args }) => {
@@ -200,9 +193,7 @@ export default defineCommand({
 
       // Reject unsupported auth-type web
       if (args.authType === "web") {
-        logger.error(
-          "❌ --auth-type web is not supported. Please use --auth-type legacy instead.",
-        );
+        logger.error("❌ --auth-type web is not supported. Please use --auth-type legacy instead.");
         process.exit(1);
       }
 
@@ -228,8 +219,7 @@ export default defineCommand({
         cafile: args.cafile,
         ignoreScripts: args.ignoreScripts,
         silent: args.silent !== undefined ? args.silent : !isVerbose,
-        noProgress:
-          args.noProgress !== undefined ? args.noProgress : !isVerbose,
+        noProgress: args.noProgress !== undefined ? args.noProgress : !isVerbose,
         noSummary: args.noSummary !== undefined ? args.noSummary : !isVerbose,
         bunRegistry: args.bunRegistry,
         skipTip2FA: args.skipTip2FA,

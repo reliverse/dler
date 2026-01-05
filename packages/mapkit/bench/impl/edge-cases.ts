@@ -2,8 +2,7 @@ import pMap, { pMapIterable, pMapSkip } from "../../src/mod";
 import type { BenchmarkResult } from "../perf";
 
 // Helper to create async delay
-const delay = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function benchmarkEdgeCases(
   benchmark: (
@@ -77,11 +76,9 @@ export async function benchmarkEdgeCases(
     await benchmark("pMap (aborted)", async () => {
       const controller = new AbortController();
       controller.abort();
-      await pMap(array, (x) => x * 2, { signal: controller.signal }).catch(
-        () => {
-          // Expected to reject
-        },
-      );
+      await pMap(array, (x) => x * 2, { signal: controller.signal }).catch(() => {
+        // Expected to reject
+      });
     }),
   );
 

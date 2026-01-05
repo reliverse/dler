@@ -1,44 +1,44 @@
 {
   "name": "@reliverse/rempts",
   "version": "0.4.0",
-  "type": "module",
   "description": "Scaffold new Rempts CLI projects with ease",
-  "bin": {
-    "rempts": "./src/cli.ts"
-  },
-  "module": "./src/mod.ts",
-  "types": "./src/mod.ts",
-  "exports": {
-    ".": {
-      "import": "./src/mod.ts",
-      "types": "./src/mod.ts"
-    }
-  },
-  "files": [
-    "dist",
-    "templates"
+  "keywords": [
+    "bun",
+    "cli",
+    "create",
+    "rempts",
+    "scaffold",
+    "starter",
+    "template",
+    "typescript"
   ],
-  "author": "blefnk",
+  "homepage": "https://github.com/reliverse/rempts#readme",
+  "bugs": {
+    "url": "https://github.com/reliverse/rempts/issues"
+  },
   "license": "MIT",
+  "author": "blefnk",
   "repository": {
     "type": "git",
     "url": "https://github.com/reliverse/rempts.git",
     "directory": "packages/rempts"
   },
-  "bugs": {
-    "url": "https://github.com/reliverse/rempts/issues"
+  "bin": {
+    "rempts": "./src/cli.ts"
   },
-  "homepage": "https://github.com/reliverse/rempts#readme",
-  "keywords": [
-    "rempts",
-    "create",
-    "scaffold",
-    "cli",
-    "starter",
-    "template",
-    "bun",
-    "typescript"
+  "files": [
+    "dist",
+    "templates"
   ],
+  "type": "module",
+  "module": "./src/mod.ts",
+  "types": "./src/mod.ts",
+  "exports": {
+    ".": {
+      "types": "./src/mod.ts",
+      "import": "./src/mod.ts"
+    }
+  },
   "scripts": {
     "dev": "bun run src/cli.ts",
     "build": "bun scripts/build.ts && bun run tsc",
@@ -47,10 +47,10 @@
     "prepublishOnly": "bun run build"
   },
   "dependencies": {
+    "@reliverse/relico": "workspace:*",
     "@reliverse/rempts-core": "workspace:*",
     "@reliverse/rempts-test": "workspace:*",
     "@reliverse/rempts-utils": "workspace:*",
-    "@reliverse/relico": "workspace:*",
     "giget": "^2.0.0",
     "zod": "^4.1.13"
   },

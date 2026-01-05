@@ -72,9 +72,7 @@ async function checkDockerAvailable(): Promise<DockerCheckResult> {
   } catch (error) {
     return {
       available: false,
-      reason: `Error checking Docker: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
+      reason: `Error checking Docker: ${error instanceof Error ? error.message : String(error)}`,
     };
   }
 }
@@ -82,10 +80,7 @@ async function checkDockerAvailable(): Promise<DockerCheckResult> {
 /**
  * Find all Go files in a directory (recursively)
  */
-async function findGoFiles(
-  dir: string,
-  goFiles: string[] = [],
-): Promise<string[]> {
+async function findGoFiles(dir: string, goFiles: string[] = []): Promise<string[]> {
   try {
     const entries = await readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
@@ -271,15 +266,7 @@ async function buildGoTarget(
   };
 
   const proc = Bun.spawnSync(
-    [
-      "go",
-      "build",
-      `-buildmode=${buildMode}`,
-      `-ldflags=${ldflags}`,
-      "-o",
-      outputPath,
-      mainFile,
-    ],
+    ["go", "build", `-buildmode=${buildMode}`, `-ldflags=${ldflags}`, "-o", outputPath, mainFile],
     {
       env,
       cwd: packagePath,
@@ -312,9 +299,7 @@ async function buildWithXgo(
   // Determine targets
   let targets: string;
   if (config.targets) {
-    targets = Array.isArray(config.targets)
-      ? config.targets.join(",")
-      : config.targets;
+    targets = Array.isArray(config.targets) ? config.targets.join(",") : config.targets;
   } else {
     // Default: build for all platforms
     targets = "linux/arm64,linux/amd64,darwin/arm64,darwin/amd64,windows/amd64";
@@ -325,12 +310,7 @@ async function buildWithXgo(
 
   // Check if rebuild is needed
   const targetsArray = targets.split(",").map((t) => t.trim());
-  const rebuildCheck = await shouldRebuildGo(
-    packagePath,
-    targetsArray,
-    outputDir,
-    outputName,
-  );
+  const rebuildCheck = await shouldRebuildGo(packagePath, targetsArray, outputDir, outputName);
   if (!rebuildCheck.rebuild) {
     logger.info(`✓ ${rebuildCheck.reason}, skipping rebuild`);
     return { success: true, errors: [] };
@@ -451,12 +431,8 @@ async function buildWithNative(
 
   // Filter targets if specified
   if (config.targets) {
-    const targetSet = new Set(
-      Array.isArray(config.targets) ? config.targets : [config.targets],
-    );
-    targetsToBuild = targetsToBuild.filter(([goos, goarch]) =>
-      targetSet.has(`${goos}/${goarch}`),
-    );
+    const targetSet = new Set(Array.isArray(config.targets) ? config.targets : [config.targets]);
+    targetsToBuild = targetsToBuild.filter(([goos, goarch]) => targetSet.has(`${goos}/${goarch}`));
   }
 
   // Build for selected targets
@@ -475,9 +451,7 @@ async function buildWithNative(
         mainFile,
       ).catch((err) => {
         logger.error(
-          `Error building ${goos}/${goarch}: ${
-            err instanceof Error ? err.message : String(err)
-          }`,
+          `Error building ${goos}/${goarch}: ${err instanceof Error ? err.message : String(err)}`,
         );
         return false;
       }),
@@ -487,9 +461,7 @@ async function buildWithNative(
   const successCount = results.filter((r) => r === true).length;
   const failCount = results.filter((r) => r === false).length;
 
-  logger.info(
-    `\nBuild complete: ${successCount} succeeded, ${failCount} failed`,
-  );
+  logger.info(`\nBuild complete: ${successCount} succeeded, ${failCount} failed`);
 
   if (successCount === 0) {
     const error = "No targets built successfully";

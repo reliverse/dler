@@ -25,10 +25,7 @@ const createTestPackage = (baseDir: string): string => {
     },
   };
 
-  writeFileSync(
-    join(pkgDir, "package.json"),
-    JSON.stringify(packageJson, null, 2),
-  );
+  writeFileSync(join(pkgDir, "package.json"), JSON.stringify(packageJson, null, 2));
 
   // Create entry point files
   writeFileSync(join(srcDir, "index.ts"), "export const main = () => {};");
@@ -46,10 +43,7 @@ const detectEntryPoints = async (packagePath: string): Promise<string[]> => {
   const entryPoints: string[] = [];
 
   if (pkg.exports) {
-    const extractFromExports = (
-      exports: string | Record<string, unknown>,
-      basePath = "",
-    ): void => {
+    const extractFromExports = (exports: string | Record<string, unknown>, basePath = ""): void => {
       if (typeof exports === "string") {
         const fullPath = resolve(packagePath, basePath, exports);
         if (existsSync(fullPath)) {
@@ -59,11 +53,7 @@ const detectEntryPoints = async (packagePath: string): Promise<string[]> => {
         for (const [key, value] of Object.entries(exports)) {
           if (key === "." || key.startsWith("./")) {
             extractFromExports(value, basePath);
-          } else if (
-            key === "import" ||
-            key === "require" ||
-            key === "default"
-          ) {
+          } else if (key === "import" || key === "require" || key === "default") {
             if (key !== "types") {
               extractFromExports(value, basePath);
             }
@@ -123,10 +113,7 @@ export async function benchmarkEntryPointDetection(
 
   const complexPkgDir = join(testDir, "complex-pkg");
   mkdirSync(join(complexPkgDir, "src", "components"), { recursive: true });
-  writeFileSync(
-    join(complexPkgDir, "package.json"),
-    JSON.stringify(complexPackageJson, null, 2),
-  );
+  writeFileSync(join(complexPkgDir, "package.json"), JSON.stringify(complexPackageJson, null, 2));
   writeFileSync(join(complexPkgDir, "src", "index.ts"), "");
   writeFileSync(join(complexPkgDir, "src", "utils.ts"), "");
   writeFileSync(join(complexPkgDir, "src", "components", "index.ts"), "");

@@ -104,9 +104,7 @@ function restoreOutput(): void {
   process.stderr.write = originalStderrWrite;
 }
 
-const defaultOutputPath = fileURLToPath(
-  new URL("../baseline.txt", import.meta.url),
-);
+const defaultOutputPath = fileURLToPath(new URL("../baseline.txt", import.meta.url));
 
 const formatBenchmarkResultLine = (result: BenchmarkResult): string => {
   const stats = [
@@ -120,10 +118,7 @@ const formatBenchmarkResultLine = (result: BenchmarkResult): string => {
   return `${result.name} | ${stats.join(" | ")}`;
 };
 
-const buildSectionLines = (
-  title: string,
-  results: BenchmarkResult[],
-): string[] => {
+const buildSectionLines = (title: string, results: BenchmarkResult[]): string[] => {
   if (results.length === 0) {
     return [];
   }
@@ -137,9 +132,7 @@ const buildSectionLines = (
 };
 
 // Main benchmark runner
-async function runBenchmarks(
-  outputPath: string = defaultOutputPath,
-): Promise<void> {
+async function runBenchmarks(outputPath: string = defaultOutputPath): Promise<void> {
   const allResults: BenchmarkResult[] = [];
   const sections: Array<{ title: string; results: BenchmarkResult[] }> = [];
   let pendingError: unknown;
@@ -184,15 +177,9 @@ async function runBenchmarks(
   }
 
   if (allResults.length > 0) {
-    const totalOps = allResults.reduce(
-      (sum, result) => sum + result.opsPerSec,
-      0,
-    );
+    const totalOps = allResults.reduce((sum, result) => sum + result.opsPerSec, 0);
     const averageOps = Math.round(totalOps / allResults.length);
-    const totalIterations = allResults.reduce(
-      (sum, result) => sum + result.iterations,
-      0,
-    );
+    const totalIterations = allResults.reduce((sum, result) => sum + result.iterations, 0);
     lines.push("Summary:");
     lines.push(`Total benchmarks: ${allResults.length}`);
     lines.push(`Average ops/s: ${averageOps.toLocaleString()}`);

@@ -144,29 +144,29 @@ interface MyPluginStore {
 const myPlugin: RemptsPlugin<MyPluginStore> = {
   name: 'my-plugin',
   version: '1.0.0',
-  
+
   // Define the plugin's store
   store: {
     apiKey: '',
     isAuthenticated: false
   },
-  
+
   // Lifecycle hooks
   setup(context) {
     // One-time initialization
     context.updateConfig({ customField: 'value' })
   },
-  
+
   configResolved(config) {
     // Called after all configuration is resolved
   },
-  
+
   beforeCommand(context) {
     // Called before each command - context.store is type-safe!
     context.store.apiKey = process.env.API_KEY || ''
     context.store.isAuthenticated = !!context.store.apiKey
   },
-  
+
   afterCommand(context) {
     // Called after each command with results
     if (context.error) {
@@ -229,12 +229,12 @@ cli.command({
 Rempts provides utilities for plugin development and testing:
 
 ```typescript
-import { 
-  createTestPlugin, 
-  composePlugins, 
+import {
+  createTestPlugin,
+  composePlugins,
   createMockPluginContext,
   testPluginHooks,
-  assertPluginBehavior 
+  assertPluginBehavior
 } from '@reliverse/rempts-core/plugin'
 
 // Create a test plugin
@@ -294,9 +294,9 @@ const cli = await createCLI({
 #### Available Helpers
 
 ```typescript
-import { 
-  listCommands, 
-  getCommandApi, 
+import {
+  listCommands,
+  getCommandApi,
   getTypedFlags,
   validateCommand,
   findCommandByName,
@@ -364,27 +364,27 @@ import { getCommandApi } from '~commands/api'
 Rempts provides runtime validation utilities for dynamic type checking:
 
 ```typescript
-import { 
-  validateValue, 
-  validateValues, 
+import {
+  validateValue,
+  validateValues,
   isValueOfType,
   createValidator,
-  createBatchValidator 
+  createBatchValidator
 } from '@reliverse/rempts-core'
 
 // Validate a single value
 const result = await validateValue(
-  'hello', 
-  z.string().min(1).schema, 
+  'hello',
+  z.string().min(1).schema,
   { option: 'message', command: 'greet' }
 )
 
 // Validate multiple values
 const validated = await validateValues(
   { name: 'John', age: 25 },
-  { 
-    name: z.string().schema, 
-    age: z.number().schema 
+  {
+    name: z.string().schema,
+    age: z.number().schema
   },
   'user'
 )
@@ -407,9 +407,9 @@ const userValidator = createBatchValidator({
 Rempts exports advanced TypeScript type utilities for complex type manipulation, especially useful when working with generated types:
 
 ```typescript
-import { 
-  UnionToIntersection, 
-  MergeAll, 
+import {
+  UnionToIntersection,
+  MergeAll,
   Expand,
   DeepPartial,
   Constrain,
@@ -423,30 +423,35 @@ import {
 ### Key Utilities
 
 **UnionToIntersection** - Convert union types to intersection types:
+
 ```typescript
 type Example = UnionToIntersection<{ a: string } | { b: number }>
 // Result: { a: string } & { b: number }
 ```
 
 **MergeAll** - Merge multiple object types:
+
 ```typescript
 type Example = MergeAll<[{ a: string }, { b: number }, { c: boolean }]>
 // Result: { a: string; b: number; c: boolean }
 ```
 
 **Expand** - Expand complex types for better IntelliSense:
+
 ```typescript
 type Example = Expand<{ nested: { deep: { value: string } } }>
 // Shows full type structure in IDE
 ```
 
 **DeepPartial** - Make all properties optional recursively:
+
 ```typescript
 type Example = DeepPartial<{ user: { name: string; age: number } }>
 // Result: { user?: { name?: string; age?: number } }
 ```
 
 **Constrain** - Constrain types with fallback:
+
 ```typescript
 type Example = Constrain<string, 'a' | 'b' | 'c', 'a'>
 // Result: 'a' | 'b' | 'c' (or 'a' if string doesn't match)

@@ -2,6 +2,20 @@
   "name": "@reliverse/rempts-tui",
   "version": "0.2.0",
   "description": "Terminal User Interface plugin for Rempts CLI framework",
+  "keywords": [
+    "cli",
+    "interactive",
+    "rempts",
+    "terminal",
+    "tui",
+    "ui"
+  ],
+  "license": "MIT",
+  "author": "bun dler Contributors",
+  "files": [
+    "dist",
+    "src"
+  ],
   "type": "module",
   "main": "src/mod.ts",
   "exports": {
@@ -16,9 +30,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@reliverse/rempts-core": "workspace:*",
     "@opentui/core": "^0.1.57",
-    "@opentui/react": "^0.1.57"
+    "@opentui/react": "^0.1.57",
+    "@reliverse/rempts-core": "workspace:*"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
@@ -30,19 +44,5 @@
   "peerDependencies": {
     "@opentui/core": "^0.1.57",
     "react": "^19.2.0"
-  },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "keywords": [
-    "rempts",
-    "cli",
-    "tui",
-    "terminal",
-    "ui",
-    "interactive"
-  ],
-  "author": "bun dler Contributors",
-  "license": "MIT"
+  }
 }

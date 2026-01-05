@@ -35,34 +35,20 @@ export class HTMLProcessor {
     }
   }
 
-  private async processHTMLFile(
-    htmlPath: string,
-    outputDir: string,
-  ): Promise<void> {
+  private async processHTMLFile(htmlPath: string, outputDir: string): Promise<void> {
     try {
       const content = readFileSync(htmlPath, "utf-8");
       let processedContent = content;
 
       // Extract and process script tags
-      processedContent = await this.processScriptTags(
-        processedContent,
-        htmlPath,
-        outputDir,
-      );
+      processedContent = await this.processScriptTags(processedContent, htmlPath, outputDir);
 
       // Extract and process link tags (CSS)
-      processedContent = await this.processLinkTags(
-        processedContent,
-        htmlPath,
-        outputDir,
-      );
+      processedContent = await this.processLinkTags(processedContent, htmlPath, outputDir);
 
       // Inject built assets if enabled
       if (this.options.injectAssets) {
-        processedContent = await this.injectBuiltAssets(
-          processedContent,
-          outputDir,
-        );
+        processedContent = await this.injectBuiltAssets(processedContent, outputDir);
       }
 
       // Minify HTML if enabled
@@ -90,18 +76,11 @@ export class HTMLProcessor {
 
     return content.replace(scriptRegex, (match, src) => {
       // Check if this is a local script file
-      if (
-        src.startsWith("./") ||
-        src.startsWith("../") ||
-        src.startsWith("/")
-      ) {
+      if (src.startsWith("./") || src.startsWith("../") || src.startsWith("/")) {
         const scriptPath = resolve(dirname(htmlPath), src);
 
         // Check if the script was built and exists in output
-        const builtScriptPath = this.findBuiltAsset(scriptPath, outputDir, [
-          ".js",
-          ".mjs",
-        ]);
+        const builtScriptPath = this.findBuiltAsset(scriptPath, outputDir, [".js", ".mjs"]);
         if (builtScriptPath) {
           const relativePath = this.getRelativePath(htmlPath, builtScriptPath);
           return match.replace(src, relativePath);
@@ -121,11 +100,7 @@ export class HTMLProcessor {
 
     return content.replace(linkRegex, (match, href) => {
       // Check if this is a local CSS file
-      if (
-        href.startsWith("./") ||
-        href.startsWith("../") ||
-        href.startsWith("/")
-      ) {
+      if (href.startsWith("./") || href.startsWith("../") || href.startsWith("/")) {
         const cssPath = resolve(dirname(htmlPath), href);
 
         // Check if the CSS was built and exists in output
@@ -140,10 +115,7 @@ export class HTMLProcessor {
     });
   }
 
-  private async injectBuiltAssets(
-    content: string,
-    outputDir: string,
-  ): Promise<string> {
+  private async injectBuiltAssets(content: string, outputDir: string): Promise<string> {
     // Find all built JS files
     const jsFiles = this.findBuiltFiles(outputDir, [".js", ".mjs"]);
     const cssFiles = this.findBuiltFiles(outputDir, [".css"]);
@@ -154,38 +126,26 @@ export class HTMLProcessor {
     if (cssFiles.length > 0) {
       const cssLinks = cssFiles
         .map((cssFile) => {
-          const relativePath = this.getRelativePathFromOutput(
-            cssFile,
-            outputDir,
-          );
+          const relativePath = this.getRelativePathFromOutput(cssFile, outputDir);
           return `    <link rel="stylesheet" href="${relativePath}">`;
         })
         .join("\n");
 
       // Insert before closing </head> tag
-      injectedContent = injectedContent.replace(
-        /<\/head>/i,
-        `${cssLinks}\n  </head>`,
-      );
+      injectedContent = injectedContent.replace(/<\/head>/i, `${cssLinks}\n  </head>`);
     }
 
     // Inject JS files
     if (jsFiles.length > 0) {
       const jsScripts = jsFiles
         .map((jsFile) => {
-          const relativePath = this.getRelativePathFromOutput(
-            jsFile,
-            outputDir,
-          );
+          const relativePath = this.getRelativePathFromOutput(jsFile, outputDir);
           return `    <script src="${relativePath}"></script>`;
         })
         .join("\n");
 
       // Insert before closing </body> tag
-      injectedContent = injectedContent.replace(
-        /<\/body>/i,
-        `${jsScripts}\n  </body>`,
-      );
+      injectedContent = injectedContent.replace(/<\/body>/i, `${jsScripts}\n  </body>`);
     }
 
     return injectedContent;
@@ -242,10 +202,7 @@ export class HTMLProcessor {
     return relativePath.startsWith(".") ? relativePath : `./${relativePath}`;
   }
 
-  private getRelativePathFromOutput(
-    filePath: string,
-    outputDir: string,
-  ): string {
+  private getRelativePathFromOutput(filePath: string, outputDir: string): string {
     const relativePath = require("node:path").relative(outputDir, filePath);
     return this.options.publicPath + relativePath.replace(/\\/g, "/");
   }

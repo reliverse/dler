@@ -76,8 +76,7 @@ export default defineCommand({
     },
     ignore: {
       type: "string",
-      description:
-        "Package(s) to ignore (supports wildcards like @reliverse/*)",
+      description: "Package(s) to ignore (supports wildcards like @reliverse/*)",
     },
     presets: {
       type: "string",
@@ -86,8 +85,7 @@ export default defineCommand({
     },
     custom: {
       type: "string",
-      description:
-        "Comma-separated custom patterns to clean (e.g., 'dist/,*.log,node_modules/')",
+      description: "Comma-separated custom patterns to clean (e.g., 'dist/,*.log,node_modules/')",
     },
     cwd: {
       type: "string",
@@ -95,8 +93,7 @@ export default defineCommand({
     },
     subdirs: {
       type: "boolean",
-      description:
-        "Search recursively in subdirectories (single-repo mode only)",
+      description: "Search recursively in subdirectories (single-repo mode only)",
     },
     dryRun: {
       type: "boolean",
@@ -104,8 +101,7 @@ export default defineCommand({
     },
     force: {
       type: "boolean",
-      description:
-        "Required flag to proceed with deletion (no prompts, args-only)",
+      description: "Required flag to proceed with deletion (no prompts, args-only)",
     },
     verbose: {
       type: "boolean",
@@ -113,13 +109,11 @@ export default defineCommand({
     },
     deleteLockFiles: {
       type: "boolean",
-      description:
-        "Include lock files (bun.lock, package-lock.json, etc.) when using deps preset",
+      description: "Include lock files (bun.lock, package-lock.json, etc.) when using deps preset",
     },
     replaceExports: {
       type: "boolean",
-      description:
-        "Replace exports from ./src/*.ts to ./dist/*.js before cleaning (default: true)",
+      description: "Replace exports from ./src/*.ts to ./dist/*.js before cleaning (default: true)",
     },
     replaceExportsIgnorePackages: {
       type: "string",
@@ -139,9 +133,7 @@ export default defineCommand({
       const shouldReplaceExports = args.replaceExports !== false;
       if (shouldReplaceExports) {
         if (args.verbose) {
-          logger.info(
-            "📝 Replacing exports from ./dist/*.js to ./src/*.ts before cleaning...",
-          );
+          logger.info("📝 Replacing exports from ./dist/*.js to ./src/*.ts before cleaning...");
         }
         await replaceExportsInPackages({
           direction: "js-to-ts",

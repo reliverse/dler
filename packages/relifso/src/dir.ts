@@ -1,12 +1,5 @@
 import { dirname, join } from "node:path";
-import {
-  fsLStat,
-  fsMkdir,
-  fsReaddir,
-  fsRm,
-  fsStat,
-  fsUnlink,
-} from "./internal/fs";
+import { fsLStat, fsMkdir, fsReaddir, fsRm, fsStat, fsUnlink } from "./internal/fs";
 import { toPathString } from "./internal/path";
 import type {
   EmptyDirOptions,
@@ -40,10 +33,7 @@ export const remove = async (
   });
 };
 
-export const emptyDir = async (
-  path: PathLike,
-  options?: EmptyDirOptions,
-): Promise<void> => {
+export const emptyDir = async (path: PathLike, options?: EmptyDirOptions): Promise<void> => {
   const target = toPathString(path);
   await ensureDir(target);
 
@@ -69,14 +59,9 @@ export const emptyDir = async (
   }
 };
 
-export const sizeOf = async (
-  path: PathLike,
-  options?: SizeOfOptions,
-): Promise<number> => {
+export const sizeOf = async (path: PathLike, options?: SizeOfOptions): Promise<number> => {
   const target = toPathString(path);
-  const stats = options?.followSymlinks
-    ? await fsStat(target)
-    : await fsLStat(target);
+  const stats = options?.followSymlinks ? await fsStat(target) : await fsLStat(target);
 
   if (stats.isDirectory()) {
     let total = 0;
@@ -92,10 +77,7 @@ export const sizeOf = async (
   return stats.size;
 };
 
-export const readdir = async (
-  path: PathLike,
-  options?: ReaddirOptions,
-): Promise<string[]> => {
+export const readdir = async (path: PathLike, options?: ReaddirOptions): Promise<string[]> => {
   const target = toPathString(path);
 
   if (options?.withFileTypes) {
@@ -117,9 +99,7 @@ export const readdirRecursive = async (
   const queue: string[] = [target];
   const files: string[] = [];
   const follow = options?.followSymlinks ?? false;
-  const extensions = options?.extensions?.map((ext) =>
-    ext.startsWith(".") ? ext : `.${ext}`,
-  );
+  const extensions = options?.extensions?.map((ext) => (ext.startsWith(".") ? ext : `.${ext}`));
 
   while (queue.length > 0) {
     const current = queue.pop()!;

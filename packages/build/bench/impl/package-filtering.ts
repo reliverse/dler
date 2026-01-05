@@ -1,8 +1,4 @@
-import {
-  createIgnoreFilter,
-  createIncludeFilter,
-  normalizePatterns,
-} from "@reliverse/matcha";
+import { createIgnoreFilter, createIncludeFilter, normalizePatterns } from "@reliverse/matcha";
 import type { BenchmarkResult } from "../perf";
 
 // Mock package info array
@@ -27,10 +23,7 @@ export async function benchmarkPackageFiltering(
   // Benchmark ignore filter
   results.push(
     await benchmark("package filtering (ignore)", () => {
-      const ignoreFilter = createIgnoreFilter([
-        "@test/package-1",
-        "@test/package-2",
-      ]);
+      const ignoreFilter = createIgnoreFilter(["@test/package-1", "@test/package-2"]);
       ignoreFilter(packages);
     }),
   );

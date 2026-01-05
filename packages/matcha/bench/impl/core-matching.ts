@@ -1,13 +1,7 @@
 import { match, matchAll, matchAny } from "../../src/mod";
 import type { BenchmarkResult } from "../perf";
 
-const testPatterns = [
-  "*.ts",
-  "*.js",
-  "**/*.test.ts",
-  "src/**/*.ts",
-  "packages/*/src/**",
-];
+const testPatterns = ["*.ts", "*.js", "**/*.test.ts", "src/**/*.ts", "packages/*/src/**"];
 
 const testPaths = [
   "src/mod.ts",

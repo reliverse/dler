@@ -39,7 +39,6 @@ export function filterPrivatePackages(
 
   // Filter: allow if not private OR if private and explicitly allowed
   return packages.filter(
-    (pkg) =>
-      pkg.private !== true || isPackageAllowed(pkg.name, allowedPatterns),
+    (pkg) => pkg.private !== true || isPackageAllowed(pkg.name, allowedPatterns),
   );
 }

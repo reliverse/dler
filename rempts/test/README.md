@@ -35,7 +35,7 @@ const greetCommand = defineCommand({
 
 test('greet command', async () => {
   const result = await testCommand(greetCommand)
-  
+
   expectCommand(result).toHaveSucceeded()
   expectCommand(result).toContainInStdout('[green]Hello, world![/green]')
 })
@@ -59,7 +59,7 @@ test('deploy with flags', async () => {
   const result = await testCommand(deployCommand, {
     flags: { env: 'prod', force: true }
   })
-  
+
   expect(result.stdout).toContain('Deploying to prod (forced)')
 })
 ```
@@ -83,7 +83,7 @@ test('interactive setup', async () => {
     'Project name:': 'my-app',
     'Use TypeScript?': 'y'
   }))
-  
+
   expect(result.stdout).toContain('Creating my-app with TypeScript')
 })
 ```
@@ -108,7 +108,7 @@ test('git status', async () => {
     'git branch --show-current': 'feature/awesome\n',
     'git status --porcelain': ''
   }))
-  
+
   expect(result.stdout).toContain('On branch: feature/awesome')
   expect(result.stdout).toContain('Clean: true')
 })
@@ -131,7 +131,7 @@ test('email validation', async () => {
   const result = await testCommand(emailCommand, mockPromptResponses({
     'Enter email:': ['invalid', 'still-bad', 'valid@email.com']
   }))
-  
+
   // First two attempts fail validation
   expect(result.stderr).toContain('Invalid email')
   // Third attempt succeeds
@@ -155,7 +155,7 @@ test('CLI help', async () => {
     },
     ['--help']
   )
-  
+
   expectCommand(result).toContainInStdout('Say hello')
 })
 ```
@@ -175,7 +175,7 @@ test('complex interaction', async () => {
       'npm --version': '10.0.0\n'
     }
   ))
-  
+
   // Or merge multiple option sets
   const result2 = await testCommand(myCommand, mergeTestOptions(
     { flags: { verbose: true } },
@@ -209,6 +209,7 @@ expectCommand(result).toMatchStderr(/error.*occurred/)
 Test a single command.
 
 **Parameters:**
+
 - `command`: Command to test
 - `options`: Test options
   - `flags`: Command flags
@@ -227,6 +228,7 @@ Test a single command.
 Test a complete CLI with multiple commands.
 
 **Parameters:**
+
 - `setupFn`: Function to configure the CLI
 - `argv`: Command line arguments
 - `options`: Test options (same as testCommand)
@@ -244,6 +246,7 @@ Test a complete CLI with multiple commands.
 1. **Colors in Output**: The test utilities preserve color codes as tags (e.g., `[green]text[/green]`) for easier assertion
 
 2. **Multiple Attempts**: For validation scenarios, provide arrays of responses:
+
    ```typescript
    mockPromptResponses({
      'Enter age:': ['abc', '-5', '25']  // Tries each until valid

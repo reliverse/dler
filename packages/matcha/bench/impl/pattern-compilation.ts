@@ -1,20 +1,9 @@
 import { compile, compileAny } from "../../src/mod";
 import type { BenchmarkResult } from "../perf";
 
-const patterns = [
-  "*.ts",
-  "*.js",
-  "**/*.test.ts",
-  "src/**/*.ts",
-  "packages/*/src/**",
-];
+const patterns = ["*.ts", "*.js", "**/*.test.ts", "src/**/*.ts", "packages/*/src/**"];
 
-const testInputs = [
-  "src/mod.ts",
-  "test/index.test.ts",
-  "dist/index.js",
-  "packages/foo/src/mod.ts",
-];
+const testInputs = ["src/mod.ts", "test/index.test.ts", "dist/index.js", "packages/foo/src/mod.ts"];
 
 export async function benchmarkPatternCompilation(
   benchmark: (

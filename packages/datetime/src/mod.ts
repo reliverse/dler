@@ -57,14 +57,8 @@ function getDateFormatter(
 /**
  * Format a date using Intl.DateTimeFormat with custom options
  */
-export function formatDate(
-  date: Date | number | string,
-  options: FormatOptions = {},
-): string {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+export function formatDate(date: Date | number | string, options: FormatOptions = {}): string {
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
 
   const formatOptions: Intl.DateTimeFormatOptions = {};
 
@@ -108,10 +102,7 @@ export function formatDate(
  * Format date in ISO 8601 format
  */
 export function formatISO(date: Date | number | string): string {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   return dateObj.toISOString();
 }
 
@@ -119,10 +110,7 @@ export function formatISO(date: Date | number | string): string {
  * Format date in RFC 2822 format
  */
 export function formatRFC2822(date: Date | number | string): string {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   return dateObj.toUTCString();
 }
 
@@ -153,14 +141,8 @@ const FORMAT_PATTERNS = {
  * Format date using a custom format string
  * Supports: YYYY, MM, DD, HH, mm, ss, SSS, AM/PM
  */
-export function formatCustom(
-  date: Date | number | string,
-  format: string,
-): string {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+export function formatCustom(date: Date | number | string, format: string): string {
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
 
   const year = dateObj.getFullYear();
   const month = dateObj.getMonth() + 1;
@@ -189,10 +171,7 @@ export function formatCustom(
     .replace(FORMAT_PATTERNS.ss, String(seconds).padStart(2, "0"))
     .replace(FORMAT_PATTERNS.s, String(seconds))
     .replace(FORMAT_PATTERNS.SSS, String(milliseconds).padStart(3, "0"))
-    .replace(
-      FORMAT_PATTERNS.SS,
-      String(Math.floor(milliseconds / 10)).padStart(2, "0"),
-    )
+    .replace(FORMAT_PATTERNS.SS, String(Math.floor(milliseconds / 10)).padStart(2, "0"))
     .replace(FORMAT_PATTERNS.S, String(Math.floor(milliseconds / 100)))
     .replace(FORMAT_PATTERNS.AMPM, ampm)
     .replace(FORMAT_PATTERNS.ampm, ampm.toLowerCase());
@@ -262,40 +241,17 @@ function getTimezoneFormatter(timeZone: string): Intl.DateTimeFormat {
 /**
  * Convert date to a specific timezone
  */
-export function toTimezone(
-  date: Date | number | string,
-  timeZone: string,
-): Date {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+export function toTimezone(date: Date | number | string, timeZone: string): Date {
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
 
   const formatter = getTimezoneFormatter(timeZone);
   const parts = formatter.formatToParts(dateObj);
-  const year = Number.parseInt(
-    parts.find((p) => p.type === "year")?.value ?? "0",
-    10,
-  );
-  const month =
-    Number.parseInt(parts.find((p) => p.type === "month")?.value ?? "0", 10) -
-    1;
-  const day = Number.parseInt(
-    parts.find((p) => p.type === "day")?.value ?? "0",
-    10,
-  );
-  const hour = Number.parseInt(
-    parts.find((p) => p.type === "hour")?.value ?? "0",
-    10,
-  );
-  const minute = Number.parseInt(
-    parts.find((p) => p.type === "minute")?.value ?? "0",
-    10,
-  );
-  const second = Number.parseInt(
-    parts.find((p) => p.type === "second")?.value ?? "0",
-    10,
-  );
+  const year = Number.parseInt(parts.find((p) => p.type === "year")?.value ?? "0", 10);
+  const month = Number.parseInt(parts.find((p) => p.type === "month")?.value ?? "0", 10) - 1;
+  const day = Number.parseInt(parts.find((p) => p.type === "day")?.value ?? "0", 10);
+  const hour = Number.parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
+  const minute = Number.parseInt(parts.find((p) => p.type === "minute")?.value ?? "0", 10);
+  const second = Number.parseInt(parts.find((p) => p.type === "second")?.value ?? "0", 10);
 
   return new Date(Date.UTC(year, month, day, hour, minute, second));
 }
@@ -303,18 +259,10 @@ export function toTimezone(
 /**
  * Get timezone offset in minutes
  */
-export function getTimezoneOffset(
-  date: Date | number | string,
-  timeZone: string,
-): number {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+export function getTimezoneOffset(date: Date | number | string, timeZone: string): number {
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
 
-  const utcDate = new Date(
-    dateObj.toLocaleString("en-US", { timeZone: "UTC" }),
-  );
+  const utcDate = new Date(dateObj.toLocaleString("en-US", { timeZone: "UTC" }));
   const tzDate = new Date(dateObj.toLocaleString("en-US", { timeZone }));
   return (tzDate.getTime() - utcDate.getTime()) / (1000 * 60);
 }
@@ -354,14 +302,9 @@ export function formatRelativeTime(
   baseDate: Date | number | string = new Date(),
   options: RelativeTimeOptions = {},
 ): string {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   const baseObj =
-    typeof baseDate === "string" || typeof baseDate === "number"
-      ? new Date(baseDate)
-      : baseDate;
+    typeof baseDate === "string" || typeof baseDate === "number" ? new Date(baseDate) : baseDate;
 
   const diffMs = dateObj.getTime() - baseObj.getTime();
   const diffSeconds = Math.floor(diffMs / 1000);
@@ -405,16 +348,9 @@ export function formatRelativeTime(
 /**
  * Calculate duration between two dates
  */
-export function getDuration(
-  start: Date | number | string,
-  end: Date | number | string,
-): Duration {
-  const startObj =
-    typeof start === "string" || typeof start === "number"
-      ? new Date(start)
-      : start;
-  const endObj =
-    typeof end === "string" || typeof end === "number" ? new Date(end) : end;
+export function getDuration(start: Date | number | string, end: Date | number | string): Duration {
+  const startObj = typeof start === "string" || typeof start === "number" ? new Date(start) : start;
+  const endObj = typeof end === "string" || typeof end === "number" ? new Date(end) : end;
 
   const diffMs = Math.abs(endObj.getTime() - startObj.getTime());
 
@@ -453,9 +389,7 @@ export function formatDuration(duration: Duration): string {
     parts.push(`${duration.years} ${duration.years === 1 ? "year" : "years"}`);
   }
   if (duration.months) {
-    parts.push(
-      `${duration.months} ${duration.months === 1 ? "month" : "months"}`,
-    );
+    parts.push(`${duration.months} ${duration.months === 1 ? "month" : "months"}`);
   }
   if (duration.weeks) {
     parts.push(`${duration.weeks} ${duration.weeks === 1 ? "week" : "weeks"}`);
@@ -467,14 +401,10 @@ export function formatDuration(duration: Duration): string {
     parts.push(`${duration.hours} ${duration.hours === 1 ? "hour" : "hours"}`);
   }
   if (duration.minutes) {
-    parts.push(
-      `${duration.minutes} ${duration.minutes === 1 ? "minute" : "minutes"}`,
-    );
+    parts.push(`${duration.minutes} ${duration.minutes === 1 ? "minute" : "minutes"}`);
   }
   if (duration.seconds) {
-    parts.push(
-      `${duration.seconds} ${duration.seconds === 1 ? "second" : "seconds"}`,
-    );
+    parts.push(`${duration.seconds} ${duration.seconds === 1 ? "second" : "seconds"}`);
   }
   if (duration.milliseconds) {
     parts.push(
@@ -504,14 +434,8 @@ export function formatDuration(duration: Duration): string {
 /**
  * Add duration to a date
  */
-export function addDuration(
-  date: Date | number | string,
-  duration: Duration,
-): Date {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+export function addDuration(date: Date | number | string, duration: Duration): Date {
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
 
   const result = new Date(dateObj);
 
@@ -546,10 +470,7 @@ export function addDuration(
 /**
  * Subtract duration from a date
  */
-export function subtractDuration(
-  date: Date | number | string,
-  duration: Duration,
-): Date {
+export function subtractDuration(date: Date | number | string, duration: Duration): Date {
   const negatedDuration: Duration = {};
   if (duration.years) negatedDuration.years = -duration.years;
   if (duration.months) negatedDuration.months = -duration.months;
@@ -572,10 +493,7 @@ export function subtractDuration(
  * Get start of day
  */
 export function startOfDay(date: Date | number | string): Date {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   const result = new Date(dateObj);
   result.setHours(0, 0, 0, 0);
   return result;
@@ -585,10 +503,7 @@ export function startOfDay(date: Date | number | string): Date {
  * Get end of day
  */
 export function endOfDay(date: Date | number | string): Date {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   const result = new Date(dateObj);
   result.setHours(23, 59, 59, 999);
   return result;
@@ -601,10 +516,7 @@ export function startOfWeek(
   date: Date | number | string,
   weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6 = 0,
 ): Date {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   const result = new Date(dateObj);
   const day = result.getDay();
   const diff = (day < weekStartsOn ? 7 : 0) + day - weekStartsOn;
@@ -619,10 +531,7 @@ export function endOfWeek(
   date: Date | number | string,
   weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6 = 0,
 ): Date {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   const start = startOfWeek(dateObj, weekStartsOn);
   const result = new Date(start);
   result.setDate(result.getDate() + 6);
@@ -633,10 +542,7 @@ export function endOfWeek(
  * Get start of month
  */
 export function startOfMonth(date: Date | number | string): Date {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   const result = new Date(dateObj);
   result.setDate(1);
   return startOfDay(result);
@@ -646,10 +552,7 @@ export function startOfMonth(date: Date | number | string): Date {
  * Get end of month
  */
 export function endOfMonth(date: Date | number | string): Date {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   const result = new Date(dateObj);
   result.setMonth(result.getMonth() + 1, 0);
   return endOfDay(result);
@@ -659,10 +562,7 @@ export function endOfMonth(date: Date | number | string): Date {
  * Get start of year
  */
 export function startOfYear(date: Date | number | string): Date {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   const result = new Date(dateObj);
   result.setMonth(0, 1);
   return startOfDay(result);
@@ -672,10 +572,7 @@ export function startOfYear(date: Date | number | string): Date {
  * Get end of year
  */
 export function endOfYear(date: Date | number | string): Date {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   const result = new Date(dateObj);
   result.setMonth(11, 31);
   return endOfDay(result);
@@ -685,10 +582,7 @@ export function endOfYear(date: Date | number | string): Date {
  * Check if date is today
  */
 export function isToday(date: Date | number | string): boolean {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   const today = startOfDay(new Date());
   const checkDate = startOfDay(dateObj);
   return today.getTime() === checkDate.getTime();
@@ -698,10 +592,7 @@ export function isToday(date: Date | number | string): boolean {
  * Check if date is in the past
  */
 export function isPast(date: Date | number | string): boolean {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   return dateObj.getTime() < Date.now();
 }
 
@@ -709,10 +600,7 @@ export function isPast(date: Date | number | string): boolean {
  * Check if date is in the future
  */
 export function isFuture(date: Date | number | string): boolean {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   return dateObj.getTime() > Date.now();
 }
 
@@ -724,16 +612,9 @@ export function isBetween(
   start: Date | number | string,
   end: Date | number | string,
 ): boolean {
-  const dateObj =
-    typeof date === "string" || typeof date === "number"
-      ? new Date(date)
-      : date;
-  const startObj =
-    typeof start === "string" || typeof start === "number"
-      ? new Date(start)
-      : start;
-  const endObj =
-    typeof end === "string" || typeof end === "number" ? new Date(end) : end;
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
+  const startObj = typeof start === "string" || typeof start === "number" ? new Date(start) : start;
+  const endObj = typeof end === "string" || typeof end === "number" ? new Date(end) : end;
 
   const time = dateObj.getTime();
   const startTime = startObj.getTime();
@@ -749,78 +630,52 @@ export function diffInMilliseconds(
   start: Date | number | string,
   end: Date | number | string,
 ): number {
-  const startObj =
-    typeof start === "string" || typeof start === "number"
-      ? new Date(start)
-      : start;
-  const endObj =
-    typeof end === "string" || typeof end === "number" ? new Date(end) : end;
+  const startObj = typeof start === "string" || typeof start === "number" ? new Date(start) : start;
+  const endObj = typeof end === "string" || typeof end === "number" ? new Date(end) : end;
   return endObj.getTime() - startObj.getTime();
 }
 
 /**
  * Get difference in seconds between two dates
  */
-export function diffInSeconds(
-  start: Date | number | string,
-  end: Date | number | string,
-): number {
+export function diffInSeconds(start: Date | number | string, end: Date | number | string): number {
   return Math.floor(diffInMilliseconds(start, end) / 1000);
 }
 
 /**
  * Get difference in minutes between two dates
  */
-export function diffInMinutes(
-  start: Date | number | string,
-  end: Date | number | string,
-): number {
+export function diffInMinutes(start: Date | number | string, end: Date | number | string): number {
   return Math.floor(diffInSeconds(start, end) / 60);
 }
 
 /**
  * Get difference in hours between two dates
  */
-export function diffInHours(
-  start: Date | number | string,
-  end: Date | number | string,
-): number {
+export function diffInHours(start: Date | number | string, end: Date | number | string): number {
   return Math.floor(diffInMinutes(start, end) / 60);
 }
 
 /**
  * Get difference in days between two dates
  */
-export function diffInDays(
-  start: Date | number | string,
-  end: Date | number | string,
-): number {
+export function diffInDays(start: Date | number | string, end: Date | number | string): number {
   return Math.floor(diffInHours(start, end) / 24);
 }
 
 /**
  * Get difference in weeks between two dates
  */
-export function diffInWeeks(
-  start: Date | number | string,
-  end: Date | number | string,
-): number {
+export function diffInWeeks(start: Date | number | string, end: Date | number | string): number {
   return Math.floor(diffInDays(start, end) / 7);
 }
 
 /**
  * Get difference in months between two dates
  */
-export function diffInMonths(
-  start: Date | number | string,
-  end: Date | number | string,
-): number {
-  const startObj =
-    typeof start === "string" || typeof start === "number"
-      ? new Date(start)
-      : start;
-  const endObj =
-    typeof end === "string" || typeof end === "number" ? new Date(end) : end;
+export function diffInMonths(start: Date | number | string, end: Date | number | string): number {
+  const startObj = typeof start === "string" || typeof start === "number" ? new Date(start) : start;
+  const endObj = typeof end === "string" || typeof end === "number" ? new Date(end) : end;
 
   const years = endObj.getFullYear() - startObj.getFullYear();
   const months = endObj.getMonth() - startObj.getMonth();
@@ -830,15 +685,8 @@ export function diffInMonths(
 /**
  * Get difference in years between two dates
  */
-export function diffInYears(
-  start: Date | number | string,
-  end: Date | number | string,
-): number {
-  const startObj =
-    typeof start === "string" || typeof start === "number"
-      ? new Date(start)
-      : start;
-  const endObj =
-    typeof end === "string" || typeof end === "number" ? new Date(end) : end;
+export function diffInYears(start: Date | number | string, end: Date | number | string): number {
+  const startObj = typeof start === "string" || typeof start === "number" ? new Date(start) : start;
+  const endObj = typeof end === "string" || typeof end === "number" ? new Date(end) : end;
   return endObj.getFullYear() - startObj.getFullYear();
 }

@@ -41,25 +41,18 @@ export function validateBuildOptions(options: BuildOptions): ValidationError[] {
 
   // Validate JSX options
   if (options.jsx) {
-    if (
-      options.jsx.runtime &&
-      !["automatic", "classic"].includes(options.jsx.runtime)
-    ) {
+    if (options.jsx.runtime && !["automatic", "classic"].includes(options.jsx.runtime)) {
       errors.push({
         field: "jsx.runtime",
         message: 'JSX runtime must be "automatic" or "classic"',
         suggestion: 'Set --jsxRuntime to "automatic" or "classic"',
       });
     }
-    if (
-      options.jsx.importSource &&
-      typeof options.jsx.importSource !== "string"
-    ) {
+    if (options.jsx.importSource && typeof options.jsx.importSource !== "string") {
       errors.push({
         field: "jsx.importSource",
         message: "JSX import source must be a string",
-        suggestion:
-          'Set --jsxImportSource to a valid package name like "react"',
+        suggestion: 'Set --jsxImportSource to a valid package name like "react"',
       });
     }
   }
@@ -88,8 +81,7 @@ export function validateBuildOptions(options: BuildOptions): ValidationError[] {
       errors.push({
         field: "format",
         message: "CommonJS format is not recommended for browser targets",
-        suggestion:
-          "Use --format esm for browser or --target node for CommonJS",
+        suggestion: "Use --format esm for browser or --target node for CommonJS",
       });
     }
     // Warn about experimental status
@@ -140,22 +132,15 @@ export function validateBuildOptions(options: BuildOptions): ValidationError[] {
     if (options.html) {
       errors.push({
         field: "compile",
-        message:
-          "HTML processing is not compatible with standalone executables",
+        message: "HTML processing is not compatible with standalone executables",
         suggestion: "Remove --html or --compile flag",
       });
     }
 
     // Bytecode is beneficial for executables
-    if (
-      !options.bytecode &&
-      options.format === "cjs" &&
-      options.target === "bun"
-    ) {
+    if (!options.bytecode && options.format === "cjs" && options.target === "bun") {
       // This is just a suggestion, not an error
-      logger.info(
-        "💡 Consider using --bytecode with --compile for faster cold starts",
-      );
+      logger.info("💡 Consider using --bytecode with --compile for faster cold starts");
     }
   }
 
@@ -243,11 +228,7 @@ export function validateBuildOptions(options: BuildOptions): ValidationError[] {
 
   // Validate port
   if (options.port !== undefined) {
-    if (
-      !Number.isInteger(options.port) ||
-      options.port < 1 ||
-      options.port > 65535
-    ) {
+    if (!Number.isInteger(options.port) || options.port < 1 || options.port > 65535) {
       errors.push({
         field: "port",
         message: "Port must be between 1 and 65535",
@@ -277,10 +258,7 @@ export function validateBuildOptions(options: BuildOptions): ValidationError[] {
   // Validate minify options
   if (options.minify && typeof options.minify === "object") {
     const minify = options.minify as any;
-    if (
-      minify.whitespace !== undefined &&
-      typeof minify.whitespace !== "boolean"
-    ) {
+    if (minify.whitespace !== undefined && typeof minify.whitespace !== "boolean") {
       errors.push({
         field: "minify.whitespace",
         message: "Minify whitespace option must be boolean",
@@ -294,10 +272,7 @@ export function validateBuildOptions(options: BuildOptions): ValidationError[] {
         suggestion: "Set --minifySyntax to true or false",
       });
     }
-    if (
-      minify.identifiers !== undefined &&
-      typeof minify.identifiers !== "boolean"
-    ) {
+    if (minify.identifiers !== undefined && typeof minify.identifiers !== "boolean") {
       errors.push({
         field: "minify.identifiers",
         message: "Minify identifiers option must be boolean",
@@ -308,23 +283,9 @@ export function validateBuildOptions(options: BuildOptions): ValidationError[] {
 
   // Validate loader object
   if (options.loader && typeof options.loader === "object") {
-    const validLoaders = [
-      "js",
-      "jsx",
-      "ts",
-      "tsx",
-      "json",
-      "toml",
-      "file",
-      "napi",
-      "wasm",
-      "text",
-    ];
+    const validLoaders = ["js", "jsx", "ts", "tsx", "json", "toml", "file", "napi", "wasm", "text"];
     for (const [ext, loader] of Object.entries(options.loader)) {
-      if (
-        typeof loader !== "string" ||
-        !validLoaders.includes(loader as string)
-      ) {
+      if (typeof loader !== "string" || !validLoaders.includes(loader as string)) {
         errors.push({
           field: "loader",
           message: `Invalid loader for extension .${ext}: ${loader}`,
@@ -336,11 +297,7 @@ export function validateBuildOptions(options: BuildOptions): ValidationError[] {
 
   // Validate env option
   if (options.env && typeof options.env === "string") {
-    if (
-      options.env !== "inline" &&
-      options.env !== "disable" &&
-      !options.env.endsWith("*")
-    ) {
+    if (options.env !== "inline" && options.env !== "disable" && !options.env.endsWith("*")) {
       errors.push({
         field: "env",
         message: 'env must be "inline", "disable", or a string ending with "*"',

@@ -1,12 +1,7 @@
 // packages/build/src/impl/debug.ts
 
 import { logger } from "@reliverse/relinka";
-import type {
-  BuildOptions,
-  BuildResult,
-  BuildSummary,
-  PackageInfo,
-} from "./types";
+import type { BuildOptions, BuildResult, BuildSummary, PackageInfo } from "./types";
 
 export interface DebugInfo {
   configSource: "cli" | "reliverse" | "default";
@@ -36,11 +31,7 @@ export class DebugLogger {
     }
   }
 
-  logConfigResolution(
-    pkg: PackageInfo,
-    configSource: string,
-    configPath?: string,
-  ): void {
+  logConfigResolution(pkg: PackageInfo, configSource: string, configPath?: string): void {
     if (!this.enabled) return;
 
     logger.info(`📋 Config resolution for ${pkg.name}:`);
@@ -68,9 +59,7 @@ export class DebugLogger {
     }
 
     if (options.external) {
-      const externals = Array.isArray(options.external)
-        ? options.external
-        : [options.external];
+      const externals = Array.isArray(options.external) ? options.external : [options.external];
       logger.info(`   External: ${externals.join(", ")}`);
     }
 
@@ -100,18 +89,14 @@ export class DebugLogger {
     logger.info(`   Skipped: ${summary.skippedPackages}`);
     logger.info(`   Cache hits: ${summary.cacheHits}`);
     logger.info(`   Total build time: ${summary.totalBuildTime}ms`);
-    logger.info(
-      `   Total bundle size: ${formatBytes(summary.totalBundleSize)}`,
-    );
+    logger.info(`   Total bundle size: ${formatBytes(summary.totalBundleSize)}`);
     logger.info(`   Process time: ${totalTime}ms`);
     logger.info(
       `   Average per package: ${Math.round(summary.totalBuildTime / summary.totalPackages)}ms`,
     );
 
     if (summary.cacheHits > 0) {
-      const cacheHitRate = Math.round(
-        (summary.cacheHits / summary.totalPackages) * 100,
-      );
+      const cacheHitRate = Math.round((summary.cacheHits / summary.totalPackages) * 100);
       logger.info(`   Cache hit rate: ${cacheHitRate}%`);
     }
   }

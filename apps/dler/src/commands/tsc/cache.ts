@@ -4,12 +4,7 @@ import { existsSync, statSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { PackageInfo } from "./impl";
-import type {
-  CacheMetadata,
-  PackageCacheEntry,
-  SourceFileInfo,
-  TscCacheOptions,
-} from "./types";
+import type { CacheMetadata, PackageCacheEntry, SourceFileInfo, TscCacheOptions } from "./types";
 
 const CACHE_VERSION = "1.0.0";
 const DEFAULT_CACHE_DIR = "node_modules/.cache/dler-tsc";
@@ -77,11 +72,7 @@ export class TscCache {
 
     try {
       this.metadata.lastUpdated = Date.now();
-      await writeFile(
-        this.metadataPath,
-        JSON.stringify(this.metadata, null, 2),
-        "utf-8",
-      );
+      await writeFile(this.metadataPath, JSON.stringify(this.metadata, null, 2), "utf-8");
     } catch {
       // Ignore save errors
     }
@@ -121,10 +112,7 @@ export class TscCache {
     return sourceFiles;
   }
 
-  private hasSourceFilesChanged(
-    cached: SourceFileInfo[],
-    current: SourceFileInfo[],
-  ): boolean {
+  private hasSourceFilesChanged(cached: SourceFileInfo[], current: SourceFileInfo[]): boolean {
     if (cached.length !== current.length) return true;
 
     const currentMap = new Map(current.map((file) => [file.path, file]));
@@ -155,9 +143,7 @@ export class TscCache {
 
     // Check if source files have changed
     const currentSourceFiles = await this.getSourceFiles(pkg.path);
-    if (
-      this.hasSourceFilesChanged(cacheEntry.sourceFiles, currentSourceFiles)
-    ) {
+    if (this.hasSourceFilesChanged(cacheEntry.sourceFiles, currentSourceFiles)) {
       return false;
     }
 
@@ -172,9 +158,7 @@ export class TscCache {
 
     // Check if source files have changed
     const currentSourceFiles = await this.getSourceFiles(pkg.path);
-    if (
-      this.hasSourceFilesChanged(cacheEntry.sourceFiles, currentSourceFiles)
-    ) {
+    if (this.hasSourceFilesChanged(cacheEntry.sourceFiles, currentSourceFiles)) {
       return null;
     }
 
@@ -198,9 +182,7 @@ export class TscCache {
 
     this.metadata.packages[pkg.name] = {
       lastCheck: now,
-      lastSuccess: result.success
-        ? now
-        : (this.metadata.packages[pkg.name]?.lastSuccess ?? null),
+      lastSuccess: result.success ? now : (this.metadata.packages[pkg.name]?.lastSuccess ?? null),
       sourceFiles,
       hasErrors: !result.success,
       errorCount: result.errorCount,

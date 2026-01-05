@@ -49,10 +49,7 @@ export async function benchmarkDuration(
   results.push(
     await benchmark("diffInMilliseconds", () => {
       diffInMilliseconds(startDate, endDate);
-      diffInMilliseconds(
-        datePairs[0]?.[0] ?? startDate,
-        datePairs[0]?.[1] ?? endDate,
-      );
+      diffInMilliseconds(datePairs[0]?.[0] ?? startDate, datePairs[0]?.[1] ?? endDate);
     }),
   );
 
@@ -60,10 +57,7 @@ export async function benchmarkDuration(
   results.push(
     await benchmark("diffInSeconds", () => {
       diffInSeconds(startDate, endDate);
-      diffInSeconds(
-        datePairs[1]?.[0] ?? startDate,
-        datePairs[1]?.[1] ?? endDate,
-      );
+      diffInSeconds(datePairs[1]?.[0] ?? startDate, datePairs[1]?.[1] ?? endDate);
     }),
   );
 
@@ -71,10 +65,7 @@ export async function benchmarkDuration(
   results.push(
     await benchmark("diffInMinutes", () => {
       diffInMinutes(startDate, endDate);
-      diffInMinutes(
-        datePairs[2]?.[0] ?? startDate,
-        datePairs[2]?.[1] ?? endDate,
-      );
+      diffInMinutes(datePairs[2]?.[0] ?? startDate, datePairs[2]?.[1] ?? endDate);
     }),
   );
 
@@ -106,10 +97,7 @@ export async function benchmarkDuration(
   results.push(
     await benchmark("diffInMonths", () => {
       diffInMonths(startDate, endDate);
-      diffInMonths(
-        datePairs[1]?.[0] ?? startDate,
-        datePairs[1]?.[1] ?? endDate,
-      );
+      diffInMonths(datePairs[1]?.[0] ?? startDate, datePairs[1]?.[1] ?? endDate);
     }),
   );
 

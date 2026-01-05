@@ -1,4 +1,4 @@
-/* 
+/*
 When to Use Sync vs Async:
 Use SYNC (logger) when:
 ✅ Sequential logging (like your tsc implementation)
@@ -140,11 +140,7 @@ const writeColoredAsync = (
 };
 
 // Generic colored sync writer
-const writeColoredSync = (
-  text: string,
-  color: typeof re.white,
-  isError = false,
-): void => {
+const writeColoredSync = (text: string, color: typeof re.white, isError = false): void => {
   const coloredText = color(text);
   writeSync(coloredText, isError);
 };
@@ -172,18 +168,14 @@ function createLogMethod(
   if (isAsync) {
     return (...args: unknown[]): Promise<void> => {
       const message = formatMessage(...args);
-      const formattedMessage = isBox
-        ? formatBox(message)
-        : createPrefixedMessage(level, message);
+      const formattedMessage = isBox ? formatBox(message) : createPrefixedMessage(level, message);
       return writeColoredAsync(formattedMessage, color, isError);
     };
   }
 
   return (...args: unknown[]): void => {
     const message = formatMessage(...args);
-    const formattedMessage = isBox
-      ? formatBox(message)
-      : createPrefixedMessage(level, message);
+    const formattedMessage = isBox ? formatBox(message) : createPrefixedMessage(level, message);
     writeColoredSync(formattedMessage, color, isError);
   };
 }

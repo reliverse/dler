@@ -20,6 +20,7 @@ Rempts is a minimal, type-safe CLI framework for Bun with an advanced plugin sys
 ## Development Commands
 
 ### Root Level
+
 ```bash
 bun run build    # Build all packages via Turbo
 bun test         # Run all tests
@@ -28,6 +29,7 @@ bun run release  # Release packages
 ```
 
 ### Package Level
+
 ```bash
 bun run build      # Build package and generate types
 bun test           # Run package tests
@@ -35,6 +37,7 @@ bun run typecheck # Type check without emitting
 ```
 
 ### Running Single Tests
+
 ```bash
 bun test path/to/test.test.ts  # Run specific test file
 bun test -t "test name"         # Run tests matching pattern
@@ -43,11 +46,13 @@ bun test -t "test name"         # Run tests matching pattern
 ## Architecture & Code Patterns
 
 ### Module System
+
 - Pure ESM modules (all packages have `"type": "module"`)
 - TypeScript with `"moduleResolution": "bundler"`
 - Use named exports, avoid default exports
 
 ### Project Structure
+
 All Rempts projects must follow this structure for reliable type generation:
 
 ```bash
@@ -64,6 +69,7 @@ my-cli/
 ```
 
 **Required Configuration**: All `dler.config.ts` files must include:
+
 ```typescript
 export default defineConfig({
   // ... other config
@@ -74,6 +80,7 @@ export default defineConfig({
 ```
 
 ### Command Definition Pattern
+
 Commands in Rempts use a type-safe builder pattern:
 
 ```typescript
@@ -93,7 +100,7 @@ const command = defineCommand({
     // Implementation with full type safety
     console.log(flags.flagName) // TypeScript knows the type
     console.log(positional[0]) // Access positional args
-    
+
     // Access plugin store if available
     if (context?.store.someData) {
       console.log(context.store.someData)
@@ -105,6 +112,7 @@ export default command
 ```
 
 ### Package Exports
+
 Each package uses explicit exports in package.json:
 
 ```json
@@ -119,11 +127,13 @@ Each package uses explicit exports in package.json:
 ```
 
 ### Build System
+
 - Custom build scripts in `scripts/build.ts` for each package
 - Turbo manages inter-package dependencies
 - TypeScript compilation only for type declarations (Bun runs .ts directly)
 
 ### Testing Patterns
+
 - Use Bun's built-in test runner
 - Test files use `.test.ts` suffix
 - @reliverse/rempts-test provides CLI-specific testing utilities
@@ -140,6 +150,7 @@ Each package uses explicit exports in package.json:
 ## Common Tasks
 
 ### Adding a New Command
+
 1. Create command file in `commands/` directory (e.g., `commands/my-command.ts`)
 2. Use `defineCommand` from @reliverse/rempts-core
 3. Export as default export
@@ -150,6 +161,7 @@ Each package uses explicit exports in package.json:
 **Note**: All Rempts projects must use a `commands/` directory structure for reliable type generation.
 
 ### Creating a New Package
+
 1. Create directory under `packages/`
 2. Add package.json with ESM configuration
 3. Add to root workspace in package.json
@@ -157,6 +169,7 @@ Each package uses explicit exports in package.json:
 5. Add to Turbo pipeline if needed
 
 ### Running Examples
+
 ```bash
 cd examples/[example-name]
 bun run src/mod.ts [command]
@@ -165,6 +178,7 @@ bun run src/mod.ts [command]
 ## Type Safety
 
 Rempts emphasizes type safety throughout:
+
 - Command flags are fully typed via Zod schemas
 - Plugin stores provide compile-time type safety
 - Validation schemas integrate with TypeScript

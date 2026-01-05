@@ -76,8 +76,7 @@ export default defineCommand({
     },
     ignoreFields: {
       type: "string",
-      description:
-        "Dependency fields to ignore (e.g., 'peerDependencies,catalog')",
+      description: "Dependency fields to ignore (e.g., 'peerDependencies,catalog')",
     },
   }),
   run: async ({ args }) => {
@@ -97,8 +96,7 @@ export default defineCommand({
       await validatePackageJson();
 
       // Prepare package.json files
-      const { packageJsonFiles, fileDepsMap } =
-        await prepareAllUpdateCandidates();
+      const { packageJsonFiles, fileDepsMap } = await prepareAllUpdateCandidates();
       if (packageJsonFiles.length === 0) {
         logger.log("No package.json files found");
         return;
@@ -115,11 +113,7 @@ export default defineCommand({
         // Check updates for this specific file
         const updateArgs = {
           ...args,
-          name: args.name
-            ? Array.isArray(args.name)
-              ? args.name
-              : [args.name]
-            : undefined,
+          name: args.name ? (Array.isArray(args.name) ? args.name : [args.name]) : undefined,
           ignore: args.ignore
             ? Array.isArray(args.ignore)
               ? args.ignore
@@ -134,17 +128,13 @@ export default defineCommand({
         const results = await checkPackageUpdatesForFile(fileDeps, updateArgs);
         allResults.push(...results);
 
-        const toUpdate = results.filter(
-          (r: UpdateResult) => r.updated && !r.error,
-        );
+        const toUpdate = results.filter((r: UpdateResult) => r.updated && !r.error);
 
         if (toUpdate.length > 0) {
           // Exit early for dry run
           if (isDryRun) {
             const relativePath = path.relative(process.cwd(), packageJsonPath);
-            logger.debug(
-              `Would update ${toUpdate.length} dependencies in ${relativePath}`,
-            );
+            logger.debug(`Would update ${toUpdate.length} dependencies in ${relativePath}`);
             continue;
           }
 
@@ -166,12 +156,7 @@ export default defineCommand({
       }
 
       // Display results in structured format
-      displayStructuredUpdateResults(
-        allResults,
-        packageJsonFiles,
-        fileDepsMap,
-        showDetails,
-      );
+      displayStructuredUpdateResults(allResults, packageJsonFiles, fileDepsMap, showDetails);
 
       if (totalUpdated === 0) {
         if (isDryRun) {

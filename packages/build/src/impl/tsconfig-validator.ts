@@ -28,11 +28,7 @@ export async function validateTSConfig(
   pkg: PackageInfo,
   options: TSConfigValidationOptions = {},
 ): Promise<TSConfigValidationResult> {
-  const {
-    strict = false,
-    checkDeclarations = true,
-    checkBuildOutput = true,
-  } = options;
+  const { strict = false, checkDeclarations = true, checkBuildOutput = true } = options;
 
   const warnings: string[] = [];
   const errors: string[] = [];
@@ -63,19 +59,14 @@ export async function validateTSConfig(
     // Check declaration generation settings
     if (checkDeclarations) {
       if (compilerOptions.declaration === false) {
-        warnings.push(
-          "declaration: false - TypeScript declaration files will not be generated",
-        );
+        warnings.push("declaration: false - TypeScript declaration files will not be generated");
       } else if (compilerOptions.declaration === undefined) {
         warnings.push(
           "declaration not set - consider adding 'declaration: true' for library packages",
         );
       }
 
-      if (
-        compilerOptions.emitDeclarationOnly === true &&
-        !compilerOptions.declaration
-      ) {
+      if (compilerOptions.emitDeclarationOnly === true && !compilerOptions.declaration) {
         errors.push("emitDeclarationOnly: true requires declaration: true");
       }
 
@@ -111,10 +102,7 @@ export async function validateTSConfig(
         );
       }
 
-      if (
-        compilerOptions.emitDeclarationOnly === true &&
-        compilerOptions.noEmit === true
-      ) {
+      if (compilerOptions.emitDeclarationOnly === true && compilerOptions.noEmit === true) {
         errors.push("emitDeclarationOnly: true conflicts with noEmit: true");
       }
     }
@@ -180,10 +168,7 @@ export async function validateTSConfig(
       );
     }
 
-    if (
-      compilerOptions.experimentalDecorators === true &&
-      !compilerOptions.emitDecoratorMetadata
-    ) {
+    if (compilerOptions.experimentalDecorators === true && !compilerOptions.emitDecoratorMetadata) {
       warnings.push(
         "experimentalDecorators: true without emitDecoratorMetadata - decorator metadata will not be emitted",
       );
@@ -200,10 +185,7 @@ export async function validateTSConfig(
         );
       }
 
-      if (
-        compilerOptions.target &&
-        ["es5", "es2015"].includes(compilerOptions.target)
-      ) {
+      if (compilerOptions.target && ["es5", "es2015"].includes(compilerOptions.target)) {
         warnings.push(
           `Frontend app using old target '${compilerOptions.target}' - consider using 'es2020' or newer for better performance`,
         );
@@ -212,10 +194,7 @@ export async function validateTSConfig(
 
     // Check for library specific issues
     if (!pkg.isFrontendApp) {
-      if (
-        compilerOptions.moduleResolution &&
-        compilerOptions.moduleResolution === "bundler"
-      ) {
+      if (compilerOptions.moduleResolution && compilerOptions.moduleResolution === "bundler") {
         warnings.push(
           "Library using moduleResolution 'bundler' - consider using 'node' for better compatibility",
         );
@@ -249,8 +228,7 @@ export async function validateAllTSConfigs(
   valid: boolean;
   results: Array<{ package: string; result: TSConfigValidationResult }>;
 }> {
-  const results: Array<{ package: string; result: TSConfigValidationResult }> =
-    [];
+  const results: Array<{ package: string; result: TSConfigValidationResult }> = [];
   let allValid = true;
 
   for (const pkg of packages) {

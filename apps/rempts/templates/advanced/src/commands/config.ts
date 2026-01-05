@@ -1,148 +1,145 @@
-import { defineCommand, option } from '@reliverse/rempts-core'
-import { z } from 'zod'
-import { loadConfig, saveConfig, getConfigPath } from '../utils/config'
-import { relico } from '@reliverse/relico'
+import { defineCommand, option } from "@reliverse/rempts-core";
+import { z } from "zod";
+import { loadConfig, saveConfig, getConfigPath } from "../utils/config";
+import { relico } from "@reliverse/relico";
 
 const configCommand = defineCommand({
-  name: 'config',
-  description: 'Manage configuration',
+  name: "config",
+  description: "Manage configuration",
   subcommands: [
     defineCommand({
-      name: 'get',
-      description: 'Get a config value',
-      args: z.tuple([z.string()]).describe('Config key to get'),
+      name: "get",
+      description: "Get a config value",
+      args: z.tuple([z.string()]).describe("Config key to get"),
       handler: async ({ args, colors }) => {
-        const [key] = args
+        const [key] = args;
 
         try {
-          const config = await loadConfig()
-          const value = getNestedValue(config, key)
+          const config = await loadConfig();
+          const value = getNestedValue(config, key);
 
           if (value === undefined) {
-            console.log(relico.yellow(`Config key '${key}' not found`))
+            console.log(relico.yellow(`Config key '${key}' not found`));
           } else {
-            console.log(JSON.stringify(value, null, 2))
+            console.log(JSON.stringify(value, null, 2));
           }
         } catch (error) {
-          console.error(relico.red(`Failed to load config: ${error}`))
-          process.exit(1)
+          console.error(relico.red(`Failed to load config: ${error}`));
+          process.exit(1);
         }
-      }
+      },
     }),
 
     defineCommand({
-      name: 'set',
-      description: 'Set a config value',
-      args: z.tuple([z.string(), z.string()]).describe('Config key and value'),
+      name: "set",
+      description: "Set a config value",
+      args: z.tuple([z.string(), z.string()]).describe("Config key and value"),
       handler: async ({ args, colors, spinner }) => {
-        const [key, value] = args
+        const [key, value] = args;
 
-        const spin = spinner('Updating config...')
-        spin.start()
+        const spin = spinner("Updating config...");
+        spin.start();
 
         try {
-          const config = await loadConfig()
-          setNestedValue(config, key, JSON.parse(value))
-          await saveConfig(config)
+          const config = await loadConfig();
+          setNestedValue(config, key, JSON.parse(value));
+          await saveConfig(config);
 
-          spin.succeed(`Config '${key}' updated`)
+          spin.succeed(`Config '${key}' updated`);
         } catch (error) {
-          spin.fail('Failed to update config')
-          console.error(relico.red(String(error)))
-          process.exit(1)
+          spin.fail("Failed to update config");
+          console.error(relico.red(String(error)));
+          process.exit(1);
         }
-      }
+      },
     }),
 
     defineCommand({
-      name: 'list',
-      description: 'List all config values',
+      name: "list",
+      description: "List all config values",
       handler: async ({ colors }) => {
         try {
-          const config = await loadConfig()
-          const configPath = await getConfigPath()
+          const config = await loadConfig();
+          const configPath = await getConfigPath();
 
-          console.log(relico.bold('Configuration:'))
-          console.log(relico.dim(`  File: ${configPath}`))
-          console.log()
-          console.log(JSON.stringify(config, null, 2))
+          console.log(relico.bold("Configuration:"));
+          console.log(relico.dim(`  File: ${configPath}`));
+          console.log();
+          console.log(JSON.stringify(config, null, 2));
         } catch (error) {
-          console.error(relico.red(`Failed to load config: ${error}`))
-          process.exit(1)
+          console.error(relico.red(`Failed to load config: ${error}`));
+          process.exit(1);
         }
-      }
+      },
     }),
 
     defineCommand({
-      name: 'reset',
-      description: 'Reset config to defaults',
+      name: "reset",
+      description: "Reset config to defaults",
       options: {
-        force: option(
-          z.boolean().default(false),
-          {
-            short: 'f',
-            description: 'Skip confirmation'
-          }
-        )
+        force: option(z.boolean().default(false), {
+          short: "f",
+          description: "Skip confirmation",
+        }),
       },
       handler: async ({ flags, colors, prompt, spinner }) => {
         if (!flags.force) {
           const confirmed = await prompt.confirm(
-            'This will reset all config to defaults. Continue?',
-            { default: false }
-          )
+            "This will reset all config to defaults. Continue?",
+            { default: false },
+          );
 
           if (!confirmed) {
-            console.log(relico.yellow('Reset cancelled'))
-            return
+            console.log(relico.yellow("Reset cancelled"));
+            return;
           }
         }
 
-        const spin = spinner('Resetting config...')
-        spin.start()
+        const spin = spinner("Resetting config...");
+        spin.start();
 
         try {
-          const { DEFAULT_CONFIG } = await import('../utils/constants.js')
-          await saveConfig(DEFAULT_CONFIG)
+          const { DEFAULT_CONFIG } = await import("../utils/constants.js");
+          await saveConfig(DEFAULT_CONFIG);
 
-          spin.succeed('Config reset to defaults')
+          spin.succeed("Config reset to defaults");
         } catch (error) {
-          spin.fail('Failed to reset config')
-          console.error(relico.red(String(error)))
-          process.exit(1)
+          spin.fail("Failed to reset config");
+          console.error(relico.red(String(error)));
+          process.exit(1);
         }
-      }
-    })
-  ]
-})
+      },
+    }),
+  ],
+});
 
 function getNestedValue(obj: any, path: string): any {
-  const keys = path.split('.')
-  let current = obj
+  const keys = path.split(".");
+  let current = obj;
 
   for (const key of keys) {
     if (current === null || current === undefined) {
-      return undefined
+      return undefined;
     }
-    current = current[key]
+    current = current[key];
   }
 
-  return current
+  return current;
 }
 
 function setNestedValue(obj: any, path: string, value: any): void {
-  const keys = path.split('.')
-  const lastKey = keys.pop()!
-  let current = obj
+  const keys = path.split(".");
+  const lastKey = keys.pop()!;
+  let current = obj;
 
   for (const key of keys) {
-    if (!(key in current) || typeof current[key] !== 'object') {
-      current[key] = {}
+    if (!(key in current) || typeof current[key] !== "object") {
+      current[key] = {};
     }
-    current = current[key]
+    current = current[key];
   }
 
-  current[lastKey] = value
+  current[lastKey] = value;
 }
 
-export default configCommand
+export default configCommand;

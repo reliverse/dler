@@ -2,8 +2,7 @@ import { pMapIterable, pMapSkip } from "../../src/mod";
 import type { BenchmarkResult } from "../perf";
 
 // Helper to create async delay
-const delay = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Helper to create sync mapper
 const syncMapper = (x: number): number => x * 2;
@@ -97,9 +96,7 @@ export async function benchmarkPMapIterable(
   // Benchmark with skip functionality
   results.push(
     await benchmark("pMapIterable (with skip)", async () => {
-      const iterable = pMapIterable(mediumArray, (x) =>
-        x % 2 === 0 ? x * 2 : pMapSkip,
-      );
+      const iterable = pMapIterable(mediumArray, (x) => (x % 2 === 0 ? x * 2 : pMapSkip));
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       for await (const _ of iterable) {
         // Consume all items

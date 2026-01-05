@@ -1,20 +1,10 @@
 import { dirname, join } from "node:path";
 import { ensureDir, pathExists, remove } from "./dir";
-import {
-  fsLStat,
-  fsReaddir,
-  fsReadlink,
-  fsRename,
-  fsStat,
-  fsSymlink,
-} from "./internal/fs";
+import { fsLStat, fsReaddir, fsReadlink, fsRename, fsStat, fsSymlink } from "./internal/fs";
 import { toPathString } from "./internal/path";
 import type { CopyOptions, MoveOptions, PathLike } from "./types";
 
-const shouldCopyEntry = async (
-  path: string,
-  filter?: CopyOptions["filter"],
-): Promise<boolean> => {
+const shouldCopyEntry = async (path: string, filter?: CopyOptions["filter"]): Promise<boolean> => {
   if (!filter) {
     return true;
   }
@@ -28,11 +18,7 @@ const shouldCopyEntry = async (
   return result;
 };
 
-const copyFile = async (
-  source: string,
-  destination: string,
-  overwrite: boolean,
-): Promise<void> => {
+const copyFile = async (source: string, destination: string, overwrite: boolean): Promise<void> => {
   await ensureDir(dirname(destination));
 
   if (!overwrite && (await pathExists(destination))) {
@@ -43,10 +29,7 @@ const copyFile = async (
   await Bun.write(destination, Bun.file(source));
 };
 
-const copySymlink = async (
-  source: string,
-  destination: string,
-): Promise<void> => {
+const copySymlink = async (source: string, destination: string): Promise<void> => {
   const target = await fsReadlink(source);
 
   try {
@@ -100,9 +83,7 @@ export const copy = async (
 ): Promise<void> => {
   const source = toPathString(from);
   const destination = toPathString(to);
-  const stats = options.dereference
-    ? await fsStat(source)
-    : await fsLStat(source);
+  const stats = options.dereference ? await fsStat(source) : await fsLStat(source);
 
   if (stats.isDirectory()) {
     await copyDirectory(source, destination, options);
@@ -119,11 +100,7 @@ export const copy = async (
   await copyFile(source, destination, options.overwrite ?? true);
 };
 
-export const move = async (
-  from: PathLike,
-  to: PathLike,
-  options?: MoveOptions,
-): Promise<void> => {
+export const move = async (from: PathLike, to: PathLike, options?: MoveOptions): Promise<void> => {
   const source = toPathString(from);
   const destination = toPathString(to);
 

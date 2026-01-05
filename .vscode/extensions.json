@@ -1,15 +1,15 @@
 {
-    "recommendations": [
-        "oxc.oxc-vscode",
-        "chunsen.bracket-select",
-        "oven.bun-vscode",
-        "usernamehw.errorlens",
-        "davidanson.vscode-markdownlint",
-        "yoavbls.pretty-ts-errors",
-        "usernamehw.remove-empty-lines",
-        "rust-lang.rust-analyzer",
-        "bradlc.vscode-tailwindcss",
-        "tauri-apps.tauri-vscode",
-        "typescriptteam.native-preview"
-    ]
+  "recommendations": [
+    "oxc.oxc-vscode",
+    "chunsen.bracket-select",
+    "oven.bun-vscode",
+    "usernamehw.errorlens",
+    "davidanson.vscode-markdownlint",
+    "yoavbls.pretty-ts-errors",
+    "usernamehw.remove-empty-lines",
+    "rust-lang.rust-analyzer",
+    "bradlc.vscode-tailwindcss",
+    "tauri-apps.tauri-vscode",
+    "typescriptteam.native-preview"
+  ]
 }

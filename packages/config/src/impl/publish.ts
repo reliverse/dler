@@ -49,10 +49,7 @@ export const getPackagePublishConfig = (
   packageName: string,
   dlerConfig: { publish?: PublishConfig } | null,
 ): PackagePublishConfig | undefined => {
-  return resolvePackageConfig<PackagePublishConfig>(
-    packageName,
-    dlerConfig?.publish,
-  );
+  return resolvePackageConfig<PackagePublishConfig>(packageName, dlerConfig?.publish);
 };
 
 // ============================================================================

@@ -1,72 +1,64 @@
-import { defineCommand, option } from '@reliverse/rempts-core'
-import { z } from 'zod'
-import { CONFIG_FILE_NAME, DEFAULT_CONFIG } from '../utils/constants'
-import { relico } from '@reliverse/relico'
+import { defineCommand, option } from "@reliverse/rempts-core";
+import { z } from "zod";
+import { CONFIG_FILE_NAME, DEFAULT_CONFIG } from "../utils/constants";
+import { relico } from "@reliverse/relico";
 
 const initCommand = defineCommand({
-  name: 'init',
-  description: 'Initialize a new configuration file',
+  name: "init",
+  description: "Initialize a new configuration file",
   options: {
-    force: option(
-      z.boolean().default(false),
-      {
-        short: 'f',
-        description: 'Overwrite existing config'
-      }
-    ),
-    template: option(
-      z.enum(['minimal', 'default', 'full']).default('default'),
-      {
-        short: 't',
-        description: 'Config template to use'
-      }
-    )
+    force: option(z.boolean().default(false), {
+      short: "f",
+      description: "Overwrite existing config",
+    }),
+    template: option(z.enum(["minimal", "default", "full"]).default("default"), {
+      short: "t",
+      description: "Config template to use",
+    }),
   },
   handler: async ({ flags, colors, prompt, spinner }) => {
-    const configPath = `${process.cwd()}/${CONFIG_FILE_NAME}`
+    const configPath = `${process.cwd()}/${CONFIG_FILE_NAME}`;
 
     // Check if config already exists
-    const configFile = Bun.file(configPath)
-    if (await configFile.exists() && !flags.force) {
-      const overwrite = await prompt.confirm(
-        `Config file already exists. Overwrite?`,
-        { default: false }
-      )
+    const configFile = Bun.file(configPath);
+    if ((await configFile.exists()) && !flags.force) {
+      const overwrite = await prompt.confirm(`Config file already exists. Overwrite?`, {
+        default: false,
+      });
 
       if (!overwrite) {
-        console.log(relico.yellow('Init cancelled'))
-        return
+        console.log(relico.yellow("Init cancelled"));
+        return;
       }
     }
 
-    const spin = spinner('Creating config file...')
-    spin.start()
+    const spin = spinner("Creating config file...");
+    spin.start();
 
     try {
       // Get template content
-      const configContent = getConfigTemplate(flags.template)
+      const configContent = getConfigTemplate(flags.template);
 
       // Write config file
-      await Bun.write(configPath, configContent)
+      await Bun.write(configPath, configContent);
 
-      spin.succeed('Config file created')
-      console.log(relico.dim(`  ${CONFIG_FILE_NAME}`))
+      spin.succeed("Config file created");
+      console.log(relico.dim(`  ${CONFIG_FILE_NAME}`));
 
       // Next steps
-      console.log()
-      console.log('Next steps:')
-      console.log(relico.gray(`  1. Edit ${CONFIG_FILE_NAME} to customize your configuration`))
-      console.log(relico.gray(`  2. Run '{{name}} validate' to check your files`))
-
+      console.log();
+      console.log("Next steps:");
+      console.log(relico.gray(`  1. Edit ${CONFIG_FILE_NAME} to customize your configuration`));
+      console.log(relico.gray(`  2. Run '{{name}} validate' to check your files`));
     } catch (error) {
-      spin.fail('Failed to create config file')
-      console.error(relico.red(String(error)))
-      process.exit(1)
+      spin.fail("Failed to create config file");
+      console.error(relico.red(String(error)));
+      process.exit(1);
     }
-  }
-})
+  },
+});
 
-function getConfigTemplate(template: 'minimal' | 'default' | 'full'): string {
+function getConfigTemplate(template: "minimal" | "default" | "full"): string {
   const templates = {
     minimal: `export default ${JSON.stringify(DEFAULT_CONFIG, null, 2)}`,
 
@@ -147,10 +139,10 @@ export default defineConfig({
       console.log(\`Found \${results.errors} errors and \${results.warnings} warnings\`)
     },
   },
-})`
-  }
+})`,
+  };
 
-  return templates[template]
+  return templates[template];
 }
 
-export default initCommand
+export default initCommand;

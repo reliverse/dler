@@ -4,11 +4,7 @@ import type { FSWatcher } from "node:fs";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
 import { relinka } from "@reliverse/relinka";
-import {
-  DEFAULT_DEBOUNCE_MS,
-  DEFAULT_DEV_SERVER_HOST,
-  DEFAULT_DEV_SERVER_PORT,
-} from "./constants";
+import { DEFAULT_DEBOUNCE_MS, DEFAULT_DEV_SERVER_HOST, DEFAULT_DEV_SERVER_PORT } from "./constants";
 import type { BuildOptions, DevServerOptions, PackageInfo } from "./types";
 import { RebuildQueueProcessor } from "./utils/rebuild-queue";
 
@@ -26,11 +22,7 @@ export class DevServer {
   private watchers: Map<string, FSWatcher> = new Map();
   private rebuildQueue: RebuildQueueProcessor;
 
-  constructor(
-    packages: PackageInfo[],
-    options: BuildOptions,
-    devServerOptions?: DevServerOptions,
-  ) {
+  constructor(packages: PackageInfo[], options: BuildOptions, devServerOptions?: DevServerOptions) {
     this.packages = packages;
     this.config = {
       port: devServerOptions?.port ?? DEFAULT_DEV_SERVER_PORT,
@@ -261,9 +253,7 @@ export class DevServer {
 
   private generateFallbackHtml(): string {
     const title =
-      this.packages.length === 1
-        ? this.packages[0]?.name || "Frontend App"
-        : "Frontend App";
+      this.packages.length === 1 ? this.packages[0]?.name || "Frontend App" : "Frontend App";
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -369,9 +359,7 @@ export class DevServer {
       });
 
       watcher.on("error", (error) => {
-        void relinka.warn(
-          `File watcher error for ${filePath}: ${error.message}`,
-        );
+        void relinka.warn(`File watcher error for ${filePath}: ${error.message}`);
         this.watchers.delete(filePath);
       });
 
@@ -381,29 +369,20 @@ export class DevServer {
     }
   }
 
-  private async watchDirectory(
-    dirPath: string,
-    pkg: PackageInfo,
-  ): Promise<void> {
+  private async watchDirectory(dirPath: string, pkg: PackageInfo): Promise<void> {
     if (this.watchers.has(dirPath)) return;
 
     try {
       const { watch } = await import("node:fs");
-      const watcher = watch(
-        dirPath,
-        { recursive: true },
-        (eventType, filename) => {
-          if (eventType === "change" && filename) {
-            const fullPath = join(dirPath, filename);
-            this.handleFileChange(fullPath, pkg);
-          }
-        },
-      );
+      const watcher = watch(dirPath, { recursive: true }, (eventType, filename) => {
+        if (eventType === "change" && filename) {
+          const fullPath = join(dirPath, filename);
+          this.handleFileChange(fullPath, pkg);
+        }
+      });
 
       watcher.on("error", (error) => {
-        void relinka.warn(
-          `Directory watcher error for ${dirPath}: ${error.message}`,
-        );
+        void relinka.warn(`Directory watcher error for ${dirPath}: ${error.message}`);
         this.watchers.delete(dirPath);
       });
 
@@ -421,10 +400,7 @@ export class DevServer {
     this.rebuildQueue.add(pkg.name);
   }
 
-  private handleHMRMessage(
-    ws: { send: (data: string) => void },
-    message: string | Buffer,
-  ): void {
+  private handleHMRMessage(ws: { send: (data: string) => void }, message: string | Buffer): void {
     try {
       const data = JSON.parse(message.toString());
 

@@ -42,26 +42,26 @@ interface ConfigMergerOptions {
    * Paths starting with ~ are expanded to home directory
    */
   sources: string[]
-  
+
   /**
    * Merge strategy for combining configs
    * - 'deep': Recursively merge objects (default)
    * - 'shallow': Only merge top-level properties
    */
   mergeStrategy?: 'deep' | 'shallow'
-  
+
   /**
    * Stop after finding the first config file
    * Default: false (loads and merges all found configs)
    */
   stopOnFirst?: boolean
-  
+
   /**
    * Custom config parser (e.g., for YAML, TOML)
    * Default: JSON.parse
    */
   parser?: (content: string) => any
-  
+
   /**
    * Transform config after loading
    */
@@ -74,6 +74,7 @@ interface ConfigMergerOptions {
 By default, the plugin supports JSON files. Common patterns:
 
 ### RC Files
+
 ```bash
 # These are equivalent for a CLI named "my-cli"
 .my-clirc
@@ -81,12 +82,14 @@ By default, the plugin supports JSON files. Common patterns:
 ```
 
 ### Home Directory Config
+
 ```bash
 ~/.config/my-cli/config.json
 ~/.my-clirc
 ```
 
 ### Package.json
+
 ```json
 {
   "name": "my-project",

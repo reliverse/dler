@@ -27,6 +27,7 @@ bun cli.ts setup --preset standard
 ## Commands
 
 ### `build` - Project Building
+
 Demonstrates advanced validation and data transformation:
 
 ```bash
@@ -41,6 +42,7 @@ bun cli.ts build -v "NODE_ENV=production,API_URL=https://api.example.com"
 ```
 
 **Features:**
+
 - Environment validation (dev/staging/prod)
 - JSON configuration parsing with error handling
 - Memory limit parsing (512m, 2g, etc.)
@@ -48,6 +50,7 @@ bun cli.ts build -v "NODE_ENV=production,API_URL=https://api.example.com"
 - Watch mode for development
 
 ### `test` - Test Execution
+
 Shows complex validation patterns and conditional logic:
 
 ```bash
@@ -62,6 +65,7 @@ bun cli.ts test --watch --verbose
 ```
 
 **Features:**
+
 - Regex pattern validation
 - Coverage threshold enforcement
 - Environment variable parsing and validation
@@ -69,6 +73,7 @@ bun cli.ts test --watch --verbose
 - Verbose output control
 
 ### `deploy` - Deployment Workflow
+
 Interactive deployment with progress tracking:
 
 ```bash
@@ -83,6 +88,7 @@ bun cli.ts deploy --force
 ```
 
 **Features:**
+
 - Multi-step progress indicators
 - Step skipping with validation
 - Confirmation prompts
@@ -90,6 +96,7 @@ bun cli.ts deploy --force
 - Post-deployment options
 
 ### `setup` - Project Setup Wizard
+
 Comprehensive setup wizard with presets:
 
 ```bash
@@ -103,6 +110,7 @@ bun cli.ts setup --preset full
 ```
 
 **Features:**
+
 - Multi-step interactive wizard
 - Input validation with custom messages
 - Preset configurations
@@ -183,6 +191,7 @@ bun run build
 ## Next Steps
 
 Ready for more complex patterns? Try the **[git-tool](../git-tool/README.md)** example to learn about:
+
 - Nested command organization
 - External tool integration
 - Command aliases and shortcuts

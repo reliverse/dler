@@ -1,1 +1,1 @@
-export { registerTuiRenderer as registerTui } from './renderer'
+export { registerTuiRenderer as registerTui } from "./renderer";

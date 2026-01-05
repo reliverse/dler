@@ -5,11 +5,7 @@ import { join, resolve } from "node:path";
 import pMap from "@reliverse/mapkit";
 import { createIgnoreFilter, normalizePatterns } from "@reliverse/matcha";
 import { logger } from "@reliverse/relinka";
-import {
-  getWorkspacePatterns,
-  hasWorkspaces,
-  readPackageJSON,
-} from "@reliverse/typerso";
+import { getWorkspacePatterns, hasWorkspaces, readPackageJSON } from "@reliverse/typerso";
 import {
   LOCK_FILE_PATTERNS,
   mergePatterns,
@@ -32,10 +28,7 @@ const DEFAULT_CONCURRENCY = 5;
 // Package Discovery
 // ============================================================================
 
-const findMonorepoRoot = async (
-  startDir?: string,
-  useCwd = false,
-): Promise<string | null> => {
+const findMonorepoRoot = async (startDir?: string, useCwd = false): Promise<string | null> => {
   let currentDir = resolve(startDir ?? process.cwd());
 
   // If useCwd is true, only check the specified directory, don't search up
@@ -100,10 +93,7 @@ const resolvePackageInfo = async (
   }
 };
 
-const getWorkspacePackages = async (
-  cwd?: string,
-  useCwd = false,
-): Promise<PackageInfo[]> => {
+const getWorkspacePackages = async (cwd?: string, useCwd = false): Promise<PackageInfo[]> => {
   const monorepoRoot = await findMonorepoRoot(cwd, useCwd);
 
   // If no monorepo found, check if current directory is a single package
@@ -209,9 +199,7 @@ const calculateDirectorySize = (dirPath: string): number => {
     let totalSize = 0;
     const entries =
       existsSync(dirPath) && statSync(dirPath).isDirectory()
-        ? Array.from(
-            new Bun.Glob("**/*").scanSync({ cwd: dirPath, onlyFiles: true }),
-          )
+        ? Array.from(new Bun.Glob("**/*").scanSync({ cwd: dirPath, onlyFiles: true }))
         : [];
 
     for (const entry of entries) {
@@ -233,11 +221,7 @@ const calculateDirectorySize = (dirPath: string): number => {
 const isAbsolutePath = (path: string): boolean =>
   path.startsWith("/") || (path.length > 1 && path[1] === ":");
 
-const findMatchingFiles = (
-  targetDir: string,
-  patterns: string[],
-  subdirs = false,
-): FileMatch[] => {
+const findMatchingFiles = (targetDir: string, patterns: string[], subdirs = false): FileMatch[] => {
   const matches: FileMatch[] = [];
   const searchDirs = subdirs ? [targetDir] : [targetDir];
 
@@ -303,11 +287,7 @@ const getCategoryForPattern = (pattern: string): string => {
   if (pattern.includes(".next") || pattern.includes(".expo")) return "frontend";
   if (pattern.includes(".source")) return "docs";
   if (pattern.includes(".react-email")) return "email";
-  if (
-    pattern.includes(".turbo") ||
-    pattern.includes(".vercel") ||
-    pattern.includes(".wrangler")
-  )
+  if (pattern.includes(".turbo") || pattern.includes(".vercel") || pattern.includes(".wrangler"))
     return "build-tools";
   if (pattern.includes("node_modules")) return "deps";
   return "other";
@@ -410,16 +390,11 @@ const cleanPackage = async (
     logger.info(`   Found ${files.length} files/directories to clean`);
   }
 
-  const { deletedCount, deletedSize, errors } = await deleteFiles(
-    files,
-    dryRun,
-  );
+  const { deletedCount, deletedSize, errors } = await deleteFiles(files, dryRun);
 
   if (verbose) {
     const status = errors.length === 0 ? "✅" : "⚠️";
-    logger.log(
-      `${status} ${pkg.name}: ${deletedCount} deleted, ${errors.length} errors`,
-    );
+    logger.log(`${status} ${pkg.name}: ${deletedCount} deleted, ${errors.length} errors`);
   }
 
   return {
@@ -494,9 +469,7 @@ const displayPreview = (
   for (const result of results) {
     if (result.files.length === 0) continue;
 
-    logger.log(
-      `\n📦 ${result.package.name}${result.package.isRoot ? " (root)" : ""}:`,
-    );
+    logger.log(`\n📦 ${result.package.name}${result.package.isRoot ? " (root)" : ""}:`);
 
     // Group by category
     const byCategory = result.files.reduce(
@@ -510,9 +483,7 @@ const displayPreview = (
 
     for (const [category, files] of Object.entries(byCategory)) {
       const categorySize = files.reduce((sum, file) => sum + file.size, 0);
-      logger.log(
-        `   ${category}: ${files.length} files (${formatBytes(categorySize)})`,
-      );
+      logger.log(`   ${category}: ${files.length} files (${formatBytes(categorySize)})`);
 
       if (files.length <= 5) {
         for (const file of files) {
@@ -542,9 +513,7 @@ const displayPreview = (
 
 const checkForceFlag = (force: boolean): void => {
   if (!force) {
-    throw new Error(
-      "❌ Deletion requires --force flag. Use --force to proceed with deletion.",
-    );
+    throw new Error("❌ Deletion requires --force flag. Use --force to proceed with deletion.");
   }
 };
 
@@ -575,9 +544,7 @@ export const runCleanOnAllPackages = async (
   const patterns = mergePatterns(presets, customPatterns);
 
   // Check if we have any absolute paths in custom patterns
-  const hasAbsolutePaths = customPatterns.some((pattern) =>
-    isAbsolutePath(pattern),
-  );
+  const hasAbsolutePaths = customPatterns.some((pattern) => isAbsolutePath(pattern));
 
   // Log discovery start
   if (verbose) {
@@ -629,10 +596,7 @@ export const runCleanOnAllPackages = async (
         checkForceFlag(force);
 
         // Delete files
-        const { deletedCount, deletedSize, errors } = await deleteFiles(
-          files,
-          dryRun,
-        );
+        const { deletedCount, deletedSize, errors } = await deleteFiles(files, dryRun);
 
         const summary: CleanSummary = {
           totalPackages: 1,
@@ -657,9 +621,7 @@ export const runCleanOnAllPackages = async (
         // Display final summary
         logger.log(`\n${"━".repeat(60)}`);
         logger.log("📊 Clean Summary:");
-        logger.log(
-          `   Files ${dryRun ? "would be" : ""} deleted: ${summary.deletedFiles}`,
-        );
+        logger.log(`   Files ${dryRun ? "would be" : ""} deleted: ${summary.deletedFiles}`);
         logger.log(
           `   Size ${dryRun ? "would be" : ""} freed: ${formatBytes(summary.deletedSize)}`,
         );
@@ -702,9 +664,7 @@ export const runCleanOnAllPackages = async (
         logger.log(`\n${"━".repeat(60)}`);
         logger.log("📊 Clean Summary:");
         logger.log(`   Files would be deleted: ${summary.deletedFiles}`);
-        logger.log(
-          `   Size would be freed: ${formatBytes(summary.deletedSize)}`,
-        );
+        logger.log(`   Size would be freed: ${formatBytes(summary.deletedSize)}`);
         logger.log("━".repeat(60));
 
         return summary;
@@ -739,9 +699,7 @@ export const runCleanOnAllPackages = async (
 
       if (ignoredCount > 0) {
         const patterns = normalizePatterns(ignore);
-        logger.info(
-          `   Ignoring ${ignoredCount} packages matching: ${patterns.join(", ")}`,
-        );
+        logger.info(`   Ignoring ${ignoredCount} packages matching: ${patterns.join(", ")}`);
       }
 
       packages = filteredPackages;
@@ -759,11 +717,7 @@ export const runCleanOnAllPackages = async (
 
     // Clean lock files if requested
     const rootDir = cwd ?? process.cwd();
-    const lockFilesResult = await cleanLockFiles(
-      rootDir,
-      deleteLockFiles,
-      dryRun,
-    );
+    const lockFilesResult = await cleanLockFiles(rootDir, deleteLockFiles, dryRun);
 
     // Display preview
     displayPreview(results, lockFilesResult);
@@ -788,19 +742,14 @@ export const runCleanOnAllPackages = async (
 
       // Calculate totals
       const totalFiles =
-        cleanedResults.reduce((sum, r) => sum + r.files.length, 0) +
-        lockFilesResult.deletedCount;
+        cleanedResults.reduce((sum, r) => sum + r.files.length, 0) + lockFilesResult.deletedCount;
       const totalSize =
-        cleanedResults.reduce(
-          (sum, r) => sum + r.files.reduce((s, f) => s + f.size, 0),
-          0,
-        ) + lockFilesResult.deletedSize;
-      const deletedFiles =
-        cleanedResults.reduce((sum, r) => sum + r.deletedCount, 0) +
-        lockFilesResult.deletedCount;
-      const deletedSize =
-        cleanedResults.reduce((sum, r) => sum + r.deletedSize, 0) +
+        cleanedResults.reduce((sum, r) => sum + r.files.reduce((s, f) => s + f.size, 0), 0) +
         lockFilesResult.deletedSize;
+      const deletedFiles =
+        cleanedResults.reduce((sum, r) => sum + r.deletedCount, 0) + lockFilesResult.deletedCount;
+      const deletedSize =
+        cleanedResults.reduce((sum, r) => sum + r.deletedSize, 0) + lockFilesResult.deletedSize;
       const allErrors = cleanedResults.flatMap((r) => r.errors);
 
       const summary: CleanSummary = {
@@ -819,12 +768,8 @@ export const runCleanOnAllPackages = async (
       logger.log(`\n${"━".repeat(60)}`);
       logger.log("📊 Clean Summary:");
       logger.log(`   Packages processed: ${summary.processedPackages}`);
-      logger.log(
-        `   Files ${dryRun ? "would be" : ""} deleted: ${summary.deletedFiles}`,
-      );
-      logger.log(
-        `   Size ${dryRun ? "would be" : ""} freed: ${formatBytes(summary.deletedSize)}`,
-      );
+      logger.log(`   Files ${dryRun ? "would be" : ""} deleted: ${summary.deletedFiles}`);
+      logger.log(`   Size ${dryRun ? "would be" : ""} freed: ${formatBytes(summary.deletedSize)}`);
 
       if (summary.hasErrors) {
         logger.log(`   Errors: ${summary.errors.length}`);
@@ -841,13 +786,10 @@ export const runCleanOnAllPackages = async (
 
     // If dry run, return early
     const totalFiles =
-      results.reduce((sum, r) => sum + r.files.length, 0) +
-      lockFilesResult.deletedCount;
+      results.reduce((sum, r) => sum + r.files.length, 0) + lockFilesResult.deletedCount;
     const totalSize =
-      results.reduce(
-        (sum, r) => sum + r.files.reduce((s, f) => s + f.size, 0),
-        0,
-      ) + lockFilesResult.deletedSize;
+      results.reduce((sum, r) => sum + r.files.reduce((s, f) => s + f.size, 0), 0) +
+      lockFilesResult.deletedSize;
     // In dry-run mode, deletedFiles/deletedSize should equal totalFiles/totalSize
     const deletedFiles = totalFiles;
     const deletedSize = totalSize;
