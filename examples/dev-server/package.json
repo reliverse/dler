@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@reliverse/relico": "workspace:*",
     "@reliverse/rempts": "workspace:*",
     "@reliverse/rempts-plugin-ai-detect": "workspace:*",
     "@reliverse/rempts-plugin-config": "workspace:*",

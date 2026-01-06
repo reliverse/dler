@@ -113,5 +113,8 @@ export function createEnvironmentInfo(): EnvironmentInfo {
       process.env.GITLAB_CI === "true" ||
       process.env.CIRCLECI === "true" ||
       process.env.JENKINS_URL !== undefined,
+    // Initialize AI detection properties (plugins can override these)
+    isAIAgent: false,
+    aiAgents: [],
   };
 }

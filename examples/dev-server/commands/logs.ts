@@ -6,19 +6,19 @@ const logsCommand = defineCommand({
   name: "logs",
   description: "View server logs",
   options: {
-    follow: option(type("boolean").default(false), {
+    follow: option(type("boolean | undefined").pipe(b => b ?? false), {
       description: "Follow log output in real-time",
       short: "f",
     }),
-    lines: option(type("number").min(1).max(1000).default(50), {
+    lines: option(type("number.integer >= 1 & number.integer <= 1000").pipe(n => n ?? 50), {
       description: "Number of lines to show",
       short: "n",
     }),
-    level: option(type("'error'|'warn'|'info'|'debug'").default("info"), {
+    level: option(type("'error'|'warn'|'info'|'debug' | undefined").pipe(l => l ?? "info"), {
       description: "Minimum log level",
       short: "l",
     }),
-    service: option(type("string?"), {
+    service: option(type("string | undefined"), {
       description: "Filter by service name",
       short: "s",
     }),

@@ -26,6 +26,7 @@ describe("Generated Store", () => {
           booleanOpt: { type: "boolean", required: false, hasDefault: false },
           arrayOpt: { type: "array", required: false, hasDefault: false },
         },
+        handler: () => {},
       },
     } as const;
 
@@ -105,6 +106,7 @@ describe("Generated Store", () => {
           ...modules.test.options,
           requiredOpt: { type: "string", required: true, hasDefault: false },
         },
+        handler: () => {},
       },
     } as const;
 
@@ -135,9 +137,11 @@ describe("Generated Store", () => {
     const modules = {
       test: {
         name: "test",
+        description: "test command",
         options: {
           unknownOpt: { type: "unknown", required: false, hasDefault: false },
         },
+        handler: () => {},
       },
     } as const;
 

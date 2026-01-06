@@ -14,19 +14,19 @@ const buildCommand = defineCommand({
   name: "build",
   description: "Build for production",
   options: {
-    output: option(type("string").default("dist"), {
+    output: option(type("string | undefined").pipe(s => s ?? "dist"), {
       description: "Output directory",
       short: "o",
     }),
-    minify: option(type("boolean").default(true), {
+    minify: option(type("boolean | undefined").pipe(b => b ?? true), {
       description: "Minify output",
       short: "m",
     }),
-    sourcemap: option(type("boolean").default(false), {
+    sourcemap: option(type("boolean | undefined").pipe(b => b ?? false), {
       description: "Generate source maps",
       short: "s",
     }),
-    target: option(type("'node'|'bun'|'browser'").default("node"), {
+    target: option(type("'node'|'bun'|'browser' | undefined").pipe(t => t ?? "node"), {
       description: "Build target",
       short: "t",
     }),

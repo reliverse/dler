@@ -178,6 +178,9 @@ export interface PathInfo {
 export interface EnvironmentInfo {
   /** Running in CI environment */
   isCI: boolean;
+
+  /** Additional properties that plugins can add */
+  [key: string]: any;
 }
 
 /**
@@ -186,14 +189,8 @@ export interface EnvironmentInfo {
 export type Middleware = (context: CommandContext, next: () => Promise<any>) => Promise<any>;
 
 /**
- * Module augmentation for plugin extensions
+ * Plugin extension interfaces
+ *
+ * Note: Plugins should extend these interfaces directly in their own code
+ * rather than using module augmentation, as that creates circular dependencies.
  */
-declare module "@reliverse/rempts" {
-  interface PluginStore {
-    // Plugins can extend this interface
-  }
-
-  interface CommandContext {
-    // Plugins can extend command context
-  }
-}

@@ -6,19 +6,19 @@ const envCommand = defineCommand({
   name: "env",
   description: "Manage environment variables",
   options: {
-    set: option(type("string?"), {
+    set: option(type("string | undefined"), {
       description: "Set environment variable (format: KEY=VALUE)",
       short: "s",
     }),
-    get: option(type("string?"), {
+    get: option(type("string | undefined"), {
       description: "Get environment variable value",
       short: "g",
     }),
-    list: option(type("boolean").default(false), {
+    list: option(type("boolean | undefined").pipe(b => b ?? false), {
       description: "List all environment variables",
       short: "l",
     }),
-    file: option(type("string").default(".env"), {
+    file: option(type("string | undefined").pipe(s => s ?? ".env"), {
       description: "Environment file to use",
       short: "f",
     }),

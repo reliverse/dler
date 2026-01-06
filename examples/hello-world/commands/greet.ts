@@ -7,19 +7,30 @@ const greetCommand = defineCommand({
   description: "A minimal greeting CLI",
   options: {
     // Simple string with default
-    name: option(type("string").default("world")),
+    name: option(
+      type("string | undefined").pipe((s) => s ?? "world"),
+      {
+        description: "Name to greet",
+      },
+    ),
 
     // Boolean with short flag
-    loud: option(type("boolean", "=", false), {
-      short: "l",
-      description: "Shout the greeting",
-    }),
+    loud: option(
+      type("boolean | undefined").pipe((b) => b ?? false),
+      {
+        short: "l",
+        description: "Shout the greeting",
+      },
+    ),
 
     // Number with validation
-    times: option(type("number").int().positive().default(1), {
-      short: "t",
-      description: "Number of times to greet",
-    }),
+    times: option(
+      type("number.integer > 0").pipe((n) => n ?? 1),
+      {
+        short: "t",
+        description: "Number of times to greet",
+      },
+    ),
   },
   handler: async ({ flags, colors }) => {
     const greeting = `Hello, ${flags.name}!`;

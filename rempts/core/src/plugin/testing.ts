@@ -44,6 +44,8 @@ export function createMockCommandContext<TStore = {}>(
     flags,
     env: {
       isCI: false,
+      isAIAgent: false,
+      aiAgents: [],
     },
     store,
     getStoreValue: (key: keyof TStore) => (store as any)[key],

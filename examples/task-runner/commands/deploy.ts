@@ -7,35 +7,35 @@ export default defineCommand({
   description: "Deploy application with interactive prompts",
   options: {
     // Environment with validation
-    environment: option(type("'development'|'staging'|'production'").default("staging"), {
+    environment: option(type("'development'|'staging'|'production' | undefined").pipe(e => e ?? "staging"), {
       short: "e",
       description: "Target environment",
     }),
 
     // Skip steps with validation
-    skip: option(
-      z
-        .string()
-        .transform((val) => val.split(",").map((s) => s.trim()))
-        .refine((steps) => {
-          const validSteps = ["tests", "build", "cache", "migration"];
-          return steps.every((step) => validSteps.includes(step));
-        }, "Invalid step. Valid steps: tests, build, cache, migration")
-        .optional(),
-      {
-        short: "s",
-        description: "Skip steps (tests,build,cache,migration)",
-      },
-    ),
+    skip: option(type("string | undefined"), {
+      short: "s",
+      description: "Skip steps (tests,build,cache,migration)",
+    }),
 
     // Force deployment
-    force: option(type("boolean", "=", false), {
+    force: option(type("boolean | undefined").pipe(b => b ?? false), {
       short: "f",
       description: "Force deployment without confirmation",
     }),
   },
 
   handler: async ({ flags, colors, spinner, prompt }) => {
+    // Parse and validate skip steps
+    let parsedSkipSteps;
+    if (flags.skip) {
+      parsedSkipSteps = flags.skip.split(",").map((s) => s.trim());
+      const validSteps = ["tests", "build", "cache", "migration"];
+      if (!parsedSkipSteps.every((step) => validSteps.includes(step))) {
+        throw new Error("Invalid step. Valid steps: tests, build, cache, migration");
+      }
+    }
+
     const steps = [
       { name: "tests", description: "Run test suite" },
       { name: "build", description: "Build application" },
@@ -44,7 +44,7 @@ export default defineCommand({
       { name: "deploy", description: "Deploy to server" },
     ];
 
-    const skippedSteps = flags.skip || [];
+    const skippedSteps = parsedSkipSteps || [];
 
     // Show deployment plan
     console.log(relico.bold(`\n🚀 Deployment Plan (${flags.environment}):`));

@@ -18,6 +18,7 @@
     "arktype": "catalog:"
   },
   "devDependencies": {
+    "typescript": "catalog:",
     "@reliverse/tsconfig": "workspace:*",
     "@types/babel__parser": "^7.1.0",
     "@types/babel__traverse": "^7.20.0",

@@ -6,19 +6,19 @@ const startCommand = defineCommand({
   name: "start",
   description: "Start development server with hot reload",
   options: {
-    port: option(type("number").min(1000).max(65535).default(3000), {
+    port: option(type("number.integer >= 1000 & number.integer <= 65535").pipe(n => n ?? 3000), {
       description: "Port to run the server on",
       short: "p",
     }),
-    host: option(type("string").default("localhost"), {
+    host: option(type("string | undefined").pipe(s => s ?? "localhost"), {
       description: "Host to bind the server to",
       short: "h",
     }),
-    watch: option(type("boolean").default(true), {
+    watch: option(type("boolean | undefined").pipe(b => b ?? true), {
       description: "Enable file watching and hot reload",
       short: "w",
     }),
-    open: option(type("boolean").default(false), {
+    open: option(type("boolean | undefined").pipe(b => b ?? false), {
       description: "Open browser automatically",
       short: "o",
     }),

@@ -1,18 +1,16 @@
-import { defineCommand } from "@reliverse/rempts";
+import { defineCommand, option } from "@reliverse/rempts";
 import { type } from "arktype";
 
 export default defineCommand({
   name: "build",
   description: "Build the project",
   options: {
-    watch: {
-      type: "boolean",
+    watch: option(type("boolean | undefined"), {
       description: "Watch for changes",
-    },
-    minify: {
-      type: "boolean",
+    }),
+    minify: option(type("boolean | undefined"), {
       description: "Minify output",
-    },
+    }),
   },
   handler: ({ flags }) => {
     console.log("Building project...");

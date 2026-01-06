@@ -7,76 +7,42 @@ export default defineCommand({
   description: "Build project with validation and transformation",
   options: {
     // Environment with validation
-    env: option(type("'development'|'staging'|'production'").default("development"), {
+    env: option(type("'development'|'staging'|'production' | undefined").pipe(e => e ?? "development"), {
       short: "e",
       description: "Build environment",
     }),
 
     // Output directory with validation
-    outdir: option(type("string").min(1, "Output directory cannot be empty").default("dist"), {
+    outdir: option(type("string").narrow((s, ctx) => {
+      if (!s || s.length < 1) {
+        return ctx.reject("Output directory cannot be empty");
+      }
+      return true;
+    }).pipe(s => s ?? "dist"), {
       short: "o",
       description: "Output directory",
     }),
 
     // Configuration file with JSON parsing
-    config: option(
-      z
-        .string()
-        .transform((val) => {
-          try {
-            return JSON.parse(val);
-          } catch {
-            throw new Error("Invalid JSON configuration");
-          }
-        })
-        .optional(),
-      {
-        short: "c",
-        description: "JSON configuration object",
-      },
-    ),
+    config: option(type("string | undefined"), {
+      short: "c",
+      description: "JSON configuration object",
+    }),
 
     // Memory limit with size parsing
-    memory: option(
-      z
-        .string()
-        .regex(/^\d+[kmg]?$/i, "Memory must be a number with optional unit (k, m, g)")
-        .transform((val) => {
-          const num = parseInt(val);
-          const unit = val.slice(-1).toLowerCase();
-          const multipliers = { k: 1024, m: 1024 * 1024, g: 1024 * 1024 * 1024 };
-          return num * (multipliers[unit as keyof typeof multipliers] || 1);
-        })
-        .default("512m"),
-      {
-        short: "m",
-        description: "Memory limit (e.g., 512m, 2g)",
-      },
-    ),
+    memory: option(type("string | undefined").pipe(s => s ?? "512m"), {
+      short: "m",
+      description: "Memory limit (e.g., 512m, 2g)",
+    }),
 
     // Variables with key=value parsing
-    variables: option(
-      z
-        .string()
-        .transform((val) => {
-          const vars: Record<string, string> = {};
-          val.split(",").forEach((pair) => {
-            const [key, value] = pair.split("=");
-            if (key && value) {
-              vars[key.trim()] = value.trim();
-            }
-          });
-          return vars;
-        })
-        .optional(),
-      {
-        short: "v",
-        description: "Environment variables (key1=value1,key2=value2)",
-      },
-    ),
+    variables: option(type("string | undefined"), {
+      short: "v",
+      description: "Environment variables (key1=value1,key2=value2)",
+    }),
 
     // Watch mode
-    watch: option(type("boolean", "=", false), {
+    watch: option(type("boolean | undefined").pipe(b => b ?? false), {
       short: "w",
       description: "Watch for changes",
     }),
@@ -86,13 +52,46 @@ export default defineCommand({
     const spin = spinner("Building project...");
 
     try {
+      // Parse and validate configuration
+      let parsedConfig;
+      if (flags.config) {
+        try {
+          parsedConfig = JSON.parse(flags.config);
+        } catch {
+          throw new Error("Invalid JSON configuration");
+        }
+      }
+
+      // Parse and validate memory
+      let parsedMemory;
+      if (flags.memory) {
+        if (!/^\d+[kmg]?$/i.test(flags.memory)) {
+          throw new Error("Memory must be a number with optional unit (k, m, g)");
+        }
+        const num = parseInt(flags.memory);
+        const unit = flags.memory.slice(-1).toLowerCase();
+        const multipliers = { k: 1024, m: 1024 * 1024, g: 1024 * 1024 * 1024 };
+        parsedMemory = num * (multipliers[unit as keyof typeof multipliers] || 1);
+      }
+
+      // Parse variables
+      const parsedVariables: Record<string, string> = {};
+      if (flags.variables) {
+        flags.variables.split(",").forEach((pair) => {
+          const [key, value] = pair.split("=");
+          if (key && value) {
+            parsedVariables[key.trim()] = value.trim();
+          }
+        });
+      }
+
       // Simulate build process
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       spin.update("Validating configuration...");
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      if (flags.config) {
+      if (parsedConfig) {
         spin.update("Applying custom configuration...");
         await new Promise((resolve) => setTimeout(resolve, 300));
       }
@@ -105,15 +104,15 @@ export default defineCommand({
       console.log(relico.bold("\nBuild Summary:"));
       console.log(`  Environment: ${relico.cyan(flags.env)}`);
       console.log(`  Output: ${relico.cyan(flags.outdir)}`);
-      console.log(`  Memory: ${relico.cyan(flags.memory.toString())} bytes`);
+      console.log(`  Memory: ${relico.cyan(parsedMemory?.toString() ?? flags.memory)} bytes`);
 
-      if (flags.config) {
-        console.log(`  Config: ${relico.cyan(JSON.stringify(flags.config, null, 2))}`);
+      if (parsedConfig) {
+        console.log(`  Config: ${relico.cyan(JSON.stringify(parsedConfig, null, 2))}`);
       }
 
-      if (flags.variables) {
+      if (Object.keys(parsedVariables).length > 0) {
         console.log(
-          `  Variables: ${relico.cyan(Object.keys(flags.variables).length.toString())} set`,
+          `  Variables: ${relico.cyan(Object.keys(parsedVariables).length.toString())} set`,
         );
       }
 
