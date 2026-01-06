@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
-    "@types/bun": "latest",
-    "typescript": "^5.0.0"
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
   }
 }

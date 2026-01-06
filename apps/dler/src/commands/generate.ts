@@ -1,9 +1,9 @@
-import { defineCommand, option } from "@reliverse/rempts-core";
+import { defineCommand, option } from "@reliverse/rempts";
 import { Generator } from "@reliverse/rempts-generator";
 import { z } from "zod";
 import { join } from "node:path";
 import { isCommandFile } from "@reliverse/rempts-generator";
-import { loadConfig } from "@reliverse/rempts-core";
+import { loadConfig } from "@reliverse/rempts";
 import { relico } from "@reliverse/relico";
 
 export default defineCommand({

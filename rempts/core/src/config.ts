@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { PluginConfig } from "./plugin/types";
 
 /**
  * Comprehensive Rempts configuration schema

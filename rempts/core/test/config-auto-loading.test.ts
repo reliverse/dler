@@ -74,7 +74,7 @@ export default {
 `;
     await writeFile("dler.config.ts", configContent);
 
-    const cli = await createCLI();
+    const cli = await createCLI({ generated: false });
 
     // Test that CLI was created successfully
     expect(cli).toBeDefined();
@@ -95,6 +95,7 @@ export default {
 
     const cli = await createCLI({
       description: "Overridden description",
+      generated: false,
     });
 
     // Test that CLI was created successfully
@@ -113,6 +114,7 @@ export default {
       version: "5.0.0",
       description: "Override CLI",
       plugins: [],
+      generated: false,
     });
 
     expect(cli).toBeDefined();

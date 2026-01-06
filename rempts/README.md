@@ -8,15 +8,15 @@ Rempts is a minimal, type-safe CLI framework designed specifically for Bun. It l
 
 ### Core
 
-- **[@reliverse/rempts-core](./packages/core)** - Core framework with type-safe command definitions
-- **[@reliverse/rempts-utils](./packages/utils)** - Shared utilities (prompts, spinners, colors)
-- **[@reliverse/rempts-test](./packages/test)** - Testing utilities for CLI applications
-- **[@reliverse/rempts-generator](./packages/generator)** - Generate TypeScript definitions from commands
+- **[rempts-core](./packages/core)** - Core framework with type-safe command definitions
+- **[rempts-utils](./packages/utils)** - Shared utilities (prompts, spinners, colors)
+- **[rempts-test](./packages/test)** - Testing utilities for CLI applications
+- **[rempts-generator](./packages/generator)** - Generate TypeScript definitions from commands
 
 ### Plugins
 
-- **[@reliverse/rempts-plugin-ai-detect](./packages/plugin-ai-detect)** - Detect AI coding assistants
-- **[@reliverse/rempts-plugin-config](./packages/plugin-config)** - Configuration file loading and merging
+- **[rempts-plugin-ai-detect](./packages/plugin-ai-detect)** - Detect AI coding assistants
+- **[rempts-plugin-config](./packages/plugin-config)** - Configuration file loading and merging
 
 ## Getting Started
 
@@ -25,7 +25,7 @@ Rempts is a minimal, type-safe CLI framework designed specifically for Bun. It l
 bun add -g rempts
 
 # Create a new CLI project
-bunx @reliverse/rempts my-cli
+bunx rempts my-cli
 
 # Start development
 cd my-cli
@@ -52,7 +52,7 @@ bun run dev
 
 ## Thanks
 
-Thanks to [Bunli](https://github.com/reliverse/bunli), which `@reliverse/rempts` v2+ builds upon, [OpenTUI](https://github.com/anomalyco/opentui) for the great TUI library, [Bun](https://bun.com) for the incredibly fast JavaScript runtime, and the entire open-source community for making projects like these possible ❤️
+Thanks to [Dler](https://github.com/reliverse/dler), which `rempts` v2+ builds upon, [OpenTUI](https://github.com/anomalyco/opentui) for the great TUI library, [Bun](https://bun.com) for the incredibly fast JavaScript runtime, and the entire open-source community for making projects like these possible ❤️
 
 ## License
 

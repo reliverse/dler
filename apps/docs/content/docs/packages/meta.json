@@ -1,0 +1,13 @@
+{
+  "title": "Packages",
+  "pages": [
+    "index",
+    "rempts",
+    "core",
+    "utils",
+    "test",
+    "cli",
+    "generator",
+    "plugins"
+  ]
+}

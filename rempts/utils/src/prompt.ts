@@ -1,6 +1,4 @@
 import type { PromptOptions, ConfirmOptions, SelectOptions, SelectOption } from "./types";
-import { SchemaError } from "@standard-schema/utils";
-import { colors } from "./colors";
 import { relico } from "@reliverse/relico";
 
 // ANSI escape codes

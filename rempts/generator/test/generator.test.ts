@@ -16,7 +16,7 @@ describe("Generator", () => {
 
     // Create a test command file
     const testCommandContent = `
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({
@@ -48,7 +48,7 @@ export default defineCommand({
 
     // Create a test command file
     const testCommandContent = `
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({
@@ -83,6 +83,7 @@ export default defineCommand({
         name: "test-command",
         description: "A test command",
         filePath: join(testDir, "test-command.ts"),
+        importPath: "./commands/test-command",
         exportPath: "./commands/test-command",
       },
     ];
@@ -90,7 +91,7 @@ export default defineCommand({
     const types = buildTypes(mockCommands as any);
     expect(types).toContain("const modules: Record<GeneratedNames, Command<any>> = {");
     expect(types).toContain("'test-command'");
-    expect(types).toContain("declare module '@reliverse/rempts-core'");
+    expect(types).toContain("declare module '@reliverse/rempts'");
   });
 
   test("should generate complete types file", async () => {
@@ -99,7 +100,7 @@ export default defineCommand({
 
     // Create a test command file
     const testCommandContent = `
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({

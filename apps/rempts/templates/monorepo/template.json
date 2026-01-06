@@ -1,5 +1,5 @@
 {
-  "name": "rempts-monorepo",
+  "name": "@reliverse/rempts-monorepo",
   "description": "Monorepo template for multi-package Rempts projects",
   "variables": [
     {

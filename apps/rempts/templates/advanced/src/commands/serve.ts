@@ -1,4 +1,4 @@
-import { defineCommand, option } from "@reliverse/rempts-core";
+import { defineCommand, option } from "@reliverse/rempts";
 import { z } from "zod";
 import { loadConfig } from "../utils/config";
 import { relico } from "@reliverse/relico";
@@ -19,7 +19,7 @@ const serveCommand = defineCommand({
       description: "Open browser on start",
     }),
   },
-  handler: async ({ flags, colors, spinner, shell }) => {
+  handler: async ({ flags, spinner, shell }) => {
     const spin = spinner("Starting server...");
     spin.start();
 
@@ -162,7 +162,7 @@ function getHomePage(): string {
       </ul>
     </div>
     
-    <p>To get started, check out the <a href="https://github.com/reliverse/rempts">documentation</a>.</p>
+    <p>To get started, check out the <a href="https://github.com/reliverse/dler">documentation</a>.</p>
   </div>
 </body>
 </html>

@@ -12,7 +12,7 @@ await Bun.build({
   target: "bun",
   format: "esm",
   minify: false,
-  external: ["@reliverse/rempts-core", "@{{name}}/utils", "zod"],
+  external: ["@reliverse/rempts", "@{{name}}/utils", "zod"],
 });
 
 console.log("✅ @{{name}}/core built successfully");

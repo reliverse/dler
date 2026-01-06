@@ -23,8 +23,8 @@
   "devDependencies": {
     "@changesets/cli": "^2.27.0",
     "@reliverse/tsconfig": "workspace:*",
-    "@types/bun": "latest",
+    "@types/bun": "catalog:",
     "turbo": "latest",
-    "typescript": "^5.0.0"
+    "typescript": "catalog:"
   }
 }

@@ -159,7 +159,7 @@ export class BuildCache {
 
       this.hits++;
       return entry;
-    } catch (_error) {
+    } catch {
       // If cache is corrupted, ignore it
       this.misses++;
       return null;
@@ -193,7 +193,7 @@ export class BuildCache {
 
       const cacheFilePath = this.getCacheFilePath(key);
       writeFileSync(cacheFilePath, JSON.stringify(entry, null, 2));
-    } catch (_error) {
+    } catch {
       // Silently fail cache writes
     }
   }
@@ -209,7 +209,7 @@ export class BuildCache {
         const fs = require("node:fs");
         fs.unlinkSync(cacheFilePath);
       }
-    } catch (_error) {
+    } catch {
       // Silently fail cache deletion
     }
   }
@@ -231,7 +231,7 @@ export class BuildCache {
           }
         }
       }
-    } catch (_error) {
+    } catch {
       // Silently fail cache clearing
     }
   }
@@ -264,7 +264,7 @@ export class BuildCache {
         misses: this.misses,
         size: totalSize,
       };
-    } catch (_error) {
+    } catch {
       return { hits: this.hits, misses: this.misses, size: 0 };
     }
   }

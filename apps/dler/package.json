@@ -11,15 +11,15 @@
     "toolchain",
     "typescript"
   ],
-  "homepage": "https://github.com/reliverse/rempts#readme",
+  "homepage": "https://github.com/reliverse/dler#readme",
   "bugs": {
-    "url": "https://github.com/reliverse/rempts/issues"
+    "url": "https://github.com/reliverse/dler/issues"
   },
   "license": "MIT",
   "author": "blefnk",
   "repository": {
     "type": "git",
-    "url": "https://github.com/reliverse/rempts.git",
+    "url": "https://github.com/reliverse/dler.git",
     "directory": "packages/cli"
   },
   "bin": {
@@ -38,12 +38,15 @@
     }
   },
   "scripts": {
-    "dev": "bun run src/cli.ts",
-    "build": "bun run scripts/build.ts && bun run tsc",
+    "dler": "bun src/cli.ts",
+    "generate": "bun dler generate",
+    "dev": "bun dler dev",
+    "typecheck": "tsc --noEmit",
+    "cli": "bun cli.ts",
+    "build": "bun scripts/build.ts && bun run tsc",
     "build:standalone": "bun run scripts/build.ts --compile",
     "build:binaries": "bun run scripts/release-binaries.ts",
     "test": "bun test",
-    "typecheck": "tsc --noEmit",
     "prepublishOnly": "bun run build"
   },
   "dependencies": {
@@ -60,7 +63,6 @@
     "@reliverse/relifso": "workspace:*",
     "@reliverse/relinka": "workspace:*",
     "@reliverse/rempts": "workspace:*",
-    "@reliverse/rempts-core": "workspace:*",
     "@reliverse/rempts-generator": "workspace:*",
     "@reliverse/rempts-utils": "workspace:*",
     "@reliverse/typerso": "workspace:*",

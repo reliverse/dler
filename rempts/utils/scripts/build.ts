@@ -17,4 +17,4 @@ for (const entry of entrypoints) {
   });
 }
 
-console.log("✅ @reliverse/rempts-utils built successfully");
+console.log("✅ rempts-utils built successfully");

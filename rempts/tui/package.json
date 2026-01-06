@@ -32,17 +32,17 @@
   "dependencies": {
     "@opentui/core": "^0.1.57",
     "@opentui/react": "^0.1.57",
-    "@reliverse/rempts-core": "workspace:*"
+    "@reliverse/rempts": "workspace:*"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
-    "@types/bun": "latest",
-    "@types/react": "19.2.7",
-    "react": "19.2.1",
-    "typescript": "^5.8.3"
+    "@types/bun": "catalog:",
+    "@types/react": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:"
   },
   "peerDependencies": {
     "@opentui/core": "^0.1.57",
-    "react": "^19.2.0"
+    "react": "catalog:"
   }
 }

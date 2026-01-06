@@ -306,7 +306,7 @@ import {
   inputPrompt,
   startPrompt,
   endPrompt,
-} from "@reliverse/rempts";
+} from "rempts";
 import path from "node:path";
 import semver from "semver";
 

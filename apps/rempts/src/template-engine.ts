@@ -88,7 +88,7 @@ async function loadTemplateManifest(dir: string): Promise<TemplateManifest | nul
         }
         return manifest;
       }
-      // TODO: Add YAML support if needed
+      // TODO: Add YAML support
     }
   }
 

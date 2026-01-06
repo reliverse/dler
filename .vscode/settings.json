@@ -3,10 +3,11 @@
   "editor.selectionClipboard": false,
   "editor.formatOnSave": true,
   "files.autoSave": "afterDelay",
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "oxc.enable": true,
+  "mdx.server.enable": true,
   "editor.codeActionsOnSave": {
-    "source.biome": "explicit",
-    "source.fixAll.biome": "explicit",
-    "source.organizeImports.biome": "explicit"
+    "source.fixAll.oxc": "explicit"
   },
   "markdownlint.config": {
     "MD031": false,
@@ -14,5 +15,8 @@
     "MD022": false,
     "MD033": false,
     "MD041": false
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
   }
 }

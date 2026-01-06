@@ -1,5 +1,5 @@
 {
-  "name": "rempts-basic",
+  "name": "@reliverse/rempts-basic",
   "description": "Basic Rempts CLI template",
   "variables": [
     {

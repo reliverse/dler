@@ -8,6 +8,9 @@ import type {
   CLIOption,
   TerminalInfo,
   RuntimeInfo,
+  BeforeHook,
+  AfterHook,
+  HookContext,
 } from "./types";
 import { remptsConfigStrictSchema, remptsConfigSchema } from "./config";
 import { loadConfig, type LoadedConfig } from "./config-loader";
@@ -15,11 +18,12 @@ import { parseArgs } from "./parser";
 import { SchemaError, getDotPath } from "@standard-schema/utils";
 import { PluginManager } from "./plugin/manager";
 import type { RemptsPlugin, MergeStores, PluginConfig } from "./plugin/types";
-import { CommandContext, createEnvironmentInfo } from "./plugin/context";
+import { CommandContext } from "./plugin/context";
 import { GLOBAL_FLAGS, type GlobalFlags } from "./global-flags";
 import { getTuiRenderer } from "./tui/registry";
 import { relico } from "@reliverse/relico";
 import { loadGeneratedStores } from "./generated";
+import { FileCommandLoader } from "./file-loader";
 
 export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
   configOverride?: Partial<RemptsConfig> & {
@@ -33,7 +37,7 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
   let loadedConfigData: LoadedConfig | null = null;
   try {
     loadedConfigData = await loadConfig();
-  } catch (error) {
+  } catch {
     // If no config file found and no override provided, throw an error
     if (!configOverride || (!configOverride.name && !configOverride.version)) {
       throw new Error(
@@ -64,22 +68,33 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
   }
   let fullConfig = parsed.data;
 
-  // Auto-load generated types (always enabled)
-  const generatedPath = "./.dler/commands.gen.ts"; // Standard location
+  // Auto-load generated types (can be disabled via config)
+  const shouldLoadGenerated = configOverride?.generated !== false;
+  if (shouldLoadGenerated) {
+    const generatedPath = "./.dler/commands.gen.ts"; // Standard location
 
-  try {
-    // Resolve path relative to current working directory
-    const resolvedPath = generatedPath.startsWith("./")
-      ? new URL(generatedPath, `file://${process.cwd()}/`).href
-      : generatedPath;
+    try {
+      // Resolve path relative to current working directory
+      const resolvedPath = generatedPath.startsWith("./")
+        ? new URL(generatedPath, `file://${process.cwd()}/`).href
+        : generatedPath;
 
-    await import(resolvedPath);
-    // Side-effect import automatically registers via registerGeneratedStore
-  } catch (error) {
-    console.warn(`[rempts] Could not load generated types from ${generatedPath}:`, error);
+      await import(resolvedPath);
+      // Side-effect import automatically registers via registerGeneratedStore
+    } catch (error) {
+      console.warn(`[rempts] Could not load generated types from ${generatedPath}:`, error);
+    }
   }
 
   const commands = new Map<string, Command<any, any>>();
+  const commandSources = new Map<string, "manifest" | "directory">(); // Track where commands come from
+
+  // Global before/after hooks
+  const beforeHooks: BeforeHook<TStore>[] = [];
+  const afterHooks: AfterHook<TStore>[] = [];
+
+  // Global hook context storage (shared across commands)
+  let globalHookContext: Record<string, any> = {};
 
   // Helper to get terminal information
   function getTerminalInfo(): TerminalInfo {
@@ -109,16 +124,13 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
     await pluginManager.loadPlugins(mergedConfig.plugins as any as PluginConfig[]);
 
     // Run setup hooks - this may modify config
-    const {
-      config: updatedConfig,
-      commands: pluginCommands,
-      middlewares,
-    } = await pluginManager.runSetup(fullConfig);
+    const { config: updatedConfig, commands: pluginCommands } =
+      await pluginManager.runSetup(fullConfig);
     // Re-validate after plugins potentially modified config
     fullConfig = remptsConfigStrictSchema.parse(updatedConfig);
 
     // Register plugin commands
-    pluginCommands.forEach((cmd) => registerCommand(cmd));
+    pluginCommands.forEach((cmd) => registerCommand(cmd, [], "manifest"));
   }
 
   // Create resolved config with defaults
@@ -160,23 +172,50 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
   }
 
   // Helper to register a command and its aliases
-  function registerCommand(cmd: Command<any, any>, path: string[] = []) {
+  function registerCommand(
+    cmd: Command<any, any>,
+    path: string[] = [],
+    source: "manifest" | "directory" = "manifest",
+  ) {
     const fullName = [...path, cmd.name].join(" ");
+
+    // Check for conflicts
+    if (commands.has(fullName)) {
+      const existingSource = commandSources.get(fullName);
+      if (existingSource && existingSource !== source) {
+        throw new Error(
+          `Command "${fullName}" is defined in both manifest and directory sources. ` +
+            `Please remove one of the conflicting definitions.`,
+        );
+      }
+    }
+
     commands.set(fullName, cmd);
+    commandSources.set(fullName, source);
 
     // Register aliases
     if (cmd.alias) {
       const aliases = Array.isArray(cmd.alias) ? cmd.alias : [cmd.alias];
       aliases.forEach((alias) => {
         const aliasPath = [...path, alias].join(" ");
+        // Check alias conflicts too
+        if (commands.has(aliasPath)) {
+          const existingSource = commandSources.get(aliasPath);
+          if (existingSource && existingSource !== source) {
+            throw new Error(
+              `Command alias "${aliasPath}" conflicts between manifest and directory sources.`,
+            );
+          }
+        }
         commands.set(aliasPath, cmd);
+        commandSources.set(aliasPath, source);
       });
     }
 
     // Register nested commands
     if (cmd.commands) {
       cmd.commands.forEach((subCmd) => {
-        registerCommand(subCmd, [...path, cmd.name]);
+        registerCommand(subCmd, [...path, cmd.name], source);
       });
     }
   }
@@ -243,25 +282,6 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
     }
   }
 
-  function shouldUseRender(
-    command: Command<any, any>,
-    flags: GlobalFlags & Record<string, unknown>,
-    terminal: TerminalInfo,
-  ): boolean {
-    if (!command.render) return false;
-
-    // Explicit flags take precedence
-    if ((flags as Record<string, unknown>)["no-tui"]) return false;
-    if (
-      (flags as Record<string, unknown>)["tui"] ||
-      (flags as Record<string, unknown>)["interactive"]
-    )
-      return true;
-
-    // Fallback to terminal detection
-    return terminal.isInteractive && !terminal.isCI;
-  }
-
   function ensureRenderAvailable(command: Command<any, any>) {
     if (!command.render) {
       throw new Error(`Command ${command.name} does not support TUI rendering.`);
@@ -275,6 +295,7 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
 
   // Auto-load commands from config if specified
   async function loadFromConfig() {
+    // Load from manifest if specified
     if (fullConfig.commands?.manifest) {
       try {
         // Resolve relative to the current working directory
@@ -290,6 +311,29 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
           `Failed to load command manifest from ${fullConfig.commands.manifest}:`,
           error,
         );
+      }
+    }
+
+    // Load from directory if specified
+    if (fullConfig.commands?.directory) {
+      try {
+        // Resolve relative to the current working directory
+        const commandsDir = fullConfig.commands.directory.startsWith(".")
+          ? `${process.cwd()}/${fullConfig.commands.directory}`
+          : fullConfig.commands.directory;
+
+        const fileLoader = new FileCommandLoader();
+        const commandTree = await fileLoader.loadFromDirectory(commandsDir);
+        const fileCommands = await fileLoader.loadCommandsFromTree(commandTree);
+
+        // Register file-based commands
+        fileCommands.forEach((cmd) => registerCommand(cmd, [], "directory"));
+      } catch (error) {
+        console.error(
+          `Failed to load commands from directory ${fullConfig.commands.directory}:`,
+          error,
+        );
+        throw error; // Re-throw to prevent CLI from starting with invalid config
       }
     }
   }
@@ -317,7 +361,6 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
           const subCommands = await loadFromManifest(value, [...path, key]);
           if (subCommands.length > 0) {
             // Create a parent command that contains the subcommands
-            // @ts-expect-error - Parent commands with only subcommands don't need handler/render
             const parentCommand: Command<any, TStore> = {
               name: key,
               description: `${key} commands`,
@@ -332,7 +375,7 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
     }
 
     const loadedCommands = await loadFromManifest(manifest);
-    loadedCommands.forEach((cmd) => registerCommand(cmd));
+    loadedCommands.forEach((cmd) => registerCommand(cmd, [], "manifest"));
   }
 
   async function runCommandInternal(
@@ -341,8 +384,10 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
     providedFlags?: Record<string, unknown>,
   ) {
     let context: CommandContext<any> | undefined;
+    let resultParsed: any;
+
     try {
-      const mergedOptions = { ...GLOBAL_FLAGS, ...(command.options || {}) };
+      const mergedOptions = { ...GLOBAL_FLAGS, ...command.options };
       const parsed = providedFlags
         ? (() => {
             // Parse with empty args for defaults, then overlay provided flags
@@ -352,8 +397,8 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
             );
           })()
         : parseArgs(argv, mergedOptions, command.name);
-      const resultParsed = await parsed;
-      const { prompt, spinner, colors } = await import("@reliverse/rempts-utils");
+      resultParsed = await parsed;
+      const { prompt, spinner } = await import("@reliverse/rempts-utils");
 
       if (mergedConfig.plugins && mergedConfig.plugins.length > 0) {
         context = await pluginManager.runBeforeCommand(
@@ -362,6 +407,29 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
           providedFlags ? [] : resultParsed.positional,
           resultParsed.flags,
         );
+      }
+
+      // Run global before hooks
+      if (beforeHooks.length > 0) {
+        // Reset global hook context for this command
+        globalHookContext = {};
+
+        const hookContext: HookContext<TStore> = {
+          flags: resultParsed.flags,
+          store: context?.store || ({} as TStore),
+          env: process.env,
+          cwd: process.cwd(),
+          set: (key: string, value: any) => {
+            globalHookContext[key] = value;
+          },
+          get: (key: string) => {
+            return globalHookContext[key];
+          },
+        };
+
+        for (const hook of beforeHooks) {
+          await hook(hookContext);
+        }
       }
 
       const terminalInfo = getTerminalInfo();
@@ -383,10 +451,9 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
         else render = terminalInfo.isInteractive && !terminalInfo.isCI;
       }
 
-      let result: unknown;
       if (render) {
         ensureRenderAvailable(command);
-        result = await getTuiRenderer<Record<string, unknown>, TStore>()?.({
+        await getTuiRenderer<Record<string, unknown>, TStore>()?.({
           command,
           flags: resultParsed.flags,
           positional: resultParsed.positional,
@@ -395,10 +462,11 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
           cwd: process.cwd(),
           prompt,
           spinner,
-          colors,
+          colors: relico,
           terminal: terminalInfo,
           runtime: runtimeInfo,
           ...(context ? { context } : {}),
+          ...(Object.keys(globalHookContext).length > 0 ? { hooks: globalHookContext } : {}),
         });
       } else {
         if (!command.handler)
@@ -411,22 +479,57 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
           cwd: process.cwd(),
           prompt,
           spinner,
-          colors,
+          colors: relico,
           terminal: terminalInfo,
           runtime: runtimeInfo,
           ...(context ? { context } : {}),
+          ...(Object.keys(globalHookContext).length > 0 ? { hooks: globalHookContext } : {}),
         });
       }
 
       if (mergedConfig.plugins && mergedConfig.plugins.length > 0 && context) {
         await pluginManager.runAfterCommand(context, { exitCode: 0 });
       }
+
+      // Run global after hooks
+      if (afterHooks.length > 0) {
+        const hookContext: HookContext<TStore> & { exitCode: number } = {
+          flags: resultParsed.flags,
+          store: context?.store || ({} as TStore),
+          env: process.env,
+          cwd: process.cwd(),
+          set: () => {}, // Not used in after hooks
+          get: () => undefined, // Not used in after hooks
+          exitCode: 0,
+        };
+
+        for (const hook of afterHooks) {
+          await hook(hookContext);
+        }
+      }
     } catch (error) {
       if (mergedConfig.plugins && mergedConfig.plugins.length > 0 && context) {
         await pluginManager.runAfterCommand(context, { exitCode: 1 });
       }
 
-      const { colors } = await import("@reliverse/rempts-utils");
+      // Run global after hooks on error
+      if (afterHooks.length > 0) {
+        const hookContext: HookContext<TStore> & { exitCode: number; error?: Error } = {
+          flags: resultParsed?.flags || {},
+          store: context?.store || ({} as TStore),
+          env: process.env,
+          cwd: process.cwd(),
+          set: () => {}, // Not used in after hooks
+          get: () => undefined, // Not used in after hooks
+          exitCode: 1,
+          error: error instanceof Error ? error : new Error(String(error)),
+        };
+
+        for (const hook of afterHooks) {
+          await hook(hookContext);
+        }
+      }
+
       if (error instanceof SchemaError) {
         console.error(relico.red("Validation Error:"));
         const generalErrors: string[] = [];
@@ -456,7 +559,7 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
 
   const api: CLI<MergeStores<TPlugins>> = {
     command<TCommandStore = any>(cmd: Command<any, TCommandStore>) {
-      registerCommand(cmd);
+      registerCommand(cmd, [], "manifest");
     },
 
     async load(manifest: CommandManifest) {
@@ -557,19 +660,42 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
         // Merge global flags with command options
         const mergedOptions = {
           ...GLOBAL_FLAGS,
-          ...(command.options || {}),
+          ...command.options,
         };
 
         // Parse with empty args to get defaults, then merge options
         const parsed = await parseArgs([], mergedOptions, command.name);
         Object.assign(parsed.flags, finalOptions);
 
-        const { prompt, spinner, colors } = await import("@reliverse/rempts-utils");
+        const { prompt, spinner } = await import("@reliverse/rempts-utils");
 
         // Run beforeCommand hooks if plugins are loaded
         let context: CommandContext<TStore> | undefined;
         if (mergedConfig.plugins && mergedConfig.plugins.length > 0) {
           context = await pluginManager.runBeforeCommand(command.name, command, [], parsed.flags);
+        }
+
+        // Run global before hooks
+        if (beforeHooks.length > 0) {
+          // Reset global hook context for this command
+          globalHookContext = {};
+
+          const hookContext: HookContext<TStore> = {
+            flags: parsed.flags,
+            store: context?.store || ({} as TStore),
+            env: process.env,
+            cwd: process.cwd(),
+            set: (key: string, value: any) => {
+              globalHookContext[key] = value;
+            },
+            get: (key: string) => {
+              return globalHookContext[key];
+            },
+          };
+
+          for (const hook of beforeHooks) {
+            await hook(hookContext);
+          }
         }
 
         // Create runtime info
@@ -590,16 +716,34 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
             cwd: process.cwd(),
             prompt,
             spinner,
-            colors,
+            colors: relico,
             terminal: terminalInfo,
             runtime: runtimeInfo,
             ...(context ? { context } : {}),
+            ...(Object.keys(globalHookContext).length > 0 ? { hooks: globalHookContext } : {}),
           });
         }
 
         // Run afterCommand hooks if plugins are loaded
         if (mergedConfig.plugins && mergedConfig.plugins.length > 0 && context) {
           await pluginManager.runAfterCommand(context, { exitCode: 0 });
+        }
+
+        // Run global after hooks
+        if (afterHooks.length > 0) {
+          const hookContext: HookContext<TStore> & { exitCode: number } = {
+            flags: parsed.flags,
+            store: context?.store || ({} as TStore),
+            env: process.env,
+            cwd: process.cwd(),
+            set: () => {}, // Not used in after hooks
+            get: () => undefined, // Not used in after hooks
+            exitCode: 0,
+          };
+
+          for (const hook of afterHooks) {
+            await hook(hookContext);
+          }
         }
         return;
       }
@@ -615,10 +759,20 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
         await runCommandInternal(foundCommand, finalArgsToUse);
       }
     },
+
+    before(hook: BeforeHook<TStore>) {
+      beforeHooks.push(hook);
+    },
+
+    after(hook: AfterHook<TStore>) {
+      afterHooks.push(hook);
+    },
   };
 
   // Auto-register any generated command stores with this CLI instance
-  loadGeneratedStores(api);
+  if (shouldLoadGenerated) {
+    loadGeneratedStores(api);
+  }
 
   return api;
 }

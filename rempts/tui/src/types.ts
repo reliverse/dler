@@ -1,4 +1,4 @@
-import type { CLIOption } from "@reliverse/rempts-core";
+import type { CLIOption } from "@reliverse/rempts";
 
 export interface TuiRendererOptions {
   exitOnCtrlC?: boolean;

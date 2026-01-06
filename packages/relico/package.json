@@ -10,15 +10,15 @@
     "terminal",
     "utilities"
   ],
-  "homepage": "https://github.com/reliverse/rempts#readme",
+  "homepage": "https://github.com/reliverse/dler#readme",
   "bugs": {
-    "url": "https://github.com/reliverse/rempts/issues"
+    "url": "https://github.com/reliverse/dler/issues"
   },
   "license": "MIT",
   "author": "blefnk",
   "repository": {
     "type": "git",
-    "url": "https://github.com/reliverse/rempts.git",
+    "url": "https://github.com/reliverse/dler.git",
     "directory": "packages/utils"
   },
   "files": [
@@ -50,11 +50,8 @@
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
-    "@types/bun": "latest",
-    "typescript": "^5.8.3"
-  },
-  "peerDependencies": {
-    "bun": ">=1.3.5"
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
   },
   "engines": {
     "bun": ">=1.3.5"

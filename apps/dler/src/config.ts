@@ -1,4 +1,4 @@
-import { remptsConfigSchema, type RemptsConfig } from "@reliverse/rempts-core";
+import { remptsConfigSchema, type RemptsConfig } from "@reliverse/rempts";
 import path from "node:path";
 import { existsSync } from "node:fs";
 

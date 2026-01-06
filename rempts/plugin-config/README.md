@@ -1,17 +1,17 @@
-# @reliverse/rempts-plugin-config
+# rempts-plugin-config
 
 Configuration file merger plugin for Rempts CLI framework. Loads and merges configuration from multiple sources including user home directory and project-specific config files.
 
 ## Installation
 
 ```bash
-bun add @reliverse/rempts-plugin-config
+bun add rempts-plugin-config
 ```
 
 ## Usage
 
 ```typescript
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 import { configMergerPlugin } from '@reliverse/rempts-plugin-config'
 
 const cli = await createCLI({

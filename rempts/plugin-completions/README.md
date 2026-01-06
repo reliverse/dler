@@ -1,4 +1,4 @@
-# @reliverse/rempts-plugin-completions
+# rempts-plugin-completions
 
 Shell completion generation plugin for Rempts CLI applications. Automatically generates completion scripts for Bash, Zsh, and Fish shells based on your command definitions.
 
@@ -13,7 +13,7 @@ Shell completion generation plugin for Rempts CLI applications. Automatically ge
 ## Installation
 
 ```bash
-bun add @reliverse/rempts-plugin-completions
+bun add rempts-plugin-completions
 ```
 
 ## Usage
@@ -21,7 +21,7 @@ bun add @reliverse/rempts-plugin-completions
 ### 1. Add the plugin to your CLI
 
 ```typescript
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 import { completionsPlugin } from '@reliverse/rempts-plugin-completions'
 
 const cli = await createCLI({
@@ -34,7 +34,7 @@ const cli = await createCLI({
 Or in your `dler.config.ts`:
 
 ```typescript
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 import { completionsPlugin } from '@reliverse/rempts-plugin-completions'
 
 export default defineConfig({
@@ -149,7 +149,7 @@ The plugin leverages Rempts's command metadata generation system to create accur
 Given a command like:
 
 ```typescript
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({

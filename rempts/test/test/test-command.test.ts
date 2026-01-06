@@ -1,5 +1,5 @@
 import { test, expect } from "bun:test";
-import { defineCommand, option } from "@reliverse/rempts-core";
+import { defineCommand, option } from "@reliverse/rempts";
 import { z } from "zod";
 import { testCommand, expectCommand } from "../src/mod";
 import { mockPromptResponses, mockShellCommands, mockInteractive } from "../src/helpers";
@@ -17,7 +17,7 @@ test("testCommand - basic command execution", async () => {
   const result = await testCommand(command);
 
   expect(result.exitCode).toBe(0);
-  expect(result.stdout).toContain("[green]Hello, world![/green]");
+  expect(result.stdout).toContain("Hello, world!");
   expect(result.stderr).toBe("");
 });
 
@@ -64,7 +64,7 @@ test("testCommand - with prompts", async () => {
   expect(result.stdout).toContain("What is your name?");
   expect(result.stdout).toContain("Alice");
   expect(result.stdout).toContain("Continue?");
-  expect(result.stdout).toContain("[green]Welcome, Alice![/green]");
+  expect(result.stdout).toContain("Welcome, Alice!");
 });
 
 test("testCommand - select prompt", async () => {

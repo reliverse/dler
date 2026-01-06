@@ -1,0 +1,342 @@
+---
+title: File-Based Commands & Hooks
+description: Learn file-based command loading and global hooks with a practical example
+---
+
+# File-Based Commands & Hooks Example
+
+This example demonstrates Rempts' file-based command loading and global hooks system. These features enable scalable CLI development with automatic command discovery and shared setup/teardown logic.
+
+## Overview
+
+File-based commands automatically discover commands from a directory structure, while hooks provide lifecycle management across all commands. This example shows:
+
+- **File-Based Commands**: Automatic command discovery from `commands/` directory
+- **Nested Command Hierarchy**: Directory structure maps to command structure
+- **Global Hooks**: Shared setup and cleanup logic
+- **Hook Context Sharing**: Data persistence between hook calls
+- **Command Organization**: Best practices for scalable CLI structure
+
+## Project Structure
+
+```
+file-based-cli/
+├── cli.ts                 # Main CLI entry point
+├── dler.config.ts         # Rempts configuration
+├── commands/              # Command directory (auto-discovered)
+│   ├── build.ts           # → my-cli build
+│   ├── test.ts            # → my-cli test
+│   ├── deploy.ts          # → my-cli deploy
+│   └── db/
+│       ├── migrate.ts     # → my-cli db migrate
+│       └── seed.ts        # → my-cli db seed
+└── package.json
+```
+
+## Configuration
+
+Enable file-based command loading in your CLI configuration:
+
+```typescript
+// cli.ts
+#!/usr/bin/env bun
+import { createCLI } from '@rempts/core'
+
+const cli = await createCLI({
+  name: 'file-cli',
+  version: '1.0.0',
+  description: 'CLI with file-based commands and hooks',
+  commands: {
+    directory: './commands' // Enable file-based loading
+  }
+})
+
+// Global hooks for shared setup
+cli.before(async (context) => {
+  // Initialize shared resources
+  const logger = {
+    level: context.flags.verbose ? 'debug' : 'info',
+    log: (level: string, message: string) => {
+      if (level === 'debug' && logger.level !== 'debug') return
+      console.log(`[${level.toUpperCase()}] ${message}`)
+    }
+  }
+
+  const config = {
+    apiUrl: 'https://api.example.com',
+    timeout: 5000,
+    retries: 3
+  }
+
+  // Store for command handlers
+  context.set('logger', logger)
+  context.set('config', config)
+  context.set('startTime', Date.now())
+})
+
+cli.after(async (context) => {
+  const logger = context.get('logger')
+  const startTime = context.get('startTime')
+  const duration = Date.now() - (startTime || 0)
+
+  if (context.error) {
+    logger?.log('error', `Command failed after ${duration}ms: ${context.error.message}`)
+  } else {
+    logger?.log('info', `Command completed successfully in ${duration}ms`)
+  }
+})
+
+await cli.run()
+```
+
+```typescript
+// dler.config.ts
+import { defineConfig } from '@rempts/core'
+
+export default defineConfig({
+  name: 'file-cli',
+  version: '1.0.0',
+  description: 'CLI with file-based commands',
+  commands: {
+    directory: './commands'
+  },
+  build: {
+    entry: './cli.ts',
+    outdir: './dist',
+    targets: ['native'],
+    compress: false,
+    minify: false,
+    sourcemap: true
+  }
+})
+```
+
+## Command Files
+
+### Root Commands
+
+```typescript
+// commands/build.ts
+import { defineCommand, option } from '@rempts/core'
+import { z } from 'zod'
+
+export default defineCommand({
+  name: 'build',
+  description: 'Build the project',
+  options: {
+    watch: option(
+      z.boolean().default(false),
+      { description: 'Watch for changes', short: 'w' }
+    ),
+    minify: option(
+      z.boolean().default(false),
+      { description: 'Minify output', short: 'm' }
+    )
+  },
+  handler: async ({ flags, shell, hooks }) => {
+    const logger = hooks?.logger
+    const config = hooks?.config
+
+    logger?.log('info', 'Starting build...')
+
+    const args = []
+    if (flags.watch) args.push('--watch')
+    if (flags.minify) args.push('--minify')
+
+    if (flags.watch) {
+      logger?.log('info', 'Watching for changes...')
+      await shell`bun run build --watch`
+    } else {
+      await shell`bun run build ${args}`
+      logger?.log('info', 'Build completed successfully')
+    }
+  }
+})
+```
+
+```typescript
+// commands/test.ts
+import { defineCommand } from '@rempts/core'
+
+export default defineCommand({
+  name: 'test',
+  description: 'Run tests',
+  handler: async ({ shell, hooks }) => {
+    const logger = hooks?.logger
+
+    logger?.log('info', 'Running tests...')
+    await shell`bun test`
+
+    logger?.log('info', 'All tests passed!')
+  }
+})
+```
+
+### Nested Commands
+
+```typescript
+// commands/db/migrate.ts
+import { defineCommand, option } from '@rempts/core'
+import { z } from 'zod'
+
+export default defineCommand({
+  name: 'migrate',
+  description: 'Run database migrations',
+  options: {
+    direction: option(
+      z.enum(['up', 'down']).default('up'),
+      { description: 'Migration direction', short: 'd' }
+    ),
+    dryRun: option(
+      z.boolean().default(false),
+      { description: 'Show what would be migrated', short: 'n' }
+    )
+  },
+  handler: async ({ flags, shell, hooks }) => {
+    const logger = hooks?.logger
+    const config = hooks?.config
+
+    const direction = flags.direction
+    const dryRun = flags.dryRun
+
+    logger?.log('info', `Running ${direction} migrations${dryRun ? ' (dry run)' : ''}...`)
+
+    const cmd = dryRun ? 'db:migrate:dry' : 'db:migrate'
+    await shell`bun run ${cmd} --direction ${direction}`
+
+    logger?.log('info', `Migrations ${direction} completed`)
+  }
+})
+```
+
+```typescript
+// commands/db/seed.ts
+import { defineCommand, option } from '@rempts/core'
+import { z } from 'zod'
+
+export default defineCommand({
+  name: 'seed',
+  description: 'Seed database with test data',
+  options: {
+    force: option(
+      z.boolean().default(false),
+      { description: 'Force seed in production', short: 'f' }
+    ),
+    count: option(
+      z.coerce.number().int().positive().default(100),
+      { description: 'Number of records to seed', short: 'c' }
+    )
+  },
+  handler: async ({ flags, env, prompt, shell, hooks }) => {
+    const logger = hooks?.logger
+
+    // Safety check for production
+    if (env.NODE_ENV === 'production' && !flags.force) {
+      const confirmed = await prompt.confirm(
+        'Seeding production database? This will add test data.',
+        { default: false }
+      )
+      if (!confirmed) {
+        logger?.log('info', 'Seeding cancelled')
+        return
+      }
+    }
+
+    logger?.log('info', `Seeding database with ${flags.count} records...`)
+    await shell`bun run db:seed --count ${flags.count}`
+
+    logger?.log('info', 'Database seeded successfully')
+  }
+})
+```
+
+## Usage Examples
+
+Once set up, your CLI automatically discovers all commands:
+
+```bash
+# Root commands
+./file-cli build --watch
+./file-cli test
+./file-cli deploy
+
+# Nested commands
+./file-cli db migrate --direction up
+./file-cli db migrate --dry-run
+./file-cli db seed --count 50
+./file-cli db seed --force
+
+# Help system works automatically
+./file-cli --help
+./file-cli db --help
+./file-cli db migrate --help
+```
+
+## Key Benefits
+
+### File-Based Commands
+
+1. **Automatic Discovery**: No need to manually register commands
+2. **Scalable Structure**: Directory organization maps to command hierarchy
+3. **Lazy Loading**: Commands load only when executed
+4. **Conflict Prevention**: Automatic detection of duplicate command names
+5. **Type Safety**: Full TypeScript support with generated types
+
+### Global Hooks
+
+1. **Shared Setup**: Initialize resources once for all commands
+2. **Context Sharing**: Pass data between hooks and command handlers
+3. **Error Handling**: Centralized error logging and cleanup
+4. **Performance Monitoring**: Track command execution times
+5. **Resource Management**: Proper initialization and cleanup
+
+## Best Practices
+
+### Command Organization
+
+- Use consistent naming (kebab-case for files, camelCase for options)
+- Group related commands in subdirectories
+- Keep command handlers focused and testable
+- Use descriptive option names and help text
+
+### Hook Usage
+
+- Keep hooks lightweight - they're called for every command
+- Use hooks for cross-cutting concerns (logging, auth, config)
+- Handle errors gracefully in hooks to prevent command failure
+- Store only serializable data in hook context
+
+### Error Handling
+
+```typescript
+// In hooks - handle errors gracefully
+cli.before(async (context) => {
+  try {
+    const config = await loadConfig()
+    context.set('config', config)
+  } catch (error) {
+    console.warn('Config loading failed, using defaults')
+    context.set('config', { debug: false })
+  }
+})
+
+// In commands - let hooks handle logging
+handler: async ({ hooks }) => {
+  const logger = hooks?.logger
+  try {
+    // Command logic
+    await riskyOperation()
+    logger?.log('info', 'Operation completed')
+  } catch (error) {
+    // Let after hook handle error logging
+    throw error
+  }
+}
+```
+
+## Next Steps
+
+- **[Plugin System](/docs/core-concepts/plugins)**: Add reusable functionality with plugins
+- **[Type Generation](/docs/guides/type-generation)**: Enhanced developer experience with generated types
+- **[Testing](/docs/guides/testing)**: Write tests for your commands and hooks
+- **[Distribution](/docs/guides/distribution)**: Package and distribute your CLI

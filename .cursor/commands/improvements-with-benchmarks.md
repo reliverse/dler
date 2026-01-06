@@ -23,7 +23,7 @@ The following packages should be optimized in priority order (packages with olde
 | 10  | `@reliverse/relico`   | -             | -      | -     |
 | 11  | `@reliverse/relifso`  | -             | -      | -     |
 | 12  | `@reliverse/relinka`  | -             | -      | -     |
-| 13  | `@reliverse/rempts`   | -             | -      | -     |
+| 13  | `rempts`   | -             | -      | -     |
 | 14  | `@reliverse/tsconfig` | -             | -      | -     |
 | 15  | `@reliverse/typerso`  | -             | -      | -     |
 

@@ -6,10 +6,10 @@ Scaffold new Rempts CLI projects with ease.
 
 ```bash
 # Using bunx (recommended)
-bunx @reliverse/rempts my-cli
+bunx rempts my-cli
 
 # Or install globally and use directly
-bun add -g @reliverse/rempts
+bun add -g rempts
 rempts my-cli
 ```
 
@@ -18,7 +18,7 @@ rempts my-cli
 - 🚀 **Fast scaffolding** - Get started in seconds
 - 📦 **Multiple templates** - Choose from basic, advanced, or monorepo setups
 - 🔧 **TypeScript ready** - Full TypeScript support out of the box
-- 🧪 **Testing included** - Comes with @reliverse/rempts-test for CLI testing
+- 🧪 **Testing included** - Comes with rempts-test for CLI testing
 - 🎨 **Best practices** - Follows Rempts conventions and patterns
 - 🌐 **Flexible sources** - Use bundled templates or any GitHub repository
 - ⚡ **Type generation** - All templates include codegen for enhanced developer experience
@@ -30,7 +30,7 @@ rempts my-cli
 Create a new project with the default template:
 
 ```bash
-bunx @reliverse/rempts my-cli
+bunx rempts my-cli
 ```
 
 ### Using Templates
@@ -39,13 +39,13 @@ Choose from bundled templates:
 
 ```bash
 # Basic single-command CLI
-bunx @reliverse/rempts my-cli --template basic
+bunx rempts my-cli --template basic
 
 # Advanced multi-command CLI with subcommands
-bunx @reliverse/rempts my-cli --template advanced
+bunx rempts my-cli --template advanced
 
 # Monorepo setup with Turborepo
-bunx @reliverse/rempts my-cli --template monorepo
+bunx rempts my-cli --template monorepo
 ```
 
 ### Using External Templates
@@ -54,19 +54,19 @@ Use any GitHub repository as a template:
 
 ```bash
 # GitHub repository
-bunx @reliverse/rempts my-cli --template username/repo
+bunx rempts my-cli --template username/repo
 
 # With full GitHub URL
-bunx @reliverse/rempts my-cli --template github:username/repo
+bunx rempts my-cli --template github:username/repo
 
 # Specific branch or tag
-bunx @reliverse/rempts my-cli --template username/repo#branch
+bunx rempts my-cli --template username/repo#branch
 ```
 
 ### Options
 
 ```bash
-bunx @reliverse/rempts [name] [options]
+bunx rempts [name] [options]
 
 Options:
   -t, --template <template>   Project template (default: "basic")
@@ -82,16 +82,16 @@ Options:
 
 ```bash
 # Create in current directory
-bunx @reliverse/rempts .
+bunx rempts .
 
 # Create without installing dependencies
-bunx @reliverse/rempts my-cli --no-install
+bunx rempts my-cli --no-install
 
 # Create in custom directory
-bunx @reliverse/rempts my-cli --dir ~/projects/my-cli
+bunx rempts my-cli --dir ~/projects/my-cli
 
 # Use external template
-bunx @reliverse/rempts my-cli --template pvtnbr/rempts-starter
+bunx rempts my-cli --template pvtnbr/rempts-starter
 ```
 
 ## Templates
@@ -104,7 +104,7 @@ Perfect for simple CLI tools with a single command.
 
 - Single command setup
 - TypeScript configuration
-- Test setup with @reliverse/rempts-test
+- Test setup with rempts-test
 - Build script using rempts
 
 **Structure:**
@@ -243,7 +243,7 @@ Variables can be used in file contents and filenames:
 ## Programmatic Usage
 
 ```typescript
-import { createProject } from '@reliverse/rempts'
+import { createProject } from 'rempts'
 
 await createProject({
   name: 'my-cli',
@@ -257,7 +257,7 @@ await createProject({
 
 ```bash
 # Clone the repository
-git clone https://github.com/reliverse/rempts.git
+git clone https://github.com/reliverse/dler.git
 cd rempts/packages/rempts
 
 # Install dependencies

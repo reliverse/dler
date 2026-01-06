@@ -1,5 +1,4 @@
-import { join, relative, extname } from "node:path";
-import type { CommandMetadata } from "./types";
+import { join, extname } from "node:path";
 
 /**
  * Fast command scanner using Bun.Transpiler for optimal performance
@@ -63,7 +62,7 @@ export class CommandScanner {
       }
 
       return commandFiles;
-    } catch (error) {
+    } catch {
       console.warn(`Warning: Could not scan commands directory: ${commandsDir}`);
       return [];
     }
@@ -87,14 +86,14 @@ export class CommandScanner {
 
       // Check for command-related imports
       const hasCommandImports = scanResult.imports.some(
-        (imp) => imp.path.includes("@reliverse/rempts-core") || imp.path.includes("defineCommand"),
+        (imp) => imp.path.includes("@reliverse/rempts") || imp.path.includes("defineCommand"),
       );
 
       // Check for defineCommand usage in the content
       const hasDefineCommand = content.includes("defineCommand(");
 
       return hasCommandExport && (hasCommandImports || hasDefineCommand);
-    } catch (error) {
+    } catch {
       // If we can't read or parse the file, assume it's not a command
       return false;
     }

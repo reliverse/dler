@@ -1,4 +1,4 @@
-import { defineCommand, option } from "@reliverse/rempts-core";
+import { defineCommand, option } from "@reliverse/rempts";
 import { z } from "zod";
 import { generateBash, generateZsh, generateFish } from "../generators/mod";
 import { loadMetadata, getCLIName } from "../utils/metadata";

@@ -61,7 +61,7 @@ When documenting plugins:
 
 ## Installation
 ```bash
-bun add @reliverse/rempts-plugin-name
+bun add rempts-plugin-name
 ```
 
 ## Usage
@@ -141,6 +141,6 @@ vercel env pull
 
 - Added comprehensive plugin system documentation
 - Created API reference for plugin types and utilities
-- Added package docs for @reliverse/rempts-plugin-ai-detect and @reliverse/rempts-plugin-config
+- Added package docs for rempts-plugin-ai-detect and rempts-plugin-config
 - Updated command patterns to show new handler context with plugin access
 - Enhanced examples to demonstrate plugin usage

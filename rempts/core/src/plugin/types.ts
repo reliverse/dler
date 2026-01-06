@@ -188,7 +188,7 @@ export type Middleware = (context: CommandContext, next: () => Promise<any>) => 
 /**
  * Module augmentation for plugin extensions
  */
-declare module "@reliverse/rempts-core" {
+declare module "@reliverse/rempts" {
   interface PluginStore {
     // Plugins can extend this interface
   }

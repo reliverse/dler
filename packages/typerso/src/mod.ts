@@ -24,7 +24,7 @@ export {
 export const readPackageJSONSafe = async (path: string) => {
   try {
     return await readPackageJSON(path);
-  } catch (_error) {
+  } catch {
     return null;
   }
 };

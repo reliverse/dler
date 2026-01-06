@@ -1,4 +1,4 @@
-import { defineCommand, option } from "@reliverse/rempts-core";
+import { defineCommand, option } from "@reliverse/rempts";
 import { z } from "zod";
 import { loadConfig } from "../utils/config";
 import { validateFiles } from "../utils/validator";
@@ -8,7 +8,6 @@ import { relico } from "@reliverse/relico";
 const validateCommand = defineCommand({
   name: "validate",
   description: "Validate files against defined rules",
-  args: z.array(z.string()).min(1).describe("Files to validate"),
   options: {
     config: option(z.string().optional(), {
       short: "c",
@@ -21,8 +20,11 @@ const validateCommand = defineCommand({
     cache: option(z.boolean().default(true), {
       description: "Enable caching",
     }),
+    files: option(z.string().optional(), {
+      description: "Files to validate (if not specified, uses config patterns)",
+    }),
   },
-  handler: async ({ args, flags, colors, spinner }) => {
+  handler: async ({ positional, flags, spinner }) => {
     const spin = spinner("Loading configuration...");
     spin.start();
 
@@ -35,7 +37,7 @@ const validateCommand = defineCommand({
       const fileSpin = spinner("Resolving files...");
       fileSpin.start();
 
-      const files = await glob(args, {
+      const files = await glob(flags.files ? [flags.files] : positional, {
         include: config.include,
         exclude: config.exclude,
       });

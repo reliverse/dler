@@ -1,4 +1,4 @@
-import { defineCommand, option } from "@reliverse/rempts-core";
+import { defineCommand, option } from "@reliverse/rempts";
 import { z } from "zod";
 import { loadConfig, saveConfig, getConfigPath } from "../utils/config";
 import { relico } from "@reliverse/relico";
@@ -6,13 +6,17 @@ import { relico } from "@reliverse/relico";
 const configCommand = defineCommand({
   name: "config",
   description: "Manage configuration",
-  subcommands: [
+  commands: [
     defineCommand({
       name: "get",
       description: "Get a config value",
-      args: z.tuple([z.string()]).describe("Config key to get"),
-      handler: async ({ args, colors }) => {
-        const [key] = args;
+      options: {
+        key: option(z.string(), {
+          description: "Config key to get",
+        }),
+      },
+      handler: async ({ flags }) => {
+        const key = flags.key;
 
         try {
           const config = await loadConfig();
@@ -33,9 +37,17 @@ const configCommand = defineCommand({
     defineCommand({
       name: "set",
       description: "Set a config value",
-      args: z.tuple([z.string(), z.string()]).describe("Config key and value"),
-      handler: async ({ args, colors, spinner }) => {
-        const [key, value] = args;
+      options: {
+        key: option(z.string(), {
+          description: "Config key to set",
+        }),
+        value: option(z.string(), {
+          description: "Value to set",
+        }),
+      },
+      handler: async ({ flags, spinner }) => {
+        const key = flags.key;
+        const value = flags.value;
 
         const spin = spinner("Updating config...");
         spin.start();
@@ -57,7 +69,7 @@ const configCommand = defineCommand({
     defineCommand({
       name: "list",
       description: "List all config values",
-      handler: async ({ colors }) => {
+      handler: async () => {
         try {
           const config = await loadConfig();
           const configPath = await getConfigPath();
@@ -82,7 +94,7 @@ const configCommand = defineCommand({
           description: "Skip confirmation",
         }),
       },
-      handler: async ({ flags, colors, prompt, spinner }) => {
+      handler: async ({ flags, prompt, spinner }) => {
         if (!flags.force) {
           const confirmed = await prompt.confirm(
             "This will reset all config to defaults. Continue?",

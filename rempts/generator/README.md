@@ -1,4 +1,4 @@
-# @reliverse/rempts-generator
+# rempts-generator
 
 The Rempts command type generator that creates TypeScript definitions from your CLI commands using Bun's native APIs.
 
@@ -61,8 +61,8 @@ export interface CommandRegistry {
   }
 }
 
-// Module augmentation for @reliverse/rempts-core
-declare module '@reliverse/rempts-core' {
+// Module augmentation for rempts-core
+declare module '@reliverse/rempts' {
   interface GeneratedCommands extends CommandRegistry {}
 }
 
@@ -79,7 +79,7 @@ export function listCommands(): Array<{...}>
 The generator scans for files matching `**/*.{ts,tsx,js,jsx}` and looks for `defineCommand` calls:
 
 ```typescript
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({
@@ -107,14 +107,14 @@ The generator is automatically integrated with:
 
 - `rempts dev` - Generates types and watches for changes
 - `rempts build` - Pre-build codegen step
-- `rempts generate` - Standalone generation command
+- `dler generate` - Standalone generation command
 
 ## Configuration
 
 Configure the generator in your `dler.config.ts`:
 
 ```typescript
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 
 export default defineConfig({
   name: 'my-cli',

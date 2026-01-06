@@ -28,7 +28,7 @@ export function remptsCodegenPlugin(options: RemptsCodegenPluginOptions = {}): B
   let generator: Generator | null = null;
 
   return {
-    name: "rempts-codegen",
+    name: "@reliverse/rempts-codegen",
 
     setup(build) {
       // Initialize generator

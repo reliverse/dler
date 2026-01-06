@@ -41,7 +41,7 @@ import {
   SVGAsReactPlugin,
   TypeScriptDeclarationsPlugin,
   WorkerPlugin,
-} from "./impl/plugins";
+} from "./impl/plugins/mod";
 import { validateTSConfig } from "./impl/tsconfig-validator";
 import { validateBuildConfig } from "./impl/type-guards";
 import type {

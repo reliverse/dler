@@ -1,4 +1,4 @@
-import type { HandlerArgs } from "@reliverse/rempts-core";
+import type { HandlerArgs } from "@reliverse/rempts";
 import { createProject } from "./create-project";
 import path from "node:path";
 import { relico } from "@reliverse/relico";

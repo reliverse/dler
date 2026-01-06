@@ -1,17 +1,17 @@
-# @reliverse/rempts-core
+# rempts-core
 
 The minimal, type-safe CLI framework for Bun.
 
 ## Installation
 
 ```bash
-bun add @reliverse/rempts-core
+bun add rempts-core
 ```
 
 ## Quick Start
 
 ```typescript
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({
@@ -50,7 +50,7 @@ export default defineCommand({
 Define commands with automatic type inference:
 
 ```typescript
-import { defineCommand } from '@reliverse/rempts-core'
+import { defineCommand } from '@reliverse/rempts'
 
 export default defineCommand({
   name: 'build',
@@ -66,7 +66,7 @@ export default defineCommand({
 Use the `option` helper with Standard Schema validation:
 
 ```typescript
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({
@@ -94,7 +94,7 @@ export default defineCommand({
 Create complex CLIs with multiple commands:
 
 ```typescript
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 import build from './commands/build'
 import deploy from './commands/deploy'
 import test from './commands/test'
@@ -134,7 +134,7 @@ Rempts provides a powerful plugin system with compile-time type safety:
 ### Basic Plugin
 
 ```typescript
-import { RemptsPlugin, createPlugin } from '@reliverse/rempts-core'
+import { RemptsPlugin, createPlugin } from '@reliverse/rempts'
 
 interface MyPluginStore {
   apiKey: string
@@ -181,7 +181,7 @@ const myPlugin: RemptsPlugin<MyPluginStore> = {
 Use `createPlugin` for better ergonomics:
 
 ```typescript
-import { createPlugin } from '@reliverse/rempts-core'
+import { createPlugin } from '@reliverse/rempts'
 
 export const authPlugin = createPlugin((options: AuthOptions) => {
   return {
@@ -235,7 +235,7 @@ import {
   createMockPluginContext,
   testPluginHooks,
   assertPluginBehavior
-} from '@reliverse/rempts-core/plugin'
+} from '@reliverse/rempts/plugin'
 
 // Create a test plugin
 const testPlugin = createTestPlugin(
@@ -271,7 +271,7 @@ assertPluginBehavior(results, {
 Plugins can extend Rempts's interfaces:
 
 ```typescript
-declare module '@reliverse/rempts-core' {
+declare module '@reliverse/rempts' {
   interface EnvironmentInfo {
     isCI: boolean
     ciProvider?: string
@@ -370,7 +370,7 @@ import {
   isValueOfType,
   createValidator,
   createBatchValidator
-} from '@reliverse/rempts-core'
+} from '@reliverse/rempts'
 
 // Validate a single value
 const result = await validateValue(
@@ -417,7 +417,7 @@ import {
   IsNever,
   IsAny,
   IsUnknown
-} from '@reliverse/rempts-core'
+} from '@reliverse/rempts'
 ```
 
 ### Key Utilities
@@ -463,7 +463,7 @@ These utilities work particularly well with generated command types:
 
 ```typescript
 import { getCommandApi, listCommands } from './commands.gen'
-import { UnionToIntersection, MergeAll } from '@reliverse/rempts-core'
+import { UnionToIntersection, MergeAll } from '@reliverse/rempts'
 
 // Get all command options as a union
 type AllCommandOptions = UnionToIntersection<
@@ -482,9 +482,9 @@ type AllCommands = MergeAll<
 
 ## Related Packages
 
-- **[@reliverse/rempts-generator](/docs/packages/generator)** - Generate TypeScript definitions from commands
-- **[@reliverse/rempts-utils](/docs/packages/utils)** - Shared utilities for CLI development
-- **[@reliverse/rempts-test](/docs/packages/test)** - Testing utilities for CLI applications
+- **[rempts-generator](/docs/packages/generator)** - Generate TypeScript definitions from commands
+- **[rempts-utils](/docs/packages/utils)** - Shared utilities for CLI development
+- **[rempts-test](/docs/packages/test)** - Testing utilities for CLI applications
 
 ## Documentation
 

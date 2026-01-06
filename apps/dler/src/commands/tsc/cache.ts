@@ -30,7 +30,7 @@ export class TscCache {
     try {
       await mkdir(this.options.cacheDir, { recursive: true });
       await this.loadMetadata();
-    } catch (_error) {
+    } catch {
       // Cache initialization failed, disable caching
       this.options.enabled = false;
     }

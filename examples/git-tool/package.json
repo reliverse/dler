@@ -10,13 +10,13 @@
     "cli": "bun cli.ts"
   },
   "dependencies": {
-    "@reliverse/rempts-core": "workspace:*",
-    "zod": "^4.1.13"
+    "@reliverse/rempts": "workspace:*",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@reliverse/dler": "workspace:*",
     "@reliverse/tsconfig": "workspace:*",
-    "@types/bun": "^1.3.5",
-    "typescript": "^5.8.3"
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
   }
 }

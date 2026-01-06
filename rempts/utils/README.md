@@ -1,11 +1,11 @@
-# @reliverse/rempts-utils
+# rempts-utils
 
 Utility functions for building CLI applications with Rempts.
 
 ## Installation
 
 ```bash
-bun add @reliverse/rempts-utils
+bun add rempts-utils
 ```
 
 ## Features

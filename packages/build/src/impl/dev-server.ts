@@ -412,7 +412,7 @@ export class DevServer {
           this.notifyClients("reload");
           break;
       }
-    } catch (_error) {
+    } catch {
       // Ignore invalid messages
     }
   }

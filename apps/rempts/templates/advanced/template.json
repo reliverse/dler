@@ -1,5 +1,5 @@
 {
-  "name": "rempts-advanced",
+  "name": "@reliverse/rempts-advanced",
   "description": "Advanced Rempts CLI template with multiple commands",
   "variables": [
     {

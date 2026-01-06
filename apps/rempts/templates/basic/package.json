@@ -15,14 +15,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@reliverse/rempts-core": "latest"
+    "@reliverse/rempts": "latest"
   },
   "devDependencies": {
     "@reliverse/rempts-test": "latest",
     "@reliverse/tsconfig": "workspace:*",
-    "@types/bun": "latest",
+    "@types/bun": "catalog:",
     "rempts": "latest",
-    "typescript": "^5.0.0"
+    "typescript": "catalog:"
   },
   "rempts": {
     "entry": "./src/mod.ts",

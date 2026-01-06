@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { createCLI } from "@reliverse/rempts-core";
+import { createCLI } from "@reliverse/rempts";
 import initCommand from "./commands/init";
 import validateCommand from "./commands/validate";
 import serveCommand from "./commands/serve";
@@ -12,15 +12,16 @@ const cli = await createCLI({
   description: "{{description}}",
 });
 
-// Global options
-cli.option("verbose", {
-  type: "boolean",
-  description: "Enable verbose output",
-});
+// Global setup hook
+cli.before(async (context) => {
+  // Set up logging based on flags (commands can define their own verbose/quiet options)
+  const logger = {
+    level: "info",
+    log: (message: string) => console.log(`[${new Date().toISOString()}] ${message}`),
+    error: (message: string) => console.error(`[ERROR] ${message}`),
+  };
 
-cli.option("quiet", {
-  type: "boolean",
-  description: "Suppress output",
+  context.set("logger", logger);
 });
 
 // Add commands
@@ -32,8 +33,7 @@ cli.command(configCommand);
 // Load config and run
 async function run() {
   try {
-    const config = await loadConfig();
-    // Store config in global context if needed
+    await loadConfig();
     await cli.run();
   } catch (error) {
     console.error("Failed to start CLI:", error);

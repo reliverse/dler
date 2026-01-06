@@ -1,4 +1,4 @@
-import { defineCommand, option } from "@reliverse/rempts-core";
+import { defineCommand, option } from "@reliverse/rempts";
 import { z } from "zod";
 import { spawn } from "node:child_process";
 import { relico } from "@reliverse/relico";
@@ -90,7 +90,7 @@ export default defineCommand({
       console.error(relico.red("Failed to run rempts:"), error.message);
       console.log();
       console.log("Make sure rempts is available:");
-      console.log(relico.gray("  bunx @reliverse/rempts --help"));
+      console.log(relico.gray("  bunx rempts --help"));
       process.exit(1);
     });
   },

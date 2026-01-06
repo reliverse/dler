@@ -12,7 +12,7 @@ await Bun.build({
   target: "bun",
   format: "esm",
   minify: false,
-  external: ["@reliverse/rempts-core", "@reliverse/rempts-utils", "zod", "giget"],
+  external: ["@reliverse/rempts", "@reliverse/rempts-utils", "zod", "giget"],
 });
 
 // Copy templates directory to dist

@@ -243,7 +243,7 @@ export const loadDlerConfig = async <T extends Record<string, any> = any>(
     });
 
     return config || null;
-  } catch (_error) {
+  } catch {
     // Return null for config loading errors (file not found, etc.)
     return null;
   }

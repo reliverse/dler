@@ -63,6 +63,17 @@ export interface CLI<TStore = {}> {
     args: string[],
     options: CommandOptions<T>,
   ): Promise<void>;
+
+  /**
+   * Add a global before hook that runs before command execution
+   * This provides a simple API for setup/initialization tasks
+   */
+  before(hook: BeforeHook<TStore>): void;
+
+  /**
+   * Add a global after hook that runs after command execution
+   */
+  after(hook: AfterHook<TStore>): void;
 }
 
 // generic Command type that carries options type information
@@ -94,6 +105,9 @@ export type Command<
   | (BaseCommand<TOptions, TStore, TName> & {
       handler: Handler<InferOptions<TOptions>, TStore, TName>;
       render: RenderFunction<InferOptions<TOptions>, TStore>;
+    })
+  | (BaseCommand<TOptions, TStore, TName> & {
+      commands: Command<any, TStore, any>[];
     });
 
 // Type helper to extract output types from StandardSchemaV1
@@ -125,9 +139,11 @@ export interface HandlerArgs<
   // Utilities
   prompt: typeof import("@reliverse/rempts-utils").prompt;
   spinner: typeof import("@reliverse/rempts-utils").spinner;
-  colors: typeof import("@reliverse/rempts-utils").colors;
+  colors: typeof import("@reliverse/relico").relico;
   // Plugin context (if plugins are loaded)
   context?: import("./plugin/types.js").CommandContext<any>;
+  // Data set by global before hooks
+  hooks?: Record<string, any>;
   // Terminal information
   terminal: TerminalInfo;
   // Runtime information
@@ -197,7 +213,7 @@ export type PluginConfig = import("./plugin/types.js").PluginConfig;
  *
  * @example
  * // In commands.gen.ts:
- * declare module '@reliverse/rempts-core' {
+ * declare module '@reliverse/rempts' {
  *   interface RegisteredCommands extends CommandsByName {}
  * }
  */
@@ -229,6 +245,36 @@ export type ResolvedConfig = Required<
   workspace: NonNullable<RemptsConfig["workspace"]>;
   release: NonNullable<RemptsConfig["release"]>;
 };
+
+/**
+ * Hook context passed to before/after hooks
+ */
+export interface HookContext<TStore = {}> {
+  /** Global flags parsed from command line */
+  flags: Record<string, unknown>;
+  /** Store from plugins (if any) */
+  store: TStore;
+  /** Environment variables */
+  env: typeof process.env;
+  /** Current working directory */
+  cwd: string;
+  /** Set data that will be available to command handlers */
+  set(key: string, value: any): void;
+  /** Get data that was set by hooks */
+  get(key: string): any;
+}
+
+/**
+ * Before hook function type
+ */
+export type BeforeHook<TStore = {}> = (context: HookContext<TStore>) => void | Promise<void>;
+
+/**
+ * After hook function type
+ */
+export type AfterHook<TStore = {}> = (
+  context: HookContext<TStore> & { exitCode: number; error?: Error },
+) => void | Promise<void>;
 
 /**
  * Rich validation error with context information

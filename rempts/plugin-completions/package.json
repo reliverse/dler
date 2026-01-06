@@ -29,12 +29,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@reliverse/rempts-core": "workspace:*",
+    "@reliverse/relico": "workspace:*",
+    "@reliverse/rempts": "workspace:*",
     "@reliverse/rempts-generator": "workspace:*",
-    "zod": "^4.1.13"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
-    "typescript": "^5.8.3"
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
   }
 }

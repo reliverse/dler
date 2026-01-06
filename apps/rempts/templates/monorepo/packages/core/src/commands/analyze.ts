@@ -1,4 +1,4 @@
-import { defineCommand, option } from "@reliverse/rempts-core";
+import { defineCommand, option } from "@reliverse/rempts";
 import { z } from "zod";
 import { logger, formatTable } from "@{{name}}/utils";
 import type { AnalyzeResult } from "../types";

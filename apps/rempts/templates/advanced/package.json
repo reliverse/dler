@@ -19,22 +19,22 @@
     "prepare": "bun run build"
   },
   "dependencies": {
-    "@reliverse/rempts-core": "latest",
+    "@reliverse/rempts": "latest",
     "@reliverse/rempts-utils": "latest",
-    "zod": "^3.22.0"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@reliverse/rempts-test": "latest",
     "@reliverse/tsconfig": "workspace:*",
-    "@types/bun": "latest",
+    "@types/bun": "catalog:",
     "rempts": "latest",
-    "typescript": "^5.0.0"
+    "typescript": "catalog:"
   },
   "rempts": {
     "entry": "./src/mod.ts",
     "outDir": "./dist",
     "external": [
-      "@reliverse/rempts-core",
+      "@reliverse/rempts",
       "@reliverse/rempts-utils",
       "zod"
     ]

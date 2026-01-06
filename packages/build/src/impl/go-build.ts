@@ -489,7 +489,7 @@ export async function buildGo(
   const effectiveConfig = config ?? { enable: true };
 
   // Derive output name from package name if not specified
-  // Strip org name (e.g., "@reliverse/rempts" -> "rempts")
+  // Strip org name (e.g., "rempts" -> "rempts")
   const outputName =
     effectiveConfig.outputName ??
     packageName.replace(/^@[^/]+\//, "").replace(/[^a-zA-Z0-9-]/g, "-");

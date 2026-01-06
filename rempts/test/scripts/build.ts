@@ -15,4 +15,4 @@ await Bun.build({
   sourcemap: "external",
 });
 
-console.log("✅ @reliverse/rempts-test built successfully");
+console.log("✅ rempts-test built successfully");

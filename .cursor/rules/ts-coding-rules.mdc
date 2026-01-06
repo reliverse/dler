@@ -27,6 +27,7 @@ The current codebase enforces strict type safety, accessibility standards, and c
 - When working on CLI commands, you can check their performance by running `Measure-Command { bun dler tsc --verbose }`.
 
 ### Code Complexity and Quality
+- Don't add `_` prefix to disable unused variable, when this variable is really unused (just use e.g. `} catch {` instead of `} catch (_error) {`)
 - Don't use consecutive spaces in regular expression literals.
 - Don't use the `arguments` object.
 - Don't use primitive type aliases or misleading types.

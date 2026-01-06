@@ -1,15 +1,16 @@
 #!/usr/bin/env bun
-import { createCLI } from "@reliverse/rempts-core";
-import { loadConfig } from "@reliverse/rempts-core";
+import { createCLI } from "@reliverse/rempts";
+import { loadConfig } from "@reliverse/rempts";
+
+// Load configuration first
+const config = await loadConfig();
 
 const cli = await createCLI({
   name: "rempts",
   version: "0.1.0",
   description: "The Rempts CLI toolchain for developing, building, and distributing CLIs",
+  ...config, // Pass config to enable automatic command loading
 });
-
-// Load configuration
-const config = await loadConfig();
 
 // Load commands from manifest
 await cli.load({

@@ -1,7 +1,7 @@
-import { defineCommand, option } from "@reliverse/rempts-core";
+import { defineCommand, option } from "@reliverse/rempts";
 import { Generator } from "@reliverse/rempts-generator";
 import { z } from "zod";
-import { loadConfig } from "@reliverse/rempts-core";
+import { loadConfig } from "@reliverse/rempts";
 import { findEntry } from "../utils/find-entry";
 import path from "node:path";
 import { existsSync } from "node:fs";

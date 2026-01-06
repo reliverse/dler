@@ -13,4 +13,4 @@ await $`rm -rf dist`;
 // Generate type definitions
 await $`tsc`;
 
-console.log("✅ @reliverse/rempts-plugin-ai-detect built successfully");
+console.log("✅ rempts-plugin-ai-detect built successfully");

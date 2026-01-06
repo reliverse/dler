@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { createCLI } from "@reliverse/rempts-core";
+import { createCLI } from "@reliverse/rempts";
 import { configMergerPlugin } from "@reliverse/rempts-plugin-config";
 import { aiAgentPlugin } from "@reliverse/rempts-plugin-ai-detect";
 import { metricsPlugin } from "./plugins/metrics";

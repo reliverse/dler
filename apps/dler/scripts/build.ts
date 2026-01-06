@@ -37,7 +37,7 @@ if (useCompile) {
     target: "bun",
     format: "esm",
     minify: true,
-    external: ["@reliverse/rempts-core", "@reliverse/rempts-utils", "zod", "glob"],
+    external: ["@reliverse/rempts", "@reliverse/rempts-utils", "zod", "glob"],
   });
 
   if (!result.success) {
@@ -62,7 +62,7 @@ const libResult = await Bun.build({
   target: "bun",
   format: "esm",
   minify: false,
-  external: ["@reliverse/rempts-core", "@reliverse/rempts-utils", "zod", "glob"],
+  external: ["@reliverse/rempts", "@reliverse/rempts-utils", "zod", "glob"],
 });
 
 if (!libResult.success) {

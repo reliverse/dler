@@ -17,22 +17,22 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@reliverse/rempts-core": "latest",
+    "@reliverse/rempts": "latest",
     "@{{name}}/core": "workspace:*",
     "@{{name}}/utils": "workspace:*"
   },
   "devDependencies": {
     "@reliverse/rempts-test": "latest",
     "@reliverse/tsconfig": "workspace:*",
-    "@types/bun": "latest",
+    "@types/bun": "catalog:",
     "rempts": "latest",
-    "typescript": "^5.0.0"
+    "typescript": "catalog:"
   },
   "rempts": {
     "entry": "./src/mod.ts",
     "outDir": "./dist",
     "external": [
-      "@reliverse/rempts-core",
+      "@reliverse/rempts",
       "@{{name}}/core",
       "@{{name}}/utils"
     ]

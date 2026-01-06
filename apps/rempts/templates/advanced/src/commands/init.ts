@@ -1,4 +1,4 @@
-import { defineCommand, option } from "@reliverse/rempts-core";
+import { defineCommand, option } from "@reliverse/rempts";
 import { z } from "zod";
 import { CONFIG_FILE_NAME, DEFAULT_CONFIG } from "../utils/constants";
 import { relico } from "@reliverse/relico";
@@ -16,7 +16,8 @@ const initCommand = defineCommand({
       description: "Config template to use",
     }),
   },
-  handler: async ({ flags, colors, prompt, spinner }) => {
+  handler: async ({ flags, prompt, spinner, hooks }) => {
+    const logger = hooks?.logger;
     const configPath = `${process.cwd()}/${CONFIG_FILE_NAME}`;
 
     // Check if config already exists
@@ -27,7 +28,7 @@ const initCommand = defineCommand({
       });
 
       if (!overwrite) {
-        console.log(relico.yellow("Init cancelled"));
+        logger?.log("Init cancelled");
         return;
       }
     }
@@ -43,7 +44,7 @@ const initCommand = defineCommand({
       await Bun.write(configPath, configContent);
 
       spin.succeed("Config file created");
-      console.log(relico.dim(`  ${CONFIG_FILE_NAME}`));
+      logger?.log(`Created ${CONFIG_FILE_NAME}`);
 
       // Next steps
       console.log();
@@ -52,7 +53,7 @@ const initCommand = defineCommand({
       console.log(relico.gray(`  2. Run '{{name}} validate' to check your files`));
     } catch (error) {
       spin.fail("Failed to create config file");
-      console.error(relico.red(String(error)));
+      logger?.error(String(error));
       process.exit(1);
     }
   },

@@ -1,7 +1,7 @@
 {
   "extends": "@reliverse/tsconfig/base.json",
   "compilerOptions": {
-    "rootDir": "./src",
+    "rootDir": ".",
     "outDir": "./dist",
     "lib": ["ESNext", "DOM"],
     "types": ["bun"],
@@ -17,6 +17,6 @@
     "jsx": "react-jsx",
     "jsxImportSource": "@opentui/react"
   },
-  "include": ["src/**/*"],
-  "exclude": ["**/*.test.ts", "**/*.spec.ts"]
+  "include": ["./src/**/*", "./test/**/*"],
+  "exclude": ["./node_modules", "./dist"]
 }

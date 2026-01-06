@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { createCLI, defineCommand, option } from "@reliverse/rempts-core";
+import { createCLI, defineCommand, option } from "@reliverse/rempts";
 import { z } from "zod";
 import { create } from "./create";
 

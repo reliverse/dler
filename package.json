@@ -53,7 +53,6 @@
       "@rollup/pluginutils": "^5.3.0",
       "@types/better-sqlite3": "^7.6.13",
       "@types/globby": "^9.1.0",
-      "@types/node": "^25.0.3",
       "@types/react-dom": "^19.2.3",
       "@types/react": "^19.2.7",
       "@types/semver": "^7.7.1",
@@ -147,7 +146,7 @@
   },
   "type": "module",
   "scripts": {
-    "dler": "bun cli/src/cli.ts",
+    "dler": "bun apps/dler/src/cli.ts",
     "latest": "bun dler update && bun check",
     "check": "bun dler tsc --verbose && bun dler biome",
     "clean:2": "bun dler clean --presets build --force",
@@ -165,8 +164,8 @@
     "test": "bun test",
     "dev": "bun scripts/dev.ts",
     "release": "bun scripts/release.ts",
-    "format": "bun oxfmt",
-    "lint": "bun oxlint"
+    "lint": "bun oxlint --fix",
+    "format": "bun oxfmt"
   },
   "devDependencies": {
     "oxfmt": "^0.19.0",

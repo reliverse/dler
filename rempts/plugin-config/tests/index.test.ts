@@ -3,8 +3,8 @@ import { writeFile, mkdir, rm } from "fs/promises";
 import { join } from "path";
 import { homedir } from "os";
 import { configMergerPlugin } from "../src/mod";
-import { PluginContext } from "@reliverse/rempts-core/plugin";
-import { createLogger } from "@reliverse/rempts-core/utils";
+import { PluginContext } from "@reliverse/rempts/plugin";
+import { createLogger } from "@reliverse/rempts/utils";
 
 describe("Config Merger Plugin", () => {
   const testDir = join(process.cwd(), ".test-config");

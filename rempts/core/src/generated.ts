@@ -1,4 +1,4 @@
-import type { CLI, Command, CommandOptions } from "./types";
+import type { CLI, Command } from "./types";
 
 export interface GeneratedOptionMeta {
   type: string;
@@ -19,6 +19,38 @@ export interface GeneratedCommandMeta {
   options?: Record<string, GeneratedOptionMeta>;
   commands?: GeneratedCommandMeta[];
   path: string;
+}
+
+/**
+ * Safe validation function that replaces eval() for security
+ */
+function safeValidate(validatorName: string, value: unknown): boolean {
+  // Parse validator type from the generated string format
+  // Expected formats: '(val) => typeof val === "string"' etc.
+  const typeMatch = validatorName.match(/typeof val === "(\w+)"/);
+  if (typeMatch) {
+    const expectedType = typeMatch[1];
+    switch (expectedType) {
+      case "string":
+        return typeof value === "string";
+      case "number":
+        return typeof value === "number";
+      case "boolean":
+        return typeof value === "boolean";
+      case "object":
+        return typeof value === "object" && value !== null;
+      default:
+        return true;
+    }
+  }
+
+  // Handle Array.isArray check
+  if (validatorName.includes("Array.isArray(val)")) {
+    return Array.isArray(value);
+  }
+
+  // Default to true for unknown validators
+  return true;
 }
 
 export interface GeneratedStore<
@@ -65,7 +97,7 @@ export interface GeneratedStore<
   withCLI(cli: CLI<any>): GeneratedExecutor<TModules>;
 }
 
-export interface GeneratedExecutor<TModules extends Record<string, Command<any>>> {
+export interface GeneratedExecutor<_TModules extends Record<string, Command<any>>> {
   execute(name: string, options: unknown): Promise<void>;
 }
 
@@ -90,7 +122,7 @@ export function clearGeneratedStores(): void {
 export function loadGeneratedStores(cli?: CLI<any>): void {
   if (generatedStores.length === 0) {
     console.warn(
-      "[rempts] No generated command types registered. Run `rempts generate` to enable typed execution.",
+      "[rempts] No generated command types registered. Run `dler generate` to enable typed execution.",
     );
     return;
   }
@@ -184,7 +216,7 @@ export function createGeneratedHelpers<
         // Use runtime validator if available
         if (option.validator && value !== undefined) {
           try {
-            const isValid = eval(option.validator)(value);
+            const isValid = safeValidate(option.validator, value);
             if (!isValid) {
               errors.push(`Option '${key}' failed validation: expected ${option.type}`);
               continue;

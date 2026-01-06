@@ -1,17 +1,17 @@
-# @reliverse/rempts-plugin-ai-detect
+# rempts-plugin-ai-detect
 
 AI agent detection plugin for Rempts CLI framework. Detects when your CLI is running inside AI coding assistants like Claude, Cursor, GitHub Copilot, and more.
 
 ## Installation
 
 ```bash
-bun add @reliverse/rempts-plugin-ai-detect
+bun add rempts-plugin-ai-detect
 ```
 
 ## Usage
 
 ```typescript
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 import { aiAgentPlugin } from '@reliverse/rempts-plugin-ai-detect'
 
 const cli = await createCLI({

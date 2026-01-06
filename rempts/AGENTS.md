@@ -8,14 +8,14 @@ Rempts is a minimal, type-safe CLI framework for Bun with an advanced plugin sys
 
 ### Key Packages
 
-- **@reliverse/rempts-core** - Core CLI framework with type-safe command definitions and plugin system
-- **@reliverse/rempts-utils** - Shared utilities (colors, prompts, spinners, validation)
-- **@reliverse/rempts-test** - Testing utilities for CLI applications
-- **@reliverse/rempts-generator** - TypeScript type generation from CLI commands
+- **rempts-core** - Core CLI framework with type-safe command definitions and plugin system
+- **rempts-utils** - Shared utilities (colors, prompts, spinners, validation)
+- **rempts-test** - Testing utilities for CLI applications
+- **rempts-generator** - TypeScript type generation from CLI commands
 - **rempts** - CLI toolchain for development and building
 - **rempts** - Project scaffolding tool
-- **@reliverse/rempts-plugin-ai-detect** - Plugin for detecting AI coding assistants
-- **@reliverse/rempts-plugin-config** - Plugin for loading and merging configuration files
+- **rempts-plugin-ai-detect** - Plugin for detecting AI coding assistants
+- **rempts-plugin-config** - Plugin for loading and merging configuration files
 
 ## Development Commands
 
@@ -84,7 +84,7 @@ export default defineConfig({
 Commands in Rempts use a type-safe builder pattern:
 
 ```typescript
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 const command = defineCommand({
@@ -136,7 +136,7 @@ Each package uses explicit exports in package.json:
 
 - Use Bun's built-in test runner
 - Test files use `.test.ts` suffix
-- @reliverse/rempts-test provides CLI-specific testing utilities
+- rempts-test provides CLI-specific testing utilities
 - Mock commands and capture output using test helpers
 
 ## Important Conventions
@@ -152,11 +152,11 @@ Each package uses explicit exports in package.json:
 ### Adding a New Command
 
 1. Create command file in `commands/` directory (e.g., `commands/my-command.ts`)
-2. Use `defineCommand` from @reliverse/rempts-core
+2. Use `defineCommand` from rempts-core
 3. Export as default export
 4. Import and register in `cli.ts`
 5. Run `bun run generate` to update types
-6. Add tests using @reliverse/rempts-test utilities
+6. Add tests using rempts-test utilities
 
 **Note**: All Rempts projects must use a `commands/` directory structure for reliable type generation.
 
@@ -190,7 +190,7 @@ Rempts emphasizes type safety throughout:
 ### Creating Plugins
 
 ```typescript
-import { createPlugin } from '@reliverse/rempts-core/plugin'
+import { createPlugin } from '@reliverse/rempts/plugin'
 
 interface MyStore {
   count: number
@@ -212,7 +212,7 @@ export const myPlugin = createPlugin<MyStore>({
 ### Using Plugins
 
 ```typescript
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 import { aiAgentPlugin } from '@reliverse/rempts-plugin-ai-detect'
 import { configMergerPlugin } from '@reliverse/rempts-plugin-config'
 
@@ -232,7 +232,7 @@ const cli = await createCLI({
 Projects use `dler.config.ts` for configuration:
 
 ```typescript
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 
 export default defineConfig({
   name: 'my-cli',

@@ -3,7 +3,8 @@
 
 import fs from "@reliverse/relifso";
 import { logger } from "@reliverse/relinka";
-import { defineArgs, defineCommand } from "@reliverse/rempts";
+import { defineCommand, option } from "@reliverse/rempts";
+import { z } from "zod";
 
 const isWindows = (): boolean => {
   const bun = globalThis as { Bun?: { platform?: () => string } };
@@ -194,51 +195,50 @@ const persistPosixEditPath = async (
 };
 
 export default defineCommand({
-  meta: {
-    name: "senv",
-    description: "Inspect and modify environment variables (process and user-level)",
-    examples: [
-      "dler senv --action list",
-      "dler senv --action list --name Path",
-      "dler senv --action get --name Path",
-      "dler senv --action set --name Path --value C\\\\bin",
-      "dler senv --action append --name Path --value C\\\\msys64\\\\ucrt64\\\\bin --yes",
-      "dler senv --action contains --name Path --value C\\\\bin",
-    ],
+  name: "senv",
+  description: "Inspect and modify environment variables (process and user-level)",
+  options: {
+    action: option(
+      z.string(),
+      {
+        description: "Operation to perform: list|get|set|append|remove|contains",
+      },
+    ),
+    name: option(
+      z.string().optional(),
+      {
+        description: "Environment variable name (optional for list)",
+      },
+    ),
+    value: option(
+      z.string().optional(),
+      {
+        description: "Value for set/append/remove/contains",
+      },
+    ),
+    persist: option(
+      z.boolean().default(true),
+      {
+        description: "Persist change to user environment (default: true)",
+      },
+    ),
+    yes: option(
+      z.boolean().default(false),
+      {
+        description: "Skip interactive confirmation message",
+      },
+    ),
   },
-  args: defineArgs({
-    action: {
-      type: "string",
-      required: true,
-      description: "Operation to perform: list|get|set|append|remove|contains",
-    },
-    name: {
-      type: "string",
-      description: "Environment variable name (optional for list)",
-    },
-    value: {
-      type: "string",
-      description: "Value for set/append/remove/contains",
-    },
-    persist: {
-      type: "boolean",
-      description: "Persist change to user environment (default: true)",
-    },
-    yes: {
-      type: "boolean",
-      description: "Skip interactive confirmation message",
-    },
-  }),
-  run: async ({ args }) => {
+  handler: async ({ flags }) => {
     try {
       if (typeof process.versions.bun === "undefined") {
         logger.error("❌ This command requires Bun runtime. Sorry.");
         process.exit(1);
       }
 
-      const { action, name, value } = args;
-      const persist = args.persist ?? true;
-      const yes = args.yes ?? false;
+      const { action, name, value } = flags;
+      const persist = flags.persist ?? true;
+      const yes = flags.yes ?? false;
 
       const allowed = new Set(["list", "get", "set", "append", "remove", "contains"]);
       if (!allowed.has(action)) {

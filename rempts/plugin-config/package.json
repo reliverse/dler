@@ -29,11 +29,11 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@reliverse/rempts-core": "workspace:*"
+    "@reliverse/rempts": "workspace:*"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
-    "@types/bun": "latest",
-    "typescript": "^5.8.3"
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
   }
 }

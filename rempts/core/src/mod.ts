@@ -14,6 +14,8 @@ export {
   type GeneratedExecutor,
 } from "./generated";
 export { SchemaError } from "@standard-schema/utils";
+export { FileCommandLoader, loadCommandsFromDirectory } from "./file-loader";
+export type { CommandFileInfo, CommandFileTree, CommandConflict } from "./file-loader";
 export type {
   CLI,
   Command,
@@ -43,7 +45,7 @@ export type { GlobalFlags } from "./global-flags";
 export { registerTuiRenderer, clearTuiRenderer, getTuiRenderer } from "./tui/registry";
 
 // Note: Plugin system is exported via subpath export
-// Usage: import { PluginManager, createPlugin } from '@reliverse/rempts-core/plugin'
+// Usage: import { PluginManager, createPlugin } from '@reliverse/rempts/plugin'
 
 // Export validation utilities
 export {

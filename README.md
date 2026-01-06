@@ -51,7 +51,7 @@ logger.success("Hello, Reliverse!"); // > ✓ Hello, Reliverse!
 10. `@reliverse/relico`
 11. `@reliverse/relifso`
 12. `@reliverse/relinka`
-13. `@reliverse/rempts`
+13. `rempts`
 14. `@reliverse/tsconfig`
 15. `@reliverse/typerso`
 

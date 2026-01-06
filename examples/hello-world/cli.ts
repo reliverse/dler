@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { createCLI } from "@reliverse/rempts-core";
+import { createCLI } from "@reliverse/rempts";
 import greetCommand from "./commands/greet";
 
 const cli = await createCLI();

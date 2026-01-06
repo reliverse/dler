@@ -1,0 +1,38 @@
+import { defineConfig } from "@reliverse/rempts";
+
+export default defineConfig({
+  name: "dler",
+  version: "2.3.0",
+  description:
+    "@reliverse/dler is a framework which helps TypeScript and JavaScript developers create their libraries and CLI tools. It provides ready-to-use primitives, so you don't have to write them from scratch.",
+  plugins: [],
+  commands: {
+    directory: "./src/commands",
+  },
+  build: {
+    entry: "./cli.ts",
+    outdir: "./dist",
+    targets: ["native"],
+    compress: false,
+    minify: false,
+    sourcemap: true,
+  },
+  dev: {
+    watch: true,
+    inspect: false,
+  },
+  test: {
+    pattern: ["**/*.test.ts", "**/*.spec.ts"],
+    coverage: false,
+    watch: false,
+  },
+  workspace: {
+    versionStrategy: "fixed" as const,
+  },
+  release: {
+    npm: true,
+    github: false,
+    tagFormat: "v{{version}}",
+    conventionalCommits: true,
+  },
+});

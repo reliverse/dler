@@ -7,7 +7,7 @@ import { mkdir } from "node:fs/promises";
 const packageRoot = new URL("../", import.meta.url).pathname;
 const distDir = join(packageRoot, "dist");
 
-console.log("Building @reliverse/rempts-generator...");
+console.log("Building rempts-generator...");
 
 // Ensure dist directory exists
 await mkdir(distDir, { recursive: true });

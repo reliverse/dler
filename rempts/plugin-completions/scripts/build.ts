@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Build script for @reliverse/rempts-plugin-completions
+ * Build script for rempts-plugin-completions
  */
 
-console.log("✅ @reliverse/rempts-plugin-completions built successfully");
+console.log("✅ rempts-plugin-completions built successfully");

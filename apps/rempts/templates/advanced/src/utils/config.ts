@@ -48,7 +48,7 @@ export async function loadConfig(configPath?: string): Promise<Config> {
       ...config,
       server: {
         ...DEFAULT_CONFIG.server,
-        ...(config.server || {}),
+        ...config.server,
       },
     };
 

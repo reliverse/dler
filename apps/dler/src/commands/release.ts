@@ -1,6 +1,6 @@
-import { defineCommand, option } from "@reliverse/rempts-core";
+import { defineCommand, option } from "@reliverse/rempts";
 import { z } from "zod";
-import { loadConfig } from "@reliverse/rempts-core";
+import { loadConfig } from "@reliverse/rempts";
 import { $ } from "bun";
 import { existsSync } from "node:fs";
 import { relico } from "@reliverse/relico";

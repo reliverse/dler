@@ -1,6 +1,6 @@
-import type { Command, CLI } from "@reliverse/rempts-core";
+import type { Command, CLI } from "@reliverse/rempts";
 import type { TestOptions, TestResult, MockHandlerArgs, ShellPromise } from "./types";
-import { createCLI } from "@reliverse/rempts-core";
+import { createCLI } from "@reliverse/rempts";
 
 export async function testCommand(
   command: Command<any>,
@@ -351,7 +351,7 @@ export async function testCommand(
     const handlerArgs: MockHandlerArgs = {
       flags: options.flags || {},
       positional: options.args || [],
-      env: { ...process.env, ...(options.env || {}) },
+      env: { ...process.env, ...options.env },
       cwd: options.cwd || process.cwd(),
       prompt: mockPrompt,
       spinner: mockSpinner,

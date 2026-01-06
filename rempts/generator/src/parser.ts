@@ -24,7 +24,8 @@ function getImportPath(filePath: string, outputFile: string): string {
   const commandAbsolute = toAbsolute(filePath);
   const outputAbsolute = toAbsolute(outputFile);
   const relativePath = path.relative(path.dirname(outputAbsolute), commandAbsolute);
-  const normalized = relativePath.replace(/\\/g, "/");
+  // Normalize and ensure forward slashes for cross-platform compatibility
+  const normalized = path.normalize(relativePath).replace(/\\/g, "/");
 
   // Convert .ts extension to .js for ESM imports
   const withJsExt = normalized.replace(/\.ts$/, ".js");
@@ -35,11 +36,13 @@ function getImportPath(filePath: string, outputFile: string): string {
   return `./${withJsExt}`;
 }
 
-function getExportPath(filePath: string, commandsDir: string, outputFile: string): string {
+function getExportPath(filePath: string, commandsDir: string): string {
   const commandsRoot = toAbsolute(commandsDir);
   const commandAbsolute = toAbsolute(filePath);
-  const relativePath = path.relative(commandsRoot, commandAbsolute).replace(/\\/g, "/");
-  const withoutExt = relativePath.replace(/\.[^.]+$/, "");
+  const relativePath = path.relative(commandsRoot, commandAbsolute);
+  // Normalize and ensure forward slashes for cross-platform compatibility
+  const normalized = path.normalize(relativePath).replace(/\\/g, "/");
+  const withoutExt = normalized.replace(/\.[^.]+$/, "");
 
   const cleanedCommandsDir = commandsDir.replace(/^\.\/?/, "");
   const base = cleanedCommandsDir ? `../${cleanedCommandsDir}` : "..";
@@ -101,11 +104,13 @@ export async function parseCommand(
 
     return commandMetadata;
   } catch (error) {
-    console.warn(`Warning: Could not parse command file: ${filePath}`);
-    console.warn(`Error:`, error);
+    console.error(`❌ Failed to parse command file: ${filePath}`);
+    console.error(`Error:`, error);
     if (error instanceof Error) {
-      console.warn(`Stack:`, error.stack);
+      console.error(`Stack trace:`, error.stack);
     }
+    console.error(`This may cause the command to be unavailable. Please check the file syntax.`);
+    // Return null to allow the build to continue, but make it very visible
     return null;
   }
 }
@@ -121,7 +126,7 @@ function extractCommandMetadata(
     description: "",
     filePath,
     importPath: getImportPath(filePath, outputFile),
-    exportPath: getExportPath(filePath, commandsDir, outputFile),
+    exportPath: getExportPath(filePath, commandsDir),
   };
 
   // Extract properties from the object expression

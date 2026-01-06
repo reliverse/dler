@@ -1,0 +1,12 @@
+{
+  "extends": "@reliverse/tsconfig/base.json",
+  "compilerOptions": {
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": false,
+    "skipLibCheck": true,
+    "paths": {
+      "~commands/*": ["./.dler/commands.gen.ts"]
+    }
+  },
+  "include": [".dler/**/*.ts", "**/*.ts"]
+}

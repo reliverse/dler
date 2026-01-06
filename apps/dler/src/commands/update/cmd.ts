@@ -3,7 +3,8 @@
 import { getCurrentWorkingDirectory } from "@reliverse/helpers";
 import path from "@reliverse/pathkit";
 import { logger } from "@reliverse/relinka";
-import { defineArgs, defineCommand } from "@reliverse/rempts";
+import { defineCommand, option } from "@reliverse/rempts";
+import { z } from "zod";
 import { msgs } from "../../const";
 import {
   checkPackageUpdatesForFile,
@@ -15,71 +16,70 @@ import {
 import { displayStructuredUpdateResults, type UpdateResult } from "./utils";
 
 export default defineCommand({
-  meta: {
-    name: "update",
-    description:
-      "Update all dependencies to their latest versions across all package.json files. Supports selective updates with glob patterns and comprehensive filtering options.",
-    examples: [
-      "dler update",
-      "dler update --no-install",
-      "dler update --dryRun",
-      "dler update --name @types/* --name react*",
-      'dler update --ignore "eslint-*" --ignore "@babel/*"',
-      "dler update --no-allowMajor",
-      "dler update --details",
-      "dler update --ignoreFields peerDependencies",
-      "dler update --dryRun --no-install",
-      "dler update --name react --name react-dom",
-      "dler update --ignore @types/* --allowMajor",
-    ],
+  name: "update",
+  description:
+    "Update all dependencies to their latest versions across all package.json files. Supports selective updates with glob patterns and comprehensive filtering options.",
+  options: {
+    ci: option(
+      z.boolean().default(!process.stdout.isTTY || !!process.env.CI),
+      {
+        description: msgs.args.ci,
+      },
+    ),
+    cwd: option(
+      z.string().default(getCurrentWorkingDirectory()),
+      {
+        description: msgs.args.cwd,
+      },
+    ),
+    name: option(
+      z.string().optional(),
+      {
+        description:
+          "Specific dependencies to update, supports glob patterns (e.g. '@types/*', 'react*'). Can be specified multiple times or comma-separated.",
+      },
+    ),
+    ignore: option(
+      z.string().optional(),
+      {
+        description:
+          "Dependencies to exclude from updates, supports glob patterns (e.g. 'eslint-*', '@types/*')",
+      },
+    ),
+    dryRun: option(
+      z.boolean().default(false),
+      {
+        description: "Preview updates without making changes",
+      },
+    ),
+    install: option(
+      z.boolean().default(true),
+      {
+        description: "Run install after updating (default: true)",
+        short: "i",
+      },
+    ),
+    allowMajor: option(
+      z.boolean().default(true),
+      {
+        description: "Allow major version updates (default: true)",
+      },
+    ),
+    details: option(
+      z.boolean().default(false),
+      {
+        description: "Show detailed dependency information (default: false)",
+        short: "d",
+      },
+    ),
+    ignoreFields: option(
+      z.string().optional(),
+      {
+        description: "Dependency fields to ignore (e.g., 'peerDependencies,catalog')",
+      },
+    ),
   },
-  args: defineArgs({
-    ci: {
-      type: "boolean",
-      description: msgs.args.ci,
-      default: !process.stdout.isTTY || !!process.env.CI,
-    },
-    cwd: {
-      type: "string",
-      description: msgs.args.cwd,
-      default: getCurrentWorkingDirectory(),
-    },
-    name: {
-      type: "string",
-      description:
-        "Specific dependencies to update, supports glob patterns (e.g. '@types/*', 'react*'). Can be specified multiple times or comma-separated.",
-    },
-    ignore: {
-      type: "string",
-      description:
-        "Dependencies to exclude from updates, supports glob patterns (e.g. 'eslint-*', '@types/*')",
-    },
-    dryRun: {
-      type: "boolean",
-      description: "Preview updates without making changes",
-    },
-    install: {
-      type: "boolean",
-      description: "Run install after updating (default: true)",
-      default: true,
-      aliases: ["i"],
-    },
-    allowMajor: {
-      type: "boolean",
-      description: "Allow major version updates (default: true)",
-      default: true,
-    },
-    details: {
-      type: "boolean",
-      description: "Show detailed dependency information (default: false)",
-      aliases: ["d"],
-    },
-    ignoreFields: {
-      type: "string",
-      description: "Dependency fields to ignore (e.g., 'peerDependencies,catalog')",
-    },
-  }),
-  run: async ({ args }) => {
+  handler: async ({ flags }) => {
     try {
       // Check if running in Bun
       if (typeof process.versions.bun === "undefined") {
@@ -87,7 +87,7 @@ export default defineCommand({
         process.exit(1);
       }
 
-      const { dryRun, install, details, ignoreFields } = args;
+      const { dryRun, install, details, ignoreFields } = flags;
       const isDryRun = Boolean(dryRun);
       const showDetails = Boolean(details);
       const fieldsToIgnore = Array.isArray(ignoreFields) ? ignoreFields : [];
@@ -113,16 +113,16 @@ export default defineCommand({
         // Check updates for this specific file
         const updateArgs = {
           ...args,
-          name: args.name ? (Array.isArray(args.name) ? args.name : [args.name]) : undefined,
-          ignore: args.ignore
-            ? Array.isArray(args.ignore)
-              ? args.ignore
-              : [args.ignore]
+          name: flags.name ? (Array.isArray(flags.name) ? flags.name : [flags.name]) : undefined,
+          ignore: flags.ignore
+            ? Array.isArray(flags.ignore)
+              ? flags.ignore
+              : [flags.ignore]
             : undefined,
-          ignoreFields: args.ignoreFields
-            ? Array.isArray(args.ignoreFields)
-              ? args.ignoreFields
-              : args.ignoreFields.split(",").map((s) => s.trim())
+          ignoreFields: flags.ignoreFields
+            ? Array.isArray(flags.ignoreFields)
+              ? flags.ignoreFields
+              : flags.ignoreFields.split(",").map((s) => s.trim())
             : undefined,
         };
         const results = await checkPackageUpdatesForFile(fileDeps, updateArgs);

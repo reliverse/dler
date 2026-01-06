@@ -1,0 +1,24 @@
+{
+  "name": "file-based-commands-example",
+  "version": "1.0.0",
+  "description": "Example of file-based command loading in @rempts",
+  "type": "module",
+  "scripts": {
+    "generate": "bun dler generate",
+    "dev": "bun dler dev",
+    "build": "bun dler build",
+    "typecheck": "tsc --noEmit",
+    "cli": "bun cli.ts"
+  },
+  "dependencies": {
+    "@reliverse/relico": "workspace:*",
+    "@reliverse/rempts": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@reliverse/dler": "workspace:*",
+    "@reliverse/tsconfig": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}

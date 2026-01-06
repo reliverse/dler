@@ -1,5 +1,5 @@
-import { registerTuiRenderer as coreRegisterTuiRenderer } from "@reliverse/rempts-core";
-import type { RenderArgs } from "@reliverse/rempts-core";
+import { registerTuiRenderer as coreRegisterTuiRenderer } from "@reliverse/rempts";
+import type { RenderArgs } from "@reliverse/rempts";
 import { render as opentuiRender } from "@opentui/react";
 import type { ReactElement } from "react";
 

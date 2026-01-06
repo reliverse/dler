@@ -13,15 +13,15 @@
   "dependencies": {
     "@babel/parser": "^7.23.0",
     "@babel/traverse": "^7.23.0",
-    "@reliverse/rempts-core": "workspace:*",
+    "@reliverse/rempts": "workspace:*",
     "debug": "^4.4.3",
-    "zod": "^4.1.13"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
     "@types/babel__parser": "^7.1.0",
     "@types/babel__traverse": "^7.20.0",
-    "@types/bun": "latest",
+    "@types/bun": "catalog:",
     "@types/debug": "^4.1.12"
   }
 }

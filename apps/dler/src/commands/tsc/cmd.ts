@@ -3,91 +3,53 @@
 // Note on `bun publish` and `bun tsc`: we don't display npm/tsc raw output, because both are not reliable for concurrent display, so we display them on our own.
 
 import { logger } from "@reliverse/relinka";
-import { defineArgs, defineCommand } from "@reliverse/rempts";
+import { defineCommand, option } from "@reliverse/rempts";
+import { z } from "zod";
 import { runTscOnAllPackages } from "./impl";
 
 export default defineCommand({
-  meta: {
-    name: "tsc",
-    description: "Run TypeScript type checking on all workspace packages",
-    examples: [
-      "dler tsc",
-      'dler tsc --filter "@reliverse/rempts,@reliverse/build"',
-      'dler tsc --ignore "@reliverse/*"',
-      'dler tsc --ignore "@reliverse/relico" --ignore "@reliverse/dler-v1"',
-      'dler tsc --ignore "@reliverse/relico @reliverse/dler-v1"',
-      "dler tsc --cwd /path/to/monorepo",
-      "dler tsc --cwd /path/to/monorepo --ignore @reliverse/*",
-      "dler tsc --concurrency 8",
-      "dler tsc --concurrency 2 --stopOnError",
-      "dler tsc --ignore @reliverse/* --concurrency 6 --stopOnError",
-      "dler tsc --verbose",
-      "dler tsc --verbose --ignore @reliverse/*",
-      "dler tsc --verbose --concurrency 2 --stopOnError",
-      "dler tsc --copy-logs",
-      "dler tsc --copy-logs --verbose",
-      "dler tsc --auto-concurrency",
-      "dler tsc --no-cache",
-      "dler tsc --no-incremental",
-      "dler tsc --build-mode",
-      "dler tsc --skip-unchanged",
-      "dler tsc --auto-concurrency --build-mode --verbose",
-    ],
-  },
-  args: defineArgs({
-    filter: {
-      type: "string",
+  name: "tsc",
+  description: "Run TypeScript type checking on all workspace packages",
+  options: {
+    filter: option(z.string().optional(), {
       description:
-        "Package(s) to include (supports wildcards and comma-separated values like '@reliverse/rempts,@reliverse/build'). Takes precedence over --ignore when both are provided.",
-      positional: true,
-    },
-    ignore: {
-      type: "string",
+        "Package(s) to include (supports wildcards and comma-separated values like 'rempts,@reliverse/build'). Takes precedence over --ignore when both are provided.",
+    }),
+    ignore: option(z.string().optional(), {
       description: "Package(s) to ignore (supports wildcards like @reliverse/*)",
-    },
-    cwd: {
-      type: "string",
+    }),
+    cwd: option(z.string().optional(), {
       description: "Working directory (monorepo root)",
-    },
-    concurrency: {
-      type: "number",
+    }),
+    concurrency: option(z.coerce.number().optional(), {
       description: "Number of packages to check concurrently (default: CPU cores)",
-    },
-    stopOnError: {
-      type: "boolean",
+    }),
+    stopOnError: option(z.boolean().default(false), {
       description: "Stop on first error instead of collecting all errors (default: false)",
-    },
-    verbose: {
-      type: "boolean",
+    }),
+    verbose: option(z.boolean().default(false), {
       description: "Verbose mode (default: false)",
-    },
-    copyLogs: {
-      type: "boolean",
+    }),
+    copyLogs: option(z.boolean().default(true), {
       description: "Copy failed package logs to clipboard (default: true, skipped in CI)",
-      default: true,
-    },
-    cache: {
-      type: "boolean",
+    }),
+    cache: option(z.boolean().default(true), {
       description: "Enable caching for faster subsequent runs (default: true)",
-    },
-    incremental: {
-      type: "boolean",
+    }),
+    incremental: option(z.boolean().default(true), {
       description: "Use TypeScript incremental compilation (default: true)",
-    },
-    autoConcurrency: {
-      type: "boolean",
+    }),
+    autoConcurrency: option(z.boolean().default(false), {
       description: "Auto-detect optimal concurrency based on CPU cores (default: false)",
-    },
-    skipUnchanged: {
-      type: "boolean",
+    }),
+    skipUnchanged: option(z.boolean().default(true), {
       description: "Skip packages with no changes since last check (default: true)",
-    },
-    buildMode: {
-      type: "boolean",
+    }),
+    buildMode: option(z.boolean().default(false), {
       description: "Use tsc --build for project references (default: false)",
-    },
-  }),
-  run: async ({ args }) => {
+    }),
+  },
+  handler: async ({ flags }) => {
     try {
       // Check if running in Bun
       if (typeof process.versions.bun === "undefined") {
@@ -97,19 +59,19 @@ export default defineCommand({
 
       // Skip copying in CI environment
       const isCI = process.env.CI === "true" || !process.stdout.isTTY;
-      const shouldCopyLogs = args.copyLogs !== false && !isCI;
+      const shouldCopyLogs = flags.copyLogs !== false && !isCI;
 
-      const results = await runTscOnAllPackages(args.ignore, args.cwd, {
-        filter: args.filter,
-        concurrency: args.concurrency,
-        stopOnError: args.stopOnError,
-        verbose: args.verbose,
+      const results = await runTscOnAllPackages(flags.ignore, flags.cwd, {
+        filter: flags.filter,
+        concurrency: flags.concurrency,
+        stopOnError: flags.stopOnError,
+        verbose: flags.verbose,
         copyLogs: shouldCopyLogs,
-        cache: args.cache,
-        incremental: args.incremental,
-        autoConcurrency: args.autoConcurrency,
-        skipUnchanged: args.skipUnchanged,
-        buildMode: args.buildMode,
+        cache: flags.cache,
+        incremental: flags.incremental,
+        autoConcurrency: flags.autoConcurrency,
+        skipUnchanged: flags.skipUnchanged,
+        buildMode: flags.buildMode,
       });
 
       if (results.hasErrors) {

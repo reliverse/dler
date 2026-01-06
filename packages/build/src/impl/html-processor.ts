@@ -189,7 +189,7 @@ export class HTMLProcessor {
           }
         }
       }
-    } catch (_error) {
+    } catch {
       // Ignore directory read errors
     }
 
