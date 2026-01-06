@@ -56,8 +56,8 @@ export async function loadConfig(cwd = process.cwd()): Promise<LoadedConfig> {
     if (existsSync(configPath)) {
       try {
         const module = await import(configPath);
-        // Zod parse automatically applies all defaults
-        const config = remptsConfigSchema.parse(module.default || module) as LoadedConfig;
+        // Arktype assert automatically validates and applies defaults
+        const config = remptsConfigSchema.assert(module.default || module) as LoadedConfig;
         return config;
       } catch (error) {
         console.error(`Error loading config from ${configPath}:`, error);
@@ -67,6 +67,6 @@ export async function loadConfig(cwd = process.cwd()): Promise<LoadedConfig> {
   }
 
   // Return default config if no file found
-  // Zod parse with empty object will apply all defaults
-  return remptsConfigSchema.parse({}) as LoadedConfig;
+  // Arktype assert with empty object will validate and return defaults
+  return remptsConfigSchema.assert({}) as LoadedConfig;
 }

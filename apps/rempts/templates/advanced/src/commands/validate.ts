@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { loadConfig } from "../utils/config";
 import { validateFiles } from "../utils/validator";
 import { glob } from "../utils/glob";
@@ -9,18 +9,35 @@ const validateCommand = defineCommand({
   name: "validate",
   description: "Validate files against defined rules",
   options: {
-    config: option(z.string().optional(), {
-      short: "c",
-      description: "Path to config file",
-    }),
-    fix: option(z.boolean().default(false), {
-      short: "f",
-      description: "Auto-fix issues",
-    }),
-    cache: option(z.boolean().default(true), {
-      description: "Enable caching",
-    }),
-    files: option(z.string().optional(), {
+    config: option(
+      type("string | undefined").narrow((s, ctx) => {
+        if (!s) return true;
+        return (
+          s.endsWith(".json") ||
+          s.endsWith(".ts") ||
+          s.endsWith(".js") ||
+          ctx.reject(`Config file must be .json, .ts, or .js (was "${s}")`)
+        );
+      }),
+      {
+        short: "c",
+        description: "Path to config file (.json, .ts, or .js)",
+      },
+    ),
+    fix: option(
+      type("boolean").pipe((v) => v ?? false),
+      {
+        short: "f",
+        description: "Auto-fix issues",
+      },
+    ),
+    cache: option(
+      type("boolean").pipe((v) => v ?? true),
+      {
+        description: "Enable caching",
+      },
+    ),
+    files: option(type("string | undefined"), {
       description: "Files to validate (if not specified, uses config patterns)",
     }),
   },

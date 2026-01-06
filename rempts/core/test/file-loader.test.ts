@@ -178,13 +178,13 @@ export default defineCommand({
     // Test the fixed logic for detecting commands that use defineCommand
     // but don't explicitly import from rempts-core
     const commandContent = `
-import { z } from "zod";
+import { type } from "arktype";
 
 const cmd = defineCommand({
   name: "define-only-test",
   description: "Command using defineCommand without explicit import",
   options: {
-    test: z.string().optional()
+    test: type("string?")
   },
   handler: () => {}
 });

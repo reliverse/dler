@@ -699,9 +699,9 @@ const collectAllResults = async (
         }
         return runTscOnPackage(pkg, monorepoRoot, {
           verbose,
-          cache,
           incremental,
           buildMode,
+          ...(cache && { cache }),
         });
       },
       {

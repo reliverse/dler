@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { relico } from "@reliverse/relico";
 
 // Type for the merged plugin stores
@@ -14,19 +14,19 @@ const buildCommand = defineCommand({
   name: "build",
   description: "Build for production",
   options: {
-    output: option(z.string().default("dist"), {
+    output: option(type("string").default("dist"), {
       description: "Output directory",
       short: "o",
     }),
-    minify: option(z.boolean().default(true), {
+    minify: option(type("boolean").default(true), {
       description: "Minify output",
       short: "m",
     }),
-    sourcemap: option(z.boolean().default(false), {
+    sourcemap: option(type("boolean").default(false), {
       description: "Generate source maps",
       short: "s",
     }),
-    target: option(z.enum(["node", "bun", "browser"]).default("node"), {
+    target: option(type("'node'|'bun'|'browser'").default("node"), {
       description: "Build target",
       short: "t",
     }),

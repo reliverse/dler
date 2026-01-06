@@ -17,14 +17,14 @@ describe("Generator", () => {
     // Create a test command file
     const testCommandContent = `
 import { defineCommand, option } from '@reliverse/rempts'
-import { z } from 'zod'
+import { type } from 'arktype'
 
 export default defineCommand({
   name: 'test-command',
   description: 'A test command',
   options: {
-    name: option(z.string(), { description: 'Name option' }),
-    count: option(z.number().default(1), { description: 'Count option' })
+    name: option(type("string"), { description: 'Name option' }),
+    count: option(type("number", "=", 1), { description: 'Count option' })
   },
   handler: async ({ flags }) => {
     console.log('Test command executed')
@@ -49,14 +49,14 @@ export default defineCommand({
     // Create a test command file
     const testCommandContent = `
 import { defineCommand, option } from '@reliverse/rempts'
-import { z } from 'zod'
+import { type } from 'arktype'
 
 export default defineCommand({
   name: 'test-command',
   description: 'A test command',
   options: {
-    name: option(z.string(), { description: 'Name option' }),
-    count: option(z.number().default(1), { description: 'Count option' })
+    name: option(type("string"), { description: 'Name option' }),
+    count: option(type("number", "=", 1), { description: 'Count option' })
   },
   handler: async ({ flags }) => {
     console.log('Test command executed')
@@ -101,14 +101,14 @@ export default defineCommand({
     // Create a test command file
     const testCommandContent = `
 import { defineCommand, option } from '@reliverse/rempts'
-import { z } from 'zod'
+import { type } from 'arktype'
 
 export default defineCommand({
   name: 'test-command',
   description: 'A test command',
   options: {
-    name: option(z.string(), { description: 'Name option' }),
-    count: option(z.number().default(1), { description: 'Count option' })
+    name: option(type("string"), { description: 'Name option' }),
+    count: option(type("number", "=", 1), { description: 'Count option' })
   },
   handler: async ({ flags }) => {
     console.log('Test command executed')

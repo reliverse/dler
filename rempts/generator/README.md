@@ -80,7 +80,7 @@ The generator scans for files matching `**/*.{ts,tsx,js,jsx}` and looks for `def
 
 ```typescript
 import { defineCommand, option } from '@reliverse/rempts'
-import { z } from 'zod'
+import { type } from 'arktype'
 
 export default defineCommand({
   name: 'deploy',

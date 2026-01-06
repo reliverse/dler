@@ -1,16 +1,16 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { relico } from "@reliverse/relico";
 
 const helloCommand = defineCommand({
   name: "hello",
   description: "Say hello to someone",
   options: {
-    name: option(z.string().default("World"), {
+    name: option(type("string", "=", "World"), {
       description: "Name to greet",
       short: "n",
     }),
-    excited: option(z.boolean().default(false), {
+    excited: option(type("boolean", "=", false), {
       description: "Add excitement!",
       short: "e",
     }),

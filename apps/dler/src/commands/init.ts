@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { spawn } from "node:child_process";
 import { relico } from "@reliverse/relico";
 
@@ -8,26 +8,32 @@ export default defineCommand({
   description: "Initialize a new Rempts CLI project",
   alias: "i",
   options: {
-    name: option(z.string().optional(), { short: "n", description: "Project name" }),
-    template: option(z.enum(["basic", "advanced", "monorepo"]).default("basic"), {
+    name: option(type("string | undefined"), { short: "n", description: "Project name" }),
+    template: option(type("'basic'|'advanced'|'monorepo'"), {
       short: "t",
       description: "Project template",
     }),
-    dir: option(z.string().optional(), {
+    dir: option(type("string | undefined"), {
       short: "d",
       description: "Directory to create project in",
     }),
-    git: option(z.boolean().default(true), {
+    git: option(type("boolean"), {
       short: "g",
       description: "Initialize git repository",
     }),
-    install: option(z.boolean().default(true), { description: "Install dependencies" }),
-    "package-manager": option(z.enum(["bun", "pnpm", "yarn", "npm"]).default("bun"), {
+    install: option(type("boolean"), { description: "Install dependencies" }),
+    "package-manager": option(type("'bun'|'pnpm'|'yarn'|'npm'"), {
       short: "p",
       description: "Package manager to use",
     }),
   },
   handler: async ({ flags, positional, colors }) => {
+    // Apply defaults
+    const template = flags.template || "basic";
+    const git = flags.git ?? true;
+    const install = flags.install ?? true;
+    const packageManager = flags["package-manager"] || "bun";
+
     console.log(relico.cyan("🚀 Creating new Rempts CLI project..."));
     console.log();
 
@@ -42,24 +48,24 @@ export default defineCommand({
     }
 
     // Add flags
-    if (flags.template !== "basic") {
-      args.push("--template", flags.template);
+    if (template !== "basic") {
+      args.push("--template", template);
     }
 
     if (flags.dir) {
       args.push("--dir", flags.dir);
     }
 
-    if (!flags.git) {
+    if (!git) {
       args.push("--no-git");
     }
 
-    if (!flags.install) {
+    if (!install) {
       args.push("--no-install");
     }
 
-    if (flags["package-manager"] !== "bun") {
-      args.push("--package-manager", flags["package-manager"]);
+    if (packageManager !== "bun") {
+      args.push("--package-manager", packageManager);
     }
 
     console.log(relico.dim(`> bunx ${args.join(" ")}`));

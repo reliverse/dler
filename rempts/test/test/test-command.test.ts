@@ -1,6 +1,6 @@
 import { test, expect } from "bun:test";
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { testCommand, expectCommand } from "../src/mod";
 import { mockPromptResponses, mockShellCommands, mockInteractive } from "../src/helpers";
 import { relico } from "@reliverse/relico";
@@ -9,7 +9,7 @@ test("testCommand - basic command execution", async () => {
   const command = defineCommand({
     name: "hello",
     description: "Say hello",
-    handler: async ({ flags, colors }) => {
+    handler: async () => {
       console.log(relico.green("Hello, world!"));
     },
   });
@@ -26,8 +26,8 @@ test("testCommand - with flags", async () => {
     name: "greet",
     description: "Greet someone",
     options: {
-      name: option(z.string().default("World")),
-      loud: option(z.boolean().default(false), { short: "l" }),
+      name: option(type("string")),
+      loud: option(type("boolean"), { short: "l" }),
     },
     handler: async ({ flags }) => {
       const message = `Hello, ${flags.name}!`;
@@ -47,7 +47,7 @@ test("testCommand - with prompts", async () => {
   const command = defineCommand({
     name: "setup",
     description: "Setup wizard",
-    handler: async ({ prompt, colors }) => {
+    handler: async ({ prompt }) => {
       const name = await prompt("What is your name?");
       const confirmed = await prompt.confirm("Continue?", { default: true });
 
@@ -241,7 +241,7 @@ test("testCommand - mockInteractive helper", async () => {
 });
 
 test("testCommand - validation with retry using mockPrompts", async () => {
-  const emailSchema = z.string().email("Invalid email format");
+  const emailSchema = type("string.email");
 
   const command = defineCommand({
     name: "register",

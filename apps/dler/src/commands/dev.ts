@@ -1,6 +1,6 @@
 import { defineCommand, option } from "@reliverse/rempts";
 import { Generator } from "@reliverse/rempts-generator";
-import { z } from "zod";
+import { type } from "arktype";
 import { loadConfig } from "@reliverse/rempts";
 import { findEntry } from "../utils/find-entry";
 import path from "node:path";
@@ -12,16 +12,16 @@ export default defineCommand({
   description: "Run your CLI in development mode with hot reload",
   alias: "d",
   options: {
-    entry: option(z.string().optional(), {
+    entry: option(type("string | undefined"), {
       short: "e",
       description: "Entry file (defaults to auto-detect)",
     }),
-    commandsDir: option(z.string().default("commands"), { description: "Commands directory" }),
-    generate: option(z.boolean().default(true), { description: "Enable codegen" }),
-    clearScreen: option(z.boolean().default(true), { description: "Clear screen on reload" }),
-    watch: option(z.boolean().default(true), { short: "w", description: "Watch for changes" }),
-    inspect: option(z.boolean().default(false), { short: "i", description: "Enable debugger" }),
-    port: option(z.number().int().min(1).max(65535).optional(), {
+    commandsDir: option(type("string"), { description: "Commands directory" }),
+    generate: option(type("boolean"), { description: "Enable codegen" }),
+    clearScreen: option(type("boolean"), { description: "Clear screen on reload" }),
+    watch: option(type("boolean"), { short: "w", description: "Watch for changes" }),
+    inspect: option(type("boolean"), { short: "i", description: "Enable debugger" }),
+    port: option(type("number | undefined"), {
       short: "p",
       description: "Debugger port",
     }),
@@ -29,15 +29,22 @@ export default defineCommand({
   handler: async ({ flags, positional, spinner, colors }) => {
     const config = await loadConfig();
 
+    // Apply defaults
+    const commandsDir = flags.commandsDir || "commands";
+    const generate = flags.generate !== undefined ? flags.generate : true;
+    const clearScreen = flags.clearScreen !== undefined ? flags.clearScreen : true;
+    const watch = flags.watch !== undefined ? flags.watch : true;
+    const inspect = flags.inspect !== undefined ? flags.inspect : false;
+
     // Generate types if codegen is enabled
     const generateTypes = async () => {
-      if (!flags.generate) return;
+      if (!generate) return;
 
       const generator = new Generator({
-        commandsDir: flags.commandsDir,
+        commandsDir: commandsDir,
         outputFile: "./.dler/commands.gen.ts",
         config,
-        generateReport: config.commands?.generateReport,
+        generateReport: config.commands?.generateReport ?? false,
       });
 
       try {
@@ -51,7 +58,7 @@ export default defineCommand({
     };
 
     // Initial type generation
-    if (flags.generate) {
+    if (generate) {
       const spin = spinner("Generating command types...");
       const success = await generateTypes();
       if (success) {
@@ -87,12 +94,12 @@ export default defineCommand({
     const bunArgs: string[] = [];
 
     // Use --hot for hot reload (Bun's native hot reload)
-    if (flags.watch ?? config.dev?.watch ?? true) {
+    if (watch ?? config.dev?.watch ?? true) {
       bunArgs.push("--hot");
     }
 
     // Add inspect flag if enabled
-    if (flags.inspect) {
+    if (inspect) {
       bunArgs.push("--inspect");
       if (flags.port) {
         bunArgs.push(`--inspect-port=${flags.port}`);
@@ -111,15 +118,15 @@ export default defineCommand({
     }
 
     console.log(relico.cyan("\n👀 Starting dev mode...\n"));
-    if (flags.watch ?? config.dev?.watch ?? true) {
+    if (watch ?? config.dev?.watch ?? true) {
       console.log(relico.dim(`Running: bun ${bunArgs.join(" ")}\n`));
     }
 
     // Watch for changes in commands directory to regenerate types
     let ac: AbortController | null = null;
-    if (flags.watch ?? config.dev?.watch ?? true) {
-      const commandsDir = path.resolve(flags.commandsDir);
-      if (existsSync(commandsDir) && flags.generate) {
+    if (watch ?? config.dev?.watch ?? true) {
+      const commandsDirPath = path.resolve(commandsDir);
+      if (existsSync(commandsDirPath) && generate) {
         const { watch } = await import("node:fs/promises");
         ac = new AbortController();
         const { signal } = ac;
@@ -127,7 +134,7 @@ export default defineCommand({
         // Watch commands directory for type regeneration
         const watchCommands = async () => {
           try {
-            const watcher = watch(commandsDir, {
+            const watcher = watch(commandsDirPath, {
               recursive: true,
               signal,
             });

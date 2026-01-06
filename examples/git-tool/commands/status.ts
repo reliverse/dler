@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { relico } from "@reliverse/relico";
 
 export default defineCommand({
@@ -8,39 +8,31 @@ export default defineCommand({
   alias: "st",
   options: {
     // Show detailed information
-    detailed: option(z.coerce.boolean().default(false), {
+    detailed: option(type("boolean"), {
       short: "d",
       description: "Show detailed status information",
     }),
 
     // Show branch information
-    branches: option(z.coerce.boolean().default(false), {
+    branches: option(type("boolean"), {
       short: "b",
       description: "Show branch information",
     }),
 
     // Show remote information
-    remote: option(z.coerce.boolean().default(false), {
+    remote: option(type("boolean"), {
       short: "r",
       description: "Show remote information",
     }),
 
     // Show commit history
-    history: option(
-      z.coerce
-        .number()
-        .int("History count must be a whole number")
-        .min(1, "History count must be at least 1")
-        .max(50, "History count cannot exceed 50")
-        .optional(),
-      {
-        short: "h",
-        description: "Show commit history (1-50 commits)",
-      },
-    ),
+    history: option(type("number.integer >= 1 & number.integer <= 50"), {
+      short: "h",
+      description: "Show commit history (1-50 commits)",
+    }),
   },
 
-  handler: async ({ flags, colors, shell }) => {
+  handler: async ({ flags, colors: _colors, shell }) => {
     try {
       // Basic status
       const { stdout: status } = await shell`git status --porcelain`;
@@ -176,7 +168,7 @@ export default defineCommand({
           .toString()
           .trim()
           .split("\n")
-          .forEach((commit: string, index: number) => {
+          .forEach((commit: string, _index: number) => {
             const [hash, ...rest] = commit.split(" ");
             const message = rest.join(" ");
             console.log(`  ${relico.dim(hash || "")} ${message}`);

@@ -1,24 +1,24 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { relico } from "@reliverse/relico";
 
 const envCommand = defineCommand({
   name: "env",
   description: "Manage environment variables",
   options: {
-    set: option(z.string().optional(), {
+    set: option(type("string?"), {
       description: "Set environment variable (format: KEY=VALUE)",
       short: "s",
     }),
-    get: option(z.string().optional(), {
+    get: option(type("string?"), {
       description: "Get environment variable value",
       short: "g",
     }),
-    list: option(z.boolean().default(false), {
+    list: option(type("boolean").default(false), {
       description: "List all environment variables",
       short: "l",
     }),
-    file: option(z.string().default(".env"), {
+    file: option(type("string").default(".env"), {
       description: "Environment file to use",
       short: "f",
     }),

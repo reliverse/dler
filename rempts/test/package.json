@@ -47,7 +47,8 @@
   "dependencies": {
     "@reliverse/relico": "workspace:*",
     "@reliverse/rempts": "workspace:*",
-    "zod": "catalog:"
+    "arktype": "catalog:",
+    "arkregex": "catalog:"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",

@@ -1,22 +1,22 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { logger } from "@{{name}}/utils";
 import type { ProcessOptions } from "../types";
 
 const processCommand = defineCommand({
   name: "process",
   description: "Process input files",
-  args: z.array(z.string()).min(1).describe("Files to process"),
+  args: type("string[]", { minLength: 1 }),
   options: {
-    output: option(z.string().optional(), {
+    output: option(type("string?"), {
       short: "o",
       description: "Output directory",
     }),
-    format: option(z.enum(["json", "yaml", "text"]).default("json"), {
+    format: option(type("'json'|'yaml'|'text'", "=", "json"), {
       short: "f",
       description: "Output format",
     }),
-    verbose: option(z.boolean().default(false), {
+    verbose: option(type("boolean", "=", false), {
       short: "v",
       description: "Verbose output",
     }),

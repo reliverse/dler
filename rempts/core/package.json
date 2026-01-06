@@ -60,9 +60,9 @@
   "dependencies": {
     "@reliverse/relico": "workspace:*",
     "@reliverse/rempts-utils": "workspace:*",
-    "@standard-schema/spec": "^1.0.0",
-    "@standard-schema/utils": "^0.3.0",
-    "zod": "catalog:"
+    "@standard-schema/spec": "catalog:",
+    "@standard-schema/utils": "catalog:",
+    "arktype": "catalog:"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",

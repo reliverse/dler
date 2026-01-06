@@ -3,20 +3,31 @@
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "./dist",
-    "lib": ["ESNext", "DOM"],
-    "types": ["bun"],
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    "types": [
+      "bun"
+    ],
     "declaration": true,
     "emitDeclarationOnly": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "strict": false,
     "noImplicitOverride": false,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "allowImportingTsExtensions": true,
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "jsxImportSource": "@opentui/react"
   },
-  "include": ["./src/**/*", "./test/**/*"],
-  "exclude": ["./node_modules", "./dist"]
+  "include": [
+    "./src/**/*",
+    "./test/**/*"
+  ],
+  "exclude": [
+    "./node_modules",
+    "./dist"
+  ]
 }

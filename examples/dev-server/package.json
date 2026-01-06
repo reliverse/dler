@@ -14,7 +14,7 @@
     "@reliverse/rempts": "workspace:*",
     "@reliverse/rempts-plugin-ai-detect": "workspace:*",
     "@reliverse/rempts-plugin-config": "workspace:*",
-    "zod": "catalog:"
+    "arktype": "catalog:"
   },
   "devDependencies": {
     "@reliverse/dler": "workspace:*",

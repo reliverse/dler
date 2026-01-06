@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { loadConfig } from "@reliverse/rempts";
 import { spawn } from "node:child_process";
 import { readdir } from "node:fs/promises";
@@ -12,20 +12,23 @@ export default defineCommand({
   description: "Run tests for your CLI",
   alias: "t",
   options: {
-    pattern: option(z.string().or(z.array(z.string())).optional(), {
+    pattern: option(type("string | string[] | undefined"), {
       short: "p",
       description: "Test file patterns",
     }),
-    watch: option(z.boolean().default(false), { short: "w", description: "Watch for changes" }),
-    coverage: option(z.boolean().default(false), {
+    watch: option(type("boolean | undefined"), { short: "w", description: "Watch for changes" }),
+    coverage: option(type("boolean | undefined"), {
       short: "c",
       description: "Generate coverage report",
     }),
-    bail: option(z.boolean().default(false), { short: "b", description: "Stop on first failure" }),
-    timeout: option(z.number().int().positive().optional(), {
+    bail: option(type("boolean | undefined"), {
+      short: "b",
+      description: "Stop on first failure",
+    }),
+    timeout: option(type("number | undefined"), {
       description: "Test timeout in milliseconds",
     }),
-    all: option(z.boolean().default(false), {
+    all: option(type("boolean | undefined"), {
       description: "Run tests in all packages (workspace mode)",
     }),
   },

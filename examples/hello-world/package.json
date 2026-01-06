@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@reliverse/rempts": "workspace:*",
-    "zod": "catalog:"
+    "arktype": "catalog:"
   },
   "devDependencies": {
     "@reliverse/dler": "workspace:*",

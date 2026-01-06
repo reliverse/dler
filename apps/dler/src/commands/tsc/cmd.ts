@@ -4,48 +4,48 @@
 
 import { logger } from "@reliverse/relinka";
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { runTscOnAllPackages } from "./impl";
 
 export default defineCommand({
   name: "tsc",
   description: "Run TypeScript type checking on all workspace packages",
   options: {
-    filter: option(z.string().optional(), {
+    filter: option(type("string | undefined"), {
       description:
         "Package(s) to include (supports wildcards and comma-separated values like 'rempts,@reliverse/build'). Takes precedence over --ignore when both are provided.",
     }),
-    ignore: option(z.string().optional(), {
+    ignore: option(type("string | undefined"), {
       description: "Package(s) to ignore (supports wildcards like @reliverse/*)",
     }),
-    cwd: option(z.string().optional(), {
+    cwd: option(type("string | undefined"), {
       description: "Working directory (monorepo root)",
     }),
-    concurrency: option(z.coerce.number().optional(), {
+    concurrency: option(type("number | undefined"), {
       description: "Number of packages to check concurrently (default: CPU cores)",
     }),
-    stopOnError: option(z.boolean().default(false), {
+    stopOnError: option(type("boolean | undefined"), {
       description: "Stop on first error instead of collecting all errors (default: false)",
     }),
-    verbose: option(z.boolean().default(false), {
+    verbose: option(type("boolean | undefined"), {
       description: "Verbose mode (default: false)",
     }),
-    copyLogs: option(z.boolean().default(true), {
+    copyLogs: option(type("boolean | undefined"), {
       description: "Copy failed package logs to clipboard (default: true, skipped in CI)",
     }),
-    cache: option(z.boolean().default(true), {
+    cache: option(type("boolean | undefined"), {
       description: "Enable caching for faster subsequent runs (default: true)",
     }),
-    incremental: option(z.boolean().default(true), {
+    incremental: option(type("boolean | undefined"), {
       description: "Use TypeScript incremental compilation (default: true)",
     }),
-    autoConcurrency: option(z.boolean().default(false), {
+    autoConcurrency: option(type("boolean | undefined"), {
       description: "Auto-detect optimal concurrency based on CPU cores (default: false)",
     }),
-    skipUnchanged: option(z.boolean().default(true), {
+    skipUnchanged: option(type("boolean | undefined"), {
       description: "Skip packages with no changes since last check (default: true)",
     }),
-    buildMode: option(z.boolean().default(false), {
+    buildMode: option(type("boolean | undefined"), {
       description: "Use tsc --build for project references (default: false)",
     }),
   },
@@ -62,16 +62,16 @@ export default defineCommand({
       const shouldCopyLogs = flags.copyLogs !== false && !isCI;
 
       const results = await runTscOnAllPackages(flags.ignore, flags.cwd, {
-        filter: flags.filter,
-        concurrency: flags.concurrency,
-        stopOnError: flags.stopOnError,
-        verbose: flags.verbose,
         copyLogs: shouldCopyLogs,
-        cache: flags.cache,
-        incremental: flags.incremental,
-        autoConcurrency: flags.autoConcurrency,
-        skipUnchanged: flags.skipUnchanged,
-        buildMode: flags.buildMode,
+        ...(flags.filter && { filter: flags.filter }),
+        ...(flags.concurrency && { concurrency: flags.concurrency }),
+        ...(flags.stopOnError && { stopOnError: flags.stopOnError }),
+        ...(flags.verbose && { verbose: flags.verbose }),
+        ...(flags.cache && { cache: flags.cache }),
+        ...(flags.incremental && { incremental: flags.incremental }),
+        ...(flags.autoConcurrency && { autoConcurrency: flags.autoConcurrency }),
+        ...(flags.skipUnchanged && { skipUnchanged: flags.skipUnchanged }),
+        ...(flags.buildMode && { buildMode: flags.buildMode }),
       });
 
       if (results.hasErrors) {

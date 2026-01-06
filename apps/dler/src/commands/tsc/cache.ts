@@ -187,8 +187,8 @@ export class TscCache {
       hasErrors: !result.success,
       errorCount: result.errorCount,
       warningCount: result.warningCount,
-      output: result.output,
-      filteredOutput: result.filteredOutput,
+      ...(result.output && { output: result.output }),
+      ...(result.filteredOutput && { filteredOutput: result.filteredOutput }),
     };
 
     await this.saveMetadata();

@@ -150,7 +150,7 @@ Given a command like:
 
 ```typescript
 import { defineCommand, option } from '@reliverse/rempts'
-import { z } from 'zod'
+import { type } from 'arktype'
 
 export default defineCommand({
   name: 'deploy',

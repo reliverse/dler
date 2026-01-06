@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { loadConfig, saveConfig, getConfigPath } from "../utils/config";
 import { relico } from "@reliverse/relico";
 
@@ -11,7 +11,7 @@ const configCommand = defineCommand({
       name: "get",
       description: "Get a config value",
       options: {
-        key: option(z.string(), {
+        key: option(type("string"), {
           description: "Config key to get",
         }),
       },
@@ -38,10 +38,10 @@ const configCommand = defineCommand({
       name: "set",
       description: "Set a config value",
       options: {
-        key: option(z.string(), {
+        key: option(type("string"), {
           description: "Config key to set",
         }),
-        value: option(z.string(), {
+        value: option(type("string"), {
           description: "Value to set",
         }),
       },
@@ -89,7 +89,7 @@ const configCommand = defineCommand({
       name: "reset",
       description: "Reset config to defaults",
       options: {
-        force: option(z.boolean().default(false), {
+        force: option(type("boolean", "=", false), {
           short: "f",
           description: "Skip confirmation",
         }),

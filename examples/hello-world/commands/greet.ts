@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { relico } from "@reliverse/relico";
 
 const greetCommand = defineCommand({
@@ -7,16 +7,16 @@ const greetCommand = defineCommand({
   description: "A minimal greeting CLI",
   options: {
     // Simple string with default
-    name: option(z.string().default("world")),
+    name: option(type("string").default("world")),
 
     // Boolean with short flag
-    loud: option(z.coerce.boolean().default(false), {
+    loud: option(type("boolean", "=", false), {
       short: "l",
       description: "Shout the greeting",
     }),
 
     // Number with validation
-    times: option(z.coerce.number().int().positive().default(1), {
+    times: option(type("number").int().positive().default(1), {
       short: "t",
       description: "Number of times to greet",
     }),

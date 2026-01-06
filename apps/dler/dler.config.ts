@@ -12,7 +12,7 @@ export default defineConfig({
   build: {
     entry: "./cli.ts",
     outdir: "./dist",
-    targets: ["native"],
+    targets: ["linux-x64", "darwin-x64", "windows-x64"],
     compress: false,
     minify: false,
     sourcemap: true,
@@ -32,7 +32,7 @@ export default defineConfig({
   release: {
     npm: true,
     github: false,
-    tagFormat: "v{{version}}",
+    tagFormat: "v${version}",
     conventionalCommits: true,
   },
 });

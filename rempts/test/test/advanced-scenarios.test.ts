@@ -1,13 +1,13 @@
 import { test, expect } from "bun:test";
-import { defineCommand, option, SchemaError } from "@reliverse/rempts";
-import { z } from "zod";
+import { defineCommand, option } from "@reliverse/rempts";
+import { type } from "arktype";
 import { testCommand, mockPromptResponses, mockShellCommands, mergeTestOptions } from "../src/mod";
 
 test("complex validation scenario with Standard Schema", async () => {
-  const userSchema = z.object({
-    name: z.string().min(3, "Name must be at least 3 characters"),
-    age: z.number().int().min(18, "Must be 18 or older"),
-    email: z.string().email("Invalid email format"),
+  const userSchema = type({
+    name: "string >= 3",
+    age: "number.integer >= 18",
+    email: "string.email",
   });
 
   const command = defineCommand({
@@ -39,7 +39,9 @@ test("validation error handling with Standard Schema", async () => {
     name: "validate",
     description: "Validate port number",
     options: {
-      port: option(z.number().int().min(1).max(65535), { description: "Port number" }),
+      port: option(type("number.integer >= 1 & number.integer <= 65535"), {
+        description: "Port number",
+      }),
     },
     handler: async ({ flags }) => {
       console.log(`Using port: ${flags.port}`);
@@ -48,15 +50,9 @@ test("validation error handling with Standard Schema", async () => {
 
   // Note: In actual CLI usage, validation errors would be caught before the handler runs
   // For testing, we need to simulate the parsing phase
-  try {
-    const schema = z.number().int().min(1).max(65535);
-    const result = await schema["~standard"].validate(99999);
-    if (result.issues) {
-      throw new SchemaError(result.issues);
-    }
-  } catch (error) {
-    expect(error).toBeInstanceOf(SchemaError);
-  }
+  const schema = type("number.integer >= 1 & number.integer <= 65535");
+  const result = schema(99999);
+  expect(result).toBeInstanceOf(type.errors);
 });
 
 test("nested command prompt mocking", async () => {
@@ -111,13 +107,17 @@ test("multi-step form with validation retries", async () => {
     description: "Project setup wizard",
     handler: async ({ prompt }) => {
       const name = await prompt("Project name:", {
-        schema: z
-          .string()
-          .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens allowed"),
+        schema: type("string").narrow(
+          (s, ctx) =>
+            /^[a-z0-9-]+$/.test(s) ||
+            ctx.reject("Only lowercase letters, numbers, and hyphens allowed"),
+        ),
       });
 
       const version = await prompt("Initial version:", {
-        schema: z.string().regex(/^\d+\.\d+\.\d+$/, "Must be in format X.Y.Z"),
+        schema: type("string").narrow(
+          (s, ctx) => /^\d+\.\d+\.\d+$/.test(s) || ctx.reject("Must be in format X.Y.Z"),
+        ),
       });
 
       const license = await prompt.select("License:", {
@@ -208,11 +208,18 @@ test("mergeTestOptions with conflicting options", async () => {
 });
 
 test("password prompt with validation", async () => {
-  const passwordSchema = z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[0-9]/, "Password must contain at least one number");
+  const passwordSchema = type("string").narrow((s, ctx) => {
+    if (s.length < 8) {
+      return ctx.reject("Password must be at least 8 characters");
+    }
+    if (!/[A-Z]/.test(s)) {
+      return ctx.reject("Password must contain at least one uppercase letter");
+    }
+    if (!/[0-9]/.test(s)) {
+      return ctx.reject("Password must contain at least one number");
+    }
+    return true;
+  });
 
   const command = defineCommand({
     name: "secure",

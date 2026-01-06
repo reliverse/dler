@@ -136,7 +136,7 @@ const parseBiomeOutput = (
     // Match error message (×)
     const errorMatch = line.match(errorPattern);
     if (errorMatch) {
-      currentDiagnostic.message = errorMatch[1]?.trim();
+      currentDiagnostic.message = errorMatch[1]?.trim() ?? "";
       currentDiagnostic.severity = "error";
       continue;
     }
@@ -144,7 +144,7 @@ const parseBiomeOutput = (
     // Match info message (i)
     const infoMatch = line.match(infoPattern);
     if (infoMatch) {
-      currentDiagnostic.suggestion = infoMatch[1]?.trim();
+      currentDiagnostic.suggestion = infoMatch[1]?.trim() ?? "";
       // If we see info but no error message yet, it might be a warning/info
       if (!currentDiagnostic.message) {
         currentDiagnostic.severity = "info";

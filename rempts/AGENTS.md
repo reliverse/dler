@@ -85,7 +85,7 @@ Commands in Rempts use a type-safe builder pattern:
 
 ```typescript
 import { defineCommand, option } from '@reliverse/rempts'
-import { z } from 'zod'
+import { type } from 'arktype'
 
 const command = defineCommand({
   name: 'command-name',

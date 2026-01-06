@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { loadConfig } from "../utils/config";
 import { relico } from "@reliverse/relico";
 
@@ -7,15 +7,15 @@ const serveCommand = defineCommand({
   name: "serve",
   description: "Start a development server",
   options: {
-    port: option(z.number().int().min(1).max(65535).default(3000), {
+    port: option(type("number", { divisor: 1, min: 1, max: 65535 }, "=", 3000), {
       short: "p",
       description: "Port to listen on",
     }),
-    host: option(z.string().default("localhost"), {
+    host: option(type("string", "=", "localhost"), {
       short: "h",
       description: "Host to bind to",
     }),
-    open: option(z.boolean().default(true), {
+    open: option(type("boolean", "=", true), {
       description: "Open browser on start",
     }),
   },

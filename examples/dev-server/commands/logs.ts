@@ -1,24 +1,24 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { relico } from "@reliverse/relico";
 
 const logsCommand = defineCommand({
   name: "logs",
   description: "View server logs",
   options: {
-    follow: option(z.boolean().default(false), {
+    follow: option(type("boolean").default(false), {
       description: "Follow log output in real-time",
       short: "f",
     }),
-    lines: option(z.number().min(1).max(1000).default(50), {
+    lines: option(type("number").min(1).max(1000).default(50), {
       description: "Number of lines to show",
       short: "n",
     }),
-    level: option(z.enum(["error", "warn", "info", "debug"]).default("info"), {
+    level: option(type("'error'|'warn'|'info'|'debug'").default("info"), {
       description: "Minimum log level",
       short: "l",
     }),
-    service: option(z.string().optional(), {
+    service: option(type("string?"), {
       description: "Filter by service name",
       short: "s",
     }),

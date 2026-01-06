@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { relico } from "@reliverse/relico";
 
 export default defineCommand({
@@ -8,60 +8,45 @@ export default defineCommand({
   alias: "pull-request",
   options: {
     // PR title
-    title: option(
-      z.string().min(1, "Title cannot be empty").max(100, "Title must be 100 characters or less"),
-      {
-        short: "t",
-        description: "Pull request title",
-      },
-    ),
+    title: option(type("string"), {
+      short: "t",
+      description: "Pull request title",
+    }),
 
     // PR description
-    description: option(z.string().optional(), {
+    description: option(type("string"), {
       short: "d",
       description: "Pull request description",
     }),
 
     // Base branch
-    base: option(z.string().default("main"), {
+    base: option(type("string"), {
       short: "b",
       description: "Base branch to merge into",
     }),
 
     // Head branch
-    head: option(z.string().optional(), {
+    head: option(type("string"), {
       short: "h",
       description: "Head branch (defaults to current branch)",
     }),
 
     // Draft PR
-    draft: option(z.coerce.boolean().default(false), {
+    draft: option(type("boolean"), {
       description: "Create as draft pull request",
     }),
 
     // Assign reviewers
-    reviewers: option(
-      z
-        .string()
-        .transform((val) => val.split(",").map((s) => s.trim()))
-        .optional(),
-      {
-        short: "r",
-        description: "Comma-separated list of reviewers",
-      },
-    ),
+    reviewers: option(type("string"), {
+      short: "r",
+      description: "Comma-separated list of reviewers",
+    }),
 
     // Labels
-    labels: option(
-      z
-        .string()
-        .transform((val) => val.split(",").map((s) => s.trim()))
-        .optional(),
-      {
-        short: "l",
-        description: "Comma-separated list of labels",
-      },
-    ),
+    labels: option(type("string"), {
+      short: "l",
+      description: "Comma-separated list of labels",
+    }),
   },
 
   handler: async ({ flags, colors, spinner, shell, prompt }) => {
@@ -134,11 +119,13 @@ export default defineCommand({
       console.log(`  URL: ${relico.blue(prUrl)}`);
 
       if (flags.reviewers) {
-        console.log(`  Reviewers: ${relico.cyan(flags.reviewers.join(", "))}`);
+        const reviewersArray = flags.reviewers.split(",").map((s) => s.trim());
+        console.log(`  Reviewers: ${relico.cyan(reviewersArray.join(", "))}`);
       }
 
       if (flags.labels) {
-        console.log(`  Labels: ${relico.cyan(flags.labels.join(", "))}`);
+        const labelsArray = flags.labels.split(",").map((s) => s.trim());
+        console.log(`  Labels: ${relico.cyan(labelsArray.join(", "))}`);
       }
 
       console.log(relico.dim("\nDescription:"));

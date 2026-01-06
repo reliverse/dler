@@ -122,25 +122,28 @@ bun cli.ts setup --preset full
 ### Schema Validation Patterns
 
 ```typescript
-// Custom validation with refine
+// Custom validation with morph
 env: option(
-  z.string()
-    .refine((val) => {
-      const vars = val.split(',')
-      return vars.every(v => v.includes('=') && v.split('=').length === 2)
-    }, 'Environment variables must be in format KEY=VALUE,KEY2=VALUE2')
+  type("string", (s) => {
+    const vars = s.split(',')
+    if (!vars.every(v => v.includes('=') && v.split('=').length === 2)) {
+      throw new Error('Environment variables must be in format KEY=VALUE,KEY2=VALUE2')
+    }
+    return s
+  })
 )
 
 // Data transformation
 memory: option(
-  z.string()
-    .regex(/^\d+[kmg]?$/i, 'Memory must be a number with optional unit')
-    .transform((val) => {
-      const num = parseInt(val)
-      const unit = val.slice(-1).toLowerCase()
-      const multipliers = { k: 1024, m: 1024 * 1024, g: 1024 * 1024 * 1024 }
-      return num * (multipliers[unit as keyof typeof multipliers] || 1)
-    })
+  type("string", (s) => {
+    if (!/^\d+[kmg]?$/i.test(s)) {
+      throw new Error('Memory must be a number with optional unit')
+    }
+    const num = parseInt(s)
+    const unit = s.slice(-1).toLowerCase()
+    const multipliers = { k: 1024, m: 1024 * 1024, g: 1024 * 1024 * 1024 }
+    return num * (multipliers[unit as keyof typeof multipliers] || 1)
+  })
 )
 ```
 

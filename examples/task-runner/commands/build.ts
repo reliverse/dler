@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { relico } from "@reliverse/relico";
 
 export default defineCommand({
@@ -7,13 +7,13 @@ export default defineCommand({
   description: "Build project with validation and transformation",
   options: {
     // Environment with validation
-    env: option(z.enum(["development", "staging", "production"]).default("development"), {
+    env: option(type("'development'|'staging'|'production'").default("development"), {
       short: "e",
       description: "Build environment",
     }),
 
     // Output directory with validation
-    outdir: option(z.string().min(1, "Output directory cannot be empty").default("dist"), {
+    outdir: option(type("string").min(1, "Output directory cannot be empty").default("dist"), {
       short: "o",
       description: "Output directory",
     }),
@@ -76,7 +76,7 @@ export default defineCommand({
     ),
 
     // Watch mode
-    watch: option(z.coerce.boolean().default(false), {
+    watch: option(type("boolean", "=", false), {
       short: "w",
       description: "Watch for changes",
     }),

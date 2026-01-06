@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { logger, formatTable } from "@{{name}}/utils";
 import type { AnalyzeResult } from "../types";
 import { relico } from "@reliverse/relico";
@@ -7,9 +7,9 @@ import { relico } from "@reliverse/relico";
 const analyzeCommand = defineCommand({
   name: "analyze",
   description: "Analyze files and generate reports",
-  args: z.array(z.string()).min(1).describe("Files to analyze"),
+  args: type("string[]", { minLength: 1 }),
   options: {
-    detailed: option(z.boolean().default(false), {
+    detailed: option(type("boolean", "=", false), {
       short: "d",
       description: "Show detailed analysis",
     }),

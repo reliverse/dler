@@ -4,12 +4,12 @@ import path from "node:path";
 import { relico } from "@reliverse/relico";
 
 interface CreateOptions {
-  name?: string;
+  name: string | undefined;
   template: string;
-  dir?: string;
+  dir: string | undefined;
   git: boolean;
   install: boolean;
-  offline?: boolean;
+  offline: boolean | undefined;
 }
 
 export async function create(context: HandlerArgs<CreateOptions>) {
@@ -62,7 +62,7 @@ export async function create(context: HandlerArgs<CreateOptions>) {
     template: flags.template,
     git: flags.git,
     install: flags.install,
-    offline: flags.offline,
+    offline: flags.offline ?? false,
     prompt,
     spinner,
     colors,

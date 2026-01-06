@@ -1,7 +1,7 @@
 import { defineCommand, option } from "@reliverse/rempts";
 import { Generator } from "@reliverse/rempts-generator";
 import { remptsCodegenPlugin } from "@reliverse/rempts-generator/plugin";
-import { z } from "zod";
+import { type } from "arktype";
 import { loadConfig } from "@reliverse/rempts";
 import { findEntry } from "../utils/find-entry";
 import { $ } from "bun";
@@ -13,40 +13,34 @@ export default defineCommand({
   description: "Build your CLI for production",
   alias: "b",
   options: {
-    entry: option(z.string().optional(), {
+    entry: option(type("string | undefined"), {
       short: "e",
-      description: "Entry file (defaults to auto-detect)",
+      description:
+        "Entry file (defaults to auto-detect), supports comma-separated multiple entries",
     }),
-    outdir: option(z.string().optional(), { short: "o", description: "Output directory" }),
-    outfile: option(z.string().optional(), {
+    outdir: option(type("string | undefined"), { short: "o", description: "Output directory" }),
+    outfile: option(type("string | undefined"), {
       description: "Output filename (for single executable)",
     }),
-    minify: option(z.boolean().optional(), { short: "m", description: "Minify output" }),
-    sourcemap: option(z.boolean().optional(), { short: "s", description: "Generate sourcemaps" }),
-    bytecode: option(z.boolean().default(false), {
+    minify: option(type("boolean | undefined"), { short: "m", description: "Minify output" }),
+    sourcemap: option(type("boolean | undefined"), {
+      short: "s",
+      description: "Generate sourcemaps",
+    }),
+    bytecode: option(type("boolean | undefined"), {
       description: "Enable bytecode compilation (experimental)",
     }),
-    runtime: option(z.enum(["bun", "node"]).optional(), {
+    runtime: option(type("'bun'|'node' | undefined"), {
       short: "r",
       description: "Runtime target (for non-compiled builds)",
     }),
-    targets: option(
-      z
-        .string()
-        .optional()
-        .transform((val) => {
-          if (!val) return undefined;
-          // Split comma-separated values into array
-          return val.split(",").map((t) => t.trim());
-        }),
-      {
-        short: "t",
-        description: "Target platforms for compilation (e.g., darwin-arm64,linux-x64)",
-      },
-    ),
-    watch: option(z.boolean().default(false), { short: "w", description: "Watch for changes" }),
+    targets: option(type("string | undefined"), {
+      short: "t",
+      description: "Target platforms for compilation (e.g., darwin-arm64,linux-x64)",
+    }),
+    watch: option(type("boolean | undefined"), { short: "w", description: "Watch for changes" }),
   },
-  handler: async ({ flags, spinner, colors }) => {
+  handler: async ({ flags, spinner, colors: _colors }) => {
     const config = await loadConfig();
 
     // 1. Run codegen before build (always enabled)
@@ -57,7 +51,7 @@ export default defineCommand({
           commandsDir: config.commands?.directory || "commands",
           outputFile: "./.dler/commands.gen.ts",
           config,
-          generateReport: config.commands?.generateReport,
+          generateReport: config.commands?.generateReport ?? false,
         });
         await generator.run();
         spin.succeed("Types generated");
@@ -79,7 +73,14 @@ export default defineCommand({
     }
 
     // Determine targets - from flags, config, or none (traditional build)
-    const targets = flags.targets || config.build?.targets;
+    let targets: string[] | undefined;
+    if (flags.targets) {
+      // flags.targets is a comma-separated string, split it
+      targets = flags.targets.split(",").map((t) => t.trim());
+    } else if (config.build?.targets) {
+      // config.build.targets is already an array
+      targets = config.build.targets;
+    }
 
     const isCompiling = targets && targets.length > 0;
 
@@ -89,7 +90,7 @@ export default defineCommand({
       process.exit(1);
     }
 
-    const entryFile = Array.isArray(entry) ? entry[0] : entry;
+    const entryFile = Array.isArray(entry) ? entry[0] : entry || undefined;
     if (!entryFile) {
       console.error(relico.red("Entry file is undefined"));
       process.exit(1);
@@ -186,15 +187,18 @@ export default defineCommand({
         }
       } else {
         // Traditional Bun.build() for non-executable builds
-        const entryFiles = Array.isArray(entry) ? entry : [entry];
+        const entryFiles: string[] = Array.isArray(entry) ? entry : entry ? [entry] : [];
 
         const buildOptions = {
           entrypoints: entryFiles,
           outdir,
-          target: flags.runtime || "bun",
+          target: (flags.runtime || "bun") as "bun" | "node",
           format: "esm" as const,
           minify: flags.minify ?? config.build?.minify ?? true,
-          sourcemap: flags.sourcemap ?? config.build?.sourcemap ?? false,
+          sourcemap:
+            (flags.sourcemap ?? config.build?.sourcemap ?? false)
+              ? ("external" as const)
+              : (false as const),
           external: config.build?.external || [],
           // Add codegen plugin for automatic type generation (always enabled)
           plugins: [

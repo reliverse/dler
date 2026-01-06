@@ -35,7 +35,7 @@ export async function processTemplate(options: TemplateOptions) {
     // Download template using giget for remote sources
     const result = await downloadTemplate(source, {
       dir,
-      offline,
+      offline: offline ?? false,
       preferOffline: true,
       force: true,
     });

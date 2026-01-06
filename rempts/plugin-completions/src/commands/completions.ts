@@ -1,27 +1,27 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { generateBash, generateZsh, generateFish } from "../generators/mod";
 import { loadMetadata, getCLIName } from "../utils/metadata";
 import { getInstallInstructions } from "../utils/instructions";
 import type { CompletionsPluginOptions } from "../types";
 import { relico } from "@reliverse/relico";
 
-export default function completionsCommand(pluginOptions: CompletionsPluginOptions) {
+export default function completionsCommand(_pluginOptions: CompletionsPluginOptions) {
   return defineCommand({
     name: "completions",
     description: "Generate shell completion scripts",
     options: {
-      shell: option(z.enum(["bash", "zsh", "fish"]), {
+      shell: option(type("'bash'|'zsh'|'fish'"), {
         short: "s",
         description: "Target shell (bash, zsh, or fish)",
       }),
-      output: option(z.string().optional(), {
+      output: option(type("string | undefined"), {
         short: "o",
         description: "Output file path (default: stdout)",
       }),
     },
 
-    handler: async ({ flags, colors, spinner }) => {
+    handler: async ({ flags, spinner }) => {
       const spin = spinner("Generating completions...");
 
       try {
@@ -41,6 +41,8 @@ export default function completionsCommand(pluginOptions: CompletionsPluginOptio
           case "fish":
             script = generateFish(metadata, cliName);
             break;
+          default:
+            throw new Error(`Unsupported shell: ${flags.shell}`);
         }
 
         spin.succeed(`Generated ${flags.shell} completions`);

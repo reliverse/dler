@@ -1,24 +1,24 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { relico } from "@reliverse/relico";
 
 const startCommand = defineCommand({
   name: "start",
   description: "Start development server with hot reload",
   options: {
-    port: option(z.number().min(1000).max(65535).default(3000), {
+    port: option(type("number").min(1000).max(65535).default(3000), {
       description: "Port to run the server on",
       short: "p",
     }),
-    host: option(z.string().default("localhost"), {
+    host: option(type("string").default("localhost"), {
       description: "Host to bind the server to",
       short: "h",
     }),
-    watch: option(z.boolean().default(true), {
+    watch: option(type("boolean").default(true), {
       description: "Enable file watching and hot reload",
       short: "w",
     }),
-    open: option(z.boolean().default(false), {
+    open: option(type("boolean").default(false), {
       description: "Open browser automatically",
       short: "o",
     }),

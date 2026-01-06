@@ -2,6 +2,12 @@
   "terminal.integrated.enablePersistentSessions": false,
   "editor.selectionClipboard": false,
   "editor.formatOnSave": true,
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  "typescript.preferences.autoImportSpecifierExcludeRegexes": [
+    "^(node:)?os$"
+  ],
   "files.autoSave": "afterDelay",
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "oxc.enable": true,
@@ -18,5 +24,8 @@
   },
   "[typescript]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
   }
 }

@@ -1,6 +1,6 @@
 import { defineCommand, option } from "@reliverse/rempts";
 import { Generator } from "@reliverse/rempts-generator";
-import { z } from "zod";
+import { type } from "arktype";
 import { join } from "node:path";
 import { isCommandFile } from "@reliverse/rempts-generator";
 import { loadConfig } from "@reliverse/rempts";
@@ -11,14 +11,14 @@ export default defineCommand({
   description: "Generate command type definitions",
   alias: "gen",
   options: {
-    commandsDir: option(z.string().optional(), {
+    commandsDir: option(type("string | undefined"), {
       description: "Commands directory",
     }),
-    output: option(z.string().default("./.dler/commands.gen.ts"), {
+    output: option(type("string"), {
       short: "o",
       description: "Output file",
     }),
-    watch: option(z.boolean().default(false), {
+    watch: option(type("boolean"), {
       short: "w",
       description: "Watch for changes",
     }),
@@ -28,6 +28,9 @@ export default defineCommand({
     // Load config to get default values
     const config = await loadConfig();
 
+    // Apply defaults
+    const watch = flags.watch ?? false;
+
     const finalCommandsDir = flags.commandsDir || config.commands?.directory || "commands";
     const finalOutputFile = flags.output || "./.dler/commands.gen.ts";
 
@@ -35,7 +38,7 @@ export default defineCommand({
       commandsDir: finalCommandsDir,
       outputFile: finalOutputFile,
       config,
-      generateReport: config.commands?.generateReport,
+      generateReport: config.commands?.generateReport ?? false,
     });
 
     // Initial generation
@@ -50,7 +53,7 @@ export default defineCommand({
       return;
     }
 
-    if (flags.watch) {
+    if (watch) {
       console.log(relico.cyan(`\n👀 Watching ${finalCommandsDir}...\n`));
 
       // Use Bun's native file watching with fs.promises.watch

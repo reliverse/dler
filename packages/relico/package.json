@@ -39,14 +39,14 @@
     "access": "public"
   },
   "scripts": {
-    "build": "bun scripts/build.ts && bun run tsc",
+    "build": "bun run tsc",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "bun run build"
   },
   "dependencies": {
-    "@standard-schema/spec": "^1.0.0",
-    "@standard-schema/utils": "^0.3.0"
+    "@standard-schema/spec": "catalog:",
+    "@standard-schema/utils": "catalog:"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",

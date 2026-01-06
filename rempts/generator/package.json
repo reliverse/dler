@@ -15,7 +15,7 @@
     "@babel/traverse": "^7.23.0",
     "@reliverse/rempts": "workspace:*",
     "debug": "^4.4.3",
-    "zod": "catalog:"
+    "arktype": "catalog:"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",

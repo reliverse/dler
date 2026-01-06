@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { relico } from "@reliverse/relico";
 
 export default defineCommand({
@@ -8,30 +8,30 @@ export default defineCommand({
   alias: "pull",
   options: {
     // Remote name
-    remote: option(z.string().default("origin"), {
+    remote: option(type("string"), {
       short: "r",
       description: "Remote name to sync with",
     }),
 
     // Branch to sync
-    branch: option(z.string().optional(), {
+    branch: option(type("string"), {
       short: "b",
       description: "Branch to sync (defaults to current branch)",
     }),
 
     // Force sync
-    force: option(z.coerce.boolean().default(false), {
+    force: option(type("boolean"), {
       short: "f",
       description: "Force sync even if there are conflicts",
     }),
 
     // Rebase instead of merge
-    rebase: option(z.coerce.boolean().default(false), {
+    rebase: option(type("boolean"), {
       description: "Use rebase instead of merge",
     }),
 
     // Prune remote branches
-    prune: option(z.coerce.boolean().default(false), {
+    prune: option(type("boolean"), {
       short: "p",
       description: "Remove remote-tracking branches that no longer exist",
     }),

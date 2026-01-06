@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { loadConfig } from "@reliverse/rempts";
 import { $ } from "bun";
 import { existsSync } from "node:fs";
@@ -10,28 +10,32 @@ export default defineCommand({
   description: "Create a release of your CLI",
   alias: "r",
   options: {
-    version: option(z.enum(["patch", "minor", "major"]).or(z.string()).optional(), {
+    version: option(type("'patch'|'minor'|'major' | string | undefined"), {
       short: "v",
       description: "Version to release (patch/minor/major/x.y.z)",
     }),
-    tag: option(z.string().optional(), { short: "t", description: "Git tag format" }),
-    npm: option(z.boolean().optional(), { description: "Publish to npm" }),
-    github: option(z.boolean().optional(), { description: "Create GitHub release" }),
-    dry: option(z.boolean().default(false), {
+    tag: option(type("string | undefined"), { short: "t", description: "Git tag format" }),
+    npm: option(type("boolean | undefined"), { description: "Publish to npm" }),
+    github: option(type("boolean | undefined"), { description: "Create GitHub release" }),
+    dry: option(type("boolean"), {
       short: "d",
       description: "Dry run - show what would be done",
     }),
-    all: option(z.boolean().default(false), {
+    all: option(type("boolean"), {
       description: "Release all packages (workspace mode)",
     }),
   },
   handler: async ({ flags, prompt, spinner, colors }) => {
+    // Apply defaults
+    const dry = flags.dry ?? false;
+    const all = flags.all ?? false;
+
     const config = await loadConfig();
 
     // Check if git repo is clean
     try {
       const status = await $`git status --porcelain`.text();
-      if (status.trim() && !flags.dry) {
+      if (status.trim() && !dry) {
         console.error(
           relico.red("Working directory is not clean. Please commit or stash changes first."),
         );
@@ -42,17 +46,17 @@ export default defineCommand({
       process.exit(1);
     }
 
-    if (flags.all && config.workspace?.packages) {
+    if (all && config.workspace?.packages) {
       // Workspace mode
-      await releaseWorkspace(flags, config, prompt, spinner, colors);
+      await releaseWorkspace(flags, config, prompt, spinner, colors, dry);
     } else {
       // Single package mode
-      await releaseSingle(flags, config, prompt, spinner, colors);
+      await releaseSingle(flags, config, prompt, spinner, colors, dry);
     }
   },
 });
 
-async function releaseSingle(flags: any, config: any, prompt: any, spinner: any, colors: any) {
+async function releaseSingle(flags: any, config: any, prompt: any, spinner: any, colors: any, dry: boolean) {
   const pkg = await loadPackageJson();
   const currentVersion = pkg.version || "0.0.0";
 
@@ -64,7 +68,7 @@ async function releaseSingle(flags: any, config: any, prompt: any, spinner: any,
   console.log(relico.dim(`  New:     ${newVersion}`));
   console.log();
 
-  if (!flags.dry) {
+  if (!dry) {
     const confirmed = await prompt.confirm("Continue with release?", { default: true });
     if (!confirmed) {
       console.log(relico.yellow("Release cancelled"));
@@ -89,14 +93,14 @@ async function releaseSingle(flags: any, config: any, prompt: any, spinner: any,
     spin.start();
 
     try {
-      if (!flags.dry) {
+      if (!dry) {
         await step.cmd();
       }
       spin.succeed(step.name);
     } catch (error) {
       spin.fail(step.name);
       console.error(relico.red(error instanceof Error ? error.message : String(error)));
-      if (!flags.dry) process.exit(1);
+      if (!dry) process.exit(1);
     }
   }
 
@@ -113,7 +117,7 @@ async function releaseSingle(flags: any, config: any, prompt: any, spinner: any,
   }
 }
 
-async function releaseWorkspace(flags: any, config: any, prompt: any, spinner: any, colors: any) {
+async function releaseWorkspace(flags: any, config: any, prompt: any, spinner: any, colors: any, dry: boolean) {
   console.log(relico.bold("Workspace Release"));
 
   if (config.workspace?.versionStrategy === "independent") {

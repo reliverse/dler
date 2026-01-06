@@ -8,13 +8,14 @@ import {
 import type { CreateOptions } from "./types";
 import { relico } from "@reliverse/relico";
 
-interface CreateProjectOptions extends CreateOptions {
+interface CreateProjectOptions extends Omit<CreateOptions, 'name' | 'dir' | 'offline'> {
   name: string;
   dir: string;
   template: string;
+  offline: boolean;
   prompt: RemptsUtils["prompt"];
   spinner: RemptsUtils["spinner"];
-  colors: RemptsUtils["colors"];
+  colors: typeof import("@reliverse/relico").relico;
   shell: typeof Bun.$;
 }
 

@@ -99,3 +99,6 @@ export const relico: Colors = {
   reset: createColorFunction(colorCodes.reset),
   strip: stripAnsi,
 };
+
+// Alias for convenience
+export const re = relico;

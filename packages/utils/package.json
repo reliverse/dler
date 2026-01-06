@@ -1,0 +1,31 @@
+{
+  "name": "@reliverse/utils",
+  "version": "0.1.0",
+  "description": "Shared utilities for Reliverse packages",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/mod.ts"
+    },
+    "./validation": {
+      "types": "./dist/validation.d.ts",
+      "default": "./src/validation.ts"
+    }
+  },
+  "scripts": {
+    "build": "bun run build.ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "arktype": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.1.0"
+  }
+}

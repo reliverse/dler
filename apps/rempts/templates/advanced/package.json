@@ -21,7 +21,7 @@
   "dependencies": {
     "@reliverse/rempts": "latest",
     "@reliverse/rempts-utils": "latest",
-    "zod": "catalog:"
+    "arktype": "catalog:"
   },
   "devDependencies": {
     "@reliverse/rempts-test": "latest",

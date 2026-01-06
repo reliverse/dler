@@ -927,7 +927,7 @@ export async function publishPackage(
       }
       workspacePackages = await getWorkspacePackages(monorepoRoot);
       if (options.verbose) {
-        logger.log(re.blue(`  Found ${re.bold(workspacePackages.length)} workspace packages`));
+        logger.log(re.blue(`  Found ${re.bold(String(workspacePackages.length))} workspace packages`));
       }
     } else if (options.verbose) {
       logger.debug("Not in a monorepo (no root found)");
@@ -1180,7 +1180,7 @@ export async function publishPackage(
       if (options.withNpmLogs && options.skipTip2FA !== true && !hasShown2FATip) {
         hasShown2FATip = true;
         logger.log(
-          `\n${re.cyan.bold("💡 2FA Authentication Tip")}\n` +
+          `\n${re.bold(re.cyan("💡 2FA Authentication Tip"))}\n` +
             `If you have 2FA enabled on npm, you may be prompted for a one-time password during publishing (on each publish attempt).\n` +
             `${re.bold("Quick fix:")}\n` +
             `  When prompted, check the box: "Do not challenge npm publish operations from your IP address for the next 5 minutes"\n` +
@@ -1437,7 +1437,7 @@ export async function publishAllPackages(
         const filterPatterns = Array.isArray(options.filter) ? options.filter : [options.filter];
         logger.info(
           re.blue(
-            `   Filtering to ${re.bold(filteredPackages.length)} packages matching: ${re.bold(filterPatterns.join(", "))}`,
+            `   Filtering to ${re.bold(String(filteredPackages.length))} packages matching: ${re.bold(filterPatterns.join(", "))}`,
           ),
         );
       }
@@ -1454,7 +1454,7 @@ export async function publishAllPackages(
       };
     }
 
-    logger.info(re.blue(`Found ${re.bold(filteredPackages.length)} package(s) to publish`));
+    logger.info(re.blue(`Found ${re.bold(String(filteredPackages.length))} package(s) to publish`));
 
     const results: PublishResult[] = [];
     const concurrency = options.concurrency || 3;
@@ -1493,7 +1493,7 @@ export async function publishAllPackages(
       };
     }
 
-    logger.info(re.blue(`Publishing ${re.bold(packagesToPublish.length)} enabled package(s)`));
+    logger.info(re.blue(`Publishing ${re.bold(String(packagesToPublish.length))} enabled package(s)`));
 
     // Pre-bump all packages to calculate new versions before resolving dependencies
     // This ensures that workspace dependencies resolve to the bumped versions
@@ -1520,7 +1520,7 @@ export async function publishAllPackages(
             if (options.verbose) {
               logger.log(
                 re.blue(
-                  `  ${re.bold(pkg.name)}: ${pkg.pkg.version} -> ${re.green.bold(nextVersion)}`,
+                  `  ${re.bold(pkg.name)}: ${pkg.pkg.version} -> ${re.bold(re.green(nextVersion))}`,
                 ),
               );
             }

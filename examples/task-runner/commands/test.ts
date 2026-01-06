@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { relico } from "@reliverse/relico";
 
 export default defineCommand({
@@ -8,13 +8,17 @@ export default defineCommand({
   options: {
     // Test pattern with regex validation
     pattern: option(
-      z
-        .string()
-        .regex(
-          /^[a-zA-Z0-9._-]+$/,
-          "Pattern can only contain letters, numbers, dots, underscores, and hyphens",
-        )
-        .default("**/*.test.ts"),
+      type("string")
+        .narrow((s, ctx) => {
+          if (typeof s !== "string") return ctx.reject("Expected string");
+          return (
+            /^[a-zA-Z0-9._-]+$/.test(s) ||
+            ctx.reject(
+              "Pattern must contain only alphanumeric characters, dots, underscores, and hyphens",
+            )
+          );
+        })
+        .pipe((s) => s || "**/*.test.ts"),
       {
         short: "p",
         description: "Test file pattern",
@@ -23,11 +27,7 @@ export default defineCommand({
 
     // Coverage threshold with range validation
     coverage: option(
-      z.coerce
-        .number()
-        .min(0, "Coverage must be at least 0%")
-        .max(100, "Coverage cannot exceed 100%")
-        .default(80),
+      type("number.integer >= 0 & number.integer <= 100").pipe((n) => n ?? 80),
       {
         short: "c",
         description: "Minimum coverage percentage",
@@ -36,51 +36,44 @@ export default defineCommand({
 
     // Timeout with custom validation
     timeout: option(
-      z.coerce
-        .number()
-        .int("Timeout must be a whole number")
-        .min(1000, "Timeout must be at least 1000ms")
-        .max(300000, "Timeout cannot exceed 5 minutes")
-        .default(30000),
+      type("number.integer >= 1000 & number.integer <= 300000").pipe((n) => n ?? 30000),
       {
         short: "t",
         description: "Test timeout in milliseconds",
       },
     ),
 
-    // Environment variables with validation
+    // Environment variables with validation and transformation
     env: option(
-      z
-        .string()
-        .refine((val) => {
-          const vars = val.split(",");
-          return vars.every((v) => v.includes("=") && v.split("=").length === 2);
-        }, "Environment variables must be in format KEY=VALUE,KEY2=VALUE2")
-        .transform((val) => {
+      type("string | undefined")
+        .narrow((s, ctx) => {
+          if (!s) return true;
+          const vars = s.split(",");
+          return (
+            vars.every((v) => v.includes("=") && v.split("=").length === 2) ||
+            ctx.reject(`Environment variables must be in format KEY=VALUE,KEY2=VALUE2 (was "${s}")`)
+          );
+        })
+        .pipe((s) => {
+          if (!s) return undefined;
           const vars: Record<string, string> = {};
-          val.split(",").forEach((pair) => {
+          s.split(",").forEach((pair) => {
             const [key, value] = pair.split("=");
             if (key && value) {
               vars[key.trim()] = value.trim();
             }
           });
           return vars;
-        })
-        .optional(),
+        }),
       {
         short: "e",
         description: "Environment variables (KEY=VALUE,KEY2=VALUE2)",
       },
     ),
 
-    // Retry count with custom validation
+    // Retry count with validation
     retries: option(
-      z.coerce
-        .number()
-        .int("Retries must be a whole number")
-        .min(0, "Retries cannot be negative")
-        .max(5, "Maximum 5 retries allowed")
-        .default(0),
+      type("number.integer >= 0 & number.integer <= 5").pipe((n) => n ?? 0),
       {
         short: "r",
         description: "Number of retries for failed tests",
@@ -88,19 +81,25 @@ export default defineCommand({
     ),
 
     // Watch mode
-    watch: option(z.coerce.boolean().default(false), {
-      short: "w",
-      description: "Watch for changes",
-    }),
+    watch: option(
+      type("boolean").pipe((v) => v ?? false),
+      {
+        short: "w",
+        description: "Watch for changes",
+      },
+    ),
 
     // Verbose output
-    verbose: option(z.coerce.boolean().default(false), {
-      short: "v",
-      description: "Verbose output",
-    }),
+    verbose: option(
+      type("boolean").pipe((v) => v ?? false),
+      {
+        short: "v",
+        description: "Verbose output",
+      },
+    ),
   },
 
-  handler: async ({ flags, colors, spinner }) => {
+  handler: async ({ flags, spinner }) => {
     const spin = spinner("Running tests...");
 
     try {

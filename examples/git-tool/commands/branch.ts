@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { relico } from "@reliverse/relico";
 
 export default defineCommand({
@@ -8,46 +8,37 @@ export default defineCommand({
   alias: "br",
   options: {
     // Branch name
-    name: option(
-      z
-        .string()
-        .min(1, "Branch name cannot be empty")
-        .regex(
-          /^[a-zA-Z0-9._-]+$/,
-          "Branch name can only contain letters, numbers, dots, underscores, and hyphens",
-        ),
-      {
-        short: "n",
-        description: "Branch name",
-      },
-    ),
+    name: option(type("string"), {
+      short: "n",
+      description: "Branch name",
+    }),
 
     // Base branch
-    base: option(z.string().default("main"), {
+    base: option(type("string"), {
       short: "b",
       description: "Base branch to create from",
     }),
 
     // Switch to branch
-    switch: option(z.coerce.boolean().default(false), {
+    switch: option(type("boolean"), {
       short: "s",
       description: "Switch to the branch after creating",
     }),
 
     // Delete branch
-    delete: option(z.coerce.boolean().default(false), {
+    delete: option(type("boolean"), {
       short: "d",
       description: "Delete the branch",
     }),
 
     // Force operations
-    force: option(z.coerce.boolean().default(false), {
+    force: option(type("boolean"), {
       short: "f",
       description: "Force the operation",
     }),
   },
 
-  handler: async ({ flags, colors, spinner, shell }) => {
+  handler: async ({ flags, colors: _colors, spinner, shell }) => {
     const spin = spinner("Working with branches...");
 
     try {

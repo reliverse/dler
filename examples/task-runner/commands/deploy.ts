@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { relico } from "@reliverse/relico";
 
 export default defineCommand({
@@ -7,7 +7,7 @@ export default defineCommand({
   description: "Deploy application with interactive prompts",
   options: {
     // Environment with validation
-    environment: option(z.enum(["development", "staging", "production"]).default("staging"), {
+    environment: option(type("'development'|'staging'|'production'").default("staging"), {
       short: "e",
       description: "Target environment",
     }),
@@ -29,7 +29,7 @@ export default defineCommand({
     ),
 
     // Force deployment
-    force: option(z.coerce.boolean().default(false), {
+    force: option(type("boolean", "=", false), {
       short: "f",
       description: "Force deployment without confirmation",
     }),

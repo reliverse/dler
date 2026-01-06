@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { relico } from "@reliverse/relico";
 
 export default defineCommand({
@@ -7,13 +7,13 @@ export default defineCommand({
   description: "Interactive project setup wizard",
   options: {
     // Preset configuration
-    preset: option(z.enum(["minimal", "standard", "full"]).optional(), {
+    preset: option(type("'minimal' | 'standard' | 'full' | undefined"), {
       short: "p",
       description: "Use preset configuration",
     }),
   },
 
-  handler: async ({ flags, colors, prompt, spinner }) => {
+  handler: async ({ flags, prompt, spinner }) => {
     console.log(relico.bold("🎯 Project Setup Wizard"));
     console.log(relico.dim("Let's configure your project step by step\n"));
 
@@ -51,7 +51,7 @@ export default defineCommand({
         },
       };
 
-      const config = presets[flags.preset];
+      const config = presets[flags.preset as keyof typeof presets];
       console.log(relico.green("✅ Preset applied successfully!"));
       console.log(relico.dim("\nConfiguration:"));
       console.log(`  Name: ${relico.cyan(config.name)}`);
@@ -77,12 +77,15 @@ export default defineCommand({
     // Project name
     config.name = await prompt.text("Project name:", {
       default: "my-project",
-      validate: (val) => {
-        if (!val || val.length < 2) return "Name must be at least 2 characters";
-        if (!/^[a-zA-Z0-9-_]+$/.test(val))
-          return "Name can only contain letters, numbers, hyphens, and underscores";
-        return true;
-      },
+      schema: type("string").narrow((val: string, ctx) => {
+        if (!val || val.length < 2) {
+          return ctx.reject("Name must be at least 2 characters");
+        }
+        return (
+          /^[a-zA-Z0-9-_]+$/.test(val) ||
+          ctx.reject("Name can only contain letters, numbers, hyphens, and underscores")
+        );
+      }),
     });
 
     // Project type

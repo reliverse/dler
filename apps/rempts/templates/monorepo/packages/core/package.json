@@ -22,7 +22,7 @@
   "dependencies": {
     "@reliverse/rempts": "latest",
     "@{{name}}/utils": "workspace:*",
-    "zod": "catalog:"
+    "arktype": "catalog:"
   },
   "devDependencies": {
     "@reliverse/rempts-test": "latest",

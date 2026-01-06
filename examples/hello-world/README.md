@@ -30,12 +30,12 @@ const greetCommand = defineCommand({
   name: 'greet' as const,
   description: 'A minimal greeting CLI',
   options: {
-    name: option(z.string().default('world')),
-    loud: option(z.coerce.boolean().default(false), {
+    name: option(type("string", "=", "world")),
+    loud: option(type("boolean", "=", false), {
       short: 'l',
       description: 'Shout the greeting'
     }),
-    times: option(z.coerce.number().int().positive().default(1), {
+    times: option(type("number", { divisor: 1 }, ">0", "=", 1), {
       short: 't',
       description: 'Number of times to greet'
     })

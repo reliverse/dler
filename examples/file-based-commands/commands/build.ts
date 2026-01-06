@@ -1,5 +1,5 @@
 import { defineCommand } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 
 export default defineCommand({
   name: "build",

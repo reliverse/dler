@@ -1,7 +1,5 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 import { SchemaError } from "@standard-schema/utils";
-import { colors } from "./colors";
-import { prompt } from "./prompt";
 
 /**
  * Validate a value against a schema and throw SchemaError on failure

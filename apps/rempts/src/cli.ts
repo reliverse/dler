@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { createCLI, defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { create } from "./create";
 
 // Custom run to support default behavior
@@ -27,28 +27,46 @@ async function run() {
       name: "create",
       description: "Create a new Rempts CLI project",
       options: {
-        name: option(z.string().optional(), { description: "Project name" }),
-        template: option(z.string().default("basic"), {
+        name: option(type("string | undefined"), { description: "Project name" }),
+        template: option(type("string"), {
           short: "t",
           description: "Project template (basic, advanced, monorepo, or github:user/repo)",
         }),
-        dir: option(z.string().optional(), {
+        dir: option(type("string | undefined"), {
           short: "d",
           description: "Directory to create project in",
         }),
-        git: option(z.boolean().default(true), {
+        git: option(type("boolean"), {
           short: "g",
           description: "Initialize git repository",
         }),
-        install: option(z.boolean().default(true), {
+        install: option(type("boolean"), {
           short: "i",
           description: "Install dependencies",
         }),
-        offline: option(z.boolean().default(false), {
+        offline: option(type("boolean"), {
           description: "Use cached templates when available",
         }),
       },
-      handler: create,
+      handler: async (context) => {
+        // Apply defaults
+        const options = {
+          name: context.flags.name,
+          template: context.flags.template ?? "basic",
+          dir: context.flags.dir,
+          git: context.flags.git ?? true,
+          install: context.flags.install ?? true,
+          offline: context.flags.offline ?? false,
+        } as {
+          name: string | undefined;
+          template: string;
+          dir: string | undefined;
+          git: boolean;
+          install: boolean;
+          offline: boolean;
+        };
+        return create({ ...context, flags: options });
+      },
     }),
   );
 

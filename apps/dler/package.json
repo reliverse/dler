@@ -70,7 +70,7 @@
     "clipboardy": "catalog:",
     "lookpath": "catalog:",
     "semver": "catalog:",
-    "zod": "catalog:"
+    "arktype": "catalog:"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",

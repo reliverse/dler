@@ -22,7 +22,9 @@ import { re } from "@reliverse/relico";
 
 const textEncoder = new TextEncoder();
 
-const LOG_COLORS = {
+type LogLevel = "log" | "error" | "fatal" | "warn" | "info" | "success" | "debug" | "box";
+
+const LOG_COLORS: Record<LogLevel, (text: string) => string> = {
   log: re.white,
   error: re.red,
   fatal: re.red,
@@ -31,9 +33,9 @@ const LOG_COLORS = {
   success: re.green,
   debug: re.gray,
   box: re.white,
-} as const;
+};
 
-const LOG_SYMBOLS = {
+const LOG_SYMBOLS: Record<LogLevel, string> = {
   log: "│  ",
   error: "✖  ",
   fatal: "☠  ",
@@ -42,9 +44,7 @@ const LOG_SYMBOLS = {
   success: "✓  ",
   debug: "✱  ",
   box: "",
-} as const;
-
-type LogLevel = keyof typeof LOG_COLORS;
+};
 
 // Write lock to prevent interleaving
 let writeLock = Promise.resolve();

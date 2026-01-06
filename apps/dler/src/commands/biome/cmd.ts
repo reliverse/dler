@@ -2,20 +2,20 @@
 
 import { logger } from "@reliverse/relinka";
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { runBiomeCheck } from "./impl";
 
 export default defineCommand({
   name: "biome",
   description: "Run Biome linting and formatting check on workspace",
   options: {
-    cwd: option(z.string().optional(), {
+    cwd: option(type("string | undefined"), {
       description: "Working directory to run biome from (default: current directory)",
     }),
-    verbose: option(z.boolean().default(false), {
+    verbose: option(type("boolean"), {
       description: "Verbose mode (default: false)",
     }),
-    copyLogs: option(z.boolean().default(true), {
+    copyLogs: option(type("boolean"), {
       description: "Copy diagnostics to clipboard (default: true, skipped in CI)",
     }),
   },
@@ -27,13 +27,17 @@ export default defineCommand({
         process.exit(1);
       }
 
+      // Apply defaults
+      const verbose = flags.verbose ?? false;
+      const copyLogs = flags.copyLogs ?? true;
+
       // Skip copying in CI environment
       const isCI = process.env.CI === "true" || !process.stdout.isTTY;
-      const shouldCopyLogs = flags.copyLogs !== false && !isCI;
+      const shouldCopyLogs = copyLogs !== false && !isCI;
 
       const result = await runBiomeCheck({
-        cwd: flags.cwd,
-        verbose: flags.verbose,
+        cwd: flags.cwd || process.cwd(),
+        verbose,
         copyLogs: shouldCopyLogs,
       });
 

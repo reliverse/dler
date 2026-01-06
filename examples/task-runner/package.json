@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "@reliverse/rempts": "workspace:*",
+    "@reliverse/relico": "workspace:*",
     "@reliverse/rempts-plugin-completions": "workspace:*",
-    "zod": "catalog:"
+    "arktype": "catalog:",
+    "arkregex": "catalog:"
   },
   "devDependencies": {
     "@reliverse/dler": "workspace:*",

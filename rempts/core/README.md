@@ -12,18 +12,18 @@ bun add rempts-core
 
 ```typescript
 import { defineCommand, option } from '@reliverse/rempts'
-import { z } from 'zod'
+import { type } from 'arktype'
 
 export default defineCommand({
   name: 'greet',
   description: 'A friendly greeting',
   options: {
     name: option(
-      z.string().min(1),
+      type("string", ">0"),
       { description: 'Name to greet', short: 'n' }
     ),
     excited: option(
-      z.coerce.boolean().default(false),
+      type("boolean", "=", false),
       { description: 'Add excitement', short: 'e' }
     )
   },
@@ -67,17 +67,17 @@ Use the `option` helper with Standard Schema validation:
 
 ```typescript
 import { defineCommand, option } from '@reliverse/rempts'
-import { z } from 'zod'
+import { type } from 'arktype'
 
 export default defineCommand({
   name: 'deploy',
   options: {
     env: option(
-      z.enum(['dev', 'staging', 'prod']),
+      type("'dev'|'staging'|'prod'"),
       { description: 'Target environment' }
     ),
     force: option(
-      z.coerce.boolean().default(false),
+      type("boolean", "=", false),
       { description: 'Force deployment', short: 'f' }
     )
   },
@@ -375,7 +375,7 @@ import {
 // Validate a single value
 const result = await validateValue(
   'hello',
-  z.string().min(1).schema,
+  type("string", ">0"),
   { option: 'message', command: 'greet' }
 )
 
@@ -383,8 +383,8 @@ const result = await validateValue(
 const validated = await validateValues(
   { name: 'John', age: 25 },
   {
-    name: z.string().schema,
-    age: z.number().schema
+    name: type("string"),
+    age: type("number")
   },
   'user'
 )
@@ -395,10 +395,10 @@ if (isValueOfType(value, 'string')) {
 }
 
 // Create reusable validators
-const nameValidator = createValidator(z.string().min(1).schema)
+const nameValidator = createValidator(type("string", ">0"))
 const userValidator = createBatchValidator({
-  name: z.string().schema,
-  age: z.number().schema
+  name: type("string"),
+  age: type("number")
 })
 ```
 

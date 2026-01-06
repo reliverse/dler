@@ -4,7 +4,7 @@
 import fs from "@reliverse/relifso";
 import { logger } from "@reliverse/relinka";
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 
 const isWindows = (): boolean => {
   const bun = globalThis as { Bun?: { platform?: () => string } };
@@ -199,31 +199,31 @@ export default defineCommand({
   description: "Inspect and modify environment variables (process and user-level)",
   options: {
     action: option(
-      z.string(),
+      type("string"),
       {
         description: "Operation to perform: list|get|set|append|remove|contains",
       },
     ),
     name: option(
-      z.string().optional(),
+      type("string | undefined"),
       {
         description: "Environment variable name (optional for list)",
       },
     ),
     value: option(
-      z.string().optional(),
+      type("string | undefined"),
       {
         description: "Value for set/append/remove/contains",
       },
     ),
     persist: option(
-      z.boolean().default(true),
+      type("boolean | undefined"),
       {
         description: "Persist change to user environment (default: true)",
       },
     ),
     yes: option(
-      z.boolean().default(false),
+      type("boolean | undefined"),
       {
         description: "Skip interactive confirmation message",
       },

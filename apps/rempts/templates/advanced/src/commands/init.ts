@@ -1,5 +1,5 @@
 import { defineCommand, option } from "@reliverse/rempts";
-import { z } from "zod";
+import { type } from "arktype";
 import { CONFIG_FILE_NAME, DEFAULT_CONFIG } from "../utils/constants";
 import { relico } from "@reliverse/relico";
 
@@ -7,11 +7,11 @@ const initCommand = defineCommand({
   name: "init",
   description: "Initialize a new configuration file",
   options: {
-    force: option(z.boolean().default(false), {
+    force: option(type("boolean", "=", false), {
       short: "f",
       description: "Overwrite existing config",
     }),
-    template: option(z.enum(["minimal", "default", "full"]).default("default"), {
+    template: option(type("'minimal'|'default'|'full'", "=", "default"), {
       short: "t",
       description: "Config template to use",
     }),

@@ -98,12 +98,12 @@ Rempts uses Standard Schema for validation, allowing you to use any compatible v
 
 ```typescript
 import { defineCommand, option } from '@reliverse/rempts'
-import { z } from 'zod'
+import { type } from 'arktype'
 
 export default defineCommand({
   options: {
     port: option(
-      z.number().min(1000).max(65535),
+      type("number", { min: 1000, max: 65535 }),
       { short: 'p', description: 'Port number' }
     )
   }

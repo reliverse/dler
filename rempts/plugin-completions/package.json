@@ -32,7 +32,7 @@
     "@reliverse/relico": "workspace:*",
     "@reliverse/rempts": "workspace:*",
     "@reliverse/rempts-generator": "workspace:*",
-    "zod": "catalog:"
+    "arktype": "catalog:"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",

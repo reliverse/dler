@@ -12,7 +12,7 @@ import type {
   AfterHook,
   HookContext,
 } from "./types";
-import { remptsConfigStrictSchema, remptsConfigSchema } from "./config";
+import { remptsConfigStrictSchema, remptsConfigSchema, type RemptsConfigStrict } from "./config";
 import { loadConfig, type LoadedConfig } from "./config-loader";
 import { parseArgs } from "./parser";
 import { SchemaError, getDotPath } from "@standard-schema/utils";
@@ -51,7 +51,7 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
 
   // Use loaded config or create from override
   const loadedConfig: RemptsConfig =
-    loadedConfigData || (remptsConfigSchema.parse(configOverride || {}) as LoadedConfig);
+    loadedConfigData || (remptsConfigSchema.assert(configOverride || {}) as LoadedConfig);
 
   // Merge override config on top of loaded config
   const mergedConfig = {
@@ -62,11 +62,14 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
   };
 
   // Validate and coerce to strict at runtime to ensure required fields
-  const parsed = remptsConfigStrictSchema.safeParse(mergedConfig);
-  if (!parsed.success) {
-    throw new Error("[rempts] Invalid config: " + JSON.stringify(parsed.error.format()));
+  let fullConfig: RemptsConfigStrict;
+  try {
+    fullConfig = remptsConfigStrictSchema.assert(mergedConfig);
+  } catch (error) {
+    throw new Error(
+      "[rempts] Invalid config: " + (error instanceof Error ? error.message : String(error)),
+    );
   }
-  let fullConfig = parsed.data;
 
   // Auto-load generated types (can be disabled via config)
   const shouldLoadGenerated = configOverride?.generated !== false;
@@ -127,7 +130,7 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
     const { config: updatedConfig, commands: pluginCommands } =
       await pluginManager.runSetup(fullConfig);
     // Re-validate after plugins potentially modified config
-    fullConfig = remptsConfigStrictSchema.parse(updatedConfig);
+    fullConfig = remptsConfigStrictSchema.assert(updatedConfig);
 
     // Register plugin commands
     pluginCommands.forEach((cmd) => registerCommand(cmd, [], "manifest"));
