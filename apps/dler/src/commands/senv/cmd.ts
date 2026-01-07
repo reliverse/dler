@@ -3,7 +3,7 @@
 
 import fs from "@reliverse/relifso";
 import { logger } from "@reliverse/relinka";
-import { defineCommand, option } from "@reliverse/rempts";
+import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 
 const isWindows = (): boolean => {

@@ -1,8 +1,8 @@
-import { defineCommand, option } from "@reliverse/rempts";
+import { defineCommand, option } from "@reliverse/rempts-core";
 import { Generator } from "@reliverse/rempts-generator";
 import { remptsCodegenPlugin } from "@reliverse/rempts-generator/plugin";
 import { type } from "arktype";
-import { loadConfig } from "@reliverse/rempts";
+import { loadConfig } from "@reliverse/rempts-core";
 import { findEntry } from "../utils/find-entry";
 import { $ } from "bun";
 import path from "node:path";

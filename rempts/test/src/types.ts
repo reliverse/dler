@@ -1,4 +1,4 @@
-import type { Command, HandlerArgs } from "@reliverse/rempts";
+import type { Command, HandlerArgs } from "@reliverse/rempts-core";
 
 export interface TestOptions {
   /** Command flags to pass */

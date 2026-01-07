@@ -1,7 +1,7 @@
-import { defineCommand, option } from "@reliverse/rempts";
+import { defineCommand, option } from "@reliverse/rempts-core";
 import { Generator } from "@reliverse/rempts-generator";
 import { type } from "arktype";
-import { loadConfig } from "@reliverse/rempts";
+import { loadConfig } from "@reliverse/rempts-core";
 import { findEntry } from "../utils/find-entry";
 import path from "node:path";
 import { existsSync } from "node:fs";

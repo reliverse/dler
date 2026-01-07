@@ -1,4 +1,4 @@
-import { createPlugin } from "@reliverse/rempts/plugin";
+import { createPlugin } from "@reliverse/rempts-core/plugin";
 
 interface MetricsStore {
   metrics: {

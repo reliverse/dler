@@ -1,4 +1,4 @@
-import { defineConfig } from "@reliverse/rempts";
+import { defineConfig } from "@reliverse/rempts-core";
 import { completionsPlugin } from "@reliverse/rempts-plugin-completions";
 
 export default defineConfig({

@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { aiAgentPlugin } from "../src/mod";
-import { CommandContext, createEnvironmentInfo } from "@reliverse/rempts/plugin";
+import { CommandContext, createEnvironmentInfo } from "@reliverse/rempts-core/plugin";
 
 describe("AI Agent Detection Plugin", () => {
   const originalEnv = { ...process.env };

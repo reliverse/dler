@@ -42,11 +42,11 @@
     "generate": "bun dler generate",
     "dev": "bun dler dev",
     "typecheck": "tsc --noEmit",
-    "cli": "bun cli.ts",
+    "cli": "bun dler",
+    "test": "bun test",
     "build": "bun scripts/build.ts && bun run tsc",
     "build:standalone": "bun run scripts/build.ts --compile",
     "build:binaries": "bun run scripts/release-binaries.ts",
-    "test": "bun test",
     "prepublishOnly": "bun run build"
   },
   "dependencies": {
@@ -62,7 +62,7 @@
     "@reliverse/relico": "workspace:*",
     "@reliverse/relifso": "workspace:*",
     "@reliverse/relinka": "workspace:*",
-    "@reliverse/rempts": "workspace:*",
+    "@reliverse/rempts-core": "workspace:*",
     "@reliverse/rempts-generator": "workspace:*",
     "@reliverse/rempts-utils": "workspace:*",
     "@reliverse/typerso": "workspace:*",

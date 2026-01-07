@@ -1,5 +1,5 @@
-import { createPlugin } from "@reliverse/rempts/plugin";
-import type { PluginContext } from "@reliverse/rempts/plugin";
+import { createPlugin } from "@reliverse/rempts-core/plugin";
+import type { PluginContext } from "@reliverse/rempts-core/plugin";
 import type { CompletionsPluginOptions } from "./types";
 import completionsCommand from "./commands/completions";
 

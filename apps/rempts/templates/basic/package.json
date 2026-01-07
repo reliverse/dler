@@ -15,7 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@reliverse/rempts": "latest"
+    "@reliverse/rempts-core": "latest"
   },
   "devDependencies": {
     "@reliverse/rempts-test": "latest",

@@ -20,7 +20,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@reliverse/rempts": "latest",
+    "@reliverse/rempts-core": "latest",
     "@{{name}}/utils": "workspace:*",
     "arktype": "catalog:"
   },

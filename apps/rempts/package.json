@@ -1,5 +1,5 @@
 {
-  "name": "rempts",
+  "name": "@reliverse/rempts",
   "version": "0.4.0",
   "description": "Scaffold new Rempts CLI projects with ease",
   "keywords": [
@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "@reliverse/relico": "workspace:*",
-    "@reliverse/rempts": "workspace:*",
+    "@reliverse/rempts-core": "workspace:*",
     "@reliverse/rempts-test": "workspace:*",
     "@reliverse/rempts-utils": "workspace:*",
     "giget": "^2.0.0",

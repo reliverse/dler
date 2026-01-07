@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import { createCLI } from "@reliverse/rempts";
-import { loadConfig } from "@reliverse/rempts";
+import { createCLI } from "@reliverse/rempts-core";
+import { loadConfig } from "@reliverse/rempts-core";
 
 // Load configuration first
 const config = await loadConfig();
@@ -12,7 +12,10 @@ const cli = await createCLI({
   ...config, // Pass config to enable automatic command loading
 });
 
-// Load commands from manifest
+// Load commands from directory (including app directory)
+await cli.init();
+
+// Load commands from manifest (these will take priority over file-based commands)
 await cli.load({
   dev: () => import("./commands/dev.js"),
   build: () => import("./commands/build.js"),

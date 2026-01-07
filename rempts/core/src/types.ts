@@ -213,7 +213,7 @@ export type PluginConfig = import("./plugin/types.js").PluginConfig;
  *
  * @example
  * // In commands.gen.ts:
- * declare module '@reliverse/rempts' {
+ * declare module '@reliverse/rempts-core' {
  *   interface RegisteredCommands extends CommandsByName {}
  * }
  */

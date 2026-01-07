@@ -105,6 +105,19 @@ export const remptsConfigSchema = type({
     "directory?": SafePath.configure({
       description: "directory containing command files",
     }),
+    "fileBasedDir?": type("string")
+      .configure({
+        description: "directory name for file-based commands (default: 'app')",
+      })
+      .narrow((dir: string, ctx) => {
+        if (dir.includes("/") || dir.includes("\\")) {
+          return ctx.reject("fileBasedDir cannot contain path separators");
+        }
+        if (dir.startsWith(".") || dir.endsWith(".")) {
+          return ctx.reject("fileBasedDir cannot start or end with dots");
+        }
+        return true;
+      }),
     "generateReport?": "boolean",
   }).configure({
     description: "command-related configuration",

@@ -1,5 +1,5 @@
 {
-  "name": "@reliverse/rempts",
+  "name": "@reliverse/rempts-core",
   "version": "0.4.0",
   "description": "Minimal, type-safe CLI framework for Bun",
   "keywords": [

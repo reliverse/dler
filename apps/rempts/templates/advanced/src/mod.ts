@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { createCLI } from "@reliverse/rempts";
+import { createCLI } from "@reliverse/rempts-core";
 import initCommand from "./commands/init";
 import validateCommand from "./commands/validate";
 import serveCommand from "./commands/serve";

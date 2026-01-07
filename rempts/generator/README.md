@@ -62,7 +62,7 @@ export interface CommandRegistry {
 }
 
 // Module augmentation for rempts-core
-declare module '@reliverse/rempts' {
+declare module '@reliverse/rempts-core' {
   interface GeneratedCommands extends CommandRegistry {}
 }
 
@@ -79,7 +79,7 @@ export function listCommands(): Array<{...}>
 The generator scans for files matching `**/*.{ts,tsx,js,jsx}` and looks for `defineCommand` calls:
 
 ```typescript
-import { defineCommand, option } from '@reliverse/rempts'
+import { defineCommand, option } from '@reliverse/rempts-core'
 import { type } from 'arktype'
 
 export default defineCommand({
@@ -114,7 +114,7 @@ The generator is automatically integrated with:
 Configure the generator in your `dler.config.ts`:
 
 ```typescript
-import { defineConfig } from '@reliverse/rempts'
+import { defineConfig } from '@reliverse/rempts-core'
 
 export default defineConfig({
   name: 'my-cli',

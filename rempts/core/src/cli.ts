@@ -243,11 +243,11 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
   function showHelp(cmd?: Command<any, TStore>, path: string[] = []) {
     if (!cmd) {
       // Show root help
-      console.log(`${fullConfig.name} v${fullConfig.version}`);
+      console.log(relico.bold(relico.cyan(`${fullConfig.name} v${fullConfig.version}`)));
       if (fullConfig.description) {
-        console.log(fullConfig.description);
+        console.log(relico.dim(fullConfig.description));
       }
-      console.log("\nCommands:");
+      console.log(`\n${relico.bold("Commands:")}`);
 
       // Show only top-level commands
       const topLevel = new Set<Command<any, TStore>>();
@@ -258,28 +258,32 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
       }
 
       for (const command of topLevel) {
-        console.log(`  ${command.name.padEnd(20)} ${command.description}`);
+        console.log(
+          `  ${relico.green(command.name.padEnd(20))} ${relico.dim(command.description)}`,
+        );
       }
     } else {
       // Show command-specific help
       const fullPath = [...path, cmd.name].join(" ");
-      console.log(`Usage: ${fullConfig.name} ${fullPath} [options]`);
-      console.log(`\n${cmd.description}`);
+      console.log(relico.bold(`Usage: ${fullConfig.name} ${fullPath} [options]`));
+      console.log(`\n${relico.dim(cmd.description)}`);
 
       if (cmd.options && Object.keys(cmd.options).length > 0) {
-        console.log("\nOptions:");
+        console.log(`\n${relico.bold("Options:")}`);
         for (const [name, opt] of Object.entries(cmd.options)) {
           const option = opt as CLIOption<any>;
           const flag = `--${name}${option.short ? `, -${option.short}` : ""}`;
           const description = option.description || "";
-          console.log(`  ${flag.padEnd(20)} ${description}`);
+          console.log(`  ${relico.yellow(flag.padEnd(20))} ${relico.dim(description)}`);
         }
       }
 
       if (cmd.commands && cmd.commands.length > 0) {
-        console.log("\nSubcommands:");
+        console.log(`\n${relico.bold("Subcommands:")}`);
         for (const subCmd of cmd.commands) {
-          console.log(`  ${subCmd.name.padEnd(20)} ${subCmd.description}`);
+          console.log(
+            `  ${relico.green(subCmd.name.padEnd(20))} ${relico.dim(subCmd.description)}`,
+          );
         }
       }
     }
@@ -326,11 +330,38 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
           : fullConfig.commands.directory;
 
         const fileLoader = new FileCommandLoader();
-        const commandTree = await fileLoader.loadFromDirectory(commandsDir);
+        const fileBasedDir = fullConfig.commands.fileBasedDir || "app";
+
+        // Load file-based directory commands first (higher priority)
+        let fileBasedCommands: Command<any, any>[] = [];
+        try {
+          const fileBasedCommandTree = await fileLoader.loadFromFileBasedDirectory(
+            commandsDir,
+            fileBasedDir,
+          );
+          fileBasedCommands = await fileLoader.loadCommandsFromTree(fileBasedCommandTree);
+          // Register file-based directory commands (higher priority)
+          fileBasedCommands.forEach((cmd) => registerCommand(cmd, [], "directory"));
+        } catch (error) {
+          // File-based directory loading is optional, don't fail if it doesn't exist
+          console.warn(
+            `Warning: Could not load file-based commands from ${commandsDir}/${fileBasedDir}:`,
+            error,
+          );
+        }
+
+        // Load traditional directory commands (excluding file-based directory)
+        const commandTree = await fileLoader.loadFromDirectory(commandsDir, fileBasedDir);
         const fileCommands = await fileLoader.loadCommandsFromTree(commandTree);
 
-        // Register file-based commands
-        fileCommands.forEach((cmd) => registerCommand(cmd, [], "directory"));
+        // Register traditional file-based commands (lower priority)
+        // These will be skipped if a command with the same name already exists from file-based directory
+        fileCommands.forEach((cmd) => {
+          const fullName = cmd.name;
+          if (!commands.has(fullName)) {
+            registerCommand(cmd, [], "directory");
+          }
+        });
       } catch (error) {
         console.error(
           `Failed to load commands from directory ${fullConfig.commands.directory}:`,
@@ -586,7 +617,7 @@ export async function createCLI<TPlugins extends readonly RemptsPlugin[] = []>(
 
       // Handle version flag (only check before -- separator)
       if (commandArgs.includes("--version") || commandArgs.includes("-v")) {
-        console.log(`${fullConfig.name} v${fullConfig.version}`);
+        console.log(relico.bold(relico.cyan(`${fullConfig.name} v${fullConfig.version}`)));
         return;
       }
 

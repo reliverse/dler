@@ -15,14 +15,14 @@ Follow these TypeScript and ESM patterns for consistency across the Rempts codeb
 
 ```typescript
 // ✅ Good - ESM with .js extensions for local files
-import { defineCommand } from '@reliverse/rempts'
+import { defineCommand } from '@reliverse/rempts-core'
 import { validateConfig } from './utils/validation.js'
 
 // ✅ Good - Named exports
 export { myFunction, MyClass }
 
 // ❌ Avoid - CommonJS
-const { defineCommand } = require('@reliverse/rempts')
+const { defineCommand } = require('@reliverse/rempts-core')
 
 // ❌ Avoid - Missing .js extension for local imports
 import { helper } from './helper'
@@ -93,8 +93,8 @@ const myPlugin = createPlugin<Options, Store>((options) => ({
 ```typescript
 // ✅ Good import order
 import { z } from 'zod'
-import { defineCommand, option } from '@reliverse/rempts'
-import { createPlugin } from '@reliverse/rempts/plugin'
+import { defineCommand, option } from '@reliverse/rempts-core'
+import { createPlugin } from '@reliverse/rempts-core/plugin'
 import { colors, spinner } from '@reliverse/rempts-utils'
 import { parseConfig } from './config.js'
 import { validateInput } from '../validation/mod.js'

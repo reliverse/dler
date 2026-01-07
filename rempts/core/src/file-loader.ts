@@ -3,7 +3,8 @@ import type { Command } from "./types";
 
 /**
  * File-based command loader that automatically discovers and loads commands
- * from a directory structure, supporting both flat and nested command hierarchies.
+ * from a directory structure, supporting both flat and nested command hierarchies,
+ * as well as file-based directory commands.
  */
 export class FileCommandLoader {
   private loadedCommands = new Map<string, string>(); // commandPath -> filePath
@@ -11,11 +12,11 @@ export class FileCommandLoader {
   /**
    * Load commands from a directory structure
    * @param commandsDir Directory containing command files
-   * @param basePath Base path for relative imports
+   * @param excludeFileBasedDir Optional file-based directory to exclude from scanning
    * @returns Promise resolving to loaded command tree
    */
-  async loadFromDirectory(commandsDir: string): Promise<CommandFileTree> {
-    const commandFiles = await this.scanCommandFiles(commandsDir);
+  async loadFromDirectory(commandsDir: string, excludeFileBasedDir?: string): Promise<CommandFileTree> {
+    const commandFiles = await this.scanCommandFiles(commandsDir, excludeFileBasedDir);
     const conflicts = this.detectConflicts(commandFiles, commandsDir);
 
     if (conflicts.length > 0) {
@@ -32,9 +33,20 @@ export class FileCommandLoader {
   }
 
   /**
+   * Load commands from file-based directory structure (only cmd.ts files)
+   * @param commandsDir Directory containing command files
+   * @param fileBasedDir Name of the file-based directory (default: 'app')
+   * @returns Promise resolving to loaded command tree
+   */
+  async loadFromFileBasedDirectory(commandsDir: string, fileBasedDir = "app"): Promise<CommandFileTree> {
+    const fileBasedCommandFiles = await this.scanFileBasedCommandFiles(commandsDir, fileBasedDir);
+    return this.buildFileBasedCommandTree(fileBasedCommandFiles, commandsDir, fileBasedDir);
+  }
+
+  /**
    * Scan for command files in directory
    */
-  private async scanCommandFiles(commandsDir: string): Promise<string[]> {
+  private async scanCommandFiles(commandsDir: string, excludeFileBasedDir?: string): Promise<string[]> {
     try {
       const glob = new Bun.Glob("**/*.{ts,tsx,js,jsx,mjs,mtsx}");
       const files = await Array.fromAsync(glob.scan({ cwd: commandsDir }));
@@ -47,6 +59,11 @@ export class FileCommandLoader {
 
         // Skip test files and other non-command files
         if (this.isNonCommandFile(file)) {
+          return null;
+        }
+
+        // Skip files in the file-based directory if specified
+        if (excludeFileBasedDir && file.startsWith(`${excludeFileBasedDir}/`)) {
           return null;
         }
 
@@ -75,6 +92,44 @@ export class FileCommandLoader {
   }
 
   /**
+   * Scan for file-based command files (only cmd.ts|js|mjs files in file-based directory)
+   */
+  private async scanFileBasedCommandFiles(commandsDir: string, fileBasedDir: string): Promise<string[]> {
+    try {
+      const glob = new Bun.Glob(`${fileBasedDir}/**/cmd.{ts,js,mjs}`);
+      const files = await Array.fromAsync(glob.scan({ cwd: commandsDir }));
+
+      const commandFiles: string[] = [];
+
+      // Process files in parallel for better performance
+      const fileChecks = files.map(async (file) => {
+        const fullPath = join(commandsDir, file);
+
+        // Quick check if this looks like a command file
+        if (await this.isAppCommandFile(fullPath)) {
+          return fullPath;
+        }
+
+        return null;
+      });
+
+      const results = await Promise.all(fileChecks);
+
+      // Filter out null results
+      for (const result of results) {
+        if (result) {
+          commandFiles.push(result);
+        }
+      }
+
+      return commandFiles;
+    } catch {
+      console.warn(`Warning: Could not scan file-based commands directory: ${commandsDir}/${fileBasedDir}`);
+      return [];
+    }
+  }
+
+  /**
    * Check if a file is likely a command file
    */
   private async isCommandFile(filePath: string): Promise<boolean> {
@@ -89,13 +144,39 @@ export class FileCommandLoader {
 
       // Check for rempts imports or defineCommand usage
       const hasRemptsImport =
-        content.includes("@reliverse/rempts") ||
-        content.includes('from "rempts"') ||
-        content.includes("from 'rempts'");
+        content.includes("@reliverse/rempts-core") ||
+        content.includes('from "@reliverse/rempts"') ||
+        content.includes("from '@reliverse/rempts'");
 
       const usesDefineCommand = content.includes("defineCommand(");
 
       return hasCommandExport && (hasRemptsImport || usesDefineCommand);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Check if a file is a valid app command file (must export default defineCommand)
+   */
+  private async isAppCommandFile(filePath: string): Promise<boolean> {
+    try {
+      const file = Bun.file(filePath);
+      const content = await file.text();
+
+      // Must have default export
+      const hasDefaultExport = /export\s+default/.test(content);
+
+      // Must use defineCommand
+      const usesDefineCommand = content.includes("defineCommand(");
+
+      // Must have rempts import
+      const hasRemptsImport =
+        content.includes("@reliverse/rempts-core") ||
+        content.includes('from "@reliverse/rempts"') ||
+        content.includes("from '@reliverse/rempts'");
+
+      return hasDefaultExport && usesDefineCommand && hasRemptsImport;
     } catch {
       return false;
     }
@@ -183,6 +264,21 @@ export class FileCommandLoader {
 
       for (let i = 0; i < pathParts.length - 1; i++) {
         const part = pathParts[i]!;
+        const existing = current[part];
+
+        // Check for structural conflict: if this path part already exists as a command file,
+        // we can't create a directory structure here
+        if (existing && 'filePath' in existing) {
+          const conflictingFile = join(commandsDir, String(existing.filePath));
+          throw new Error(
+            `Command structure conflict: "${relativePath}" conflicts with existing command file "${existing.filePath}". ` +
+            `Cannot create nested command structure when a command file already exists at the same path level. ` +
+            `Please rename one of the conflicting files:\n` +
+            `  - ${conflictingFile}\n` +
+            `  - ${filePath}`,
+          );
+        }
+
         if (!current[part]) {
           current[part] = {};
         }
@@ -198,6 +294,55 @@ export class FileCommandLoader {
     }
 
     return tree;
+  }
+
+  /**
+   * Build command tree from file-based directory structure
+   * File-based commands use flat structure - command names come from defineCommand, not file paths
+   */
+  private async buildFileBasedCommandTree(
+    commandFiles: string[],
+    commandsDir: string,
+    fileBasedDir: string,
+  ): Promise<CommandFileTree> {
+    const tree: CommandFileTree = {};
+
+    for (const filePath of commandFiles) {
+      const relativePath = relative(commandsDir, filePath);
+
+      // For file-based commands, extract the command name from the file content
+      try {
+        const commandName = await this.extractCommandNameFromFile(filePath);
+        if (commandName) {
+          tree[commandName] = {
+            filePath: relativePath,
+            importPath: this.getImportPath(filePath),
+            commandName,
+          };
+        }
+      } catch (error) {
+        // Skip files that can't be parsed
+        console.warn(`Warning: Could not parse file-based command from ${relativePath}:`, error);
+      }
+    }
+
+    return tree;
+  }
+
+  /**
+   * Extract command name from app command file content
+   */
+  private async extractCommandNameFromFile(filePath: string): Promise<string | null> {
+    try {
+      const file = Bun.file(filePath);
+      const content = await file.text();
+
+      // Look for name: "command-name" pattern in defineCommand calls
+      const nameMatch = content.match(/name:\s*["']([^"']+)["']/);
+      return nameMatch ? nameMatch[1]! : null;
+    } catch {
+      return null;
+    }
   }
 
   /**

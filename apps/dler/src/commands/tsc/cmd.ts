@@ -3,7 +3,7 @@
 // Note on `bun publish` and `bun tsc`: we don't display npm/tsc raw output, because both are not reliable for concurrent display, so we display them on our own.
 
 import { logger } from "@reliverse/relinka";
-import { defineCommand, option } from "@reliverse/rempts";
+import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 import { runTscOnAllPackages } from "./impl";
 

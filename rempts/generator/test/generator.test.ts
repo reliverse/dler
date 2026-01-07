@@ -16,7 +16,7 @@ describe("Generator", () => {
 
     // Create a test command file
     const testCommandContent = `
-import { defineCommand, option } from '@reliverse/rempts'
+import { defineCommand, option } from '@reliverse/rempts-core'
 import { type } from 'arktype'
 
 export default defineCommand({
@@ -48,7 +48,7 @@ export default defineCommand({
 
     // Create a test command file
     const testCommandContent = `
-import { defineCommand, option } from '@reliverse/rempts'
+import { defineCommand, option } from '@reliverse/rempts-core'
 import { type } from 'arktype'
 
 export default defineCommand({
@@ -91,7 +91,7 @@ export default defineCommand({
     const types = buildTypes(mockCommands as any);
     expect(types).toContain("const modules: Record<GeneratedNames, Command<any>> = {");
     expect(types).toContain("'test-command'");
-    expect(types).toContain("declare module '@reliverse/rempts'");
+    expect(types).toContain("declare module '@reliverse/rempts-core'");
   });
 
   test("should generate complete types file", async () => {
@@ -100,7 +100,7 @@ export default defineCommand({
 
     // Create a test command file
     const testCommandContent = `
-import { defineCommand, option } from '@reliverse/rempts'
+import { defineCommand, option } from '@reliverse/rempts-core'
 import { type } from 'arktype'
 
 export default defineCommand({

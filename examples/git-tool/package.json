@@ -10,7 +10,7 @@
     "cli": "bun cli.ts"
   },
   "dependencies": {
-    "@reliverse/rempts": "workspace:*",
+    "@reliverse/rempts-core": "workspace:*",
     "@reliverse/relico": "workspace:*",
     "arktype": "catalog:"
   },

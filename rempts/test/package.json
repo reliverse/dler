@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "@reliverse/relico": "workspace:*",
-    "@reliverse/rempts": "workspace:*",
+    "@reliverse/rempts-core": "workspace:*",
     "arktype": "catalog:",
     "arkregex": "catalog:"
   },

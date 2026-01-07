@@ -1,6 +1,6 @@
-import type { Command, CLI } from "@reliverse/rempts";
+import type { Command, CLI } from "@reliverse/rempts-core";
 import type { TestOptions, TestResult, MockHandlerArgs, ShellPromise } from "./types";
-import { createCLI } from "@reliverse/rempts";
+import { createCLI } from "@reliverse/rempts-core";
 
 export async function testCommand(
   command: Command<any>,

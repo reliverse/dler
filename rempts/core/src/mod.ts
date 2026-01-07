@@ -45,7 +45,7 @@ export type { GlobalFlags } from "./global-flags";
 export { registerTuiRenderer, clearTuiRenderer, getTuiRenderer } from "./tui/registry";
 
 // Note: Plugin system is exported via subpath export
-// Usage: import { PluginManager, createPlugin } from '@reliverse/rempts/plugin'
+// Usage: import { PluginManager, createPlugin } from '@reliverse/rempts-core/plugin'
 
 // Export validation utilities
 export {

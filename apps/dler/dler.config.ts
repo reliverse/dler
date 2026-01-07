@@ -1,4 +1,4 @@
-import { defineConfig } from "@reliverse/rempts";
+import { defineConfig } from "@reliverse/rempts-core";
 
 export default defineConfig({
   name: "dler",

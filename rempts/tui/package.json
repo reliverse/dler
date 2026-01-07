@@ -32,7 +32,7 @@
   "dependencies": {
     "@opentui/core": "^0.1.57",
     "@opentui/react": "^0.1.57",
-    "@reliverse/rempts": "workspace:*"
+    "@reliverse/rempts-core": "workspace:*"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",

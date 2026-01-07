@@ -1,4 +1,4 @@
-import { defineCommand, option } from "@reliverse/rempts";
+import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 import { CONFIG_FILE_NAME, DEFAULT_CONFIG } from "../utils/constants";
 import { relico } from "@reliverse/relico";

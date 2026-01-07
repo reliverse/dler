@@ -1,4 +1,4 @@
-import { defineCommand, option } from "@reliverse/rempts";
+import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 import { logger, formatTable } from "@{{name}}/utils";
 import type { AnalyzeResult } from "../types";

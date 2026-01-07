@@ -17,7 +17,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@reliverse/rempts": "latest",
+    "@reliverse/rempts-core": "latest",
     "@{{name}}/core": "workspace:*",
     "@{{name}}/utils": "workspace:*"
   },
@@ -32,7 +32,7 @@
     "entry": "./src/mod.ts",
     "outDir": "./dist",
     "external": [
-      "@reliverse/rempts",
+      "@reliverse/rempts-core",
       "@{{name}}/core",
       "@{{name}}/utils"
     ]

@@ -15,7 +15,7 @@ Commands follow a consistent pattern using the core framework:
 
 ```typescript
 // In any command file (e.g., packages/cli/src/commands/build.ts)
-import { defineCommand, option } from '@reliverse/rempts'
+import { defineCommand, option } from '@reliverse/rempts-core'
 import { z } from 'zod'
 
 export const buildCommand = defineCommand({
@@ -83,7 +83,7 @@ export const buildCommand = defineCommand({
 - Create plugins with `createPlugin` helper:
 
 ```typescript
-import { createPlugin } from '@reliverse/rempts/plugin'
+import { createPlugin } from '@reliverse/rempts-core/plugin'
 
 interface MyStore {
   count: number

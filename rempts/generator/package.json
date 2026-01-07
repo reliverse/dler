@@ -13,7 +13,7 @@
   "dependencies": {
     "@babel/parser": "^7.23.0",
     "@babel/traverse": "^7.23.0",
-    "@reliverse/rempts": "workspace:*",
+    "@reliverse/rempts-core": "workspace:*",
     "debug": "^4.4.3",
     "arktype": "catalog:"
   },

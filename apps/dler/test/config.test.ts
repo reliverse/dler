@@ -1,6 +1,6 @@
 import { test, expect } from "bun:test";
 import { loadConfig } from "../src/config";
-import { defineConfig, remptsConfigSchema } from "@reliverse/rempts";
+import { defineConfig, remptsConfigSchema } from "@reliverse/rempts-core";
 import { writeFileSync, unlinkSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

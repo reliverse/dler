@@ -98,7 +98,7 @@ Each package has its own development setup:
 
 ```typescript
 import { describe, it, expect } from 'bun:test'
-import { createCLI } from '@reliverse/rempts'
+import { createCLI } from '@reliverse/rempts-core'
 import { myPlugin } from '../src'
 
 describe('My Plugin', () => {

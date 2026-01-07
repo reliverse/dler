@@ -7,33 +7,33 @@ import type { CLIOption } from "./types";
  */
 export const GLOBAL_FLAGS = {
   interactive: {
-    schema: type("boolean").configure({
+    schema: type("boolean | undefined").configure({
       description: "enable interactive terminal user interface mode",
     }),
     short: "i",
     description: "Run in interactive TUI mode",
   },
   tui: {
-    schema: type("boolean").configure({
+    schema: type("boolean | undefined").configure({
       description: "force terminal user interface mode",
     }),
     description: "Force TUI mode (same as --interactive)",
   },
   "no-tui": {
-    schema: type("boolean").configure({
+    schema: type("boolean | undefined").configure({
       description: "disable terminal user interface mode",
     }),
     description: "Disable TUI mode, use CLI handler instead",
   },
   help: {
-    schema: type("boolean").configure({
+    schema: type("boolean | undefined").configure({
       description: "display help information",
     }),
     short: "h",
     description: "Show help",
   },
   version: {
-    schema: type("boolean").configure({
+    schema: type("boolean | undefined").configure({
       description: "display version information",
     }),
     short: "v",
@@ -42,9 +42,9 @@ export const GLOBAL_FLAGS = {
 } satisfies Record<string, CLIOption>;
 
 export type GlobalFlags = {
-  interactive: boolean;
-  tui: boolean;
-  "no-tui": boolean;
-  help: boolean;
-  version: boolean;
+  interactive?: boolean;
+  tui?: boolean;
+  "no-tui"?: boolean;
+  help?: boolean;
+  version?: boolean;
 };

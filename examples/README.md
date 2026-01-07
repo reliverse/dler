@@ -97,7 +97,7 @@ Each example builds on the previous concepts and introduces new patterns.
 Rempts uses Standard Schema for validation, allowing you to use any compatible validation library:
 
 ```typescript
-import { defineCommand, option } from '@reliverse/rempts'
+import { defineCommand, option } from '@reliverse/rempts-core'
 import { type } from 'arktype'
 
 export default defineCommand({
@@ -138,7 +138,7 @@ const confirmed = await prompt.confirm('Continue?')
 Extend functionality with type-safe plugins:
 
 ```typescript
-import { createPlugin } from '@reliverse/rempts/plugin'
+import { createPlugin } from '@reliverse/rempts-core/plugin'
 
 export const myPlugin = createPlugin({
   name: 'my-plugin',
@@ -155,7 +155,7 @@ All examples use `dler.config.ts` for build configuration:
 
 ```typescript
 // dler.config.ts
-import { defineConfig } from '@reliverse/rempts'
+import { defineConfig } from '@reliverse/rempts-core'
 
 export default defineConfig({
   name: 'my-cli',
@@ -217,7 +217,7 @@ The Rempts CLI handles:
 
 ## Thanks
 
-Thanks to [Dler](https://github.com/reliverse/dler), which `rempts` v2+ builds upon, [OpenTUI](https://github.com/anomalyco/opentui) for the great TUI library, [Bun](https://bun.com) for the incredibly fast JavaScript runtime, and the entire open-source community for making projects like these possible ❤️
+Thanks to [Bunli](https://github.com/AryaLabsHQ/bunli), which `rempts` v2+ builds upon, [OpenTUI](https://github.com/anomalyco/opentui) for the great TUI library, [Bun](https://bun.com) for the incredibly fast JavaScript runtime, and the entire open-source community for making projects like these possible ❤️
 
 ## License
 

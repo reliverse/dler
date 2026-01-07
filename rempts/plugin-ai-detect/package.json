@@ -32,7 +32,7 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@reliverse/rempts": "workspace:*"
+    "@reliverse/rempts-core": "workspace:*"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",

@@ -1,6 +1,6 @@
-import { defineCommand, option } from "@reliverse/rempts";
+import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
-import { loadConfig } from "@reliverse/rempts";
+import { loadConfig } from "@reliverse/rempts-core";
 import { $ } from "bun";
 import { existsSync } from "node:fs";
 import { relico } from "@reliverse/relico";

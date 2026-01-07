@@ -29,7 +29,8 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@reliverse/rempts": "workspace:*"
+    "@reliverse/rempts-core": "workspace:*",
+    "@reliverse/rempts-utils": "workspace:*"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",

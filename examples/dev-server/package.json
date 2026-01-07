@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@reliverse/relico": "workspace:*",
-    "@reliverse/rempts": "workspace:*",
+    "@reliverse/rempts-core": "workspace:*",
     "@reliverse/rempts-plugin-ai-detect": "workspace:*",
     "@reliverse/rempts-plugin-config": "workspace:*",
     "arktype": "catalog:"

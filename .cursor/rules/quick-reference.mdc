@@ -33,7 +33,7 @@ cd apps/web && bun dev
 
 ### Command Definition
 ```typescript
-import { defineCommand, option } from '@reliverse/rempts'
+import { defineCommand, option } from '@reliverse/rempts-core'
 import { z } from 'zod'
 
 export const myCommand = defineCommand({
@@ -80,8 +80,8 @@ describe('My Command', () => {
 
 ```typescript
 // Core framework
-import { defineCommand, defineConfig, option, createCLI } from '@reliverse/rempts'
-import { createPlugin } from '@reliverse/rempts/plugin'
+import { defineCommand, defineConfig, option, createCLI } from '@reliverse/rempts-core'
+import { createPlugin } from '@reliverse/rempts-core/plugin'
 
 // Utilities
 import { colors, spinner, prompt } from '@reliverse/rempts-utils'
@@ -112,7 +112,7 @@ import { testCommand } from '@reliverse/rempts-test'
 
 ### dler.config.ts
 ```typescript
-import { defineConfig } from '@reliverse/rempts'
+import { defineConfig } from '@reliverse/rempts-core'
 
 export default defineConfig({
   name: 'my-cli',

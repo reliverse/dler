@@ -4,11 +4,9 @@
  */
 
 import { readFile, access } from "fs/promises";
-import { join } from "path";
 import { homedir } from "os";
-import { createPlugin } from "@reliverse/rempts/plugin";
-import { deepMerge } from "@reliverse/rempts/utils";
-import type { RemptsPlugin } from "@reliverse/rempts/plugin";
+import { createPlugin } from "@reliverse/rempts-core/plugin";
+import { deepMerge } from "@reliverse/rempts-core/utils";
 
 export interface ConfigPluginOptions {
   /**

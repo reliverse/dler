@@ -19,7 +19,7 @@
     "prepare": "bun run build"
   },
   "dependencies": {
-    "@reliverse/rempts": "latest",
+    "@reliverse/rempts-core": "latest",
     "@reliverse/rempts-utils": "latest",
     "arktype": "catalog:"
   },
@@ -34,7 +34,7 @@
     "entry": "./src/mod.ts",
     "outDir": "./dist",
     "external": [
-      "@reliverse/rempts",
+      "@reliverse/rempts-core",
       "@reliverse/rempts-utils",
       "zod"
     ]

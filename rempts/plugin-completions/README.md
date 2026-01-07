@@ -21,7 +21,7 @@ bun add rempts-plugin-completions
 ### 1. Add the plugin to your CLI
 
 ```typescript
-import { createCLI } from '@reliverse/rempts'
+import { createCLI } from '@reliverse/rempts-core'
 import { completionsPlugin } from '@reliverse/rempts-plugin-completions'
 
 const cli = await createCLI({
@@ -34,7 +34,7 @@ const cli = await createCLI({
 Or in your `dler.config.ts`:
 
 ```typescript
-import { defineConfig } from '@reliverse/rempts'
+import { defineConfig } from '@reliverse/rempts-core'
 import { completionsPlugin } from '@reliverse/rempts-plugin-completions'
 
 export default defineConfig({
@@ -149,7 +149,7 @@ The plugin leverages Rempts's command metadata generation system to create accur
 Given a command like:
 
 ```typescript
-import { defineCommand, option } from '@reliverse/rempts'
+import { defineCommand, option } from '@reliverse/rempts-core'
 import { type } from 'arktype'
 
 export default defineCommand({

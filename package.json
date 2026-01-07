@@ -149,7 +149,7 @@
   },
   "type": "module",
   "scripts": {
-    "dler": "bun apps/dler/src/cli.ts",
+    "dler": "cd apps/dler && bun src/cli.ts",
     "latest": "bun dler update && bun check",
     "check": "bun dler tsc --verbose && bun dler biome",
     "clean:2": "bun dler clean --presets build --force",

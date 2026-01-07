@@ -43,9 +43,7 @@ async function getAllPackages(): Promise<PackageInfo[]> {
           // Include all packages that are not private and are part of the Rempts ecosystem
           const isPublishable =
             !packageJson.private &&
-            (packageJson.name.startsWith("@reliverse/rempts-") ||
-              packageJson.name === "rempts" ||
-              packageJson.name === "rempts");
+            (packageJson.name.startsWith("@reliverse/"));
 
           packages.push({
             name: packageJson.name,

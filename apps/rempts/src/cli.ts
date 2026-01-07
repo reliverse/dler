@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { createCLI, defineCommand, option } from "@reliverse/rempts";
+import { createCLI, defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 import { create } from "./create";
 
