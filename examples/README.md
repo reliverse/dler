@@ -73,8 +73,8 @@ bun cli.ts
 All examples include:
 
 - `dler.config.ts` - Configuration with required `commands.directory`
-- `cmds/` directory - All command definitions (REQUIRED structure with `cmd.ts` files)
-- `.dler/cmds.gen.ts` - Generated TypeScript definitions (auto-created)
+- `commands/` directory - All command definitions (REQUIRED structure)
+- `.dler/commands.gen.ts` - Generated TypeScript definitions (auto-created)
 - Development scripts using `rempts dev` for hot reload
 - Build scripts using `rempts build` for production
 - Type generation for enhanced developer experience
@@ -164,7 +164,7 @@ export default defineConfig({
 
   // REQUIRED: commands directory
   commands: {
-    directory: './cmds'
+    directory: './commands'
   },
 
   // REQUIRED: plugins array (can be empty)

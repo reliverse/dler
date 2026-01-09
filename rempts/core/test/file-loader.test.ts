@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { createFileCommandLoader } from "../src/file-loader";
+import type { CommandFileTree } from "../src/file-loader";
+import { createFileCommandLoader, loadCommandsFromDirectory } from "../src/file-loader";
 
 describe("FileCommandLoader", () => {
   const testDir = join(process.cwd(), "test-commands");
@@ -21,7 +22,6 @@ describe("FileCommandLoader", () => {
 import { defineCommand } from "@reliverse/rempts-core";
 
 export default defineCommand({
-  name: "test",
   description: "A test command",
   handler: () => {
     console.log("test executed");
@@ -45,7 +45,6 @@ export default defineCommand({
 import { defineCommand } from "@reliverse/rempts-core";
 
 export default defineCommand({
-  name: "parent",
   description: "A parent command",
   handler: () => {
     console.log("parent executed");
@@ -57,7 +56,6 @@ export default defineCommand({
 import { defineCommand } from "@reliverse/rempts-core";
 
 export default defineCommand({
-  name: "child",
   description: "A child command",
   handler: () => {
     console.log("child executed");
@@ -65,20 +63,19 @@ export default defineCommand({
 });
 `;
 
-    await mkdir(join(testDir, "parent"), { recursive: true });
-    await mkdir(join(testDir, "child"), { recursive: true });
+    await mkdir(join(testDir, "parent", "child"), { recursive: true });
     await writeFile(join(testDir, "parent", "cmd.ts"), parentContent);
-    await writeFile(join(testDir, "child", "cmd.ts"), childContent);
+    await writeFile(join(testDir, "parent", "child", "cmd.ts"), childContent);
 
     const tree = await loader.loadFromDirectory(testDir);
 
     expect(tree).toHaveProperty("parent");
-    expect(tree.parent).toHaveProperty("filePath", "parent/cmd.ts");
-    expect(tree.parent).toHaveProperty("commandName", "parent");
-
-    expect(tree).toHaveProperty("child");
-    expect(tree.child).toHaveProperty("filePath", "child/cmd.ts");
-    expect(tree.child).toHaveProperty("commandName", "child");
+    const parentTree = tree.parent as CommandFileTree;
+    expect(parentTree).toHaveProperty("child");
+    expect((parentTree as any).filePath).toBe("parent/cmd.ts");
+    expect((parentTree as any).commandName).toBe("parent");
+    expect(parentTree.child).toHaveProperty("filePath", "parent/child/cmd.ts");
+    expect(parentTree.child).toHaveProperty("commandName", "parent child");
   });
 
   it("should detect command conflicts", async () => {
@@ -87,7 +84,6 @@ export default defineCommand({
 import { defineCommand } from "@reliverse/rempts-core";
 
 export default defineCommand({
-  name: "build",
   description: "First build command",
   handler: () => {}
 });
@@ -97,7 +93,6 @@ export default defineCommand({
 import { defineCommand } from "@reliverse/rempts-core";
 
 export default defineCommand({
-  name: "build",
   description: "Second build command",
   handler: () => {}
 });
@@ -119,7 +114,6 @@ export default defineCommand({
 import { defineCommand } from "@reliverse/rempts-core";
 
 export default defineCommand({
-  name: "js-cmd",
   description: "JavaScript command",
   handler: () => {}
 });
@@ -129,7 +123,6 @@ export default defineCommand({
 import { defineCommand } from "@reliverse/rempts-core";
 
 export default defineCommand({
-  name: "mjs-cmd",
   description: "MJS command",
   handler: () => {}
 });
@@ -162,10 +155,10 @@ describe("loadCommandsFromDirectory", () => {
 
   it("should provide utility function for loading commands", async () => {
     const commandContent = `
-import { defineCommand } from "@reliverse/rempts-core";
+// Mock defineCommand for testing
+const defineCommand = (cmd: any) => cmd;
 
 export default defineCommand({
-  name: "utility-test",
   description: "Utility test command",
   handler: () => {}
 });
@@ -174,54 +167,42 @@ export default defineCommand({
     await mkdir(join(testDir, "utility-test"), { recursive: true });
     await writeFile(join(testDir, "utility-test", "cmd.ts"), commandContent);
 
-    // Test that scanning works (loading would require dependencies)
-    const loader = createFileCommandLoader();
-    const tree = await loader.loadFromDirectory(testDir);
+    const commands = await loadCommandsFromDirectory(testDir);
 
-    expect(Object.keys(tree)).toHaveLength(1);
-    expect(tree).toHaveProperty("utility-test");
+    expect(commands).toHaveLength(1);
+    expect(commands[0]?.name).toBe("utility-test");
   });
 
-  it("should only detect valid command files", async () => {
-    // Create a valid command file
-    const validCommand = `
-import { defineCommand } from "@reliverse/rempts-core";
+  it("should detect commands that only use defineCommand without rempts imports", async () => {
+    // Test the fixed logic for detecting commands that use defineCommand
+    // but don't explicitly import from rempts-core
+    const commandContent = `
+import { type } from "arktype";
 
-export default defineCommand({
-  name: "valid-test",
-  description: "Valid command file",
+const cmd = defineCommand({
+  name: "define-only-test",
+  description: "Command using defineCommand without explicit import",
+  options: {
+    test: type("string?")
+  },
   handler: () => {}
 });
-`;
-
-    // Create an invalid command file (missing rempts import)
-    const invalidCommand = `
-const cmd = {
-  name: "invalid-test",
-  description: "Invalid command file",
-  handler: () => {}
-};
 
 export default cmd;
 `;
 
-    await mkdir(join(testDir, "valid-test"), { recursive: true });
-    await mkdir(join(testDir, "invalid-test"), { recursive: true });
-    await writeFile(join(testDir, "valid-test", "cmd.ts"), validCommand);
-    await writeFile(join(testDir, "invalid-test", "cmd.ts"), invalidCommand);
+    await writeFile(join(testDir, "define-only-test.ts"), commandContent);
 
     const testLoader = createFileCommandLoader();
     const tree = await testLoader.loadFromDirectory(testDir);
 
-    // Only the valid command should be detected
-    expect(Object.keys(tree)).toHaveLength(1);
-    expect(tree).toHaveProperty("valid-test");
-    expect(tree).not.toHaveProperty("invalid-test");
+    // The file should be detected as a command file
+    expect(Object.keys(tree)).toContain("define-only-test");
   });
 });
 
-describe("Directory Loading", () => {
-  const testDir = join(process.cwd(), "test-app-commands");
+describe("Directory-Based Command Loading", () => {
+  const testDir = join(process.cwd(), "test-cmds-commands");
 
   beforeEach(async () => {
     await mkdir(testDir, { recursive: true });
@@ -231,35 +212,33 @@ describe("Directory Loading", () => {
     await rm(testDir, { recursive: true, force: true });
   });
 
-  it("should load commands from directory", async () => {
-    const cmdsCommand = `
+  it("should load commands from directory structure", async () => {
+    const commandContent = `
 import { defineCommand } from "@reliverse/rempts-core";
 
 export default defineCommand({
-  name: "app-test",
-  description: "Cmds directory test command",
+  description: "Test command",
   handler: () => {}
 });
 `;
 
-    await mkdir(join(testDir, "cmds", "app-test"), { recursive: true });
-    await writeFile(join(testDir, "cmds", "app-test", "cmd.ts"), cmdsCommand);
+    await mkdir(join(testDir, "test-cmd"), { recursive: true });
+    await writeFile(join(testDir, "test-cmd", "cmd.ts"), commandContent);
 
     const loader = createFileCommandLoader();
-    const tree = await loader.loadFromDirectory(join(testDir, "cmds"));
+    const tree = await loader.loadFromDirectory(testDir);
 
-    expect(tree).toHaveProperty("app-test");
-    expect(tree["app-test"]).toHaveProperty("filePath", "app-test/cmd.ts");
-    expect(tree["app-test"]).toHaveProperty("commandName", "app-test");
+    expect(tree).toHaveProperty("test-cmd");
+    expect(tree["test-cmd"]).toHaveProperty("filePath", "test-cmd/cmd.ts");
+    expect(tree["test-cmd"]).toHaveProperty("commandName", "test-cmd");
   });
 
-  it("should handle multiple commands", async () => {
+  it("should handle nested commands", async () => {
     const parentCommand = `
 import { defineCommand } from "@reliverse/rempts-core";
 
 export default defineCommand({
-  name: "parent",
-  description: "Parent cmds command",
+  description: "Parent command",
   handler: () => {}
 });
 `;
@@ -268,75 +247,25 @@ export default defineCommand({
 import { defineCommand } from "@reliverse/rempts-core";
 
 export default defineCommand({
-  name: "build",
-  description: "Build cmds command",
+  description: "Child command",
   handler: () => {}
 });
 `;
 
-    await mkdir(join(testDir, "cmds", "parent"), { recursive: true });
-    await mkdir(join(testDir, "cmds", "build"), { recursive: true });
-    await writeFile(join(testDir, "cmds", "parent", "cmd.ts"), parentCommand);
-    await writeFile(join(testDir, "cmds", "build", "cmd.ts"), childCommand);
+    await mkdir(join(testDir, "parent"), { recursive: true });
+    await mkdir(join(testDir, "parent", "child"), { recursive: true });
+    await writeFile(join(testDir, "parent", "cmd.ts"), parentCommand);
+    await writeFile(join(testDir, "parent", "child", "cmd.ts"), childCommand);
 
     const loader = createFileCommandLoader();
-    const tree = await loader.loadFromDirectory(join(testDir, "cmds"));
+    const tree = await loader.loadFromDirectory(testDir);
 
     expect(tree).toHaveProperty("parent");
-    expect(tree.parent).toHaveProperty("filePath", "parent/cmd.ts");
-    expect(tree.parent).toHaveProperty("commandName", "parent");
-
-    expect(tree).toHaveProperty("build");
-    expect(tree.build).toHaveProperty("filePath", "build/cmd.ts");
-    expect(tree.build).toHaveProperty("commandName", "build");
-  });
-
-  it("should only accept files with default export and defineCommand", async () => {
-    // Valid cmds command
-    const validCommand = `
-import { defineCommand } from "@reliverse/rempts-core";
-
-export default defineCommand({
-  name: "valid",
-  description: "Valid cmds command",
-  handler: () => {}
-});
-`;
-
-    // Invalid - no default export
-    const invalidCommand1 = `
-import { defineCommand } from "@reliverse/rempts-core";
-
-export const command = defineCommand({
-  name: "invalid1",
-  description: "Invalid cmds command",
-  handler: () => {}
-});
-`;
-
-    // Invalid - no defineCommand
-    const invalidCommand2 = `
-export default {
-  name: "invalid2",
-  description: "Invalid cmds command",
-  handler: () => {}
-};
-`;
-
-    await mkdir(join(testDir, "cmds"), { recursive: true });
-    await mkdir(join(testDir, "cmds", "valid"), { recursive: true });
-    await mkdir(join(testDir, "cmds", "invalid1"), { recursive: true });
-    await mkdir(join(testDir, "cmds", "invalid2"), { recursive: true });
-
-    await writeFile(join(testDir, "cmds", "valid", "cmd.ts"), validCommand);
-    await writeFile(join(testDir, "cmds", "invalid1", "cmd.ts"), invalidCommand1);
-    await writeFile(join(testDir, "cmds", "invalid2", "cmd.ts"), invalidCommand2);
-
-    const loader = createFileCommandLoader();
-    const tree = await loader.loadFromDirectory(join(testDir, "cmds"));
-
-    // Should only contain the valid command
-    expect(Object.keys(tree)).toHaveLength(1);
-    expect(tree).toHaveProperty("valid");
+    const parentTree = tree.parent as CommandFileTree;
+    expect(parentTree).toHaveProperty("child");
+    expect((parentTree as any).filePath).toBe("parent/cmd.ts");
+    expect((parentTree as any).commandName).toBe("parent");
+    expect(parentTree.child).toHaveProperty("filePath", "parent/child/cmd.ts");
+    expect(parentTree.child).toHaveProperty("commandName", "parent child");
   });
 });

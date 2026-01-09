@@ -7,7 +7,6 @@ import { type } from "arktype";
 import { findEntry } from "../../utils/find-entry";
 
 export default defineCommand({
-  name: "dev",
   description: "Run your CLI in development mode with hot reload",
   alias: "d",
   options: {
@@ -15,7 +14,9 @@ export default defineCommand({
       short: "e",
       description: "Entry file (defaults to auto-detect)",
     }),
-    commandsDir: option(type("string"), { description: "Commands directory" }),
+    cmdsDir: option(type("string"), {
+      description: "Commands directory relative to the CLI entry file (default: 'cmds')",
+    }),
     generate: option(type("boolean"), { description: "Enable codegen" }),
     clearScreen: option(type("boolean"), {
       description: "Clear screen on reload",
@@ -37,7 +38,7 @@ export default defineCommand({
     const config = await loadConfig();
 
     // Apply defaults
-    const commandsDir = flags.commandsDir || "commands";
+    const cmdsDir = flags.cmdsDir || "cmds";
     const generate = flags.generate !== undefined ? flags.generate : true;
     const _clearScreen = flags.clearScreen !== undefined ? flags.clearScreen : true;
     const watch = flags.watch !== undefined ? flags.watch : true;
@@ -50,7 +51,7 @@ export default defineCommand({
       }
 
       const generator = new Generator({
-        commandsDir,
+        cmdsDir,
         outputFile: "./.dler/commands.gen.ts",
         config,
         generateReport: config.commands?.generateReport ?? false,
@@ -134,8 +135,8 @@ export default defineCommand({
     // Watch for changes in commands directory to regenerate types
     let ac: AbortController | null = null;
     if (watch ?? config.dev?.watch ?? true) {
-      const commandsDirPath = path.resolve(commandsDir);
-      if (existsSync(commandsDirPath) && generate) {
+      const cmdsDirPath = path.resolve(cmdsDir);
+      if (existsSync(cmdsDirPath) && generate) {
         const { watch } = await import("node:fs/promises");
         ac = new AbortController();
         const { signal } = ac;
@@ -143,7 +144,7 @@ export default defineCommand({
         // Watch commands directory for type regeneration
         const watchCommands = async () => {
           try {
-            const watcher = watch(commandsDirPath, {
+            const watcher = watch(cmdsDirPath, {
               recursive: true,
               signal,
             });

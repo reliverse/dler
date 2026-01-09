@@ -2,7 +2,7 @@ import type { BuildOutput, BunPlugin, OnLoadArgs, OnResolveArgs } from "bun";
 import { Generator } from "./generator";
 
 export interface RemptsCodegenPluginOptions {
-  commandsDir?: string;
+  cmdsDir?: string;
   outputFile?: string;
   config?: any;
   generateReport?: boolean;
@@ -16,7 +16,7 @@ export interface RemptsCodegenPluginOptions {
  * separate codegen steps.
  */
 export function remptsCodegenPlugin(options: RemptsCodegenPluginOptions = {}): BunPlugin {
-  const { commandsDir = "cmds", outputFile = "./cmds.gen.ts", config, generateReport } = options;
+  const { cmdsDir = "cmds", outputFile = "./commands.gen.ts", config, generateReport } = options;
 
   let generator: Generator | null = null;
 
@@ -26,7 +26,7 @@ export function remptsCodegenPlugin(options: RemptsCodegenPluginOptions = {}): B
     setup(build) {
       // Initialize generator
       generator = new Generator({
-        commandsDir,
+        cmdsDir,
         outputFile,
         config,
         generateReport,
@@ -62,7 +62,7 @@ export function remptsCodegenPlugin(options: RemptsCodegenPluginOptions = {}): B
         { filter: /\.(ts|tsx|js|jsx)$/, namespace: "file" },
         async (args: OnLoadArgs) => {
           // Check if this is a command file
-          if (args.path.includes(commandsDir)) {
+          if (args.path.includes(cmdsDir)) {
             // Let Bun handle the file normally, but we've already generated types
             return undefined;
           }
@@ -103,8 +103,8 @@ export function remptsCodegenPlugin(options: RemptsCodegenPluginOptions = {}): B
  *   outdir: './dist',
  *   plugins: [
  *     remptsCodegenPlugin({
- *       commandsDir: './cmds',
- *       outputFile: './cmds.gen.ts'
+ *       cmdsDir: './cmds',
+ *       outputFile: './commands.gen.ts'
  *     })
  *   ]
  * })

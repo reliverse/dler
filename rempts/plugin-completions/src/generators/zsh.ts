@@ -16,7 +16,7 @@ export function generateZsh(commands: CommandMetadata[], cliName: string): strin
   script += "    cmds)\n";
 
   // Generate command list with descriptions
-  script += `      _values "commands" \\\n`;
+  script += `      _values "cmds" \\\n`;
   for (let i = 0; i < commands.length; i++) {
     const cmd = commands[i];
     if (!cmd) {

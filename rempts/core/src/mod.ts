@@ -44,7 +44,6 @@ export type {
   RenderResult,
   ResolvedConfig,
   RuntimeInfo,
-  StandardSchemaV1,
   TerminalInfo,
 } from "./types";
 export { defineCommand, option } from "./types";

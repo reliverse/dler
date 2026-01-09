@@ -63,7 +63,7 @@ Development options:
 - `--watch, -w` - Watch for changes (default: true)
 - `--inspect, -i` - Enable debugger
 - `--port, -p` - Debugger port (default: 9229)
-- `--commandsDir` - Commands directory for codegen (default: commands)
+- `--cmdsDir` - Commands directory for codegen (default: commands)
 - `--generate` - Enable/disable code generation (default: true)
 - `--clearScreen` - Clear screen on reload (default: true)
 
@@ -101,7 +101,7 @@ dler generate
 dler generate --watch
 
 # Custom commands directory
-dler generate --commandsDir ./src/commands
+dler generate --cmdsDir ./src/commands
 
 # Custom output file
 dler generate --output ./types/commands.gen.ts
@@ -109,7 +109,7 @@ dler generate --output ./types/commands.gen.ts
 
 Generate options:
 
-- `--commandsDir` - Commands directory to scan (default: commands)
+- `--cmdsDir` - Commands directory to scan (default: commands)
 - `--output, -o` - Output file path (default: ./commands.gen.ts)
 - `--watch, -w` - Watch for changes and regenerate
 

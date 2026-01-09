@@ -21,17 +21,17 @@ export class CommandScanner {
   /**
    * Scan for command files using Bun.Transpiler for fast filtering
    */
-  async scanCommands(commandsDir: string): Promise<string[]> {
+  async scanCommands(cmdsDir: string): Promise<string[]> {
     try {
       // Use Bun's native Glob for file scanning
       const glob = new Bun.Glob("**/*.{ts,tsx,js,jsx}");
-      const files = await Array.fromAsync(glob.scan({ cwd: commandsDir }));
+      const files = await Array.fromAsync(glob.scan({ cwd: cmdsDir }));
 
       const commandFiles: string[] = [];
 
       // Process files in parallel for better performance
       const fileChecks = files.map(async (file) => {
-        const fullPath = join(commandsDir, file);
+        const fullPath = join(cmdsDir, file);
 
         // Quick file extension check
         const ext = extname(file);
@@ -63,7 +63,7 @@ export class CommandScanner {
 
       return commandFiles;
     } catch {
-      console.warn(`Warning: Could not scan commands directory: ${commandsDir}`);
+      console.warn(`Warning: Could not scan commands directory: ${cmdsDir}`);
       return [];
     }
   }
@@ -120,25 +120,30 @@ export class CommandScanner {
   /**
    * Get command name from file path
    */
-  getCommandName(filePath: string, commandsDir: string): string {
-    const relativePath = filePath.replace(`${commandsDir}/`, "");
-    const withoutExt = relativePath.replace(/\.[^.]+$/, "");
+  getCommandName(filePath: string, cmdsDir: string): string {
+    const relativePath = filePath.replace(`${cmdsDir}/`, "");
 
-    // Handle index files as parent commands
-    if (withoutExt.endsWith("/index")) {
-      return withoutExt.slice(0, -6); // Remove '/index'
-    }
+    // Remove the "cmd" part and extension: "test/cmd.ts" -> "test/"
+    // Match pattern: /cmd.{ts,js,mjs} at the end
+    const pathWithoutCmd = relativePath.replace(/\/cmd\.[^.]+$/, "");
 
-    return withoutExt;
+    // Remove trailing slash if present: "test/" -> "test"
+    const trimmed = pathWithoutCmd.replace(/\/$/, "");
+
+    // Convert path separators to spaces for command hierarchy
+    // Handle multiple consecutive slashes and normalize
+    return trimmed.replace(/\//g, " ").replace(/\s+/g, " ").trim();
   }
 
   /**
    * Get export path for a command file
    */
-  getExportPath(filePath: string, commandsDir: string): string {
-    const relativePath = filePath.replace(`${commandsDir}/`, "");
+  getExportPath(filePath: string, cmdsDir: string): string {
+    const relativePath = filePath.replace(`${cmdsDir}/`, "");
     const withoutExt = relativePath.replace(/\.[^.]+$/, "");
-    return `./cmds/${withoutExt}`;
+    // Use the actual cmdsDir name instead of hardcoded "cmds"
+    const dirName = cmdsDir.split("/").pop() || "cmds";
+    return `./${dirName}/${withoutExt}`;
   }
 }
 

@@ -8,7 +8,7 @@ describe("Generated Store", () => {
 
     const helpers = createGeneratedHelpers(modules, metadata);
 
-    expect(helpers).toHaveProperty("commands");
+    expect(helpers).toHaveProperty("cmds");
     expect(helpers).toHaveProperty("metadata");
     expect(helpers).toHaveProperty("list");
     expect(helpers).toHaveProperty("get");

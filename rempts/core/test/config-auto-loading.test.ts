@@ -78,7 +78,8 @@ export default {
     // Test that CLI was created successfully
     expect(cli).toBeDefined();
     expect(typeof cli.run).toBe("function");
-    expect(typeof cli.init).toBe("function");
+    // command() is an internal method, not part of public API
+    expect(typeof (cli as any).command).toBe("function");
   });
 
   test("createCLI merges override with loaded config", async () => {

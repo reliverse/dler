@@ -116,7 +116,9 @@ export const cli: GeneratedCLI = {
 export const listCommands = () => generated.list().map(c => c.name)
 export const getCommandApi = <Name extends GeneratedNames>(name: Name) => generated.getMetadata(name)
 export const getTypedFlags = <Name extends GeneratedNames>(name: Name) => {
-  return (generated.getFlags as any)(name) as Name extends keyof import('@reliverse/rempts-core').RegisteredCommands ? CommandOptions<Name & keyof import('@reliverse/rempts-core').RegisteredCommands> : never;
+  // After module augmentation, RegisteredCommands will contain GeneratedNames as keys
+  // Use a type assertion since the types are guaranteed to match after augmentation
+  return (generated.getFlags as any)(name) as CommandOptions<Name & keyof import('@reliverse/rempts-core').RegisteredCommands>;
 }
 export const validateCommand = <Name extends GeneratedNames>(name: Name, flags: Record<string, unknown>) => generated.validateCommand(name, flags)
 export const findCommandByName = <Name extends GeneratedNames>(name: Name) => generated.findByName(name)

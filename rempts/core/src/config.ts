@@ -104,7 +104,8 @@ export const remptsConfigSchema = type({
   // Commands configuration
   "commands?": type({
     "directory?": SafePath.configure({
-      description: "directory containing command files",
+      description:
+        "directory containing command files following pattern: <cmd-name>/cmd.{ts,js,mjs}",
     }),
     "generateReport?": "boolean",
   }).configure({

@@ -30,7 +30,7 @@ export default defineCommand({
       description: "Package manager to use",
     }),
   },
-  handler: async ({ flags, positional, colors }) => {
+  handler: async ({ flags, positional }) => {
     // Apply defaults
     const template = flags.template || "basic";
     const git = flags.git ?? true;

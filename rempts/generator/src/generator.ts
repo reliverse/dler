@@ -56,7 +56,7 @@ export class Generator {
    * Scan for command files in the commands directory
    */
   private async scanCommands(): Promise<string[]> {
-    return await this.scanner.scanCommands(this.config.commandsDir);
+    return await this.scanner.scanCommands(this.config.cmdsDir);
   }
 
   /**
@@ -67,7 +67,7 @@ export class Generator {
 
     for (const file of files) {
       log(`Parsing file: ${file}`);
-      const command = await parseCommand(file, this.config.commandsDir, this.config.outputFile);
+      const command = await parseCommand(file, this.config.cmdsDir, this.config.outputFile);
       if (command) {
         log(`✅ Successfully parsed: ${command.name}`);
         commands.push(command);

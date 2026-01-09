@@ -32,7 +32,6 @@ node_modules
 out
 pack-input
 pack-output
-release
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 start-runtime
 temp

@@ -3,15 +3,12 @@ import type { Command } from "./types";
 
 /**
  * File-based command loader that automatically discovers and loads commands
- * from a directory structure, supporting both flat and nested command hierarchies,
- * for loading commands from the file system.
+ * from a directory structure following the pattern: <cmds-dir>/<cmd-name>/cmd.{ts,js,mjs}
  */
 
 // Pre-compiled regex patterns for performance
 const CMD_FILE_PATTERN = /\/cmd\.[^.]+$/;
 const PATH_SEPARATOR_PATTERN = /\//g;
-const DEFAULT_EXPORT_PATTERN = /export\s+default/;
-const COMMAND_NAME_PATTERN = /name:\s*["']([^"']+)["']/;
 
 /**
  * Create a file command loader
@@ -20,12 +17,12 @@ export function createFileCommandLoader() {
   return {
     /**
      * Load commands from a directory structure
-     * @param commandsDir Directory containing command files
+     * @param cmdsDir Directory containing command files following pattern: <cmd-name>/cmd.{ts,js,mjs}
      * @returns Promise resolving to loaded command tree
      */
-    async loadFromDirectory(commandsDir: string): Promise<CommandFileTree> {
-      const commandFiles = await scanCommandFiles(commandsDir);
-      const conflicts = await detectConflicts(commandFiles, commandsDir);
+    async loadFromDirectory(cmdsDir: string): Promise<CommandFileTree> {
+      const commandFiles = await scanCommandFiles(cmdsDir);
+      const conflicts = detectConflicts(commandFiles, cmdsDir);
 
       if (conflicts.length > 0) {
         const conflictMessages = conflicts.map(
@@ -37,98 +34,56 @@ export function createFileCommandLoader() {
         throw new Error(`Command conflicts detected:\n${conflictMessages.join("\n\n")}`);
       }
 
-      return buildCommandTree(commandFiles, commandsDir);
+      return buildCommandTree(commandFiles, cmdsDir);
     },
 
     /**
      * Load and register commands from file tree
+     * Returns commands with their names inferred from file paths
      */
-    async loadCommandsFromTree(tree: CommandFileTree): Promise<Command<any, any>[]> {
+    async loadCommandsFromTree(tree: CommandFileTree): Promise<CommandWithName[]> {
       return loadCommandsFromTree(tree);
     },
   };
 }
 
 /**
- * Scan for command files (cmd.ts|js|mjs files in subdirectories)
+ * Scan for command files in directory
+ * Only finds files matching the pattern: <cmd-name>/cmd.{ts,js,mjs}
  */
-async function scanCommandFiles(commandsDir: string): Promise<string[]> {
+async function scanCommandFiles(cmdsDir: string): Promise<string[]> {
   try {
-    const glob = new Bun.Glob(`*/cmd.{ts,js,mjs}`);
-    const files = await Array.fromAsync(glob.scan({ cwd: commandsDir }));
+    // Only look for cmd.{ts,js,mjs} files in subdirectories
+    const glob = new Bun.Glob("**/cmd.{ts,js,mjs}");
+    const files = await Array.fromAsync(glob.scan({ cwd: cmdsDir }));
 
     const commandFiles: string[] = [];
 
     // Process files in parallel for better performance
-    const fileChecks = files.map(async (file) => {
-      const fullPath = join(commandsDir, file);
-
-      // Quick check if this looks like a command file
-      if (await isAppCommandFile(fullPath)) {
-        return fullPath;
-      }
-
-      return null;
-    });
-
-    const results = await Promise.all(fileChecks);
-
-    // Filter out null results
-    for (const result of results) {
-      if (result) {
-        commandFiles.push(result);
-      }
+    for (const file of files) {
+      const fullPath = join(cmdsDir, file);
+      // All cmd.{ts,js,mjs} files in subdirectories are considered valid command files
+      commandFiles.push(fullPath);
     }
 
     return commandFiles;
   } catch {
-    console.warn(`Warning: Could not scan commands directory: ${commandsDir}/cmds`);
+    console.warn(`Warning: Could not scan commands directory: ${cmdsDir}`);
     return [];
-  }
-}
-
-/**
- * Check if a file is a valid command file (must export default defineCommand)
- */
-async function isAppCommandFile(filePath: string): Promise<boolean> {
-  try {
-    const file = Bun.file(filePath);
-    const content = await file.text();
-
-    // Must have default export
-    const hasDefaultExport = DEFAULT_EXPORT_PATTERN.test(content);
-
-    // Must use defineCommand
-    const usesDefineCommand = content.includes("defineCommand(");
-
-    // Must have rempts import
-    const hasRemptsImport =
-      content.includes("@reliverse/rempts-core") ||
-      content.includes('from "@reliverse/rempts"') ||
-      content.includes("from '@reliverse/rempts'");
-
-    return hasDefaultExport && usesDefineCommand && hasRemptsImport;
-  } catch {
-    return false;
   }
 }
 
 /**
  * Detect conflicts between command files
  */
-async function detectConflicts(
-  commandFiles: string[],
-  commandsDir: string
-): Promise<CommandConflict[]> {
+function detectConflicts(commandFiles: string[], cmdsDir: string): CommandConflict[] {
   const conflicts: CommandConflict[] = [];
   const commandMap = new Map<string, string[]>(); // commandName -> [filePaths]
   const directoryMap = new Map<string, string[]>(); // directory -> [filePaths]
 
   for (const filePath of commandFiles) {
-    const relativePath = relative(commandsDir, filePath);
-    const commandName = await extractCommandNameFromFile(filePath);
-
-    if (!commandName) continue; // Skip files that don't have valid command names
+    const relativePath = relative(cmdsDir, filePath);
+    const commandName = getCommandName(relativePath);
 
     // Track files by command name
     if (!commandMap.has(commandName)) {
@@ -176,56 +131,77 @@ function getCommandName(filePath: string): string {
   // Remove the "cmd" part and extension: "greet/cmd.ts" -> "greet/"
   const pathWithoutCmd = filePath.replace(CMD_FILE_PATTERN, "");
 
+  // Remove trailing slash if present: "greet/" -> "greet"
+  const trimmed = pathWithoutCmd.replace(/\/$/, "");
+
   // Convert path separators to spaces for command hierarchy
-  return pathWithoutCmd.replace(PATH_SEPARATOR_PATTERN, " ");
+  // Handle multiple consecutive slashes and normalize
+  return trimmed.replace(PATH_SEPARATOR_PATTERN, " ").replace(/\s+/g, " ").trim();
 }
 
 /**
- * Build command tree from directory structure
- * File-based commands use flat structure - command names come from defineCommand, not file paths
+ * Build command tree from file structure
  */
-async function buildCommandTree(
-  commandFiles: string[],
-  commandsDir: string
-): Promise<CommandFileTree> {
+async function buildCommandTree(commandFiles: string[], cmdsDir: string): Promise<CommandFileTree> {
   const tree: CommandFileTree = {};
 
   for (const filePath of commandFiles) {
-    const relativePath = relative(commandsDir, filePath);
+    const relativePath = relative(cmdsDir, filePath);
+    const commandName = getCommandName(relativePath);
 
-    // Extract the command name from the file content
-    try {
-      const commandName = await extractCommandNameFromFile(filePath);
-      if (commandName) {
-        tree[commandName] = {
-          filePath: relativePath,
-          importPath: getImportPath(filePath),
-          commandName,
-        };
+    // For strict structure, command name is just the directory name(s)
+    // e.g., "greet/cmd.ts" -> "greet", "build/binary/cmd.ts" -> "build binary"
+    const commandNameParts = commandName.split(" ");
+    let current = tree;
+
+    // Build nested structure for multi-level commands
+    // If a parent command file exists (e.g., build/cmd.ts), we need to preserve it
+    for (let i = 0; i < commandNameParts.length - 1; i++) {
+      const part = commandNameParts[i]!;
+      if (!current[part]) {
+        current[part] = {};
+      } else if ("filePath" in current[part]) {
+        // Parent command file exists (e.g., build/cmd.ts)
+        // Convert it to a tree structure to hold subcommands
+        const existingCommand = current[part] as CommandFileInfo;
+        current[part] = {
+          // Store the parent command file under a special key or as the base
+          // We'll handle this in loadCommandsFromTree
+        } as CommandFileTree;
+        // Re-add the parent command file to the tree
+        const treeNode = current[part] as CommandFileTree;
+        (treeNode as Record<string, unknown>).__parent__ = existingCommand;
       }
-    } catch (error) {
-      // Skip files that can't be parsed
-      console.warn(`Warning: Could not parse command from ${relativePath}:`, error);
+      current = current[part] as CommandFileTree;
     }
+
+    const finalPart = commandNameParts.at(-1)!;
+
+    // If this is a single-part command (e.g., "build") and there's already a tree here,
+    // it means we have subcommands - store the parent command file separately
+    if (
+      commandNameParts.length === 1 &&
+      finalPart in current &&
+      "filePath" in current[finalPart]!
+    ) {
+      // This shouldn't happen - single-part commands shouldn't conflict
+      // But handle it gracefully
+      const existing = current[finalPart] as CommandFileInfo;
+      if (existing.filePath !== relativePath) {
+        throw new Error(
+          `Command conflict: "${finalPart}" is defined in both "${existing.filePath}" and "${relativePath}"`
+        );
+      }
+    }
+
+    (current as any)[finalPart] = {
+      filePath: relativePath,
+      importPath: getImportPath(filePath),
+      commandName,
+    };
   }
 
   return tree;
-}
-
-/**
- * Extract command name from command file content
- */
-async function extractCommandNameFromFile(filePath: string): Promise<string | null> {
-  try {
-    const file = Bun.file(filePath);
-    const content = await file.text();
-
-    // Look for name: "command-name" pattern in defineCommand calls
-    const nameMatch = content.match(COMMAND_NAME_PATTERN);
-    return nameMatch ? nameMatch[1]! : null;
-  } catch {
-    return null;
-  }
 }
 
 /**
@@ -238,37 +214,100 @@ function getImportPath(filePath: string): string {
 }
 
 /**
- * Load and register commands from file tree
+ * Command with its inferred name from file path
  */
-async function loadCommandsFromTree(tree: CommandFileTree): Promise<Command<any, any>[]> {
+export interface CommandWithName {
+  name: string;
+  command: Command<any, any>;
+}
+
+/**
+ * Load and register commands from file tree
+ * Returns commands with their names inferred from file paths
+ */
+async function loadCommandsFromTree(tree: CommandFileTree): Promise<CommandWithName[]> {
   async function loadFromTree(
     obj: CommandFileTree,
     path: string[] = []
-  ): Promise<Command<any, any>[]> {
-    const loadedCommands: Command<any, any>[] = [];
+  ): Promise<CommandWithName[]> {
+    const loadedCommands: CommandWithName[] = [];
 
     for (const [key, value] of Object.entries(obj)) {
-      if (typeof value === "object" && "filePath" in value) {
-        // This is a command file
+      if (key === "__parent__") {
+        // This is a parent command file stored in a tree (e.g., build/cmd.ts when build/binary/cmd.ts exists)
         const commandInfo = value as CommandFileInfo;
         try {
           const module = await import(commandInfo.importPath);
           const command = module.default || module;
-          loadedCommands.push(command);
+
+          // Load the parent command with its full name
+          loadedCommands.push({
+            name: commandInfo.commandName,
+            command,
+          });
+        } catch (error) {
+          console.warn(`Failed to load command from ${commandInfo.importPath}:`, error);
+        }
+        continue;
+      }
+
+      if (typeof value === "object" && "filePath" in value) {
+        // This is a command file (leaf node)
+        const commandInfo = value as CommandFileInfo;
+        try {
+          const module = await import(commandInfo.importPath);
+          const command = module.default || module;
+
+          // Name is always inferred from file path
+          // e.g., "build/binary/cmd.ts" -> "build binary"
+          const inferredName = commandInfo.commandName;
+
+          loadedCommands.push({
+            name: inferredName,
+            command,
+          });
         } catch (error) {
           console.warn(`Failed to load command from ${commandInfo.importPath}:`, error);
         }
       } else {
-        // This is a nested tree - create parent command with subcommands
+        // This is a nested tree - may contain subcommands and/or a parent command
         const subCommands = await loadFromTree(value as CommandFileTree, [...path, key]);
         if (subCommands.length > 0) {
-          // Create a parent command that contains the subcommands
-          const parentCommand: Command<any, any> = {
-            name: key,
-            description: `${key} commands`,
-            commands: subCommands,
-          };
-          loadedCommands.push(parentCommand);
+          // Check if there's a parent command file (stored as __parent__)
+          const parentCommandInfo = (value as Record<string, unknown>).__parent__ as
+            | CommandFileInfo
+            | undefined;
+
+          if (parentCommandInfo) {
+            // Parent command file exists (e.g., build/cmd.ts)
+            // Load it - subcommands are already registered separately from files
+            try {
+              const module = await import(parentCommandInfo.importPath);
+              const parentCommand = module.default || module;
+
+              // Register the parent command - subcommands are discovered dynamically from commands map
+              loadedCommands.push({
+                name: parentCommandInfo.commandName,
+                command: parentCommand,
+              });
+            } catch (error) {
+              console.warn(
+                `Failed to load parent command from ${parentCommandInfo.importPath}:`,
+                error
+              );
+            }
+          } else {
+            // No parent command file - create a synthetic parent command
+            // Subcommands are discovered dynamically from the commands map
+            // The synthetic parent has no handler/render, so run() will show help when subcommands exist
+            const parentCommand: Command<any, any> = {
+              description: `${key} commands`,
+            };
+            loadedCommands.push({
+              name: key,
+              command: parentCommand,
+            });
+          }
         }
       }
     }
@@ -280,7 +319,7 @@ async function loadCommandsFromTree(tree: CommandFileTree): Promise<Command<any,
 }
 
 /**
- * Types for command loading
+ * Types for file-based command loading
  */
 export interface CommandFileInfo {
   filePath: string;
@@ -289,7 +328,7 @@ export interface CommandFileInfo {
 }
 
 export interface CommandFileTree {
-  [key: string]: CommandFileTree | CommandFileInfo;
+  [key: string]: CommandFileTree | CommandFileInfo | undefined;
 }
 
 export interface CommandConflict {
@@ -300,8 +339,8 @@ export interface CommandConflict {
 /**
  * Utility function to load commands from directory
  */
-export async function loadCommandsFromDirectory(commandsDir: string): Promise<Command<any, any>[]> {
+export async function loadCommandsFromDirectory(cmdsDir: string): Promise<CommandWithName[]> {
   const loader = createFileCommandLoader();
-  const tree = await loader.loadFromDirectory(commandsDir);
+  const tree = await loader.loadFromDirectory(cmdsDir);
   return loader.loadCommandsFromTree(tree);
 }

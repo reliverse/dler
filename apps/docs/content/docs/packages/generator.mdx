@@ -55,7 +55,7 @@ The main class for generating TypeScript definitions:
 import { Generator } from '@rempts/generator'
 
 const generator = new Generator({
-  commandsDir: './commands',
+  cmdsDir: './commands',
   outputFile: './.rempts/commands.gen.ts',
   config: {}, // Optional config object
   generateReport: false // Optional report generation
@@ -133,7 +133,7 @@ import { remptsCodegenPlugin } from '@rempts/generator'
 export default {
   plugins: [
     remptsCodegenPlugin({
-      commandsDir: './commands',
+      cmdsDir: './commands',
       output: './.rempts/commands.gen.ts'
     })
   ]
@@ -161,7 +161,7 @@ rempts generate --watch
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `commandsDir` | `string` | `'./commands'` | Directory to scan for command files |
+| `cmdsDir` | `string` | `'./commands'` | Directory to scan for command files |
 | `outputFile` | `string` | `'./.rempts/commands.gen.ts'` | Output file for generated types |
 | `watch` | `boolean` | `false` | Watch for file changes |
 | `include` | `string[]` | `['**/*.ts', '**/*.js']` | File patterns to include |
@@ -222,7 +222,7 @@ function findCommandsByDescription(searchTerm: string): CommandInfo[]
 import { Generator } from '@rempts/generator'
 
 const generator = new Generator({
-  commandsDir: './src/commands',
+  cmdsDir: './src/commands',
   outputFile: './.rempts/commands.gen.ts'
 })
 
@@ -267,7 +267,7 @@ class Generator {
 
 ```typescript
 interface GeneratorOptions {
-  commandsDir: string
+  cmdsDir: string
   outputFile: string
   config?: any
   generateReport?: boolean
@@ -331,7 +331,7 @@ export default defineConfig({
 import { Generator } from '@rempts/generator'
 
 const generator = new Generator({
-  commandsDir: './src/commands',
+  cmdsDir: './src/commands',
   outputFile: './.rempts/commands.gen.ts'
 })
 

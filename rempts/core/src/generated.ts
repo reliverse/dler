@@ -10,6 +10,7 @@ export interface GeneratedOptionMeta {
   // NEW: Enhanced schema information
   schema?: any;
   validator?: string;
+  fileType?: string; // For file/directory type options
 }
 
 export interface GeneratedCommandMeta {
@@ -141,8 +142,18 @@ export function createGeneratedHelpers<
     commands: modules,
     metadata,
     register(cli) {
-      // Commands are now loaded automatically from the file system
-      // No manual registration needed
+      if (cli) {
+        // Register commands with their names (keys from modules record)
+        // Names come from file paths: <cmds-dir>/<cmd-name>/cmd.{ts,js,mjs}
+        for (const [name, command] of Object.entries(modules) as [
+          CommandName,
+          Command<any, any>,
+        ][]) {
+          // Use type assertion to access internal command() method
+          // This method exists on the implementation but not on the public CLI interface
+          (cli as any).command(name, command);
+        }
+      }
       return store;
     },
     list() {

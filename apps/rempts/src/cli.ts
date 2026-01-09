@@ -12,7 +12,9 @@ const cli = await createApp({
   defaultCommand: "create",
 });
 
-cli.command(
+// Use type assertion to access internal command() method
+// This is needed for the rempts CLI itself which registers commands programmatically
+(cli as any).command(
   defineCommand({
     name: "create",
     description: "Create a new Rempts CLI project",

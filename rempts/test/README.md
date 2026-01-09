@@ -147,12 +147,16 @@ import { testCLI } from '@reliverse/rempts-test'
 
 test('CLI help', async () => {
   const result = await testCLI(
-    // Commands are loaded from cmds/ directory
-    { commands: { directory: './cmds' } },
+    (cli) => {
+      cli.command('hello', {
+        description: 'Say hello',
+        handler: async () => console.log('Hello!')
+      })
+    },
     ['--help']
   )
 
-  expectCommand(result).toContainInStdout('help')
+  expectCommand(result).toContainInStdout('Say hello')
 })
 ```
 

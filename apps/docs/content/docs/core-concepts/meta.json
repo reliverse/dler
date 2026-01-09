@@ -2,7 +2,7 @@
   "title": "Core Concepts",
   "pages": [
     "index",
-    "commands",
+    "cmds",
     "type-inference",
     "validation",
     "configuration",

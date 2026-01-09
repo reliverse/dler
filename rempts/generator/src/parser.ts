@@ -6,16 +6,20 @@ import path from "node:path";
 import type { CommandMetadata, OptionMetadata } from "./types";
 
 // Utility functions
-function getCommandName(filePath: string, commandsDir: string): string {
-  const dir = commandsDir.replace(/^\.\/?/, "");
+function getCommandName(filePath: string, cmdsDir: string): string {
+  const dir = cmdsDir.replace(/^\.\/?/, "");
   const relativePath = filePath.replace(`${dir}/`, "");
-  const withoutExt = relativePath.replace(/\.[^.]+$/, "");
 
-  if (withoutExt.endsWith("/index")) {
-    return withoutExt.slice(0, -6);
-  }
+  // Remove the "cmd" part and extension: "test/cmd.ts" -> "test/"
+  // Match pattern: /cmd.{ts,js,mjs} at the end
+  const pathWithoutCmd = relativePath.replace(/\/cmd\.[^.]+$/, "");
 
-  return withoutExt;
+  // Remove trailing slash if present: "test/" -> "test"
+  const trimmed = pathWithoutCmd.replace(/\/$/, "");
+
+  // Convert path separators to spaces for command hierarchy
+  // Handle multiple consecutive slashes and normalize
+  return trimmed.replace(/\//g, " ").replace(/\s+/g, " ").trim();
 }
 
 function toAbsolute(target: string): string {
@@ -38,23 +42,23 @@ function getImportPath(filePath: string, outputFile: string): string {
   return `./${withJsExt}`;
 }
 
-function getExportPath(filePath: string, commandsDir: string): string {
-  const commandsRoot = toAbsolute(commandsDir);
+function getExportPath(filePath: string, cmdsDir: string): string {
+  const commandsRoot = toAbsolute(cmdsDir);
   const commandAbsolute = toAbsolute(filePath);
   const relativePath = path.relative(commandsRoot, commandAbsolute);
   // Normalize and ensure forward slashes for cross-platform compatibility
   const normalized = path.normalize(relativePath).replace(/\\/g, "/");
   const withoutExt = normalized.replace(/\.[^.]+$/, "");
 
-  const cleanedCommandsDir = commandsDir.replace(/^\.\/?/, "");
-  const base = cleanedCommandsDir ? `../${cleanedCommandsDir}` : "..";
+  const cleanedcmdsDir = cmdsDir.replace(/^\.\/?/, "");
+  const base = cleanedcmdsDir ? `../${cleanedcmdsDir}` : "..";
   const result = `${base}/${withoutExt}`;
   return result.startsWith("./") ? result.slice(2) : result;
 }
 
 export async function parseCommand(
   filePath: string,
-  commandsDir: string,
+  cmdsDir: string,
   outputFile: string
 ): Promise<CommandMetadata | null> {
   try {
@@ -89,7 +93,7 @@ export async function parseCommand(
         if (path.node.callee.type === "Identifier" && path.node.callee.name === "defineCommand") {
           const args = path.node.arguments;
           if (args.length > 0 && args[0]?.type === "ObjectExpression") {
-            commandMetadata = extractCommandMetadata(args[0], filePath, commandsDir, outputFile);
+            commandMetadata = extractCommandMetadata(args[0], filePath, cmdsDir, outputFile);
           }
         } else if (
           path.node.callee.type === "MemberExpression" &&
@@ -98,7 +102,7 @@ export async function parseCommand(
         ) {
           const args = path.node.arguments;
           if (args.length > 0 && args[0]?.type === "ObjectExpression") {
-            commandMetadata = extractCommandMetadata(args[0], filePath, commandsDir, outputFile);
+            commandMetadata = extractCommandMetadata(args[0], filePath, cmdsDir, outputFile);
           }
         }
       },
@@ -120,7 +124,7 @@ export async function parseCommand(
 function extractCommandMetadata(
   objectExpression: any,
   filePath: string,
-  commandsDir: string,
+  cmdsDir: string,
   outputFile: string
 ): CommandMetadata {
   const metadata: CommandMetadata = {
@@ -128,7 +132,7 @@ function extractCommandMetadata(
     description: "",
     filePath,
     importPath: getImportPath(filePath, outputFile),
-    exportPath: getExportPath(filePath, commandsDir),
+    exportPath: getExportPath(filePath, cmdsDir),
   };
 
   // Extract properties from the object expression
@@ -172,16 +176,27 @@ function extractCommandMetadata(
           metadata.hasRender = true;
           break;
 
-        case "commands":
-          metadata.commands = extractNestedCommands(value, filePath, commandsDir, outputFile);
+        case "cmds":
+          metadata.commands = extractNestedCommands(value, filePath, cmdsDir, outputFile);
           break;
       }
     }
   }
 
-  // Always use the file path as the source of truth for command names
-  // This ensures nested commands like 'docker/clean' are properly named
-  metadata.name = getCommandName(filePath, commandsDir);
+  // Always use file path-based name for consistency
+  // This ensures the generated types match the actual command names used at runtime
+  // The file path is the source of truth: <cmds-dir>/<cmd-name>/cmd.ts -> <cmd-name>
+  const fileBasedName = getCommandName(filePath, cmdsDir);
+
+  // If user provided a name that differs from file path, warn but use file path
+  if (metadata.name && metadata.name !== fileBasedName) {
+    console.warn(
+      `Warning: Command name "${metadata.name}" in ${filePath} doesn't match file path "${fileBasedName}". ` +
+        `Using file path name "${fileBasedName}" for consistency. Consider removing the 'name' property.`
+    );
+  }
+
+  metadata.name = fileBasedName;
 
   return metadata;
 }
@@ -355,7 +370,7 @@ function inferSchemaType(schema: any): { type: string } {
 function extractNestedCommands(
   value: any,
   parentFile: string,
-  commandsDir: string,
+  cmdsDir: string,
   outputFile: string
 ): CommandMetadata[] | undefined {
   if (value.type !== "ArrayExpression") {
@@ -364,7 +379,7 @@ function extractNestedCommands(
   const nested: CommandMetadata[] = [];
   for (const element of value.elements) {
     if (element?.type === "ObjectExpression") {
-      const nestedMetadata = extractCommandMetadata(element, parentFile, commandsDir, outputFile);
+      const nestedMetadata = extractCommandMetadata(element, parentFile, cmdsDir, outputFile);
       if (nestedMetadata.name) {
         nested.push(nestedMetadata);
       }
@@ -374,20 +389,6 @@ function extractNestedCommands(
 }
 
 function inferRequired(schema: any): boolean {
-  // For arktype schemas, check if the type includes "| undefined"
-  if (schema.type === "CallExpression" && schema.callee?.name === "type") {
-    const args = schema.arguments;
-    if (
-      args?.[0] &&
-      (args[0].type === "Literal" || args[0].type === "StringLiteral") &&
-      typeof args[0].value === "string"
-    ) {
-      const typeString = args[0].value;
-      // If the type includes "| undefined", it's optional
-      return !(typeString.includes("| undefined") || typeString.includes(" | undefined"));
-    }
-  }
-
   // Check if the schema has .optional() or similar
   if (schema.type === "CallExpression") {
     const callee = schema.callee;
@@ -412,13 +413,13 @@ function extractSchemaDefinition(schema: any): any {
       const callee = schema.callee;
       if (callee.type === "MemberExpression") {
         return {
-          type: "arktype",
+          type: "zod",
           method: callee.property?.name || "unknown",
           args: schema.arguments?.map((arg: any) => extractSchemaDefinition(arg)) || [],
         };
       }
       return {
-        type: "arktype",
+        type: "zod",
         method: callee.name || "unknown",
         args: schema.arguments?.map((arg: any) => extractSchemaDefinition(arg)) || [],
       };
@@ -426,14 +427,14 @@ function extractSchemaDefinition(schema: any): any {
 
     case "MemberExpression":
       return {
-        type: "arktype",
+        type: "zod",
         object: extractSchemaDefinition(schema.object),
         property: schema.property?.name || "unknown",
       };
 
     case "Identifier":
       return {
-        type: "arktype",
+        type: "zod",
         name: schema.name,
       };
 

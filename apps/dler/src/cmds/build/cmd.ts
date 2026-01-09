@@ -56,7 +56,7 @@ export default defineCommand({
       const spin = spinner("Generating types...");
       try {
         const generator = new Generator({
-          commandsDir: config.commands?.directory || "commands",
+          cmdsDir: config.commands?.directory || "cmds",
           outputFile: "./.dler/commands.gen.ts",
           config,
           generateReport: config.commands?.generateReport ?? false,
@@ -211,7 +211,7 @@ export default defineCommand({
           // Add codegen plugin for automatic type generation (always enabled)
           plugins: [
             remptsCodegenPlugin({
-              commandsDir: config.commands?.directory || "commands",
+              cmdsDir: config.commands?.directory || "cmds",
               outputFile: "./.dler/commands.gen.ts",
               config,
             }),

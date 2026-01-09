@@ -1,4 +1,5 @@
-import { resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { relico } from "@reliverse/relico";
 import { getDotPath, SchemaError } from "@standard-schema/utils";
 import { type RemptsConfigStrict, remptsConfigSchema, remptsConfigStrictSchema } from "./config";
@@ -55,6 +56,12 @@ export async function createApp<
      * Custom config directory (overrides --cwd detection)
      */
     configDir?: string;
+    /**
+     * Entry file path (e.g., import.meta.path or __filename)
+     * If not provided, will be auto-detected from call stack
+     * Commands directory will be <entry-file-dir>/cmds
+     */
+    entryFile?: string;
   } = {}
 ): Promise<CLI<MergePluginStores<TPlugins>>> {
   const {
@@ -62,6 +69,7 @@ export async function createApp<
     defaultCommand,
     autoInit = true,
     configDir: customConfigDir,
+    entryFile,
   } = options;
 
   // Auto-detect config directory from --cwd flag or current directory
@@ -164,7 +172,7 @@ export async function createApp<
       | undefined;
   })();
 
-  const cli = await createCLI(finalConfigOverride || {});
+  const cli = await createCLI(finalConfigOverride || {}, entryFile);
 
   // Load commands from directory (if autoInit)
   if (autoInit) {
@@ -193,11 +201,48 @@ export async function createApp<
   return cli;
 }
 
+/**
+ * Get entry file path from call stack
+ * Tries to find the first file that's not in rempts-core
+ */
+function getEntryFileFromStack(): string | undefined {
+  try {
+    const stack = new Error("Stack trace").stack;
+    if (!stack) return undefined;
+
+    const lines = stack.split("\n");
+    // Skip first line (Error message) and second line (this function)
+    for (let i = 2; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line) continue;
+
+      // Match file paths in stack traces
+      // Bun format: at function (file:///path/to/file.ts:line:col)
+      // Node format: at function (/path/to/file.ts:line:col)
+      const match = line.match(/\(?(file:\/\/\/?|)([^:]+\.(ts|js|mjs)):\d+:\d+\)?/);
+      if (match) {
+        const filePath = match[2];
+        if (filePath && !filePath.includes("rempts-core") && !filePath.includes("node_modules")) {
+          // Convert file:// URL to path if needed
+          if (filePath.startsWith("file://")) {
+            return fileURLToPath(filePath);
+          }
+          return filePath;
+        }
+      }
+    }
+  } catch (_error) {
+    // Ignore errors in stack parsing
+  }
+  return undefined;
+}
+
 export async function createCLI<TPlugins extends readonly Plugin[] = []>(
   configOverride?: Partial<RemptsConfig> & {
     plugins?: TPlugins;
     generated?: string | boolean; // Optional, defaults to true
-  }
+  },
+  entryFile?: string
 ): Promise<CLI<MergePluginStores<TPlugins>>> {
   type TStore = MergePluginStores<TPlugins>;
 
@@ -214,85 +259,35 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
   let baseConfig =
     loadedConfigData || (remptsConfigSchema.assert(configOverride || {}) as LoadedConfig);
 
-  // If no commands directory is specified and no config file was loaded,
-  // try to auto-detect commands in common locations
-  if (!(baseConfig.commands?.directory || loadedConfigData)) {
-    // Determine if we're in a development environment (has src/ directory)
-    // Check for common development files/directories
-    const isDevelopment = await Promise.all([
-      Bun.file("./src")
-        .exists()
-        .catch(() => false),
-      Bun.file("./.git")
-        .exists()
-        .catch(() => false),
-      Bun.file("./package.json")
-        .exists()
-        .catch(() => false),
-    ]).then((results) => results.some(Boolean));
+  // Determine commands directory from entry file
+  // Commands directory is always <entry-file-dir>/cmds
+  let cmdsDir: string;
+  const detectedEntryFile = entryFile || getEntryFileFromStack();
 
-    // Prioritize directories based on environment
-    const possibleDirs = isDevelopment
-      ? ["./src/cmds", "./cmds", "./dist/cmds"] // Development: prefer src/cmds
-      : ["./dist/cmds", "./cmds", "./src/cmds"]; // Production: prefer dist/cmds
-
-    // Find all directories that contain commands
-    const foundDirs: Array<{ dir: string; fileCount: number }> = [];
-
-    for (const dir of possibleDirs) {
-      try {
-        const dirPath = resolve(process.cwd(), dir);
-        const glob = new Bun.Glob("**/cmd.{ts,js,mjs}");
-        const files = await Array.fromAsync(glob.scan({ cwd: dirPath }));
-        if (files.length > 0) {
-          foundDirs.push({ dir, fileCount: files.length });
-        }
-      } catch {
-        // Continue to next directory
-      }
-    }
-
-    if (foundDirs.length > 0) {
-      // If multiple directories found, use priority order but warn about ambiguity
-      const selectedDir = foundDirs[0]!.dir;
-
-      if (foundDirs.length > 1) {
-        const dirList = foundDirs.map((d) => `${d.dir} (${d.fileCount} commands)`).join(", ");
-        console.warn(
-          `⚠️  Multiple command directories found: ${dirList}\n` +
-            `   Using: ${selectedDir}\n` +
-            `   Consider specifying 'commands.directory' in dler.config.ts to remove this warning.`
-        );
-      }
-
-      baseConfig = {
-        ...baseConfig,
-        commands: {
-          ...baseConfig.commands,
-          directory: selectedDir,
-        },
-      };
+  if (detectedEntryFile) {
+    // Resolve entry file to absolute path
+    const entryFilePath = detectedEntryFile.startsWith("file://")
+      ? fileURLToPath(detectedEntryFile)
+      : resolve(detectedEntryFile);
+    const entryDir = dirname(entryFilePath);
+    cmdsDir = join(entryDir, "cmds");
+  } else {
+    // Fallback: use config if provided, otherwise use process.cwd()/cmds
+    if (baseConfig.commands?.directory) {
+      cmdsDir = resolve(baseConfig.commands.directory);
     } else {
-      // No commands found, default to the primary directory for the environment
-      const defaultDir = isDevelopment ? "./src/cmds" : "./dist/cmds";
-      baseConfig = {
-        ...baseConfig,
-        commands: {
-          ...baseConfig.commands,
-          directory: defaultDir,
-        },
-      };
+      cmdsDir = join(process.cwd(), "cmds");
     }
   }
 
-  // Resolve relative commands directory to absolute path
-  if (
-    baseConfig.commands?.directory &&
-    typeof baseConfig.commands.directory === "string" &&
-    baseConfig.commands.directory.startsWith("./")
-  ) {
-    baseConfig.commands.directory = resolve(process.cwd(), baseConfig.commands.directory);
-  }
+  // Override commands directory in config (entry file takes precedence)
+  baseConfig = {
+    ...baseConfig,
+    commands: {
+      ...baseConfig.commands,
+      directory: cmdsDir,
+    },
+  };
 
   const loadedConfig: RemptsConfig = baseConfig;
 
@@ -352,6 +347,8 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
 
   const commands = new Map<string, Command<any, any>>();
   const commandSources = new Map<string, "directory">(); // Track where commands come from
+  // Prefix tree for fast subcommand discovery: parentName -> Set<subcommandFullName>
+  const subcommandIndex = new Map<string, Set<string>>();
 
   // Global before/after hooks
   const beforeHooks: BeforeHook<TStore>[] = [];
@@ -395,8 +392,26 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
     // Re-validate after plugins potentially modified config
     fullConfig = remptsConfigStrictSchema.assert(updatedConfig);
 
-    // Register plugin commands
-    pluginCommands.forEach((cmd) => registerCommand(cmd, [], "directory"));
+    // Register plugin commands (if any)
+    // Note: Since rempts is file-based only, plugins should register commands from files
+    // Plugin commands are deprecated - use file-based commands instead
+    if (pluginCommands.length > 0) {
+      console.warn(
+        "Warning: Plugin command registration is deprecated. " +
+          "Rempts is file-based only - register commands via file structure: <cmds-dir>/<cmd-name>/cmd.{ts,js,mjs}"
+      );
+      // For backward compatibility, try to extract name from command metadata
+      // But this won't work reliably since commands don't have names anymore
+      pluginCommands.forEach((cmd) => {
+        // Try to get name from command metadata or use a fallback
+        const cmdName = (cmd as any).name || "unknown";
+        if (cmdName === "unknown") {
+          console.warn("Skipping plugin command without name - use file-based commands instead");
+          return;
+        }
+        registerCommand(cmdName, cmd, [], "directory");
+      });
+    }
   }
 
   // Create resolved config with defaults
@@ -438,66 +453,110 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
   }
 
   // Helper to register a command and its aliases
+  // Commands are file-based only - name is always inferred from file path
   function registerCommand(
+    name: string,
     cmd: Command<any, any>,
     path: string[] = [],
     source: "directory" = "directory"
   ) {
-    const fullName = [...path, cmd.name].join(" ");
+    const fullName = [...path, name].join(" ");
 
-    // Check for conflicts - directory commands should not conflict
+    // Skip if command already exists
+    // This prevents conflicts when the same command is registered from multiple sources
+    // (e.g., file loading and generated types, or duplicate files)
+    // File-loaded commands take precedence
     if (commands.has(fullName)) {
-      throw new Error(
-        `Command "${fullName}" is already registered. ` + "Please ensure command names are unique."
-      );
+      return;
     }
 
     commands.set(fullName, cmd);
     commandSources.set(fullName, source);
+
+    // Update subcommand index for fast subcommand discovery
+    // Performance: O(depth) where depth is command nesting level
+    // For "a b c", add it to indices for "a" and "a b"
+    // This enables O(1) lookup of parent -> Set<subcommands> instead of O(n) scan
+    const nameParts = fullName.split(" ");
+    // Skip empty parts (shouldn't happen, but be defensive)
+    const validParts = nameParts.filter((part) => part.length > 0);
+    for (let i = 0; i < validParts.length - 1; i++) {
+      const parentName = validParts.slice(0, i + 1).join(" ");
+      if (!subcommandIndex.has(parentName)) {
+        subcommandIndex.set(parentName, new Set());
+      }
+      subcommandIndex.get(parentName)!.add(fullName);
+    }
 
     // Register aliases
     if (cmd.alias) {
       const aliases = Array.isArray(cmd.alias) ? cmd.alias : [cmd.alias];
       aliases.forEach((alias) => {
         const aliasPath = [...path, alias].join(" ");
-        // Check alias conflicts too
+        // Skip if alias already exists (prevents duplicate registration)
         if (commands.has(aliasPath)) {
-          throw new Error(`Command alias "${aliasPath}" is already registered.`);
+          return;
         }
         commands.set(aliasPath, cmd);
         commandSources.set(aliasPath, source);
+
+        // Update subcommand index for aliases so they can discover subcommands too
+        // If this command has subcommands, make them discoverable via alias
+        const aliasParts = aliasPath.split(" ").filter((part) => part.length > 0);
+        for (let i = 0; i < aliasParts.length - 1; i++) {
+          const parentName = aliasParts.slice(0, i + 1).join(" ");
+          if (!subcommandIndex.has(parentName)) {
+            subcommandIndex.set(parentName, new Set());
+          }
+          // Add the original command name to the alias parent's index
+          subcommandIndex.get(parentName)!.add(fullName);
+        }
+        // If this command itself has subcommands, add them to alias index
+        const subcommandNames = subcommandIndex.get(fullName);
+        if (subcommandNames) {
+          if (!subcommandIndex.has(aliasPath)) {
+            subcommandIndex.set(aliasPath, new Set());
+          }
+          // Copy all subcommands to the alias index
+          for (const subCmdName of subcommandNames) {
+            subcommandIndex.get(aliasPath)!.add(subCmdName);
+          }
+        }
       });
     }
 
-    // Register nested commands
-    if (cmd.commands) {
-      cmd.commands.forEach((subCmd) => {
-        registerCommand(subCmd, [...path, cmd.name], source);
-      });
-    }
+    // Note: Nested commands are already registered individually from files
+    // Parent commands just group them together - no need to re-register
   }
 
   // Helper to find command by path
+  // Returns command name (from map key) and command object
+  // Performance: O(depth) where depth is the number of command parts
+  // Uses Map.get() which is O(1), so total is O(depth) - optimal for arbitrary nesting
   function findCommand(args: string[]): {
     command: Command<any, any> | undefined;
+    commandName: string | undefined;
     remainingArgs: string[];
   } {
     // Try to find the deepest matching command
+    // Start from longest path (most specific) and work backwards
+    // This ensures we match "a b c" before "a b" when args = ["a", "b", "c"]
     for (let i = args.length; i > 0; i--) {
       const cmdPath = args.slice(0, i).join(" ");
       const command = commands.get(cmdPath);
       if (command) {
-        return { command, remainingArgs: args.slice(i) };
+        return { command, commandName: cmdPath, remainingArgs: args.slice(i) };
       }
     }
-    return { command: undefined, remainingArgs: args };
+    return { command: undefined, commandName: undefined, remainingArgs: args };
   }
 
   // Helper to show help for a command
-  function showHelp(cmd?: Command<any, TStore>, path: string[] = []) {
-    if (cmd) {
+  // Name comes from the commands map key (inferred from file path)
+  function showHelp(cmdName?: string, cmd?: Command<any, TStore>, path: string[] = []) {
+    if (cmd && cmdName) {
       // Show command-specific help
-      const fullPath = [...path, cmd.name].join(" ");
+      const fullPath = [...path, cmdName].join(" ");
       console.log(relico.bold(`Usage: ${fullConfig.name} ${fullPath} [options]`));
       console.log(`\n${relico.dim(cmd.description)}`);
 
@@ -511,12 +570,30 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
         }
       }
 
-      if (cmd.commands && cmd.commands.length > 0) {
+      // Discover subcommands using prefix tree index
+      // Performance: O(k) where k is the number of direct subcommands (not all commands)
+      // Much faster than scanning all commands O(n) where n is total command count
+      const subcommandNames = subcommandIndex.get(fullPath);
+      const subCommands: Array<{ name: string; command: Command<any, any> }> = [];
+      if (subcommandNames) {
+        const parentDepth = fullPath.split(" ").length;
+        for (const subCmdFullName of subcommandNames) {
+          // Only include direct children (depth = parentDepth + 1)
+          // This filters out grandchildren like "a b c d" when parent is "a b"
+          if (subCmdFullName.split(" ").length === parentDepth + 1) {
+            const subCmdName = subCmdFullName.slice(fullPath.length + 1);
+            const command = commands.get(subCmdFullName);
+            if (command) {
+              subCommands.push({ name: subCmdName, command });
+            }
+          }
+        }
+      }
+
+      if (subCommands.length > 0) {
         console.log(`\n${relico.bold("Subcommands:")}`);
-        for (const subCmd of cmd.commands) {
-          console.log(
-            `  ${relico.green(subCmd.name.padEnd(20))} ${relico.dim(subCmd.description)}`
-          );
+        for (const { name: subCmdName, command: subCmd } of subCommands) {
+          console.log(`  ${relico.green(subCmdName.padEnd(20))} ${relico.dim(subCmd.description)}`);
         }
       }
     } else {
@@ -527,25 +604,18 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
       }
       console.log(`\n${relico.bold("Commands:")}`);
 
-      // Show only top-level commands
-      const topLevel = new Set<Command<any, TStore>>();
+      // Show only top-level commands (names that don't contain spaces)
       for (const [name, command] of commands) {
         if (!(name.includes(" ") || command.alias?.includes(name))) {
-          topLevel.add(command);
+          console.log(`  ${relico.green(name.padEnd(20))} ${relico.dim(command.description)}`);
         }
-      }
-
-      for (const command of topLevel) {
-        console.log(
-          `  ${relico.green(command.name.padEnd(20))} ${relico.dim(command.description)}`
-        );
       }
     }
   }
 
-  function ensureRenderAvailable(command: Command<any, any>) {
+  function ensureRenderAvailable(commandName: string, command: Command<any, any>) {
     if (!command.render) {
-      throw new Error(`Command ${command.name} does not support TUI rendering.`);
+      throw new Error(`Command ${commandName} does not support TUI rendering.`);
     }
     if (!getTuiRenderer()) {
       throw new Error(
@@ -560,16 +630,17 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
     if (fullConfig.commands?.directory) {
       try {
         // Use the already resolved commands directory
-        const commandsDir = fullConfig.commands.directory;
+        const cmdsDir = fullConfig.commands.directory;
 
         const fileLoader = createFileCommandLoader();
+        const commandTree = await fileLoader.loadFromDirectory(cmdsDir);
+        const fileCommands = await fileLoader.loadCommandsFromTree(commandTree);
 
-        // Load commands from the directory
-        const commandTree = await fileLoader.loadFromDirectory(commandsDir);
-        const commands = await fileLoader.loadCommandsFromTree(commandTree);
-
-        // Register commands
-        commands.forEach((cmd) => registerCommand(cmd, [], "directory"));
+        // Register all commands from the directory structure
+        // Name is inferred from file path: <cmds-dir>/<cmd-name>/cmd.{ts,js,mjs}
+        fileCommands.forEach(({ name, command }) => {
+          registerCommand(name, command, [], "directory");
+        });
       } catch (error) {
         console.error(
           `Failed to load commands from directory ${fullConfig.commands.directory}:`,
@@ -581,6 +652,7 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
   }
 
   async function runCommandInternal(
+    commandName: string,
     command: Command<any, any>,
     argv: string[],
     providedFlags?: Record<string, unknown>
@@ -594,18 +666,18 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
         ? (() => {
             // Parse with empty args for defaults, then overlay provided flags
             // This keeps behavior consistent with execute(options)
-            return parseArgs([], mergedOptions, command.name).then(
+            return parseArgs([], mergedOptions, commandName).then(
               (p) => (Object.assign(p.flags, providedFlags), p)
             );
           })()
-        : parseArgs(argv, mergedOptions, command.name);
+        : parseArgs(argv, mergedOptions, commandName);
       resultParsed = await parsed;
       const { prompt, spinner } = await import("@reliverse/rempts-utils");
 
       if (mergedConfig.plugins && mergedConfig.plugins.length > 0) {
         context = await runBeforeCommand(
           pluginManagerState,
-          command.name,
+          commandName,
           command,
           providedFlags ? [] : resultParsed.positional,
           resultParsed.flags
@@ -640,7 +712,7 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
       const runtimeInfo: RuntimeInfo = {
         startTime: Date.now(),
         args: providedFlags ? [] : argv,
-        command: command.name,
+        command: commandName,
       };
 
       let render = false;
@@ -658,7 +730,7 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
       }
 
       if (render) {
-        ensureRenderAvailable(command);
+        ensureRenderAvailable(commandName, command);
         await getTuiRenderer<Record<string, unknown>, TStore>()?.({
           command,
           flags: resultParsed.flags,
@@ -773,14 +845,20 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
     }
   }
 
-  const api: CLI<MergePluginStores<TPlugins>> = {
+  const api = {
+    // Internal method for generated types registration (not part of public API)
+    // Generated types provide commands with their names as keys in the modules record
+    command<TCommandStore = any>(name: string, cmd: Command<any, TCommandStore>) {
+      registerCommand(name, cmd, [], "directory");
+    },
+
     async init() {
       await loadFromConfig();
     },
 
     async run(argv = process.argv.slice(2)) {
       if (argv.length === 0) {
-        showHelp();
+        showHelp(undefined, undefined, []);
         return;
       }
 
@@ -801,11 +879,12 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
         const cmdArgs = commandArgs.slice(0, helpIndex);
 
         if (cmdArgs.length === 0) {
-          showHelp();
+          showHelp(undefined, undefined, []);
         } else {
-          const { command } = findCommand(cmdArgs);
-          if (command) {
-            showHelp(command, cmdArgs.slice(0, -1));
+          const { command, commandName, remainingArgs: _remainingArgs } = findCommand(cmdArgs);
+          if (command && commandName) {
+            const pathParts = commandName.split(" ").slice(0, -1);
+            showHelp(commandName, command, pathParts);
           } else {
             console.error(`Unknown command: ${cmdArgs.join(" ")}`);
             process.exit(1);
@@ -815,23 +894,30 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
       }
 
       // Find and execute command
-      const { command, remainingArgs } = findCommand(commandArgs);
+      const { command, commandName, remainingArgs } = findCommand(commandArgs);
 
-      if (!command) {
+      if (!(command && commandName)) {
         console.error(`Unknown command: ${commandArgs[0]}`);
         process.exit(1);
       }
 
       // If command has subcommands but no handler, show help
-      if (!(command.handler || command.render) && command.commands) {
-        showHelp(command, commandArgs.slice(0, commandArgs.length - remainingArgs.length - 1));
+      // Use prefix tree index for O(1) lookup instead of scanning all commands
+      const hasSubcommands =
+        subcommandIndex.has(commandName) &&
+        Array.from(subcommandIndex.get(commandName)!).some(
+          (name) => name.split(" ").length === commandName.split(" ").length + 1
+        );
+      if (!(command.handler || command.render) && hasSubcommands) {
+        const pathParts = commandName.split(" ").slice(0, -1);
+        showHelp(commandName, command, pathParts);
         return;
       }
 
       if (command.handler || command.render) {
         // Combine remaining args from command parsing with passthrough args
         const allArgs = [...remainingArgs, ...passthroughArgs];
-        await runCommandInternal(command, allArgs);
+        await runCommandInternal(commandName, command, allArgs);
       }
     },
 
@@ -842,8 +928,8 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
     ) {
       // Parse command name to handle nested commands (git/sync -> git sync)
       const commandPath = commandName.replace(/\//g, " ").split(" ");
-      const { command, remainingArgs } = findCommand(commandPath);
-      if (!command) {
+      const { command, commandName: foundCommandName, remainingArgs } = findCommand(commandPath);
+      if (!(command && foundCommandName)) {
         throw new Error(`Command '${commandName}' not found`);
       }
 
@@ -872,7 +958,7 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
         };
 
         // Parse with empty args to get defaults, then merge options
-        const parsed = await parseArgs([], mergedOptions, command.name);
+        const parsed = await parseArgs([], mergedOptions, foundCommandName);
         Object.assign(parsed.flags, finalOptions);
 
         const { prompt, spinner } = await import("@reliverse/rempts-utils");
@@ -882,7 +968,7 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
         if (mergedConfig.plugins && mergedConfig.plugins.length > 0) {
           context = await runBeforeCommand(
             pluginManagerState,
-            command.name,
+            foundCommandName,
             command,
             [],
             parsed.flags
@@ -916,7 +1002,7 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
         const runtimeInfo: RuntimeInfo = {
           startTime: Date.now(),
           args: [],
-          command: command.name,
+          command: foundCommandName,
         };
 
         const terminalInfo = getTerminalInfo();
@@ -970,7 +1056,7 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
 
       // Execute the command using the same logic as the run method
       if (foundCommand.handler || foundCommand.render) {
-        await runCommandInternal(foundCommand, finalArgsToUse);
+        await runCommandInternal(foundCommandName, foundCommand, finalArgsToUse);
       }
     },
 

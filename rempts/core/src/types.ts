@@ -1,5 +1,8 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 
+// Re-export StandardSchemaV1 for use in other modules
+export type { StandardSchemaV1 } from "@standard-schema/spec";
+
 export type RenderResult = unknown;
 
 export interface TuiRenderOptions {
@@ -68,10 +71,8 @@ interface BaseCommand<
   TStore = {},
   TName extends string = string,
 > {
-  name: TName;
   description: string;
   options?: TOptions;
-  commands?: Command<any, TStore, any>[];
   alias?: string | string[];
   handler?: Handler<InferOptions<TOptions>, TStore, TName>;
   render?: RenderFunction<InferOptions<TOptions>, TStore>;
@@ -93,12 +94,13 @@ export type Command<
       render: RenderFunction<InferOptions<TOptions>, TStore>;
     })
   | (BaseCommand<TOptions, TStore, TName> & {
-      commands: Command<any, TStore, any>[];
+      // Synthetic parent command - no handler/render, subcommands discovered from file structure
+      handler?: never;
+      render?: never;
     });
 
 // Type helper to extract output types from StandardSchemaV1
-// Uses StandardSchemaV1.InferOutput which should work with all Standard Schema compatible libraries
-type InferSchema<T> = T extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<T> : never;
+type InferSchema<T> = T extends StandardSchemaV1<any, infer Out> ? Out : never;
 
 type InferOptions<T extends Options> = {
   [K in keyof T]: T[K] extends CLIOption<infer S> ? InferSchema<S> : never;
@@ -163,13 +165,10 @@ export interface CLIOption<S extends StandardSchemaV1 = StandardSchemaV1> {
 export type Options = Record<string, CLIOption<any>>;
 
 // Define command helper with proper type inference
-export function defineCommand<
-  TOptions extends Options = Options,
-  TStore = {},
-  TName extends string = string,
->(
-  command: Command<TOptions, TStore> & { name: TName }
-): Command<TOptions, TStore> & { name: TName } {
+// Note: 'name' is automatically inferred from file path: <cmds-dir>/<cmd-name>/cmd.{ts,js,mjs}
+export function defineCommand<TOptions extends Options = Options, TStore = {}>(
+  command: Command<TOptions, TStore>
+): Command<TOptions, TStore> {
   return command;
 }
 
@@ -198,7 +197,7 @@ export type PluginConfig = import("./plugin/types.js").PluginConfig;
  *   interface RegisteredCommands extends CommandsByName {}
  * }
  */
-export type RegisteredCommands = Record<string, never>;
+export type RegisteredCommands = Record<string, Command<any, any, any>>;
 
 /**
  * Get command options type from registered commands

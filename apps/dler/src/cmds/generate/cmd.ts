@@ -1,16 +1,15 @@
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { relico } from "@reliverse/relico";
 import { defineCommand, loadConfig, option } from "@reliverse/rempts-core";
 import { Generator, isCommandFile } from "@reliverse/rempts-generator";
 import { type } from "arktype";
 
 export default defineCommand({
-  name: "generate",
   description: "Generate command type definitions",
   alias: "gen",
   options: {
-    commandsDir: option(type("string | undefined"), {
-      description: "Commands directory",
+    cmdsDir: option(type("string | undefined"), {
+      description: "Commands directory relative to the CLI entry file (default: 'cmds')",
     }),
     output: option(type("string | undefined"), {
       short: "o",
@@ -29,11 +28,31 @@ export default defineCommand({
     // Apply defaults
     const watch = flags.watch ?? false;
 
-    const finalCommandsDir = flags.commandsDir || config.commands?.directory || "commands";
+    // Resolve cmds directory relative to entry file (same logic as CLI)
+    // Entry file is process.argv[1] (e.g., "src/cli.ts" when running "bun src/cli.ts generate")
+    let finalcmdsDir: string;
+    if (flags.cmdsDir) {
+      // If explicitly provided, resolve it
+      finalcmdsDir = resolve(flags.cmdsDir);
+    } else {
+      // Determine from entry file: <entry-file-dir>/cmds
+      const entryScript = process.argv[1];
+      if (entryScript) {
+        const entryDir = dirname(resolve(entryScript));
+        finalcmdsDir = join(entryDir, config.commands?.directory || "cmds");
+      } else if (config.commands?.directory) {
+        // Fallback to config (already resolved by CLI)
+        finalcmdsDir = resolve(config.commands.directory);
+      } else {
+        // Final fallback: use process.cwd()/cmds
+        finalcmdsDir = join(process.cwd(), "cmds");
+      }
+    }
+
     const finalOutputFile = flags.output || "./.dler/commands.gen.ts";
 
     const generator = new Generator({
-      commandsDir: finalCommandsDir,
+      cmdsDir: finalcmdsDir,
       outputFile: finalOutputFile,
       config,
       generateReport: config.commands?.generateReport ?? false,
@@ -52,7 +71,7 @@ export default defineCommand({
     }
 
     if (watch) {
-      console.log(relico.cyan(`\n👀 Watching ${finalCommandsDir}...\n`));
+      console.log(relico.cyan(`\n👀 Watching ${finalcmdsDir}...\n`));
 
       // Use Bun's native file watching with fs.promises.watch
       const { watch } = await import("node:fs/promises");
@@ -68,7 +87,7 @@ export default defineCommand({
       });
 
       try {
-        const watcher = watch(finalCommandsDir, {
+        const watcher = watch(finalcmdsDir, {
           recursive: true,
           signal,
         });
@@ -84,7 +103,7 @@ export default defineCommand({
           try {
             await generator.run({
               type: event.eventType === "rename" ? "delete" : "update",
-              path: join(finalCommandsDir, event.filename),
+              path: join(finalcmdsDir, event.filename),
             });
             spin.succeed("Updated");
           } catch (error) {

@@ -120,7 +120,7 @@ export default defineCommand({
 
     // Create generator and run it
     const generator = new Generator({
-      commandsDir: testDir,
+      cmdsDir: testDir,
       outputFile,
     });
 

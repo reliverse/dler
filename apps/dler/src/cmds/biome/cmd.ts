@@ -36,8 +36,8 @@ export default defineCommand({
       const shouldCopyLogs = copyLogs !== false && !isCI;
 
       const result = await runBiomeCheck({
-        cwd: flags.cwd || process.cwd(),
-        verbose,
+        cwd: flags.cwd || process.cwd(), // Type '{}' is not assignable to type 'string'.
+        verbose, // Type '{}' is not assignable to type 'boolean | undefined'.
         copyLogs: shouldCopyLogs,
       });
 

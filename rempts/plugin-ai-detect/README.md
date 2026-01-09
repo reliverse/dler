@@ -25,8 +25,13 @@ const cli = await createCLI({
 })
 
 // In your commands, you can access the detection results
-// Commands are automatically loaded from the cmds/ directory
-// and plugin stores are available via the context parameter
+cli.command({
+  name: 'info',
+  handler: async ({ context }) => {
+    if (context?.store.isAIAgent) {
+      console.log('Running in AI agent:', context.store.aiAgents.join(', '))
+      console.log('Detected env vars:', context.store.aiAgentEnvVars.join(', '))
+    }
   }
 })
 ```
