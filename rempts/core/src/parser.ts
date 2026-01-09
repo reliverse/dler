@@ -1,16 +1,16 @@
-import type { Options, StandardSchemaV1 } from "./types";
+import type { InferOptions, Options, StandardSchemaV1 } from "./types";
 import { RemptsValidationError } from "./types";
 
-export interface ParsedArgs {
-  flags: Record<string, unknown>;
+export interface ParsedArgs<TOptions extends Options = Options> {
+  flags: InferOptions<TOptions>;
   positional: string[];
 }
 
-export async function parseArgs(
+export async function parseArgs<TOptions extends Options = Options>(
   args: string[],
-  options: Options,
+  options: TOptions,
   commandName = "unknown"
-): Promise<ParsedArgs> {
+): Promise<ParsedArgs<TOptions>> {
   const flags: Record<string, unknown> = {};
   const positional: string[] = [];
 
@@ -87,13 +87,40 @@ export async function parseArgs(
 
   // Validate all options were provided (schemas handle their own defaults/required logic)
   // We run validation with undefined for options not provided on command line
+  // If a schema has a default value, it will be used during validation
   for (const [name, opt] of Object.entries(options)) {
     if (!(name in flags)) {
-      flags[name] = await validateOption(name, undefined, opt.schema, commandName);
+      // Check if the option has an explicit default value
+      if (opt.default !== undefined) {
+        // Validate the default value against the schema
+        const defaultValidated = await validateOption(name, opt.default, opt.schema, commandName);
+        flags[name] = defaultValidated;
+      } else {
+        // No explicit default, validate undefined
+        const validatedValue = await validateOption(name, undefined, opt.schema, commandName);
+
+        // For boolean flags that weren't provided, default to false instead of undefined
+        // This is a common CLI pattern and makes boolean flags more intuitive to use
+        if (validatedValue === undefined) {
+          // Check if the schema accepts boolean values
+          const booleanTest = await opt.schema["~standard"].validate(false);
+          if (booleanTest.issues) {
+            // Schema doesn't accept boolean, keep undefined
+            flags[name] = undefined;
+          } else {
+            // Schema accepts boolean, so default to false
+            flags[name] = false;
+          }
+        } else {
+          // Validation returned a value (could be a default from the schema)
+          flags[name] = validatedValue;
+        }
+      }
     }
   }
 
-  return { flags, positional };
+  // Type assertion: flags are validated at runtime, so we can safely assert the type
+  return { flags: flags as InferOptions<TOptions>, positional };
 }
 
 async function validateOption(

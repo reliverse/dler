@@ -37,31 +37,6 @@ logger.success("Hello, Reliverse!"); // > ✓ Hello, Reliverse!
 
 ## Usage
 
-### Development
-
-Run your CLI in development mode with hot reloading and automatic type generation:
-
-```bash
-dler dev
-
-# With custom entry file
-dler dev --entry src/mycli.ts
-
-# Enable debugging
-dler dev --inspect
-
-# Custom debug port
-dler dev --inspect --port 9230
-
-# Pass arguments to your CLI
-dler dev -- --help
-```
-
-Development options:
-
-- `--entry, -e` - Entry file (defaults to auto-detect)
-- `--watch, -w` - Watch for changes (default: true)
-- `--inspect, -i` - Enable debugger
 - `--port, -p` - Debugger port (default: 9229)
 - `--cmdsDir` - Commands directory for codegen (default: commands)
 - `--generate` - Enable/disable code generation (default: true)
@@ -87,45 +62,12 @@ dler build --targets native
 dler build --targets all
 ```
 
-**Note:** The build process automatically generates TypeScript definitions from your commands before building when codegen is enabled in your config.
 
-### Type Generation
-
-Generate TypeScript definitions from your CLI commands for enhanced developer experience:
-
-```bash
-# Generate types once
-dler generate
-
-# Generate types and watch for changes
-dler generate --watch
-
-# Custom commands directory
-dler generate --cmdsDir ./src/commands
-
-# Custom output file
-dler generate --output ./types/commands.gen.ts
-```
-
-Generate options:
-
-- `--cmdsDir` - Commands directory to scan (default: commands)
-- `--output, -o` - Output file path (default: ./commands.gen.ts)
-- `--watch, -w` - Watch for changes and regenerate
-
-The generator creates type-safe command definitions with:
-
-- Autocomplete for command names and options
-- Type safety at compile time
-- IntelliSense for command metadata
-- Helper functions for command discovery
 
 ### Available Commands
 
 - `dler init` - Initialize a new @reliverse/dler project
-- `dler dev` - Run CLI in development mode with hot reloading
 - `dler build` - Build your CLI for production
-- `dler generate` - Generate TypeScript definitions from commands
 - `dler test` - Run tests with Bun test runner
 - `dler release` - Release your CLI package
 

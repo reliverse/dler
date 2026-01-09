@@ -148,11 +148,7 @@ const persistPosix = async (name: string, value: string): Promise<void> => {
   }
 };
 
-const persistPosixEditPath = async (
-  name: string,
-  entry: string,
-  action: "append" | "remove"
-): Promise<void> => {
+const persistPosixEditPath = async (entry: string, action: "append" | "remove"): Promise<void> => {
   const home = getHomeDirectory();
   if (!home) {
     throw new Error("Could not determine home directory");
@@ -199,7 +195,6 @@ const persistPosixEditPath = async (
 };
 
 export default defineCommand({
-  name: "senv",
   description: "Inspect and modify environment variables (process and user-level)",
   options: {
     action: option(type("string"), {

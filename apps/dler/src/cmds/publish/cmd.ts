@@ -23,7 +23,6 @@ const AccessType = type("'public' | 'restricted'");
 const AuthType = type("'web' | 'legacy'");
 
 export default defineCommand({
-  name: "publish",
   description:
     "Publish packages to npm, JSR, Vercel, or multiple registries. Supports version bumping, dist-tags, access control, and concurrent publishing. Automatically loads .env files for authentication. Works with dler.ts configuration for per-package settings.",
   options: {

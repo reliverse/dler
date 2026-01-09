@@ -8,7 +8,6 @@ import { type } from "arktype";
 import { runTscOnAllPackages } from "./impl";
 
 export default defineCommand({
-  name: "tsc",
   description: "Run TypeScript type checking on all workspace packages",
   options: {
     filter: option(type("string | undefined"), {
@@ -32,6 +31,7 @@ export default defineCommand({
     }),
     copyLogs: option(type("boolean | undefined"), {
       description: "Copy failed package logs to clipboard (default: true, skipped in CI)",
+      default: true,
     }),
     cache: option(type("boolean | undefined"), {
       description: "Enable caching for faster subsequent runs (default: true)",
@@ -51,6 +51,67 @@ export default defineCommand({
   },
   handler: async ({ flags }) => {
     try {
+      /* // Runtime type verification (for testing)
+      console.log("=== Runtime Type Verification ===");
+      console.log("\nIndividual Flags:");
+      console.log("  flags.verbose:", `type=${typeof flags.verbose}, value=${flags.verbose}`);
+      console.log("  flags.filter:", `type=${typeof flags.filter}, value=${flags.filter}`);
+      console.log("  flags.cwd:", `type=${typeof flags.cwd}, value=${flags.cwd}`);
+      console.log(
+        "  flags.concurrency:",
+        `type=${typeof flags.concurrency}, value=${flags.concurrency}`
+      );
+      console.log(
+        "  flags.stopOnError:",
+        `type=${typeof flags.stopOnError}, value=${flags.stopOnError}`
+      );
+      console.log("  flags.copyLogs:", `type=${typeof flags.copyLogs}, value=${flags.copyLogs}`);
+      console.log("  flags.cache:", `type=${typeof flags.cache}, value=${flags.cache}`);
+
+      // Show all flags (including undefined ones)
+      // Get all expected option keys from the command definition
+      const expectedKeys = [
+        "filter",
+        "ignore",
+        "cwd",
+        "concurrency",
+        "stopOnError",
+        "verbose",
+        "copyLogs",
+        "cache",
+        "incremental",
+        "autoConcurrency",
+        "skipUnchanged",
+        "buildMode",
+      ];
+      console.log("\nAll flags (including undefined):");
+      for (const key of expectedKeys) {
+        const value = flags[key as keyof typeof flags];
+        const displayValue =
+          value === undefined ? "undefined" : `${typeof value} = ${JSON.stringify(value)}`;
+        console.log(`  ${key}:`, displayValue);
+      }
+
+      console.log("\n=== Type Checks ===");
+      const checks = [
+        ["verbose", typeof flags.verbose === "boolean" || flags.verbose === undefined],
+        ["filter", typeof flags.filter === "string" || flags.filter === undefined],
+        ["cwd", typeof flags.cwd === "string" || flags.cwd === undefined],
+        ["concurrency", typeof flags.concurrency === "number" || flags.concurrency === undefined],
+        ["stopOnError", typeof flags.stopOnError === "boolean" || flags.stopOnError === undefined],
+        ["copyLogs", typeof flags.copyLogs === "boolean" || flags.copyLogs === undefined],
+        ["cache", typeof flags.cache === "boolean" || flags.cache === undefined],
+      ];
+
+      let allPassed = true;
+      for (const [name, passed] of checks) {
+        const status = passed ? "✓" : "✗";
+        console.log(`  ${status} ${name}:`, passed ? "correct type" : "WRONG TYPE");
+        if (!passed) allPassed = false;
+      }
+
+      console.log(`\n${allPassed ? "✅ All type checks passed!" : "❌ Some type checks failed!"}`); */
+
       // Check if running in Bun
       if (typeof process.versions.bun === "undefined") {
         logger.error("❌ This command requires Bun runtime. Sorry.");

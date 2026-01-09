@@ -12,7 +12,6 @@ const _CleanPreset = type(
 );
 
 export default defineCommand({
-  name: "clean",
   description:
     "Clean build artifacts and generated files from workspace packages. Supports presets for different types of files. Works in both monorepo and single-repo modes.",
   options: {

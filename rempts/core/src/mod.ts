@@ -1,8 +1,5 @@
 // Note: createCLI is now async and returns Promise<CLI>
 
-export type { RemptsVirtualPluginOptions } from "@reliverse/rempts-generator/virtual";
-// Re-export virtual plugin for convenience
-export { remptsVirtualPlugin } from "@reliverse/rempts-generator/virtual";
 export { SchemaError } from "@standard-schema/utils";
 export { createApp, createCLI } from "./cli";
 export { defineConfig, type RemptsConfig, remptsConfigSchema } from "./config";
@@ -13,16 +10,6 @@ export type {
   CommandFileTree,
 } from "./file-loader";
 export { createFileCommandLoader, loadCommandsFromDirectory } from "./file-loader";
-export {
-  clearGeneratedStores,
-  createGeneratedHelpers,
-  type GeneratedCommandMeta,
-  type GeneratedExecutor,
-  type GeneratedOptionMeta,
-  type GeneratedStore,
-  getGeneratedStores,
-  registerGeneratedStore,
-} from "./generated";
 export type { GlobalFlags } from "./global-flags";
 // Export global flags
 export { GLOBAL_FLAGS } from "./global-flags";

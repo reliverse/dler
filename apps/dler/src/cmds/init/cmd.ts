@@ -4,7 +4,6 @@ import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 
 export default defineCommand({
-  name: "init",
   description: "Initialize a new Rempts CLI project",
   alias: "i",
   options: {

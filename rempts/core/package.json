@@ -42,10 +42,6 @@
     "./utils": {
       "types": "./src/utils/mod.ts",
       "import": "./src/utils/mod.ts"
-    },
-    "./generated": {
-      "types": "./src/generated.ts",
-      "import": "./src/generated.ts"
     }
   },
   "publishConfig": {

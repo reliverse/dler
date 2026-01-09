@@ -39,8 +39,6 @@
   },
   "scripts": {
     "dler": "bun src/cli.ts",
-    "gen": "bun dler generate",
-    "dev": "bun dler dev",
     "typecheck": "tsc --noEmit",
     "cli": "bun dler",
     "test": "bun test",
@@ -63,7 +61,6 @@
     "@reliverse/relifso": "workspace:*",
     "@reliverse/relinka": "workspace:*",
     "@reliverse/rempts-core": "workspace:*",
-    "@reliverse/rempts-generator": "workspace:*",
     "@reliverse/rempts-utils": "workspace:*",
     "@reliverse/typerso": "workspace:*",
     "c12": "catalog:",

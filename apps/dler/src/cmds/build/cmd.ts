@@ -1,8 +1,6 @@
 import path from "node:path";
 import { relico } from "@reliverse/relico";
 import { defineCommand, loadConfig, option } from "@reliverse/rempts-core";
-import { Generator } from "@reliverse/rempts-generator";
-import { remptsCodegenPlugin } from "@reliverse/rempts-generator/plugin";
 import { type } from "arktype";
 import { $ } from "bun";
 import { findEntry } from "../../utils/find-entry";
@@ -51,27 +49,7 @@ export default defineCommand({
   handler: async ({ flags, spinner, colors: _colors }) => {
     const config = await loadConfig();
 
-    // 1. Run codegen before build (always enabled)
-    {
-      const spin = spinner("Generating types...");
-      try {
-        const generator = new Generator({
-          cmdsDir: config.commands?.directory || "cmds",
-          outputFile: "./.dler/commands.gen.ts",
-          config,
-          generateReport: config.commands?.generateReport ?? false,
-        });
-        await generator.run();
-        spin.succeed("Types generated");
-      } catch (error) {
-        spin.fail("Failed to generate types");
-        const message = error instanceof Error ? error.message : String(error);
-        console.error(relico.red(message));
-        return;
-      }
-    }
-
-    // 2. Determine entry point
+    // 1. Determine entry point
     const entry = flags.entry || config.build?.entry || (await findEntry());
     if (!entry) {
       console.error(
@@ -208,14 +186,6 @@ export default defineCommand({
               ? ("external" as const)
               : (false as const),
           external: config.build?.external || [],
-          // Add codegen plugin for automatic type generation (always enabled)
-          plugins: [
-            remptsCodegenPlugin({
-              cmdsDir: config.commands?.directory || "cmds",
-              outputFile: "./.dler/commands.gen.ts",
-              config,
-            }),
-          ],
         };
 
         const result = await Bun.build(buildOptions);

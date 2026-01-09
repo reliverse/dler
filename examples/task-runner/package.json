@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "generate": "bun dler generate",
     "dev": "bun dler dev",
     "build": "bun dler build",
     "typecheck": "tsc --noEmit",
@@ -12,7 +11,6 @@
   "dependencies": {
     "@reliverse/rempts-core": "workspace:*",
     "@reliverse/relico": "workspace:*",
-    "@reliverse/rempts-plugin-completions": "workspace:*",
     "arktype": "catalog:",
     "arkregex": "catalog:"
   },

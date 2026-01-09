@@ -61,8 +61,6 @@ my-cli/
 ├── commands/           # Command definitions (REQUIRED)
 │   ├── command1.ts     # Individual command files
 │   └── command2.ts     # Each command as default export
-├── .dler/            # Generated files (auto-created)
-│   └── commands.gen.ts # Generated TypeScript types
 ├── dler.config.ts     # Rempts configuration
 ├── package.json        # Project dependencies
 └── tsconfig.json       # TypeScript configuration

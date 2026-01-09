@@ -7,7 +7,6 @@ import { defineCommand, loadConfig, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 
 export default defineCommand({
-  name: "test",
   description: "Run tests for your CLI",
   alias: "t",
   options: {

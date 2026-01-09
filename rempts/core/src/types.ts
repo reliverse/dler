@@ -1,4 +1,5 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
+import type { GLOBAL_FLAGS } from "./global-flags";
 
 // Re-export StandardSchemaV1 for use in other modules
 export type { StandardSchemaV1 } from "@standard-schema/spec";
@@ -39,8 +40,6 @@ export interface CLI<TStore = {}> {
 
   /**
    * Execute a command programmatically
-   *
-   * With generated types, provides full type safety for command names and options
    */
   execute(commandName: string, args?: string[]): Promise<void>;
   execute<T extends keyof RegisteredCommands>(
@@ -102,9 +101,15 @@ export type Command<
 // Type helper to extract output types from StandardSchemaV1
 type InferSchema<T> = T extends StandardSchemaV1<any, infer Out> ? Out : never;
 
-type InferOptions<T extends Options> = {
+export type InferOptions<T extends Options> = {
   [K in keyof T]: T[K] extends CLIOption<infer S> ? InferSchema<S> : never;
 };
+
+// Type helper to merge global flags with command options
+export type MergedOptions<TOptions extends Options> = typeof GLOBAL_FLAGS & TOptions;
+
+// Type helper to infer types from merged options (global flags + command options)
+export type InferMergedOptions<TOptions extends Options> = InferOptions<MergedOptions<TOptions>>;
 
 // generic Handler type that accepts inferred flags type
 export type Handler<
@@ -119,8 +124,8 @@ export interface HandlerArgs<
   TStore = {},
   TCommandName extends string = string,
 > {
-  // ✨ Automatic type inference based on command name ✨
-  flags: TCommandName extends keyof RegisteredCommands ? CommandOptions<TCommandName> : TFlags;
+  // ✨ Automatic type inference from command options ✨
+  flags: TFlags;
   positional: string[];
   shell: typeof Bun.$;
   env: typeof process.env;
@@ -159,6 +164,7 @@ export interface CLIOption<S extends StandardSchemaV1 = StandardSchemaV1> {
   schema: S;
   short?: string;
   description?: string;
+  default?: unknown; // Default value when flag is not provided (will be validated against schema)
 }
 
 // Options must use the CLIOption wrapper
@@ -177,26 +183,10 @@ import type { RemptsConfig } from "./config";
 
 export type { RemptsConfig } from "./config";
 export { remptsConfigSchema } from "./config";
-export type {
-  GeneratedCommandMeta,
-  GeneratedExecutor,
-  GeneratedOptionMeta,
-  GeneratedStore,
-} from "./generated";
 
 // Plugin configuration type (imported from plugin/types)
 export type PluginConfig = import("./plugin/types.js").PluginConfig;
 
-/**
- * Interface for registered commands (augmented by generated types)
- * This will be populated by commands.gen.ts via module augmentation
- *
- * @example
- * // In commands.gen.ts:
- * declare module '@reliverse/rempts-core' {
- *   interface RegisteredCommands extends CommandsByName {}
- * }
- */
 export type RegisteredCommands = Record<string, Command<any, any, any>>;
 
 /**
@@ -286,7 +276,7 @@ ${this.context.hint ? `\nHint: ${this.context.hint}` : ""}`;
 // Helper to create a CLI option with metadata
 export function option<S extends StandardSchemaV1>(
   schema: S,
-  metadata?: { short?: string; description?: string }
+  metadata?: { short?: string; description?: string; default?: unknown }
 ): CLIOption<S> {
   return {
     schema,

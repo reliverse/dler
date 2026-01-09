@@ -15,7 +15,6 @@ import {
 import { displayStructuredUpdateResults, type UpdateResult } from "./utils";
 
 export default defineCommand({
-  name: "update",
   description:
     "Update all dependencies to their latest versions across all package.json files. Supports selective updates with glob patterns and comprehensive filtering options.",
   options: {

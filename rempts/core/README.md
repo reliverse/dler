@@ -282,86 +282,6 @@ declare module '@reliverse/rempts-core' {
 }
 ```
 
-### Generated Helpers
-
-Rempts automatically generates type-safe helpers for your commands. These are auto-loaded when you set `generated: true` in your CLI config:
-
-```typescript
-const cli = await createCLI({
-  name: 'my-cli',
-  version: '1.0.0',
-  generated: true  // Auto-load generated types
-})
-```
-
-#### Available Helpers
-
-```typescript
-import {
-  listCommands,
-  getCommandApi,
-  getTypedFlags,
-  validateCommand,
-  findCommandByName,
-  findCommandsByDescription,
-  getCommandNames
-} from './.dler/commands.gen'
-
-// List all available commands
-const commands = listCommands()
-// Result: ['build', 'dev', 'test', ...]
-
-// Get command metadata
-const buildMeta = getCommandApi('build')
-console.log(buildMeta.description) // "Build the project"
-console.log(buildMeta.options)     // { outdir: {...}, watch: {...} }
-
-// Get typed flags for a command
-const flags = getTypedFlags('build')
-// flags.outdir is typed as string | undefined
-// flags.watch is typed as boolean | undefined
-
-// Validate command arguments at runtime
-const result = validateCommand('build', { outdir: 'dist', watch: true })
-if (result.success) {
-  console.log('Valid arguments:', result.data)
-} else {
-  console.error('Validation errors:', result.errors)
-}
-
-// Find commands by name or description
-const buildCmd = findCommandByName('build')
-const devCommands = findCommandsByDescription('development')
-const allNames = getCommandNames()
-```
-
-#### IDE Auto-Import Support
-
-Configure TypeScript path mapping for better IDE support:
-
-```json
-// tsconfig.json
-{
-  "compilerOptions": {
-    "paths": {
-      "~commands/*": ["./.dler/commands.gen.ts"]
-    }
-  }
-}
-```
-
-Then use auto-imports:
-
-```typescript
-// These will show up in IDE auto-complete
-import { listCommands } from '~commands/helpers'
-import { getCommandApi } from '~commands/api'
-```
-
-<Callout type="tip">
-  Generated helpers provide full type safety and runtime introspection for your CLI commands. They're automatically updated when you modify your command definitions.
-</Callout>
-
 ## Runtime Validation
 
 Rempts provides runtime validation utilities for dynamic type checking:
@@ -407,7 +327,7 @@ const userValidator = createBatchValidator({
 
 ## Type Utilities
 
-Rempts exports advanced TypeScript type utilities for complex type manipulation, especially useful when working with generated types:
+Rempts exports advanced TypeScript type utilities for complex type manipulation:
 
 ```typescript
 import {
@@ -460,28 +380,6 @@ type Example = Constrain<string, 'a' | 'b' | 'c', 'a'>
 // Result: 'a' | 'b' | 'c' (or 'a' if string doesn't match)
 ```
 
-### Usage with Generated Types
-
-These utilities work particularly well with generated command types:
-
-```typescript
-import { getCommandApi, listCommands } from './commands.gen'
-import { UnionToIntersection, MergeAll } from '@reliverse/rempts-core'
-
-// Get all command options as a union
-type AllCommandOptions = UnionToIntersection<
-  ReturnType<typeof getCommandApi>[keyof CommandRegistry]['options']
->
-
-// Merge all command metadata
-type AllCommands = MergeAll<
-  Array<{ name: string; description: string }>
->
-```
-
-<Callout type="tip">
-  These utilities are especially powerful when combined with generated types for creating CLI wrappers, documentation generators, and command analytics tools.
-</Callout>
 
 ## Related Packages
 

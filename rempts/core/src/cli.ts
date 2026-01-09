@@ -5,7 +5,6 @@ import { getDotPath, SchemaError } from "@standard-schema/utils";
 import { type RemptsConfigStrict, remptsConfigSchema, remptsConfigStrictSchema } from "./config";
 import { type LoadedConfig, loadConfig } from "./config-loader";
 import { createFileCommandLoader } from "./file-loader";
-import { loadGeneratedStores } from "./generated";
 import { GLOBAL_FLAGS, type GlobalFlags } from "./global-flags";
 import { parseArgs } from "./parser";
 import {
@@ -41,7 +40,6 @@ export async function createApp<
      */
     config?: Partial<RemptsConfig> & {
       plugins?: TPlugins;
-      generated?: string | boolean;
     };
     /**
      * Default command to run when no arguments are provided
@@ -152,11 +150,6 @@ export async function createApp<
       baseConfig = resolveConfigPaths(baseConfig, configDir);
     }
 
-    // Set the generated path to be relative to configDir if not already specified
-    if (baseConfig && !(baseConfig as any).generated) {
-      (baseConfig as any).generated = resolve(configDir, ".dler/commands.gen.ts");
-    }
-
     // Ensure commands directory is resolved relative to configDir if it exists
     if (baseConfig?.commands?.directory && typeof baseConfig.commands.directory === "string") {
       (baseConfig as any).commands.directory = baseConfig.commands.directory.startsWith(".")
@@ -167,7 +160,6 @@ export async function createApp<
     return baseConfig as
       | (Partial<RemptsConfig> & {
           plugins?: TPlugins;
-          generated?: string | boolean;
         })
       | undefined;
   })();
@@ -240,7 +232,6 @@ function getEntryFileFromStack(): string | undefined {
 export async function createCLI<TPlugins extends readonly Plugin[] = []>(
   configOverride?: Partial<RemptsConfig> & {
     plugins?: TPlugins;
-    generated?: string | boolean; // Optional, defaults to true
   },
   entryFile?: string
 ): Promise<CLI<MergePluginStores<TPlugins>>> {
@@ -317,42 +308,6 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
     throw new Error(
       "[rempts] Invalid config: " + (error instanceof Error ? error.message : String(error))
     );
-  }
-
-  // Auto-load generated types (can be disabled via config)
-  const shouldLoadGenerated = configOverride?.generated !== false;
-  if (shouldLoadGenerated) {
-    // Use virtual module if not explicitly disabled or custom path provided
-    if (typeof configOverride?.generated === "string") {
-      // Custom path provided - use file-based import (backward compatibility)
-      const generatedPath = configOverride.generated;
-      try {
-        // If it's a custom path (absolute), use it directly
-        // If it's relative, resolve relative to current working directory
-        const resolvedPath =
-          generatedPath.startsWith("./") || generatedPath.startsWith("../")
-            ? new URL(generatedPath, `file://${process.cwd()}/`).href
-            : generatedPath.startsWith("/")
-              ? `file://${generatedPath}`
-              : generatedPath;
-
-        await import(resolvedPath);
-        // Side-effect import automatically registers via registerGeneratedStore
-      } catch (_error) {
-        // Generated types are optional enhancements for developer experience.
-        // Don't show warnings to end users - they don't need these types.
-      }
-    } else {
-      // Use virtual module (default)
-      try {
-        await import("virtual:rempts-generated");
-        // Side-effect import automatically registers via registerGeneratedStore
-      } catch (_error) {
-        // Virtual module generation failed - this is expected if Bun plugin is not configured
-        // Generated types are optional enhancements for developer experience.
-        // Don't show warnings to end users - they don't need these types.
-      }
-    }
   }
 
   const commands = new Map<string, Command<any, any>>();
@@ -474,7 +429,7 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
 
     // Skip if command already exists
     // This prevents conflicts when the same command is registered from multiple sources
-    // (e.g., file loading and generated types, or duplicate files)
+    // (e.g., file loading or duplicate files)
     // File-loaded commands take precedence
     if (commands.has(fullName)) {
       return;
@@ -668,10 +623,13 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
     providedFlags?: Record<string, unknown>
   ) {
     let context: CommandContext<any> | undefined;
-    let resultParsed: any;
+    let resultParsed: { flags: unknown; positional: string[] };
 
     try {
-      const mergedOptions = { ...GLOBAL_FLAGS, ...command.options };
+      const mergedOptions = {
+        ...GLOBAL_FLAGS,
+        ...(command.options || {}),
+      } as MergedOptions<(typeof command.options & Options) | Options>;
       const parsed = providedFlags
         ? (() => {
             // Parse with empty args for defaults, then overlay provided flags
@@ -760,8 +718,14 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
         if (!command.handler) {
           throw new Error("Command does not provide a handler for non-TUI execution");
         }
+        // Type assertion: flags are validated and typed by parseArgs
+        // Use command.options to infer the merged type (includes global flags)
+        const typedFlags = resultParsed.flags as InferMergedOptions<
+          | (typeof command.options & Options)
+          | (command.options extends Options ? typeof command.options : Options)
+        >;
         await command.handler({
-          flags: resultParsed.flags,
+          flags: typedFlags,
           positional: resultParsed.positional,
           shell: Bun.$,
           env: process.env,
@@ -856,8 +820,7 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
   }
 
   const api = {
-    // Internal method for generated types registration (not part of public API)
-    // Generated types provide commands with their names as keys in the modules record
+    // Internal method for command registration (not part of public API)
     command<TCommandStore = any>(name: string, cmd: Command<any, TCommandStore>) {
       registerCommand(name, cmd, [], "directory");
     },
@@ -964,8 +927,8 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
         // Merge global flags with command options
         const mergedOptions = {
           ...GLOBAL_FLAGS,
-          ...command.options,
-        };
+          ...(command.options || {}),
+        } as MergedOptions<(typeof command.options & Options) | Options>;
 
         // Parse with empty args to get defaults, then merge options
         const parsed = await parseArgs([], mergedOptions, foundCommandName);
@@ -1018,8 +981,12 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
         const terminalInfo = getTerminalInfo();
 
         if (command.handler) {
+          // Type assertion: flags are validated and typed by parseArgs
+          const typedFlags = parsed.flags as InferMergedOptions<
+            (typeof command.options & Options) | Options
+          >;
           await command.handler({
-            flags: parsed.flags,
+            flags: typedFlags,
             positional: [],
             shell: Bun.$,
             env: process.env,
@@ -1078,11 +1045,6 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
       afterHooks.push(hook);
     },
   };
-
-  // Auto-register any generated command stores with this CLI instance
-  if (shouldLoadGenerated) {
-    loadGeneratedStores(api);
-  }
 
   return api;
 }

@@ -1,12 +1,9 @@
 import { defineConfig } from "@reliverse/rempts-core";
-import { completionsPlugin } from "@reliverse/rempts-plugin-completions";
 
 export default defineConfig({
   name: "task-runner",
   version: "2.3.0",
   description: "Task automation CLI with validation and interactivity",
-
-  plugins: [completionsPlugin],
   commands: {
     directory: "./cmds",
   },

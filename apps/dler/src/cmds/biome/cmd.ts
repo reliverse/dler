@@ -6,7 +6,6 @@ import { type } from "arktype";
 import { runBiomeCheck } from "./impl";
 
 export default defineCommand({
-  name: "biome",
   description: "Run Biome linting and formatting check on workspace",
   options: {
     cwd: option(type("string | undefined"), {

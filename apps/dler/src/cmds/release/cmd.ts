@@ -4,7 +4,6 @@ import { type } from "arktype";
 import { $ } from "bun";
 
 export default defineCommand({
-  name: "release",
   description: "Create a release of your CLI",
   alias: "r",
   options: {
