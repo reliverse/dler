@@ -1,7 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 import debug from "debug";
-import { buildTypes } from "./builder";
+import { buildTypeRegistry, buildTypes } from "./builder";
 import { parseCommand } from "./parser";
 import { CommandScanner } from "./scanner";
 import type { CommandMetadata, GeneratorConfig, GeneratorEvent } from "./types";
@@ -15,6 +15,21 @@ export class Generator {
   constructor(config: GeneratorConfig) {
     this.config = config;
     this.scanner = new CommandScanner();
+  }
+
+  /**
+   * Generate virtual module content without writing to disk
+   * Used by the virtual plugin to generate types on-the-fly
+   */
+  async generateVirtualModule(): Promise<string> {
+    // 1. Scan for command files
+    const commandFiles = await this.scanCommands();
+
+    // 2. Parse each command file
+    const commands = await this.parseCommands(commandFiles);
+
+    // 3. Build type registry code
+    return buildTypeRegistry(commands);
   }
 
   /**
@@ -55,14 +70,14 @@ export class Generator {
   /**
    * Scan for command files in the commands directory
    */
-  private async scanCommands(): Promise<string[]> {
+  async scanCommands(): Promise<string[]> {
     return await this.scanner.scanCommands(this.config.cmdsDir);
   }
 
   /**
    * Parse command files to extract metadata
    */
-  private async parseCommands(files: string[]): Promise<CommandMetadata[]> {
+  async parseCommands(files: string[]): Promise<CommandMetadata[]> {
     const commands: CommandMetadata[] = [];
 
     for (const file of files) {

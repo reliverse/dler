@@ -4,7 +4,8 @@
   "type": "module",
   "exports": {
     ".": "./src/mod.ts",
-    "./plugin": "./src/plugin.ts"
+    "./plugin": "./src/plugin.ts",
+    "./virtual": "./src/virtual-plugin.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

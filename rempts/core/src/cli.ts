@@ -322,26 +322,36 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
   // Auto-load generated types (can be disabled via config)
   const shouldLoadGenerated = configOverride?.generated !== false;
   if (shouldLoadGenerated) {
-    const generatedPath =
-      typeof configOverride?.generated === "string"
-        ? configOverride.generated
-        : "./.dler/commands.gen.ts"; // Standard location
+    // Use virtual module if not explicitly disabled or custom path provided
+    if (typeof configOverride?.generated === "string") {
+      // Custom path provided - use file-based import (backward compatibility)
+      const generatedPath = configOverride.generated;
+      try {
+        // If it's a custom path (absolute), use it directly
+        // If it's relative, resolve relative to current working directory
+        const resolvedPath =
+          generatedPath.startsWith("./") || generatedPath.startsWith("../")
+            ? new URL(generatedPath, `file://${process.cwd()}/`).href
+            : generatedPath.startsWith("/")
+              ? `file://${generatedPath}`
+              : generatedPath;
 
-    try {
-      // If it's a custom path (absolute), use it directly
-      // If it's relative, resolve relative to current working directory
-      const resolvedPath =
-        generatedPath.startsWith("./") || generatedPath.startsWith("../")
-          ? new URL(generatedPath, `file://${process.cwd()}/`).href
-          : generatedPath.startsWith("/")
-            ? `file://${generatedPath}`
-            : generatedPath;
-
-      await import(resolvedPath);
-      // Side-effect import automatically registers via registerGeneratedStore
-    } catch (_error) {
-      // Generated types are optional enhancements for developer experience.
-      // Don't show warnings to end users - they don't need these types.
+        await import(resolvedPath);
+        // Side-effect import automatically registers via registerGeneratedStore
+      } catch (_error) {
+        // Generated types are optional enhancements for developer experience.
+        // Don't show warnings to end users - they don't need these types.
+      }
+    } else {
+      // Use virtual module (default)
+      try {
+        await import("virtual:rempts-generated");
+        // Side-effect import automatically registers via registerGeneratedStore
+      } catch (_error) {
+        // Virtual module generation failed - this is expected if Bun plugin is not configured
+        // Generated types are optional enhancements for developer experience.
+        // Don't show warnings to end users - they don't need these types.
+      }
     }
   }
 

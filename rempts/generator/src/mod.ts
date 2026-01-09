@@ -10,3 +10,5 @@ export type {
   GeneratorEvent,
   OptionMetadata,
 } from "./types";
+export type { RemptsVirtualPluginOptions } from "./virtual-plugin";
+export { remptsVirtualPlugin } from "./virtual-plugin";

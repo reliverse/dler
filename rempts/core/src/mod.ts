@@ -1,5 +1,8 @@
 // Note: createCLI is now async and returns Promise<CLI>
 
+export type { RemptsVirtualPluginOptions } from "@reliverse/rempts-generator/virtual";
+// Re-export virtual plugin for convenience
+export { remptsVirtualPlugin } from "@reliverse/rempts-generator/virtual";
 export { SchemaError } from "@standard-schema/utils";
 export { createApp, createCLI } from "./cli";
 export { defineConfig, type RemptsConfig, remptsConfigSchema } from "./config";
