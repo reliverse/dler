@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
+import { join } from "node:path";
 import { $ } from "bun";
-import { join } from "path";
 
 // Ensure we're in the right directory
 const packageDir = join(import.meta.dir, "..");

@@ -1,81 +1,85 @@
 // Note: createCLI is now async and returns Promise<CLI>
-export { createCLI } from "./cli";
-export { defineCommand, option } from "./types";
-export { defineConfig, remptsConfigSchema, type RemptsConfig } from "./config";
-export { loadConfig, type LoadedConfig } from "./config-loader";
-export {
-  createGeneratedHelpers,
-  registerGeneratedStore,
-  getGeneratedStores,
-  clearGeneratedStores,
-  type GeneratedStore,
-  type GeneratedCommandMeta,
-  type GeneratedOptionMeta,
-  type GeneratedExecutor,
-} from "./generated";
-export { SchemaError } from "@standard-schema/utils";
-export { FileCommandLoader, loadCommandsFromDirectory } from "./file-loader";
-export type { CommandFileInfo, CommandFileTree, CommandConflict } from "./file-loader";
-export type {
-  CLI,
-  Command,
-  Handler,
-  HandlerArgs,
-  RenderArgs,
-  RenderFunction,
-  Options,
-  CLIOption,
-  CommandManifest,
-  CommandLoader,
-  StandardSchemaV1,
-  PluginConfig,
-  ResolvedConfig,
-  TerminalInfo,
-  RuntimeInfo,
-  RenderResult,
-  RegisteredCommands,
-  CommandOptions,
-} from "./types";
 
+export { SchemaError } from "@standard-schema/utils";
+export { createApp, createCLI } from "./cli";
+export { defineConfig, type RemptsConfig, remptsConfigSchema } from "./config";
+export { type LoadedConfig, loadConfig } from "./config-loader";
+export type {
+  CommandConflict,
+  CommandFileInfo,
+  CommandFileTree,
+} from "./file-loader";
+export { createFileCommandLoader, loadCommandsFromDirectory } from "./file-loader";
+export {
+  clearGeneratedStores,
+  createGeneratedHelpers,
+  type GeneratedCommandMeta,
+  type GeneratedExecutor,
+  type GeneratedOptionMeta,
+  type GeneratedStore,
+  getGeneratedStores,
+  registerGeneratedStore,
+} from "./generated";
+export type { GlobalFlags } from "./global-flags";
 // Export global flags
 export { GLOBAL_FLAGS } from "./global-flags";
-export type { GlobalFlags } from "./global-flags";
-
 // Export TUI registry
-export { registerTuiRenderer, clearTuiRenderer, getTuiRenderer } from "./tui/registry";
+export {
+  clearTuiRenderer,
+  getTuiRenderer,
+  registerTuiRenderer,
+} from "./tui/registry";
+export type {
+  CLI,
+  CLIOption,
+  Command,
+  CommandOptions,
+  Handler,
+  HandlerArgs,
+  Options,
+  PluginConfig,
+  RegisteredCommands,
+  RenderArgs,
+  RenderFunction,
+  RenderResult,
+  ResolvedConfig,
+  RuntimeInfo,
+  StandardSchemaV1,
+  TerminalInfo,
+} from "./types";
+export { defineCommand, option } from "./types";
 
 // Note: Plugin system is exported via subpath export
 // Usage: import { PluginManager, createPlugin } from '@reliverse/rempts-core/plugin'
 
-// Export validation utilities
-export {
-  validateValue,
-  validateValues,
-  isValueOfType,
-  createValidator,
-  createBatchValidator,
-} from "./validation";
-
 // Export type utilities
 export type {
-  UnionToIntersection,
-  Constrain,
-  PickRequired,
-  PickOptional,
-  ExtractPrimitives,
-  ExtractObjects,
-  PartialMergeAll,
-  MergeAllObjects,
-  MergeAll,
-  NoInfer,
-  IsAny,
-  PickAsRequired,
-  WithoutEmpty,
-  Expand,
-  DeepPartial,
-  MakeDifferenceOptional,
-  IsUnion,
-  IsNonEmptyObject,
   Assign,
+  Constrain,
+  DeepPartial,
+  Expand,
+  ExtractObjects,
+  ExtractPrimitives,
   IntersectAssign,
+  IsAny,
+  IsNonEmptyObject,
+  IsUnion,
+  MakeDifferenceOptional,
+  MergeAll,
+  MergeAllObjects,
+  NoInfer,
+  PartialMergeAll,
+  PickAsRequired,
+  PickOptional,
+  PickRequired,
+  UnionToIntersection,
+  WithoutEmpty,
 } from "./utils/type-helpers";
+// Export validation utilities
+export {
+  createBatchValidator,
+  createValidator,
+  isValueOfType,
+  validateValue,
+  validateValues,
+} from "./validation";

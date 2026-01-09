@@ -12,7 +12,7 @@ async function main() {
       direction = "js-to-ts";
     } else if (directionValue !== "ts-to-js") {
       console.error(
-        `Error: Invalid --direction value "${directionValue}". Use "ts-to-js" or "js-to-ts".`,
+        `Error: Invalid --direction value "${directionValue}". Use "ts-to-js" or "js-to-ts".`
       );
       process.exit(1);
     }

@@ -1,30 +1,21 @@
 #!/usr/bin/env bun
 
 import { createCLI } from "@reliverse/rempts-core";
-import { configMergerPlugin } from "@reliverse/rempts-plugin-config";
 import { aiAgentPlugin } from "@reliverse/rempts-plugin-ai-detect";
+import { configMergerPlugin } from "@reliverse/rempts-plugin-config";
 import { metricsPlugin } from "./plugins/metrics";
 
-// Import commands
-import startCommand from "./commands/start";
-import buildCommand from "./commands/build";
-import envCommand from "./commands/env";
-import logsCommand from "./commands/logs";
+const plugins = [
+  configMergerPlugin({
+    sources: [".devserverrc.json", "devserver.config.json"],
+  }),
+  aiAgentPlugin({ verbose: true }),
+  metricsPlugin(),
+] as const;
 
 const cli = await createCLI({
-  plugins: [
-    configMergerPlugin({
-      sources: [".devserverrc.json", "devserver.config.json"],
-    }),
-    aiAgentPlugin({ verbose: true }),
-    metricsPlugin,
-  ] as const,
+  plugins: plugins as any,
 });
 
-// Add commands
-cli.command(startCommand);
-cli.command(buildCommand);
-cli.command(envCommand);
-cli.command(logsCommand);
-
+await cli.init();
 await cli.run();

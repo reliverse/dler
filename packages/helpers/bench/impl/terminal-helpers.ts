@@ -14,8 +14,8 @@ export async function benchmarkTerminalHelpers(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -23,14 +23,14 @@ export async function benchmarkTerminalHelpers(
   results.push(
     await benchmark("getCurrentWorkingDirectory (cached)", () => {
       getCurrentWorkingDirectory(true);
-    }),
+    })
   );
 
   // Benchmark getCurrentWorkingDirectory (without cache)
   results.push(
     await benchmark("getCurrentWorkingDirectory (uncached)", () => {
       getCurrentWorkingDirectory(false);
-    }),
+    })
   );
 
   // Benchmark handleError with Error instance
@@ -38,7 +38,7 @@ export async function benchmarkTerminalHelpers(
   results.push(
     await benchmark("handleError (Error instance)", () => {
       handleError(errorInstance);
-    }),
+    })
   );
 
   // Benchmark handleError with non-Error
@@ -46,21 +46,21 @@ export async function benchmarkTerminalHelpers(
   results.push(
     await benchmark("handleError (non-Error)", () => {
       handleError(nonError);
-    }),
+    })
   );
 
   // Benchmark handleError with string
   results.push(
     await benchmark("handleError (string)", () => {
       handleError("String error");
-    }),
+    })
   );
 
   // Benchmark handleError with null/undefined
   results.push(
     await benchmark("handleError (null)", () => {
       handleError(null);
-    }),
+    })
   );
 
   // Benchmark combined operations
@@ -70,7 +70,7 @@ export async function benchmarkTerminalHelpers(
       handleError(errorInstance);
       handleError("String error");
       getCurrentWorkingDirectory(false);
-    }),
+    })
   );
 
   return results;

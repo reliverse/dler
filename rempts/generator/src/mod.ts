@@ -1,12 +1,12 @@
-export { Generator } from "./generator";
-export { CommandScanner, isCommandFile } from "./scanner";
-export { parseCommand } from "./parser";
 export { buildTypes } from "./builder";
+export { Generator } from "./generator";
+export { parseCommand } from "./parser";
 export { remptsCodegenPlugin } from "./plugin";
+export { CommandScanner, isCommandFile } from "./scanner";
 export type {
+  CommandMetadata,
+  CommandRegistry,
   GeneratorConfig,
   GeneratorEvent,
-  CommandMetadata,
   OptionMetadata,
-  CommandRegistry,
 } from "./types";

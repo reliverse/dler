@@ -1,8 +1,8 @@
-import { test, expect } from "bun:test";
+import { expect, test } from "bun:test";
 import {
-  resolveTemplateSource,
-  isLocalTemplate,
   getBundledTemplatePath,
+  isLocalTemplate,
+  resolveTemplateSource,
 } from "../src/template-engine";
 
 test("resolveTemplateSource - handles special templates", () => {

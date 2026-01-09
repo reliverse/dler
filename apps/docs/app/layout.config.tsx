@@ -12,23 +12,23 @@ export const baseOptions: BaseLayoutProps = {
     title: (
       <>
         <svg
-          width="24"
+          aria-label="Rempts Logo"
+          fill="none"
           height="24"
           viewBox="0 0 24 24"
-          fill="none"
+          width="24"
           xmlns="http://www.w3.org/2000/svg"
-          aria-label="Rempts Logo"
         >
           {/* Terminal icon representing CLI */}
-          <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
+          <rect height="16" rx="2" stroke="currentColor" strokeWidth="2" width="20" x="2" y="4" />
           <path
             d="M7 9L10 12L7 15"
             stroke="currentColor"
-            strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            strokeWidth="2"
           />
-          <path d="M13 15H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path d="M13 15H17" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
         </svg>
         <span className="font-bold">Rempts</span>
       </>

@@ -46,8 +46,8 @@ export async function benchmarkConfigMerging(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -55,28 +55,28 @@ export async function benchmarkConfigMerging(
   results.push(
     await benchmark("mergeConfig (basic)", () => {
       mergeConfig(cliOptions, configOptions);
-    }),
+    })
   );
 
   // Benchmark null config
   results.push(
     await benchmark("mergeConfig (null config)", () => {
       mergeConfig(cliOptions, undefined);
-    }),
+    })
   );
 
   // Benchmark large configs
   results.push(
     await benchmark("mergeConfig (large configs)", () => {
       mergeConfig(largeCliOptions, largeConfig);
-    }),
+    })
   );
 
   // Benchmark empty config
   results.push(
     await benchmark("mergeConfig (empty config)", () => {
       mergeConfig(cliOptions, {});
-    }),
+    })
   );
 
   return results;

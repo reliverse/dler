@@ -17,8 +17,8 @@ export async function benchmarkMatcherCreation(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -28,7 +28,7 @@ export async function benchmarkMatcherCreation(
       const matcher = createMatcher("*.ts");
       matcher("src/mod.ts");
       matcher("test/index.test.ts");
-    }),
+    })
   );
 
   // Benchmark creating multiple matchers
@@ -40,7 +40,7 @@ export async function benchmarkMatcherCreation(
           matcher(input);
         }
       }
-    }),
+    })
   );
 
   // Benchmark reusing matchers (should be fast)
@@ -50,7 +50,7 @@ export async function benchmarkMatcherCreation(
       for (const input of testInputs) {
         matcher(input);
       }
-    }),
+    })
   );
 
   // Benchmark creating matchers with options
@@ -59,7 +59,7 @@ export async function benchmarkMatcherCreation(
       const matcher = createMatcher("*.ts", { partial: true });
       matcher("src/mod.ts");
       matcher("test/index.test.ts");
-    }),
+    })
   );
 
   return results;

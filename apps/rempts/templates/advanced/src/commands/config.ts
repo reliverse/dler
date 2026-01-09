@@ -1,7 +1,7 @@
+import { relico } from "@reliverse/relico";
 import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
-import { loadConfig, saveConfig, getConfigPath } from "../utils/config";
-import { relico } from "@reliverse/relico";
+import { getConfigPath, loadConfig, saveConfig } from "../utils/config";
 
 const configCommand = defineCommand({
   name: "config",
@@ -98,7 +98,7 @@ const configCommand = defineCommand({
         if (!flags.force) {
           const confirmed = await prompt.confirm(
             "This will reset all config to defaults. Continue?",
-            { default: false },
+            { default: false }
           );
 
           if (!confirmed) {

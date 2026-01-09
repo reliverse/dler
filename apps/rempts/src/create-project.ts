@@ -1,14 +1,14 @@
+import { relico } from "@reliverse/relico";
 import type { RemptsUtils } from "@reliverse/rempts-utils";
 import {
+  getBundledTemplatePath,
+  isLocalTemplate,
   processTemplate,
   resolveTemplateSource,
-  isLocalTemplate,
-  getBundledTemplatePath,
 } from "./template-engine";
 import type { CreateOptions } from "./types";
-import { relico } from "@reliverse/relico";
 
-interface CreateProjectOptions extends Omit<CreateOptions, 'name' | 'dir' | 'offline'> {
+interface CreateProjectOptions extends Omit<CreateOptions, "name" | "dir" | "offline"> {
   name: string;
   dir: string;
   template: string;
@@ -60,9 +60,9 @@ export async function createProject(options: CreateProjectOptions) {
       dir,
       offline,
       variables: {
-        name: name,
+        name,
         version: "0.1.0",
-        description: `A CLI built with Rempts`,
+        description: "A CLI built with Rempts",
         author: "",
         license: "MIT",
         year: new Date().getFullYear().toString(),
@@ -95,16 +95,16 @@ export async function createProject(options: CreateProjectOptions) {
 
     // Install dependencies
     if (install) {
-      const installSpin = spinner(`Installing dependencies...`);
+      const installSpin = spinner("Installing dependencies...");
       installSpin.start();
 
       try {
         await shell`cd ${dir} && bun install`;
 
         installSpin.succeed("Dependencies installed");
-      } catch (error) {
+      } catch (_error) {
         installSpin.fail("Failed to install dependencies");
-        console.error(relico.dim(`  You can install them manually by running: bun install`));
+        console.error(relico.dim("  You can install them manually by running: bun install"));
       }
     }
   } catch (error) {

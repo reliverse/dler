@@ -3,7 +3,13 @@
 import type { DtsOptions } from "@reliverse/config/impl/build";
 import { logger } from "@reliverse/relinka";
 import { generateDeclarations } from "../dts-generator";
-import type { BuildOptions, BuildResult, BunBuildConfig, DlerPlugin, PackageInfo } from "../types";
+import type {
+  BuildOptions,
+  BuildResult,
+  BunBuildConfig,
+  DlerPlugin,
+  PackageInfo,
+} from "../types";
 
 export const TypeScriptDeclarationsPlugin: DlerPlugin = {
   name: "typescript-declarations",
@@ -35,13 +41,14 @@ export const TypeScriptDeclarationsPlugin: DlerPlugin = {
 
 async function generateTypeDeclarations(
   pkg: PackageInfo,
-  buildOptions?: BuildOptions,
+  buildOptions?: BuildOptions
 ): Promise<void> {
   // Extract dts config from pkg.buildConfig
   const configDts = pkg.buildConfig?.dts;
 
   // Convert boolean to object if needed
-  const dtsConfig = typeof configDts === "boolean" ? { enable: configDts } : configDts || {};
+  const dtsConfig =
+    typeof configDts === "boolean" ? { enable: configDts } : configDts || {};
 
   // Merge with CLI options (CLI takes precedence)
   const dtsOptions: DtsOptions = {
@@ -60,6 +67,8 @@ async function generateTypeDeclarations(
 
   if (!result.success) {
     logger.warn(`⚠️  Declaration generation failed for ${pkg.name}:`);
-    logger.warn(result.error || "Unknown error occurred during declaration generation");
+    logger.warn(
+      result.error || "Unknown error occurred during declaration generation"
+    );
   }
 }

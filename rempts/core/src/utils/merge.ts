@@ -22,7 +22,9 @@ export function deepMerge<T = any>(...objects: Partial<T>[]): T {
   const result: any = {};
 
   for (const obj of objects) {
-    if (!obj) continue;
+    if (!obj) {
+      continue;
+    }
 
     for (const [key, value] of Object.entries(obj)) {
       const existing = result[key];

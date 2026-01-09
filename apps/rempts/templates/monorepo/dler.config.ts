@@ -6,7 +6,7 @@ export default defineConfig({
   description: "{{description}}",
 
   commands: {
-    directory: "./packages/core/src/commands",
+    directory: "./packages/core/src/cmds",
   },
 
   plugins: [],

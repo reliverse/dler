@@ -1,28 +1,14 @@
 #!/usr/bin/env bun
-import { createCLI } from "@reliverse/rempts-core";
-import { loadConfig } from "@reliverse/rempts-core";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { createApp } from "@reliverse/rempts-core";
 
-// Load configuration first
-const config = await loadConfig();
+// Always use the dler app's own config directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-const cli = await createCLI({
-  name: "rempts",
-  version: "0.1.0",
-  description: "The Rempts CLI toolchain for developing, building, and distributing CLIs",
-  ...config, // Pass config to enable automatic command loading
-});
-
-// Load commands from directory (including app directory)
-await cli.init();
-
-// Load commands from manifest (these will take priority over file-based commands)
-await cli.load({
-  dev: () => import("./commands/dev.js"),
-  build: () => import("./commands/build.js"),
-  generate: () => import("./commands/generate.js"),
-  test: () => import("./commands/test.js"),
-  release: () => import("./commands/release.js"),
-  init: () => import("./commands/init.js"),
+const cli = await createApp({
+  configDir: dirname(__dirname), // Go up one level to the dler app directory
 });
 
 // Run CLI

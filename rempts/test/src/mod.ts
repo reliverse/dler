@@ -1,17 +1,17 @@
-export { testCommand, testCLI } from "./test-command";
-export { expectCommand, createMatchers } from "./matchers";
 export {
+  mergeTestOptions,
+  mockInteractive,
   mockPromptResponses,
   mockShellCommands,
-  mockInteractive,
   mockValidationAttempts,
-  mergeTestOptions,
 } from "./helpers";
+export { createMatchers, expectCommand } from "./matchers";
+export { testCLI, testCommand } from "./test-command";
 export type {
-  TestOptions,
-  TestResult,
+  Matchers,
   MockHandlerArgs,
   MockShell,
   ShellPromise,
-  Matchers,
+  TestOptions,
+  TestResult,
 } from "./types";

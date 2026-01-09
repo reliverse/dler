@@ -1,7 +1,7 @@
-import type { HandlerArgs } from "@reliverse/rempts-core";
-import { createProject } from "./create-project";
 import path from "node:path";
 import { relico } from "@reliverse/relico";
+import type { HandlerArgs } from "@reliverse/rempts-core";
+import { createProject } from "./create-project";
 
 interface CreateOptions {
   name: string | undefined;
@@ -20,7 +20,9 @@ export async function create(context: HandlerArgs<CreateOptions>) {
   if (!projectName) {
     projectName = await prompt("Project name:", {
       validate: (value) => {
-        if (!value) return "Project name is required";
+        if (!value) {
+          return "Project name is required";
+        }
         if (!/^[a-z0-9-]+$/.test(value)) {
           return "Project name must only contain lowercase letters, numbers, and hyphens";
         }
@@ -29,7 +31,7 @@ export async function create(context: HandlerArgs<CreateOptions>) {
     });
   } else if (!/^[a-z0-9-]+$/.test(projectName)) {
     console.error(
-      relico.red("Project name must only contain lowercase letters, numbers, and hyphens"),
+      relico.red("Project name must only contain lowercase letters, numbers, and hyphens")
     );
     process.exit(1);
   }
@@ -77,10 +79,10 @@ export async function create(context: HandlerArgs<CreateOptions>) {
   console.log(relico.gray(`  cd ${path.relative(process.cwd(), projectDir)}`));
 
   if (!flags.install) {
-    console.log(relico.gray(`  bun install`));
+    console.log(relico.gray("  bun install"));
   }
 
-  console.log(relico.gray(`  bun run dev`));
+  console.log(relico.gray("  bun run dev"));
 
   console.log();
 }

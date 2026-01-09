@@ -1,21 +1,35 @@
 // packages/build/src/impl/assets.ts
 
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { relinka } from "@reliverse/relinka";
 import type { AssetOptions, PackageInfo } from "./types";
 
 export interface AssetProcessor {
-  processAssets(pkg: PackageInfo, outputDir: string, options?: AssetOptions): Promise<void>;
+  processAssets(
+    pkg: PackageInfo,
+    outputDir: string,
+    options?: AssetOptions
+  ): Promise<void>;
 }
 
 export class DefaultAssetProcessor implements AssetProcessor {
   async processAssets(
     pkg: PackageInfo,
     outputDir: string,
-    options: AssetOptions = {},
+    options: AssetOptions = {}
   ): Promise<void> {
-    const { publicPath = "/", copyFiles = [], imageOptimization = false } = options;
+    const {
+      publicPath = "/",
+      copyFiles = [],
+      imageOptimization = false,
+    } = options;
 
     // Copy public directory assets
     if (pkg.hasPublicDir) {
@@ -36,7 +50,7 @@ export class DefaultAssetProcessor implements AssetProcessor {
   private async copyPublicAssets(
     pkg: PackageInfo,
     outputDir: string,
-    publicPath: string,
+    publicPath: string
   ): Promise<void> {
     const publicDir = join(pkg.path, "public");
 
@@ -54,14 +68,18 @@ export class DefaultAssetProcessor implements AssetProcessor {
     pkg: PackageInfo,
     outputDir: string,
     copyFiles: string[],
-    publicPath: string,
+    publicPath: string
   ): Promise<void> {
     for (const filePattern of copyFiles) {
       const sourcePath = resolve(pkg.path, filePattern);
 
       if (existsSync(sourcePath)) {
         const fileName = basename(sourcePath);
-        const destPath = join(outputDir, publicPath.replace(/^\//, ""), fileName);
+        const destPath = join(
+          outputDir,
+          publicPath.replace(/^\//, ""),
+          fileName
+        );
 
         // Ensure destination directory exists
         mkdirSync(dirname(destPath), { recursive: true });
@@ -92,7 +110,10 @@ export class DefaultAssetProcessor implements AssetProcessor {
     }
   }
 
-  private async optimizeImages(_pkg: PackageInfo, _outputDir: string): Promise<void> {
+  private async optimizeImages(
+    _pkg: PackageInfo,
+    _outputDir: string
+  ): Promise<void> {
     // This is a placeholder for image optimization
     // In the future, we would use libraries like sharp or imagemin
     await relinka.info("🖼️  Image optimization is not yet implemented");
@@ -103,7 +124,7 @@ export class CSSProcessor {
   async processCSS(
     _pkg: PackageInfo,
     outputDir: string,
-    cssChunking: boolean = false,
+    cssChunking: boolean = false
   ): Promise<void> {
     if (!cssChunking) {
       return;
@@ -111,13 +132,17 @@ export class CSSProcessor {
 
     // Find all CSS files in the output directory
     const glob = new Bun.Glob("**/*.css");
-    const cssFiles = Array.from(glob.scanSync({ cwd: outputDir, onlyFiles: true }));
+    const cssFiles = Array.from(
+      glob.scanSync({ cwd: outputDir, onlyFiles: true })
+    );
 
     if (cssFiles.length === 0) {
       return;
     }
 
-    await relinka.info(`🎨 Processing ${cssFiles.length} CSS files for chunking`);
+    await relinka.info(
+      `🎨 Processing ${cssFiles.length} CSS files for chunking`
+    );
 
     try {
       // Read all CSS files
@@ -146,7 +171,7 @@ export class CSSProcessor {
   }
 
   private createCSSChunks(
-    cssContents: Array<{ file: string; content: string }>,
+    cssContents: Array<{ file: string; content: string }>
   ): Record<string, string> {
     const chunks: Record<string, string> = {};
 
@@ -177,7 +202,9 @@ export class CSSProcessor {
   private extractCommonPrefix(lines: string[]): string {
     // Extract common CSS selectors/patterns
     const selectors = lines
-      .filter((line) => line.trim().startsWith(".") || line.trim().startsWith("#"))
+      .filter(
+        (line) => line.trim().startsWith(".") || line.trim().startsWith("#")
+      )
       .map((line) => line.trim().split(" ")[0])
       .filter(Boolean);
 
@@ -204,11 +231,13 @@ export class CSSProcessor {
   private async updateCSSReferences(
     cssFiles: string[],
     _chunks: Record<string, string>,
-    _outputDir: string,
+    _outputDir: string
   ): Promise<void> {
     // This would update HTML files to reference the new CSS chunks
     // For now, we'll just log what would be updated
-    await relinka.info(`   📝 Would update ${cssFiles.length} CSS files to reference chunks`);
+    await relinka.info(
+      `   📝 Would update ${cssFiles.length} CSS files to reference chunks`
+    );
   }
 }
 
@@ -257,7 +286,7 @@ export class AssetManifest {
 export async function processAssetsForPackage(
   pkg: PackageInfo,
   outputDir: string,
-  options: AssetOptions = {},
+  options: AssetOptions = {}
 ): Promise<void> {
   const processor = new DefaultAssetProcessor();
   await processor.processAssets(pkg, outputDir, options);
@@ -266,7 +295,7 @@ export async function processAssetsForPackage(
 export async function processCSSForPackage(
   pkg: PackageInfo,
   outputDir: string,
-  cssChunking: boolean = false,
+  cssChunking: boolean = false
 ): Promise<void> {
   const processor = new CSSProcessor();
   await processor.processCSS(pkg, outputDir, cssChunking);

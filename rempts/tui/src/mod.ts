@@ -1,20 +1,18 @@
 // Export TUI renderer registration
-export { registerTuiRenderer } from "./renderer";
 
-// Export component library
-export * from "./components/mod";
+// Re-export useful OpenTUI core types and utilities
+export type { CliRendererConfig, KeyEvent, SelectOption } from "@opentui/core";
+// Re-export text styling utilities
+export { bold, fg, italic, TextAttributes, t } from "@opentui/core";
 
 // Re-export useful OpenTUI React hooks and types
 export {
   useKeyboard,
+  useOnResize,
   useRenderer,
   useTerminalDimensions,
   useTimeline,
-  useOnResize,
 } from "@opentui/react";
-
-// Re-export useful OpenTUI core types and utilities
-export type { SelectOption, KeyEvent, CliRendererConfig } from "@opentui/core";
-
-// Re-export text styling utilities
-export { bold, fg, italic, t, TextAttributes } from "@opentui/core";
+// Export component library
+export * from "./components/mod";
+export { registerTuiRenderer } from "./renderer";

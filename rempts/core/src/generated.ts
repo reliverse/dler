@@ -69,15 +69,15 @@ export interface GeneratedStore<
   getMetadata<Name extends keyof TModules & string>(name: Name): TMeta[Name];
   // Typed flags shape for compile-time DX (keys come from RegisteredCommands via augmentation)
   getFlags<Name extends keyof import("./types.js").RegisteredCommands & string>(
-    name: Name,
+    name: Name
   ): Record<string, unknown>;
   // Raw metadata for UI/inspection
   getFlagsMeta<Name extends keyof TModules & string>(
-    name: Name,
+    name: Name
   ): Record<string, GeneratedOptionMeta>;
   // Enhanced discovery methods
   findByName<Name extends keyof TModules & string>(
-    name: Name,
+    name: Name
   ): {
     name: Name;
     command: TModules[Name];
@@ -92,7 +92,7 @@ export interface GeneratedStore<
   // Runtime validation
   validateCommand<Name extends keyof TModules & string>(
     name: Name,
-    flags: Record<string, unknown>,
+    flags: Record<string, unknown>
   ): { success: true; data: Record<string, unknown> } | { success: false; errors: string[] };
   withCLI(cli: CLI<any>): GeneratedExecutor<TModules>;
 }
@@ -111,7 +111,7 @@ export function registerGeneratedStore<
   return store;
 }
 
-export function getGeneratedStores(): ReadonlyArray<GeneratedStore<any, any>> {
+export function getGeneratedStores(): readonly GeneratedStore<any, any>[] {
   return generatedStores;
 }
 
@@ -121,9 +121,8 @@ export function clearGeneratedStores(): void {
 
 export function loadGeneratedStores(cli?: CLI<any>): void {
   if (generatedStores.length === 0) {
-    console.warn(
-      "[rempts] No generated command types registered. Run `dler generate` to enable typed execution.",
-    );
+    // Generated types are optional enhancements for developer experience.
+    // Don't warn end users who don't need these types.
     return;
   }
 
@@ -142,11 +141,8 @@ export function createGeneratedHelpers<
     commands: modules,
     metadata,
     register(cli) {
-      if (cli) {
-        for (const command of Object.values(modules) as Command<any, any>[]) {
-          cli.command(command);
-        }
-      }
+      // Commands are now loaded automatically from the file system
+      // No manual registration needed
       return store;
     },
     list() {
@@ -179,7 +175,9 @@ export function createGeneratedHelpers<
     getFlags<Name extends keyof TModules & string>(name: Name): Record<string, unknown> {
       // Build runtime type shape from metadata with proper typing
       const meta = metadata[name];
-      if (!meta?.options) return {};
+      if (!meta?.options) {
+        return {};
+      }
 
       const flagShape: Record<string, unknown> = {};
       for (const [key, option] of Object.entries(meta.options)) {
@@ -194,7 +192,7 @@ export function createGeneratedHelpers<
     },
     validateCommand<Name extends keyof TModules & string>(
       name: Name,
-      flags: Record<string, unknown>,
+      flags: Record<string, unknown>
     ): { success: true; data: Record<string, unknown> } | { success: false; errors: string[] } {
       const meta = metadata[name];
       if (!meta?.options) {
@@ -244,7 +242,7 @@ export function createGeneratedHelpers<
     withCLI(cli) {
       const executor = cli.execute.bind(cli) as (
         commandName: string,
-        options: unknown,
+        options: unknown
       ) => Promise<void>;
       return {
         execute(name, options) {

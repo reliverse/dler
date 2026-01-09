@@ -5,8 +5,8 @@ export async function benchmarkConcurrentLogging(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -16,11 +16,11 @@ export async function benchmarkConcurrentLogging(
       "concurrent async (10 parallel)",
       async () => {
         await Promise.all(
-          Array.from({ length: 10 }, (_, i) => relinka.info(`Concurrent message ${i}`)),
+          Array.from({ length: 10 }, (_, i) => relinka.info(`Concurrent message ${i}`))
         );
       },
-      100,
-    ),
+      100
+    )
   );
 
   // Concurrent async logging (50 parallel operations)
@@ -29,11 +29,11 @@ export async function benchmarkConcurrentLogging(
       "concurrent async (50 parallel)",
       async () => {
         await Promise.all(
-          Array.from({ length: 50 }, (_, i) => relinka.info(`Concurrent message ${i}`)),
+          Array.from({ length: 50 }, (_, i) => relinka.info(`Concurrent message ${i}`))
         );
       },
-      100,
-    ),
+      100
+    )
   );
 
   // Concurrent async logging (100 parallel operations)
@@ -42,11 +42,11 @@ export async function benchmarkConcurrentLogging(
       "concurrent async (100 parallel)",
       async () => {
         await Promise.all(
-          Array.from({ length: 100 }, (_, i) => relinka.info(`Concurrent message ${i}`)),
+          Array.from({ length: 100 }, (_, i) => relinka.info(`Concurrent message ${i}`))
         );
       },
-      50,
-    ),
+      50
+    )
   );
 
   // Mixed log levels concurrent
@@ -61,8 +61,8 @@ export async function benchmarkConcurrentLogging(
           ...Array.from({ length: 5 }, () => relinka.error("Error message")),
         ]);
       },
-      100,
-    ),
+      100
+    )
   );
 
   return results;

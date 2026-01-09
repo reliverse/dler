@@ -44,7 +44,7 @@ const calculatePercentile = (sorted: number[], percentile: number): number => {
 async function benchmark(
   name: string,
   fn: () => void | Promise<void>,
-  iterCount = ITERATIONS,
+  iterCount = ITERATIONS
 ): Promise<BenchmarkResult> {
   // Warmup runs
   for (let i = 0; i < WARMUP_RUNS; i++) {
@@ -69,7 +69,7 @@ async function benchmark(
   const sorted = [...timings].sort((a, b) => a - b);
   const avgTime = totalTime / iterCount;
   const minTime = sorted[0] ?? 0;
-  const maxTime = sorted[sorted.length - 1] ?? 0;
+  const maxTime = sorted.at(-1) ?? 0;
   const medianTime = calculatePercentile(sorted, 50);
   const p95Time = calculatePercentile(sorted, 95);
   const p99Time = calculatePercentile(sorted, 99);

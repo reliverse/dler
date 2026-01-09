@@ -32,8 +32,8 @@ export async function benchmarkDuration(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -42,7 +42,7 @@ export async function benchmarkDuration(
     await benchmark("getDuration", () => {
       getDuration(startDate, endDate);
       getDuration(datePairs[0]?.[0] ?? startDate, datePairs[0]?.[1] ?? endDate);
-    }),
+    })
   );
 
   // Benchmark diffInMilliseconds
@@ -50,7 +50,7 @@ export async function benchmarkDuration(
     await benchmark("diffInMilliseconds", () => {
       diffInMilliseconds(startDate, endDate);
       diffInMilliseconds(datePairs[0]?.[0] ?? startDate, datePairs[0]?.[1] ?? endDate);
-    }),
+    })
   );
 
   // Benchmark diffInSeconds
@@ -58,7 +58,7 @@ export async function benchmarkDuration(
     await benchmark("diffInSeconds", () => {
       diffInSeconds(startDate, endDate);
       diffInSeconds(datePairs[1]?.[0] ?? startDate, datePairs[1]?.[1] ?? endDate);
-    }),
+    })
   );
 
   // Benchmark diffInMinutes
@@ -66,7 +66,7 @@ export async function benchmarkDuration(
     await benchmark("diffInMinutes", () => {
       diffInMinutes(startDate, endDate);
       diffInMinutes(datePairs[2]?.[0] ?? startDate, datePairs[2]?.[1] ?? endDate);
-    }),
+    })
   );
 
   // Benchmark diffInHours
@@ -74,7 +74,7 @@ export async function benchmarkDuration(
     await benchmark("diffInHours", () => {
       diffInHours(startDate, endDate);
       diffInHours(datePairs[0]?.[0] ?? startDate, datePairs[0]?.[1] ?? endDate);
-    }),
+    })
   );
 
   // Benchmark diffInDays
@@ -82,7 +82,7 @@ export async function benchmarkDuration(
     await benchmark("diffInDays", () => {
       diffInDays(startDate, endDate);
       diffInDays(datePairs[1]?.[0] ?? startDate, datePairs[1]?.[1] ?? endDate);
-    }),
+    })
   );
 
   // Benchmark diffInWeeks
@@ -90,7 +90,7 @@ export async function benchmarkDuration(
     await benchmark("diffInWeeks", () => {
       diffInWeeks(startDate, endDate);
       diffInWeeks(datePairs[0]?.[0] ?? startDate, datePairs[0]?.[1] ?? endDate);
-    }),
+    })
   );
 
   // Benchmark diffInMonths
@@ -98,7 +98,7 @@ export async function benchmarkDuration(
     await benchmark("diffInMonths", () => {
       diffInMonths(startDate, endDate);
       diffInMonths(datePairs[1]?.[0] ?? startDate, datePairs[1]?.[1] ?? endDate);
-    }),
+    })
   );
 
   // Benchmark diffInYears
@@ -106,7 +106,7 @@ export async function benchmarkDuration(
     await benchmark("diffInYears", () => {
       diffInYears(startDate, endDate);
       diffInYears(datePairs[1]?.[0] ?? startDate, datePairs[1]?.[1] ?? endDate);
-    }),
+    })
   );
 
   // Benchmark addDuration
@@ -115,7 +115,7 @@ export async function benchmarkDuration(
       addDuration(startDate, durations[0] ?? {});
       addDuration(startDate, durations[1] ?? {});
       addDuration(startDate, durations[2] ?? {});
-    }),
+    })
   );
 
   // Benchmark subtractDuration
@@ -124,7 +124,7 @@ export async function benchmarkDuration(
       subtractDuration(endDate, durations[0] ?? {});
       subtractDuration(endDate, durations[1] ?? {});
       subtractDuration(endDate, durations[2] ?? {});
-    }),
+    })
   );
 
   // Benchmark mixed duration operations
@@ -135,7 +135,7 @@ export async function benchmarkDuration(
       addDuration(startDate, durations[0] ?? {});
       diffInHours(startDate, endDate);
       subtractDuration(endDate, durations[1] ?? {});
-    }),
+    })
   );
 
   return results;

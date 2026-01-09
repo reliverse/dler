@@ -2,16 +2,17 @@
  * Plugin testing utilities for Rempts
  */
 
-import type { RemptsPlugin, CommandContext, PluginContext } from "./types";
 import type { RemptsConfig, ResolvedConfig } from "../types";
 import { createLogger } from "../utils/logger";
+import { createPluginStore, type PluginStore } from "./store.js";
+import type { CommandContext, Plugin, PluginContext } from "./types";
 
 /**
  * Mock plugin context for testing
  */
 export function createMockPluginContext(
   config: Partial<RemptsConfig> = {},
-  store: Map<string, any> = new Map(),
+  store: PluginStore<any> = createPluginStore({})
 ): PluginContext {
   return {
     config,
@@ -32,11 +33,26 @@ export function createMockPluginContext(
  * Mock command context for testing
  */
 export function createMockCommandContext<TStore = {}>(
-  command: string = "test",
+  command = "test",
   args: string[] = [],
   flags: Record<string, any> = {},
-  store: TStore = {} as TStore,
+  initialStore: TStore = {} as TStore
 ): CommandContext<TStore> {
+  // Create a mock store that behaves like a Zustand store
+  let storeState = { ...initialStore };
+  const mockStore = {
+    getState: () => storeState,
+    setState: (updater: any) => {
+      if (typeof updater === "function") {
+        storeState = { ...storeState, ...updater(storeState) };
+      } else {
+        storeState = { ...storeState, ...updater };
+      }
+    },
+    subscribe: () => () => {}, // Mock subscription
+    destroy: () => {},
+  };
+
   return {
     command,
     commandDef: {} as any,
@@ -47,12 +63,12 @@ export function createMockCommandContext<TStore = {}>(
       isAIAgent: false,
       aiAgents: [],
     },
-    store,
-    getStoreValue: (key: keyof TStore) => (store as any)[key],
-    setStoreValue: (key: keyof TStore, value: any) => {
-      (store as any)[key] = value;
+    store: mockStore as any,
+    getStoreValue: (key: keyof TStore | string | number | symbol) => (storeState as any)[key],
+    setStoreValue: (key: keyof TStore | string | number | symbol, value: any) => {
+      mockStore.setState({ [key]: value });
     },
-    hasStoreValue: (key: keyof TStore) => key in (store as object),
+    hasStoreValue: (key: keyof TStore | string | number | symbol) => key in (storeState as object),
   };
 }
 
@@ -60,15 +76,16 @@ export function createMockCommandContext<TStore = {}>(
  * Test plugin lifecycle hooks
  */
 export async function testPluginHooks<TStore = {}>(
-  plugin: RemptsPlugin<TStore>,
+  plugin: Plugin<TStore>,
   options: {
     config?: Partial<RemptsConfig>;
     store?: TStore;
     command?: string;
     args?: string[];
     flags?: Record<string, any>;
-  } = {},
+  } = {}
 ) {
+  const hooks = plugin();
   const results: {
     setup?: any;
     configResolved?: any;
@@ -77,10 +94,10 @@ export async function testPluginHooks<TStore = {}>(
   } = {};
 
   // Test setup hook
-  if (plugin.setup) {
+  if (hooks.setup) {
     const context = createMockPluginContext(options.config);
     try {
-      await plugin.setup(context);
+      await hooks.setup(context);
       results.setup = { success: true, context };
     } catch (error) {
       results.setup = { success: false, error };
@@ -88,7 +105,7 @@ export async function testPluginHooks<TStore = {}>(
   }
 
   // Test configResolved hook
-  if (plugin.configResolved) {
+  if (hooks.configResolved) {
     const config: ResolvedConfig = {
       name: "test-cli",
       version: "1.0.0",
@@ -121,7 +138,7 @@ export async function testPluginHooks<TStore = {}>(
       plugins: [],
     };
     try {
-      await plugin.configResolved(config);
+      await hooks.configResolved(config);
       results.configResolved = { success: true, config };
     } catch (error) {
       results.configResolved = { success: false, error };
@@ -129,15 +146,15 @@ export async function testPluginHooks<TStore = {}>(
   }
 
   // Test beforeCommand hook
-  if (plugin.beforeCommand) {
+  if (hooks.beforeCommand) {
     const context = createMockCommandContext(
       options.command || "test",
       options.args || [],
       options.flags || {},
-      options.store || ({} as TStore),
+      options.store || ({} as TStore)
     );
     try {
-      await plugin.beforeCommand(context);
+      await hooks.beforeCommand(context);
       results.beforeCommand = { success: true, context };
     } catch (error) {
       results.beforeCommand = { success: false, error };
@@ -145,15 +162,15 @@ export async function testPluginHooks<TStore = {}>(
   }
 
   // Test afterCommand hook
-  if (plugin.afterCommand) {
+  if (hooks.afterCommand) {
     const context = createMockCommandContext(
       options.command || "test",
       options.args || [],
       options.flags || {},
-      options.store || ({} as TStore),
+      options.store || ({} as TStore)
     );
     try {
-      await plugin.afterCommand(context as any);
+      await hooks.afterCommand(context as any);
       results.afterCommand = { success: true, context };
     } catch (error) {
       results.afterCommand = { success: false, error };
@@ -173,7 +190,7 @@ export function assertPluginBehavior(
     configResolvedShouldSucceed?: boolean;
     beforeCommandShouldSucceed?: boolean;
     afterCommandShouldSucceed?: boolean;
-  },
+  }
 ) {
   const assertions: string[] = [];
 
@@ -181,7 +198,7 @@ export function assertPluginBehavior(
     const actual = results.setup?.success ?? false;
     if (actual !== expectations.setupShouldSucceed) {
       assertions.push(
-        `Setup hook ${actual ? "succeeded" : "failed"} but expected ${expectations.setupShouldSucceed ? "success" : "failure"}`,
+        `Setup hook ${actual ? "succeeded" : "failed"} but expected ${expectations.setupShouldSucceed ? "success" : "failure"}`
       );
     }
   }
@@ -190,7 +207,7 @@ export function assertPluginBehavior(
     const actual = results.configResolved?.success ?? false;
     if (actual !== expectations.configResolvedShouldSucceed) {
       assertions.push(
-        `ConfigResolved hook ${actual ? "succeeded" : "failed"} but expected ${expectations.configResolvedShouldSucceed ? "success" : "failure"}`,
+        `ConfigResolved hook ${actual ? "succeeded" : "failed"} but expected ${expectations.configResolvedShouldSucceed ? "success" : "failure"}`
       );
     }
   }
@@ -199,7 +216,7 @@ export function assertPluginBehavior(
     const actual = results.beforeCommand?.success ?? false;
     if (actual !== expectations.beforeCommandShouldSucceed) {
       assertions.push(
-        `BeforeCommand hook ${actual ? "succeeded" : "failed"} but expected ${expectations.beforeCommandShouldSucceed ? "success" : "failure"}`,
+        `BeforeCommand hook ${actual ? "succeeded" : "failed"} but expected ${expectations.beforeCommandShouldSucceed ? "success" : "failure"}`
       );
     }
   }
@@ -208,7 +225,7 @@ export function assertPluginBehavior(
     const actual = results.afterCommand?.success ?? false;
     if (actual !== expectations.afterCommandShouldSucceed) {
       assertions.push(
-        `AfterCommand hook ${actual ? "succeeded" : "failed"} but expected ${expectations.afterCommandShouldSucceed ? "success" : "failure"}`,
+        `AfterCommand hook ${actual ? "succeeded" : "failed"} but expected ${expectations.afterCommandShouldSucceed ? "success" : "failure"}`
       );
     }
   }

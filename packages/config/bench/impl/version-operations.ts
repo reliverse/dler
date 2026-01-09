@@ -22,8 +22,8 @@ export async function benchmarkVersionOperations(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -33,58 +33,58 @@ export async function benchmarkVersionOperations(
       for (const version of testVersions) {
         parseVersion(version);
       }
-    }),
+    })
   );
 
   results.push(
     await benchmark("parseVersion (single)", () => {
       parseVersion("1.2.3");
-    }),
+    })
   );
 
   results.push(
     await benchmark("parseVersion (invalid)", () => {
       parseVersion("invalid");
-    }),
+    })
   );
 
   // Benchmark bumpVersion
   results.push(
     await benchmark("bumpVersion (patch)", () => {
       bumpVersion("1.2.3", "patch");
-    }),
+    })
   );
 
   results.push(
     await benchmark("bumpVersion (minor)", () => {
       bumpVersion("1.2.3", "minor");
-    }),
+    })
   );
 
   results.push(
     await benchmark("bumpVersion (major)", () => {
       bumpVersion("1.2.3", "major");
-    }),
+    })
   );
 
   // Benchmark getNextVersion
   results.push(
     await benchmark("getNextVersion (patch)", () => {
       getNextVersion("1.2.3", "patch");
-    }),
+    })
   );
 
   // Benchmark isPrerelease
   results.push(
     await benchmark("isPrerelease (release)", () => {
       isPrerelease("1.2.3");
-    }),
+    })
   );
 
   results.push(
     await benchmark("isPrerelease (prerelease)", () => {
       isPrerelease("1.2.3-beta.1");
-    }),
+    })
   );
 
   // Benchmark getReleaseType
@@ -93,7 +93,7 @@ export async function benchmarkVersionOperations(
       getReleaseType("1.2.3");
       getReleaseType("0.1.0");
       getReleaseType("2.0.0");
-    }),
+    })
   );
 
   return results;

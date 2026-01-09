@@ -1,6 +1,6 @@
+import { relico } from "@reliverse/relico";
 import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
-import { relico } from "@reliverse/relico";
 
 const helloCommand = defineCommand({
   name: "hello",

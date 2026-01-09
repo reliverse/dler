@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
+import { readdir, readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { $ } from "bun";
-import { readdir, readFile, writeFile } from "fs/promises";
-import { join } from "path";
 
 type SemverType = "major" | "minor" | "patch" | "prerelease" | "current";
 
@@ -41,9 +41,7 @@ async function getAllPackages(): Promise<PackageInfo[]> {
           const packageJson = JSON.parse(await readFile(packageJsonPath, "utf-8"));
 
           // Include all packages that are not private and are part of the Rempts ecosystem
-          const isPublishable =
-            !packageJson.private &&
-            (packageJson.name.startsWith("@reliverse/"));
+          const isPublishable = !packageJson.private && packageJson.name.startsWith("@reliverse/");
 
           packages.push({
             name: packageJson.name,
@@ -150,8 +148,8 @@ async function detectModifiedPackages(packages: PackageInfo[]): Promise<PackageI
       return {
         ...pkg,
         modified: modifiedPackages.has(packageDir),
-        lastVersion: lastVersion,
-        publishedVersion: publishedVersion,
+        lastVersion,
+        publishedVersion,
       };
     });
 
@@ -167,32 +165,32 @@ async function detectModifiedPackages(packages: PackageInfo[]): Promise<PackageI
 
 function calculateNewVersion(currentVersion: string, semverType: SemverType): string {
   const [major, minor, patch, ...prerelease] = currentVersion.split(/[.-]/);
-  if (!major || !minor || !patch) {
+  if (!(major && minor && patch)) {
     throw new Error("Invalid version format");
   }
 
   switch (semverType) {
     case "major":
-      return `${parseInt(major) + 1}.0.0`;
+      return `${Number.parseInt(major, 10) + 1}.0.0`;
     case "minor":
-      return `${major}.${parseInt(minor) + 1}.0`;
+      return `${major}.${Number.parseInt(minor, 10) + 1}.0`;
     case "patch":
-      return `${major}.${minor}.${parseInt(patch) + 1}`;
-    case "prerelease":
+      return `${major}.${minor}.${Number.parseInt(patch, 10) + 1}`;
+    case "prerelease": {
       const prereleaseStr = prerelease.join("-");
       if (prereleaseStr) {
         // Increment prerelease version
         const parts = prereleaseStr.split(".");
-        const lastPart = parts[parts.length - 1];
+        const lastPart = parts.at(-1);
         if (lastPart && /^\d+$/.test(lastPart)) {
-          parts[parts.length - 1] = (parseInt(lastPart) + 1).toString();
+          parts[parts.length - 1] = (Number.parseInt(lastPart, 10) + 1).toString();
         } else {
           parts.push("1");
         }
         return `${major}.${minor}.${patch}-${parts.join(".")}`;
-      } else {
-        return `${major}.${minor}.${parseInt(patch) + 1}-beta.1`;
       }
+      return `${major}.${minor}.${Number.parseInt(patch, 10) + 1}-beta.1`;
+    }
     default:
       throw new Error(`Invalid semver type: ${semverType}`);
   }
@@ -200,7 +198,7 @@ function calculateNewVersion(currentVersion: string, semverType: SemverType): st
 
 async function promptForReleaseOptions(
   packages: PackageInfo[],
-  options: ReleaseOptions,
+  options: ReleaseOptions
 ): Promise<ReleaseOptions> {
   const modifiedPackages = packages.filter((p) => p.modified && p.publishable);
 
@@ -237,7 +235,7 @@ async function promptForReleaseOptions(
   const needsPublishing = modifiedPackages.filter(
     (pkg) =>
       pkg.publishedVersion === "not-published" ||
-      (pkg.publishedVersion && pkg.publishedVersion !== pkg.version),
+      (pkg.publishedVersion && pkg.publishedVersion !== pkg.version)
   );
 
   if (needsPublishing.length > 0) {
@@ -273,7 +271,7 @@ async function promptForReleaseOptions(
   const packagesNeedingPublish = modifiedPackages.filter(
     (pkg) =>
       pkg.publishedVersion === "not-published" ||
-      (pkg.publishedVersion && pkg.publishedVersion !== pkg.version),
+      (pkg.publishedVersion && pkg.publishedVersion !== pkg.version)
   );
 
   if (packagesNeedingPublish.length > 0) {
@@ -294,7 +292,9 @@ async function promptForReleaseOptions(
   }
 
   // Skip confirmation if --yes flag is provided
-  if (!options.yes) {
+  if (options.yes) {
+    console.log("\n🚀 Proceeding with release (--yes flag provided)...");
+  } else {
     console.log("\n❓ Proceed with this release? (y/N)");
     console.log("   Use --yes flag to skip this prompt");
 
@@ -319,20 +319,18 @@ async function promptForReleaseOptions(
       }
 
       console.log("\n🚀 Proceeding with release...");
-    } catch (error) {
+    } catch (_error) {
       // Fallback: if stdin reading fails, ask user to run with --dry-run first
       console.log(
-        "\n⚠️  Could not prompt for confirmation. Please run with --dry-run first to preview:",
+        "\n⚠️  Could not prompt for confirmation. Please run with --dry-run first to preview:"
       );
-      console.log(`   bun scripts/release.ts --auto --dry-run`);
+      console.log("   bun scripts/release.ts --auto --dry-run");
       console.log("\nThen run without --dry-run to execute:");
-      console.log(`   bun scripts/release.ts --auto`);
+      console.log("   bun scripts/release.ts --auto");
       console.log("\nOr use --yes flag to skip confirmation:");
-      console.log(`   bun scripts/release.ts --auto --yes`);
+      console.log("   bun scripts/release.ts --auto --yes");
       process.exit(1);
     }
-  } else {
-    console.log("\n🚀 Proceeding with release (--yes flag provided)...");
   }
 
   return {
@@ -352,7 +350,7 @@ async function updatePackageVersion(packagePath: string, newVersion: string): Pr
   // Only update if version is different (idempotent)
   if (packageJson.version !== newVersion) {
     packageJson.version = newVersion;
-    await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n");
+    await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
   }
 }
 
@@ -396,11 +394,11 @@ async function publishPackages(packages: PackageInfo[]): Promise<void> {
       // Check if package version already exists on npm
       try {
         const { stdout: npmInfo } = await $`bun info ${pkg.name}@${pkg.version} version`.quiet();
-        if (npmInfo && npmInfo.toString().trim()) {
+        if (npmInfo?.toString().trim()) {
           console.log(`ℹ️  ${pkg.name}@${pkg.version} already published, skipping`);
           continue;
         }
-      } catch (infoError) {
+      } catch (_infoError) {
         // Package version doesn't exist, proceed with publishing
         console.log(`ℹ️  ${pkg.name}@${pkg.version} not found on npm, proceeding with publish`);
       }
@@ -429,11 +427,11 @@ async function createGitTag(version: string): Promise<void> {
 
     // Check if tag already exists
     const { stdout: tagOutput } = await $`git tag -l v${version}`.quiet();
-    if (!tagOutput.toString().trim()) {
+    if (tagOutput.toString().trim()) {
+      console.log(`ℹ️  Tag v${version} already exists`);
+    } else {
       await $`git tag v${version}`;
       console.log(`✅ Created tag v${version}`);
-    } else {
-      console.log(`ℹ️  Tag v${version} already exists`);
     }
   } catch (error) {
     console.error("❌ Failed to create git tag:", error);
@@ -546,7 +544,7 @@ async function main() {
   // Determine release options
   let releaseOptions: ReleaseOptions;
 
-  if (options.auto || (!options.version && !options.semverType)) {
+  if (options.auto || !(options.version || options.semverType)) {
     // Auto-detect mode
     releaseOptions = await promptForReleaseOptions(packages, options);
   } else {
@@ -560,7 +558,7 @@ async function main() {
 
     if (!newVersion) {
       console.error(
-        "❌ No version specified. Use --auto, provide a version, or specify --patch/--minor/--major",
+        "❌ No version specified. Use --auto, provide a version, or specify --patch/--minor/--major"
       );
       process.exit(1);
     }
@@ -568,7 +566,7 @@ async function main() {
     // Basic version validation
     if (!/^\d+\.\d+\.\d+(-[a-zA-Z0-9.-]+)?$/.test(newVersion)) {
       console.error(
-        "❌ Invalid version format. Use semantic versioning (e.g., 1.0.0, 1.0.0-beta.1)",
+        "❌ Invalid version format. Use semantic versioning (e.g., 1.0.0, 1.0.0-beta.1)"
       );
       process.exit(1);
     }
@@ -588,12 +586,12 @@ async function main() {
   if (releaseOptions.packages && releaseOptions.packages.length > 0) {
     packagesToRelease = packages.filter(
       (pkg) =>
-        releaseOptions.packages!.includes(pkg.name) ||
-        releaseOptions.packages!.includes(pkg.name.split("/").pop() || ""),
+        releaseOptions.packages?.includes(pkg.name) ||
+        releaseOptions.packages?.includes(pkg.name.split("/").pop() || "")
     );
   }
 
-  console.log(`\n📋 Release Plan:`);
+  console.log("\n📋 Release Plan:");
   console.log(`  Version: ${releaseOptions.version}`);
   console.log(`  Packages: ${packagesToRelease.filter((p) => p.publishable).length} publishable`);
   console.log(`  Mode: ${releaseOptions.dryRun ? "DRY RUN" : "LIVE"}`);
@@ -605,32 +603,32 @@ async function main() {
   }
 
   // Run tests
-  if (!releaseOptions.dryRun) {
+  if (releaseOptions.dryRun) {
+    console.log("🧪 [DRY RUN] Would run tests");
+    console.log("");
+  } else {
     if (!(await runTests())) {
       console.log("❌ Release aborted due to test failures");
       process.exit(1);
     }
     console.log("");
-  } else {
-    console.log("🧪 [DRY RUN] Would run tests");
-    console.log("");
   }
 
   // Build packages
-  if (!releaseOptions.dryRun) {
+  if (releaseOptions.dryRun) {
+    console.log("🔨 [DRY RUN] Would build packages");
+    console.log("");
+  } else {
     if (!(await buildPackages())) {
       console.log("❌ Release aborted due to build failures");
       process.exit(1);
     }
     console.log("");
-  } else {
-    console.log("🔨 [DRY RUN] Would build packages");
-    console.log("");
   }
 
   // Update versions
   console.log(
-    `📝 ${releaseOptions.dryRun ? "[DRY RUN] Would update" : "Updating"} packages to version ${releaseOptions.version}...`,
+    `📝 ${releaseOptions.dryRun ? "[DRY RUN] Would update" : "Updating"} packages to version ${releaseOptions.version}...`
   );
   let updatedCount = 0;
   for (const pkg of packagesToRelease) {
@@ -640,7 +638,7 @@ async function main() {
     }
     if (oldVersion !== releaseOptions.version) {
       console.log(
-        `${releaseOptions.dryRun ? "🔍 [DRY RUN]" : "✅"} ${releaseOptions.dryRun ? "Would update" : "Updated"} ${pkg.name} from ${oldVersion} to ${releaseOptions.version}`,
+        `${releaseOptions.dryRun ? "🔍 [DRY RUN]" : "✅"} ${releaseOptions.dryRun ? "Would update" : "Updated"} ${pkg.name} from ${oldVersion} to ${releaseOptions.version}`
       );
       updatedCount++;
     } else {
@@ -648,28 +646,28 @@ async function main() {
     }
   }
   console.log(
-    `📊 ${releaseOptions.dryRun ? "[DRY RUN] Would update" : "Updated"} ${updatedCount} packages, ${packagesToRelease.length - updatedCount} already at target version`,
+    `📊 ${releaseOptions.dryRun ? "[DRY RUN] Would update" : "Updated"} ${updatedCount} packages, ${packagesToRelease.length - updatedCount} already at target version`
   );
   console.log("");
 
   // Publish packages
-  if (!releaseOptions.dryRun) {
-    await publishPackages(packagesToRelease);
-  } else {
+  if (releaseOptions.dryRun) {
     console.log("📦 [DRY RUN] Would publish packages:");
     packagesToRelease
       .filter((p) => p.publishable)
       .forEach((pkg) => {
         console.log(`  • ${pkg.name}@${releaseOptions.version}`);
       });
+  } else {
+    await publishPackages(packagesToRelease);
   }
   console.log("");
 
   // Create git tag
-  if (!releaseOptions.dryRun) {
-    await createGitTag(releaseOptions.version!);
-  } else {
+  if (releaseOptions.dryRun) {
     console.log(`🏷️  [DRY RUN] Would create git tag v${releaseOptions.version}`);
+  } else {
+    await createGitTag(releaseOptions.version!);
   }
   console.log("");
 

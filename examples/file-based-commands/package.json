@@ -4,7 +4,7 @@
   "description": "Example of file-based command loading in @rempts",
   "type": "module",
   "scripts": {
-    "generate": "bun dler generate",
+    "gen": "bun dler generate",
     "dev": "bun dler dev",
     "build": "bun dler build",
     "typecheck": "tsc --noEmit",

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
-import { createCLI } from "@reliverse/rempts-core";
+import { analyzeCommand, processCommand } from "@{{name}}/core";
 import { logger } from "@{{name}}/utils";
-import { processCommand, analyzeCommand } from "@{{name}}/core";
+import { createCLI } from "@reliverse/rempts-core";
 
 const cli = await createCLI({
   name: "{{name}}",

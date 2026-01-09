@@ -1,7 +1,7 @@
-import { test, expect } from "bun:test";
+import { expect, test } from "bun:test";
 import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
-import { testCommand, mockPromptResponses, mockShellCommands, mergeTestOptions } from "../src/mod";
+import { mergeTestOptions, mockPromptResponses, mockShellCommands, testCommand } from "../src/mod";
 
 test("complex validation scenario with Standard Schema", async () => {
   const userSchema = type({
@@ -51,7 +51,7 @@ test("validation error handling with Standard Schema", async () => {
   // Note: In actual CLI usage, validation errors would be caught before the handler runs
   // For testing, we need to simulate the parsing phase
   const schema = type("number.integer >= 1 & number.integer <= 65535");
-  const result = schema(99999);
+  const result = schema(99_999);
   expect(result).toBeInstanceOf(type.errors);
 });
 
@@ -61,7 +61,10 @@ test("nested command prompt mocking", async () => {
     description: "Deploy application",
     handler: async ({ prompt, shell, spinner }) => {
       const env = await prompt.select("Select environment:", {
-        options: ["development", "staging", "production"].map((value) => ({ label: value, value })),
+        options: ["development", "staging", "production"].map((value) => ({
+          label: value,
+          value,
+        })),
       });
 
       if (env === "production") {
@@ -84,7 +87,7 @@ test("nested command prompt mocking", async () => {
     mockPromptResponses({
       "Select environment:": "3", // production
       "Are you sure you want to deploy to production?": "y",
-    }),
+    })
   );
 
   expect(result1.stdout).toContain("Deployed main to production");
@@ -95,7 +98,7 @@ test("nested command prompt mocking", async () => {
     mockPromptResponses({
       "Select environment:": "3", // production
       "Are you sure you want to deploy to production?": "n",
-    }),
+    })
   );
 
   expect(result2.stdout).toContain("Deployment cancelled");
@@ -110,13 +113,13 @@ test("multi-step form with validation retries", async () => {
         schema: type("string").narrow(
           (s, ctx) =>
             /^[a-z0-9-]+$/.test(s) ||
-            ctx.reject("Only lowercase letters, numbers, and hyphens allowed"),
+            ctx.reject("Only lowercase letters, numbers, and hyphens allowed")
         ),
       });
 
       const version = await prompt("Initial version:", {
         schema: type("string").narrow(
-          (s, ctx) => /^\d+\.\d+\.\d+$/.test(s) || ctx.reject("Must be in format X.Y.Z"),
+          (s, ctx) => /^\d+\.\d+\.\d+$/.test(s) || ctx.reject("Must be in format X.Y.Z")
         ),
       });
 
@@ -137,7 +140,7 @@ test("multi-step form with validation retries", async () => {
       "Project name:": ["My Project", "my_project", "my-project"], // First two fail validation
       "Initial version:": ["1.0", "1.0.0"], // First fails validation
       "License:": "1", // MIT
-    }),
+    })
   );
 
   expect(result.stderr).toContain("Only lowercase letters, numbers, and hyphens allowed");
@@ -157,7 +160,7 @@ test("shell command mocking with complex outputs", async () => {
       console.log(colors.bold("Project Status:"));
       console.log(`Node: ${nodeVersion.trim()}`);
       console.log(
-        `Working tree: ${gitStatus.trim() === "" ? colors.green("clean") : colors.yellow("modified")}`,
+        `Working tree: ${gitStatus.trim() === "" ? colors.green("clean") : colors.yellow("modified")}`
       );
       console.log(`Outdated packages: ${Object.keys(npmOutdated).length}`);
     },
@@ -172,7 +175,7 @@ test("shell command mocking with complex outputs", async () => {
         typescript: { current: "4.5.0", wanted: "4.9.0", latest: "5.0.0" },
       }),
       "node --version": "v20.10.0\n",
-    }),
+    })
   );
 
   // Strip mock color tags from output for comparison
@@ -200,8 +203,8 @@ test("mergeTestOptions with conflicting options", async () => {
       { flags: { verbose: false }, env: { NODE_ENV: "development" } },
       mockPromptResponses({ "Name:": "Bob" }),
       { flags: { verbose: true } }, // This overrides the previous verbose: false
-      { env: { NODE_ENV: "test", DEBUG: "1" } }, // This overrides NODE_ENV and adds DEBUG
-    ),
+      { env: { NODE_ENV: "test", DEBUG: "1" } } // This overrides NODE_ENV and adds DEBUG
+    )
   );
 
   expect(result.stdout).toContain("Hello Bob (verbose: true, env: test)");
@@ -237,7 +240,7 @@ test("password prompt with validation", async () => {
     command,
     mockPromptResponses({
       "Enter password:": ["weak", "Weak1234", "Strong1234"],
-    }),
+    })
   );
 
   expect(result.stderr).toContain("Password must be at least 8 characters");
@@ -268,7 +271,7 @@ test("multiselect prompt", async () => {
     command,
     mockPromptResponses({
       "Select features to enable:": "1,3,4", // TypeScript, Prettier, Testing
-    }),
+    })
   );
 
   expect(result.stdout).toContain("[ ] 1. TypeScript");
@@ -294,8 +297,8 @@ test("stdin fallback when mockPrompts not provided", async () => {
     command,
     mergeTestOptions(
       mockPromptResponses({ "Name:": "Charlie" }),
-      { stdin: "30" }, // This will be used for Age prompt
-    ),
+      { stdin: "30" } // This will be used for Age prompt
+    )
   );
 
   expect(result.stdout).toContain("Charlie is 30 years old");
@@ -323,7 +326,7 @@ test("custom shell command output simulation", async () => {
 web-app             Up 2 hours
 postgres-db         Up 2 hours
 redis-cache         Up 1 hour`,
-    }),
+    })
   );
 
   expect(result.stdout).toContain("Docker containers:");

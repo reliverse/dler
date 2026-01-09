@@ -1,8 +1,7 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { unlink, writeFile } from "node:fs/promises";
 import { createCLI } from "../src/cli";
 import { loadConfig } from "../src/config-loader";
-import { writeFile, unlink } from "fs/promises";
-import { join } from "path";
 
 describe("Config Auto-Loading", () => {
   const originalCwd = process.cwd();
@@ -79,7 +78,7 @@ export default {
     // Test that CLI was created successfully
     expect(cli).toBeDefined();
     expect(typeof cli.run).toBe("function");
-    expect(typeof cli.command).toBe("function");
+    expect(typeof cli.init).toBe("function");
   });
 
   test("createCLI merges override with loaded config", async () => {

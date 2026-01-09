@@ -1,8 +1,8 @@
+import { formatTable, logger } from "@{{name}}/utils";
+import { relico } from "@reliverse/relico";
 import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
-import { logger, formatTable } from "@{{name}}/utils";
 import type { AnalyzeResult } from "../types";
-import { relico } from "@reliverse/relico";
 
 const analyzeCommand = defineCommand({
   name: "analyze",

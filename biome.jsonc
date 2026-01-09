@@ -1,0 +1,78 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": ["ultracite/biome/core"],
+  "linter": {
+    "enabled": true,
+    "includes": ["**"],
+    "rules": {
+      "recommended": true,
+      "performance": {
+        "useTopLevelRegex": "off",
+        "noBarrelFile": "off"
+      },
+      "suspicious": {
+        "noShadowRestrictedNames": "off",
+        "useGuardForIn": "off",
+        "noRedeclare": "off",
+        "noEmptyBlockStatements": "off",
+        "useIterableCallbackReturn": "off",
+        "useAwait": "off",
+        "noExplicitAny": "off",
+        "noTemplateCurlyInString": "off"
+      },
+      "style": {
+        "noUnusedTemplateLiteral": "off",
+        "useDefaultSwitchClause": "off",
+        "noParameterAssign": "off",
+        "useBlockStatements": "off",
+        "useCollapsedElseIf": "off",
+        "useTemplate": "off",
+        "useDefaultParameterLast": "off",
+        "noUselessElse": "off",
+        "noNonNullAssertion": "off",
+        "noParameterProperties": "off",
+        "noNestedTernary": "off",
+        "useAsConstAssertion": "off",
+        "useEnumInitializers": "off",
+        "useSelfClosingElements": "off",
+        "useSingleVarDeclarator": "off",
+        "useNumberNamespace": "off",
+        "noInferrableTypes": "off"
+      },
+      "complexity": {
+        "noForEach": "off",
+        "noCommaOperator": "off",
+        "noUselessStringConcat": "off",
+        "noExcessiveCognitiveComplexity": "off",
+        "noBannedTypes": "off",
+        "noUselessLoneBlockStatements": "off",
+        "useOptionalChain": "off",
+        "noUselessStringRaw": "off"
+      },
+      "correctness": {
+        "noUndeclaredDependencies": "off",
+        "noUndeclaredVariables": "off",
+        "noUnusedVariables": "off"
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "attributePosition": "auto",
+    "formatWithErrors": true,
+    "lineEnding": "lf",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": {
+      "jsxQuoteStyle": "double",
+      "quoteStyle": "double"
+    },
+    "globals": ["React", "Bun"],
+    "parser": {
+      "unsafeParameterDecoratorsEnabled": true
+    }
+  }
+}

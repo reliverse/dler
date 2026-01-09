@@ -17,8 +17,8 @@ export async function benchmarkRelativeTime(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -28,7 +28,7 @@ export async function benchmarkRelativeTime(
       formatRelativeTime(testDates[0] ?? baseDate, baseDate);
       formatRelativeTime(testDates[1] ?? baseDate, baseDate);
       formatRelativeTime(testDates[2] ?? baseDate, baseDate);
-    }),
+    })
   );
 
   // Benchmark formatRelativeTime with different time ranges
@@ -36,28 +36,28 @@ export async function benchmarkRelativeTime(
     await benchmark("formatRelativeTime (hours)", () => {
       formatRelativeTime(testDates[0] ?? baseDate, baseDate);
       formatRelativeTime(testDates[5] ?? baseDate, baseDate);
-    }),
+    })
   );
 
   results.push(
     await benchmark("formatRelativeTime (days)", () => {
       formatRelativeTime(testDates[1] ?? baseDate, baseDate);
       formatRelativeTime(testDates[6] ?? baseDate, baseDate);
-    }),
+    })
   );
 
   results.push(
     await benchmark("formatRelativeTime (weeks)", () => {
       formatRelativeTime(testDates[2] ?? baseDate, baseDate);
       formatRelativeTime(testDates[7] ?? baseDate, baseDate);
-    }),
+    })
   );
 
   results.push(
     await benchmark("formatRelativeTime (months/years)", () => {
       formatRelativeTime(testDates[3] ?? baseDate, baseDate);
       formatRelativeTime(testDates[4] ?? baseDate, baseDate);
-    }),
+    })
   );
 
   // Benchmark formatRelativeTime with custom options
@@ -69,7 +69,7 @@ export async function benchmarkRelativeTime(
       formatRelativeTime(testDates[1] ?? baseDate, baseDate, {
         style: "short",
       });
-    }),
+    })
   );
 
   results.push(
@@ -80,7 +80,7 @@ export async function benchmarkRelativeTime(
       formatRelativeTime(testDates[2] ?? baseDate, baseDate, {
         style: "narrow",
       });
-    }),
+    })
   );
 
   results.push(
@@ -91,7 +91,7 @@ export async function benchmarkRelativeTime(
       formatRelativeTime(testDates[1] ?? baseDate, baseDate, {
         locale: "de-DE",
       });
-    }),
+    })
   );
 
   // Benchmark formatRelativeTime with string inputs
@@ -100,7 +100,7 @@ export async function benchmarkRelativeTime(
       formatRelativeTime("2024-01-15T11:00:00.000Z", baseDate);
       formatRelativeTime("2024-01-14T12:00:00.000Z", baseDate);
       formatRelativeTime(testDates[0] ?? baseDate, "2024-01-15T12:00:00.000Z");
-    }),
+    })
   );
 
   // Benchmark formatRelativeTime with timestamp inputs
@@ -108,7 +108,7 @@ export async function benchmarkRelativeTime(
     await benchmark("formatRelativeTime (timestamp inputs)", () => {
       formatRelativeTime(testDates[0]?.getTime() ?? baseDate.getTime(), baseDate);
       formatRelativeTime(testDates[1]?.getTime() ?? baseDate.getTime(), baseDate);
-    }),
+    })
   );
 
   return results;

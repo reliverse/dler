@@ -21,14 +21,14 @@ const createTestFiles = (baseDir: string): string[] => {
     join(srcDir, "index.ts"),
     `import { util1 } from "./utils/util1";
 import { util2 } from "./utils/util2";
-export const main = () => {};`,
+export const main = () => {};`
   );
 
   // Create utility files
   writeFileSync(
     join(utilsDir, "util1.ts"),
     `import { helper } from "./helper";
-export const util1 = () => helper();`,
+export const util1 = () => helper();`
   );
 
   writeFileSync(join(utilsDir, "util2.ts"), `export const util2 = () => {};`);
@@ -42,8 +42,8 @@ export async function benchmarkDependencyTracking(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
   const testDir = join(tmpdir(), "build-bench-deps");
@@ -54,7 +54,7 @@ export async function benchmarkDependencyTracking(
     await benchmark("dependency tracking", async () => {
       const tracker = new DependencyTracker();
       await tracker.trackDependencies(entryPoints);
-    }),
+    })
   );
 
   // Benchmark with cached graph
@@ -65,7 +65,7 @@ export async function benchmarkDependencyTracking(
       await tracker.trackDependencies(entryPoints);
       // Second call with same entry points
       await tracker.trackDependencies(entryPoints);
-    }),
+    })
   );
 
   // Benchmark file hash retrieval
@@ -74,7 +74,7 @@ export async function benchmarkDependencyTracking(
       const tracker = new DependencyTracker();
       await tracker.trackDependencies(entryPoints);
       tracker.getFileHash(entryPoints[0]);
-    }),
+    })
   );
 
   // Benchmark dependency graph retrieval
@@ -83,7 +83,7 @@ export async function benchmarkDependencyTracking(
       const tracker = new DependencyTracker();
       await tracker.trackDependencies(entryPoints);
       tracker.getGraph();
-    }),
+    })
   );
 
   return results;

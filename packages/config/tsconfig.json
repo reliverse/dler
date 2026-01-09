@@ -2,7 +2,8 @@
   "extends": "@reliverse/tsconfig/base.json",
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "strictNullChecks": true
   },
   "include": ["./src/**/*", "./test/**/*"],
   "exclude": ["./node_modules", "./dist"]

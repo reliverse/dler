@@ -1,4 +1,4 @@
-import { join, extname } from "node:path";
+import { extname, join } from "node:path";
 
 /**
  * Fast command scanner using Bun.Transpiler for optimal performance
@@ -8,7 +8,7 @@ import { join, extname } from "node:path";
  * than traditional approaches.
  */
 export class CommandScanner {
-  private transpiler: Bun.Transpiler;
+  private readonly transpiler: Bun.Transpiler;
 
   constructor() {
     // Initialize transpiler for TypeScript/JSX files
@@ -81,12 +81,12 @@ export class CommandScanner {
 
       // Check for command-related exports
       const hasCommandExport = scanResult.exports.some(
-        (exp) => exp === "default" || exp.includes("Command") || exp.includes("defineCommand"),
+        (exp) => exp === "default" || exp.includes("Command") || exp.includes("defineCommand")
       );
 
       // Check for command-related imports
       const hasCommandImports = scanResult.imports.some(
-        (imp) => imp.path.includes("@reliverse/rempts-core") || imp.path.includes("defineCommand"),
+        (imp) => imp.path.includes("@reliverse/rempts-core") || imp.path.includes("defineCommand")
       );
 
       // Check for defineCommand usage in the content
@@ -121,7 +121,7 @@ export class CommandScanner {
    * Get command name from file path
    */
   getCommandName(filePath: string, commandsDir: string): string {
-    const relativePath = filePath.replace(commandsDir + "/", "");
+    const relativePath = filePath.replace(`${commandsDir}/`, "");
     const withoutExt = relativePath.replace(/\.[^.]+$/, "");
 
     // Handle index files as parent commands
@@ -136,9 +136,9 @@ export class CommandScanner {
    * Get export path for a command file
    */
   getExportPath(filePath: string, commandsDir: string): string {
-    const relativePath = filePath.replace(commandsDir + "/", "");
+    const relativePath = filePath.replace(`${commandsDir}/`, "");
     const withoutExt = relativePath.replace(/\.[^.]+$/, "");
-    return `./commands/${withoutExt}`;
+    return `./cmds/${withoutExt}`;
   }
 }
 

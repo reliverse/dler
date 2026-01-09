@@ -31,7 +31,7 @@ export interface DlerConfig {
  */
 export const resolvePackageConfig = <T extends Record<string, any>>(
   packageName: string,
-  config: BaseConfig | null | undefined,
+  config: BaseConfig | null | undefined
 ): T | undefined => {
   if (!config) {
     return;
@@ -92,9 +92,11 @@ export const resolvePackageConfig = <T extends Record<string, any>>(
  */
 export const mergeConfig = <T extends Record<string, any>>(
   cliOptions: T,
-  configOptions?: Record<string, any>,
+  configOptions?: Record<string, any>
 ): T => {
-  if (!configOptions) return cliOptions;
+  if (!configOptions) {
+    return cliOptions;
+  }
 
   // CLI options take precedence over config options
   return {

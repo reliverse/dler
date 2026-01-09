@@ -80,12 +80,12 @@ const ensureOutputDestination = async (path: PathLike): Promise<string> => {
 
 export function readFile(
   path: PathLike,
-  options: ReadFileOptions & { readonly encoding: FileEncoding },
+  options: ReadFileOptions & { readonly encoding: FileEncoding }
 ): Promise<string>;
 export function readFile(path: PathLike): Promise<Uint8Array>;
 export async function readFile(
   path: PathLike,
-  options?: ReadFileOptions,
+  options?: ReadFileOptions
 ): Promise<string | Uint8Array> {
   const file = Bun.file(toPathString(path));
   const encoding = options?.encoding;
@@ -143,7 +143,7 @@ export const readJSONSync = <T>(path: PathLike): T => {
 export const writeFile = async (
   destination: PathLike,
   input: FileInput,
-  options?: WriteFileOptions,
+  options?: WriteFileOptions
 ): Promise<void> => {
   const encoding = options?.encoding;
   const hasSpecialOptions = options?.mode !== undefined || options?.signal !== undefined;
@@ -203,7 +203,7 @@ export const writeFile = async (
 export const writeJson = async (
   destination: PathLike,
   data: unknown,
-  options?: JsonWriteOptions,
+  options?: JsonWriteOptions
 ): Promise<void> => {
   const spaces = options?.spaces ?? 2;
   const text = `${JSON.stringify(data, undefined, spaces)}\n`;
@@ -214,7 +214,7 @@ export const writeJson = async (
 export const outputFile = async (
   destination: PathLike,
   input: FileInput,
-  options?: WriteFileOptions,
+  options?: WriteFileOptions
 ): Promise<void> => {
   const target = await ensureOutputDestination(destination);
 
@@ -224,7 +224,7 @@ export const outputFile = async (
 export const outputJson = async (
   destination: PathLike,
   data: unknown,
-  options?: JsonWriteOptions,
+  options?: JsonWriteOptions
 ): Promise<void> => {
   const target = await ensureOutputDestination(destination);
 
@@ -234,7 +234,7 @@ export const outputJson = async (
 export const appendFile = async (
   file: PathLike,
   data: FileInput,
-  options?: WriteFileOptions,
+  options?: WriteFileOptions
 ): Promise<void> => {
   const pathStr = toPathString(file);
   const encoding = options?.encoding;

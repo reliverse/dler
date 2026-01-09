@@ -1,4 +1,4 @@
-import type { Colors, ColorFunction } from "./types";
+import type { ColorFunction, Colors } from "./types";
 
 // ANSI color codes
 const colorCodes = {
@@ -54,7 +54,6 @@ function createColorFunction(code: number): ColorFunction {
 
 function stripAnsi(text: string): string {
   // Remove all ANSI escape sequences
-  // oxlint-disable-next-line no-control-regex
   return text.replace(/\x1b\[[0-9;]*m/g, "");
 }
 

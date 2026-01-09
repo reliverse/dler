@@ -36,7 +36,7 @@ const removeExistingPath = async (path: string): Promise<void> => {
 
 const resolveSymlinkType = async (
   source: string,
-  type?: EnsureSymlinkOptions["type"],
+  type?: EnsureSymlinkOptions["type"]
 ): Promise<EnsureSymlinkOptions["type"] | undefined> => {
   if (type) {
     if (type === "dir" && process.platform === "win32") {
@@ -82,7 +82,7 @@ export const ensureLink = async (from: PathLike, to: PathLike): Promise<void> =>
 export const ensureSymlink = async (
   from: PathLike,
   to: PathLike,
-  options?: EnsureSymlinkOptions,
+  options?: EnsureSymlinkOptions
 ): Promise<void> => {
   const source = toPathString(from);
   const destination = toPathString(to);

@@ -10,12 +10,14 @@ import type { BuildOptions, PackageInfo } from "../types";
 export async function handleGoBuild(
   pkg: PackageInfo,
   options: BuildOptions,
-  verbose: boolean,
+  verbose: boolean
 ): Promise<void> {
   // Skip if tsOnly is set
   if (options.tsOnly) {
     if (verbose) {
-      await relinka.info(`⏭️  ${pkg.name}: Skipping Go build (--ts-only flag set)`);
+      await relinka.info(
+        `⏭️  ${pkg.name}: Skipping Go build (--ts-only flag set)`
+      );
     }
     return;
   }
@@ -40,16 +42,22 @@ export async function handleGoBuild(
 
   try {
     await relinka.info(`🔨 ${pkg.name}: Building Go binaries...`);
-    const goResult = await buildGo(pkg.path, pkg.name, goConfig ?? { enable: true });
+    const goResult = await buildGo(
+      pkg.path,
+      pkg.name,
+      goConfig ?? { enable: true }
+    );
 
     if (!goResult.success) {
-      await relinka.warn(`⚠️  ${pkg.name}: Go build failed: ${goResult.errors.join(", ")}`);
+      await relinka.warn(
+        `⚠️  ${pkg.name}: Go build failed: ${goResult.errors.join(", ")}`
+      );
     } else {
       await relinka.success(`✅ ${pkg.name}: Go binaries built successfully`);
     }
   } catch (error) {
     await relinka.warn(
-      `⚠️  ${pkg.name}: Go build error: ${error instanceof Error ? error.message : String(error)}`,
+      `⚠️  ${pkg.name}: Go build error: ${error instanceof Error ? error.message : String(error)}`
     );
   }
 }
@@ -59,7 +67,7 @@ export async function handleGoBuild(
  */
 export async function handleGoOnlyBuild(
   pkg: PackageInfo,
-  options: BuildOptions,
+  options: BuildOptions
 ): Promise<{ success: boolean; errors: string[] }> {
   if (!pkg.hasGoFiles) {
     return {
@@ -79,7 +87,11 @@ export async function handleGoOnlyBuild(
 
   try {
     await relinka.info(`🔨 ${pkg.name}: Building Go binaries...`);
-    const goResult = await buildGo(pkg.path, pkg.name, goConfig ?? { enable: true });
+    const goResult = await buildGo(
+      pkg.path,
+      pkg.name,
+      goConfig ?? { enable: true }
+    );
 
     if (!goResult.success) {
       return {

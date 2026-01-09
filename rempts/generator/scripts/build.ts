@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 
-import { build } from "bun";
-import { join } from "node:path";
 import { mkdir } from "node:fs/promises";
+import { join } from "node:path";
+import { build } from "bun";
 
 const packageRoot = new URL("../", import.meta.url).pathname;
 const distDir = join(packageRoot, "dist");

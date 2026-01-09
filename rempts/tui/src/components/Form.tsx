@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
 import { useKeyboard } from "@opentui/react";
+import { useCallback, useState } from "react";
 
 export interface FormProps {
   title: string;
@@ -11,7 +11,7 @@ export interface FormProps {
 export function Form({ title, onSubmit, onCancel, children }: FormProps) {
   const [formValues, setFormValues] = useState<Record<string, any>>({});
 
-  const handleFieldChange = useCallback((name: string, value: any) => {
+  const _handleFieldChange = useCallback((name: string, value: any) => {
     setFormValues((prev) => ({ ...prev, [name]: value }));
   }, []);
 
@@ -25,7 +25,7 @@ export function Form({ title, onSubmit, onCancel, children }: FormProps) {
   });
 
   return (
-    <box title={title} border padding={2} style={{ flexDirection: "column" }}>
+    <box border padding={2} style={{ flexDirection: "column" }} title={title}>
       {children}
       <box style={{ flexDirection: "row", gap: 2, marginTop: 2 }}>
         <text content="Press Enter to submit, Esc to cancel" />

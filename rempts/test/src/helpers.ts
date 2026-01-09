@@ -11,7 +11,7 @@ import type { TestOptions } from "./types";
  * })
  */
 export function mockPromptResponses(
-  responses: Record<string, string | string[]>,
+  responses: Record<string, string | string[]>
 ): Pick<TestOptions, "mockPrompts"> {
   return { mockPrompts: responses };
 }
@@ -27,7 +27,7 @@ export function mockPromptResponses(
  * })
  */
 export function mockShellCommands(
-  commands: Record<string, string>,
+  commands: Record<string, string>
 ): Pick<TestOptions, "mockShellCommands"> {
   return { mockShellCommands: commands };
 }
@@ -44,7 +44,7 @@ export function mockShellCommands(
  */
 export function mockInteractive(
   prompts: Record<string, string | string[]>,
-  commands?: Record<string, string>,
+  commands?: Record<string, string>
 ): TestOptions {
   return {
     ...mockPromptResponses(prompts),

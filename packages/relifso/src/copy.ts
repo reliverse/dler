@@ -49,7 +49,7 @@ const copySymlink = async (source: string, destination: string): Promise<void> =
 const copyDirectory = async (
   source: string,
   destination: string,
-  options: CopyOptions,
+  options: CopyOptions
 ): Promise<void> => {
   await ensureDir(destination);
   const entries = await fsReaddir(source, { withFileTypes: true });
@@ -79,7 +79,7 @@ const copyDirectory = async (
 export const copy = async (
   from: PathLike,
   to: PathLike,
-  options: CopyOptions = {},
+  options: CopyOptions = {}
 ): Promise<void> => {
   const source = toPathString(from);
   const destination = toPathString(to);

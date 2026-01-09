@@ -42,7 +42,9 @@ export const findMonorepoRoot = async (cwd?: string): Promise<string | null> => 
  * Get workspace patterns from package.json
  */
 export const getWorkspacePatterns = (pkg: any): string[] => {
-  if (!pkg.workspaces) return [];
+  if (!pkg.workspaces) {
+    return [];
+  }
 
   if (Array.isArray(pkg.workspaces)) {
     return pkg.workspaces;
@@ -74,11 +76,11 @@ export const hasWorkspaces = (pkg: any): boolean => {
  * Resolve package info for a given path
  */
 export const resolvePackageInfo = async (
-  packagePath: string,
+  packagePath: string
 ): Promise<{ name: string; path: string; pkg: any } | null> => {
   try {
     const pkg = await readPackageJSON(packagePath);
-    if (!pkg || !pkg.name) {
+    if (!pkg?.name) {
       return null;
     }
 
@@ -96,7 +98,7 @@ export const resolvePackageInfo = async (
  * Get all workspace packages
  */
 export const getWorkspacePackages = async (
-  cwd?: string,
+  cwd?: string
 ): Promise<{ name: string; path: string; pkg: any }[]> => {
   const monorepoRoot = await findMonorepoRoot(cwd);
 
@@ -118,7 +120,7 @@ export const getWorkspacePackages = async (
 
     // Neither monorepo nor valid package found
     throw new Error(
-      "❌ No monorepo or valid package found. Ensure package.json has 'workspaces' field or contains a valid 'name' field.",
+      "❌ No monorepo or valid package found. Ensure package.json has 'workspaces' field or contains a valid 'name' field."
     );
   }
 
@@ -144,7 +146,9 @@ export const getWorkspacePackages = async (
 
       for (const match of matches) {
         const packagePath = resolve(monorepoRoot, match);
-        if (seenPaths.has(packagePath)) continue;
+        if (seenPaths.has(packagePath)) {
+          continue;
+        }
         seenPaths.add(packagePath);
 
         const pkgInfo = await resolvePackageInfo(packagePath);
@@ -155,7 +159,9 @@ export const getWorkspacePackages = async (
     } else {
       // Direct package path (no wildcards)
       const packagePath = resolve(monorepoRoot, pattern);
-      if (seenPaths.has(packagePath)) continue;
+      if (seenPaths.has(packagePath)) {
+        continue;
+      }
       seenPaths.add(packagePath);
 
       const pkgInfo = await resolvePackageInfo(packagePath);
@@ -185,7 +191,7 @@ export const getWorkspacePackages = async (
 export const filterPackages = (
   packages: { name: string; path: string; pkg: any }[],
   ignore?: string | string[],
-  filter?: string | string[],
+  filter?: string | string[]
 ): { name: string; path: string; pkg: any }[] => {
   // If filter is provided, use it to include only matching packages (takes precedence over ignore)
   if (filter) {
@@ -193,7 +199,9 @@ export const filterPackages = (
     return includeFilter(packages);
   }
 
-  if (!ignore) return packages;
+  if (!ignore) {
+    return packages;
+  }
 
   const ignorePatterns = Array.isArray(ignore) ? ignore : [ignore];
 
@@ -231,7 +239,7 @@ export const filterPackages = (
  * - Remote config extending (gh:user/repo)
  */
 export const loadDlerConfig = async <T extends Record<string, any> = any>(
-  cwd?: string,
+  cwd?: string
 ): Promise<T | null> => {
   try {
     const { config } = await loadConfig<T>({
@@ -258,7 +266,7 @@ export const watchDlerConfig = <T extends Record<string, any> = any>(
   options?: {
     onUpdate?: (config: T) => void;
     onError?: (error: Error) => void;
-  },
+  }
 ) => {
   return watchConfig<T>({
     cwd: cwd || process.cwd(),

@@ -1,5 +1,3 @@
-import type { CLIOption } from "@reliverse/rempts-core";
-
 export interface TuiRendererOptions {
   exitOnCtrlC?: boolean;
   targetFps?: number;

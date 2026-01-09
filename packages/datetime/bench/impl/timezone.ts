@@ -22,8 +22,8 @@ export async function benchmarkTimezone(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -31,7 +31,7 @@ export async function benchmarkTimezone(
   results.push(
     await benchmark("getAvailableTimezones", () => {
       getAvailableTimezones();
-    }),
+    })
   );
 
   // Benchmark toTimezone with different timezones
@@ -39,7 +39,7 @@ export async function benchmarkTimezone(
     await benchmark("toTimezone (single timezone)", () => {
       toTimezone(testDate, "America/New_York");
       toTimezone(testDate, "Europe/London");
-    }),
+    })
   );
 
   results.push(
@@ -48,7 +48,7 @@ export async function benchmarkTimezone(
       toTimezone(testDate, commonTimezones[1] ?? "UTC");
       toTimezone(testDate, commonTimezones[2] ?? "UTC");
       toTimezone(testDate, commonTimezones[3] ?? "UTC");
-    }),
+    })
   );
 
   results.push(
@@ -56,7 +56,7 @@ export async function benchmarkTimezone(
       toTimezone(testDates[0] ?? testDate, "America/New_York");
       toTimezone(testDates[1] ?? testDate, "Europe/London");
       toTimezone(testDates[2] ?? testDate, "Asia/Tokyo");
-    }),
+    })
   );
 
   // Benchmark getTimezoneOffset
@@ -64,7 +64,7 @@ export async function benchmarkTimezone(
     await benchmark("getTimezoneOffset (single timezone)", () => {
       getTimezoneOffset(testDate, "America/New_York");
       getTimezoneOffset(testDate, "Europe/London");
-    }),
+    })
   );
 
   results.push(
@@ -73,7 +73,7 @@ export async function benchmarkTimezone(
       getTimezoneOffset(testDate, commonTimezones[1] ?? "UTC");
       getTimezoneOffset(testDate, commonTimezones[2] ?? "UTC");
       getTimezoneOffset(testDate, commonTimezones[3] ?? "UTC");
-    }),
+    })
   );
 
   // Benchmark mixed timezone operations
@@ -83,7 +83,7 @@ export async function benchmarkTimezone(
       getTimezoneOffset(testDate, "Europe/London");
       toTimezone(testDates[0] ?? testDate, "Asia/Tokyo");
       getTimezoneOffset(testDates[1] ?? testDate, "Australia/Sydney");
-    }),
+    })
   );
 
   return results;

@@ -1,4 +1,8 @@
-import { createIgnoreFilter, createIncludeFilter, normalizePatterns } from "@reliverse/matcha";
+import {
+  createIgnoreFilter,
+  createIncludeFilter,
+  normalizePatterns,
+} from "@reliverse/matcha";
 import type { BenchmarkResult } from "../perf";
 
 // Mock package info array
@@ -14,8 +18,8 @@ export async function benchmarkPackageFiltering(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
   const packages = createMockPackages(100);
@@ -23,9 +27,12 @@ export async function benchmarkPackageFiltering(
   // Benchmark ignore filter
   results.push(
     await benchmark("package filtering (ignore)", () => {
-      const ignoreFilter = createIgnoreFilter(["@test/package-1", "@test/package-2"]);
+      const ignoreFilter = createIgnoreFilter([
+        "@test/package-1",
+        "@test/package-2",
+      ]);
       ignoreFilter(packages);
-    }),
+    })
   );
 
   // Benchmark include filter
@@ -33,14 +40,14 @@ export async function benchmarkPackageFiltering(
     await benchmark("package filtering (include)", () => {
       const includeFilter = createIncludeFilter(["@test/package-*"]);
       includeFilter(packages);
-    }),
+    })
   );
 
   // Benchmark pattern normalization
   results.push(
     await benchmark("pattern normalization", () => {
       normalizePatterns(["@test/*", "package-1", "package-2"]);
-    }),
+    })
   );
 
   // Benchmark complex filtering
@@ -54,7 +61,7 @@ export async function benchmarkPackageFiltering(
       const filtered = ignoreFilter(packages);
       const includeFilter = createIncludeFilter(["@test/package-*"]);
       includeFilter(filtered);
-    }),
+    })
   );
 
   return results;

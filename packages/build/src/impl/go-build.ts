@@ -80,7 +80,10 @@ async function checkDockerAvailable(): Promise<DockerCheckResult> {
 /**
  * Find all Go files in a directory (recursively)
  */
-async function findGoFiles(dir: string, goFiles: string[] = []): Promise<string[]> {
+async function findGoFiles(
+  dir: string,
+  goFiles: string[] = []
+): Promise<string[]> {
   try {
     const entries = await readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
@@ -136,7 +139,7 @@ async function shouldRebuildGo(
   packagePath: string,
   targets: string[],
   outputDir: string,
-  outputName: string,
+  outputName: string
 ): Promise<{ rebuild: boolean; reason: string }> {
   const releasePath = path.join(packagePath, outputDir);
 
@@ -245,7 +248,7 @@ async function buildGoTarget(
   outputDir: string,
   buildMode: string,
   ldflags: string,
-  mainFile: string,
+  mainFile: string
 ): Promise<boolean> {
   const outputFileName = `${outputName}-${platformName}-${goarch}.${suffix}`;
   const outputPath = path.join(packagePath, outputDir, outputFileName);
@@ -266,11 +269,19 @@ async function buildGoTarget(
   };
 
   const proc = Bun.spawnSync(
-    ["go", "build", `-buildmode=${buildMode}`, `-ldflags=${ldflags}`, "-o", outputPath, mainFile],
+    [
+      "go",
+      "build",
+      `-buildmode=${buildMode}`,
+      `-ldflags=${ldflags}`,
+      "-o",
+      outputPath,
+      mainFile,
+    ],
     {
       env,
       cwd: packagePath,
-    },
+    }
   );
 
   if (proc.exitCode !== 0) {
@@ -291,7 +302,7 @@ async function buildGoTarget(
 async function buildWithXgo(
   packagePath: string,
   config: GoBuildOptions,
-  outputName: string,
+  outputName: string
 ): Promise<GoBuildResult> {
   const xgoBase = path.join(os.homedir(), "go/bin/xgo");
   const XGO = os.platform() === "win32" ? `${xgoBase}.exe` : xgoBase;
@@ -299,7 +310,9 @@ async function buildWithXgo(
   // Determine targets
   let targets: string;
   if (config.targets) {
-    targets = Array.isArray(config.targets) ? config.targets.join(",") : config.targets;
+    targets = Array.isArray(config.targets)
+      ? config.targets.join(",")
+      : config.targets;
   } else {
     // Default: build for all platforms
     targets = "linux/arm64,linux/amd64,darwin/arm64,darwin/amd64,windows/amd64";
@@ -310,7 +323,12 @@ async function buildWithXgo(
 
   // Check if rebuild is needed
   const targetsArray = targets.split(",").map((t) => t.trim());
-  const rebuildCheck = await shouldRebuildGo(packagePath, targetsArray, outputDir, outputName);
+  const rebuildCheck = await shouldRebuildGo(
+    packagePath,
+    targetsArray,
+    outputDir,
+    outputName
+  );
   if (!rebuildCheck.rebuild) {
     logger.info(`✓ ${rebuildCheck.reason}, skipping rebuild`);
     return { success: true, errors: [] };
@@ -330,7 +348,7 @@ async function buildWithXgo(
   const dockerCheck = await checkDockerAvailable();
   if (!dockerCheck.available) {
     logger.warn(
-      `⚠️  Skipping Go build: Docker is not installed or not running. Install Docker Desktop and ensure it's running to build Go binaries.`,
+      `⚠️  Skipping Go build: Docker is not installed or not running. Install Docker Desktop and ensure it's running to build Go binaries.`
     );
     return { success: true, errors: [] };
   }
@@ -364,7 +382,7 @@ async function buildWithXgo(
     ],
     {
       cwd: packagePath,
-    },
+    }
   );
 
   if (proc.stdout) {
@@ -387,7 +405,7 @@ async function buildWithXgo(
   if (existsSync(releasePath)) {
     const binaries = await readdir(releasePath);
     const windowsBinaries = binaries.filter(
-      (binary) => binary.includes("windows") && !binary.includes("win32"),
+      (binary) => binary.includes("windows") && !binary.includes("win32")
     );
     await Promise.all(
       windowsBinaries.map((binary) => {
@@ -395,7 +413,7 @@ async function buildWithXgo(
         // Replace windows-4.0 or windows with win32
         const newPath = binaryPath.replace(/windows(-4\.0)?/g, "win32");
         return rename(binaryPath, newPath);
-      }),
+      })
     );
   }
 
@@ -408,7 +426,7 @@ async function buildWithXgo(
 async function buildWithNative(
   packagePath: string,
   config: GoBuildOptions,
-  outputName: string,
+  outputName: string
 ): Promise<GoBuildResult> {
   logger.info("Compiling native binaries with native Go build...");
 
@@ -425,14 +443,18 @@ async function buildWithNative(
     // On Windows, only build for Windows (CGO cross-compilation requires special setup)
     targetsToBuild = targetsToBuild.filter(([goos]) => goos === "windows");
     logger.info(
-      "Building only for Windows (CGO cross-compilation from Windows requires special setup)",
+      "Building only for Windows (CGO cross-compilation from Windows requires special setup)"
     );
   }
 
   // Filter targets if specified
   if (config.targets) {
-    const targetSet = new Set(Array.isArray(config.targets) ? config.targets : [config.targets]);
-    targetsToBuild = targetsToBuild.filter(([goos, goarch]) => targetSet.has(`${goos}/${goarch}`));
+    const targetSet = new Set(
+      Array.isArray(config.targets) ? config.targets : [config.targets]
+    );
+    targetsToBuild = targetsToBuild.filter(([goos, goarch]) =>
+      targetSet.has(`${goos}/${goarch}`)
+    );
   }
 
   // Build for selected targets
@@ -448,20 +470,22 @@ async function buildWithNative(
         outputDir,
         buildMode,
         ldflags,
-        mainFile,
+        mainFile
       ).catch((err) => {
         logger.error(
-          `Error building ${goos}/${goarch}: ${err instanceof Error ? err.message : String(err)}`,
+          `Error building ${goos}/${goarch}: ${err instanceof Error ? err.message : String(err)}`
         );
         return false;
-      }),
-    ),
+      })
+    )
   );
 
   const successCount = results.filter((r) => r === true).length;
   const failCount = results.filter((r) => r === false).length;
 
-  logger.info(`\nBuild complete: ${successCount} succeeded, ${failCount} failed`);
+  logger.info(
+    `\nBuild complete: ${successCount} succeeded, ${failCount} failed`
+  );
 
   if (successCount === 0) {
     const error = "No targets built successfully";
@@ -478,7 +502,7 @@ async function buildWithNative(
 export async function buildGo(
   packagePath: string,
   packageName: string,
-  config?: GoBuildOptions,
+  config?: GoBuildOptions
 ): Promise<GoBuildResult> {
   // If config is explicitly set to disable, skip
   if (config?.enable === false) {

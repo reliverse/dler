@@ -17,7 +17,7 @@ export function createMatchers(result: TestResult): Matchers {
         throw new Error(
           `Expected exit code ${code}, but got ${result.exitCode}\n` +
             `stdout: ${result.stdout}\n` +
-            `stderr: ${result.stderr}`,
+            `stderr: ${result.stderr}`
         );
       }
     },
@@ -28,7 +28,7 @@ export function createMatchers(result: TestResult): Matchers {
           `Expected command to succeed (exit code 0), but got ${result.exitCode}\n` +
             `stdout: ${result.stdout}\n` +
             `stderr: ${result.stderr}\n` +
-            (result.error ? `error: ${result.error.message}` : ""),
+            (result.error ? `error: ${result.error.message}` : "")
         );
       }
     },
@@ -36,8 +36,8 @@ export function createMatchers(result: TestResult): Matchers {
     toHaveFailed() {
       if (result.exitCode === 0) {
         throw new Error(
-          `Expected command to fail (non-zero exit code), but it succeeded\n` +
-            `stdout: ${result.stdout}`,
+          "Expected command to fail (non-zero exit code), but it succeeded\n" +
+            `stdout: ${result.stdout}`
         );
       }
     },

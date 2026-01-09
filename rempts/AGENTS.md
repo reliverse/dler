@@ -58,11 +58,13 @@ All Rempts projects must follow this structure for reliable type generation:
 ```bash
 my-cli/
 ├── cli.ts              # Main CLI entry point
-├── commands/           # Command definitions (REQUIRED)
-│   ├── command1.ts     # Individual command files
-│   └── command2.ts     # Each command as default export
+├── cmds/               # Command definitions (REQUIRED)
+│   ├── build/          # Command directory
+│   │   └── cmd.ts      # Command implementation
+│   └── deploy/         # Another command directory
+│       └── cmd.ts      # Command implementation
 ├── .dler/            # Generated files (auto-created)
-│   └── commands.gen.ts # Generated TypeScript types
+│   └── cmds.gen.ts     # Generated TypeScript types
 ├── dler.config.ts     # Rempts configuration
 ├── package.json        # Project dependencies
 └── tsconfig.json       # TypeScript configuration
@@ -74,7 +76,7 @@ my-cli/
 export default defineConfig({
   // ... other config
   commands: {
-    directory: './commands'
+    directory: './cmds'
   }
 })
 ```
@@ -151,14 +153,14 @@ Each package uses explicit exports in package.json:
 
 ### Adding a New Command
 
-1. Create command file in `commands/` directory (e.g., `commands/my-command.ts`)
+1. Create command file in `cmds/` directory (e.g., `cmds/my-command.ts`)
 2. Use `defineCommand` from @reliverse/rempts-core
 3. Export as default export
 4. Import and register in `cli.ts`
 5. Run `bun run generate` to update types
 6. Add tests using rempts-test utilities
 
-**Note**: All Rempts projects must use a `commands/` directory structure for reliable type generation.
+**Note**: All Rempts projects must use the `cmds/<command-name>/cmd.ts` directory structure for reliable type generation.
 
 ### Creating a New Package
 

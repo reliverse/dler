@@ -8,7 +8,8 @@
     "paths": {
       "@/*": ["./*"],
       "./.dler/commands.gen": ["./.dler/commands.gen.ts"]
-    }
+    },
+    "strictNullChecks": true
   },
   "include": ["**/*.ts", "**/*.tsx", ".dler/commands.gen.ts"],
   "exclude": ["node_modules", "dist"]

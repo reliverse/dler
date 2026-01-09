@@ -4,7 +4,8 @@
     "rootDir": ".",
     "outDir": "./dist",
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "strictNullChecks": true
   },
   "include": ["./src/**/*", "./test/**/*"],
   "exclude": ["./node_modules", "./dist"]

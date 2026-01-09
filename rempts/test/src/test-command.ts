@@ -1,10 +1,10 @@
-import type { Command, CLI } from "@reliverse/rempts-core";
-import type { TestOptions, TestResult, MockHandlerArgs, ShellPromise } from "./types";
+import type { CLI, Command } from "@reliverse/rempts-core";
 import { createCLI } from "@reliverse/rempts-core";
+import type { MockHandlerArgs, ShellPromise, TestOptions, TestResult } from "./types";
 
 export async function testCommand(
   command: Command<any>,
-  options: TestOptions = {},
+  options: TestOptions = {}
 ): Promise<TestResult> {
   const startTime = performance.now();
 
@@ -37,7 +37,7 @@ export async function testCommand(
         const usedCount = promptResponsesUsed.get(message) || 0;
 
         if (Array.isArray(responses)) {
-          response = responses[usedCount] ?? responses[responses.length - 1] ?? "";
+          response = responses[usedCount] ?? responses.at(-1) ?? "";
           promptResponsesUsed.set(message, usedCount + 1);
         } else {
           response = responses ?? "";
@@ -99,7 +99,7 @@ export async function testCommand(
           const usedCount = promptResponsesUsed.get(message) || 0;
 
           if (Array.isArray(responses)) {
-            response = responses[usedCount] ?? responses[responses.length - 1] ?? "";
+            response = responses[usedCount] ?? responses.at(-1) ?? "";
             promptResponsesUsed.set(message, usedCount + 1);
           } else {
             response = responses ?? "";
@@ -114,7 +114,7 @@ export async function testCommand(
       },
       select: async <T = string>(
         message: string,
-        selectOptions: { options: any[]; default?: T; hint?: string },
+        selectOptions: { options: any[]; default?: T; hint?: string }
       ) => {
         stdout.push(message);
         selectOptions.options.forEach((choice, i) => {
@@ -128,7 +128,7 @@ export async function testCommand(
           const usedCount = promptResponsesUsed.get(message) || 0;
 
           if (Array.isArray(responses)) {
-            response = responses[usedCount] ?? responses[responses.length - 1] ?? "";
+            response = responses[usedCount] ?? responses.at(-1) ?? "";
             promptResponsesUsed.set(message, usedCount + 1);
           } else {
             response = responses ?? "";
@@ -138,7 +138,7 @@ export async function testCommand(
         }
 
         stdout.push(`> ${response}`);
-        const index = parseInt(response) - 1;
+        const index = Number.parseInt(response, 10) - 1;
         const choice = selectOptions.options[index] || selectOptions.options[0];
         return (typeof choice === "object" ? choice.value : choice) as T;
       },
@@ -151,7 +151,7 @@ export async function testCommand(
           const usedCount = promptResponsesUsed.get(message) || 0;
 
           if (Array.isArray(responses)) {
-            response = responses[usedCount] ?? responses[responses.length - 1] ?? "";
+            response = responses[usedCount] ?? responses.at(-1) ?? "";
             promptResponsesUsed.set(message, usedCount + 1);
           } else {
             response = responses ?? "";
@@ -200,7 +200,7 @@ export async function testCommand(
           const usedCount = promptResponsesUsed.get(message) || 0;
 
           if (Array.isArray(responses)) {
-            response = responses[usedCount] ?? responses[responses.length - 1] ?? "";
+            response = responses[usedCount] ?? responses.at(-1) ?? "";
             promptResponsesUsed.set(message, usedCount + 1);
           } else {
             response = responses ?? "";
@@ -210,7 +210,7 @@ export async function testCommand(
         }
 
         stdout.push(`> ${response}`);
-        const indices = response.split(",").map((s) => parseInt(s.trim()) - 1);
+        const indices = response.split(",").map((s) => Number.parseInt(s.trim(), 10) - 1);
         return indices
           .filter((i) => i >= 0 && i < selectOptions.options.length)
           .map((i) => {
@@ -218,18 +218,24 @@ export async function testCommand(
             return (typeof choice === "object" ? choice.value : choice) as T;
           });
       },
-    },
+    }
   );
 
   // Create mock spinner
   const mockSpinner = (text?: string) => {
-    if (text) stdout.push(`⠋ ${text}`);
+    if (text) {
+      stdout.push(`⠋ ${text}`);
+    }
     return {
       start: (text?: string) => {
-        if (text) stdout.push(`⠋ ${text}`);
+        if (text) {
+          stdout.push(`⠋ ${text}`);
+        }
       },
       stop: (text?: string) => {
-        if (text) stdout.push(text);
+        if (text) {
+          stdout.push(text);
+        }
       },
       succeed: (text?: string) => {
         stdout.push(`✅ ${text || "Done"}`);
@@ -402,7 +408,7 @@ export async function testCommand(
 export async function testCLI(
   setupCLI: (cli: CLI) => void,
   argv: string[],
-  options: Omit<TestOptions, "args"> = {},
+  _options: Omit<TestOptions, "args"> = {}
 ): Promise<TestResult> {
   const startTime = performance.now();
 

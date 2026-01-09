@@ -32,7 +32,7 @@ export interface GetFileImportsExportsOptions {
  */
 export function getFileImportsExports(
   content: string,
-  options: GetFileImportsExportsOptions = {},
+  options: GetFileImportsExportsOptions = {}
 ): ImportExportInfo[] {
   const {
     kind = "all",
@@ -45,7 +45,9 @@ export function getFileImportsExports(
   // helper to get path extension from import/export statements
   function getImportExtension(path: string): string {
     // Handle empty paths
-    if (!path) return "";
+    if (!path) {
+      return "";
+    }
 
     // Find the last dot in the path
     const lastDotIndex = path.lastIndexOf(".");
@@ -86,7 +88,9 @@ export function getFileImportsExports(
     const pathExt = getImportExtension(path);
 
     // If no extension in path, return empty
-    if (!pathExt) return "";
+    if (!pathExt) {
+      return "";
+    }
 
     // Handle TypeScript/JavaScript cases
     if (pathExt === ".js" || pathExt === ".jsx") {
@@ -121,10 +125,18 @@ export function getFileImportsExports(
 
   // helper to determine path type
   function getPathType(path: string): ImportExportInfo["pathType"] {
-    if (path.startsWith(".")) return "relative";
-    if (path.startsWith("/")) return "absolute";
-    if (path.startsWith("@") || path.startsWith("~")) return "alias";
-    if (path.startsWith("http://") || path.startsWith("https://")) return "module";
+    if (path.startsWith(".")) {
+      return "relative";
+    }
+    if (path.startsWith("/")) {
+      return "absolute";
+    }
+    if (path.startsWith("@") || path.startsWith("~")) {
+      return "alias";
+    }
+    if (path.startsWith("http://") || path.startsWith("https://")) {
+      return "module";
+    }
     return "bare";
   }
 
@@ -165,13 +177,17 @@ export function getFileImportsExports(
       for (const item of items) {
         const typeMatch = /^type\s+(.+)/.exec(item);
         const actualItem = typeMatch ? typeMatch[1] : item;
-        if (!actualItem) continue;
+        if (!actualItem) {
+          continue;
+        }
 
         const isItemType = !!typeMatch || isTypeOnly;
 
         if (actualItem.includes(" as ")) {
           const [name, alias] = actualItem.split(" as ").map((p) => p.trim());
-          if (!name) continue;
+          if (!name) {
+            continue;
+          }
 
           specifiers.push({
             type: "named",
@@ -199,10 +215,14 @@ export function getFileImportsExports(
     for (const match of importMatches) {
       // handle both patterns in staticImport regex
       const source = match[1] || match[3];
-      if (!source) continue;
+      if (!source) {
+        continue;
+      }
 
       const pathType = getPathType(source);
-      if (!pathType || !pathTypes.includes(pathType)) continue;
+      if (!(pathType && pathTypes.includes(pathType))) {
+        continue;
+      }
 
       const info: ImportExportInfo = {
         statement: match[0],
@@ -226,10 +246,14 @@ export function getFileImportsExports(
     const dynamicMatches = [...content.matchAll(patterns.dynamicImport)];
     for (const match of dynamicMatches) {
       const source = match[1];
-      if (!source) continue;
+      if (!source) {
+        continue;
+      }
 
       const pathType = getPathType(source);
-      if (!pathType || !pathTypes.includes(pathType)) continue;
+      if (!(pathType && pathTypes.includes(pathType))) {
+        continue;
+      }
 
       const info: ImportExportInfo = {
         statement: match[0],
@@ -256,10 +280,14 @@ export function getFileImportsExports(
     const exportMatches = [...content.matchAll(patterns.staticExport)];
     for (const match of exportMatches) {
       const source = match[1];
-      if (!source) continue;
+      if (!source) {
+        continue;
+      }
 
       const pathType = getPathType(source);
-      if (!pathType || !pathTypes.includes(pathType)) continue;
+      if (!(pathType && pathTypes.includes(pathType))) {
+        continue;
+      }
 
       const info: ImportExportInfo = {
         statement: match[0],
@@ -304,7 +332,9 @@ export function getFileImportsExports(
     const namedMatches = [...content.matchAll(patterns.namedExport)];
     for (const match of namedMatches) {
       const name = match[1];
-      if (!name) continue;
+      if (!name) {
+        continue;
+      }
 
       const info: ImportExportInfo = {
         statement: match[0],
@@ -329,7 +359,9 @@ export function getFileImportsExports(
   if (limitPerType) {
     const groupedByType = results.reduce<Record<string, ImportExportInfo[]>>((acc, curr) => {
       const key = `${curr.kind}-${curr.pathType || "none"}`;
-      if (!acc[key]) acc[key] = [];
+      if (!acc[key]) {
+        acc[key] = [];
+      }
       acc[key].push(curr);
       return acc;
     }, {});

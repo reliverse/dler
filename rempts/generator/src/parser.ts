@@ -1,12 +1,14 @@
 import { parse } from "@babel/parser";
+
 const traverse = require("@babel/traverse").default;
+
 import path from "node:path";
 import type { CommandMetadata, OptionMetadata } from "./types";
 
 // Utility functions
 function getCommandName(filePath: string, commandsDir: string): string {
   const dir = commandsDir.replace(/^\.\/?/, "");
-  const relativePath = filePath.replace(dir + "/", "");
+  const relativePath = filePath.replace(`${dir}/`, "");
   const withoutExt = relativePath.replace(/\.[^.]+$/, "");
 
   if (withoutExt.endsWith("/index")) {
@@ -53,7 +55,7 @@ function getExportPath(filePath: string, commandsDir: string): string {
 export async function parseCommand(
   filePath: string,
   commandsDir: string,
-  outputFile: string,
+  outputFile: string
 ): Promise<CommandMetadata | null> {
   try {
     // Use Bun's native file reading
@@ -66,7 +68,7 @@ export async function parseCommand(
 
     // Check if this file exports a command (look for Command in exports or defineCommand usage)
     const hasCommandExport = scanResult.exports.some(
-      (exp) => exp.includes("Command") || exp === "default",
+      (exp) => exp.includes("Command") || exp === "default"
     );
 
     if (!hasCommandExport) {
@@ -105,11 +107,11 @@ export async function parseCommand(
     return commandMetadata;
   } catch (error) {
     console.error(`❌ Failed to parse command file: ${filePath}`);
-    console.error(`Error:`, error);
+    console.error("Error:", error);
     if (error instanceof Error) {
-      console.error(`Stack trace:`, error.stack);
+      console.error("Stack trace:", error.stack);
     }
-    console.error(`This may cause the command to be unavailable. Please check the file syntax.`);
+    console.error("This may cause the command to be unavailable. Please check the file syntax.");
     // Return null to allow the build to continue, but make it very visible
     return null;
   }
@@ -119,7 +121,7 @@ function extractCommandMetadata(
   objectExpression: any,
   filePath: string,
   commandsDir: string,
-  outputFile: string,
+  outputFile: string
 ): CommandMetadata {
   const metadata: CommandMetadata = {
     name: "",
@@ -237,19 +239,17 @@ function inferDefault(schema: any): any {
   // Try to extract default value from schema
   if (schema.type === "CallExpression") {
     const callee = schema.callee;
-    if (callee.type === "MemberExpression") {
-      if (callee.property.type === "Identifier") {
-        if (callee.property.name === "default") {
-          const args = schema.arguments;
-          if (args.length > 0) {
-            return { hasDefault: true, value: extractLiteralValue(args[0]) };
-          }
+    if (callee.type === "MemberExpression" && callee.property.type === "Identifier") {
+      if (callee.property.name === "default") {
+        const args = schema.arguments;
+        if (args.length > 0) {
+          return { hasDefault: true, value: extractLiteralValue(args[0]) };
         }
-        if (callee.property.name === "catch") {
-          const args = schema.arguments;
-          if (args.length > 0) {
-            return { hasDefault: true, value: extractLiteralValue(args[0]) };
-          }
+      }
+      if (callee.property.name === "catch") {
+        const args = schema.arguments;
+        if (args.length > 0) {
+          return { hasDefault: true, value: extractLiteralValue(args[0]) };
         }
       }
     }
@@ -259,7 +259,9 @@ function inferDefault(schema: any): any {
 }
 
 function extractDescription(metadata: any): string | undefined {
-  if (!metadata) return undefined;
+  if (!metadata) {
+    return undefined;
+  }
 
   for (const prop of metadata.properties) {
     if (
@@ -276,7 +278,9 @@ function extractDescription(metadata: any): string | undefined {
 }
 
 function extractShort(metadata: any): string | undefined {
-  if (!metadata) return undefined;
+  if (!metadata) {
+    return undefined;
+  }
 
   for (const prop of metadata.properties) {
     if (
@@ -308,8 +312,12 @@ function extractLiteralValue(node: any): any {
 }
 
 function extractNameValue(node: any): string | undefined {
-  if (!node) return undefined;
-  if (node.type === "StringLiteral") return node.value;
+  if (!node) {
+    return undefined;
+  }
+  if (node.type === "StringLiteral") {
+    return node.value;
+  }
   if (node.type === "TemplateLiteral" && node.quasis.length === 1) {
     return node.quasis[0]?.value?.cooked;
   }
@@ -320,7 +328,9 @@ function extractNameValue(node: any): string | undefined {
 }
 
 function inferSchemaType(schema: any): { type: string } {
-  if (!schema) return { type: "unknown" };
+  if (!schema) {
+    return { type: "unknown" };
+  }
 
   switch (schema.type) {
     case "Identifier":
@@ -346,27 +356,43 @@ function extractNestedCommands(
   value: any,
   parentFile: string,
   commandsDir: string,
-  outputFile: string,
+  outputFile: string
 ): CommandMetadata[] | undefined {
-  if (value.type !== "ArrayExpression") return undefined;
+  if (value.type !== "ArrayExpression") {
+    return undefined;
+  }
   const nested: CommandMetadata[] = [];
   for (const element of value.elements) {
     if (element?.type === "ObjectExpression") {
       const nestedMetadata = extractCommandMetadata(element, parentFile, commandsDir, outputFile);
-      if (nestedMetadata.name) nested.push(nestedMetadata);
+      if (nestedMetadata.name) {
+        nested.push(nestedMetadata);
+      }
     }
   }
   return nested.length ? nested : undefined;
 }
 
 function inferRequired(schema: any): boolean {
+  // For arktype schemas, check if the type includes "| undefined"
+  if (schema.type === "CallExpression" && schema.callee?.name === "type") {
+    const args = schema.arguments;
+    if (
+      args?.[0] &&
+      (args[0].type === "Literal" || args[0].type === "StringLiteral") &&
+      typeof args[0].value === "string"
+    ) {
+      const typeString = args[0].value;
+      // If the type includes "| undefined", it's optional
+      return !(typeString.includes("| undefined") || typeString.includes(" | undefined"));
+    }
+  }
+
   // Check if the schema has .optional() or similar
   if (schema.type === "CallExpression") {
     const callee = schema.callee;
-    if (callee.type === "MemberExpression") {
-      if (callee.property.type === "Identifier") {
-        return callee.property.name !== "optional";
-      }
+    if (callee.type === "MemberExpression" && callee.property.type === "Identifier") {
+      return callee.property.name !== "optional";
     }
   }
 
@@ -377,34 +403,37 @@ function inferRequired(schema: any): boolean {
  * Extract detailed schema definition for runtime introspection
  */
 function extractSchemaDefinition(schema: any): any {
-  if (!schema) return null;
+  if (!schema) {
+    return null;
+  }
 
   switch (schema.type) {
-    case "CallExpression":
+    case "CallExpression": {
       const callee = schema.callee;
       if (callee.type === "MemberExpression") {
         return {
-          type: "zod",
+          type: "arktype",
           method: callee.property?.name || "unknown",
           args: schema.arguments?.map((arg: any) => extractSchemaDefinition(arg)) || [],
         };
       }
       return {
-        type: "zod",
+        type: "arktype",
         method: callee.name || "unknown",
         args: schema.arguments?.map((arg: any) => extractSchemaDefinition(arg)) || [],
       };
+    }
 
     case "MemberExpression":
       return {
-        type: "zod",
+        type: "arktype",
         object: extractSchemaDefinition(schema.object),
         property: schema.property?.name || "unknown",
       };
 
     case "Identifier":
       return {
-        type: "zod",
+        type: "arktype",
         name: schema.name,
       };
 
@@ -426,7 +455,9 @@ function extractSchemaDefinition(schema: any): any {
  * Generate a runtime validator function for the schema
  */
 function generateValidator(schema: any): string {
-  if (!schema) return "() => true";
+  if (!schema) {
+    return "() => true";
+  }
 
   // Generate a simple validator based on the schema type
   const { type } = inferSchemaType(schema);
@@ -451,7 +482,9 @@ function generateValidator(schema: any): string {
  * Extract enum values from z.enum() or z.literal() calls
  */
 function extractEnumValues(schema: any): (string | number)[] | undefined {
-  if (!schema) return undefined;
+  if (!schema) {
+    return undefined;
+  }
 
   if (schema.type === "CallExpression") {
     const callee = schema.callee;
@@ -497,7 +530,9 @@ function extractEnumValues(schema: any): (string | number)[] | undefined {
     // Also check callee itself if it's a call expression
     if (callee.type === "CallExpression") {
       const fromCallee = extractEnumValues(callee);
-      if (fromCallee) return fromCallee;
+      if (fromCallee) {
+        return fromCallee;
+      }
     }
   }
 
@@ -510,7 +545,9 @@ function extractEnumValues(schema: any): (string | number)[] | undefined {
 function extractConstraints(schema: any): Partial<OptionMetadata> {
   const constraints: Partial<OptionMetadata> = {};
 
-  if (!schema) return constraints;
+  if (!schema) {
+    return constraints;
+  }
 
   if (schema.type === "CallExpression") {
     const callee = schema.callee;
@@ -594,7 +631,7 @@ function extractConstraints(schema: any): Partial<OptionMetadata> {
  */
 function detectFileType(
   optionConfig: any,
-  description?: string,
+  description?: string
 ): "file" | "directory" | "path" | undefined {
   // Check for explicit fileType property
   if (optionConfig?.type === "ObjectExpression") {

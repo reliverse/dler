@@ -1,7 +1,6 @@
-import { prompt as promptFn, confirm, select, password } from "./prompt";
-import type { PromptOptions, MultiSelectOptions } from "./types";
+import { confirm, password, prompt as promptFn, select } from "./prompt";
 import { createSpinner } from "./spinner";
-import type { RemptsUtils } from "./types";
+import type { MultiSelectOptions, PromptOptions, RemptsUtils } from "./types";
 
 // Export all types
 export * from "./types";
@@ -15,7 +14,7 @@ export const utils: RemptsUtils = {
     text: (message: string, options?: PromptOptions) => promptFn<string>(message, options),
     multiselect: async <T = string>(
       message: string,
-      options: MultiSelectOptions<T>,
+      options: MultiSelectOptions<T>
     ): Promise<T[]> => {
       // Fallback: use select repeatedly when a real multiselect UI isn't available
       const { options: choices } = options;
@@ -23,7 +22,9 @@ export const utils: RemptsUtils = {
       console.log(message);
       for (const choice of choices) {
         const ok = await confirm(`Select ${choice.label}?`, { default: false });
-        if (ok) selected.push(choice.value as T);
+        if (ok) {
+          selected.push(choice.value as T);
+        }
       }
       return selected;
     },
@@ -42,22 +43,23 @@ export const prompt = Object.assign(promptFn, {
   text: (message: string, options?: PromptOptions) => promptFn<string>(message, options),
   multiselect: async <T = string>(
     message: string,
-    options: MultiSelectOptions<T>,
+    options: MultiSelectOptions<T>
   ): Promise<T[]> => {
     const { options: choices } = options;
     const selected: T[] = [];
     console.log(message);
     for (const choice of choices) {
       const ok = await confirm(`Select ${choice.label}?`, { default: false });
-      if (ok) selected.push(choice.value as T);
+      if (ok) {
+        selected.push(choice.value as T);
+      }
     }
     return selected;
   },
 }) as RemptsUtils["prompt"];
 
+export { getDotPath, SchemaError } from "@standard-schema/utils";
 // Also export individual prompt methods
-export { confirm, select, password } from "./prompt";
-
+export { confirm, password, select } from "./prompt";
 // Export validation utilities
 export { validate, validateFields } from "./validation";
-export { SchemaError, getDotPath } from "@standard-schema/utils";

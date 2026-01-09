@@ -1,21 +1,31 @@
 import { statSync } from "node:fs";
 import { resolve } from "node:path";
-import { findDynamicImports, findExports, findStaticImports, findTypeExports } from "mlly";
+import {
+  findDynamicImports,
+  findExports,
+  findStaticImports,
+  findTypeExports,
+} from "mlly";
 import type { TSConfig } from "pkg-types";
 import type { CompilerHost, EmitResult } from "typescript";
 
 import type { MkdistOptions } from "../../../types";
 
-export async function normalizeCompilerOptions(_options: TSConfig["compilerOptions"]) {
+export async function normalizeCompilerOptions(
+  _options: TSConfig["compilerOptions"]
+) {
   const ts = await import("typescript").then((r) => r.default || r);
   return ts.convertCompilerOptionsFromJson(_options, process.cwd()).options;
 }
 
-export type DeclarationOutput = Record<string, { contents: string; errors?: Error[] }>;
+export type DeclarationOutput = Record<
+  string,
+  { contents: string; errors?: Error[] }
+>;
 
 export async function getDeclarations(
   vfs: Map<string, string>,
-  opts?: Partial<MkdistOptions>,
+  opts?: Partial<MkdistOptions>
 ): Promise<DeclarationOutput> {
   const ts = await import("typescript").then((r) => r.default || r);
 
@@ -34,7 +44,11 @@ export async function getDeclarations(
     return _readFile(filename);
   };
 
-  const program = ts.createProgram(inputFiles, opts?.typescript?.compilerOptions || {}, tsHost);
+  const program = ts.createProgram(
+    inputFiles,
+    opts?.typescript?.compilerOptions || {},
+    tsHost
+  );
   const result = program.emit();
   const output = extractDeclarations(vfs, inputFiles, opts);
   augmentWithDiagnostics(result, output, tsHost, ts);
@@ -49,7 +63,7 @@ const RELATIVE_RE = /^\.{1,2}[/\\]/;
 export function extractDeclarations(
   vfs: Map<string, string>,
   inputFiles: string[],
-  opts?: Partial<MkdistOptions>,
+  opts?: Partial<MkdistOptions>
 ): DeclarationOutput {
   const output: DeclarationOutput = {};
 
@@ -63,22 +77,29 @@ export function extractDeclarations(
       const imports = findStaticImports(contents);
       const exports = findExports(contents);
       const typeExports = findTypeExports(contents);
-      const dynamicImports = findDynamicImports(contents).map((dynamicImport) => {
-        let specifier: string | undefined;
-        try {
-          const value = JSON.parse(dynamicImport.expression);
-          if (typeof value === "string") {
-            specifier = value;
+      const dynamicImports = findDynamicImports(contents).map(
+        (dynamicImport) => {
+          let specifier: string | undefined;
+          try {
+            const value = JSON.parse(dynamicImport.expression);
+            if (typeof value === "string") {
+              specifier = value;
+            }
+          } catch {
+            // ignore the error
           }
-        } catch {
-          // ignore the error
+          return {
+            code: dynamicImport.code,
+            specifier,
+          };
         }
-        return {
-          code: dynamicImport.code,
-          specifier,
-        };
-      });
-      for (const spec of [...exports, ...typeExports, ...imports, ...dynamicImports]) {
+      );
+      for (const spec of [
+        ...exports,
+        ...typeExports,
+        ...imports,
+        ...dynamicImports,
+      ]) {
         if (!spec.specifier || !RELATIVE_RE.test(spec.specifier)) {
           continue;
         }
@@ -96,7 +117,10 @@ export function extractDeclarations(
           // src file does not exists
         }
         // add file extension for relative paths (`.js` will match the `.d.ts` extension we emit)
-        contents = contents.replace(spec.code, spec.code.replace(spec.specifier, specifier + ext));
+        contents = contents.replace(
+          spec.code,
+          spec.code.replace(spec.specifier, specifier + ext)
+        );
       }
     }
     output[filename] = { contents };
@@ -111,7 +135,7 @@ export function augmentWithDiagnostics(
   result: EmitResult,
   output: DeclarationOutput,
   tsHost: CompilerHost,
-  ts: typeof import("typescript"),
+  ts: typeof import("typescript")
 ) {
   if (result.diagnostics?.length) {
     for (const diagnostic of result.diagnostics) {
@@ -123,7 +147,7 @@ export function augmentWithDiagnostics(
           entry.errors.push(
             new TypeError(ts.formatDiagnostics([diagnostic], tsHost), {
               cause: diagnostic,
-            }),
+            })
           );
         }
       }

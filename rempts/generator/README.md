@@ -18,8 +18,8 @@ The Rempts command type generator that creates TypeScript definitions from your 
 import { Generator } from '@reliverse/rempts-generator'
 
 const generator = new Generator({
-  commandsDir: './commands',
-  outputFile: './commands.gen.ts'
+  commandsDir: './cmds',
+  outputFile: './cmds.gen.ts'
 })
 
 await generator.run()
@@ -31,8 +31,8 @@ await generator.run()
 import { Generator } from '@reliverse/rempts-generator'
 
 const generator = new Generator({
-  commandsDir: './commands',
-  outputFile: './commands.gen.ts'
+  commandsDir: './cmds',
+  outputFile: './cmds.gen.ts'
 })
 
 // Initial generation
@@ -56,8 +56,8 @@ export interface CommandRegistry {
       env: { type: 'string', required: true, description: 'Environment' }
       force: { type: 'boolean', required: false, default: false }
     }
-    filePath: './commands/deploy.ts'
-    exportPath: './commands/deploy'
+    filePath: './cmds/deploy.ts'
+    exportPath: './cmds/deploy'
   }
 }
 

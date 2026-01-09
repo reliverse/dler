@@ -3,8 +3,9 @@
  * Loads configuration from multiple sources and merges them
  */
 
-import { readFile, access } from "fs/promises";
-import { homedir } from "os";
+import { access, readFile } from "node:fs/promises";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { createPlugin } from "@reliverse/rempts-core/plugin";
 import { deepMerge } from "@reliverse/rempts-core/utils";
 
@@ -41,17 +42,19 @@ export const configMergerPlugin = createPlugin<ConfigPluginOptions, {}>((options
     ".config/{{name}}.json",
   ];
 
-  return {
-    name: "@reliverse/rempts-plugin-config",
-    version: "1.0.0",
-
+  return () => ({
     async setup(context) {
       const appName = context.config.name || "rempts";
       const configs: any[] = [];
 
       for (const source of sources) {
         // Resolve template variables and home directory
-        const path = source.replace(/^~/, homedir()).replace(/\{\{name\}\}/g, appName);
+        let path = source.replace(/^~/, homedir()).replace(/\{\{name\}\}/g, appName);
+
+        // Resolve relative paths from context cwd
+        if (!(path.startsWith("/") || path.startsWith(homedir()))) {
+          path = join(context.paths.cwd, path);
+        }
 
         try {
           // Check if file exists
@@ -96,7 +99,7 @@ export const configMergerPlugin = createPlugin<ConfigPluginOptions, {}>((options
         context.logger.info(`Merged ${configs.length} config file(s)`);
       }
     },
-  };
+  });
 });
 
 // Default export for convenience

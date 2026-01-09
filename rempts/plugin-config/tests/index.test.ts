@@ -1,14 +1,35 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { writeFile, mkdir, rm } from "fs/promises";
-import { join } from "path";
-import { homedir } from "os";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
+import { join } from "node:path";
+import { createLogger } from "@reliverse/rempts-core/utils";
 import { configMergerPlugin } from "../src/mod";
-import { PluginContext } from "@reliverse/rempts-core/plugin";
-import { createLogger } from "@reliverse/rempts-utils";
+
+// Create a mock plugin context for testing
+function createMockPluginContext(config: any) {
+  const configUpdates: any[] = [];
+  const context = {
+    config,
+    updateConfig: (update: any) => {
+      configUpdates.push(update);
+    },
+    registerCommand: () => {},
+    use: () => {},
+    store: new Map(),
+    logger: createLogger("test"),
+    paths: {
+      cwd: process.cwd(),
+      home: homedir(),
+      config: join(homedir(), ".config", config.name || "rempts"),
+    },
+    getConfigUpdates: () => configUpdates,
+  };
+  return context;
+}
 
 describe("Config Merger Plugin", () => {
   const testDir = join(process.cwd(), ".test-config");
-  const homeConfigDir = join(homedir(), ".config", "test-app");
+  const _homeConfigDir = join(homedir(), ".config", "test-app");
 
   beforeEach(async () => {
     // Create test directories
@@ -24,24 +45,19 @@ describe("Config Merger Plugin", () => {
     const config = { apiKey: "test-key", port: 3000 };
     await writeFile(join(testDir, ".test-apprc"), JSON.stringify(config));
 
-    const plugin = configMergerPlugin({
+    const hooks = configMergerPlugin({
       sources: [join(testDir, ".test-apprc")],
-    });
+    })();
 
-    const configUpdates: any[] = [];
-    const context = new PluginContext({ name: "test-app" }, new Map(), createLogger("test"), {
-      cwd: testDir,
-      home: homedir(),
-      config: testDir,
-    });
+    const context = createMockPluginContext({ name: "test-app" });
 
-    // Override updateConfig to capture updates
-    context.updateConfig = (update) => {
-      configUpdates.push(update);
-    };
+    // Override paths for test
+    context.paths.cwd = testDir;
+    context.paths.config = testDir;
 
-    await plugin.setup!(context);
+    await hooks.setup?.(context);
 
+    const configUpdates = context.getConfigUpdates();
     expect(configUpdates).toHaveLength(1);
     expect(configUpdates[0]).toEqual(config);
   });
@@ -53,23 +69,17 @@ describe("Config Merger Plugin", () => {
     await writeFile(join(testDir, "config1.json"), JSON.stringify(config1));
     await writeFile(join(testDir, "config2.json"), JSON.stringify(config2));
 
-    const plugin = configMergerPlugin({
+    const hooks = configMergerPlugin({
       sources: [join(testDir, "config1.json"), join(testDir, "config2.json")],
-    });
+    })();
 
-    const configUpdates: any[] = [];
-    const context = new PluginContext({ name: "test-app" }, new Map(), createLogger("test"), {
-      cwd: testDir,
-      home: homedir(),
-      config: testDir,
-    });
+    const context = createMockPluginContext({ name: "test-app" });
+    context.paths.cwd = testDir;
+    context.paths.config = testDir;
 
-    context.updateConfig = (update) => {
-      configUpdates.push(update);
-    };
+    await hooks.setup?.(context);
 
-    await plugin.setup!(context);
-
+    const configUpdates = context.getConfigUpdates();
     expect(configUpdates).toHaveLength(1);
     // Later config should override earlier
     expect(configUpdates[0]).toEqual({
@@ -84,47 +94,35 @@ describe("Config Merger Plugin", () => {
     const config = { test: true };
     await writeFile(join(testDir, ".my-clirc"), JSON.stringify(config));
 
-    const plugin = configMergerPlugin({
-      sources: [join(testDir, ".{{name}}rc")],
-    });
+    const hooks = configMergerPlugin({
+      sources: [".{{name}}rc"],
+    })();
 
-    const configUpdates: any[] = [];
-    const context = new PluginContext({ name: "my-cli" }, new Map(), createLogger("test"), {
-      cwd: testDir,
-      home: homedir(),
-      config: testDir,
-    });
+    const context = createMockPluginContext({ name: "my-cli" });
+    context.paths.cwd = testDir;
+    context.paths.config = testDir;
 
-    context.updateConfig = (update) => {
-      configUpdates.push(update);
-    };
+    await hooks.setup?.(context);
 
-    await plugin.setup!(context);
-
+    const configUpdates = context.getConfigUpdates();
     expect(configUpdates).toHaveLength(1);
     expect(configUpdates[0]).toEqual(config);
   });
 
   test("handles missing config files gracefully", async () => {
-    const plugin = configMergerPlugin({
+    const hooks = configMergerPlugin({
       sources: [join(testDir, "does-not-exist.json")],
     });
 
-    const configUpdates: any[] = [];
-    const context = new PluginContext({ name: "test-app" }, new Map(), createLogger("test"), {
-      cwd: testDir,
-      home: homedir(),
-      config: testDir,
-    });
-
-    context.updateConfig = (update) => {
-      configUpdates.push(update);
-    };
+    const context = createMockPluginContext({ name: "test-app" });
+    context.paths.cwd = testDir;
+    context.paths.config = testDir;
 
     // Should not throw
-    await plugin.setup!(context);
+    await hooks.setup?.(context);
 
     // No config updates since file doesn't exist
+    const configUpdates = context.getConfigUpdates();
     expect(configUpdates).toHaveLength(0);
   });
 
@@ -135,24 +133,18 @@ describe("Config Merger Plugin", () => {
     await writeFile(join(testDir, "first.json"), JSON.stringify(config1));
     await writeFile(join(testDir, "second.json"), JSON.stringify(config2));
 
-    const plugin = configMergerPlugin({
+    const hooks = configMergerPlugin({
       sources: [join(testDir, "first.json"), join(testDir, "second.json")],
       stopOnFirst: true,
-    });
+    })();
 
-    const configUpdates: any[] = [];
-    const context = new PluginContext({ name: "test-app" }, new Map(), createLogger("test"), {
-      cwd: testDir,
-      home: homedir(),
-      config: testDir,
-    });
+    const context = createMockPluginContext({ name: "test-app" });
+    context.paths.cwd = testDir;
+    context.paths.config = testDir;
 
-    context.updateConfig = (update) => {
-      configUpdates.push(update);
-    };
+    await hooks.setup?.(context);
 
-    await plugin.setup!(context);
-
+    const configUpdates = context.getConfigUpdates();
     expect(configUpdates).toHaveLength(1);
     expect(configUpdates[0]).toEqual({ source: "first" });
   });

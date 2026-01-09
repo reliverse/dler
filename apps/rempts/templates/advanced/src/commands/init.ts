@@ -1,7 +1,7 @@
+import { relico } from "@reliverse/relico";
 import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 import { CONFIG_FILE_NAME, DEFAULT_CONFIG } from "../utils/constants";
-import { relico } from "@reliverse/relico";
 
 const initCommand = defineCommand({
   name: "init",
@@ -23,7 +23,7 @@ const initCommand = defineCommand({
     // Check if config already exists
     const configFile = Bun.file(configPath);
     if ((await configFile.exists()) && !flags.force) {
-      const overwrite = await prompt.confirm(`Config file already exists. Overwrite?`, {
+      const overwrite = await prompt.confirm("Config file already exists. Overwrite?", {
         default: false,
       });
 

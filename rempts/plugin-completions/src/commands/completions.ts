@@ -1,10 +1,10 @@
+import { relico } from "@reliverse/relico";
 import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
-import { generateBash, generateZsh, generateFish } from "../generators/mod";
-import { loadMetadata, getCLIName } from "../utils/metadata";
-import { getInstallInstructions } from "../utils/instructions";
+import { generateBash, generateFish, generateZsh } from "../generators/mod";
 import type { CompletionsPluginOptions } from "../types";
-import { relico } from "@reliverse/relico";
+import { getInstallInstructions } from "../utils/instructions";
+import { getCLIName, loadMetadata } from "../utils/metadata";
 
 export default function completionsCommand(_pluginOptions: CompletionsPluginOptions) {
   return defineCommand({
@@ -52,7 +52,7 @@ export default function completionsCommand(_pluginOptions: CompletionsPluginOpti
           await Bun.write(flags.output, script);
           console.log(relico.green(`\n✅ Completions written to: ${flags.output}`));
         } else {
-          console.log("\n" + script);
+          console.log(`\n${script}`);
         }
 
         // Show installation instructions if outputting to stdout

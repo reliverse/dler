@@ -1,7 +1,5 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 
-export type { StandardSchemaV1 };
-
 export type RenderResult = unknown;
 
 export interface TuiRenderOptions {
@@ -11,16 +9,14 @@ export interface TuiRenderOptions {
   [key: string]: unknown;
 }
 
-export interface RenderArgs<TFlags = Record<string, unknown>, TStore = {}> extends HandlerArgs<
-  TFlags,
-  TStore
-> {
+export interface RenderArgs<TFlags = Record<string, unknown>, TStore = {}>
+  extends HandlerArgs<TFlags, TStore> {
   command: Command<any, TStore>;
   rendererOptions?: TuiRenderOptions;
 }
 
 export type RenderFunction<TFlags = Record<string, unknown>, TStore = {}> = (
-  args: RenderArgs<TFlags, TStore>,
+  args: RenderArgs<TFlags, TStore>
 ) => RenderResult;
 
 // Core Rempts types
@@ -28,16 +24,6 @@ export type RenderFunction<TFlags = Record<string, unknown>, TStore = {}> = (
  * CLI instance with plugin type information
  */
 export interface CLI<TStore = {}> {
-  /**
-   * Register a command
-   */
-  command<TCommandStore = any>(command: Command<any, TCommandStore>): void;
-
-  /**
-   * Load commands from a manifest
-   */
-  load(manifest: CommandManifest): Promise<void>;
-
   /**
    * Initialize the CLI (load config, etc)
    */
@@ -56,12 +42,12 @@ export interface CLI<TStore = {}> {
   execute(commandName: string, args?: string[]): Promise<void>;
   execute<T extends keyof RegisteredCommands>(
     commandName: T,
-    options: CommandOptions<T>,
+    options: CommandOptions<T>
   ): Promise<void>;
   execute<T extends keyof RegisteredCommands>(
     commandName: T,
     args: string[],
-    options: CommandOptions<T>,
+    options: CommandOptions<T>
   ): Promise<void>;
 
   /**
@@ -111,7 +97,8 @@ export type Command<
     });
 
 // Type helper to extract output types from StandardSchemaV1
-type InferSchema<T> = T extends StandardSchemaV1<any, infer Out> ? Out : never;
+// Uses StandardSchemaV1.InferOutput which should work with all Standard Schema compatible libraries
+type InferSchema<T> = T extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<T> : never;
 
 type InferOptions<T extends Options> = {
   [K in keyof T]: T[K] extends CLIOption<infer S> ? InferSchema<S> : never;
@@ -175,33 +162,27 @@ export interface CLIOption<S extends StandardSchemaV1 = StandardSchemaV1> {
 // Options must use the CLIOption wrapper
 export type Options = Record<string, CLIOption<any>>;
 
-// Command manifest for lazy loading
-export type CommandManifest = {
-  [key: string]: CommandLoader | CommandManifest;
-};
-
-export type CommandLoader = () => Promise<{ default: Command<any> }>;
-
 // Define command helper with proper type inference
 export function defineCommand<
   TOptions extends Options = Options,
   TStore = {},
   TName extends string = string,
 >(
-  command: Command<TOptions, TStore> & { name: TName },
+  command: Command<TOptions, TStore> & { name: TName }
 ): Command<TOptions, TStore> & { name: TName } {
   return command;
 }
 
 // Import configuration types from schema
 import type { RemptsConfig } from "./config";
+
 export type { RemptsConfig } from "./config";
 export { remptsConfigSchema } from "./config";
 export type {
-  GeneratedStore,
   GeneratedCommandMeta,
-  GeneratedOptionMeta,
   GeneratedExecutor,
+  GeneratedOptionMeta,
+  GeneratedStore,
 } from "./generated";
 
 // Plugin configuration type (imported from plugin/types)
@@ -217,7 +198,7 @@ export type PluginConfig = import("./plugin/types.js").PluginConfig;
  *   interface RegisteredCommands extends CommandsByName {}
  * }
  */
-export interface RegisteredCommands {}
+export type RegisteredCommands = Record<string, never>;
 
 /**
  * Get command options type from registered commands
@@ -273,7 +254,7 @@ export type BeforeHook<TStore = {}> = (context: HookContext<TStore>) => void | P
  * After hook function type
  */
 export type AfterHook<TStore = {}> = (
-  context: HookContext<TStore> & { exitCode: number; error?: Error },
+  context: HookContext<TStore> & { exitCode: number; error?: Error }
 ) => void | Promise<void>;
 
 /**
@@ -282,13 +263,13 @@ export type AfterHook<TStore = {}> = (
 export class RemptsValidationError extends Error {
   constructor(
     message: string,
-    public readonly context: {
+    readonly context: {
       option: string;
       value: unknown;
       command: string;
       expectedType: string;
       hint?: string;
-    },
+    }
   ) {
     super(message);
     this.name = "RemptsValidationError";
@@ -306,7 +287,7 @@ ${this.context.hint ? `\nHint: ${this.context.hint}` : ""}`;
 // Helper to create a CLI option with metadata
 export function option<S extends StandardSchemaV1>(
   schema: S,
-  metadata?: { short?: string; description?: string },
+  metadata?: { short?: string; description?: string }
 ): CLIOption<S> {
   return {
     schema,

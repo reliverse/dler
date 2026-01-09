@@ -20,7 +20,9 @@ export const BundleAnalyzerPlugin: DlerPlugin = {
     try {
       await analyzeBundle(result);
     } catch (error) {
-      logger.warn(`Failed to analyze bundle for ${result.package.name}: ${error}`);
+      logger.warn(
+        `Failed to analyze bundle for ${result.package.name}: ${error}`
+      );
     }
   },
 };
@@ -96,13 +98,15 @@ async function analyzeBundle(result: BuildResult): Promise<void> {
   logger.info(`📊 Bundle analysis for ${pkg.name}:`);
   logger.info(`   Total size: ${formatBytes(analysis.totals.totalSize)}`);
   logger.info(
-    `   Files: ${analysis.totals.totalFiles} (${analysis.totals.jsFiles} JS, ${analysis.totals.cssFiles} CSS, ${analysis.totals.assetFiles} assets)`,
+    `   Files: ${analysis.totals.totalFiles} (${analysis.totals.jsFiles} JS, ${analysis.totals.cssFiles} CSS, ${analysis.totals.assetFiles} assets)`
   );
 
   if (analysis.files.length > 0) {
     const largestFile = analysis.files[0];
     if (largestFile) {
-      logger.info(`   Largest file: ${largestFile.name} (${formatBytes(largestFile.size)})`);
+      logger.info(
+        `   Largest file: ${largestFile.name} (${formatBytes(largestFile.size)})`
+      );
     }
   }
 
@@ -165,7 +169,7 @@ function generateRecommendations(analysis: BundleAnalysis): void {
   if (totals.totalSize > 1024 * 1024) {
     // 1MB
     analysis.recommendations.push(
-      "Bundle size is large (>1MB). Consider code splitting or removing unused code.",
+      "Bundle size is large (>1MB). Consider code splitting or removing unused code."
     );
   }
 
@@ -173,14 +177,14 @@ function generateRecommendations(analysis: BundleAnalysis): void {
   const largeFiles = files.filter((f) => f.size > 500 * 1024); // 500KB
   if (largeFiles.length > 0) {
     analysis.recommendations.push(
-      `Large files detected: ${largeFiles.map((f) => f.name).join(", ")}. Consider optimizing or splitting.`,
+      `Large files detected: ${largeFiles.map((f) => f.name).join(", ")}. Consider optimizing or splitting.`
     );
   }
 
   // Check for too many files
   if (totals.totalFiles > 50) {
     analysis.recommendations.push(
-      "Many files in bundle. Consider consolidating or using code splitting.",
+      "Many files in bundle. Consider consolidating or using code splitting."
     );
   }
 
@@ -189,11 +193,13 @@ function generateRecommendations(analysis: BundleAnalysis): void {
     const jsSize = files
       .filter((f) => f.type.includes("JavaScript"))
       .reduce((sum, f) => sum + f.size, 0);
-    const cssSize = files.filter((f) => f.type.includes("CSS")).reduce((sum, f) => sum + f.size, 0);
+    const cssSize = files
+      .filter((f) => f.type.includes("CSS"))
+      .reduce((sum, f) => sum + f.size, 0);
 
     if (cssSize > jsSize) {
       analysis.recommendations.push(
-        "CSS is larger than JavaScript. Consider CSS optimization or purging unused styles.",
+        "CSS is larger than JavaScript. Consider CSS optimization or purging unused styles."
       );
     }
   }
@@ -206,7 +212,9 @@ function generateRecommendations(analysis: BundleAnalysis): void {
 
   for (const [type, count] of fileTypes) {
     if (count > 10) {
-      analysis.recommendations.push(`Many ${type} files (${count}). Consider consolidating.`);
+      analysis.recommendations.push(
+        `Many ${type} files (${count}). Consider consolidating.`
+      );
     }
   }
 }

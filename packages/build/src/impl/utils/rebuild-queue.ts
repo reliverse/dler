@@ -105,7 +105,7 @@ export class RebuildQueueProcessor {
         return result;
       } catch (error) {
         await relinka.error(
-          `❌ ${pkg.name}: Rebuild error - ${error instanceof Error ? error.message : String(error)}`,
+          `❌ ${pkg.name}: Rebuild error - ${error instanceof Error ? error.message : String(error)}`
         );
         return null;
       }
@@ -149,7 +149,7 @@ export class RebuildQueueProcessor {
         }
       } catch (error) {
         await relinka.error(
-          `❌ ${pkg.name}: Rebuild error - ${error instanceof Error ? error.message : String(error)}`,
+          `❌ ${pkg.name}: Rebuild error - ${error instanceof Error ? error.message : String(error)}`
         );
       }
     }

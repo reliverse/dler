@@ -25,7 +25,7 @@ function isPackageAllowed(pkgName: string, allowedPatterns: string[]): boolean {
  */
 export function filterPrivatePackages(
   packages: PackageInfo[],
-  allowPrivateBuild?: string | string[],
+  allowPrivateBuild?: string | string[]
 ): PackageInfo[] {
   // Filter out private packages unless explicitly allowed
   if (!allowPrivateBuild) {
@@ -39,6 +39,6 @@ export function filterPrivatePackages(
 
   // Filter: allow if not private OR if private and explicitly allowed
   return packages.filter(
-    (pkg) => pkg.private !== true || isPackageAllowed(pkg.name, allowedPatterns),
+    (pkg) => pkg.private !== true || isPackageAllowed(pkg.name, allowedPatterns)
   );
 }

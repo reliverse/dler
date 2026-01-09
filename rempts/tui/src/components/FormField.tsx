@@ -19,7 +19,7 @@ export function FormField({
   onChange,
   onSubmit,
 }: FormFieldProps) {
-  const [value, setValue] = useState(initialValue);
+  const [_value, setValue] = useState(initialValue);
 
   const handleInput = (newValue: string) => {
     setValue(newValue);
@@ -33,12 +33,12 @@ export function FormField({
   return (
     <box style={{ flexDirection: "column", marginBottom: 1 }}>
       <text content={`${label}${required ? " *" : ""}`} />
-      <box title={label} border height={3} style={{ marginTop: 0.5 }}>
+      <box border height={3} style={{ marginTop: 0.5 }} title={label}>
         <input
-          placeholder={placeholder}
+          focused={true}
           onInput={handleInput}
           onSubmit={handleSubmit}
-          focused={true}
+          placeholder={placeholder}
           style={{ focusedBackgroundColor: "#000000" }}
         />
       </box>

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { Button } from "~/components/ui/button";
 import { ArrowRight, Github, Star } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Button } from "~/components/ui/button";
 
 export function CTASection() {
   const [stars, setStars] = useState<number | null>(null);
@@ -23,25 +23,25 @@ export function CTASection() {
       });
   }, []);
   return (
-    <section className="px-6 py-24 sm:py-32 lg:px-8 bg-muted/30">
+    <section className="bg-muted/30 px-6 py-24 sm:py-32 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
+          <h2 className="mb-4 font-bold text-3xl tracking-tight sm:text-4xl">
             Start Building in 30 Seconds
           </h2>
-          <p className="text-lg text-muted-foreground mb-8">
+          <p className="mb-8 text-lg text-muted-foreground">
             Join developers building fast, type-safe CLIs with Rempts
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link href="/docs/getting-started">
-              <Button size="lg" className="gap-2">
+              <Button className="gap-2" size="lg">
                 Get Started
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <Link href="https://github.com/AryaLabsHQ/rempts">
-              <Button size="lg" variant="outline" className="gap-2">
+              <Button className="gap-2" size="lg" variant="outline">
                 <Github className="h-4 w-4" />
                 View on GitHub
               </Button>
@@ -49,7 +49,7 @@ export function CTASection() {
           </div>
 
           {stars && (
-            <div className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <div className="mt-8 flex items-center justify-center gap-2 text-muted-foreground text-sm">
               <Star className="h-4 w-4 fill-current" />
               <span>{(stars / 1000).toFixed(1)}k stars on GitHub</span>
             </div>

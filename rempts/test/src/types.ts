@@ -1,4 +1,4 @@
-import type { Command, HandlerArgs } from "@reliverse/rempts-core";
+import type { HandlerArgs } from "@reliverse/rempts-core";
 
 export interface TestOptions {
   /** Command flags to pass */
@@ -62,9 +62,7 @@ export interface Matchers {
   toMatchStderr(pattern: RegExp): void;
 }
 
-export interface MockShell {
-  (strings: TemplateStringsArray, ...values: any[]): ShellPromise;
-}
+export type MockShell = (strings: TemplateStringsArray, ...values: any[]) => ShellPromise;
 
 export interface ShellPromise extends Promise<void> {
   text(): Promise<string>;

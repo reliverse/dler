@@ -138,7 +138,9 @@ export function applyPresets(options: BuildOptions): BuildOptions {
 
   // Handle experimental features
   if (result.experimental && typeof result.experimental === "string") {
-    result.experimental = (result.experimental as string).split(",").map((f: string) => f.trim());
+    result.experimental = (result.experimental as string)
+      .split(",")
+      .map((f: string) => f.trim());
   }
 
   return result;
@@ -221,7 +223,13 @@ export function applyMonorepoPreset(options: BuildOptions): BuildOptions {
 }
 
 export function getPresetDescription(
-  preset: "production" | "development" | "library" | "react" | "node" | "monorepo",
+  preset:
+    | "production"
+    | "development"
+    | "library"
+    | "react"
+    | "node"
+    | "monorepo"
 ): string {
   switch (preset) {
     case "production":

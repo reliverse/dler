@@ -1,9 +1,9 @@
-import { remptsConfigSchema, type RemptsConfig } from "@reliverse/rempts-core";
-import path from "node:path";
 import { existsSync } from "node:fs";
+import path from "node:path";
+import { remptsConfigSchema } from "@reliverse/rempts-core";
 
 // Type for loaded config with defaults applied by Zod
-export type LoadedConfig = {
+export interface LoadedConfig {
   name?: string;
   version?: string;
   description?: string;
@@ -44,7 +44,7 @@ export type LoadedConfig = {
     conventionalCommits: boolean; // Always has default true
   };
   plugins: any[]; // Always has default []
-};
+}
 
 // Config file names to search for
 const CONFIG_NAMES = ["dler.config.ts", "dler.config.js", "dler.config.mjs"];

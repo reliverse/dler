@@ -23,6 +23,8 @@ may include its own `AGENTS.md` file, which you must adhere to.
 - Do not make useless helper functions, inline functionality unless the function is reusable or composable
 - Prefer early returns over nested `if` statements
 
+Important: Always ensure that you are adding imports for everything. If TypeScript indicates that something is wrong, it may be because you forgot to add some imports.
+
 ## Dler Rules
 
 - This project uses `@reliverse/dler` to manage bun monorepos easily

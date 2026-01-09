@@ -16,8 +16,8 @@ export async function benchmarkVersionQueries(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -27,21 +27,21 @@ export async function benchmarkVersionQueries(
       for (const version of testVersions) {
         isPrerelease(version);
       }
-    }),
+    })
   );
 
   // Benchmark single isPrerelease check
   results.push(
     await benchmark("isPrerelease (single prerelease)", () => {
       isPrerelease("1.2.3-beta.1");
-    }),
+    })
   );
 
   // Benchmark single isPrerelease check (non-prerelease)
   results.push(
     await benchmark("isPrerelease (single release)", () => {
       isPrerelease("1.2.3");
-    }),
+    })
   );
 
   // Benchmark getReleaseType
@@ -50,28 +50,28 @@ export async function benchmarkVersionQueries(
       for (const version of testVersions) {
         getReleaseType(version);
       }
-    }),
+    })
   );
 
   // Benchmark single getReleaseType check
   results.push(
     await benchmark("getReleaseType (single major)", () => {
       getReleaseType("2.0.0");
-    }),
+    })
   );
 
   // Benchmark single getReleaseType check (minor)
   results.push(
     await benchmark("getReleaseType (single minor)", () => {
       getReleaseType("0.2.0");
-    }),
+    })
   );
 
   // Benchmark single getReleaseType check (patch)
   results.push(
     await benchmark("getReleaseType (single patch)", () => {
       getReleaseType("0.0.1");
-    }),
+    })
   );
 
   // Benchmark combined queries
@@ -81,7 +81,7 @@ export async function benchmarkVersionQueries(
         isPrerelease(version);
         getReleaseType(version);
       }
-    }),
+    })
   );
 
   return results;

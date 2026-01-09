@@ -1,8 +1,8 @@
 "use client";
 
+import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 
 const examples = {
   validation: {
@@ -107,8 +107,8 @@ export function ExamplesShowcase() {
   return (
     <section className="px-6 py-24 sm:py-32 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mx-auto max-w-2xl text-center mb-16">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+        <div className="mx-auto mb-16 max-w-2xl text-center">
+          <h2 className="font-bold text-3xl tracking-tight sm:text-4xl">
             Powerful Features, Simple API
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
@@ -117,7 +117,7 @@ export function ExamplesShowcase() {
         </div>
 
         <div className="mx-auto max-w-5xl">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs className="w-full" onValueChange={setActiveTab} value={activeTab}>
             <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
               <TabsTrigger value="validation">Validation</TabsTrigger>
               <TabsTrigger value="prompts">Prompts</TabsTrigger>
@@ -126,15 +126,15 @@ export function ExamplesShowcase() {
             </TabsList>
 
             {Object.entries(examples).map(([key, example]) => (
-              <TabsContent key={key} value={key} className="mt-6">
-                <div className="rounded-lg border bg-card overflow-hidden">
+              <TabsContent className="mt-6" key={key} value={key}>
+                <div className="overflow-hidden rounded-lg border bg-card">
                   <div className="flex items-center gap-2 border-b px-4 py-3">
                     <div className="flex gap-1.5">
                       <div className="h-3 w-3 rounded-full bg-red-500" />
                       <div className="h-3 w-3 rounded-full bg-yellow-500" />
                       <div className="h-3 w-3 rounded-full bg-green-500" />
                     </div>
-                    <span className="ml-2 text-sm text-muted-foreground">{example.title}</span>
+                    <span className="ml-2 text-muted-foreground text-sm">{example.title}</span>
                   </div>
                   <DynamicCodeBlock code={example.code} lang="typescript" />
                 </div>

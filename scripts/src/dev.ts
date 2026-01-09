@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-import { $ } from "bun";
 
 console.log("🚀 Starting development mode...");
 console.log("This will watch for changes and rebuild packages");

@@ -17,14 +17,16 @@ const dateStrings = [
   "2024-01-15T10:30:45",
 ];
 
-const timestamps = [1705315845123, 1703520000000, 1718455530500, 1735747200000, 1710922522999];
+const timestamps = [
+  1_705_315_845_123, 1_703_520_000_000, 1_718_455_530_500, 1_735_747_200_000, 1_710_922_522_999,
+];
 
 export async function benchmarkParsing(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -34,7 +36,7 @@ export async function benchmarkParsing(
       parseISO(isoStrings[0] ?? "");
       parseISO(isoStrings[1] ?? "");
       parseISO(isoStrings[2] ?? "");
-    }),
+    })
   );
 
   // Benchmark parseDate with ISO strings
@@ -43,7 +45,7 @@ export async function benchmarkParsing(
       parseDate(isoStrings[0] ?? "");
       parseDate(isoStrings[1] ?? "");
       parseDate(isoStrings[2] ?? "");
-    }),
+    })
   );
 
   // Benchmark parseDate with various date strings
@@ -53,7 +55,7 @@ export async function benchmarkParsing(
       parseDate(dateStrings[1] ?? "");
       parseDate(dateStrings[2] ?? "");
       parseDate(dateStrings[3] ?? "");
-    }),
+    })
   );
 
   // Benchmark parseDate with timestamps
@@ -62,7 +64,7 @@ export async function benchmarkParsing(
       parseDate(timestamps[0] ?? 0);
       parseDate(timestamps[1] ?? 0);
       parseDate(timestamps[2] ?? 0);
-    }),
+    })
   );
 
   // Benchmark parseDate with Date objects (should be fast path)
@@ -77,7 +79,7 @@ export async function benchmarkParsing(
       parseDate(dateObjects[0] ?? new Date());
       parseDate(dateObjects[1] ?? new Date());
       parseDate(dateObjects[2] ?? new Date());
-    }),
+    })
   );
 
   // Benchmark isValidDate
@@ -86,7 +88,7 @@ export async function benchmarkParsing(
       isValidDate(isoStrings[0] ?? "");
       isValidDate(timestamps[0] ?? 0);
       isValidDate(dateObjects[0] ?? new Date());
-    }),
+    })
   );
 
   results.push(
@@ -94,7 +96,7 @@ export async function benchmarkParsing(
       isValidDate("invalid-date");
       isValidDate("not-a-date");
       isValidDate("");
-    }),
+    })
   );
 
   // Benchmark mixed parsing operations
@@ -105,7 +107,7 @@ export async function benchmarkParsing(
       parseDate(timestamps[0] ?? 0);
       isValidDate(isoStrings[0] ?? "");
       parseISO(isoStrings[1] ?? "");
-    }),
+    })
   );
 
   return results;

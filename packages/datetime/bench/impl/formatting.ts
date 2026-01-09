@@ -13,8 +13,8 @@ export async function benchmarkFormatting(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -24,7 +24,7 @@ export async function benchmarkFormatting(
       formatISO(testDate);
       formatISO(testDates[0] ?? testDate);
       formatISO(testDates[1] ?? testDate);
-    }),
+    })
   );
 
   // Benchmark formatRFC2822
@@ -33,7 +33,7 @@ export async function benchmarkFormatting(
       formatRFC2822(testDate);
       formatRFC2822(testDates[0] ?? testDate);
       formatRFC2822(testDates[1] ?? testDate);
-    }),
+    })
   );
 
   // Benchmark formatDate with Intl options
@@ -44,14 +44,14 @@ export async function benchmarkFormatting(
         dateStyle: "medium",
         timeStyle: "medium",
       });
-    }),
+    })
   );
 
   results.push(
     await benchmark("formatDate (Intl - short)", () => {
       formatDate(testDate, { dateStyle: "short", timeStyle: "short" });
       formatDate(testDates[0] ?? testDate, { dateStyle: "short" });
-    }),
+    })
   );
 
   results.push(
@@ -69,7 +69,7 @@ export async function benchmarkFormatting(
         month: "long",
         day: "numeric",
       });
-    }),
+    })
   );
 
   // Benchmark formatCustom with various patterns
@@ -77,7 +77,7 @@ export async function benchmarkFormatting(
     await benchmark("formatCustom (YYYY-MM-DD HH:mm:ss)", () => {
       formatCustom(testDate, "YYYY-MM-DD HH:mm:ss");
       formatCustom(testDates[0] ?? testDate, "YYYY-MM-DD HH:mm:ss");
-    }),
+    })
   );
 
   results.push(
@@ -85,14 +85,14 @@ export async function benchmarkFormatting(
       formatCustom(testDate, "YYYY-MM-DD HH:mm:ss.SSS");
       formatCustom(testDates[0] ?? testDate, "DD/MM/YYYY HH:mm");
       formatCustom(testDates[1] ?? testDate, "MM-DD-YYYY hh:mm AM/PM");
-    }),
+    })
   );
 
   results.push(
     await benchmark("formatCustom (12-hour format)", () => {
       formatCustom(testDate, "hh:mm:ss AM/PM");
       formatCustom(testDates[0] ?? testDate, "YYYY-MM-DD hh:mm AM/PM");
-    }),
+    })
   );
 
   // Benchmark formatDuration
@@ -104,14 +104,14 @@ export async function benchmarkFormatting(
     await benchmark("formatDuration (long duration)", () => {
       formatDuration(duration1);
       formatDuration(duration2);
-    }),
+    })
   );
 
   results.push(
     await benchmark("formatDuration (short duration)", () => {
       formatDuration(duration3);
       formatDuration({ seconds: 45 });
-    }),
+    })
   );
 
   // Benchmark multiple formatting operations
@@ -122,7 +122,7 @@ export async function benchmarkFormatting(
       formatDate(testDate, { dateStyle: "long" });
       formatRFC2822(testDate);
       formatDuration({ days: 1, hours: 2, minutes: 30 });
-    }),
+    })
   );
 
   return results;

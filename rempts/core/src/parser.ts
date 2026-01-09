@@ -1,6 +1,5 @@
-import type { Options, StandardSchemaV1, CLIOption } from "./types";
+import type { Options, StandardSchemaV1 } from "./types";
 import { RemptsValidationError } from "./types";
-import { SchemaError } from "@standard-schema/utils";
 
 export interface ParsedArgs {
   flags: Record<string, unknown>;
@@ -10,7 +9,7 @@ export interface ParsedArgs {
 export async function parseArgs(
   args: string[],
   options: Options,
-  commandName: string = "unknown",
+  commandName = "unknown"
 ): Promise<ParsedArgs> {
   const flags: Record<string, unknown> = {};
   const positional: string[] = [];
@@ -27,7 +26,9 @@ export async function parseArgs(
   let stopParsingFlags = false;
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (!arg) continue;
+    if (!arg) {
+      continue;
+    }
 
     // Handle -- separator: everything after is positional
     if (arg === "--") {
@@ -47,7 +48,9 @@ export async function parseArgs(
       const name = eqIndex > 0 ? arg.slice(2, eqIndex) : arg.slice(2);
       const inlineValue = eqIndex > 0 ? arg.slice(eqIndex + 1) : undefined;
 
-      if (!name || !options[name]) continue;
+      if (!(name && options[name])) {
+        continue;
+      }
 
       // Get the value (inline, next arg, or 'true' for boolean-like flags)
       let value: string | undefined = inlineValue;
@@ -56,7 +59,7 @@ export async function parseArgs(
       }
 
       // Pass the value to the schema for validation
-      flags[name] = await validateOption(name, value ?? "true", options[name]!.schema, commandName);
+      flags[name] = await validateOption(name, value ?? "true", options[name]?.schema, commandName);
     } else if (arg.startsWith("-") && arg.length > 1) {
       // Short flag: -n or -n value
       const short = arg.slice(1);
@@ -72,8 +75,8 @@ export async function parseArgs(
         flags[name] = await validateOption(
           name,
           value ?? "true",
-          options[name]!.schema,
-          commandName,
+          options[name]?.schema,
+          commandName
         );
       }
     } else {
@@ -97,7 +100,7 @@ async function validateOption(
   name: string,
   value: unknown,
   schema: StandardSchemaV1,
-  commandName: string = "unknown",
+  commandName = "unknown"
 ): Promise<unknown> {
   // Convert string 'true'/'false' to boolean for boolean schemas
   let processedValue = value;
@@ -115,14 +118,16 @@ async function validateOption(
 
   if (result.issues && result.issues.length > 0) {
     const issue = result.issues[0];
-    if (!issue) return processedValue; // Fallback if no issues
+    if (!issue) {
+      return processedValue; // Fallback if no issues
+    }
 
     const expectedType = extractSchemaType(schema);
     const hint = generateHint(schema, value);
 
     throw new RemptsValidationError(`Invalid option '${name}': ${issue.message}`, {
       option: name,
-      value: value,
+      value,
       command: commandName,
       expectedType,
       hint,
@@ -142,10 +147,18 @@ function extractSchemaType(schema: StandardSchemaV1): string {
   }
 
   // Fallback to checking common patterns
-  if ("enum" in schema) return "enum";
-  if ("items" in schema) return "array";
-  if ("properties" in schema) return "object";
-  if ("format" in schema) return "string";
+  if ("enum" in schema) {
+    return "enum";
+  }
+  if ("items" in schema) {
+    return "array";
+  }
+  if ("properties" in schema) {
+    return "object";
+  }
+  if ("format" in schema) {
+    return "string";
+  }
 
   return "unknown";
 }

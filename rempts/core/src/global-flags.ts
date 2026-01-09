@@ -41,10 +41,10 @@ export const GLOBAL_FLAGS = {
   },
 } satisfies Record<string, CLIOption>;
 
-export type GlobalFlags = {
+export interface GlobalFlags {
   interactive?: boolean;
   tui?: boolean;
   "no-tui"?: boolean;
   help?: boolean;
   version?: boolean;
-};
+}

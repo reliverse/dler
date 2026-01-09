@@ -5,9 +5,9 @@
     "outDir": "./dist",
     "declaration": true,
     "declarationMap": true,
-    "emitDeclarationOnly": true
+    "emitDeclarationOnly": true,
+    "strictNullChecks": true
   },
   "include": ["./src/**/*", "./test/**/*"],
   "exclude": ["./node_modules", "./dist"]
 }
-   

@@ -42,7 +42,7 @@ const dateFormatterCache = new Map<string, Intl.DateTimeFormat>();
 
 function getDateFormatter(
   locale: string | undefined,
-  options: Intl.DateTimeFormatOptions,
+  options: Intl.DateTimeFormatOptions
 ): Intl.DateTimeFormat {
   // Create cache key from locale and options
   const cacheKey = `${locale ?? "default"}|${JSON.stringify(options)}`;
@@ -300,7 +300,7 @@ export function getAvailableTimezones(): string[] {
 export function formatRelativeTime(
   date: Date | number | string,
   baseDate: Date | number | string = new Date(),
-  options: RelativeTimeOptions = {},
+  options: RelativeTimeOptions = {}
 ): string {
   const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   const baseObj =
@@ -408,7 +408,7 @@ export function formatDuration(duration: Duration): string {
   }
   if (duration.milliseconds) {
     parts.push(
-      `${duration.milliseconds} ${duration.milliseconds === 1 ? "millisecond" : "milliseconds"}`,
+      `${duration.milliseconds} ${duration.milliseconds === 1 ? "millisecond" : "milliseconds"}`
     );
   }
 
@@ -428,7 +428,7 @@ export function formatDuration(duration: Duration): string {
     return `${parts[0]} and ${parts[1]}`;
   }
 
-  return `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`;
+  return `${parts.slice(0, -1).join(", ")}, and ${parts.at(-1)}`;
 }
 
 /**
@@ -472,13 +472,27 @@ export function addDuration(date: Date | number | string, duration: Duration): D
  */
 export function subtractDuration(date: Date | number | string, duration: Duration): Date {
   const negatedDuration: Duration = {};
-  if (duration.years) negatedDuration.years = -duration.years;
-  if (duration.months) negatedDuration.months = -duration.months;
-  if (duration.weeks) negatedDuration.weeks = -duration.weeks;
-  if (duration.days) negatedDuration.days = -duration.days;
-  if (duration.hours) negatedDuration.hours = -duration.hours;
-  if (duration.minutes) negatedDuration.minutes = -duration.minutes;
-  if (duration.seconds) negatedDuration.seconds = -duration.seconds;
+  if (duration.years) {
+    negatedDuration.years = -duration.years;
+  }
+  if (duration.months) {
+    negatedDuration.months = -duration.months;
+  }
+  if (duration.weeks) {
+    negatedDuration.weeks = -duration.weeks;
+  }
+  if (duration.days) {
+    negatedDuration.days = -duration.days;
+  }
+  if (duration.hours) {
+    negatedDuration.hours = -duration.hours;
+  }
+  if (duration.minutes) {
+    negatedDuration.minutes = -duration.minutes;
+  }
+  if (duration.seconds) {
+    negatedDuration.seconds = -duration.seconds;
+  }
   if (duration.milliseconds) {
     negatedDuration.milliseconds = -duration.milliseconds;
   }
@@ -514,7 +528,7 @@ export function endOfDay(date: Date | number | string): Date {
  */
 export function startOfWeek(
   date: Date | number | string,
-  weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6 = 0,
+  weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6 = 0
 ): Date {
   const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   const result = new Date(dateObj);
@@ -529,7 +543,7 @@ export function startOfWeek(
  */
 export function endOfWeek(
   date: Date | number | string,
-  weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6 = 0,
+  weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6 = 0
 ): Date {
   const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   const start = startOfWeek(dateObj, weekStartsOn);
@@ -610,7 +624,7 @@ export function isFuture(date: Date | number | string): boolean {
 export function isBetween(
   date: Date | number | string,
   start: Date | number | string,
-  end: Date | number | string,
+  end: Date | number | string
 ): boolean {
   const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   const startObj = typeof start === "string" || typeof start === "number" ? new Date(start) : start;
@@ -628,7 +642,7 @@ export function isBetween(
  */
 export function diffInMilliseconds(
   start: Date | number | string,
-  end: Date | number | string,
+  end: Date | number | string
 ): number {
   const startObj = typeof start === "string" || typeof start === "number" ? new Date(start) : start;
   const endObj = typeof end === "string" || typeof end === "number" ? new Date(end) : end;

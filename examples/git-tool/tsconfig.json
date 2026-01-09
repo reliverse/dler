@@ -6,7 +6,8 @@
     "skipLibCheck": true,
     "paths": {
       "~commands/*": ["./.dler/commands.gen.ts"]
-    }
+    },
+    "strictNullChecks": true
   },
   "include": [".dler/**/*.ts", "**/*.ts"]
 }

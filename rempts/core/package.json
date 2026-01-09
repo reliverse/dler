@@ -62,7 +62,8 @@
     "@reliverse/rempts-utils": "workspace:*",
     "@standard-schema/spec": "catalog:",
     "@standard-schema/utils": "catalog:",
-    "arktype": "catalog:"
+    "arktype": "catalog:",
+    "zustand": "catalog:"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",

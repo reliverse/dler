@@ -19,7 +19,7 @@ export interface ValidateOptions {
 
 export async function validateFiles(
   files: string[],
-  options: ValidateOptions = {},
+  options: ValidateOptions = {}
 ): Promise<ValidationResult[]> {
   const { rules = {}, fix = false } = options;
   const results: ValidationResult[] = [];
@@ -35,7 +35,7 @@ export async function validateFiles(
 async function validateFile(
   filePath: string,
   rules: Record<string, any>,
-  fix: boolean,
+  fix: boolean
 ): Promise<ValidationResult> {
   const errors: ValidationIssue[] = [];
   const warnings: ValidationIssue[] = [];
@@ -87,15 +87,13 @@ async function validateFile(
       });
     }
 
-    if (rules.requireFileHeader) {
-      if (!content.startsWith("/*") && !content.startsWith("//")) {
-        errors.push({
-          line: 1,
-          column: 1,
-          message: "File must start with a header comment",
-          rule: "requireFileHeader",
-        });
-      }
+    if (rules.requireFileHeader && !(content.startsWith("/*") || content.startsWith("//"))) {
+      errors.push({
+        line: 1,
+        column: 1,
+        message: "File must start with a header comment",
+        rule: "requireFileHeader",
+      });
     }
 
     // Auto-fix if requested

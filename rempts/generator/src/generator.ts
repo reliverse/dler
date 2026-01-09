@@ -1,16 +1,16 @@
 import { mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 import debug from "debug";
-import type { GeneratorConfig, GeneratorEvent, CommandMetadata } from "./types";
-import { CommandScanner } from "./scanner";
-import { parseCommand } from "./parser";
 import { buildTypes } from "./builder";
+import { parseCommand } from "./parser";
+import { CommandScanner } from "./scanner";
+import type { CommandMetadata, GeneratorConfig, GeneratorEvent } from "./types";
 
 const log = debug("rempts:generator");
 
 export class Generator {
   private config: GeneratorConfig;
-  private scanner: CommandScanner;
+  private readonly scanner: CommandScanner;
 
   constructor(config: GeneratorConfig) {
     this.config = config;
@@ -20,7 +20,7 @@ export class Generator {
   /**
    * Run the generator to create or update command types
    */
-  async run(event?: GeneratorEvent): Promise<void> {
+  async run(_event?: GeneratorEvent): Promise<void> {
     try {
       // 1. Scan for command files
       const commandFiles = await this.scanCommands();

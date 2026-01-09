@@ -18,8 +18,8 @@ export async function benchmarkCoreMatching(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -29,7 +29,7 @@ export async function benchmarkCoreMatching(
       match("*.ts", "src/mod.ts");
       match("**/*.test.ts", "test/index.test.ts");
       match("src/**/*.ts", "src/utils/helper.ts");
-    }),
+    })
   );
 
   // Benchmark matchAny with multiple patterns
@@ -38,7 +38,7 @@ export async function benchmarkCoreMatching(
       matchAny(testPatterns, "src/mod.ts");
       matchAny(testPatterns, "test/index.test.ts");
       matchAny(testPatterns, "dist/index.js");
-    }),
+    })
   );
 
   // Benchmark matchAll with multiple patterns
@@ -46,7 +46,7 @@ export async function benchmarkCoreMatching(
     await benchmark("matchAll (multiple patterns)", () => {
       matchAll(["*.ts", "src/**"], "src/mod.ts");
       matchAll(["*.js", "dist/**"], "dist/index.js");
-    }),
+    })
   );
 
   // Benchmark matching against multiple paths
@@ -57,7 +57,7 @@ export async function benchmarkCoreMatching(
         match("**/*.test.ts", path);
         match("src/**/*.ts", path);
       }
-    }),
+    })
   );
 
   // Benchmark complex patterns
@@ -66,7 +66,7 @@ export async function benchmarkCoreMatching(
       match("**/*.{ts,tsx}", "src/components/Button.tsx");
       match("packages/*/src/**/*.ts", "packages/foo/src/mod.ts");
       match("!**/node_modules/**", "src/mod.ts");
-    }),
+    })
   );
 
   return results;

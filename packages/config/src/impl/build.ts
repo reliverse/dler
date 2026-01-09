@@ -188,7 +188,7 @@ export interface BuildConfig extends BaseConfig {
  */
 export const getPackageBuildConfig = async (
   packageName: string,
-  dlerConfig: { build?: BuildConfig } | null,
+  dlerConfig: { build?: BuildConfig } | null
 ): Promise<PackageBuildConfig | undefined> => {
   return resolvePackageConfig<PackageBuildConfig>(packageName, dlerConfig?.build);
 };
@@ -202,7 +202,7 @@ export const getPackageBuildConfig = async (
  */
 export const mergeBuildOptions = <T extends Record<string, any>>(
   cliOptions: T,
-  packageConfig?: PackageBuildConfig,
+  packageConfig?: PackageBuildConfig
 ): T => {
   return mergeConfig(cliOptions, packageConfig);
 };

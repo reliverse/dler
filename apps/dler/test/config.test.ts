@@ -1,9 +1,9 @@
-import { test, expect } from "bun:test";
-import { loadConfig } from "../src/config";
-import { defineConfig, remptsConfigSchema } from "@reliverse/rempts-core";
-import { writeFileSync, unlinkSync, existsSync } from "node:fs";
+import { expect, test } from "bun:test";
+import { existsSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { defineConfig, remptsConfigSchema } from "@reliverse/rempts-core";
+import { loadConfig } from "../src/config";
 
 test("defineConfig - returns config as-is", () => {
   const config = {

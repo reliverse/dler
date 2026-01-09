@@ -1,6 +1,6 @@
-import type { CommandMetadata } from "@reliverse/rempts-generator";
-import { resolve } from "node:path";
 import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import type { CommandMetadata } from "@reliverse/rempts-generator";
 
 export async function loadMetadata(): Promise<CommandMetadata[]> {
   try {
@@ -11,9 +11,9 @@ export async function loadMetadata(): Promise<CommandMetadata[]> {
     // Extract metadata from the generated module
     const metadataList = module.generated?.list() || [];
     return metadataList.map((item: any) => item.metadata);
-  } catch (error) {
+  } catch (_error) {
     throw new Error(
-      'Could not load command metadata. Make sure you have run "bun run generate" first.',
+      'Could not load command metadata. Make sure you have run "bun run generate" first.'
     );
   }
 }

@@ -9,8 +9,8 @@ export async function benchmarkVersionBumping(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -21,7 +21,7 @@ export async function benchmarkVersionBumping(
         for (const version of testVersions) {
           bumpVersion(version, type);
         }
-      }),
+      })
     );
   }
 
@@ -32,7 +32,7 @@ export async function benchmarkVersionBumping(
         for (const version of testVersions) {
           getNextVersion(version, type);
         }
-      }),
+      })
     );
   }
 
@@ -40,14 +40,14 @@ export async function benchmarkVersionBumping(
   results.push(
     await benchmark("bumpVersion (single patch)", () => {
       bumpVersion("1.2.3", "patch");
-    }),
+    })
   );
 
   // Benchmark single getNextVersion operation
   results.push(
     await benchmark("getNextVersion (single minor)", () => {
       getNextVersion("1.2.3", "minor");
-    }),
+    })
   );
 
   // Benchmark complex bumping scenarios
@@ -59,7 +59,7 @@ export async function benchmarkVersionBumping(
       bumpVersion("1.0.0-beta.1", "prerelease");
       bumpVersion("1.2.3", "major");
       bumpVersion("1.2.3", "minor");
-    }),
+    })
   );
 
   return results;

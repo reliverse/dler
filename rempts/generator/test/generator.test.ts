@@ -1,10 +1,10 @@
-import { test, expect, describe } from "bun:test";
-import { Generator } from "../src/generator";
-import { CommandScanner } from "../src/scanner";
-import { parseCommand } from "../src/parser";
-import { buildTypes } from "../src/builder";
+import { describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
+import { buildTypes } from "../src/builder";
+import { Generator } from "../src/generator";
+import { parseCommand } from "../src/parser";
+import { CommandScanner } from "../src/scanner";
 
 describe("Generator", () => {
   const testDir = join(import.meta.dir, "fixtures");
@@ -83,8 +83,8 @@ export default defineCommand({
         name: "test-command",
         description: "A test command",
         filePath: join(testDir, "test-command.ts"),
-        importPath: "./commands/test-command",
-        exportPath: "./commands/test-command",
+        importPath: "./cmds/test-command",
+        exportPath: "./cmds/test-command",
       },
     ];
 

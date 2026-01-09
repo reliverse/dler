@@ -6,7 +6,8 @@
     "declaration": true,
     "declarationMap": true,
     "emitDeclarationOnly": false,
-    "noEmit": false
+    "noEmit": false,
+    "strictNullChecks": true
   },
   "include": ["./src/**/*", "./test/**/*", "bench/**/*"],
   "exclude": ["./node_modules", "./dist"]

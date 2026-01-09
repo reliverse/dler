@@ -45,8 +45,7 @@ alwaysApply: true
 - If code needs a paragraph to justify itself, rewrite it
 - Production-ready code onlyrefer omission over correction
 - Modify only what is clearly necessary
-- Prefer Oxlint over ESLint
-- Prefer Oxfmt over Prettier
+- Prefer Biome over ESLint and Prettier
 
 ## Monorepo Rules
 - Bun workspaces by default

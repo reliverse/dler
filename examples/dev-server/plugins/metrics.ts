@@ -1,4 +1,4 @@
-import { createPlugin } from "@reliverse/rempts-core/plugin";
+import { createPlugin, createPluginStore } from "@reliverse/rempts-core/plugin";
 
 interface MetricsStore {
   metrics: {
@@ -9,15 +9,14 @@ interface MetricsStore {
     }>;
     recordEvent: (name: string, data?: Record<string, any>) => void;
     getEvents: (
-      name?: string,
+      name?: string
     ) => Array<{ name: string; timestamp: Date; data: Record<string, any> }>;
     clearEvents: () => void;
   };
 }
 
-export const metricsPlugin = createPlugin<MetricsStore>({
-  name: "metrics",
-  store: {
+export const metricsPlugin = createPlugin<MetricsStore>(() => ({
+  store: createPluginStore<MetricsStore>({
     metrics: {
       events: [],
       recordEvent(name: string, data: Record<string, any> = {}) {
@@ -42,21 +41,25 @@ export const metricsPlugin = createPlugin<MetricsStore>({
         this.events = [];
       },
     },
-  },
+  }),
 
   beforeCommand({ store, command }) {
-    // Record command start
-    store.metrics.recordEvent("command_started", {
-      command: command,
-      timestamp: new Date().toISOString(),
-    });
+    if (store) {
+      // Record command start
+      store.getState().metrics.recordEvent("command_started", {
+        command,
+        timestamp: new Date().toISOString(),
+      });
+    }
   },
 
   afterCommand({ store, command }) {
-    // Record command completion
-    store.metrics.recordEvent("command_completed", {
-      command: command,
-      timestamp: new Date().toISOString(),
-    });
+    if (store) {
+      // Record command completion
+      store.getState().metrics.recordEvent("command_completed", {
+        command,
+        timestamp: new Date().toISOString(),
+      });
+    }
   },
-});
+}));

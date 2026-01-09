@@ -1,6 +1,5 @@
 {
   "recommendations": [
-    "oxc.oxc-vscode",
     "chunsen.bracket-select",
     "oven.bun-vscode",
     "usernamehw.errorlens",
@@ -10,6 +9,7 @@
     "rust-lang.rust-analyzer",
     "bradlc.vscode-tailwindcss",
     "tauri-apps.tauri-vscode",
-    "typescriptteam.native-preview"
+    "typescriptteam.native-preview",
+    "biomejs.biome"
   ]
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
+import { join } from "node:path";
 import { $ } from "bun";
-import { join } from "path";
 
 const rootDir = join(import.meta.dir, "..");
 
@@ -12,7 +12,7 @@ await $`rm -rf ${rootDir}/dist`;
 console.log("🔨 Building types...");
 try {
   await $`cd ${rootDir} && tsc`;
-} catch (error) {
+} catch (_error) {
   console.warn("⚠️  TypeScript compilation had errors, but continuing build...");
 }
 

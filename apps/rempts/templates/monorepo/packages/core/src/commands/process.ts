@@ -1,6 +1,6 @@
+import { logger } from "@{{name}}/utils";
 import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
-import { logger } from "@{{name}}/utils";
 import type { ProcessOptions } from "../types";
 
 const processCommand = defineCommand({

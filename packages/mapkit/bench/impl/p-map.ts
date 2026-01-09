@@ -17,8 +17,8 @@ export async function benchmarkPMap(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
   const smallArray = Array.from({ length: 10 }, (_, i) => i);
@@ -29,21 +29,21 @@ export async function benchmarkPMap(
   results.push(
     await benchmark("pMap (sync, small array)", async () => {
       await pMap(smallArray, syncMapper);
-    }),
+    })
   );
 
   // Benchmark sync mapper with medium array
   results.push(
     await benchmark("pMap (sync, medium array)", async () => {
       await pMap(mediumArray, syncMapper);
-    }),
+    })
   );
 
   // Benchmark sync mapper with large array
   results.push(
     await benchmark("pMap (sync, large array)", async () => {
       await pMap(largeArray, syncMapper);
-    }),
+    })
   );
 
   // Benchmark async mapper with concurrency limit
@@ -53,8 +53,8 @@ export async function benchmarkPMap(
       async () => {
         await pMap(mediumArray, asyncMapper, { concurrency: 5 });
       },
-      100,
-    ),
+      100
+    )
   );
 
   // Benchmark async mapper with unlimited concurrency
@@ -66,15 +66,15 @@ export async function benchmarkPMap(
           concurrency: Number.POSITIVE_INFINITY,
         });
       },
-      100,
-    ),
+      100
+    )
   );
 
   // Benchmark with skip functionality
   results.push(
     await benchmark("pMap (with skip)", async () => {
       await pMap(mediumArray, (x) => (x % 2 === 0 ? x * 2 : pMapSkip));
-    }),
+    })
   );
 
   // Benchmark with async iterable
@@ -86,7 +86,7 @@ export async function benchmarkPMap(
         }
       })();
       await pMap(asyncIterable, syncMapper);
-    }),
+    })
   );
 
   // Benchmark with promise values
@@ -94,7 +94,7 @@ export async function benchmarkPMap(
     await benchmark("pMap (promise values)", async () => {
       const promiseArray = mediumArray.map((x) => Promise.resolve(x));
       await pMap(promiseArray, syncMapper);
-    }),
+    })
   );
 
   return results;

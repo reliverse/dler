@@ -8,7 +8,7 @@ import type { RenderArgs } from "../types";
 let renderer: ((args: RenderArgs<any, any>) => Promise<unknown> | unknown) | null = null;
 
 export function registerTuiRenderer<TFlags = Record<string, unknown>, TStore = {}>(
-  fn: (args: RenderArgs<TFlags, TStore>) => Promise<unknown> | unknown,
+  fn: (args: RenderArgs<TFlags, TStore>) => Promise<unknown> | unknown
 ) {
   renderer = fn as (args: RenderArgs<any, any>) => Promise<unknown> | unknown;
 }

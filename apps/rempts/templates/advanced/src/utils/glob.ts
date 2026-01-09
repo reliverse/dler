@@ -1,5 +1,5 @@
-import { Glob } from "bun";
 import path from "node:path";
+import { Glob } from "bun";
 
 export interface GlobOptions {
   include?: string[];

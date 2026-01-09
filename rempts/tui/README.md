@@ -32,22 +32,9 @@ const cli = await createCLI({
 // Register TUI renderer to enable render() functions
 registerTuiRenderer()
 
-// Define a command with TUI using the render property
-const myCommand = defineCommand({
-  name: 'deploy',
-  description: 'Deploy application',
-  render: () => (
-    <box title="Deployment" style={{ border: true, padding: 2 }}>
-      <text>Deploying...</text>
-    </box>
-  ),
-  handler: async () => {
-    // CLI mode handler (used with --no-tui or in non-interactive environments)
-    console.log('Deploying application...')
-  }
-})
+// Commands are automatically loaded from the cmds/ directory
+// See cmds/deploy.ts for the command definition with TUI
 
-cli.command(myCommand)
 await cli.run()
 ```
 

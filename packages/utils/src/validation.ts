@@ -9,7 +9,8 @@ import { type } from "arktype";
  * Creates a branded type for compile-time guarantees
  * Note: This is a simplified version that works with basic types
  */
-export const createBrandedType = <T extends string>(brand: T) =>
+export const createBrandedType =
+  <T extends string>(brand: T) =>
   (baseType: "string" | "number" | "boolean") =>
     type(baseType).brand(brand);
 
@@ -67,10 +68,9 @@ export const SafeUrl = type("string")
 /**
  * Email validation using arktype built-in constraints
  */
-export const Email = type("string.email")
-  .configure({
-    description: "a valid email address",
-  });
+export const Email = type("string.email").configure({
+  description: "a valid email address",
+});
 
 /**
  * Port number validation with common service warnings
@@ -134,10 +134,9 @@ export const NonEmptyString = type("string")
 /**
  * Positive integer validation
  */
-export const PositiveInteger = type("number.integer > 0")
-  .configure({
-    description: "a positive integer",
-  });
+export const PositiveInteger = type("number.integer > 0").configure({
+  description: "a positive integer",
+});
 
 /**
  * Creates a validated array with minimum and maximum length constraints
@@ -171,16 +170,20 @@ export const createUnionWithMessages = <T extends readonly [string, ...string[]]
   literals: T,
   descriptions?: Record<string, string>
 ) => {
-  const unionString = literals.map(l => `'${l}'`).join(" | ") as any;
+  const unionString = literals.map((l) => `'${l}'`).join(" | ") as any;
 
   return type(unionString)
     .configure({
-      description: descriptions ? Object.values(descriptions).join(" | ") : `one of: ${literals.join(", ")}`,
+      description: descriptions
+        ? Object.values(descriptions).join(" | ")
+        : `one of: ${literals.join(", ")}`,
     })
     .narrow((value: string, ctx) => {
       if (!literals.includes(value as any)) {
         const expected = descriptions
-          ? Object.entries(descriptions).map(([k, v]) => `${k}: ${v}`).join(", ")
+          ? Object.entries(descriptions)
+              .map(([k, v]) => `${k}: ${v}`)
+              .join(", ")
           : literals.join(", ");
 
         return ctx.reject({

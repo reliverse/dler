@@ -1,5 +1,5 @@
-import type { PromptOptions, ConfirmOptions, SelectOptions, SelectOption } from "./types";
 import { relico } from "@reliverse/relico";
+import type { ConfirmOptions, PromptOptions, SelectOption, SelectOptions } from "./types";
 
 // ANSI escape codes
 const ESC = "\x1b";
@@ -49,13 +49,13 @@ export async function prompt<T = string>(message: string, options: PromptOptions
       const result = options.validate(value);
       if (result === true) {
         return value as T;
-      } else if (typeof result === "string") {
+      }
+      if (typeof result === "string") {
         console.error(`✗ ${result}`);
         continue;
-      } else {
-        console.error("✗ Invalid input");
-        continue;
       }
+      console.error("✗ Invalid input");
+      continue;
     }
 
     return value as T;
@@ -89,7 +89,9 @@ export async function confirm(message: string, options: ConfirmOptions = {}): Pr
 export async function select<T = string>(message: string, options: SelectOptions<T>): Promise<T> {
   const { options: choices, default: defaultValue } = options;
   let selectedIndex = defaultValue ? choices.findIndex((opt) => opt.value === defaultValue) : 0;
-  if (selectedIndex === -1) selectedIndex = 0;
+  if (selectedIndex === -1) {
+    selectedIndex = 0;
+  }
 
   console.log(message);
   process.stdout.write(CURSOR_HIDE);
@@ -157,9 +159,9 @@ function drawOptions<T>(options: SelectOption<T>[], selectedIndex: number) {
 
 export async function password<T = string>(
   message: string,
-  options: PromptOptions = {},
+  options: PromptOptions = {}
 ): Promise<T> {
-  process.stdout.write(message + " ");
+  process.stdout.write(`${message} `);
 
   return new Promise((resolve) => {
     let input = "";

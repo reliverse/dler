@@ -21,8 +21,8 @@ export async function benchmarkVersionParsing(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -32,21 +32,21 @@ export async function benchmarkVersionParsing(
       for (const version of testVersions) {
         parseVersion(version);
       }
-    }),
+    })
   );
 
   // Benchmark single valid version
   results.push(
     await benchmark("parseVersion (single valid)", () => {
       parseVersion("1.2.3");
-    }),
+    })
   );
 
   // Benchmark invalid version handling
   results.push(
     await benchmark("parseVersion (invalid)", () => {
       parseVersion("invalid");
-    }),
+    })
   );
 
   // Benchmark edge cases
@@ -55,7 +55,7 @@ export async function benchmarkVersionParsing(
       parseVersion("0.0.0");
       parseVersion("999.999.999");
       parseVersion("1.0.0-beta.1");
-    }),
+    })
   );
 
   return results;

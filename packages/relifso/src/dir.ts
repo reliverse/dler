@@ -25,7 +25,7 @@ export const mkdirp = ensureDir;
 
 export const remove = async (
   path: PathLike,
-  options?: { readonly force?: boolean },
+  options?: { readonly force?: boolean }
 ): Promise<void> => {
   await fsRm(toPathString(path), {
     recursive: true,
@@ -93,7 +93,7 @@ export const readdir = async (path: PathLike, options?: ReaddirOptions): Promise
 
 export const readdirRecursive = async (
   path: PathLike,
-  options?: ListFilesOptions,
+  options?: ListFilesOptions
 ): Promise<string[]> => {
   const target = toPathString(path);
   const queue: string[] = [target];

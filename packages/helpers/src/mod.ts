@@ -8,4 +8,10 @@ export {
   pwd,
   rm,
 } from "./impl/terminal-helpers";
-export { writeError, writeErrorLines, writeJsonFile, writeLine, writeTextFile } from "./impl/write";
+export {
+  writeError,
+  writeErrorLines,
+  writeJsonFile,
+  writeLine,
+  writeTextFile,
+} from "./impl/write";

@@ -18,7 +18,9 @@ export function createSpinner(options?: SpinnerOptions | string): Spinner {
 
   const spinner: Spinner = {
     start(text?: string) {
-      if (isSpinning) return;
+      if (isSpinning) {
+        return;
+      }
 
       isSpinning = true;
       if (text !== undefined) {
@@ -36,7 +38,9 @@ export function createSpinner(options?: SpinnerOptions | string): Spinner {
     },
 
     stop(text?: string) {
-      if (!isSpinning) return;
+      if (!isSpinning) {
+        return;
+      }
 
       isSpinning = false;
       if (intervalId) {

@@ -4,7 +4,7 @@
 
 // Union to intersection conversion
 export type UnionToIntersection<T> = (T extends any ? (arg: T) => any : never) extends (
-  arg: infer T,
+  arg: infer T
 ) => any
   ? T
   : never;
@@ -33,7 +33,7 @@ export type ExtractPrimitives<TUnion> = TUnion extends MergeAllPrimitive
 
 // Merge all primitive types
 export type MergeAllPrimitive =
-  | ReadonlyArray<any>
+  | readonly any[]
   | number
   | string
   | bigint
@@ -114,7 +114,11 @@ export type MakeDifferenceOptional<TLeft, TRight> = keyof TLeft & keyof TRight e
 
 // Check if type is union
 export type IsUnion<T, U extends T = T> = (
-  T extends any ? (U extends T ? false : true) : never
+  T extends any
+    ? U extends T
+      ? false
+      : true
+    : never
 ) extends false
   ? false
   : true;

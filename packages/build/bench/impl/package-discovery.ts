@@ -1,5 +1,8 @@
 import { resolve } from "node:path";
-import { findMonorepoRoot, loadDlerConfig } from "@reliverse/config/impl/discovery";
+import {
+  findMonorepoRoot,
+  loadDlerConfig,
+} from "@reliverse/config/impl/discovery";
 import { getWorkspacePatterns, readPackageJSON } from "@reliverse/typerso";
 import type { BenchmarkResult } from "../perf";
 
@@ -32,7 +35,9 @@ const discoverPackages = async (cwd?: string): Promise<number> => {
     if (pattern.includes("*")) {
       // Pattern with wildcards - use glob
       const glob = new Bun.Glob(pattern);
-      const matches = Array.from(glob.scanSync({ cwd: monorepoRoot, onlyFiles: false }));
+      const matches = Array.from(
+        glob.scanSync({ cwd: monorepoRoot, onlyFiles: false })
+      );
       count += matches.length;
     } else {
       // Direct package path
@@ -47,8 +52,8 @@ export async function benchmarkPackageDiscovery(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -56,7 +61,7 @@ export async function benchmarkPackageDiscovery(
   results.push(
     await benchmark("package discovery (monorepo root)", async () => {
       await findMonorepoRoot(TEST_CWD);
-    }),
+    })
   );
 
   // Benchmark workspace pattern extraction
@@ -69,7 +74,7 @@ export async function benchmarkPackageDiscovery(
           getWorkspacePatterns(rootPkg);
         }
       }
-    }),
+    })
   );
 
   // Benchmark dler config loading
@@ -79,14 +84,14 @@ export async function benchmarkPackageDiscovery(
       if (monorepoRoot) {
         await loadDlerConfig(monorepoRoot);
       }
-    }),
+    })
   );
 
   // Benchmark full discovery (without builds)
   results.push(
     await benchmark("package discovery (full)", async () => {
       await discoverPackages(TEST_CWD);
-    }),
+    })
   );
 
   return results;

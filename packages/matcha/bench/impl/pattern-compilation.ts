@@ -9,8 +9,8 @@ export async function benchmarkPatternCompilation(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -20,7 +20,7 @@ export async function benchmarkPatternCompilation(
       const regex = compile("*.ts");
       regex.test("src/mod.ts");
       regex.test("test/index.test.ts");
-    }),
+    })
   );
 
   // Benchmark compiling multiple patterns
@@ -30,7 +30,7 @@ export async function benchmarkPatternCompilation(
       for (const input of testInputs) {
         regex.test(input);
       }
-    }),
+    })
   );
 
   // Benchmark compiling complex patterns
@@ -39,7 +39,7 @@ export async function benchmarkPatternCompilation(
       compile("**/*.{ts,tsx}");
       compile("packages/*/src/**/*.ts");
       compile("!**/node_modules/**");
-    }),
+    })
   );
 
   // Benchmark reusing compiled regex
@@ -49,7 +49,7 @@ export async function benchmarkPatternCompilation(
       for (const input of testInputs) {
         regex.test(input);
       }
-    }),
+    })
   );
 
   return results;

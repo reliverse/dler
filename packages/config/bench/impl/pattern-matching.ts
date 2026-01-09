@@ -38,8 +38,8 @@ export async function benchmarkPatternMatching(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -49,7 +49,7 @@ export async function benchmarkPatternMatching(
       for (const pkgName of testPackageNames) {
         resolvePackageConfig(pkgName, configWithPatterns);
       }
-    }),
+    })
   );
 
   // Benchmark pattern matching with regex
@@ -58,7 +58,7 @@ export async function benchmarkPatternMatching(
       for (const pkgName of testPackageNames) {
         resolvePackageConfig(pkgName, configWithPatterns);
       }
-    }),
+    })
   );
 
   // Benchmark many patterns
@@ -67,7 +67,7 @@ export async function benchmarkPatternMatching(
       for (const pkgName of testPackageNames) {
         resolvePackageConfig(pkgName, configWithManyPatterns);
       }
-    }),
+    })
   );
 
   // Benchmark no match
@@ -85,7 +85,7 @@ export async function benchmarkPatternMatching(
       for (const pkgName of testPackageNames) {
         resolvePackageConfig(pkgName, noMatchConfig);
       }
-    }),
+    })
   );
 
   return results;

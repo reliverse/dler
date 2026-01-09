@@ -1,4 +1,9 @@
-import type { CreateLoaderOptions, InputFile, LoaderContext, LoadFile } from "../../types";
+import type {
+  CreateLoaderOptions,
+  InputFile,
+  LoaderContext,
+  LoadFile,
+} from "../../types";
 
 import { resolveLoaders } from "./loaders/loaders-mod";
 

@@ -36,7 +36,9 @@ export class FileWatcher {
   }
 
   async start(): Promise<void> {
-    await relinka.info(`👀 Starting file watcher for ${this.packages.length} packages...`);
+    await relinka.info(
+      `👀 Starting file watcher for ${this.packages.length} packages...`
+    );
 
     for (const pkg of this.packages) {
       if (pkg.entryPoints.length === 0) continue;
@@ -53,7 +55,7 @@ export class FileWatcher {
         watcher.close();
       } catch (error) {
         await relinka.warn(
-          `Failed to close watcher for ${path}: ${error instanceof Error ? error.message : String(error)}`,
+          `Failed to close watcher for ${path}: ${error instanceof Error ? error.message : String(error)}`
         );
       }
     }
@@ -104,7 +106,9 @@ export class FileWatcher {
       });
 
       watcher.on("error", (error) => {
-        void relinka.warn(`File watcher error for ${filePath}: ${error.message}`);
+        void relinka.warn(
+          `File watcher error for ${filePath}: ${error.message}`
+        );
         this.watchers.delete(filePath);
       });
 
@@ -114,20 +118,29 @@ export class FileWatcher {
     }
   }
 
-  private async watchDirectory(dirPath: string, pkg: PackageInfo): Promise<void> {
+  private async watchDirectory(
+    dirPath: string,
+    pkg: PackageInfo
+  ): Promise<void> {
     if (this.watchers.has(dirPath)) return;
 
     try {
       const { watch } = await import("node:fs");
-      const watcher = watch(dirPath, { recursive: true }, (eventType, filename) => {
-        if (eventType === "change" && filename) {
-          const fullPath = join(dirPath, filename);
-          this.handleFileChange(fullPath, pkg);
+      const watcher = watch(
+        dirPath,
+        { recursive: true },
+        (eventType, filename) => {
+          if (eventType === "change" && filename) {
+            const fullPath = join(dirPath, filename);
+            this.handleFileChange(fullPath, pkg);
+          }
         }
-      });
+      );
 
       watcher.on("error", (error) => {
-        void relinka.warn(`Directory watcher error for ${dirPath}: ${error.message}`);
+        void relinka.warn(
+          `Directory watcher error for ${dirPath}: ${error.message}`
+        );
         this.watchers.delete(dirPath);
       });
 
@@ -174,7 +187,7 @@ export class FileWatcher {
 
 export async function startWatchMode(
   packages: PackageInfo[],
-  options: WatchOptions,
+  options: WatchOptions
 ): Promise<void> {
   const watcher = new FileWatcher(packages, options);
 

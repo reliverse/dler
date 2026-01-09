@@ -6,7 +6,7 @@ import { SchemaError } from "@standard-schema/utils";
  */
 export async function validate<TSchema extends StandardSchemaV1>(
   schema: TSchema,
-  value: unknown,
+  value: unknown
 ): Promise<StandardSchemaV1.InferOutput<TSchema>> {
   const result = await schema["~standard"].validate(value);
 
@@ -22,7 +22,7 @@ export async function validate<TSchema extends StandardSchemaV1>(
  */
 export async function validateFields<T extends Record<string, StandardSchemaV1>>(
   schemas: T,
-  values: Record<string, unknown>,
+  values: Record<string, unknown>
 ): Promise<
   | {
       [K in keyof T]: StandardSchemaV1.InferOutput<T[K]>;

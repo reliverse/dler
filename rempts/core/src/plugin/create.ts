@@ -2,7 +2,8 @@
  * Plugin development utilities
  */
 
-import type { RemptsPlugin, PluginFactory, MergeStores } from "./types";
+import { createPluginStore, type PluginStore } from "./store.js";
+import type { Plugin, PluginFactory, PluginHooks } from "./types";
 
 /**
  * Create a plugin - supports both direct plugins and plugin factories
@@ -36,18 +37,18 @@ import type { RemptsPlugin, PluginFactory, MergeStores } from "./types";
  *   beforeCommand(context) {
  *     console.log(`${options.prefix}: ${context.store.count}`)
  *   }
- * } satisfies RemptsPlugin<{ count: number }>))
+ * } satisfies PluginHooks<{ count: number }>))
  *
  * // Use it:
  * myPlugin({ prefix: 'Hello' })
  * ```
  */
 // Overload for direct plugin
-export function createPlugin<TStore = {}>(plugin: RemptsPlugin<TStore>): RemptsPlugin<TStore>;
+export function createPlugin<TStore = {}>(plugin: Plugin<TStore>): Plugin<TStore>;
 
 export function createPlugin<TOptions, TStore = {}>(
-  factory: (options: TOptions) => RemptsPlugin<TStore>,
-): (options: TOptions) => RemptsPlugin<TStore>;
+  factory: (options: TOptions) => Plugin<TStore>
+): (options: TOptions) => Plugin<TStore>;
 
 export function createPlugin<T>(input: T): T {
   return input;
@@ -72,7 +73,7 @@ export type InferPluginOptions<T> = T extends PluginFactory<infer O, any> ? O : 
  * ```
  */
 export type InferPluginStore<T> =
-  T extends RemptsPlugin<infer S> ? S : T extends PluginFactory<any, infer S> ? S : {};
+  T extends Plugin<infer S> ? S : T extends PluginFactory<any, infer S> ? S : {};
 
 /**
  * Create a test plugin for development and testing
@@ -91,15 +92,13 @@ export type InferPluginStore<T> =
  * ```
  */
 export function createTestPlugin<TStore = {}>(
-  store: TStore,
-  hooks: Partial<RemptsPlugin<TStore>>,
-): RemptsPlugin<TStore> {
-  return {
-    name: "test-plugin",
-    version: "1.0.0",
-    store,
+  initialState: TStore,
+  hooks: Partial<PluginHooks<TStore>>
+): Plugin<TStore> {
+  return () => ({
+    store: createPluginStore(initialState),
     ...hooks,
-  };
+  });
 }
 
 /**
@@ -114,50 +113,62 @@ export function createTestPlugin<TStore = {}>(
  * )
  * ```
  */
-export function composePlugins<T extends RemptsPlugin[]>(
-  ...plugins: T
-): RemptsPlugin<MergeStores<T>> {
-  const composedStore = plugins.reduce(
-    (acc, plugin) => {
-      if (plugin.store) {
-        return { ...acc, ...plugin.store };
-      }
-      return acc;
-    },
-    {} as MergeStores<T>,
-  );
+export function composePlugins<T extends Plugin[]>(...plugins: T): Plugin {
+  return () => {
+    const hooksArray = plugins.map((plugin) => plugin());
 
-  return {
-    name: "composed-plugin",
-    version: "1.0.0",
-    store: composedStore,
-    async setup(context) {
-      for (const plugin of plugins) {
-        if (plugin.setup) {
-          await plugin.setup(context);
-        }
+    // Collect all stores from plugins
+    const stores: Record<string, PluginStore<any>> = {};
+    hooksArray.forEach((hooks, index) => {
+      if (hooks.store) {
+        stores[`plugin_${index}`] = hooks.store;
       }
-    },
-    async configResolved(config) {
-      for (const plugin of plugins) {
-        if (plugin.configResolved) {
-          await plugin.configResolved(config);
+    });
+
+    // Create combined store if there are any stores
+    const composedStore =
+      Object.keys(stores).length > 0
+        ? createPluginStore(
+            Object.keys(stores).reduce((acc, key) => {
+              const store = stores[key];
+              if (store) {
+                acc[key] = store.getState();
+              }
+              return acc;
+            }, {} as any)
+          )
+        : undefined;
+
+    return {
+      store: composedStore,
+      async setup(context) {
+        for (const hooks of hooksArray) {
+          if (hooks.setup) {
+            await hooks.setup(context);
+          }
         }
-      }
-    },
-    async beforeCommand(context) {
-      for (const plugin of plugins) {
-        if (plugin.beforeCommand) {
-          await plugin.beforeCommand(context);
+      },
+      async configResolved(config) {
+        for (const hooks of hooksArray) {
+          if (hooks.configResolved) {
+            await hooks.configResolved(config);
+          }
         }
-      }
-    },
-    async afterCommand(context) {
-      for (const plugin of plugins) {
-        if (plugin.afterCommand) {
-          await plugin.afterCommand(context);
+      },
+      async beforeCommand(context) {
+        for (const hooks of hooksArray) {
+          if (hooks.beforeCommand) {
+            await hooks.beforeCommand(context);
+          }
         }
-      }
-    },
+      },
+      async afterCommand(context) {
+        for (const hooks of hooksArray) {
+          if (hooks.afterCommand) {
+            await hooks.afterCommand(context);
+          }
+        }
+      },
+    };
   };
 }

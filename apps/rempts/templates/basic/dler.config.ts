@@ -5,10 +5,6 @@ export default defineConfig({
   version: "{{version}}",
   description: "{{description}}",
 
-  commands: {
-    directory: "./src/commands",
-  },
-
   build: {
     entry: "./src/mod.ts",
     outdir: "./dist",

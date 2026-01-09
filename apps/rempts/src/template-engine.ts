@@ -1,6 +1,6 @@
-import { downloadTemplate } from "giget";
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
+import { downloadTemplate } from "giget";
 import type { TemplateManifest } from "./types";
 
 export interface TemplateOptions {
@@ -25,7 +25,7 @@ export async function processTemplate(options: TemplateOptions) {
     const sourceDir = source.startsWith("/") ? source : join(process.cwd(), source);
 
     // Copy template files to destination
-    await Bun.spawn(["cp", "-r", sourceDir + "/.", dir], {
+    await Bun.spawn(["cp", "-r", `${sourceDir}/.`, dir], {
       stdout: "inherit",
       stderr: "inherit",
     }).exited;
@@ -101,7 +101,7 @@ async function loadTemplateManifest(dir: string): Promise<TemplateManifest | nul
 async function processTemplateFiles(
   dir: string,
   variables: Record<string, string>,
-  manifest?: TemplateManifest | null,
+  manifest?: TemplateManifest | null
 ) {
   const files = await getFilesToProcess(dir, manifest);
 
@@ -141,7 +141,7 @@ async function processTemplateFiles(
  */
 async function getFilesToProcess(
   dir: string,
-  manifest?: TemplateManifest | null,
+  manifest?: TemplateManifest | null
 ): Promise<string[]> {
   if (manifest?.files?.include) {
     return manifest.files.include;
@@ -178,7 +178,7 @@ async function getFilesToProcess(
   // Apply exclude patterns from manifest
   if (manifest?.files?.exclude) {
     return files.filter((file) => {
-      return !manifest.files!.exclude!.some((pattern) => {
+      return !manifest.files?.exclude?.some((pattern) => {
         // Convert glob pattern to regex
         const regexPattern = pattern
           .replace(/\*\*/g, ".*") // ** matches any number of directories

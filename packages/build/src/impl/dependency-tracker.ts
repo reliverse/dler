@@ -61,7 +61,10 @@ export class DependencyTracker {
     }
   }
 
-  private async extractDependencies(filePath: string, content: string): Promise<string[]> {
+  private async extractDependencies(
+    filePath: string,
+    content: string
+  ): Promise<string[]> {
     const dependencies: string[] = [];
     const dir = resolve(filePath, "..");
 
@@ -89,7 +92,10 @@ export class DependencyTracker {
     return [...new Set(dependencies)]; // Remove duplicates
   }
 
-  private resolveImportPath(importPath: string, fromDir: string): string | null {
+  private resolveImportPath(
+    importPath: string,
+    fromDir: string
+  ): string | null {
     // Handle relative imports
     if (importPath.startsWith("./") || importPath.startsWith("../")) {
       return resolve(fromDir, importPath);

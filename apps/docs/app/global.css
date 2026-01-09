@@ -1,6 +1,6 @@
-@import 'tailwindcss';
-@import 'fumadocs-ui/css/neutral.css';
-@import 'fumadocs-ui/css/preset.css';
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
@@ -120,10 +120,15 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family:
+      var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, sans-serif;
   }
-  code, pre, .font-mono {
-    font-family: var(--font-geist-mono), 'JetBrains Mono', 'Fira Code', monospace;
+  code,
+  pre,
+  .font-mono {
+    font-family:
+      var(--font-geist-mono), "JetBrains Mono", "Fira Code", monospace;
   }
 }
 
@@ -132,10 +137,11 @@
   html {
     @apply scroll-smooth;
   }
-  
+
   /* Code block styling with Geist Mono */
   pre code {
-    font-family: var(--font-geist-mono), 'JetBrains Mono', 'Fira Code', monospace;
+    font-family:
+      var(--font-geist-mono), "JetBrains Mono", "Fira Code", monospace;
     @apply text-sm leading-normal block whitespace-pre break-normal;
   }
 }
@@ -143,7 +149,11 @@
 @layer components {
   /* Subtle gradient for hero - can't be replaced with Tailwind utilities */
   .hero-gradient {
-    background: radial-gradient(ellipse at center top, var(--primary) 0%, transparent 50%);
+    background: radial-gradient(
+      ellipse at center top,
+      var(--primary) 0%,
+      transparent 50%
+    );
     @apply opacity-10;
   }
 }

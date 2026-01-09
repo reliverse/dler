@@ -3,7 +3,12 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
 import { logger } from "@reliverse/relinka";
-import type { BuildResult, BunBuildConfig, DlerPlugin, PackageInfo } from "../types";
+import type {
+  BuildResult,
+  BunBuildConfig,
+  DlerPlugin,
+  PackageInfo,
+} from "../types";
 
 export const AssetOptimizationPlugin: DlerPlugin = {
   name: "asset-optimization",

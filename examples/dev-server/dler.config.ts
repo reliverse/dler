@@ -7,12 +7,12 @@ export default defineConfig({
     "Development server with plugins - Advanced plugin system and configuration management",
   plugins: [],
   commands: {
-    directory: "./commands",
+    directory: "./cmds",
   },
   build: {
     entry: "cli.ts",
     outdir: "dist",
-    targets: ["native"],
+    targets: ["bun-linux-x64-modern"],
     compress: false,
     minify: false,
     sourcemap: true,
@@ -32,7 +32,7 @@ export default defineConfig({
   release: {
     npm: true,
     github: false,
-    tagFormat: "v{{version}}",
+    tagFormat: "v${version}",
     conventionalCommits: true,
   },
 });

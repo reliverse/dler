@@ -67,7 +67,7 @@ function clearLoggerInternalsInFile(filePath: string): boolean {
 }
 
 export async function clearLoggerInternalsInPackages(
-  options: ClearLoggerInternalsOptions,
+  options: ClearLoggerInternalsOptions
 ): Promise<ClearResult> {
   const { packages, ignorePackages, verbose = false, onLog } = options;
 

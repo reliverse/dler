@@ -1,9 +1,9 @@
-import { test, expect } from "bun:test";
+import { expect, test } from "bun:test";
+import { relico } from "@reliverse/relico";
 import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
-import { testCommand, expectCommand } from "../src/mod";
-import { mockPromptResponses, mockShellCommands, mockInteractive } from "../src/helpers";
-import { relico } from "@reliverse/relico";
+import { mockInteractive, mockPromptResponses, mockShellCommands } from "../src/helpers";
+import { expectCommand, testCommand } from "../src/mod";
 
 test("testCommand - basic command execution", async () => {
   const command = defineCommand({
@@ -184,7 +184,7 @@ test("testCommand - with mockPrompts", async () => {
       "What is your name?": "Bob",
       "What is your age?": "25",
       "Are you happy?": "yes",
-    }),
+    })
   );
 
   expect(result.stdout).toContain("Bob (25) is happy");
@@ -206,7 +206,7 @@ test("testCommand - with mockShellCommands", async () => {
     mockShellCommands({
       "npm --version": "10.2.0\n",
       "git branch --show-current": "feature/awesome\n",
-    }),
+    })
   );
 
   expect(result.stdout).toContain("Deploying from feature/awesome with npm 10.2.0");
@@ -233,8 +233,8 @@ test("testCommand - mockInteractive helper", async () => {
       },
       {
         "git config user.name": "Alice Developer\n",
-      },
-    ),
+      }
+    )
   );
 
   expect(result.stdout).toContain("Setting up my-app (TS: true) for Alice Developer");
@@ -256,9 +256,9 @@ test("testCommand - validation with retry using mockPrompts", async () => {
     command,
     mockPromptResponses({
       "Enter email:": ["not-an-email", "still-bad", "valid@email.com"],
-    }),
+    })
   );
 
-  expect(result.stderr).toContain("Invalid email format");
+  expect(result.stderr).toContain("must be an email address");
   expect(result.stdout).toContain("Registered: valid@email.com");
 });

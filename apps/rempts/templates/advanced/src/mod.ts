@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 import { createCLI } from "@reliverse/rempts-core";
-import initCommand from "./commands/init";
-import validateCommand from "./commands/validate";
-import serveCommand from "./commands/serve";
 import configCommand from "./commands/config";
+import initCommand from "./commands/init";
+import serveCommand from "./commands/serve";
+import validateCommand from "./commands/validate";
 import { loadConfig } from "./utils/config";
 
 const cli = await createCLI({

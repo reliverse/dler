@@ -48,8 +48,8 @@ export async function benchmarkCache(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
   const cacheDir = join(tmpdir(), "build-bench-cache-dir");
@@ -76,7 +76,7 @@ export async function benchmarkCache(
         outputFiles: [join(pkg.outputDir, "index.js")],
       });
       await cache.get(pkg, testOptions);
-    }),
+    })
   );
 
   // Benchmark cache set
@@ -87,7 +87,7 @@ export async function benchmarkCache(
         bundleSize: 1024,
         outputFiles: [join(pkg.outputDir, "index.js")],
       });
-    }),
+    })
   );
 
   // Benchmark cache get (miss)
@@ -99,14 +99,14 @@ export async function benchmarkCache(
         name: "@test/different",
       };
       await cache.get(differentPkg, testOptions);
-    }),
+    })
   );
 
   // Benchmark cache get (hit)
   results.push(
     await benchmark("cache get (hit)", async () => {
       await cache.get(pkg, testOptions);
-    }),
+    })
   );
 
   // Cleanup

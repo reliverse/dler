@@ -34,8 +34,8 @@ export async function benchmarkFiltering(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
   const items = createTestItems(100);
@@ -44,14 +44,14 @@ export async function benchmarkFiltering(
   results.push(
     await benchmark("filter (include patterns)", () => {
       filter(includePatterns, testPaths);
-    }),
+    })
   );
 
   // Benchmark exclude function
   results.push(
     await benchmark("exclude (ignore patterns)", () => {
       exclude(ignorePatterns, testPaths);
-    }),
+    })
   );
 
   // Benchmark createIgnoreFilter
@@ -59,7 +59,7 @@ export async function benchmarkFiltering(
     await benchmark("createIgnoreFilter", () => {
       const ignoreFilter = createIgnoreFilter(ignorePatterns);
       ignoreFilter(items);
-    }),
+    })
   );
 
   // Benchmark createIncludeFilter
@@ -67,20 +67,20 @@ export async function benchmarkFiltering(
     await benchmark("createIncludeFilter", () => {
       const includeFilter = createIncludeFilter(includePatterns);
       includeFilter(items);
-    }),
+    })
   );
 
   // Benchmark normalizePatterns
   results.push(
     await benchmark("normalizePatterns (string)", () => {
       normalizePatterns("*.ts *.js **/*.test.ts");
-    }),
+    })
   );
 
   results.push(
     await benchmark("normalizePatterns (array)", () => {
       normalizePatterns(["*.ts", "*.js", "**/*.test.ts"]);
-    }),
+    })
   );
 
   // Benchmark complex filtering chain
@@ -89,7 +89,7 @@ export async function benchmarkFiltering(
       const filtered = filter(includePatterns, testPaths);
       const excluded = exclude(ignorePatterns, filtered);
       exclude(["*.js"], excluded);
-    }),
+    })
   );
 
   return results;

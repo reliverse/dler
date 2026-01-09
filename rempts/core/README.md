@@ -95,9 +95,9 @@ Create complex CLIs with multiple commands:
 
 ```typescript
 import { createCLI } from '@reliverse/rempts-core'
-import build from './commands/build'
-import deploy from './commands/deploy'
-import test from './commands/test'
+import build from './cmds/build'
+import deploy from './cmds/deploy'
+import test from './cmds/test'
 
 const cli = createCLI({
   name: 'my-tool',
@@ -212,16 +212,8 @@ const cli = await createCLI({
 })
 
 // In your commands, the store is fully typed!
-cli.command({
-  name: 'deploy',
-  handler: async ({ context }) => {
-    // TypeScript knows about all plugin stores!
-    if (!context?.store.isAuthenticated) {
-      throw new Error('Not authenticated')
-    }
-    console.log(`Deploying as ${context.store.user?.name}`)
-  }
-})
+// Commands are automatically loaded from the cmds/ directory
+// and plugin stores are available via the context parameter
 ```
 
 ### Plugin Development Utilities
@@ -341,7 +333,7 @@ Configure TypeScript path mapping for better IDE support:
 {
   "compilerOptions": {
     "paths": {
-      "~commands/*": ["./.dler/commands.gen.ts"]
+      "~cmds/*": ["./.dler/commands.gen.ts"]
     }
   }
 }
@@ -351,8 +343,8 @@ Then use auto-imports:
 
 ```typescript
 // These will show up in IDE auto-complete
-import { listCommands } from '~commands/helpers'
-import { getCommandApi } from '~commands/api'
+import { listCommands } from '~cmds/helpers'
+import { getCommandApi } from '~cmds/api'
 ```
 
 <Callout type="tip">
@@ -462,7 +454,7 @@ type Example = Constrain<string, 'a' | 'b' | 'c', 'a'>
 These utilities work particularly well with generated command types:
 
 ```typescript
-import { getCommandApi, listCommands } from './commands.gen'
+import { getCommandApi, listCommands } from './cmds.gen'
 import { UnionToIntersection, MergeAll } from '@reliverse/rempts-core'
 
 // Get all command options as a union

@@ -1,8 +1,8 @@
 "use client";
 
+import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 
 const traditionalCode = `// 50+ lines of boilerplate
 const yargs = require('yargs')
@@ -57,41 +57,41 @@ export function CodeComparison() {
   return (
     <section className="px-6 py-24 sm:py-32 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mx-auto max-w-2xl text-center mb-16">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">See the Difference</h2>
+        <div className="mx-auto mb-16 max-w-2xl text-center">
+          <h2 className="font-bold text-3xl tracking-tight sm:text-4xl">See the Difference</h2>
           <p className="mt-4 text-lg text-muted-foreground">Less boilerplate, more productivity</p>
         </div>
 
         <div className="mx-auto max-w-5xl">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs className="w-full" onValueChange={setActiveTab} value={activeTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="traditional">Traditional CLI</TabsTrigger>
               <TabsTrigger value="rempts">With Rempts</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="traditional" className="mt-6">
-              <div className="rounded-lg border bg-card overflow-hidden">
+            <TabsContent className="mt-6" value="traditional">
+              <div className="overflow-hidden rounded-lg border bg-card">
                 <div className="flex items-center gap-2 border-b px-4 py-3">
                   <div className="flex gap-1.5">
                     <div className="h-3 w-3 rounded-full bg-red-500" />
                     <div className="h-3 w-3 rounded-full bg-yellow-500" />
                     <div className="h-3 w-3 rounded-full bg-green-500" />
                   </div>
-                  <span className="ml-2 text-sm text-muted-foreground">traditional-cli.js</span>
+                  <span className="ml-2 text-muted-foreground text-sm">traditional-cli.js</span>
                 </div>
                 <DynamicCodeBlock code={traditionalCode} lang="javascript" />
               </div>
             </TabsContent>
 
-            <TabsContent value="rempts" className="mt-6">
-              <div className="rounded-lg border bg-card overflow-hidden">
+            <TabsContent className="mt-6" value="rempts">
+              <div className="overflow-hidden rounded-lg border bg-card">
                 <div className="flex items-center gap-2 border-b px-4 py-3">
                   <div className="flex gap-1.5">
                     <div className="h-3 w-3 rounded-full bg-red-500" />
                     <div className="h-3 w-3 rounded-full bg-yellow-500" />
                     <div className="h-3 w-3 rounded-full bg-green-500" />
                   </div>
-                  <span className="ml-2 text-sm text-muted-foreground">rempts-cli.ts</span>
+                  <span className="ml-2 text-muted-foreground text-sm">rempts-cli.ts</span>
                 </div>
                 <DynamicCodeBlock code={remptsCode} lang="typescript" />
               </div>
@@ -99,17 +99,17 @@ export function CodeComparison() {
           </Tabs>
 
           <div className="mt-12 grid gap-8 sm:grid-cols-3">
-            <div className="text-center p-6 rounded-lg bg-muted/30">
-              <div className="text-4xl font-bold text-primary">80%</div>
-              <div className="mt-2 text-sm text-muted-foreground">Less boilerplate</div>
+            <div className="rounded-lg bg-muted/30 p-6 text-center">
+              <div className="font-bold text-4xl text-primary">80%</div>
+              <div className="mt-2 text-muted-foreground text-sm">Less boilerplate</div>
             </div>
-            <div className="text-center p-6 rounded-lg bg-muted/30">
-              <div className="text-4xl font-bold text-primary">100%</div>
-              <div className="mt-2 text-sm text-muted-foreground">Type safe</div>
+            <div className="rounded-lg bg-muted/30 p-6 text-center">
+              <div className="font-bold text-4xl text-primary">100%</div>
+              <div className="mt-2 text-muted-foreground text-sm">Type safe</div>
             </div>
-            <div className="text-center p-6 rounded-lg bg-muted/30">
-              <div className="text-4xl font-bold text-primary">10x</div>
-              <div className="mt-2 text-sm text-muted-foreground">Faster development</div>
+            <div className="rounded-lg bg-muted/30 p-6 text-center">
+              <div className="font-bold text-4xl text-primary">10x</div>
+              <div className="mt-2 text-muted-foreground text-sm">Faster development</div>
             </div>
           </div>
         </div>

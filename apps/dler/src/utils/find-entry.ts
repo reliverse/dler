@@ -36,7 +36,8 @@ export async function findEntry(cwd = process.cwd()): Promise<string | undefined
       if (pkg.bin) {
         if (typeof pkg.bin === "string") {
           return pkg.bin;
-        } else if (typeof pkg.bin === "object") {
+        }
+        if (typeof pkg.bin === "object") {
           // Return first bin entry
           const firstBin = Object.values(pkg.bin)[0];
           if (typeof firstBin === "string") {

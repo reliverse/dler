@@ -3,7 +3,8 @@
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "./dist",
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "strictNullChecks": true
   },
   "include": ["./src/**/*", "./test/**/*", "bench/**/*"],
   "exclude": ["./node_modules", "./dist"]

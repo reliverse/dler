@@ -84,7 +84,9 @@ type ImportExtType = "js" | "ts" | "none";
  * normalizes windows paths to use forward slashes
  */
 function normalizeWindowsPath(input = ""): string {
-  if (!input) return input;
+  if (!input) {
+    return input;
+  }
 
   return input.replace(/\\/g, SLASH).replace(DRIVE_LETTER_START_RE, (r) => r.toUpperCase());
 }
@@ -129,12 +131,7 @@ function normalizeString(path: string, allowAboveRoot: boolean): string {
       if (lastSlash === index - 1 || dots === 1) {
         // noop: consecutive slashes or single dot
       } else if (dots === 2) {
-        if (
-          res.length < 2 ||
-          lastSegmentLength !== 2 ||
-          !res.endsWith(DOT) ||
-          res[res.length - 2] !== DOT
-        ) {
+        if (res.length < 2 || lastSegmentLength !== 2 || !res.endsWith(DOT) || res.at(-2) !== DOT) {
           if (res.length > 2) {
             const lastSlashIndex = res.lastIndexOf(SLASH);
             if (lastSlashIndex === -1) {
@@ -187,7 +184,9 @@ const sep = SLASH;
  * normalizes a path, resolving . and .. segments
  */
 const normalize = (path: string): string => {
-  if (path.length === 0) return DOT;
+  if (path.length === 0) {
+    return DOT;
+  }
 
   const originalPath = path;
   path = normalizeWindowsPath(path);
@@ -198,7 +197,9 @@ const normalize = (path: string): string => {
   path = normalizeString(path, !isPathAbsolute);
 
   if (path.length === 0) {
-    if (isPathAbsolute) return SLASH;
+    if (isPathAbsolute) {
+      return SLASH;
+    }
 
     return trailingSeparator && originalPath.length > 0 && originalPath !== DOT ? "./" : DOT;
   }
@@ -232,7 +233,9 @@ const normalize = (path: string): string => {
  * joins path segments with proper normalization
  */
 const join = (...segments: string[]): string => {
-  if (segments.length === 0) return DOT;
+  if (segments.length === 0) {
+    return DOT;
+  }
 
   let joined = EMPTY;
   for (const segment of segments) {
@@ -248,7 +251,9 @@ const join = (...segments: string[]): string => {
     }
   }
 
-  if (joined.length === 0) return DOT;
+  if (joined.length === 0) {
+    return DOT;
+  }
   return normalize(joined);
 };
 
@@ -265,7 +270,9 @@ const resolve = (...args: string[]): string => {
     if (typeof path !== "string") {
       throw new TypeError("Arguments to path.resolve must be strings");
     }
-    if (path.length === 0) continue;
+    if (path.length === 0) {
+      continue;
+    }
 
     const normalizedSegment = normalizeWindowsPath(path);
     resolvedPath = `${normalizedSegment}${SLASH}${resolvedPath}`;
@@ -288,7 +295,9 @@ const resolve = (...args: string[]): string => {
  * checks if path is absolute
  */
 const isAbsolute = (p: string): boolean => {
-  if (typeof p !== "string") return false;
+  if (typeof p !== "string") {
+    return false;
+  }
   return IS_ABSOLUTE_RE.test(normalizeWindowsPath(p));
 };
 
@@ -296,7 +305,9 @@ const isAbsolute = (p: string): boolean => {
  * converts path to namespaced path for windows
  */
 const toNamespacedPath = (p: string): string => {
-  if (typeof p !== "string" || p.length === 0) return p;
+  if (typeof p !== "string" || p.length === 0) {
+    return p;
+  }
   return normalize(p);
 };
 
@@ -304,18 +315,26 @@ const toNamespacedPath = (p: string): string => {
  * gets file extension including the dot
  */
 const extname = (p: string): string => {
-  if (typeof p !== "string") return EMPTY;
+  if (typeof p !== "string") {
+    return EMPTY;
+  }
   const path = normalizeWindowsPath(p);
 
   let lastSlashIdx = path.lastIndexOf(SLASH);
-  if (lastSlashIdx === -1) lastSlashIdx = 0;
+  if (lastSlashIdx === -1) {
+    lastSlashIdx = 0;
+  }
 
   const basePart = lastSlashIdx === 0 ? path : path.substring(lastSlashIdx + 1);
 
-  if (basePart === DOT || basePart === DOUBLE_DOT) return EMPTY;
+  if (basePart === DOT || basePart === DOUBLE_DOT) {
+    return EMPTY;
+  }
 
   const lastDotIdx = basePart.lastIndexOf(DOT);
-  if (lastDotIdx <= 0) return EMPTY;
+  if (lastDotIdx <= 0) {
+    return EMPTY;
+  }
 
   return basePart.substring(lastDotIdx);
 };
@@ -327,7 +346,9 @@ const relative = (from: string, to: string): string => {
   const resolvedFrom = resolve(from);
   const resolvedTo = resolve(to);
 
-  if (resolvedFrom === resolvedTo) return EMPTY;
+  if (resolvedFrom === resolvedTo) {
+    return EMPTY;
+  }
 
   const fromSegments = resolvedFrom.replace(ROOT_FOLDER_RE, "$1").split(SLASH).filter(Boolean);
 
@@ -357,7 +378,7 @@ const relative = (from: string, to: string): string => {
     commonSegments++;
   }
 
-  const upSegments = Array(fromSegments.length - commonSegments).fill(DOUBLE_DOT);
+  const upSegments = new Array(fromSegments.length - commonSegments).fill(DOUBLE_DOT);
   const downSegments = toSegments.slice(commonSegments);
 
   const result = [...upSegments, ...downSegments].join(SLASH);
@@ -368,7 +389,9 @@ const relative = (from: string, to: string): string => {
  * gets directory name from path
  */
 const dirname = (p: string): string => {
-  if (typeof p !== "string" || p.length === 0) return DOT;
+  if (typeof p !== "string" || p.length === 0) {
+    return DOT;
+  }
 
   const normalizedPath = normalizeWindowsPath(p);
   const lastSlash = normalizedPath.lastIndexOf(SLASH);
@@ -376,7 +399,9 @@ const dirname = (p: string): string => {
   if (lastSlash === -1) {
     return IS_ABSOLUTE_RE.test(normalizedPath) ? SLASH : DOT;
   }
-  if (lastSlash === 0) return SLASH;
+  if (lastSlash === 0) {
+    return SLASH;
+  }
 
   const dir = normalizedPath.slice(0, lastSlash);
 
@@ -398,8 +423,12 @@ const format = (p: FormatInputPathObject): string => {
   const dir = p.dir || p.root || "";
   const base = p.base || `${p.name || ""}${p.ext || ""}`;
 
-  if (!dir) return base;
-  if (dir === p.root) return `${dir}${base}`;
+  if (!dir) {
+    return base;
+  }
+  if (dir === p.root) {
+    return `${dir}${base}`;
+  }
 
   return normalize(`${dir}${SLASH}${base}`);
 };
@@ -408,9 +437,12 @@ const format = (p: FormatInputPathObject): string => {
  * gets base filename from path
  */
 const basename = (p: string, ext?: string): string => {
-  if (typeof p !== "string") throw new TypeError("Path must be a string.");
-  if (ext !== undefined && typeof ext !== "string")
+  if (typeof p !== "string") {
+    throw new TypeError("Path must be a string.");
+  }
+  if (ext !== undefined && typeof ext !== "string") {
     throw new TypeError("[basename] `ext` must be a string.");
+  }
 
   const normalizedPath = normalizeWindowsPath(p);
 
@@ -419,7 +451,9 @@ const basename = (p: string, ext?: string): string => {
   while (end > 0 && normalizedPath[end - 1] === SLASH) {
     end--;
   }
-  if (end === 0) return EMPTY;
+  if (end === 0) {
+    return EMPTY;
+  }
 
   // find last slash
   let start = normalizedPath.lastIndexOf(SLASH, end - 1);
@@ -439,7 +473,9 @@ const basename = (p: string, ext?: string): string => {
  * parses a path into its components
  */
 const parse = (p: string): ParsedPath => {
-  if (typeof p !== "string") throw new TypeError("Path must be a string.");
+  if (typeof p !== "string") {
+    throw new TypeError("Path must be a string.");
+  }
 
   const normalizedPath = normalizeWindowsPath(p);
   const B = basename(normalizedPath);
@@ -463,11 +499,9 @@ const parse = (p: string): ParsedPath => {
       R += SLASH;
     }
     // handle unc paths
-    else if (R === SLASH && D.startsWith("//")) {
-      if (UNC_REGEX.exec(D)) {
-        const uncParts = D.split(SLASH).slice(0, 3);
-        R = uncParts.join(SLASH) || R;
-      }
+    else if (R === SLASH && D.startsWith("//") && UNC_REGEX.exec(D)) {
+      const uncParts = D.split(SLASH).slice(0, 3);
+      R = uncParts.join(SLASH) || R;
     }
   }
 
@@ -487,7 +521,9 @@ const parse = (p: string): ParsedPath => {
  */
 function filename(pathString: string): string | undefined {
   const base = basename(pathString);
-  if (!base) return undefined;
+  if (!base) {
+    return undefined;
+  }
 
   const separatorIndex = base.lastIndexOf(DOT);
   return separatorIndex <= 0 ? base : base.slice(0, separatorIndex);
@@ -505,8 +541,7 @@ function normalizeAliases(aliases: Record<string, string>): NormalizedRecord {
   // normalize and sort by segment count (longest first)
   const sortedAliasesEntries = Object.entries(aliases)
     .map(
-      ([key, value]) =>
-        [normalizeWindowsPath(key), normalizeWindowsPath(value)] as [string, string],
+      ([key, value]) => [normalizeWindowsPath(key), normalizeWindowsPath(value)] as [string, string]
     )
     .sort(([a], [b]) => compareAliases(a, b));
 
@@ -515,8 +550,9 @@ function normalizeAliases(aliases: Record<string, string>): NormalizedRecord {
   // resolve nested aliases
   for (const key in sortedAliases) {
     for (const aliasPrefix in sortedAliases) {
-      if (aliasPrefix === key || key.startsWith(aliasPrefix + SLASH) || key === aliasPrefix)
+      if (aliasPrefix === key || key.startsWith(aliasPrefix + SLASH) || key === aliasPrefix) {
         continue;
+      }
 
       const value = sortedAliases[key];
       if (value?.startsWith(aliasPrefix)) {
@@ -590,7 +626,7 @@ function reverseResolveAlias(path: string, aliases: Record<string, string>): str
  */
 const findAliasMatch = (
   importPath: string,
-  paths: Record<string, string[]>,
+  paths: Record<string, string[]>
 ): {
   key: string;
   root: string;
@@ -603,19 +639,19 @@ const findAliasMatch = (
   // Skip if it's an npm package import/export that doesn't match our alias
   const firstPathKey = Object.keys(paths)[0];
   if (!firstPathKey) {
-    logInternal(`  - no paths defined`);
+    logInternal("  - no paths defined");
     return null;
   }
 
   const baseAlias = firstPathKey.replace("/*", "");
   if (importPath.startsWith("@") && !importPath.startsWith(baseAlias)) {
-    logInternal(`  - skipping: npm package import`);
+    logInternal("  - skipping: npm package import");
     return null;
   }
 
   // exact match
   if (paths[importPath]?.[0]) {
-    logInternal(`  - found exact match`);
+    logInternal("  - found exact match");
     return {
       key: importPath,
       root: importPath,
@@ -636,7 +672,7 @@ const findAliasMatch = (
         const targetPaths = paths[aliasKey];
         if (targetPaths?.[0]) {
           const resolvedPathPattern = targetPaths[0].slice(0, -2);
-          logInternal(`  - found wildcard match`);
+          logInternal("  - found wildcard match");
           logInternal(`    - suffix: ${suffix}`);
           logInternal(`    - resolvedPathPattern: ${resolvedPathPattern}`);
 
@@ -651,7 +687,7 @@ const findAliasMatch = (
     }
   }
 
-  logInternal(`  - no match found`);
+  logInternal("  - no match found");
   return null;
 };
 
@@ -668,7 +704,7 @@ const toRelativeImport = (absPath: string, fromDir: string): string => {
  */
 async function resolveFileWithExtensions(
   basePath: string,
-  extensions = ["", ...EXTENSIONS, ".json"],
+  extensions = ["", ...EXTENSIONS, ".json"]
 ): Promise<string | null> {
   // try direct file
   for (const ext of extensions) {
@@ -732,7 +768,7 @@ async function convertStringAliasRelative({
   // Skip if it's an npm package import/export that doesn't match our alias
   const baseAlias = pathPattern.replace("/*", "");
   if (importPath.startsWith("@") && !importPath.startsWith(baseAlias)) {
-    logInternal(`  - skipping: npm package import`);
+    logInternal("  - skipping: npm package import");
     return importPath;
   }
 
@@ -741,7 +777,7 @@ async function convertStringAliasRelative({
   const match = findAliasMatch(importPath, paths);
 
   if (!match) {
-    logInternal(`  - no alias match found`);
+    logInternal("  - no alias match found");
     return importPath;
   }
 
@@ -795,7 +831,7 @@ async function processFile(
   targetDir: string,
   pathExtFilter: PathExtFilter,
   displayLogsOnlyFor?: string[],
-  displayLogs = false,
+  displayLogs = false
 ): Promise<{ from: string; to: string }[]> {
   const shouldLog = displayLogs && (!displayLogsOnlyFor || displayLogsOnlyFor.includes(filePath));
   const log = (msg: string) => shouldLog && filteredLogger(msg);
@@ -819,7 +855,9 @@ async function processFile(
   for (const match of matches) {
     const originalQuote = match[1];
     const importPath = match[2];
-    if (!importPath) continue;
+    if (!importPath) {
+      continue;
+    }
 
     log(`  Processing import: ${importPath}`);
 
@@ -843,7 +881,7 @@ async function processFile(
       continue;
     }
 
-    log(`  - converting alias to relative path...`);
+    log("  - converting alias to relative path...");
     const relPath = await convertStringAliasRelative({
       importPath,
       importerFile: filePath,
@@ -866,17 +904,15 @@ async function processFile(
       updated = replaceAllInString(updated, searchString, replacementString);
       log(`  - applied change: ${importPath} → ${finalPath}`);
     } else {
-      log(`  - no change needed`);
+      log("  - no change needed");
     }
   }
 
   if (content !== updated) {
     await fs.writeFile(filePath, updated);
     log(`✓ processed: ${filePath}`);
-  } else {
-    if (DEBUG_MODE) {
-      log(`  - no changes made to file: ${filePath}`);
-    }
+  } else if (DEBUG_MODE) {
+    log(`  - no changes made to file: ${filePath}`);
   }
 
   return changes;
@@ -909,7 +945,9 @@ async function processAllFiles({
         const fullPath = join(srcDir, entry.name);
 
         if (entry.isDirectory()) {
-          if (entry.name === "node_modules") return;
+          if (entry.name === "node_modules") {
+            return;
+          }
 
           const subdirResults = await processAllFiles({
             srcDir: fullPath,
@@ -927,7 +965,7 @@ async function processAllFiles({
             aliasToReplace,
             rootDir,
             pathExtFilter,
-            displayLogsOnlyFor,
+            displayLogsOnlyFor
           );
 
           if (changes.length > 0) {
@@ -936,13 +974,13 @@ async function processAllFiles({
         } else {
           logInternal(`  - non-matching file skip: ${entry.name}`);
         }
-      }),
+      })
     );
 
     return results;
   } catch (error) {
     regularLogger(
-      `error processing directory ${srcDir}: ${error instanceof Error ? error.message : String(error)}`,
+      `error processing directory ${srcDir}: ${error instanceof Error ? error.message : String(error)}`
     );
     return [];
   }
@@ -1014,7 +1052,7 @@ async function convertImportsExt({
   alias?: string;
   displayLogs?: boolean;
 }): Promise<{ file: string; changes: { from: string; to: string }[] }[]> {
-  logInternal(`Converting import/export extensions`);
+  logInternal("Converting import/export extensions");
   logInternal(`from '${extFrom}' to '${extTo}' in "${targetDir}"...`);
 
   // create regex pattern based on extfrom
@@ -1030,7 +1068,7 @@ async function convertImportsExt({
   // but only at the start of a line or after a semicolon/newline
   const importRegex = new RegExp(
     `(?:^|;|\\n)\\s*(?:import\\s+(?:[\\s\\S]*?)\\s+from\\s+|import\\s*\\(\\s*|export\\s+\\*\\s+from\\s+)\\s*(['"])([^'"]+${fromExtStr.replace(".", "\\.")})(\\1)`,
-    "gm",
+    "gm"
   );
 
   // Helper to determine if a path should be skipped
@@ -1042,8 +1080,9 @@ async function convertImportsExt({
       path.startsWith("npm:") ||
       path.startsWith("jsr:") ||
       path.startsWith("node_modules")
-    )
+    ) {
       return true;
+    }
 
     // Handle alias paths if specified
     if (aliasPrefix && path.startsWith(aliasPrefix)) {
@@ -1056,23 +1095,32 @@ async function convertImportsExt({
     // 3. Package names with subpaths (like package/subpath)
     const segments = path.split("/");
     const firstSegment = segments[0];
-    if (!firstSegment) return false;
+    if (!firstSegment) {
+      return false;
+    }
 
     if (
       path.startsWith("@") || // scoped packages
       !firstSegment.includes(".") || // simple package names
       (firstSegment.includes("-") && !firstSegment.startsWith(".")) // hyphenated package names
-    )
+    ) {
       return true;
+    }
 
     // Skip URLs
-    if (path.startsWith("http://") || path.startsWith("https://")) return true;
+    if (path.startsWith("http://") || path.startsWith("https://")) {
+      return true;
+    }
 
     // Skip if path already has the target extension
-    if (extTo !== "none" && path.endsWith(`.${extTo}`)) return true;
+    if (extTo !== "none" && path.endsWith(`.${extTo}`)) {
+      return true;
+    }
 
     // Only skip paths with extensions when extFrom is "none"
-    if (extFrom === "none" && /\.[^/]+$/.test(path)) return true;
+    if (extFrom === "none" && /\.[^/]+$/.test(path)) {
+      return true;
+    }
 
     return false;
   }
@@ -1086,7 +1134,9 @@ async function convertImportsExt({
         const fullPath = join(targetDir, entry.name);
 
         if (entry.isDirectory()) {
-          if (entry.name === "node_modules") return;
+          if (entry.name === "node_modules") {
+            return;
+          }
 
           const subdirResults = await convertImportsExt({
             targetDir: fullPath,
@@ -1108,7 +1158,9 @@ async function convertImportsExt({
           while (match !== null) {
             const quote = match[1];
             const importPath = match[2];
-            if (!importPath) continue;
+            if (!importPath) {
+              continue;
+            }
 
             // Skip paths that shouldn't be modified
             if (shouldSkipPath(importPath)) {
@@ -1131,7 +1183,9 @@ async function convertImportsExt({
             }
 
             // skip if the path doesn't actually change
-            if (importPath === replacementPath) continue;
+            if (importPath === replacementPath) {
+              continue;
+            }
 
             changes.push({ from: importPath, to: replacementPath });
 
@@ -1155,7 +1209,7 @@ async function convertImportsExt({
         } else {
           logInternal(`  - skipping non-matching file: ${entry.name}`);
         }
-      }),
+      })
     );
 
     if (results.length > 0 && displayLogs) {
@@ -1173,7 +1227,7 @@ async function convertImportsExt({
     return results;
   } catch (error) {
     regularLogger(
-      `error processing directory ${targetDir}: ${error instanceof Error ? error.message : String(error)}`,
+      `error processing directory ${targetDir}: ${error instanceof Error ? error.message : String(error)}`
     );
     return [];
   }
@@ -1187,8 +1241,12 @@ async function convertImportsExt({
  * @returns The path with the specified number of segments removed
  */
 function stripPathSegments(path: string, count = 1, alias = ""): string {
-  if (typeof path !== "string" || path.length === 0) return path;
-  if (count <= 0) return path;
+  if (typeof path !== "string" || path.length === 0) {
+    return path;
+  }
+  if (count <= 0) {
+    return path;
+  }
 
   logInternal(`[stripPathSegments] Processing path: ${path}`);
   logInternal(`  - count: ${count}, alias: ${alias}`);
@@ -1237,7 +1295,7 @@ function stripPathSegments(path: string, count = 1, alias = ""): string {
   const remainingBodySegments = pathSegments.slice(numToStrip);
   logInternal(`  - stripping ${numToStrip} segments`);
   logInternal(`  from: ${JSON.stringify(pathSegments)}`);
-  logInternal(`  - remaining body segments:`);
+  logInternal("  - remaining body segments:");
   logInternal(`  ${JSON.stringify(remainingBodySegments)}`);
 
   const pathRoot = parsed.root;
@@ -1287,7 +1345,9 @@ async function stripPathSegmentsInDirectory({
         const fullPath = join(targetDir, entry.name);
 
         if (entry.isDirectory()) {
-          if (entry.name === "node_modules") return;
+          if (entry.name === "node_modules") {
+            return;
+          }
 
           logInternal(`  - recursing into directory: ${entry.name}`);
           const subdirResults = await stripPathSegmentsInDirectory({
@@ -1310,7 +1370,9 @@ async function stripPathSegmentsInDirectory({
           for (const match of matches) {
             const originalQuote = match[1];
             const importPath = match[2];
-            if (!importPath) continue;
+            if (!importPath) {
+              continue;
+            }
 
             if (!importPath.includes(SLASH)) {
               logInternal(`  - skipping non-path import: ${importPath}`);
@@ -1352,7 +1414,7 @@ async function stripPathSegmentsInDirectory({
         } else {
           logInternal(`  - skipping non-matching file: ${entry.name}`);
         }
-      }),
+      })
     );
 
     if (results.length > 0 && displayLogs) {
@@ -1371,7 +1433,7 @@ async function stripPathSegmentsInDirectory({
     return results;
   } catch (error) {
     regularLogger(
-      `error processing directory ${targetDir}: ${error instanceof Error ? error.message : String(error)}`,
+      `error processing directory ${targetDir}: ${error instanceof Error ? error.message : String(error)}`
     );
     return [];
   }
@@ -1393,9 +1455,11 @@ function attachPathSegments(
     ensureSlash?: boolean;
     preserveRoot?: boolean;
     preserveAlias?: string;
-  } = {},
+  } = {}
 ): string {
-  if (typeof path !== "string" || path.length === 0) return path;
+  if (typeof path !== "string" || path.length === 0) {
+    return path;
+  }
 
   const {
     position = "after",
@@ -1409,7 +1473,9 @@ function attachPathSegments(
   const segmentsArray = Array.isArray(segments) ? segments : [segments];
   const validSegments = segmentsArray.filter((s) => s.length > 0);
 
-  if (validSegments.length === 0) return path;
+  if (validSegments.length === 0) {
+    return path;
+  }
 
   // Normalize the base path if requested
   const basePath = shouldNormalize ? normalizeWindowsPath(path) : path;
@@ -1479,7 +1545,9 @@ async function attachPathSegmentsInDirectory({
         const fullPath = join(targetDir, entry.name);
 
         if (entry.isDirectory()) {
-          if (entry.name === "node_modules") return;
+          if (entry.name === "node_modules") {
+            return;
+          }
 
           const subdirResults = await attachPathSegmentsInDirectory({
             targetDir: fullPath,
@@ -1501,15 +1569,21 @@ async function attachPathSegmentsInDirectory({
           for (const match of matches) {
             const originalQuote = match[1];
             const importPath = match[2];
-            if (!importPath) continue;
+            if (!importPath) {
+              continue;
+            }
 
             // skip if path doesn't need processing
-            if (!importPath.includes(SLASH)) continue;
+            if (!importPath.includes(SLASH)) {
+              continue;
+            }
 
             const modifiedPath = attachPathSegments(importPath, segments, options);
 
             // skip if no change
-            if (importPath === modifiedPath) continue;
+            if (importPath === modifiedPath) {
+              continue;
+            }
 
             changes.push({ from: importPath, to: modifiedPath });
 
@@ -1531,7 +1605,7 @@ async function attachPathSegmentsInDirectory({
         } else {
           logInternal(`  - skipping non-matching file: ${entry.name}`);
         }
-      }),
+      })
     );
 
     if (results.length > 0 && displayLogs) {
@@ -1548,7 +1622,7 @@ async function attachPathSegmentsInDirectory({
     return results;
   } catch (error) {
     regularLogger(
-      `error processing directory ${targetDir}: ${error instanceof Error ? error.message : String(error)}`,
+      `error processing directory ${targetDir}: ${error instanceof Error ? error.message : String(error)}`
     );
     return [];
   }
@@ -1580,11 +1654,15 @@ const _platforms = {
     sep: BACK_SLASH,
     delimiter: ";",
     isAbsolute: (p: string): boolean => {
-      if (typeof p !== "string") return false;
+      if (typeof p !== "string") {
+        return false;
+      }
       return /^[a-zA-Z]:[/\\]/.test(p) || /^[/\\]{2}/.test(p);
     },
     toNamespacedPath: (p: string): string => {
-      if (typeof p !== "string" || p.length === 0) return p;
+      if (typeof p !== "string" || p.length === 0) {
+        return p;
+      }
 
       const resolved = resolve(p);
       if (/^[a-zA-Z]:/.test(resolved)) {
@@ -1606,7 +1684,7 @@ const _platforms = {
  * creates a platform-specific path object with appropriate defaults
  */
 const mix = (
-  platformDefault: "posix" | "win32" | "currentSystem" = "currentSystem",
+  platformDefault: "posix" | "win32" | "currentSystem" = "currentSystem"
 ): PlatformPath & typeof _pathBase & { posix: PlatformPath; win32: PlatformPath } => {
   const actualDefault =
     platformDefault === "currentSystem"
@@ -1619,9 +1697,15 @@ const mix = (
 
   return new Proxy(defaultPathObject, {
     get(target, prop) {
-      if (prop === "delimiter") return actualDefault === "win32" ? ";" : ":";
-      if (prop === "posix") return _platforms.posix;
-      if (prop === "win32") return _platforms.win32;
+      if (prop === "delimiter") {
+        return actualDefault === "win32" ? ";" : ":";
+      }
+      if (prop === "posix") {
+        return _platforms.posix;
+      }
+      if (prop === "win32") {
+        return _platforms.win32;
+      }
 
       if (prop in target) {
         return (target as any)[prop];

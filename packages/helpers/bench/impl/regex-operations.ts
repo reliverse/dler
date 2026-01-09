@@ -26,7 +26,7 @@ const createMockPackageJson = (): string => {
       },
     },
     null,
-    2,
+    2
   );
 };
 
@@ -80,8 +80,8 @@ export async function benchmarkRegexOperations(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -90,7 +90,7 @@ export async function benchmarkRegexOperations(
     await benchmark("pattern matching (exact)", () => {
       matchesPattern("@test/package", "@test/package");
       matchesPattern("@other/package", "@test/package");
-    }),
+    })
   );
 
   results.push(
@@ -98,7 +98,7 @@ export async function benchmarkRegexOperations(
       matchesPattern("@test/package", "@test/*");
       matchesPattern("@test/subpackage", "@test/*");
       matchesPattern("@other/package", "@test/*");
-    }),
+    })
   );
 
   // Benchmark logger internals clearing
@@ -106,14 +106,14 @@ export async function benchmarkRegexOperations(
   results.push(
     await benchmark("clear logger internals (100 lines)", () => {
       clearLoggerInternalsInFile(fileWithLogger);
-    }),
+    })
   );
 
   const largeFileWithLogger = createMockFileContent(1000, true);
   results.push(
     await benchmark("clear logger internals (1000 lines)", () => {
       clearLoggerInternalsInFile(largeFileWithLogger);
-    }),
+    })
   );
 
   // Benchmark package.json replacement
@@ -121,7 +121,7 @@ export async function benchmarkRegexOperations(
   results.push(
     await benchmark("replace exports in package.json", () => {
       replaceInPackageJson(packageJson);
-    }),
+    })
   );
 
   // Benchmark multiple regex operations (simulating file processing)
@@ -132,7 +132,7 @@ export async function benchmarkRegexOperations(
       replaceInPackageJson(packageJson);
       matchesPattern("@test/package-1", "@test/*");
       matchesPattern("@test/package-2", "@test/package-*");
-    }),
+    })
   );
 
   return results;

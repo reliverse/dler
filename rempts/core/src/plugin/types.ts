@@ -2,77 +2,87 @@
  * Core plugin types and interfaces for Rempts
  */
 
-import type { RemptsConfig, ResolvedConfig } from "../types";
-import type { Command } from "../types";
+import type { Command, RemptsConfig, ResolvedConfig } from "../types";
 import type { Logger } from "../utils/logger";
+import type { PluginStore } from "./store";
 
 // Command definition type for plugins
 export type CommandDefinition = Command<any>;
 
 /**
- * Core plugin interface with store type
+ * Functional plugin hooks with store type
  */
-export interface RemptsPlugin<TStore = {}> {
-  /** Unique plugin name */
-  name: string;
-
-  /** Optional plugin version */
-  version?: string;
-
-  /** Plugin store schema/initial state */
-  store?: TStore;
+export interface PluginHooks<TStore = {}> {
+  /** Plugin store - Zustand store instance */
+  store?: PluginStore<TStore>;
 
   /**
    * Setup hook - Called during CLI initialization
    * Can modify configuration and register commands
    */
-  setup?(context: PluginContext): void | Promise<void>;
+  setup?: (context: PluginContext) => void | Promise<void>;
 
   /**
    * Config resolved hook - Called after all configuration is finalized
    * Config is now immutable
    */
-  configResolved?(config: ResolvedConfig): void | Promise<void>;
+  configResolved?: (config: ResolvedConfig) => void | Promise<void>;
 
   /**
    * Before command hook - Called before command execution
    * Can inject context and validate
    * Uses generic constraints to preserve store type information
    */
-  beforeCommand?(context: CommandContext<any>): void | Promise<void>;
+  beforeCommand?: (context: CommandContext<any>) => void | Promise<void>;
 
   /**
    * After command hook - Called after command execution
    * Receives result or error from command
    * Uses generic constraints to preserve store type information
    */
-  afterCommand?(context: CommandContext<any> & CommandResult): void | Promise<void>;
+  afterCommand?: (context: CommandContext<any> & CommandResult) => void | Promise<void>;
 }
 
 /**
- * Extract store type from a plugin
+ * Core plugin function that returns hooks
  */
-export type StoreOf<P> = P extends RemptsPlugin<infer S> ? S : {};
+export type Plugin<TStore = {}> = () => PluginHooks<TStore>;
+
+/**
+ * Extract store type from plugin hooks
+ */
+export type StoreOf<P> = P extends PluginHooks<infer S> ? S : {};
 
 /**
  * Merge multiple plugin stores into one type
  */
-export type MergeStores<Plugins extends readonly RemptsPlugin[]> = Plugins extends readonly []
+export type MergeStores<Plugins extends readonly PluginHooks[]> = Plugins extends readonly []
   ? {}
   : Plugins extends readonly [infer First, ...infer Rest]
-    ? First extends RemptsPlugin
-      ? Rest extends readonly RemptsPlugin[]
+    ? First extends PluginHooks
+      ? Rest extends readonly PluginHooks[]
         ? StoreOf<First> & MergeStores<Rest>
         : StoreOf<First>
       : {}
     : {};
 
 /**
- * Plugin factory function type
+ * Merge stores from plugin functions
  */
-export type PluginFactory<TOptions = any, TStore = {}> = (
-  options?: TOptions,
-) => RemptsPlugin<TStore>;
+export type MergePluginStores<Plugins extends readonly Plugin[]> = Plugins extends readonly []
+  ? {}
+  : Plugins extends readonly [infer First, ...infer Rest]
+    ? First extends Plugin<infer S>
+      ? Rest extends readonly Plugin[]
+        ? S & MergePluginStores<Rest>
+        : S
+      : {}
+    : {};
+
+/**
+ * Plugin factory function type - returns a function that creates hooks
+ */
+export type PluginFactory<TOptions = any, TStore = {}> = (options?: TOptions) => Plugin<TStore>;
 
 /**
  * Command execution result
@@ -93,7 +103,7 @@ export interface CommandResult {
  */
 export type PluginConfig =
   | string // Path to plugin
-  | RemptsPlugin // Plugin object
+  | Plugin // Plugin function
   | PluginFactory // Plugin factory function
   | [PluginFactory, any]; // Plugin with options
 
@@ -114,7 +124,7 @@ export interface PluginContext {
   use(middleware: Middleware): void;
 
   /** Shared storage between plugins */
-  readonly store: Map<string, any>;
+  readonly store: PluginStore<any>;
 
   /** Plugin logger */
   readonly logger: Logger;
@@ -143,7 +153,7 @@ export interface CommandContext<TStore = {}> {
   readonly env: EnvironmentInfo;
 
   /** Type-safe context store */
-  readonly store: TStore;
+  readonly store?: PluginStore<TStore>;
 
   /** Type-safe store value access */
   getStoreValue<K extends keyof TStore>(key: K): TStore[K];

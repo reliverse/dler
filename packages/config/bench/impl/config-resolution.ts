@@ -48,8 +48,8 @@ export async function benchmarkConfigResolution(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -60,7 +60,7 @@ export async function benchmarkConfigResolution(
       for (const pkgName of testPackageNames) {
         resolvePackageConfig(pkgName, config);
       }
-    }),
+    })
   );
 
   // Benchmark pattern matching
@@ -70,7 +70,7 @@ export async function benchmarkConfigResolution(
       for (const pkgName of testPackageNames) {
         resolvePackageConfig(pkgName, config);
       }
-    }),
+    })
   );
 
   // Benchmark enable flag handling
@@ -80,7 +80,7 @@ export async function benchmarkConfigResolution(
       for (const pkgName of testPackageNames) {
         resolvePackageConfig(pkgName, config);
       }
-    }),
+    })
   );
 
   // Benchmark priority (exact > pattern > global)
@@ -90,7 +90,7 @@ export async function benchmarkConfigResolution(
       for (const pkgName of testPackageNames) {
         resolvePackageConfig(pkgName, config);
       }
-    }),
+    })
   );
 
   // Benchmark null/undefined config
@@ -99,7 +99,7 @@ export async function benchmarkConfigResolution(
       for (const pkgName of testPackageNames) {
         resolvePackageConfig(pkgName, null);
       }
-    }),
+    })
   );
 
   return results;

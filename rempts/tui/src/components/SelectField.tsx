@@ -1,5 +1,5 @@
-import { useState } from "react";
 import type { SelectOption } from "@opentui/core";
+import { useState } from "react";
 
 export interface SelectFieldProps {
   label: string;
@@ -10,7 +10,7 @@ export interface SelectFieldProps {
 }
 
 export function SelectField({ label, name, options, required, onChange }: SelectFieldProps) {
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [_selectedIndex, setSelectedIndex] = useState(0);
 
   const handleChange = (index: number, option: SelectOption | null) => {
     setSelectedIndex(index);
@@ -23,7 +23,7 @@ export function SelectField({ label, name, options, required, onChange }: Select
     <box style={{ flexDirection: "column", marginBottom: 1 }}>
       <text content={`${label}${required ? " *" : ""}`} />
       <box border height={8} style={{ marginTop: 0.5 }}>
-        <select options={options} onChange={handleChange} focused={true} />
+        <select focused={true} onChange={handleChange} options={options} />
       </box>
     </box>
   );

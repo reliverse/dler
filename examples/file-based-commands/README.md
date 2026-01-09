@@ -30,14 +30,14 @@ bun run start test
 
 ## Configuration
 
-The `commands.directory` option in `createCLI()` enables automatic command discovery from the `./commands` directory.
+The `commands.directory` option in `createCLI()` enables automatic command discovery from the `./cmds` directory.
 
 ```typescript
 const cli = await createCLI({
   name: "my-cli",
   version: "1.0.0",
   commands: {
-    directory: "./commands", // Enable file-based loading
+    directory: "./cmds", // Enable file-based loading
   },
 });
 ```

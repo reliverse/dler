@@ -52,8 +52,12 @@ let writeLock = Promise.resolve();
 // Generic message formatter - optimized for performance
 const formatMessage = (...args: unknown[]): string => {
   const len = args.length;
-  if (len === 0) return "";
-  if (len === 1) return String(args[0]);
+  if (len === 0) {
+    return "";
+  }
+  if (len === 1) {
+    return String(args[0]);
+  }
   // Use map().join() - modern engines optimize this well
   return args.map(String).join(" ");
 };
@@ -62,7 +66,9 @@ const formatMessage = (...args: unknown[]): string => {
 const createPrefixedMessage = (level: LogLevel, message: string): string => {
   const symbol = LOG_SYMBOLS[level];
   // Fast path for empty symbol (box level)
-  if (symbol === "") return message;
+  if (symbol === "") {
+    return message;
+  }
   return symbol + message;
 };
 
@@ -78,9 +84,13 @@ const formatBox = (message: string): string => {
   let maxWidth = 0;
   for (let i = 0; i < lineCount; i++) {
     const line = lines[i];
-    if (line === undefined) continue;
+    if (line === undefined) {
+      continue;
+    }
     const len = line.length;
-    if (len > maxWidth) maxWidth = len;
+    if (len > maxWidth) {
+      maxWidth = len;
+    }
   }
 
   const padding = 2;
@@ -101,7 +111,9 @@ const formatBox = (message: string): string => {
   let content = "";
   for (let i = 0; i < lineCount; i++) {
     const line = lines[i];
-    if (line === undefined) continue;
+    if (line === undefined) {
+      continue;
+    }
     const padded = line.padEnd(maxWidth);
     content += `│${leftPadding}${padded}${rightPadding}│\n`;
   }
@@ -133,7 +145,7 @@ const writeSync = (text: string, isError = false): void => {
 const writeColoredAsync = (
   text: string,
   color: typeof re.white,
-  isError = false,
+  isError = false
 ): Promise<void> => {
   const coloredText = color(text);
   return writeAsync(coloredText, isError);
@@ -149,17 +161,17 @@ const writeColoredSync = (text: string, color: typeof re.white, isError = false)
 function createLogMethod(
   level: LogLevel,
   isAsync: true,
-  isError?: boolean,
+  isError?: boolean
 ): (...args: unknown[]) => Promise<void>;
 function createLogMethod(
   level: LogLevel,
   isAsync: false,
-  isError?: boolean,
+  isError?: boolean
 ): (...args: unknown[]) => void;
 function createLogMethod(
   level: LogLevel,
   isAsync: boolean,
-  isError = false,
+  isError = false
 ): ((...args: unknown[]) => void) | ((...args: unknown[]) => Promise<void>) {
   // Cache color function for better performance
   const color = LOG_COLORS[level];
@@ -184,7 +196,7 @@ function createLogMethod(
 function createRawMethod(isAsync: true): (...args: unknown[]) => Promise<void>;
 function createRawMethod(isAsync: false): (...args: unknown[]) => void;
 function createRawMethod(
-  isAsync: boolean,
+  isAsync: boolean
 ): ((...args: unknown[]) => void) | ((...args: unknown[]) => Promise<void>) {
   if (isAsync) {
     return (...args: unknown[]): Promise<void> => {

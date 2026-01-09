@@ -17,8 +17,8 @@ export async function benchmarkPMapIterable(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
   const smallArray = Array.from({ length: 10 }, (_, i) => i);
@@ -33,7 +33,7 @@ export async function benchmarkPMapIterable(
       for await (const _ of iterable) {
         // Consume all items
       }
-    }),
+    })
   );
 
   // Benchmark sync mapper with medium array
@@ -44,7 +44,7 @@ export async function benchmarkPMapIterable(
       for await (const _ of iterable) {
         // Consume all items
       }
-    }),
+    })
   );
 
   // Benchmark sync mapper with large array
@@ -55,7 +55,7 @@ export async function benchmarkPMapIterable(
       for await (const _ of iterable) {
         // Consume all items
       }
-    }),
+    })
   );
 
   // Benchmark async mapper with concurrency limit
@@ -71,8 +71,8 @@ export async function benchmarkPMapIterable(
           // Consume all items
         }
       },
-      100,
-    ),
+      100
+    )
   );
 
   // Benchmark with backpressure
@@ -89,8 +89,8 @@ export async function benchmarkPMapIterable(
           // Consume all items
         }
       },
-      100,
-    ),
+      100
+    )
   );
 
   // Benchmark with skip functionality
@@ -101,7 +101,7 @@ export async function benchmarkPMapIterable(
       for await (const _ of iterable) {
         // Consume all items
       }
-    }),
+    })
   );
 
   // Benchmark with async iterable input
@@ -117,7 +117,7 @@ export async function benchmarkPMapIterable(
       for await (const _ of iterable) {
         // Consume all items
       }
-    }),
+    })
   );
 
   return results;

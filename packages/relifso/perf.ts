@@ -92,7 +92,7 @@ async function benchmark(
   name: string,
   fn: () => Promise<void>,
   iterCount = ITERATIONS,
-  fileSize?: number,
+  fileSize?: number
 ): Promise<BenchmarkResult> {
   // Warmup runs
   for (let i = 0; i < WARMUP_RUNS; i++) {
@@ -117,7 +117,7 @@ async function benchmark(
   const sorted = [...timings].sort((a, b) => a - b);
   const avgTime = totalTime / iterCount;
   const minTime = sorted[0] ?? 0;
-  const maxTime = sorted[sorted.length - 1] ?? 0;
+  const maxTime = sorted.at(-1) ?? 0;
   const medianTime = calculatePercentile(sorted, 50);
   const p95Time = calculatePercentile(sorted, 95);
   const p99Time = calculatePercentile(sorted, 99);
@@ -190,7 +190,7 @@ async function benchmarkFileOperations(): Promise<BenchmarkResult[]> {
       "p95".padStart(10) +
       "p99".padStart(10) +
       "ops/s".padStart(12) +
-      "throughput".padStart(14),
+      "throughput".padStart(14)
   );
   console.log("─".repeat(120));
 
@@ -208,10 +208,10 @@ async function benchmarkFileOperations(): Promise<BenchmarkResult[]> {
         await fs.readFile(testFile);
       },
       ITERATIONS,
-      SMALL_FILE_SIZE,
-    ),
+      SMALL_FILE_SIZE
+    )
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark(
@@ -220,10 +220,10 @@ async function benchmarkFileOperations(): Promise<BenchmarkResult[]> {
         await fs.writeFile(testFile, smallData);
       },
       ITERATIONS,
-      SMALL_FILE_SIZE,
-    ),
+      SMALL_FILE_SIZE
+    )
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark(
@@ -232,10 +232,10 @@ async function benchmarkFileOperations(): Promise<BenchmarkResult[]> {
         await fs.writeFile(testFile, smallBinary);
       },
       ITERATIONS,
-      SMALL_FILE_SIZE,
-    ),
+      SMALL_FILE_SIZE
+    )
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark(
@@ -245,10 +245,10 @@ async function benchmarkFileOperations(): Promise<BenchmarkResult[]> {
         await fs.readFile(testFile, { encoding: "utf8" });
       },
       ITERATIONS,
-      SMALL_FILE_SIZE,
-    ),
+      SMALL_FILE_SIZE
+    )
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   // Medium file operations
   const mediumData = createTestData(MEDIUM_FILE_SIZE);
@@ -262,10 +262,10 @@ async function benchmarkFileOperations(): Promise<BenchmarkResult[]> {
         await fs.readFile(testFile);
       },
       ITERATIONS,
-      MEDIUM_FILE_SIZE,
-    ),
+      MEDIUM_FILE_SIZE
+    )
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark(
@@ -274,10 +274,10 @@ async function benchmarkFileOperations(): Promise<BenchmarkResult[]> {
         await fs.writeFile(testFile, mediumData);
       },
       ITERATIONS,
-      MEDIUM_FILE_SIZE,
-    ),
+      MEDIUM_FILE_SIZE
+    )
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark(
@@ -286,10 +286,10 @@ async function benchmarkFileOperations(): Promise<BenchmarkResult[]> {
         await fs.writeFile(testFile, mediumBinary);
       },
       ITERATIONS,
-      MEDIUM_FILE_SIZE,
-    ),
+      MEDIUM_FILE_SIZE
+    )
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   // Large file operations
   const largeData = createTestData(LARGE_FILE_SIZE);
@@ -303,10 +303,10 @@ async function benchmarkFileOperations(): Promise<BenchmarkResult[]> {
         await fs.readFile(testFile);
       },
       20,
-      LARGE_FILE_SIZE,
-    ),
+      LARGE_FILE_SIZE
+    )
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark(
@@ -315,10 +315,10 @@ async function benchmarkFileOperations(): Promise<BenchmarkResult[]> {
         await fs.writeFile(testFile, largeData);
       },
       20,
-      LARGE_FILE_SIZE,
-    ),
+      LARGE_FILE_SIZE
+    )
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark(
@@ -327,10 +327,10 @@ async function benchmarkFileOperations(): Promise<BenchmarkResult[]> {
         await fs.writeFile(testFile, largeBinary);
       },
       20,
-      LARGE_FILE_SIZE,
-    ),
+      LARGE_FILE_SIZE
+    )
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   // Very large file operations
   const veryLargeData = createTestData(VERY_LARGE_FILE_SIZE);
@@ -343,10 +343,10 @@ async function benchmarkFileOperations(): Promise<BenchmarkResult[]> {
         await fs.readFile(testFile);
       },
       5,
-      VERY_LARGE_FILE_SIZE,
-    ),
+      VERY_LARGE_FILE_SIZE
+    )
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark(
@@ -355,10 +355,10 @@ async function benchmarkFileOperations(): Promise<BenchmarkResult[]> {
         await fs.writeFile(testFile, veryLargeData);
       },
       5,
-      VERY_LARGE_FILE_SIZE,
-    ),
+      VERY_LARGE_FILE_SIZE
+    )
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   // JSON operations
   const jsonData = createTestJson();
@@ -371,10 +371,10 @@ async function benchmarkFileOperations(): Promise<BenchmarkResult[]> {
         await fs.writeJson(testJsonFile, jsonData);
       },
       ITERATIONS,
-      jsonSize,
-    ),
+      jsonSize
+    )
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark(
@@ -384,28 +384,28 @@ async function benchmarkFileOperations(): Promise<BenchmarkResult[]> {
         await fs.readJson<typeof jsonData>(testJsonFile);
       },
       ITERATIONS,
-      jsonSize,
-    ),
+      jsonSize
+    )
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("outputFile (creates dirs)", async () => {
       const path = join(testDir, "output", "file.txt");
       await fs.outputFile(path, smallData);
       await fs.remove(join(testDir, "output"));
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("outputJson (creates dirs)", async () => {
       const path = join(testDir, "output", "file.json");
       await fs.outputJson(path, jsonData);
       await fs.remove(join(testDir, "output"));
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   return results;
 }
@@ -421,7 +421,7 @@ async function benchmarkDirectoryOperations(): Promise<BenchmarkResult[]> {
       "max".padStart(10) +
       "p95".padStart(10) +
       "p99".padStart(10) +
-      "ops/s".padStart(12),
+      "ops/s".padStart(12)
   );
   console.log("─".repeat(120));
 
@@ -432,59 +432,59 @@ async function benchmarkDirectoryOperations(): Promise<BenchmarkResult[]> {
       const dir = join(testDir, "single");
       await fs.ensureDir(dir);
       await fs.remove(dir);
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("ensureDir (nested)", async () => {
       const dir = join(testDir, "a", "b", "c", "d");
       await fs.ensureDir(dir);
       await fs.remove(join(testDir, "a"));
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("mkdirp (alias)", async () => {
       const dir = join(testDir, "mkdirp", "test");
       await fs.mkdirp(dir);
       await fs.remove(join(testDir, "mkdirp"));
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("ensureFile", async () => {
       const file = join(testDir, "ensure", "file.txt");
       await fs.ensureFile(file);
       await fs.remove(join(testDir, "ensure"));
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("pathExists (exists)", async () => {
       await fs.writeFile(testFile, "test");
       await fs.pathExists(testFile);
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("pathExists (not exists)", async () => {
       await fs.pathExists(join(testDir, "nonexistent"));
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("touch", async () => {
       await fs.writeFile(testFile, "test");
       await fs.touch(testFile);
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("emptyDir", async () => {
@@ -494,17 +494,17 @@ async function benchmarkDirectoryOperations(): Promise<BenchmarkResult[]> {
       await fs.writeFile(join(dir, "file2.txt"), "test");
       await fs.emptyDir(dir);
       await fs.remove(dir);
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("remove (file)", async () => {
       await fs.writeFile(testFile, "test");
       await fs.remove(testFile);
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("remove (directory)", async () => {
@@ -512,9 +512,9 @@ async function benchmarkDirectoryOperations(): Promise<BenchmarkResult[]> {
       await fs.ensureDir(dir);
       await fs.writeFile(join(dir, "file.txt"), "test");
       await fs.remove(dir);
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   return results;
 }
@@ -530,7 +530,7 @@ async function benchmarkCopyMoveOperations(): Promise<BenchmarkResult[]> {
       "max".padStart(10) +
       "p95".padStart(10) +
       "p99".padStart(10) +
-      "ops/s".padStart(12),
+      "ops/s".padStart(12)
   );
   console.log("─".repeat(120));
 
@@ -549,17 +549,17 @@ async function benchmarkCopyMoveOperations(): Promise<BenchmarkResult[]> {
       const dest = join(copyDest, "file1.txt");
       await fs.copy(src, dest);
       await fs.remove(copyDest);
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("copy (directory)", async () => {
       await fs.copy(copySource, copyDest);
       await fs.remove(copyDest);
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark(
@@ -573,10 +573,10 @@ async function benchmarkCopyMoveOperations(): Promise<BenchmarkResult[]> {
         await fs.remove(dest);
       },
       20,
-      LARGE_FILE_SIZE,
-    ),
+      LARGE_FILE_SIZE
+    )
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("move (file)", async () => {
@@ -585,9 +585,9 @@ async function benchmarkCopyMoveOperations(): Promise<BenchmarkResult[]> {
       await fs.move(src, dest);
       await fs.writeFile(src, "test1"); // Restore for next iteration
       await fs.remove(copyDest);
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   return results;
 }
@@ -603,7 +603,7 @@ async function benchmarkAdvancedOperations(): Promise<BenchmarkResult[]> {
       "max".padStart(10) +
       "p95".padStart(10) +
       "p99".padStart(10) +
-      "ops/s".padStart(12),
+      "ops/s".padStart(12)
   );
   console.log("─".repeat(120));
 
@@ -621,23 +621,23 @@ async function benchmarkAdvancedOperations(): Promise<BenchmarkResult[]> {
   results.push(
     await benchmark("readdirRecursive (small)", async () => {
       await fs.readdirRecursive(scanDir);
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("listFiles (alias)", async () => {
       await fs.listFiles(scanDir);
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("readdirRecursive (with filter)", async () => {
       await fs.readdirRecursive(scanDir, { extensions: ["txt"] });
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   // Create larger directory structure for more realistic benchmarks
   const largeScanDir = join(testDir, "large-scan");
@@ -658,42 +658,42 @@ async function benchmarkAdvancedOperations(): Promise<BenchmarkResult[]> {
       async () => {
         await fs.readdirRecursive(largeScanDir);
       },
-      20,
-    ),
+      20
+    )
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("sizeOf (file)", async () => {
       await fs.sizeOf(join(scanDir, "file0.txt"));
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("sizeOf (directory)", async () => {
       await fs.sizeOf(scanDir);
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("readLines", async () => {
       const content = "line1\nline2\nline3\nline4\nline5";
       await fs.writeFile(testFile, content);
       await fs.readLines(testFile);
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark("readLines (with trim)", async () => {
       const content = "  line1  \n  line2  \n  line3  ";
       await fs.writeFile(testFile, content);
       await fs.readLines(testFile, { trim: true });
-    }),
+    })
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   results.push(
     await benchmark(
@@ -703,10 +703,10 @@ async function benchmarkAdvancedOperations(): Promise<BenchmarkResult[]> {
         await fs.writeFile(testFile, lines.join("\n"));
         await fs.readLines(testFile);
       },
-      20,
-    ),
+      20
+    )
   );
-  printBenchmarkResult(results[results.length - 1]!);
+  printBenchmarkResult(results.at(-1)!);
 
   return results;
 }
@@ -722,7 +722,7 @@ async function benchmarkLinkOperations(): Promise<BenchmarkResult[]> {
       "max".padStart(10) +
       "p95".padStart(10) +
       "p99".padStart(10) +
-      "ops/s".padStart(12),
+      "ops/s".padStart(12)
   );
   console.log("─".repeat(120));
 
@@ -775,16 +775,16 @@ function printSummary(allResults: BenchmarkResult[]): void {
 
   // Group by category
   const fileOps = allResults.filter(
-    (r) => r.name.includes("readFile") || r.name.includes("writeFile"),
+    (r) => r.name.includes("readFile") || r.name.includes("writeFile")
   );
   const dirOps = allResults.filter(
-    (r) => r.name.includes("Dir") || r.name.includes("remove") || r.name.includes("pathExists"),
+    (r) => r.name.includes("Dir") || r.name.includes("remove") || r.name.includes("pathExists")
   );
   const copyOps = allResults.filter((r) => r.name.includes("copy") || r.name.includes("move"));
 
   if (fileOps.length > 0) {
     const avgFileOps = Math.round(
-      fileOps.reduce((sum, r) => sum + r.opsPerSec, 0) / fileOps.length,
+      fileOps.reduce((sum, r) => sum + r.opsPerSec, 0) / fileOps.length
     );
     console.log(`  File operations avg: ${avgFileOps.toLocaleString()} ops/s`);
   }
@@ -796,7 +796,7 @@ function printSummary(allResults: BenchmarkResult[]): void {
 
   if (copyOps.length > 0) {
     const avgCopyOps = Math.round(
-      copyOps.reduce((sum, r) => sum + r.opsPerSec, 0) / copyOps.length,
+      copyOps.reduce((sum, r) => sum + r.opsPerSec, 0) / copyOps.length
     );
     console.log(`  Copy/move operations avg: ${avgCopyOps.toLocaleString()} ops/s`);
   }

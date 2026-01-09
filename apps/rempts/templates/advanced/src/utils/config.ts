@@ -1,5 +1,5 @@
-import { CONFIG_FILE_NAME, DEFAULT_CONFIG } from "./constants";
 import path from "node:path";
+import { CONFIG_FILE_NAME, DEFAULT_CONFIG } from "./constants";
 
 export interface Config {
   rules?: Record<string, any>;

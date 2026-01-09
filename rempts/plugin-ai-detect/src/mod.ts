@@ -3,19 +3,18 @@
  * Detects various AI coding assistants from environment variables
  */
 
-import type { RemptsPlugin } from "@reliverse/rempts-core/plugin";
-import { createPlugin } from "@reliverse/rempts-core/plugin";
+import { createPlugin, createPluginStore } from "@reliverse/rempts-core/plugin";
 
 // Extend core interfaces with AI-specific fields
-declare module "@reliverse/rempts-core/plugin" {
-  interface EnvironmentInfo {
-    /** AI agent detected */
-    isAIAgent: boolean;
+// declare module "@reliverse/rempts-core/plugin" {
+//   interface EnvironmentInfo {
+//     /** AI agent detected */
+//     isAIAgent: boolean;
 
-    /** Detected AI agents */
-    aiAgents: string[];
-  }
-}
+//     /** Detected AI agents */
+//     aiAgents: string[];
+//   }
+// }
 
 interface AIAgentInfo {
   name: string;
@@ -59,76 +58,79 @@ export interface AIDetectStore {
 /**
  * AI agent detection plugin factory
  */
-export const aiAgentPlugin = createPlugin<AIDetectPluginOptions, AIDetectStore>((options = {}) => {
-  const agents = [...AI_AGENTS, ...(options.customAgents || [])];
+export const aiAgentPlugin = createPlugin<AIDetectPluginOptions | undefined, AIDetectStore>(
+  (options: AIDetectPluginOptions = {}) => {
+    const agents = [...AI_AGENTS, ...(options.customAgents || [])];
 
-  return {
-    name: "@reliverse/rempts-plugin-ai-detect",
-    version: "1.0.0",
+    return () => ({
+      // Define initial store state using Zustand
+      store: createPluginStore<AIDetectStore>({
+        isAIAgent: false,
+        aiAgents: [] as string[],
+        aiAgentEnvVars: [] as string[],
+      }),
 
-    // Define initial store state
-    store: {
-      isAIAgent: false,
-      aiAgents: [] as string[],
-      aiAgentEnvVars: [] as string[],
-    },
+      beforeCommand(context) {
+        const env = process.env;
+        const detectedAgents: string[] = [];
+        const allDetectedEnvVars: string[] = [];
 
-    beforeCommand(context) {
-      const env = process.env;
-      const detectedAgents: string[] = [];
-      const allDetectedEnvVars: string[] = [];
+        // Initialize AI fields on the environment info
+        (context.env as any).isAIAgent = false;
+        (context.env as any).aiAgents = [];
 
-      // Initialize AI fields on the environment info
-      context.env.isAIAgent = false;
-      context.env.aiAgents = [];
+        // Check all known AI agents
+        for (const agent of agents) {
+          if (agent.detect(env)) {
+            detectedAgents.push(agent.name);
 
-      // Check all known AI agents
-      for (const agent of agents) {
-        if (agent.detect(env)) {
-          detectedAgents.push(agent.name);
+            // Store detected environment variables for this agent
+            const detectedVars = agent.envVars.filter((v) => !!env[v]);
+            allDetectedEnvVars.push(...detectedVars);
 
-          // Store detected environment variables for this agent
-          const detectedVars = agent.envVars.filter((v) => !!env[v]);
-          allDetectedEnvVars.push(...detectedVars);
+            // Log if verbose
+            if (options.verbose) {
+              console.log(`🤖 AI agent detected: ${agent.name}`);
+              console.log(`   Environment variables: ${detectedVars.join(", ")}`);
+            }
+          }
+        }
 
-          // Log if verbose
+        // Update context based on detection results
+        if (detectedAgents.length > 0) {
+          (context.env as any).isAIAgent = true;
+          (context.env as any).aiAgents = detectedAgents;
+
+          // Use type-safe store - TypeScript knows the exact types!
+          if (context.store) {
+            context.store.setState({
+              isAIAgent: true,
+              aiAgents: detectedAgents,
+              aiAgentEnvVars: allDetectedEnvVars,
+            });
+          }
+
           if (options.verbose) {
-            console.log(`🤖 AI agent detected: ${agent.name}`);
-            console.log(`   Environment variables: ${detectedVars.join(", ")}`);
+            if (detectedAgents.length === 1) {
+              console.log(`🤖 AI agent detected: ${detectedAgents[0]}`);
+            } else {
+              console.log(`🤖 Multiple AI agents detected: ${detectedAgents.join(", ")}`);
+            }
+          }
+        } else {
+          // Ensure fields are initialized even when no AI agent detected
+          if (context.store) {
+            context.store.setState({
+              isAIAgent: false,
+              aiAgents: [],
+              aiAgentEnvVars: [],
+            });
           }
         }
-      }
-
-      // Update context based on detection results
-      if (detectedAgents.length > 0) {
-        context.env.isAIAgent = true;
-        context.env.aiAgents = detectedAgents;
-
-        // Use type-safe store - TypeScript knows the exact types!
-        if (context.store) {
-          context.store.isAIAgent = true;
-          context.store.aiAgents = detectedAgents;
-          context.store.aiAgentEnvVars = allDetectedEnvVars;
-        }
-
-        if (options.verbose) {
-          if (detectedAgents.length === 1) {
-            console.log(`🤖 AI agent detected: ${detectedAgents[0]}`);
-          } else {
-            console.log(`🤖 Multiple AI agents detected: ${detectedAgents.join(", ")}`);
-          }
-        }
-      } else {
-        // Ensure fields are initialized even when no AI agent detected
-        if (context.store) {
-          context.store.isAIAgent = false;
-          context.store.aiAgents = [];
-          context.store.aiAgentEnvVars = [];
-        }
-      }
-    },
-  };
-});
+      },
+    });
+  }
+);
 
 // Default export for convenience
 export default aiAgentPlugin;

@@ -32,8 +32,8 @@ export async function benchmarkFileOperations(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
@@ -44,25 +44,25 @@ export async function benchmarkFileOperations(
 
   writeFileContent(smallFile, createMockContent(100));
   writeFileContent(mediumFile, createMockContent(1000));
-  writeFileContent(largeFile, createMockContent(10000));
+  writeFileContent(largeFile, createMockContent(10_000));
 
   // Benchmark read operations
   results.push(
     await benchmark("read file (small, 100 bytes)", () => {
       readFileContent(smallFile);
-    }),
+    })
   );
 
   results.push(
     await benchmark("read file (medium, 1KB)", () => {
       readFileContent(mediumFile);
-    }),
+    })
   );
 
   results.push(
     await benchmark("read file (large, 10KB)", () => {
       readFileContent(largeFile);
-    }),
+    })
   );
 
   // Benchmark write operations
@@ -70,34 +70,34 @@ export async function benchmarkFileOperations(
   results.push(
     await benchmark("write file (small, 100 bytes)", () => {
       writeFileContent(smallFile, smallContent);
-    }),
+    })
   );
 
   const mediumContent = createMockContent(1000);
   results.push(
     await benchmark("write file (medium, 1KB)", () => {
       writeFileContent(mediumFile, mediumContent);
-    }),
+    })
   );
 
-  const largeContent = createMockContent(10000);
+  const largeContent = createMockContent(10_000);
   results.push(
     await benchmark("write file (large, 10KB)", () => {
       writeFileContent(largeFile, largeContent);
-    }),
+    })
   );
 
   // Benchmark combined read+write operations
   results.push(
     await benchmark("process file (read+write, small)", () => {
       processFile(smallFile);
-    }),
+    })
   );
 
   results.push(
     await benchmark("process file (read+write, medium)", () => {
       processFile(mediumFile);
-    }),
+    })
   );
 
   // Cleanup

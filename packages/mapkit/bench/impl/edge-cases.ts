@@ -8,8 +8,8 @@ export async function benchmarkEdgeCases(
   benchmark: (
     name: string,
     fn: () => void | Promise<void>,
-    iterCount?: number,
-  ) => Promise<BenchmarkResult>,
+    iterCount?: number
+  ) => Promise<BenchmarkResult>
 ): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
   const array = Array.from({ length: 50 }, (_, i) => i);
@@ -18,14 +18,14 @@ export async function benchmarkEdgeCases(
   results.push(
     await benchmark("pMap (empty array)", async () => {
       await pMap([], (x) => x);
-    }),
+    })
   );
 
   // Benchmark single item
   results.push(
     await benchmark("pMap (single item)", async () => {
       await pMap([1], (x) => x * 2);
-    }),
+    })
   );
 
   // Benchmark concurrency=1 (sequential)
@@ -39,18 +39,18 @@ export async function benchmarkEdgeCases(
             await delay(1);
             return x * 2;
           },
-          { concurrency: 1 },
+          { concurrency: 1 }
         );
       },
-      50,
-    ),
+      50
+    )
   );
 
   // Benchmark all items skipped
   results.push(
     await benchmark("pMap (all skipped)", async () => {
       await pMap(array, () => pMapSkip);
-    }),
+    })
   );
 
   // Benchmark stopOnError=false
@@ -64,11 +64,11 @@ export async function benchmarkEdgeCases(
           }
           return x * 2;
         },
-        { stopOnError: false },
+        { stopOnError: false }
       ).catch(() => {
         // Expected to reject
       });
-    }),
+    })
   );
 
   // Benchmark with AbortSignal (aborted immediately)
@@ -79,7 +79,7 @@ export async function benchmarkEdgeCases(
       await pMap(array, (x) => x * 2, { signal: controller.signal }).catch(() => {
         // Expected to reject
       });
-    }),
+    })
   );
 
   // Benchmark pMapIterable with early termination
@@ -94,7 +94,7 @@ export async function benchmarkEdgeCases(
           break;
         }
       }
-    }),
+    })
   );
 
   return results;

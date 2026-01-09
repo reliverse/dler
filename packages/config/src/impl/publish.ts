@@ -47,7 +47,7 @@ export interface PublishConfig extends BaseConfig {
  */
 export const getPackagePublishConfig = (
   packageName: string,
-  dlerConfig: { publish?: PublishConfig } | null,
+  dlerConfig: { publish?: PublishConfig } | null
 ): PackagePublishConfig | undefined => {
   return resolvePackageConfig<PackagePublishConfig>(packageName, dlerConfig?.publish);
 };
@@ -62,7 +62,7 @@ export const getPackagePublishConfig = (
 export const mergePublishOptions = <T extends Record<string, any>>(
   cliOptions: T,
   packageName: string,
-  dlerConfig: { publish?: PublishConfig } | null,
+  dlerConfig: { publish?: PublishConfig } | null
 ): T => {
   const packageConfig = getPackagePublishConfig(packageName, dlerConfig);
   return mergeConfig(cliOptions, packageConfig);

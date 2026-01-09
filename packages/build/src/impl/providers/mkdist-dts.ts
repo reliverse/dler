@@ -28,7 +28,7 @@ export async function getDeclarations(
   _pkg: PackageInfo,
   _dtsOptions: DtsOptions,
   _outputDir: string,
-  mkdistOptions?: MkdistDtsOptions,
+  mkdistOptions?: MkdistDtsOptions
 ): Promise<DeclarationOutput> {
   // Call the mkdist declaration generator (accepts partial options)
   return await getMkdistDeclarations(vfs, mkdistOptions);
@@ -38,7 +38,7 @@ export async function getDeclarations(
  * Normalize TypeScript compiler options for declaration generation
  */
 export async function normalizeCompilerOptions(
-  options: TSConfig["compilerOptions"],
+  options: TSConfig["compilerOptions"]
 ): Promise<import("typescript").CompilerOptions> {
   const ts = await import("typescript").then((r) => r.default || r);
   return ts.convertCompilerOptionsFromJson(options, process.cwd()).options;

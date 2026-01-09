@@ -91,7 +91,7 @@ export const matchAll = (patterns: string[], input: string, options: MatchOption
 export const filter = (
   patterns: string[],
   inputs: string[],
-  options: MatchOptions = {},
+  options: MatchOptions = {}
 ): string[] => {
   // Optimize: use compiled regex for multiple patterns to avoid repeated function calls
   if (patterns.length > 1) {
@@ -101,7 +101,9 @@ export const filter = (
   // Fast path: single pattern
   if (patterns.length === 1) {
     const pattern = patterns[0];
-    if (pattern === undefined) return [];
+    if (pattern === undefined) {
+      return [];
+    }
     return inputs.filter((input) => zeptomatch(pattern, input, options));
   }
   return [];
@@ -117,7 +119,7 @@ export const filter = (
 export const exclude = (
   patterns: string[],
   inputs: string[],
-  options: MatchOptions = {},
+  options: MatchOptions = {}
 ): string[] => {
   // Optimize: use compiled regex for multiple patterns to avoid repeated function calls
   if (patterns.length > 1) {
@@ -127,7 +129,9 @@ export const exclude = (
   // Fast path: single pattern
   if (patterns.length === 1) {
     const pattern = patterns[0];
-    if (pattern === undefined) return inputs;
+    if (pattern === undefined) {
+      return inputs;
+    }
     return inputs.filter((input) => !zeptomatch(pattern, input, options));
   }
   return inputs;
@@ -177,7 +181,7 @@ export const normalizePatterns = (patterns: string | string[]): string[] =>
  */
 export const createIgnoreFilter = (
   ignorePatterns: string | string[],
-  options: MatcherOptions = {},
+  options: MatcherOptions = {}
 ) => {
   const patterns = normalizePatterns(ignorePatterns);
   // Optimize: use compiled regex for multiple patterns
@@ -207,7 +211,7 @@ export const createIgnoreFilter = (
  */
 export const createIncludeFilter = (
   includePatterns: string | string[],
-  options: MatcherOptions = {},
+  options: MatcherOptions = {}
 ) => {
   const patterns = normalizePatterns(includePatterns);
   // Optimize: use compiled regex for multiple patterns

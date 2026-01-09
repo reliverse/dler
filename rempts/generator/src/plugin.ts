@@ -1,7 +1,5 @@
 import type { BuildOutput, BunPlugin, OnLoadArgs, OnResolveArgs } from "bun";
 import { Generator } from "./generator";
-import type { GeneratorConfig } from "./types";
-import type { Build } from "bun";
 
 export interface RemptsCodegenPluginOptions {
   commandsDir?: string;
@@ -18,12 +16,7 @@ export interface RemptsCodegenPluginOptions {
  * separate codegen steps.
  */
 export function remptsCodegenPlugin(options: RemptsCodegenPluginOptions = {}): BunPlugin {
-  const {
-    commandsDir = "commands",
-    outputFile = "./commands.gen.ts",
-    config,
-    generateReport,
-  } = options;
+  const { commandsDir = "cmds", outputFile = "./cmds.gen.ts", config, generateReport } = options;
 
   let generator: Generator | null = null;
 
@@ -49,7 +42,7 @@ export function remptsCodegenPlugin(options: RemptsCodegenPluginOptions = {}): B
           } catch (error) {
             console.warn(
               "⚠️  Failed to generate command types:",
-              error instanceof Error ? error.message : String(error),
+              error instanceof Error ? error.message : String(error)
             );
           }
         }
@@ -74,7 +67,7 @@ export function remptsCodegenPlugin(options: RemptsCodegenPluginOptions = {}): B
             return undefined;
           }
           return undefined;
-        },
+        }
       );
 
       // Hook into end to ensure types are up to date
@@ -86,7 +79,7 @@ export function remptsCodegenPlugin(options: RemptsCodegenPluginOptions = {}): B
           } catch (error) {
             console.warn(
               "⚠️  Failed to regenerate types:",
-              error instanceof Error ? error.message : String(error),
+              error instanceof Error ? error.message : String(error)
             );
           }
         }
@@ -110,8 +103,8 @@ export function remptsCodegenPlugin(options: RemptsCodegenPluginOptions = {}): B
  *   outdir: './dist',
  *   plugins: [
  *     remptsCodegenPlugin({
- *       commandsDir: './commands',
- *       outputFile: './commands.gen.ts'
+ *       commandsDir: './cmds',
+ *       outputFile: './cmds.gen.ts'
  *     })
  *   ]
  * })

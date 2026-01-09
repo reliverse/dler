@@ -72,7 +72,11 @@ export function getReleaseType(version: string): "major" | "minor" | "patch" | n
     return null;
   }
 
-  if (parsed.major > 0) return "major";
-  if (parsed.minor > 0) return "minor";
+  if (parsed.major > 0) {
+    return "major";
+  }
+  if (parsed.minor > 0) {
+    return "minor";
+  }
   return "patch";
 }

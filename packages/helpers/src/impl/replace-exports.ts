@@ -117,7 +117,7 @@ function replaceInPackageJson(filePath: string, direction: "ts-to-js" | "js-to-t
     // Replace ./file.js → ./src/file.ts (if not already in src/ or dist/)
     ROOT_JS_PATTERN_JS_TO_TS.lastIndex = 0;
     updated = updated.replace(ROOT_JS_PATTERN_JS_TO_TS, (match, fileName) => {
-      if (!fileName.startsWith("src/") && !fileName.startsWith("dist/")) {
+      if (!(fileName.startsWith("src/") || fileName.startsWith("dist/"))) {
         const baseName = fileName.replace(/\.js$/, "");
         hasChanges = true;
         return `"default": "./src/${baseName}.ts"`;
@@ -128,7 +128,7 @@ function replaceInPackageJson(filePath: string, direction: "ts-to-js" | "js-to-t
     // Replace ./file.d.ts → ./src/file.ts (if not already in src/ or dist/)
     ROOT_DTS_PATTERN_JS_TO_TS.lastIndex = 0;
     updated = updated.replace(ROOT_DTS_PATTERN_JS_TO_TS, (match, fileName) => {
-      if (!fileName.startsWith("src/") && !fileName.startsWith("dist/")) {
+      if (!(fileName.startsWith("src/") || fileName.startsWith("dist/"))) {
         const baseName = fileName.replace(/\.d\.ts$/, "");
         hasChanges = true;
         return `"types": "./src/${baseName}.ts"`;
@@ -146,7 +146,7 @@ function replaceInPackageJson(filePath: string, direction: "ts-to-js" | "js-to-t
 }
 
 export async function replaceExportsInPackages(
-  options: ReplaceExportsOptions = {},
+  options: ReplaceExportsOptions = {}
 ): Promise<ReplaceResult> {
   const { direction = "ts-to-js", cwd = process.cwd(), ignorePackages } = options;
 
@@ -167,7 +167,7 @@ export async function replaceExportsInPackages(
       try {
         const content = readFileSync(file, "utf-8");
         const pkg = JSON.parse(content);
-        if (!pkg?.name || !shouldIgnorePackage(pkg.name, ignorePackages)) {
+        if (!(pkg?.name && shouldIgnorePackage(pkg.name, ignorePackages))) {
           filteredFiles.push(file);
         }
       } catch {

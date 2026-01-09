@@ -1,12 +1,12 @@
-export * from "./Form";
-export * from "./FormField";
-export * from "./SelectField";
-export * from "./ProgressBar";
+export { bold, fg, italic, TextAttributes, t } from "@opentui/core";
 export {
   useKeyboard,
-  useRenderer,
-  useTimeline,
   useOnResize,
+  useRenderer,
   useTerminalDimensions,
+  useTimeline,
 } from "@opentui/react";
-export { bold, fg, italic, t, TextAttributes } from "@opentui/core";
+export * from "./Form";
+export * from "./FormField";
+export * from "./ProgressBar";
+export * from "./SelectField";

@@ -3,12 +3,22 @@
 import { existsSync, mkdirSync, statSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { getPackageBuildConfig, mergeBuildOptions } from "@reliverse/config/impl/build";
+import {
+  getPackageBuildConfig,
+  mergeBuildOptions,
+} from "@reliverse/config/impl/build";
 import type { DlerConfig } from "@reliverse/config/impl/core";
-import { findMonorepoRoot, loadDlerConfig } from "@reliverse/config/impl/discovery";
+import {
+  findMonorepoRoot,
+  loadDlerConfig,
+} from "@reliverse/config/impl/discovery";
 import { writeErrorLines } from "@reliverse/helpers";
 import pMap from "@reliverse/mapkit";
-import { createIgnoreFilter, createIncludeFilter, normalizePatterns } from "@reliverse/matcha";
+import {
+  createIgnoreFilter,
+  createIncludeFilter,
+  normalizePatterns,
+} from "@reliverse/matcha";
 import { relinka } from "@reliverse/relinka";
 import {
   getWorkspacePatterns,
@@ -53,8 +63,15 @@ import type {
   MkdistOptions,
   PackageInfo,
 } from "./impl/types";
-import { handleGoBuild, handleGoOnlyBuild } from "./impl/utils/go-build-handler";
-import { extractErrors, extractWarnings, formatLogMessages } from "./impl/utils/log-extraction";
+import {
+  handleGoBuild,
+  handleGoOnlyBuild,
+} from "./impl/utils/go-build-handler";
+import {
+  extractErrors,
+  extractWarnings,
+  formatLogMessages,
+} from "./impl/utils/log-extraction";
 import { filterPrivatePackages } from "./impl/utils/package-filtering";
 import { startWatchMode } from "./impl/watch";
 
@@ -68,7 +85,10 @@ export {
   preparePackageJsonForPublishing,
   transformExportsForBuild,
 } from "@reliverse/typerso";
-export type { DtsGeneratorOptions, DtsGeneratorResult } from "./impl/dts-generator";
+export type {
+  DtsGeneratorOptions,
+  DtsGeneratorResult,
+} from "./impl/dts-generator";
 export { generateDeclarations } from "./impl/dts-generator";
 export { buildGo } from "./impl/go-build";
 export { applyPresets } from "./impl/presets";
@@ -140,7 +160,7 @@ const getWorkspacePackages = async (cwd?: string): Promise<PackageInfo[]> => {
 
     // Neither monorepo nor valid package found
     throw new Error(
-      "❌ No monorepo or valid package found. Ensure package.json has 'workspaces' field or contains a valid 'name' field.",
+      "❌ No monorepo or valid package found. Ensure package.json has 'workspaces' field or contains a valid 'name' field."
     );
   }
 
@@ -169,7 +189,9 @@ const getWorkspacePackages = async (cwd?: string): Promise<PackageInfo[]> => {
     if (pattern.includes("*")) {
       // Pattern with wildcards - use glob
       const glob = new Bun.Glob(pattern);
-      matches = Array.from(glob.scanSync({ cwd: monorepoRoot, onlyFiles: false }));
+      matches = Array.from(
+        glob.scanSync({ cwd: monorepoRoot, onlyFiles: false })
+      );
     } else {
       // Direct package path (no wildcards)
       matches = [pattern];
@@ -365,7 +387,7 @@ const detectJSEntryPoints = async (packagePath: string): Promise<string[]> => {
 
 const detectBinEntryPoints = async (
   packagePath: string,
-  pkg: PackageJsonCache,
+  pkg: PackageJsonCache
 ): Promise<string[]> => {
   if (!pkg.bin) return [];
 
@@ -374,7 +396,9 @@ const detectBinEntryPoints = async (
 
   // bin can be a string or an object
   const binPaths: string[] =
-    typeof binField === "string" ? [binField] : (Object.values(binField) as string[]);
+    typeof binField === "string"
+      ? [binField]
+      : (Object.values(binField) as string[]);
 
   for (const binPath of binPaths) {
     // bin paths typically point to dist/ output
@@ -407,7 +431,10 @@ const detectBinEntryPoints = async (
   return binEntries;
 };
 
-const detectFrontendApp = async (packagePath: string, pkg: PackageJsonCache): Promise<boolean> => {
+const detectFrontendApp = async (
+  packagePath: string,
+  pkg: PackageJsonCache
+): Promise<boolean> => {
   // Check for HTML files
   for (const pattern of FRONTEND_HTML_PATTERNS) {
     const fullPath = resolve(packagePath, pattern);
@@ -461,7 +488,11 @@ const detectGoProject = async (packagePath: string): Promise<boolean> => {
       }
       // Check common Go directories
       if (entry.isDirectory()) {
-        if (GO_PROJECT_DIRS.includes(entry.name as (typeof GO_PROJECT_DIRS)[number])) {
+        if (
+          GO_PROJECT_DIRS.includes(
+            entry.name as (typeof GO_PROJECT_DIRS)[number]
+          )
+        ) {
           const subPath = resolve(packagePath, entry.name);
           try {
             const subEntries = await readdir(subPath, { recursive: true });
@@ -508,7 +539,7 @@ const resolveOutputDir = async (packagePath: string): Promise<string> => {
 
 const resolvePackageInfo = async (
   packagePath: string,
-  dlerConfig: DlerConfig | null,
+  dlerConfig: DlerConfig | null
 ): Promise<PackageInfo | null> => {
   const pkgJsonPath = join(packagePath, "package.json");
 
@@ -580,7 +611,7 @@ const filterPackages = (
   packages: PackageInfo[],
   ignore?: string | string[],
   allowPrivateBuild?: string | string[],
-  filter?: string | string[],
+  filter?: string | string[]
 ): PackageInfo[] => {
   // If filter is provided, use it to include only matching packages (takes precedence over ignore)
   if (filter) {
@@ -610,7 +641,7 @@ const filterPackages = (
 const compileToExecutable = async (
   pkg: PackageInfo,
   _outputs: Bun.BuildArtifact[],
-  options: BuildOptions,
+  options: BuildOptions
 ): Promise<void> => {
   // Use the original source entry point for compilation
   const entryPoint = pkg.entryPoints[0];
@@ -628,7 +659,7 @@ const compileToExecutable = async (
       ?.replace(/\.(ts|js|mjs|cjs)$/, "") || "app";
   const executablePath = join(
     pkg.outputDir,
-    executableName + (process.platform === "win32" ? ".exe" : ""),
+    executableName + (process.platform === "win32" ? ".exe" : "")
   );
 
   // Ensure output directory exists
@@ -636,7 +667,9 @@ const compileToExecutable = async (
     mkdirSync(pkg.outputDir, { recursive: true });
   }
 
-  await relinka.info(`🔨 Compiling ${pkg.name} to executable: ${executablePath}`);
+  await relinka.info(
+    `🔨 Compiling ${pkg.name} to executable: ${executablePath}`
+  );
 
   try {
     const buildConfig: any = {
@@ -649,13 +682,18 @@ const compileToExecutable = async (
 
     // Add Windows-specific metadata if on Windows
     if (process.platform === "win32") {
-      if (options.windowsHideConsole) buildConfig.windowsHideConsole = options.windowsHideConsole;
+      if (options.windowsHideConsole)
+        buildConfig.windowsHideConsole = options.windowsHideConsole;
       if (options.windowsIcon) buildConfig.windowsIcon = options.windowsIcon;
       if (options.windowsTitle) buildConfig.windowsTitle = options.windowsTitle;
-      if (options.windowsPublisher) buildConfig.windowsPublisher = options.windowsPublisher;
-      if (options.windowsVersion) buildConfig.windowsVersion = options.windowsVersion;
-      if (options.windowsDescription) buildConfig.windowsDescription = options.windowsDescription;
-      if (options.windowsCopyright) buildConfig.windowsCopyright = options.windowsCopyright;
+      if (options.windowsPublisher)
+        buildConfig.windowsPublisher = options.windowsPublisher;
+      if (options.windowsVersion)
+        buildConfig.windowsVersion = options.windowsVersion;
+      if (options.windowsDescription)
+        buildConfig.windowsDescription = options.windowsDescription;
+      if (options.windowsCopyright)
+        buildConfig.windowsCopyright = options.windowsCopyright;
     }
 
     // Use Bun's CLI approach for compilation instead of the API
@@ -678,7 +716,9 @@ const compileToExecutable = async (
     }
 
     const stats = statSync(executablePath);
-    await relinka.success(`✅ ${pkg.name}: Executable created (${formatBytes(stats.size)})`);
+    await relinka.success(
+      `✅ ${pkg.name}: Executable created (${formatBytes(stats.size)})`
+    );
   } catch (error) {
     await relinka.error(`❌ ${pkg.name}: Compilation failed - ${error}`);
     throw error;
@@ -692,7 +732,7 @@ const compileToExecutable = async (
 const buildWithMkdist = async (
   pkg: PackageInfo,
   options: BuildOptions,
-  _bunBuildConfig: any,
+  _bunBuildConfig: any
 ): Promise<BuildResult> => {
   const startTime = Date.now();
 
@@ -758,14 +798,16 @@ const buildWithMkdist = async (
 
         if (!prepResult.success && options.verbose) {
           await relinka.warn(
-            `⚠️  ${pkg.name}: Failed to prepare package.json for publishing: ${prepResult.error}`,
+            `⚠️  ${pkg.name}: Failed to prepare package.json for publishing: ${prepResult.error}`
           );
         } else if (options.verbose) {
-          await relinka.info(`📦 ${pkg.name}: Package.json prepared for publishing`);
+          await relinka.info(
+            `📦 ${pkg.name}: Package.json prepared for publishing`
+          );
         }
       } catch (error) {
         await relinka.warn(
-          `⚠️  ${pkg.name}: Error preparing package.json for publishing: ${error instanceof Error ? error.message : String(error)}`,
+          `⚠️  ${pkg.name}: Error preparing package.json for publishing: ${error instanceof Error ? error.message : String(error)}`
         );
       }
 
@@ -788,7 +830,9 @@ const buildWithMkdist = async (
     const buildTime = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    await relinka.error(`❌ ${pkg.name}: mkdist build failed - ${errorMessage}`);
+    await relinka.error(
+      `❌ ${pkg.name}: mkdist build failed - ${errorMessage}`
+    );
 
     return {
       package: pkg,
@@ -806,7 +850,7 @@ const buildWithMkdist = async (
 export const buildPackage = async (
   pkg: PackageInfo,
   options: BuildOptions = {},
-  cache?: BuildCache,
+  cache?: BuildCache
 ): Promise<BuildResult> => {
   // Merge with package-specific config
   const mergedOptions = mergeBuildOptions(options, pkg.buildConfig);
@@ -901,21 +945,26 @@ export const buildPackage = async (
 
   // Auto-detect frontend app settings
   const isFrontendApp = pkg.isFrontendApp || pkg.hasHtmlEntry;
-  const shouldUseCssChunking = cssChunking !== false && (cssChunking === true || isFrontendApp);
+  const shouldUseCssChunking =
+    cssChunking !== false && (cssChunking === true || isFrontendApp);
 
   // Determine bundler based on package kind and options
   // Default to mkdist, use bun only for browser-app or native-app
   const effectiveBundler =
     bundler ||
-    (pkg.buildConfig?.kind === "browser-app" || pkg.buildConfig?.kind === "native-app"
+    (pkg.buildConfig?.kind === "browser-app" ||
+    pkg.buildConfig?.kind === "native-app"
       ? "bun"
       : "mkdist");
 
   // Set appropriate defaults for frontend apps (but not for compilation)
   // When compiling, always use the configured target/format, not frontend defaults
-  const frontendTarget = isFrontendApp && !mergedOptions.compile ? "browser" : target;
-  const frontendFormat = isFrontendApp && !mergedOptions.compile ? "esm" : format;
-  const frontendSplitting = isFrontendApp && !mergedOptions.compile ? true : splitting;
+  const frontendTarget =
+    isFrontendApp && !mergedOptions.compile ? "browser" : target;
+  const frontendFormat =
+    isFrontendApp && !mergedOptions.compile ? "esm" : format;
+  const frontendSplitting =
+    isFrontendApp && !mergedOptions.compile ? true : splitting;
 
   // Initialize plugins (lazy registration)
   initializePlugins();
@@ -924,7 +973,10 @@ export const buildPackage = async (
   const activePlugins: DlerPlugin[] = [];
 
   // Auto-load plugins based on options
-  if (mergedOptions.reactFastRefresh || (isFrontendApp && !mergedOptions.production)) {
+  if (
+    mergedOptions.reactFastRefresh ||
+    (isFrontendApp && !mergedOptions.production)
+  ) {
     activePlugins.push(ReactRefreshPlugin);
   }
   if (
@@ -964,13 +1016,19 @@ export const buildPackage = async (
 
   // Validate format
   const validFormat =
-    frontendFormat === "cjs" || frontendFormat === "iife" ? frontendFormat : "esm";
+    frontendFormat === "cjs" || frontendFormat === "iife"
+      ? frontendFormat
+      : "esm";
 
   // Validate sourcemap - handle boolean for backwards compatibility
   let validSourcemap: string | boolean = sourcemap;
   if (typeof sourcemap === "boolean") {
     validSourcemap = sourcemap ? "inline" : "none";
-  } else if (sourcemap === "linked" || sourcemap === "inline" || sourcemap === "external") {
+  } else if (
+    sourcemap === "linked" ||
+    sourcemap === "inline" ||
+    sourcemap === "external"
+  ) {
     validSourcemap = sourcemap;
   } else {
     validSourcemap = "none";
@@ -1038,7 +1096,7 @@ export const buildPackage = async (
         };
       } else {
         await relinka.warn(
-          `⚠️  ${pkg.name}: TSConfig validation failed: ${error instanceof Error ? error.message : String(error)}`,
+          `⚠️  ${pkg.name}: TSConfig validation failed: ${error instanceof Error ? error.message : String(error)}`
         );
       }
     }
@@ -1050,7 +1108,7 @@ export const buildPackage = async (
     if (cacheEntry) {
       if (verbose) {
         await relinka.info(
-          `⚡ ${pkg.name}: Using cache (${cacheEntry.buildTime}ms, ${formatBytes(cacheEntry.bundleSize)})`,
+          `⚡ ${pkg.name}: Using cache (${cacheEntry.buildTime}ms, ${formatBytes(cacheEntry.bundleSize)})`
         );
       }
       return {
@@ -1082,7 +1140,9 @@ export const buildPackage = async (
     // Validate build options
     const validation = validateBuildConfig(mergedOptions);
     if (!validation.valid) {
-      await relinka.warn(`⚠️  ${pkg.name}: Invalid build options - ${validation.errors.join(", ")}`);
+      await relinka.warn(
+        `⚠️  ${pkg.name}: Invalid build options - ${validation.errors.join(", ")}`
+      );
     }
 
     const buildConfig: any = {
@@ -1098,7 +1158,7 @@ export const buildPackage = async (
     // Debug logging for native app
     if (pkg.name === "@reliverse/native-app-example") {
       await relinka.info(
-        `🔍 Debug: target=${validTarget}, format=${validFormat}, bytecode=${bytecode}`,
+        `🔍 Debug: target=${validTarget}, format=${validFormat}, bytecode=${bytecode}`
       );
     }
 
@@ -1141,9 +1201,11 @@ export const buildPackage = async (
     } else if (typeof minify === "object" && minify !== null) {
       // Validate minify object structure matches Bun API
       const validMinify: MinifyOptions = {};
-      if (minify.whitespace !== undefined) validMinify.whitespace = minify.whitespace;
+      if (minify.whitespace !== undefined)
+        validMinify.whitespace = minify.whitespace;
       if (minify.syntax !== undefined) validMinify.syntax = minify.syntax;
-      if (minify.identifiers !== undefined) validMinify.identifiers = minify.identifiers;
+      if (minify.identifiers !== undefined)
+        validMinify.identifiers = minify.identifiers;
       buildConfig.minify = validMinify;
     }
 
@@ -1190,7 +1252,9 @@ export const buildPackage = async (
       buildConfig.footer = footer;
     }
     if (conditions) {
-      buildConfig.conditions = Array.isArray(conditions) ? conditions : [conditions];
+      buildConfig.conditions = Array.isArray(conditions)
+        ? conditions
+        : [conditions];
     }
     if (loader) {
       buildConfig.loader = loader;
@@ -1259,7 +1323,9 @@ export const buildPackage = async (
 
     // Debug logging for native app
     if (pkg.name === "@reliverse/native-app-example") {
-      await relinka.info(`🔍 Final build config: ${JSON.stringify(buildConfig, null, 2)}`);
+      await relinka.info(
+        `🔍 Final build config: ${JSON.stringify(buildConfig, null, 2)}`
+      );
     }
 
     // Choose bundler based on effective bundler
@@ -1322,7 +1388,9 @@ export const buildPackage = async (
     if (result.success) {
       await handleGoBuild(pkg, mergedOptions, verbose);
     } else if (verbose && pkg.hasGoFiles) {
-      await relinka.info(`⏭️  ${pkg.name}: Skipping Go build (TypeScript build failed)`);
+      await relinka.info(
+        `⏭️  ${pkg.name}: Skipping Go build (TypeScript build failed)`
+      );
     }
 
     // Process assets for frontend apps
@@ -1331,12 +1399,17 @@ export const buildPackage = async (
         await processAssetsForPackage(pkg, pkg.outputDir, assets);
         await processCSSForPackage(pkg, pkg.outputDir, shouldUseCssChunking);
         await processHTMLForPackage(pkg, pkg.outputDir, {
-          minify: typeof minify === "boolean" ? minify : (minify?.whitespace ?? false),
+          minify:
+            typeof minify === "boolean"
+              ? minify
+              : (minify?.whitespace ?? false),
           injectAssets: true,
           publicPath: publicPath || "/",
         });
       } catch (error) {
-        await relinka.warn(`⚠️  ${pkg.name}: Asset processing failed - ${error}`);
+        await relinka.warn(
+          `⚠️  ${pkg.name}: Asset processing failed - ${error}`
+        );
       }
     }
 
@@ -1355,10 +1428,12 @@ export const buildPackage = async (
               buildTime,
               bundleSize,
             },
-            mergedOptions,
+            mergedOptions
           );
         } catch (error) {
-          await relinka.warn(`⚠️  ${pkg.name}: Plugin ${plugin.name} onBuildEnd failed - ${error}`);
+          await relinka.warn(
+            `⚠️  ${pkg.name}: Plugin ${plugin.name} onBuildEnd failed - ${error}`
+          );
         }
       }
     }
@@ -1391,21 +1466,23 @@ export const buildPackage = async (
 
         if (!prepResult.success) {
           await relinka.warn(
-            `⚠️  ${pkg.name}: Failed to prepare package.json for publishing: ${prepResult.error}`,
+            `⚠️  ${pkg.name}: Failed to prepare package.json for publishing: ${prepResult.error}`
           );
         } else if (verbose) {
-          await relinka.info(`📦 ${pkg.name}: Package.json prepared for publishing`);
+          await relinka.info(
+            `📦 ${pkg.name}: Package.json prepared for publishing`
+          );
         }
       } catch (error) {
         await relinka.warn(
-          `⚠️  ${pkg.name}: Error preparing package.json for publishing: ${error instanceof Error ? error.message : String(error)}`,
+          `⚠️  ${pkg.name}: Error preparing package.json for publishing: ${error instanceof Error ? error.message : String(error)}`
         );
       }
     }
 
     if (verbose) {
       await relinka.success(
-        `✅ ${pkg.name}: Built successfully (${buildTime}ms, ${formatBytes(bundleSize)})`,
+        `✅ ${pkg.name}: Built successfully (${buildTime}ms, ${formatBytes(bundleSize)})`
       );
     }
 
@@ -1450,7 +1527,7 @@ export const buildPackage = async (
 const collectAllResults = async (
   packages: PackageInfo[],
   options: BuildOptions = {},
-  cache?: BuildCache,
+  cache?: BuildCache
 ): Promise<BuildSummary> => {
   const {
     concurrency = DEFAULT_CONCURRENCY,
@@ -1477,21 +1554,31 @@ const collectAllResults = async (
       packages,
       async (pkg, index) => {
         if (!verbose) {
-          await relinka.info(`Building ${pkg.name} (${index + 1}/${packages.length})...`);
+          await relinka.info(
+            `Building ${pkg.name} (${index + 1}/${packages.length})...`
+          );
         }
         return buildPackage(pkg, options, cache);
       },
       {
         concurrency,
         stopOnError,
-      },
+      }
     );
 
-    const failedPackages = buildResults.filter((r) => !r.success && !r.skipped).length;
+    const failedPackages = buildResults.filter(
+      (r) => !r.success && !r.skipped
+    ).length;
     const successfulPackages = buildResults.filter((r) => r.success).length;
     const skippedPackages = buildResults.filter((r) => r.skipped).length;
-    const totalBuildTime = buildResults.reduce((sum, r) => sum + r.buildTime, 0);
-    const totalBundleSize = buildResults.reduce((sum, r) => sum + (r.bundleSize || 0), 0);
+    const totalBuildTime = buildResults.reduce(
+      (sum, r) => sum + r.buildTime,
+      0
+    );
+    const totalBundleSize = buildResults.reduce(
+      (sum, r) => sum + (r.bundleSize || 0),
+      0
+    );
     const cacheHits = buildResults.filter((r) => r.cacheHit).length;
 
     return {
@@ -1516,7 +1603,7 @@ const collectAllResults = async (
 
         if (verbose) {
           void relinka.error(
-            `❌ ${pkg.name}: Aggregate error - ${err instanceof Error ? err.message : String(err)}`,
+            `❌ ${pkg.name}: Aggregate error - ${err instanceof Error ? err.message : String(err)}`
           );
         }
 
@@ -1531,11 +1618,19 @@ const collectAllResults = async (
         };
       });
 
-      const failedPackages = buildResults.filter((r) => !r.success && !r.skipped).length;
+      const failedPackages = buildResults.filter(
+        (r) => !r.success && !r.skipped
+      ).length;
       const successfulPackages = buildResults.filter((r) => r.success).length;
       const skippedPackages = buildResults.filter((r) => r.skipped).length;
-      const totalBuildTime = buildResults.reduce((sum, r) => sum + r.buildTime, 0);
-      const totalBundleSize = buildResults.reduce((sum, r) => sum + (r.bundleSize || 0), 0);
+      const totalBuildTime = buildResults.reduce(
+        (sum, r) => sum + r.buildTime,
+        0
+      );
+      const totalBundleSize = buildResults.reduce(
+        (sum, r) => sum + (r.bundleSize || 0),
+        0
+      );
       const cacheHits = buildResults.filter((r) => r.cacheHit).length;
 
       return {
@@ -1560,7 +1655,10 @@ const collectAllResults = async (
 // Output Formatting
 // ============================================================================
 
-const formatOutput = async (summary: BuildSummary, verbose: boolean): Promise<void> => {
+const formatOutput = async (
+  summary: BuildSummary,
+  verbose: boolean
+): Promise<void> => {
   const {
     totalPackages,
     failedPackages,
@@ -1593,7 +1691,9 @@ const formatOutput = async (summary: BuildSummary, verbose: boolean): Promise<vo
 
     for (const result of failed) {
       await relinka.error(`📦 ${result.package.name} (${result.buildTime}ms)`);
-      await relinka.error(`   Entry points: ${result.package.entryPoints.join(", ")}`);
+      await relinka.error(
+        `   Entry points: ${result.package.entryPoints.join(", ")}`
+      );
       await relinka.error(`   Output dir: ${result.package.outputDir}`);
 
       if (result.errors.length > 0) {
@@ -1612,10 +1712,12 @@ const formatOutput = async (summary: BuildSummary, verbose: boolean): Promise<vo
     if (successful.length > 0) {
       await relinka.success("\n✅ Successful Packages:\n");
       for (const result of successful) {
-        const sizeInfo = result.bundleSize ? `, ${formatBytes(result.bundleSize)}` : "";
+        const sizeInfo = result.bundleSize
+          ? `, ${formatBytes(result.bundleSize)}`
+          : "";
         const cacheInfo = result.cacheHit ? " (cached)" : "";
         await relinka.success(
-          `   • ${result.package.name} (${result.buildTime}ms${sizeInfo})${cacheInfo}`,
+          `   • ${result.package.name} (${result.buildTime}ms${sizeInfo})${cacheInfo}`
         );
         if (result.warnings.length > 0) {
           await relinka.log(`     Warnings: ${result.warnings.length}`);
@@ -1644,7 +1746,7 @@ const formatOutput = async (summary: BuildSummary, verbose: boolean): Promise<vo
 export const runBuildOnAllPackages = async (
   ignore?: string | string[],
   cwd?: string,
-  options: BuildOptions = {},
+  options: BuildOptions = {}
 ): Promise<BuildSummary> => {
   const {
     verbose = false,
@@ -1683,14 +1785,18 @@ export const runBuildOnAllPackages = async (
         }
         if (dlerConfig.build.packages) {
           await relinka.info(
-            `     Package configs: ${Object.keys(dlerConfig.build.packages).length}`,
+            `     Package configs: ${Object.keys(dlerConfig.build.packages).length}`
           );
         }
         if (dlerConfig.build.patterns) {
-          await relinka.info(`     Pattern configs: ${dlerConfig.build.patterns.length}`);
+          await relinka.info(
+            `     Pattern configs: ${dlerConfig.build.patterns.length}`
+          );
         }
       } else {
-        await relinka.info("   ⚙️  No dler.ts found, using default configuration");
+        await relinka.info(
+          "   ⚙️  No dler.ts found, using default configuration"
+        );
       }
 
       await relinka.info("   Packages found:");
@@ -1701,10 +1807,12 @@ export const runBuildOnAllPackages = async (
         const htmlStatus = pkg.hasHtmlEntry ? "📄" : "";
         const cliStatus = pkg.isCLI ? "⚡" : "";
         await relinka.info(
-          `     ${entryStatus} ${configSource} ${frontendStatus}${htmlStatus}${cliStatus} ${pkg.name} (${pkg.entryPoints.length} entry points)`,
+          `     ${entryStatus} ${configSource} ${frontendStatus}${htmlStatus}${cliStatus} ${pkg.name} (${pkg.entryPoints.length} entry points)`
         );
         if (pkg.entryPoints.length > 0) {
-          await relinka.info(`       Entry points: ${pkg.entryPoints.join(", ")}`);
+          await relinka.info(
+            `       Entry points: ${pkg.entryPoints.join(", ")}`
+          );
           await relinka.info(`       Output dir: ${pkg.outputDir}`);
           if (pkg.isFrontendApp) {
             await relinka.info(`       Type: Frontend app`);
@@ -1712,7 +1820,7 @@ export const runBuildOnAllPackages = async (
             if (pkg.hasPublicDir) await relinka.info(`       Public dir: ✅`);
           } else if (pkg.isCLI) {
             await relinka.info(
-              `       Type: CLI${pkg.entryPoints.length > 1 ? " (with library exports)" : ""}`,
+              `       Type: CLI${pkg.entryPoints.length > 1 ? " (with library exports)" : ""}`
             );
           } else {
             await relinka.info(`       Type: Library`);
@@ -1722,7 +1830,7 @@ export const runBuildOnAllPackages = async (
               `       Build config: ${JSON.stringify(pkg.buildConfig, null, 2)
                 .split("\n")
                 .map((line) => `         ${line}`)
-                .join("\n")}`,
+                .join("\n")}`
             );
           }
         }
@@ -1731,13 +1839,18 @@ export const runBuildOnAllPackages = async (
     }
 
     // Apply filters
-    const packages = filterPackages(allPackages, ignore, allowPrivateBuild, filter);
+    const packages = filterPackages(
+      allPackages,
+      ignore,
+      allowPrivateBuild,
+      filter
+    );
     const filteredCount = allPackages.length - packages.length;
 
     if (filter) {
       const patterns = normalizePatterns(filter);
       await relinka.info(
-        `   Filtering to ${packages.length} packages matching: ${patterns.join(", ")}`,
+        `   Filtering to ${packages.length} packages matching: ${patterns.join(", ")}`
       );
     } else if (filteredCount > 0) {
       const combinedIgnore = ignore
@@ -1747,26 +1860,32 @@ export const runBuildOnAllPackages = async (
         : ALWAYS_IGNORED_PACKAGES;
 
       const patterns = normalizePatterns(combinedIgnore);
-      await relinka.info(`   Ignoring ${filteredCount} packages matching: ${patterns.join(", ")}`);
+      await relinka.info(
+        `   Ignoring ${filteredCount} packages matching: ${patterns.join(", ")}`
+      );
     }
 
     const { concurrency = DEFAULT_CONCURRENCY, stopOnError = false } = options;
     await relinka.info(
-      `   Building ${packages.length} packages (concurrency: ${concurrency}, stopOnError: ${stopOnError})...\n`,
+      `   Building ${packages.length} packages (concurrency: ${concurrency}, stopOnError: ${stopOnError})...\n`
     );
 
     if (watch || devServer) {
       // Dev server mode
       if (devServer) {
-        const frontendPackages = packages.filter((pkg) => pkg.isFrontendApp || pkg.hasHtmlEntry);
+        const frontendPackages = packages.filter(
+          (pkg) => pkg.isFrontendApp || pkg.hasHtmlEntry
+        );
 
         if (frontendPackages.length === 0) {
           await relinka.warn("⚠️  No frontend packages found for dev server");
-          await relinka.info("   Dev server works best with packages that have HTML entry points");
+          await relinka.info(
+            "   Dev server works best with packages that have HTML entry points"
+          );
         }
 
         await relinka.info(
-          `🚀 Starting dev server for ${frontendPackages.length} frontend packages...`,
+          `🚀 Starting dev server for ${frontendPackages.length} frontend packages...`
         );
 
         try {

@@ -82,8 +82,12 @@ export const remptsConfigSchema = type({
       description: "package name (npm naming conventions)",
     })
     .narrow((name: string, ctx) => {
-      if (name.length < 1) return ctx.reject("package name cannot be empty");
-      if (name.length > 214) return ctx.reject("package name too long (max 214 characters)");
+      if (name.length < 1) {
+        return ctx.reject("package name cannot be empty");
+      }
+      if (name.length > 214) {
+        return ctx.reject("package name too long (max 214 characters)");
+      }
       return true;
     }),
   "version?": type("string.semver").configure({
@@ -99,25 +103,9 @@ export const remptsConfigSchema = type({
 
   // Commands configuration
   "commands?": type({
-    "manifest?": SafePath.configure({
-      description: "path to commands manifest file",
-    }),
     "directory?": SafePath.configure({
       description: "directory containing command files",
     }),
-    "fileBasedDir?": type("string")
-      .configure({
-        description: "directory name for file-based commands (default: 'app')",
-      })
-      .narrow((dir: string, ctx) => {
-        if (dir.includes("/") || dir.includes("\\")) {
-          return ctx.reject("fileBasedDir cannot contain path separators");
-        }
-        if (dir.startsWith(".") || dir.endsWith(".")) {
-          return ctx.reject("fileBasedDir cannot start or end with dots");
-        }
-        return true;
-      }),
     "generateReport?": "boolean",
   }).configure({
     description: "command-related configuration",
@@ -139,7 +127,7 @@ export const remptsConfigSchema = type({
         if (!hasValidExtension) {
           // Note: ctx.warn is not available in current arktype version
           console.warn(
-            "entry files should typically have .ts, .tsx, .js, .jsx, .mjs, or .cjs extensions",
+            "entry files should typically have .ts, .tsx, .js, .jsx, .mjs, or .cjs extensions"
           );
         }
         return true;
@@ -157,7 +145,7 @@ export const remptsConfigSchema = type({
       .narrow((externals: string[], _ctx) => {
         // Warn about potentially problematic externals
         const problematic = externals.filter(
-          (ext) => ext.startsWith("@types/") || ext.includes("*"),
+          (ext) => ext.startsWith("@types/") || ext.includes("*")
         );
         if (problematic.length > 0) {
           // Note: ctx.warn is not available in current arktype version

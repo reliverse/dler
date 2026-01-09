@@ -63,7 +63,7 @@ export async function mkdist(options: MkdistOptions) {
       logger.debug("Normalizing TypeScript compiler options...");
     }
     options.typescript.compilerOptions = await normalizeCompilerOptions(
-      options.typescript.compilerOptions,
+      options.typescript.compilerOptions
     );
   }
   options.typescript.compilerOptions = defu(
@@ -77,7 +77,7 @@ export async function mkdist(options: MkdistOptions) {
       emitDeclarationOnly: true,
       allowImportingTsExtensions: true,
       allowNonTsExtensions: true,
-    } satisfies TSConfig["compilerOptions"],
+    } satisfies TSConfig["compilerOptions"]
   );
 
   // Create loader
@@ -101,7 +101,7 @@ export async function mkdist(options: MkdistOptions) {
         outputs.push(...result);
       }
       _processedCount++;
-    }),
+    })
   );
 
   // Normalize output extensions
@@ -111,11 +111,14 @@ export async function mkdist(options: MkdistOptions) {
   const pathConflicts: string[] = [];
 
   for (const output of outputs.filter((o) => o.extension)) {
-    const renamed = basename(output.path, extname(output.path)) + output.extension;
+    const renamed =
+      basename(output.path, extname(output.path)) + output.extension;
     output.path = join(dirname(output.path), renamed);
 
     // Check for output path conflicts
-    const conflictingOutput = outputs.find((o) => o !== output && o.path === output.path);
+    const conflictingOutput = outputs.find(
+      (o) => o !== output && o.path === output.path
+    );
     if (conflictingOutput) {
       pathConflicts.push(output.path);
     }
@@ -132,7 +135,9 @@ export async function mkdist(options: MkdistOptions) {
   const dtsOutputs = outputs.filter((o) => o.declaration && !o.skip);
   if (dtsOutputs.length > 0) {
     if (options.verbose) {
-      logger.debug(`Generating TypeScript declarations for ${dtsOutputs.length} files...`);
+      logger.debug(
+        `Generating TypeScript declarations for ${dtsOutputs.length} files...`
+      );
     }
 
     // Initialize VFS with original TypeScript source files, not transformed JS
@@ -183,8 +188,17 @@ export async function mkdist(options: MkdistOptions) {
     return id;
   };
 
-  const esmResolveExtensions = ["", "/index.mjs", "/index.js", ".mjs", ".ts", ".js"];
-  const esmOutputs = outputs.filter((o) => o.extension === ".mjs" || o.extension === ".js");
+  const esmResolveExtensions = [
+    "",
+    "/index.mjs",
+    "/index.js",
+    ".mjs",
+    ".ts",
+    ".js",
+  ];
+  const esmOutputs = outputs.filter(
+    (o) => o.extension === ".mjs" || o.extension === ".js"
+  );
 
   for (const output of esmOutputs) {
     // Resolve import statements
@@ -193,13 +207,20 @@ export async function mkdist(options: MkdistOptions) {
         .replace(
           /(import|export)(\s+(?:.+|{[\s\w,]+})\s+from\s+["'])(.*)(["'])/g,
           (_, type, head, id, tail) =>
-            type + head + resolveId(output.path, id, esmResolveExtensions) + tail,
+            type +
+            head +
+            resolveId(output.path, id, esmResolveExtensions) +
+            tail
         )
         // Resolve dynamic import
         .replace(
           /import\((["'])(.*)(["'])\)/g,
           (_, head, id, tail) =>
-            "import(" + head + resolveId(output.path, id, esmResolveExtensions) + tail + ")",
+            "import(" +
+            head +
+            resolveId(output.path, id, esmResolveExtensions) +
+            tail +
+            ")"
         );
     }
   }
@@ -213,7 +234,11 @@ export async function mkdist(options: MkdistOptions) {
       output.contents = output.contents.replace(
         /require\((["'])(.*)(["'])\)/g,
         (_, head, id, tail) =>
-          "require(" + head + resolveId(output.path, id, cjsResolveExtensions) + tail + ")",
+          "require(" +
+          head +
+          resolveId(output.path, id, cjsResolveExtensions) +
+          tail +
+          ")"
       );
     }
   }
@@ -251,7 +276,7 @@ export async function mkdist(options: MkdistOptions) {
       }
 
       _writtenCount++;
-    }),
+    })
   );
 
   const duration = Date.now() - startTime;
@@ -262,7 +287,9 @@ export async function mkdist(options: MkdistOptions) {
     // Log error details for debugging
     for (const error of errors.slice(0, 5)) {
       // Show first 5 errors
-      logger.error(`Error in ${error.filename}: ${error.errors[0]?.message || "Unknown error"}`);
+      logger.error(
+        `Error in ${error.filename}: ${error.errors[0]?.message || "Unknown error"}`
+      );
     }
     if (errors.length > 5) {
       logger.error(`... and ${errors.length - 5} more errors`);

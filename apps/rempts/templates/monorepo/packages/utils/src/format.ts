@@ -1,5 +1,7 @@
 export function formatTable(data: Record<string, any>[]): string {
-  if (data.length === 0) return "";
+  if (data.length === 0) {
+    return "";
+  }
 
   const headers = Object.keys(data[0]);
   const rows = data.map((item) => headers.map((h) => String(item[h] ?? "")));

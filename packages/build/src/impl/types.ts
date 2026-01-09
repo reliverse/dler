@@ -399,7 +399,7 @@ export type LoadFile = (input: InputFile) => Promise<OutputFile[] | undefined>;
 
 export type MkdistLoader = (
   input: InputFile,
-  context: LoaderContext,
+  context: LoaderContext
 ) => Promise<OutputFile[] | undefined>;
 
 export type LoaderResult = OutputFile[];

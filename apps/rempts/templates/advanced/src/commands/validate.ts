@@ -1,9 +1,9 @@
+import { relico } from "@reliverse/relico";
 import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 import { loadConfig } from "../utils/config";
-import { validateFiles } from "../utils/validator";
 import { glob } from "../utils/glob";
-import { relico } from "@reliverse/relico";
+import { validateFiles } from "../utils/validator";
 
 const validateCommand = defineCommand({
   name: "validate",
@@ -11,7 +11,9 @@ const validateCommand = defineCommand({
   options: {
     config: option(
       type("string | undefined").narrow((s, ctx) => {
-        if (!s) return true;
+        if (!s) {
+          return true;
+        }
         return (
           s.endsWith(".json") ||
           s.endsWith(".ts") ||
@@ -22,20 +24,20 @@ const validateCommand = defineCommand({
       {
         short: "c",
         description: "Path to config file (.json, .ts, or .js)",
-      },
+      }
     ),
     fix: option(
       type("boolean").pipe((v) => v ?? false),
       {
         short: "f",
         description: "Auto-fix issues",
-      },
+      }
     ),
     cache: option(
       type("boolean").pipe((v) => v ?? true),
       {
         description: "Enable caching",
-      },
+      }
     ),
     files: option(type("string | undefined"), {
       description: "Files to validate (if not specified, uses config patterns)",

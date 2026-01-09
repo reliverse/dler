@@ -2,17 +2,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "target": "ESNext",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "types": [
-      "node",
-      "react",
-      "react-dom",
-      "mdx"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "types": ["node", "react", "react-dom", "mdx"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -26,9 +17,7 @@
     "jsx": "react-jsx",
     "incremental": true,
     "paths": {
-      "~/*": [
-        "./*"
-      ]
+      "~/*": ["./*"]
     },
     "plugins": [
       {
@@ -41,9 +30,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
-, "next.config.mjs"  ],
-  "exclude": [
-    "node_modules"
-  ]
+    ".next/dev/types/**/*.ts",
+    "next.config.mjs"
+  ],
+  "exclude": ["node_modules"]
 }

@@ -5,7 +5,12 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { DependencyTracker } from "./dependency-tracker";
-import type { BuildOptions, CacheEntry, CacheOptions, PackageInfo } from "./types";
+import type {
+  BuildOptions,
+  CacheEntry,
+  CacheOptions,
+  PackageInfo,
+} from "./types";
 
 const DEFAULT_CACHE_DIR = join(".reliverse", "dler", "cache", "build");
 const DEFAULT_TTL = 24 * 60 * 60 * 1000; // 24 hours
@@ -67,11 +72,17 @@ export class BuildCache {
       emitDCEAnnotations: options.emitDCEAnnotations,
     };
 
-    const configString = JSON.stringify(buildConfig, Object.keys(buildConfig).sort());
+    const configString = JSON.stringify(
+      buildConfig,
+      Object.keys(buildConfig).sort()
+    );
     const configHash = createHash("sha256").update(configString).digest("hex");
 
     // Include project path in hash to avoid collisions between different projects
-    const projectHash = createHash("sha256").update(pkg.path).digest("hex").substring(0, 8);
+    const projectHash = createHash("sha256")
+      .update(pkg.path)
+      .digest("hex")
+      .substring(0, 8);
 
     return `${pkg.name}-${projectHash}-${configHash}`;
   }
@@ -114,7 +125,10 @@ export class BuildCache {
     return createHash("sha256").update(hashes.join("")).digest("hex");
   }
 
-  async get(pkg: PackageInfo, options: BuildOptions): Promise<CacheEntry | null> {
+  async get(
+    pkg: PackageInfo,
+    options: BuildOptions
+  ): Promise<CacheEntry | null> {
     if (!this.options.enabled) {
       this.misses++;
       return null;
@@ -173,7 +187,7 @@ export class BuildCache {
       buildTime: number;
       bundleSize: number;
       outputFiles: string[];
-    },
+    }
   ): Promise<void> {
     if (!this.options.enabled) {
       return;

@@ -1,13 +1,13 @@
+import { relico } from "@reliverse/relico";
 import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 import { loadConfig } from "../utils/config";
-import { relico } from "@reliverse/relico";
 
 const serveCommand = defineCommand({
   name: "serve",
   description: "Start a development server",
   options: {
-    port: option(type("number", { divisor: 1, min: 1, max: 65535 }, "=", 3000), {
+    port: option(type("number", { divisor: 1, min: 1, max: 65_535 }, "=", 3000), {
       short: "p",
       description: "Port to listen on",
     }),

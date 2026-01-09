@@ -6,7 +6,8 @@
     "declarationDir": "./dist",
     "declaration": true,
     "emitDeclarationOnly": true,
-    "types": ["bun"]
+    "types": ["bun"],
+    "strictNullChecks": true
   },
   "include": ["./src/**/*", "./test/**/*"],
   "exclude": ["./node_modules", "./dist"]

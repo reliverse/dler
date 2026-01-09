@@ -18,7 +18,9 @@ export const PerformancePlugin: DlerPlugin = {
     try {
       await checkPerformanceBudgets(result);
     } catch (error) {
-      logger.warn(`Failed to check performance budgets for ${result.package.name}: ${error}`);
+      logger.warn(
+        `Failed to check performance budgets for ${result.package.name}: ${error}`
+      );
     }
   },
 };
@@ -37,19 +39,19 @@ async function checkPerformanceBudgets(result: BuildResult): Promise<void> {
   // Check bundle size limits
   if (budget.maxBundleSize && bundleSize > budget.maxBundleSize) {
     warnings.push(
-      `Bundle size ${formatBytes(bundleSize)} exceeds limit of ${formatBytes(budget.maxBundleSize)}`,
+      `Bundle size ${formatBytes(bundleSize)} exceeds limit of ${formatBytes(budget.maxBundleSize)}`
     );
   }
 
   if (budget.maxChunkSize && bundleSize > budget.maxChunkSize) {
     warnings.push(
-      `Chunk size ${formatBytes(bundleSize)} exceeds limit of ${formatBytes(budget.maxChunkSize)}`,
+      `Chunk size ${formatBytes(bundleSize)} exceeds limit of ${formatBytes(budget.maxChunkSize)}`
     );
   }
 
   if (budget.maxAssetSize && bundleSize > budget.maxAssetSize) {
     warnings.push(
-      `Asset size ${formatBytes(bundleSize)} exceeds limit of ${formatBytes(budget.maxAssetSize)}`,
+      `Asset size ${formatBytes(bundleSize)} exceeds limit of ${formatBytes(budget.maxAssetSize)}`
     );
   }
 
@@ -60,7 +62,9 @@ async function checkPerformanceBudgets(result: BuildResult): Promise<void> {
       logger.warn(`   ${warning}`);
     }
   } else {
-    logger.info(`✅ Performance budget met for ${pkg.name} (${formatBytes(bundleSize)})`);
+    logger.info(
+      `✅ Performance budget met for ${pkg.name} (${formatBytes(bundleSize)})`
+    );
   }
 }
 

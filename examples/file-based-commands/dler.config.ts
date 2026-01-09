@@ -6,12 +6,12 @@ export default defineConfig({
   description: "Git workflow automation CLI",
   plugins: [],
   commands: {
-    directory: "./commands",
+    directory: "./cmds",
   },
   build: {
     entry: "./cli.ts",
     outdir: "./dist",
-    targets: ["native"],
+    targets: ["bun-linux-x64-modern"],
     compress: false,
     minify: false,
     sourcemap: true,
@@ -31,7 +31,7 @@ export default defineConfig({
   release: {
     npm: true,
     github: false,
-    tagFormat: "v{{version}}",
+    tagFormat: "v${version}",
     conventionalCommits: true,
   },
 });

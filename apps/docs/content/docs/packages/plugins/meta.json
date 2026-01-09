@@ -1,9 +1,4 @@
 {
   "title": "Plugin Packages",
-  "pages": [
-    "index",
-    "config",
-    "ai-detect",
-    "completions"
-  ]
+  "pages": ["index", "config", "ai-detect", "completions"]
 }

@@ -1,4 +1,4 @@
-type BaseOptions = {
+interface BaseOptions {
   /**
    * Number of concurrently pending promises returned by `mapkit`.
    *
@@ -7,7 +7,7 @@ type BaseOptions = {
    * @default Infinity
    */
   readonly concurrency?: number;
-};
+}
 
 export type Options = BaseOptions & {
   /**
@@ -60,7 +60,7 @@ type MaybePromise<T> = T | Promise<T>;
  */
 export type mapkit<Element = unknown, NewElement = unknown> = (
   element: Element,
-  index: number,
+  index: number
 ) => MaybePromise<NewElement | typeof pMapSkip>;
 
 /**
@@ -84,8 +84,8 @@ export const pMapSkip = Symbol("skip");
 export default async function pMap<Element, NewElement>(
   input: AsyncIterable<Element | Promise<Element>> | Iterable<Element | Promise<Element>>,
   mapkit: mapkit<Element, NewElement>,
-  options: Options = {},
-): Promise<Array<Exclude<NewElement, typeof pMapSkip>>> {
+  options: Options = {}
+): Promise<Exclude<NewElement, typeof pMapSkip>[]> {
   const { concurrency = Number.POSITIVE_INFINITY, stopOnError = true, signal } = options;
 
   if (
@@ -94,8 +94,7 @@ export default async function pMap<Element, NewElement>(
       (input as any)[Symbol.asyncIterator] === undefined)
   ) {
     throw new TypeError(
-      `Expected \`input\` to be either an \`Iterable\` or \`AsyncIterable\`, ` +
-        `got (${typeof input})`,
+      "Expected `input` to be either an `Iterable` or `AsyncIterable`, " + `got (${typeof input})`
     );
   }
 
@@ -110,8 +109,8 @@ export default async function pMap<Element, NewElement>(
     )
   ) {
     throw new TypeError(
-      `Expected \`concurrency\` to be an integer from 1 and up or ` +
-        `\`Infinity\`, got \`${concurrency}\` (${typeof concurrency})`,
+      "Expected `concurrency` to be an integer from 1 and up or " +
+        `\`Infinity\`, got \`${concurrency}\` (${typeof concurrency})`
     );
   }
 
@@ -133,7 +132,9 @@ export default async function pMap<Element, NewElement>(
     let iteratorClosed = false;
 
     const safeCloseIterator = async () => {
-      if (iteratorClosed) return;
+      if (iteratorClosed) {
+        return;
+      }
       const ret = (iterator as any)?.return;
       if (typeof ret === "function") {
         try {
@@ -148,7 +149,9 @@ export default async function pMap<Element, NewElement>(
     };
 
     const onAbort = () => {
-      if (isSettled) return;
+      if (isSettled) {
+        return;
+      }
       isSettled = true;
       void safeCloseIterator();
       cleanup();
@@ -175,7 +178,7 @@ export default async function pMap<Element, NewElement>(
       cleanup();
       // Build filtered array in one pass, preserving order
       // Optimized: check undefined first (faster primitive comparison) then pMapSkip
-      const out: Array<Exclude<NewElement, typeof pMapSkip>> = [];
+      const out: Exclude<NewElement, typeof pMapSkip>[] = [];
       for (let i = 0; i < results.length; i++) {
         const v = results[i];
         // Fast path: check undefined first (primitive), then pMapSkip (Symbol)
@@ -187,9 +190,15 @@ export default async function pMap<Element, NewElement>(
     }
 
     function checkCompletion() {
-      if (isSettled) return;
-      if (!isIterableDone) return;
-      if (activeCount > 0) return;
+      if (isSettled) {
+        return;
+      }
+      if (!isIterableDone) {
+        return;
+      }
+      if (activeCount > 0) {
+        return;
+      }
 
       isSettled = true;
 
@@ -208,7 +217,9 @@ export default async function pMap<Element, NewElement>(
           results[index] = result;
         }
       } catch (error) {
-        if (isSettled) return;
+        if (isSettled) {
+          return;
+        }
 
         if (stopOnError) {
           isSettled = true;
@@ -229,12 +240,14 @@ export default async function pMap<Element, NewElement>(
     }
 
     async function pump() {
-      if (isSettled || isPumping) return;
+      if (isSettled || isPumping) {
+        return;
+      }
       isPumping = true;
 
       try {
         // Pull new items sequentially; never call iterator.next() concurrently.
-        while (!isSettled && !isIterableDone && activeCount < concurrency) {
+        while (!(isSettled || isIterableDone) && activeCount < concurrency) {
           let next:
             | IteratorResult<Element | Promise<Element>>
             | Promise<IteratorResult<Element | Promise<Element>>>;
@@ -286,7 +299,7 @@ export default async function pMap<Element, NewElement>(
 export function pMapIterable<Element, NewElement>(
   input: AsyncIterable<Element | Promise<Element>> | Iterable<Element | Promise<Element>>,
   mapkit: mapkit<Element, NewElement>,
-  options: IterableOptions = {},
+  options: IterableOptions = {}
 ): AsyncIterable<Exclude<NewElement, typeof pMapSkip>> {
   const { concurrency = Number.POSITIVE_INFINITY, backpressure = concurrency } = options;
 
@@ -296,8 +309,7 @@ export function pMapIterable<Element, NewElement>(
       (input as any)[Symbol.asyncIterator] === undefined)
   ) {
     throw new TypeError(
-      `Expected \`input\` to be either an \`Iterable\` or \`AsyncIterable\`, ` +
-        `got (${typeof input})`,
+      "Expected `input` to be either an `Iterable` or `AsyncIterable`, " + `got (${typeof input})`
     );
   }
 
@@ -312,8 +324,8 @@ export function pMapIterable<Element, NewElement>(
     )
   ) {
     throw new TypeError(
-      `Expected \`concurrency\` to be an integer from 1 and up or ` +
-        `\`Infinity\`, got \`${concurrency}\` (${typeof concurrency})`,
+      "Expected `concurrency` to be an integer from 1 and up or " +
+        `\`Infinity\`, got \`${concurrency}\` (${typeof concurrency})`
     );
   }
 
@@ -324,9 +336,9 @@ export function pMapIterable<Element, NewElement>(
     )
   ) {
     throw new TypeError(
-      `Expected \`backpressure\` to be an integer from ` +
+      "Expected `backpressure` to be an integer from " +
         `\`concurrency\` (${concurrency}) and up or \`Infinity\`, got ` +
-        `\`${backpressure}\` (${typeof backpressure})`,
+        `\`${backpressure}\` (${typeof backpressure})`
     );
   }
 
@@ -337,13 +349,13 @@ export function pMapIterable<Element, NewElement>(
           ? (input as any)[Symbol.asyncIterator]()
           : (input as any)[Symbol.iterator]();
 
-      type ResultItem = {
+      interface ResultItem {
         value?: NewElement | typeof pMapSkip;
         error?: Error;
         done: boolean;
-      };
+      }
 
-      const resultQueue: Array<Promise<ResultItem>> = [];
+      const resultQueue: Promise<ResultItem>[] = [];
       let runningCount = 0;
       let currentIndex = 0;
       let isDone = false;
@@ -351,7 +363,9 @@ export function pMapIterable<Element, NewElement>(
       let iteratorClosed = false;
 
       const safeCloseIterator = async () => {
-        if (iteratorClosed) return;
+        if (iteratorClosed) {
+          return;
+        }
         const ret = (iterator as any)?.return;
         if (typeof ret === "function") {
           try {
@@ -366,7 +380,9 @@ export function pMapIterable<Element, NewElement>(
       };
 
       const schedulePull = () => {
-        if (pulling || isDone) return;
+        if (pulling || isDone) {
+          return;
+        }
         pulling = true;
 
         (async () => {
@@ -385,7 +401,7 @@ export function pMapIterable<Element, NewElement>(
                   Promise.resolve({
                     error: error as Error,
                     done: false,
-                  }),
+                  })
                 );
                 break;
               }

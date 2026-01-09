@@ -68,7 +68,7 @@ export type PackageKind = "library" | "browser-app" | "native-app" | "cli";
  */
 export function extractPackageName(packageName: string): string {
   const parts = packageName.split("/");
-  return parts[parts.length - 1] || packageName;
+  return parts.at(-1) || packageName;
 }
 
 /**
@@ -170,7 +170,7 @@ export function transformExportsForBuild(exports: PackageJson["exports"]): Packa
 export function addBinFieldToPackageJson(
   pkg: PackageJson,
   kind: PackageKind | undefined,
-  binDefinitions?: string,
+  binDefinitions?: string
 ): void {
   if (kind !== "cli") {
     return;
@@ -197,7 +197,7 @@ export function addBinFieldToPackageJson(
  * @returns Object indicating success and whether the field was added
  */
 export async function addFilesFieldIfMissing(
-  packagePath: string,
+  packagePath: string
 ): Promise<{ success: boolean; added: boolean; error?: string }> {
   try {
     const pkg = await readPackageJSON(packagePath);
@@ -255,7 +255,7 @@ export interface PreparePackageJsonOptions {
  */
 export async function preparePackageJsonForPublishing(
   packagePath: string,
-  options: PreparePackageJsonOptions = {},
+  options: PreparePackageJsonOptions = {}
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const pkg = await readPackageJSON(packagePath);
@@ -272,7 +272,7 @@ export async function preparePackageJsonForPublishing(
     addBinFieldToPackageJson(pkg, options.kind, options.binDefinitions);
 
     // Add files field if missing or empty
-    if (!pkg.files || !Array.isArray(pkg.files) || pkg.files.length === 0) {
+    if (!(pkg.files && Array.isArray(pkg.files)) || pkg.files.length === 0) {
       pkg.files = ["dist", "package.json"];
     }
 

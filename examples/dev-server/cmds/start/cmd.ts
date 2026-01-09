@@ -1,0 +1,83 @@
+import { relico } from "@reliverse/relico";
+import { defineCommand, option } from "@reliverse/rempts-core";
+import { type } from "arktype";
+
+const startCommand = defineCommand({
+  name: "start",
+  description: "Start development server with hot reload",
+  options: {
+    port: option(
+      type("number.integer >= 1000 & number.integer <= 65535").pipe((n) => n ?? 3000),
+      {
+        description: "Port to run the server on",
+        short: "p",
+      }
+    ),
+    host: option(
+      type("string | undefined").pipe((s) => s ?? "localhost"),
+      {
+        description: "Host to bind the server to",
+        short: "h",
+      }
+    ),
+    watch: option(
+      type("boolean | undefined").pipe((b) => b ?? true),
+      {
+        description: "Enable file watching and hot reload",
+        short: "w",
+      }
+    ),
+    open: option(
+      type("boolean | undefined").pipe((b) => b ?? false),
+      {
+        description: "Open browser automatically",
+        short: "o",
+      }
+    ),
+  },
+  handler: async ({ flags, spinner, colors, context }) => {
+    const { port, host, watch, open } = flags;
+
+    const startSpinner = spinner("Starting development server...");
+
+    // Simulate server startup
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    startSpinner.succeed(`Server started on ${relico.cyan(`http://${host}:${port}`)}`);
+
+    if (watch) {
+      console.log(relico.green("✓ File watching enabled"));
+    }
+
+    if (open) {
+      console.log(relico.blue("→ Opening browser..."));
+      // In a real implementation, you'd open the browser here
+    }
+
+    // Access plugin context
+    if (context?.store) {
+      const state = context.store.getState();
+      if (state.metrics) {
+        state.metrics.recordEvent("server_started", { port, host });
+      }
+    }
+
+    console.log(relico.dim("\nPress Ctrl+C to stop the server"));
+
+    // Simulate long-running server
+    if (context?.store && "config" in context.store) {
+      console.log(relico.dim(`Config loaded: ${JSON.stringify(context.store.config, null, 2)}`));
+    }
+
+    // Keep the process alive
+    process.on("SIGINT", () => {
+      console.log(relico.yellow("\nShutting down server..."));
+      process.exit(0);
+    });
+
+    // Simulate server running
+    await new Promise(() => {}); // Never resolves
+  },
+});
+
+export default startCommand;
