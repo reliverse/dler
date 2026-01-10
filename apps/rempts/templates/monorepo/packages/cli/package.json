@@ -17,15 +17,15 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@reliverse/rempts-core": "latest",
+    "@reliverse/rempts-core": "workspace:*",
     "@{{name}}/core": "workspace:*",
     "@{{name}}/utils": "workspace:*"
   },
   "devDependencies": {
-    "@reliverse/rempts-test": "latest",
+    "@reliverse/rempts-test": "workspace:*",
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
-    "rempts": "latest",
+    "rempts": "workspace:*",
     "typescript": "catalog:"
   },
   "rempts": {

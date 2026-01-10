@@ -3,7 +3,6 @@ import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 
 const envCommand = defineCommand({
-  name: "env",
   description: "Manage environment variables",
   options: {
     set: option(type("string | undefined"), {
@@ -30,7 +29,12 @@ const envCommand = defineCommand({
     ),
   },
   handler: async ({ flags, spinner, colors, context }) => {
-    const { set, get, list, file } = flags;
+    const { set, get, list, file } = flags as {
+      set: string | undefined;
+      get: string | undefined;
+      list: boolean;
+      file: string;
+    };
 
     if (set) {
       const [key, ...valueParts] = set.split("=");

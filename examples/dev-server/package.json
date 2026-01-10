@@ -4,9 +4,7 @@
   "description": "Development server with plugins - Advanced plugin system and configuration management",
   "type": "module",
   "scripts": {
-    "dev": "bun dler dev",
     "build": "bun dler build",
-    "generate": "bun dler generate",
     "start": "bun run dist/cli.js",
     "typecheck": "tsc --noEmit"
   },

@@ -148,7 +148,11 @@ const persistPosix = async (name: string, value: string): Promise<void> => {
   }
 };
 
-const persistPosixEditPath = async (entry: string, action: "append" | "remove"): Promise<void> => {
+const persistPosixEditPath = async (
+  name: string,
+  entry: string,
+  action: "append" | "remove"
+): Promise<void> => {
   const home = getHomeDirectory();
   if (!home) {
     throw new Error("Could not determine home directory");
@@ -341,7 +345,7 @@ export default defineCommand({
               }
             } else {
               try {
-                await persistPosixEditPath(name, value, "append");
+                await persistPosixEditPath(name, normalizedValue, "append");
               } catch (e) {
                 logger.error("Failed to persist append on POSIX:");
                 logger.error(String(e));
@@ -386,7 +390,7 @@ export default defineCommand({
               }
             } else {
               try {
-                await persistPosixEditPath(name, value, "remove");
+                await persistPosixEditPath(name, normalizedValue, "remove");
               } catch (e) {
                 logger.error("Failed to persist removal on POSIX:");
                 logger.error(String(e));

@@ -16,7 +16,6 @@ const cli = await createApp({
 // This is needed for the rempts CLI itself which registers commands programmatically
 (cli as any).command(
   defineCommand({
-    name: "create",
     description: "Create a new Rempts CLI project",
     options: {
       name: option(type("string | undefined"), { description: "Project name" }),

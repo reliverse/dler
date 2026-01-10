@@ -3,7 +3,6 @@ import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 
 export default defineCommand({
-  name: "test" as const,
   description: "Run tests with complex validation patterns",
   options: {
     // Test pattern with regex validation
@@ -149,9 +148,7 @@ export default defineCommand({
       if (coverage >= flags.coverage) {
         spin.succeed(`Tests completed! ${passed} passed, ${failed} failed`);
       } else {
-        spin.fail(
-          `Tests completed but coverage ${coverage}% is below threshold ${flags.coverage}%`
-        );
+        spin.fail(`Tests completed but coverage ${coverage}% is below threshold ${coverage}%`);
       }
 
       console.log(relico.bold("\nTest Results:"));

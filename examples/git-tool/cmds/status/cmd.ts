@@ -3,7 +3,6 @@ import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 
 export default defineCommand({
-  name: "status" as const,
   description: "Enhanced git status with detailed information",
   alias: "st",
   options: {

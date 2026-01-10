@@ -21,10 +21,10 @@
     "release": "turbo run build && changeset publish"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.27.0",
+    "@changesets/cli": "^2.29.8",
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
-    "turbo": "latest",
+    "turbo": "^2.7.3",
     "typescript": "catalog:"
   }
 }

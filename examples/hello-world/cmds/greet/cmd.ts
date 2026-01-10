@@ -3,7 +3,6 @@ import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 
 const greetCommand = defineCommand({
-  name: "greet" as const,
   description: "A minimal greeting CLI",
   options: {
     // Simple string with default

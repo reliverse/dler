@@ -3,8 +3,6 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "generate": "bun dler generate",
-    "dev": "bun dler dev",
     "build": "bun dler build",
     "typecheck": "tsc --noEmit",
     "cli": "bun cli.ts"

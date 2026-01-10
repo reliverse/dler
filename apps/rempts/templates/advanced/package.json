@@ -19,15 +19,15 @@
     "prepare": "bun run build"
   },
   "dependencies": {
-    "@reliverse/rempts-core": "latest",
-    "@reliverse/rempts-utils": "latest",
+    "@reliverse/rempts-core": "workspace:*",
+    "@reliverse/rempts-utils": "workspace:*",
     "arktype": "catalog:"
   },
   "devDependencies": {
-    "@reliverse/rempts-test": "latest",
+    "@reliverse/rempts-test": "workspace:*",
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
-    "rempts": "latest",
+    "rempts": "workspace:*",
     "typescript": "catalog:"
   },
   "rempts": {

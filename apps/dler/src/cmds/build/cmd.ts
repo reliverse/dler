@@ -6,7 +6,6 @@ import { $ } from "bun";
 import { findEntry } from "../../utils/find-entry";
 
 export default defineCommand({
-  name: "build",
   description: "Build your CLI for production",
   alias: "b",
   options: {

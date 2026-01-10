@@ -7,7 +7,7 @@ import { Callout } from 'fumadocs-ui/components/callout';
 
 # defineConfig
 
-Defines configuration for Rempts CLI projects. Used in `rempts.config.ts` files.
+Defines configuration for Rempts CLI projects. Used in `dler.config.ts` files.
 
 ## Syntax
 
@@ -89,7 +89,7 @@ interface RemptsConfig {
 ### Basic Configuration
 
 ```typescript
-// rempts.config.ts
+// dler.config.ts
 import { defineConfig } from '@rempts/core'
 
 export default defineConfig({
@@ -276,9 +276,9 @@ rempts dev --port 3000
 
 The `rempts` CLI looks for config files in this order:
 
-1. `rempts.config.ts`
-2. `rempts.config.js`
-3. `rempts.config.mjs`
+1. `dler.config.ts`
+2. `dler.config.js`
+3. `dler.config.mjs`
 
 You can also load config programmatically:
 
@@ -289,7 +289,7 @@ const config = await loadConfig()
 ```
 
 <Callout type="tip">
-  **Automatic Loading**: In most cases, you don't need to manually load config. `createCLI()` automatically loads from `rempts.config.ts` when called without arguments.
+  **Automatic Loading**: In most cases, you don't need to manually load config. `createCLI()` automatically loads from `dler.config.ts` when called without arguments.
 </Callout>
 
 <Callout type="tip">
@@ -299,7 +299,7 @@ const config = await loadConfig()
 ## Best Practices
 
 1. **Keep config minimal** - Only configure what differs from defaults
-2. **Use TypeScript** - `rempts.config.ts` provides best type safety
+2. **Use TypeScript** - `dler.config.ts` provides best type safety
 3. **Share workspace config** - Use `workspace.shared` for common settings
 4. **Externalize native deps** - Add binary dependencies to `build.external`
 5. **Enable compression** - Use `compress: true` for distribution builds
@@ -307,5 +307,5 @@ const config = await loadConfig()
 ## See Also
 
 - [rempts CLI](/docs/rempts-cli) - Using the Rempts CLI
-- [Configuration](/docs/core-concepts/configuration) - Configuration concepts
-- [Build & Distribution](/docs/guides/build-and-distribution) - Building for production
+- [Configuration](/libraries/rempts/core-concepts/configuration) - Configuration concepts
+- [Build & Distribution](/libraries/rempts/guides/build-and-distribution) - Building for production

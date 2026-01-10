@@ -43,7 +43,7 @@ await cli.load({
 await cli.run()
 ```
 
-Or in your `rempts.config.ts`:
+Or in your `dler.config.ts`:
 
 ```typescript
 import { defineConfig } from '@rempts/core'
@@ -469,7 +469,7 @@ my-cli completions --shell fish > ~/.config/fish/completions/my-cli.fish
 
 ### Wrong Command Name
 
-The plugin uses the CLI name from `createCLI()` or `rempts.config.ts`. Update it:
+The plugin uses the CLI name from `createCLI()` or `dler.config.ts`. Update it:
 
 ```typescript
 const cli = await createCLI({

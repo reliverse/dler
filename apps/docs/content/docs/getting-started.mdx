@@ -31,7 +31,7 @@ bun --version
 Use `rempts` to scaffold a new CLI project:
 
 ```bash
-bunx rempts my-cli
+bunx @reliverse/rempts my-cli
 cd my-cli
 ```
 
@@ -41,10 +41,11 @@ You'll be prompted for:
 - **Package manager**: Select your preferred package manager (bun, npm, yarn, pnpm)
 
 The tool will automatically:
-- ✅ Create the project structure
+- ✅ Create the project structure with file-based commands
 - ✅ Initialize a git repository
-- ✅ Install dependencies
-- ✅ Set up TypeScript and testing
+- ✅ Install dependencies including `@reliverse/rempts-core`
+- ✅ Set up TypeScript and testing with Bun
+- ✅ Generate initial `dler.config.ts` configuration
 
 ### Explore the project structure
 
@@ -52,14 +53,14 @@ Your new CLI project includes:
 
 ```
 my-cli/
-├── cli.ts             # CLI entry point
-├── commands/          # Command definitions (REQUIRED)
-│   └── greet.ts       # Individual command files
-├── .rempts/            # Generated files (auto-created)
-│   └── commands.gen.ts # Generated TypeScript types
-├── rempts.config.ts    # Configuration
-├── package.json
-├── tsconfig.json
+├── cli.ts                # CLI entry point with async createCLI
+├── commands/             # Command definitions (REQUIRED for file-based loading)
+│   └── greet.ts          # Individual command files
+├── dler.config.ts      # Configuration (auto-loaded)
+├── .rempts/              # Generated files (auto-created)
+│   └── commands.gen.ts   # Generated TypeScript types
+├── package.json          # Dependencies including @reliverse/rempts-core
+├── tsconfig.json         # TypeScript configuration
 └── README.md
 ```
 
@@ -82,7 +83,7 @@ bun run cli.ts --help
 Create a new command in `commands/greet.ts`:
 
 ```typescript
-import { defineCommand, option } from '@rempts/core'
+import { defineCommand, option } from '@reliverse/rempts-core'
 import { z } from 'zod'
 
 export default defineCommand({
@@ -98,8 +99,20 @@ export default defineCommand({
       { description: 'Add excitement', short: 'e' }
     )
   },
-  handler: async ({ flags }) => {
-    const greeting = `Hello, ${flags.name}${flags.excited ? '!' : '.'}`
+  handler: async ({ flags, prompt, spinner, colors }) => {
+    const spin = spinner('Preparing greeting...')
+    spin.start()
+
+    let name = flags.name
+    if (!name) {
+      name = await prompt('What is your name?')
+    }
+
+    spin.succeed()
+
+    const greeting = colors.green(
+      `Hello, ${name}${flags.excited ? '!' : '.'}`
+    )
     console.log(greeting)
   }
 })
@@ -214,30 +227,23 @@ If you prefer to set up manually:
 ### Install Rempts
 
 ```bash
-bun add rempts @rempts/core
+bun add @reliverse/rempts-core @reliverse/rempts-utils
 ```
 
 ### Create your CLI entry point
 
 ```typescript
-// src/index.ts
-import { createCLI } from '@rempts/core'
+// cli.ts
+import { createCLI } from '@reliverse/rempts-core'
 
-const cli = createCLI({
+const cli = await createCLI({
   name: 'my-cli',
   version: '1.0.0',
   description: 'My awesome CLI'
 })
 
-cli.command({
-  name: 'hello',
-  description: 'Say hello',
-  handler: async () => {
-    console.log('Hello from Rempts!')
-  }
-})
-
-cli.run()
+// CLI automatically loads commands from dler.config.ts
+await cli.run()
 ```
 
 ### Add to package.json
@@ -246,33 +252,57 @@ cli.run()
 {
   "name": "my-cli",
   "bin": {
-    "my-cli": "./src/index.ts"
+    "my-cli": "./cli.ts"
   },
   "scripts": {
     "dev": "rempts dev",
     "build": "rempts build",
     "test": "bun test"
+  },
+  "dependencies": {
+    "@reliverse/rempts-core": "latest",
+    "@reliverse/rempts-utils": "latest"
   }
 }
 ```
 
-### Create rempts.config.ts
+### Create dler.config.ts
 
 ```typescript
-import { defineConfig } from '@rempts/core'
+import { defineConfig } from '@reliverse/rempts-core'
 
 export default defineConfig({
   name: 'my-cli',
   version: '1.0.0',
+  description: 'My awesome CLI',
   commands: {
-    directory: './src/commands' // Enable file-based command loading
+    directory: './commands' // Enable file-based command loading
   }
 })
 ```
 
 <Callout type="info">
-  The `commands.directory` setting enables **file-based commands**, where Rempts automatically discovers and loads commands from your `src/commands` directory. Each `.ts` file becomes a command, and nested directories create command hierarchies (e.g., `src/commands/db/migrate.ts` becomes `my-cli db migrate`).
+  The `commands.directory` setting enables **file-based commands**, where Rempts automatically discovers and loads commands from your `commands` directory. Each `.ts` file becomes a command, and nested directories create command hierarchies (e.g., `commands/db/migrate.ts` becomes `my-cli db migrate`).
 </Callout>
+
+### Create commands directory
+
+```bash
+mkdir commands
+```
+
+```typescript
+// commands/hello.ts
+import { defineCommand } from '@reliverse/rempts-core'
+
+export default defineCommand({
+  name: 'hello',
+  description: 'Say hello',
+  handler: async ({ colors }) => {
+    console.log(colors.green('Hello from Rempts!'))
+  }
+})
+```
 
 </Steps>
 
@@ -280,13 +310,13 @@ export default defineConfig({
 
 Now that you have a working CLI:
 
-- Learn about [Commands](/docs/core-concepts/commands) - The building blocks of your CLI
-- Explore [Type Inference](/docs/core-concepts/type-inference) - Leverage TypeScript's power
-- Add [Validation](/docs/core-concepts/validation) - Ensure correct input
-- Generate [Type Definitions](/docs/guides/type-generation) - Enhanced developer experience
-- Write [Tests](/docs/packages/test) - Keep your CLI reliable
-- [Build & Distribute](/docs/guides/distribution) - Share your CLI with the world
+- Learn about [Commands](/libraries/rempts/core-concepts/commands) - The building blocks of your CLI
+- Explore [Type Inference](/libraries/rempts/core-concepts/type-inference) - Leverage TypeScript's power
+- Add [Validation](/libraries/rempts/core-concepts/validation) - Ensure correct input
+- Generate [Type Definitions](/libraries/rempts/guides/type-generation) - Enhanced developer experience
+- Write [Tests](/libraries/rempts/packages/test) - Keep your CLI reliable
+- [Build & Distribute](/libraries/rempts/guides/distribution) - Share your CLI with the world
 
 <Callout type="tip">
-  Join our community on [GitHub Discussions](https://github.com/AryaLabsHQ/rempts/discussions) for help and to share what you're building!
+  Join our community on [GitHub Discussions](https://github.com/reliverse/rempts/discussions) for help and to share what you're building!
 </Callout>

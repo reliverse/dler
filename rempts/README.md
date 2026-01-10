@@ -149,14 +149,7 @@ bun run build
 
 # Run tests
 bun test
-
-# Start development
-bun run dev
 ```
-
-## Thanks
-
-Thanks to [Bunli](https://github.com/AryaLabsHQ/bunli), which `rempts` v2+ builds upon, [OpenTUI](https://github.com/anomalyco/opentui) for the great TUI library, [Bun](https://bun.com) for the incredibly fast JavaScript runtime, and the entire open-source community for making projects like these possible ❤️
 
 ## License
 

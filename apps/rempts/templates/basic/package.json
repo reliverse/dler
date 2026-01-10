@@ -15,13 +15,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@reliverse/rempts-core": "latest"
+    "@reliverse/rempts-core": "workspace:*"
   },
   "devDependencies": {
-    "@reliverse/rempts-test": "latest",
+    "@reliverse/rempts-test": "workspace:*",
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
-    "rempts": "latest",
+    "rempts": "workspace:*",
     "typescript": "catalog:"
   },
   "rempts": {

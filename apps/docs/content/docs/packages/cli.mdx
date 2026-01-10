@@ -38,7 +38,7 @@ The official Rempts CLI toolchain provides a complete development environment fo
 - 🧪 **Test Runner** - Integrated testing with coverage support
 - 📦 **Release Automation** - Version bumping, git tags, and npm publishing
 - 🎯 **Multi-Platform** - Build for macOS, Linux, and Windows from any platform
-- ⚙️ **Configuration** - Flexible `rempts.config.ts` system
+- ⚙️ **Configuration** - Flexible `dler.config.ts` system
 - 🔍 **Debugging** - Built-in debugger support
 - 📁 **Workspace Support** - Monorepo-friendly commands
 
@@ -253,7 +253,7 @@ rempts release --all
 
 ## Configuration
 
-Create a `rempts.config.ts` file in your project root to configure the CLI behavior:
+Create a `dler.config.ts` file in your project root to configure the CLI behavior:
 
 ```typescript
 import { defineConfig } from '@rempts/core'
@@ -315,7 +315,7 @@ export default defineConfig({
 The CLI automatically detects your entry point in this order:
 
 1. `--entry` flag
-2. `build.entry` in rempts.config.ts
+2. `build.entry` in dler.config.ts
 3. `bin` field in package.json
 4. Common patterns:
    - `src/cli.ts`
@@ -380,7 +380,7 @@ rempts release --all
 cd packages/my-package && rempts dev
 ```
 
-Configure workspaces in rempts.config.ts:
+Configure workspaces in dler.config.ts:
 
 ```typescript
 export default defineConfig({
@@ -426,7 +426,7 @@ Then attach your debugger (VS Code, Chrome DevTools, etc.) to the specified port
 Extend the build process with pre/post hooks:
 
 ```typescript
-// rempts.config.ts
+// dler.config.ts
 export default defineConfig({
   build: {
     onBeforeBuild: async () => {
@@ -444,7 +444,7 @@ export default defineConfig({
 When building for multiple platforms:
 
 ```typescript
-// rempts.config.ts
+// dler.config.ts
 export default defineConfig({
   build: {
     targets: ['darwin-arm64', 'linux-x64', 'windows-x64'],
@@ -519,7 +519,7 @@ All commands support these global options:
 
 - `--help, -h` - Show help for command
 - `--version, -v` - Show CLI version
-- `--config, -c` - Path to config file (default: ./rempts.config.ts)
+- `--config, -c` - Path to config file (default: ./dler.config.ts)
 - `--verbose` - Enable verbose logging
 - `--quiet, -q` - Suppress non-error output
 
@@ -529,7 +529,7 @@ The configuration is validated using Zod. See the [Configuration](/docs/core-con
 
 ## See Also
 
-- [Getting Started](/docs/getting-started) - Quick start guide
+- [Getting Started](/libraries/rempts/getting-started) - Quick start guide
 - [Configuration](/docs/core-concepts/configuration) - Detailed configuration options
 - [Distribution Guide](/docs/guides/distribution) - Publishing and distribution strategies
 - [@rempts/test](/docs/packages/test) - Testing utilities for CLI applications

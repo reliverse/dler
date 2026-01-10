@@ -3,7 +3,6 @@ import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 
 export default defineCommand({
-  name: "deploy" as const,
   description: "Deploy application with interactive prompts",
   options: {
     // Environment with validation
@@ -31,15 +30,11 @@ export default defineCommand({
     ),
   },
 
-  handler: async ({ flags, colors, spinner, prompt }) => {
+  handler: async ({ flags, spinner, prompt }) => {
     // Parse and validate skip steps
-    let parsedSkipSteps;
-    if (flags.skip) {
-      parsedSkipSteps = flags.skip.split(",").map((s) => s.trim());
-      const validSteps = ["tests", "build", "cache", "migration"];
-      if (!parsedSkipSteps.every((step) => validSteps.includes(step))) {
-        throw new Error("Invalid step. Valid steps: tests, build, cache, migration");
-      }
+    const validSteps = ["tests", "build", "cache", "migration"];
+    if (flags.skip && !flags.skip.split(",").every((step) => validSteps.includes(step))) {
+      throw new Error("Invalid step. Valid steps: tests, build, cache, migration");
     }
 
     const steps = [
@@ -50,7 +45,7 @@ export default defineCommand({
       { name: "deploy", description: "Deploy to server" },
     ];
 
-    const skippedSteps = parsedSkipSteps || [];
+    const skippedSteps = flags.skip ? flags.skip.split(",").map((s) => s.trim()) : [];
 
     // Show deployment plan
     console.log(relico.bold(`\n🚀 Deployment Plan (${flags.environment}):`));

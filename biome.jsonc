@@ -6,10 +6,6 @@
     "includes": ["**"],
     "rules": {
       "recommended": true,
-      "performance": {
-        "useTopLevelRegex": "off",
-        "noBarrelFile": "off"
-      },
       "suspicious": {
         "noShadowRestrictedNames": "off",
         "useGuardForIn": "off",
@@ -18,7 +14,10 @@
         "useIterableCallbackReturn": "off",
         "useAwait": "off",
         "noExplicitAny": "off",
-        "noTemplateCurlyInString": "off"
+        "noTemplateCurlyInString": "off",
+        "noArrayIndexKey": "off",
+        "noDocumentCookie": "off",
+        "noControlCharactersInRegex": "off"
       },
       "style": {
         "noUnusedTemplateLiteral": "off",
@@ -37,7 +36,32 @@
         "useSelfClosingElements": "off",
         "useSingleVarDeclarator": "off",
         "useNumberNamespace": "off",
-        "noInferrableTypes": "off"
+        "noInferrableTypes": "off",
+        "useForOf": "off",
+        "noExportedImports": "off",
+        "noNamespace": "off",
+        "useFilenamingConvention": "off"
+      },
+      "correctness": {
+        "noUndeclaredDependencies": "off",
+        "noUndeclaredVariables": "off",
+        "noUnusedVariables": "off",
+        "noUnusedFunctionParameters": "off"
+      },
+      "a11y": {
+        "noSvgWithoutTitle": "off",
+        "useButtonType": "off",
+        "useFocusableInteractive": "off",
+        "useSemanticElements": "off",
+        "useAriaPropsForRole": "off"
+      },
+      "performance": {
+        "useTopLevelRegex": "off",
+        "noBarrelFile": "off",
+        "noNamespaceImport": "off"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "off"
       },
       "complexity": {
         "noForEach": "off",
@@ -47,12 +71,8 @@
         "noBannedTypes": "off",
         "noUselessLoneBlockStatements": "off",
         "useOptionalChain": "off",
-        "noUselessStringRaw": "off"
-      },
-      "correctness": {
-        "noUndeclaredDependencies": "off",
-        "noUndeclaredVariables": "off",
-        "noUnusedVariables": "off"
+        "noUselessStringRaw": "off",
+        "noVoid": "off"
       }
     }
   },

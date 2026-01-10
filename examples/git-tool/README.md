@@ -197,8 +197,8 @@ console.log(relico.cyan('📋 Information'))
 ## Development
 
 ```bash
-# Start development with hot reload
-bun run dev branch --name test-branch
+# Run the CLI
+bun ./src/cli.ts status --detailed
 
 # Build for production
 bun run build

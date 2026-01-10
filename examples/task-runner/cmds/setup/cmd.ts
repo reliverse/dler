@@ -3,7 +3,6 @@ import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 
 export default defineCommand({
-  name: "setup" as const,
   description: "Interactive project setup wizard",
   options: {
     // Preset configuration

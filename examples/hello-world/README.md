@@ -61,11 +61,8 @@ const greetCommand = defineCommand({
 ## Development
 
 ```bash
-# Generate types (creates .dler/commands.gen.ts)
-bun run generate
-
 # Start development with hot reload
-bun run dev greet --name Developer
+bun ./src/cli.ts greet --name Developer
 
 # Build for production
 bun run build

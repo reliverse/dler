@@ -1,21 +1,21 @@
 ---
 title: Configuration
-description: Configure your Rempts CLI project with rempts.config.ts
+description: Configure your Rempts CLI project with dler.config.ts
 ---
 
 # Configuration
 
-Configure your Rempts CLI project behavior with `rempts.config.ts`. **Configuration is automatically loaded** - you don't need to manually import or pass config to `createCLI()`.
+Configure your Rempts CLI project behavior with `dler.config.ts`. **Configuration is automatically loaded** - you don't need to manually import or pass config to `createCLI()`.
 
 ## Automatic Configuration Loading
 
-Rempts automatically loads configuration from `rempts.config.ts` when you call `createCLI()`:
+Rempts automatically loads configuration from `dler.config.ts` when you call `createCLI()`:
 
 ```typescript
 // cli.ts - No config needed!
 import { createCLI } from '@rempts/core'
 
-const cli = await createCLI()  // Automatically loads rempts.config.ts
+const cli = await createCLI()  // Automatically loads dler.config.ts
 
 await cli.load({
   build: () => import('./commands/build'),
@@ -26,7 +26,7 @@ await cli.run()
 ```
 
 ```typescript
-// rempts.config.ts - All configuration here
+// dler.config.ts - All configuration here
 import { defineConfig } from '@rempts/core'
 
 export default defineConfig({
@@ -70,7 +70,7 @@ The override merges with the loaded config (override values win).
 
 ## Configuration File
 
-Create a `rempts.config.ts` file in your project root:
+Create a `dler.config.ts` file in your project root:
 
 ```typescript
 import { defineConfig } from '@rempts/core'
@@ -205,7 +205,7 @@ export default defineConfig({
 | **Plugins** | `[]` | Empty array (REQUIRED) |
 
 <Callout type="info">
-  Type generation is automatically integrated with `rempts dev` and `rempts build` commands. Learn more in the [Type Generation Guide](/docs/guides/type-generation).
+  Type generation is automatically integrated with `rempts dev` and `rempts build` commands. Learn more in the [Type Generation Guide](/libraries/rempts/guides/type-generation).
 </Callout>
 
 ### Test Configuration
@@ -297,7 +297,7 @@ export const baseConfig = {
   }
 }
 
-// rempts.config.ts
+// dler.config.ts
 import { defineConfig } from '@rempts/core'
 import { baseConfig } from './base.config'
 
@@ -364,9 +364,9 @@ const configSchema = z.object({
 
 Rempts automatically looks for configuration files in this order:
 
-1. `rempts.config.ts`
-2. `rempts.config.js`
-3. `rempts.config.mjs`
+1. `dler.config.ts`
+2. `dler.config.js`
+3. `dler.config.mjs`
 
 The configuration is loaded and validated before any CLI commands run.
 
@@ -404,6 +404,6 @@ If no configuration file is found, these defaults are used:
 
 ## See Also
 
-- [defineConfig API](/docs/api/define-config) - Configuration helper
+- [defineConfig API](/libraries/rempts/api/define-config) - Configuration helper
 - [rempts CLI](/docs/rempts-cli) - CLI commands
-- [Building & Distribution](/docs/guides/distribution) - Build and release process
+- [Building & Distribution](/libraries/rempts/guides/distribution) - Build and release process

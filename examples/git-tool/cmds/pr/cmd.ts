@@ -3,7 +3,6 @@ import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 
 export default defineCommand({
-  name: "pr" as const,
   description: "Create and manage pull requests",
   alias: "pull-request",
   options: {
@@ -50,11 +49,20 @@ export default defineCommand({
   },
 
   handler: async ({ flags, colors, spinner, shell, prompt }) => {
+    const { title, description, base, head, draft, reviewers, labels } = flags as {
+      title: string;
+      description: string | undefined;
+      base: string;
+      head: string | undefined;
+      draft: boolean | undefined;
+      reviewers: string | undefined;
+      labels: string | undefined;
+    };
     const spin = spinner("Creating pull request...");
 
     try {
       // Get current branch if head not specified
-      const headBranch = flags.head || (await shell`git branch --show-current`).toString().trim();
+      const headBranch = head || (await shell`git branch --show-current`).toString().trim();
 
       // Check if we have uncommitted changes
       const { stdout: status } = await shell`git status --porcelain`;
@@ -90,16 +98,16 @@ export default defineCommand({
       }
 
       // Generate PR description if not provided
-      let description = flags.description;
-      if (!description) {
+      let prDescription = description;
+      if (!prDescription) {
         // Get recent commits for description
-        const { stdout: commits } = await shell`git log --oneline ${flags.base}..${headBranch}`;
+        const { stdout: commits } = await shell`git log --oneline ${base}..${headBranch}`;
         const commitList = commits.toString().trim().split("\n").slice(0, 5);
 
-        description = `## Changes\n\n${commitList.map((commit: string) => `- ${commit}`).join("\n")}`;
+        prDescription = `## Changes\n\n${commitList.map((commit: string) => `- ${commit}`).join("\n")}`;
 
         if (commits.toString().trim().split("\n").length > 5) {
-          description += `\n\n... and ${commits.toString().trim().split("\n").length - 5} more commits`;
+          prDescription += `\n\n... and ${commits.toString().trim().split("\n").length - 5} more commits`;
         }
       }
 
@@ -113,23 +121,23 @@ export default defineCommand({
       spin.succeed("✅ Pull request created!");
 
       console.log(relico.bold("\n📋 Pull Request Details:"));
-      console.log(`  Title: ${relico.cyan(flags.title)}`);
-      console.log(`  Base: ${relico.cyan(flags.base)} ← ${relico.cyan(headBranch)}`);
-      console.log(`  Draft: ${relico.cyan(flags.draft ? "Yes" : "No")}`);
+      console.log(`  Title: ${relico.cyan(title)}`);
+      console.log(`  Base: ${relico.cyan(base)} ← ${relico.cyan(headBranch)}`);
+      console.log(`  Draft: ${relico.cyan(draft ? "Yes" : "No")}`);
       console.log(`  URL: ${relico.blue(prUrl)}`);
 
-      if (flags.reviewers) {
-        const reviewersArray = flags.reviewers.split(",").map((s) => s.trim());
+      if (reviewers) {
+        const reviewersArray = reviewers.split(",").map((s) => s.trim());
         console.log(`  Reviewers: ${relico.cyan(reviewersArray.join(", "))}`);
       }
 
-      if (flags.labels) {
-        const labelsArray = flags.labels.split(",").map((s) => s.trim());
+      if (labels) {
+        const labelsArray = labels.split(",").map((s) => s.trim());
         console.log(`  Labels: ${relico.cyan(labelsArray.join(", "))}`);
       }
 
       console.log(relico.dim("\nDescription:"));
-      console.log(relico.dim(description));
+      console.log(relico.dim(prDescription));
 
       // Ask if user wants to open PR
       const openPR = await prompt.confirm("Open pull request in browser?", {

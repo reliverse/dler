@@ -3,7 +3,6 @@ import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 
 export default defineCommand({
-  name: "branch" as const,
   description: "Create, switch, or manage branches",
   alias: "br",
   options: {
@@ -39,57 +38,70 @@ export default defineCommand({
   },
 
   handler: async ({ flags, colors: _colors, spinner, shell }) => {
+    const {
+      name,
+      base,
+      switch: switchFlag,
+      delete: deleteFlag,
+      force,
+    } = flags as {
+      name: string;
+      base: string;
+      switch: boolean;
+      delete: boolean;
+      force: boolean;
+    };
     const spin = spinner("Working with branches...");
 
     try {
-      if (flags.delete) {
+      if (deleteFlag) {
         // Delete branch
-        spin.update(`Deleting branch '${flags.name}'...`);
+        spin.update(`Deleting branch '${name}'...`);
 
-        if (!flags.force) {
+        if (!force) {
           // Check if branch exists
-          const { stdout: branches } = await shell`git branch --list ${flags.name}`;
+          const { stdout: branches } = await shell`git branch --list ${name}`;
           if (!branches.toString().trim()) {
-            throw new Error(`Branch '${flags.name}' does not exist`);
+            throw new Error(`Branch '${name}' does not exist`);
           }
 
           // Check if it's the current branch
           const { stdout: currentBranch } = await shell`git branch --show-current`;
-          if (currentBranch.toString().trim() === flags.name) {
+          if (currentBranch.toString().trim() === name) {
             throw new Error(
-              `Cannot delete current branch '${flags.name}'. Switch to another branch first.`
+              `Cannot delete current branch '${name}'. Switch to another branch first.`
             );
           }
         }
 
-        await shell`git branch ${flags.force ? "-D" : "-d"} ${flags.name}`;
-        spin.succeed(`✅ Deleted branch '${flags.name}'`);
+        await shell`git branch ${force ? "-D" : "-d"} ${name}`;
+        spin.succeed(`✅ Deleted branch '${name}'`);
       } else {
         // Create or switch branch
-        spin.update(`Creating branch '${flags.name}' from '${flags.base}'...`);
+        spin.update(`Creating branch '${name}' from '${base}'...`);
 
         // Check if branch already exists
-        const { stdout: existingBranches } = await shell`git branch --list ${flags.name}`;
-        if (existingBranches.toString().trim() && !flags.force) {
-          throw new Error(`Branch '${flags.name}' already exists. Use --force to overwrite.`);
+        const { stdout: existingBranches } = await shell`git branch --list ${name}`;
+        if (existingBranches.toString().trim() && !force) {
+          throw new Error(`Branch '${name}' already exists. Use --force to overwrite.`);
         }
 
         // Create branch
-        if (flags.force && existingBranches.toString().trim()) {
-          await shell`git branch -D ${flags.name}`;
+        if (force && existingBranches.toString().trim()) {
+          await shell`git branch -D ${name}`;
         }
 
-        await shell`git checkout -b ${flags.name} ${flags.base}`;
+        await shell`git checkout -b ${name} ${base}`;
 
-        if (!flags.switch) {
+        if (!switchFlag) {
           // Switch back to original branch
-          await shell`git checkout ${flags.base}`;
+          await shell`git checkout ${base}`;
         }
 
-        spin.succeed(`✅ Created branch '${flags.name}' from '${flags.base}'`);
+        spin.succeed(`✅ Created branch '${name}' from '${base}'`);
 
-        if (flags.switch) {
-          console.log(relico.cyan(`Switched to branch '${flags.name}'`));
+        if (switchFlag) {
+          console.log(relico.cyan(`Switched to branch '${name}'`));
         }
       }
 

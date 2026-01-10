@@ -41,7 +41,7 @@ todo-cli/
 │   └── commands.gen.ts   # Generated TypeScript types
 ├── package.json
 ├── tsconfig.json
-├── rempts.config.ts       # Rempts configuration
+├── dler.config.ts       # Rempts configuration
 └── README.md
 ```
 
@@ -329,7 +329,7 @@ handler: async ({ flags, colors, context }) => {
 Enable type generation for enhanced developer experience:
 
 ```typescript
-// rempts.config.ts
+// dler.config.ts
 import { defineConfig } from '@rempts/core'
 
 export default defineConfig({
@@ -369,7 +369,7 @@ console.log(addApi.options) // { task: {...}, priority: {...}, due: {...} }
 
 ## Configuration
 
-Customize your CLI behavior with `rempts.config.ts`:
+Customize your CLI behavior with `dler.config.ts`:
 
 ```typescript
 import { defineConfig } from '@rempts/core'
@@ -414,12 +414,12 @@ When you're ready to share your CLI:
 
 You've built a functional CLI! Here's what to explore next:
 
-- [Type Generation Guide](/docs/guides/type-generation) - Learn about code generation
-- [Schema Validation](/docs/guides/schema-validation) - Advanced validation
-- [Interactive Prompts](/docs/guides/interactive-prompts) - Rich user interactions
-- [Testing](/docs/guides/testing) - Comprehensive testing strategies
-- [Distribution](/docs/guides/distribution) - Publishing and deployment
+- [Type Generation Guide](/libraries/rempts/guides/type-generation) - Learn about code generation
+- [Schema Validation](/libraries/rempts/guides/schema-validation) - Advanced validation
+- [Interactive Prompts](/libraries/rempts/guides/interactive-prompts) - Rich user interactions
+- [Testing](/libraries/rempts/guides/testing) - Comprehensive testing strategies
+- [Distribution](/libraries/rempts/guides/distribution) - Publishing and deployment
 
 ## Complete Example
 
-Find the complete todo CLI example in the [Rempts repository](https://github.com/AryaLabsHQ/rempts/tree/main/examples/todo-cli).
+Find the complete todo CLI example in the [Rempts repository](https://github.com/reliverse/rempts/tree/main/examples/todo-cli).

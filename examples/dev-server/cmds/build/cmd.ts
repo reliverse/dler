@@ -11,7 +11,6 @@ interface DevServerStore {
 }
 
 const buildCommand = defineCommand({
-  name: "build",
   description: "Build for production",
   options: {
     output: option(

@@ -181,8 +181,8 @@ spin.fail('Build failed')
 ## Development
 
 ```bash
-# Start development with hot reload
-bun run dev build --env development
+# Run the CLI
+bun ./src/cli.ts build --env development
 
 # Build for production
 bun run build

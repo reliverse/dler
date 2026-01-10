@@ -3,7 +3,6 @@ import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 
 export default defineCommand({
-  name: "build" as const,
   description: "Build project with validation and transformation",
   options: {
     // Environment with validation
@@ -63,14 +62,22 @@ export default defineCommand({
   },
 
   handler: async ({ flags, colors, spinner }) => {
+    const { env, outdir, config, memory, variables, watch } = flags as {
+      env: string | undefined;
+      outdir: string | undefined;
+      config: string | undefined;
+      memory: string | undefined;
+      variables: string | undefined;
+      watch: boolean;
+    };
     const spin = spinner("Building project...");
 
     try {
       // Parse and validate configuration
       let parsedConfig;
-      if (flags.config) {
+      if (config) {
         try {
-          parsedConfig = JSON.parse(flags.config);
+          parsedConfig = JSON.parse(config);
         } catch {
           throw new Error("Invalid JSON configuration");
         }
@@ -78,20 +85,20 @@ export default defineCommand({
 
       // Parse and validate memory
       let parsedMemory;
-      if (flags.memory) {
-        if (!/^\d+[kmg]?$/i.test(flags.memory)) {
+      if (memory) {
+        if (!/^\d+[kmg]?$/i.test(memory)) {
           throw new Error("Memory must be a number with optional unit (k, m, g)");
         }
-        const num = Number.parseInt(flags.memory, 10);
-        const unit = flags.memory.slice(-1).toLowerCase();
+        const num = Number.parseInt(memory, 10);
+        const unit = memory.slice(-1).toLowerCase();
         const multipliers = { k: 1024, m: 1024 * 1024, g: 1024 * 1024 * 1024 };
         parsedMemory = num * (multipliers[unit as keyof typeof multipliers] || 1);
       }
 
       // Parse variables
       const parsedVariables: Record<string, string> = {};
-      if (flags.variables) {
-        flags.variables.split(",").forEach((pair) => {
+      if (variables) {
+        variables.split(",").forEach((pair) => {
           const [key, value] = pair.split("=");
           if (key && value) {
             parsedVariables[key.trim()] = value.trim();

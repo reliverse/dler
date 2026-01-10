@@ -24,6 +24,9 @@ import type {
   CLIOption,
   Command,
   HookContext,
+  InferMergedOptions,
+  MergedOptions,
+  Options,
   RemptsConfig,
   ResolvedConfig,
   RuntimeInfo,
@@ -623,7 +626,7 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
     providedFlags?: Record<string, unknown>
   ) {
     let context: CommandContext<any> | undefined;
-    let resultParsed: { flags: unknown; positional: string[] };
+    let resultParsed: { flags: unknown; positional: string[] } | undefined;
 
     try {
       const mergedOptions = {
@@ -648,7 +651,7 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
           commandName,
           command,
           providedFlags ? [] : resultParsed.positional,
-          resultParsed.flags
+          resultParsed.flags as Record<string, any>
         );
       }
 
@@ -658,7 +661,7 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
         globalHookContext = {};
 
         const hookContext: HookContext<TStore> = {
-          flags: resultParsed.flags,
+          flags: resultParsed.flags as Record<string, unknown>,
           store: context?.store?.getState() || ({} as TStore),
           env: process.env,
           cwd: process.cwd(),
@@ -701,7 +704,7 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
         ensureRenderAvailable(commandName, command);
         await getTuiRenderer<Record<string, unknown>, TStore>()?.({
           command,
-          flags: resultParsed.flags,
+          flags: resultParsed.flags as Record<string, unknown>,
           positional: resultParsed.positional,
           shell: Bun.$,
           env: process.env,
@@ -719,11 +722,7 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
           throw new Error("Command does not provide a handler for non-TUI execution");
         }
         // Type assertion: flags are validated and typed by parseArgs
-        // Use command.options to infer the merged type (includes global flags)
-        const typedFlags = resultParsed.flags as InferMergedOptions<
-          | (typeof command.options & Options)
-          | (command.options extends Options ? typeof command.options : Options)
-        >;
+        const typedFlags = resultParsed.flags as InferMergedOptions<Options>;
         await command.handler({
           flags: typedFlags,
           positional: resultParsed.positional,
@@ -747,7 +746,7 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
       // Run global after hooks
       if (afterHooks.length > 0) {
         const hookContext: HookContext<TStore> & { exitCode: number } = {
-          flags: resultParsed.flags,
+          flags: resultParsed.flags as Record<string, unknown>,
           store: context?.store?.getState() || ({} as TStore),
           env: process.env,
           cwd: process.cwd(),
@@ -771,7 +770,7 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
           exitCode: number;
           error?: Error;
         } = {
-          flags: resultParsed?.flags || {},
+          flags: (resultParsed?.flags as Record<string, unknown> | undefined) || {},
           store: context?.store?.getState() || ({} as TStore),
           env: process.env,
           cwd: process.cwd(),

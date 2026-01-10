@@ -3,7 +3,6 @@ import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 
 const startCommand = defineCommand({
-  name: "start",
   description: "Start development server with hot reload",
   options: {
     port: option(

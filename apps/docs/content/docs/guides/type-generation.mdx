@@ -243,7 +243,7 @@ type AllCommandOptions = UnionToIntersection<
 ### Build Integration
 
 ```typescript
-// rempts.config.ts
+// dler.config.ts
 import { defineConfig } from '@rempts/core'
 
 export default defineConfig({
@@ -272,12 +272,12 @@ src/
 ├── .rempts/
 │   └── commands.gen.ts  # Generated file
 ├── cli.ts
-└── rempts.config.ts
+└── dler.config.ts
 ```
 
 ### Development Workflow
 
-1. **Configure**: Set up `rempts.config.ts`
+1. **Configure**: Set up `dler.config.ts`
 2. **Generate**: Run `rempts generate` or `rempts dev`
 3. **Use**: Import generated types in your code
 4. **Build**: Run `rempts build` (types generated automatically)
@@ -324,7 +324,7 @@ await cli.execute('deploy', {
 
 ## See Also
 
-- [Type Inference](/docs/core-concepts/type-inference) - Runtime type inference
-- [Configuration](/docs/core-concepts/configuration) - CLI configuration options
+- [Type Inference](/libraries/rempts/core-concepts/type-inference) - Runtime type inference
+- [Configuration](/libraries/rempts/core-concepts/configuration) - CLI configuration options
 - [@rempts/generator](/docs/packages/generator) - Generator package documentation
 - [rempts CLI](/docs/packages/cli) - CLI toolchain commands

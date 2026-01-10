@@ -1,7 +1,6 @@
 import { defineCommand } from "@reliverse/rempts-core";
 
 const testCommand = defineCommand({
-  name: "test",
   description: "Run tests",
   handler: async () => {
     console.log("Running tests...");

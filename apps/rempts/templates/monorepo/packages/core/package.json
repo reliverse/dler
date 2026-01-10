@@ -20,12 +20,12 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@reliverse/rempts-core": "latest",
+    "@reliverse/rempts-core": "workspace:*",
     "@{{name}}/utils": "workspace:*",
     "arktype": "catalog:"
   },
   "devDependencies": {
-    "@reliverse/rempts-test": "latest",
+    "@reliverse/rempts-test": "workspace:*",
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
     "typescript": "catalog:"

@@ -51,8 +51,8 @@
     "@reliverse/rempts-core": "workspace:*",
     "@reliverse/rempts-test": "workspace:*",
     "@reliverse/rempts-utils": "workspace:*",
-    "giget": "^2.0.0",
-    "arktype": "catalog:"
+    "arktype": "catalog:",
+    "giget": "catalog:"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",

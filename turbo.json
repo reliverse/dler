@@ -13,9 +13,6 @@
       "persistent": true,
       "cache": false
     },
-    "generate": {
-      "outputs": [".dler/**"]
-    },
     "test": {
       "dependsOn": ["^test"]
     }

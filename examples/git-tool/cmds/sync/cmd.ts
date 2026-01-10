@@ -3,7 +3,6 @@ import { defineCommand, option } from "@reliverse/rempts-core";
 import { type } from "arktype";
 
 export default defineCommand({
-  name: "sync" as const,
   description: "Sync with upstream repository",
   alias: "pull",
   options: {
@@ -38,16 +37,23 @@ export default defineCommand({
   },
 
   handler: async ({ flags, colors, spinner, shell, prompt }) => {
+    const { remote, branch, force, rebase, prune } = flags as {
+      remote: string;
+      branch: string | undefined;
+      force: boolean;
+      rebase: boolean;
+      prune: boolean;
+    };
     const spin = spinner("Syncing with remote...");
 
     try {
       // Get current branch if not specified
       const currentBranch =
-        flags.branch || (await shell`git branch --show-current`).stdout.toString().trim();
+        branch || (await shell`git branch --show-current`).stdout.toString().trim();
 
       // Check if we have uncommitted changes
       const { stdout: status } = await shell`git status --porcelain`;
-      if (status.toString().trim() && !flags.force) {
+      if (status.toString().trim() && !force) {
         const stashChanges = await prompt.confirm(
           "You have uncommitted changes. Stash them before syncing?",
           { default: true }
@@ -62,19 +68,17 @@ export default defineCommand({
 
       // Fetch latest changes
       spin.update("Fetching latest changes...");
-      await shell`git fetch ${flags.remote}`;
+      await shell`git fetch ${remote}`;
 
-      if (flags.prune) {
+      if (prune) {
         spin.update("Pruning remote branches...");
-        await shell`git remote prune ${flags.remote}`;
+        await shell`git remote prune ${remote}`;
         console.log(relico.green("🧹 Pruned remote branches"));
       }
 
       // Check if there are incoming changes
-      const { stdout: behind } =
-        await shell`git rev-list --count HEAD..${flags.remote}/${currentBranch}`;
-      const { stdout: ahead } =
-        await shell`git rev-list --count ${flags.remote}/${currentBranch}..HEAD`;
+      const { stdout: behind } = await shell`git rev-list --count HEAD..${remote}/${currentBranch}`;
+      const { stdout: ahead } = await shell`git rev-list --count ${remote}/${currentBranch}..HEAD`;
 
       const behindCount = Number.parseInt(behind.toString().trim(), 10);
       const aheadCount = Number.parseInt(ahead.toString().trim(), 10);
@@ -93,25 +97,24 @@ export default defineCommand({
         // Pull changes
         spin.update("Pulling changes...");
 
-        if (flags.rebase) {
-          await shell`git pull --rebase ${flags.remote} ${currentBranch}`;
+        if (rebase) {
+          await shell`git pull --rebase ${remote} ${currentBranch}`;
           console.log(relico.green("✅ Rebased successfully"));
         } else {
-          await shell`git pull ${flags.remote} ${currentBranch}`;
+          await shell`git pull ${remote} ${currentBranch}`;
           console.log(relico.green("✅ Merged successfully"));
         }
       }
 
       if (aheadCount > 0) {
         // Push local changes
-        const pushChanges = await prompt.confirm(
-          `Push ${aheadCount} local commits to ${flags.remote}?`,
-          { default: true }
-        );
+        const pushChanges = await prompt.confirm(`Push ${aheadCount} local commits to ${remote}?`, {
+          default: true,
+        });
 
         if (pushChanges) {
           spin.update("Pushing changes...");
-          await shell`git push ${flags.remote} ${currentBranch}`;
+          await shell`git push ${remote} ${currentBranch}`;
           console.log(relico.green("✅ Pushed successfully"));
         }
       }

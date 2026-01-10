@@ -64,7 +64,7 @@ Rempts supports building for multiple platforms:
 Build for all platforms at once:
 
 ```typescript
-// rempts.config.ts
+// dler.config.ts
 import { defineConfig } from '@rempts/core'
 
 export default defineConfig({
@@ -132,7 +132,7 @@ rempts build --targets native --minify --bytecode
 Reduce executable size:
 
 ```typescript
-// rempts.config.ts
+// dler.config.ts
 export default defineConfig({
   build: {
     targets: ['native'], // or specific platforms
@@ -152,7 +152,7 @@ export default defineConfig({
 When using type generation, the generated `.rempts/commands.gen.ts` file is automatically included in your build:
 
 ```typescript
-// rempts.config.ts
+// dler.config.ts
 export default defineConfig({
   name: 'my-cli',
   version: '1.0.0',
@@ -386,7 +386,7 @@ rempts release --dry-run
 ### Release Configuration
 
 ```typescript
-// rempts.config.ts
+// dler.config.ts
 export default defineConfig({
   release: {
     npm: true,              // Publish to npm
@@ -574,6 +574,6 @@ if (process.platform === 'win32') {
 
 ## Next Steps
 
-- [Testing](/docs/guides/testing) - Test before distribution
+- [Testing](/libraries/rempts/guides/testing) - Test before distribution
 - [rempts CLI](/docs/rempts-cli) - CLI command reference
-- [Configuration](/docs/core-concepts/configuration) - Build configuration options
+- [Configuration](/libraries/rempts/core-concepts/configuration) - Build configuration options

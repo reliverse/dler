@@ -374,7 +374,7 @@ export async function testCommand(
       runtime: {
         startTime: Date.now(),
         args: options.args || [],
-        command: command.name,
+        command: command.description,
       },
     };
 

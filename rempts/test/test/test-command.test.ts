@@ -7,7 +7,6 @@ import { expectCommand, testCommand } from "../src/mod";
 
 test("testCommand - basic command execution", async () => {
   const command = defineCommand({
-    name: "hello",
     description: "Say hello",
     handler: async () => {
       console.log(relico.green("Hello, world!"));
@@ -23,7 +22,6 @@ test("testCommand - basic command execution", async () => {
 
 test("testCommand - with flags", async () => {
   const command = defineCommand({
-    name: "greet",
     description: "Greet someone",
     options: {
       name: option(type("string")),
@@ -45,7 +43,6 @@ test("testCommand - with flags", async () => {
 
 test("testCommand - with prompts", async () => {
   const command = defineCommand({
-    name: "setup",
     description: "Setup wizard",
     handler: async ({ prompt }) => {
       const name = await prompt("What is your name?");
@@ -69,7 +66,6 @@ test("testCommand - with prompts", async () => {
 
 test("testCommand - select prompt", async () => {
   const command = defineCommand({
-    name: "choose",
     description: "Choose an option",
     handler: async ({ prompt }) => {
       const choice = await prompt.select("Pick a color:", {
@@ -96,7 +92,6 @@ test("testCommand - select prompt", async () => {
 
 test("testCommand - spinner", async () => {
   const command = defineCommand({
-    name: "process",
     description: "Process something",
     handler: async ({ spinner }) => {
       const spin = spinner("Processing...");
@@ -114,7 +109,6 @@ test("testCommand - spinner", async () => {
 
 test("testCommand - shell mock", async () => {
   const command = defineCommand({
-    name: "git-info",
     description: "Show git info",
     handler: async ({ shell }) => {
       const branch = await shell`git branch --show-current`.text();
@@ -130,7 +124,6 @@ test("testCommand - shell mock", async () => {
 
 test("testCommand - error handling", async () => {
   const command = defineCommand({
-    name: "fail",
     description: "Command that fails",
     handler: async () => {
       throw new Error("Something went wrong!");
@@ -147,7 +140,6 @@ test("testCommand - error handling", async () => {
 
 test("expectCommand matchers", async () => {
   const command = defineCommand({
-    name: "test",
     description: "Test matchers",
     handler: async () => {
       console.log("Success message");
@@ -168,7 +160,6 @@ test("expectCommand matchers", async () => {
 
 test("testCommand - with mockPrompts", async () => {
   const command = defineCommand({
-    name: "survey",
     description: "User survey",
     handler: async ({ prompt }) => {
       const name = await prompt("What is your name?");
@@ -192,7 +183,6 @@ test("testCommand - with mockPrompts", async () => {
 
 test("testCommand - with mockShellCommands", async () => {
   const command = defineCommand({
-    name: "deploy",
     description: "Deploy app",
     handler: async ({ shell }) => {
       const version = await shell`npm --version`.text();
@@ -214,7 +204,6 @@ test("testCommand - with mockShellCommands", async () => {
 
 test("testCommand - mockInteractive helper", async () => {
   const command = defineCommand({
-    name: "setup",
     description: "Interactive setup",
     handler: async ({ prompt, shell }) => {
       const name = await prompt("Project name:");
@@ -244,7 +233,6 @@ test("testCommand - validation with retry using mockPrompts", async () => {
   const emailSchema = type("string.email");
 
   const command = defineCommand({
-    name: "register",
     description: "Register user",
     handler: async ({ prompt }) => {
       const email = await prompt("Enter email:", { schema: emailSchema });

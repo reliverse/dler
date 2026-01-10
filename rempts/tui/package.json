@@ -30,8 +30,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@opentui/core": "^0.1.57",
-    "@opentui/react": "^0.1.57",
+    "@opentui/core": "^0.1.72",
+    "@opentui/react": "^0.1.72",
     "@reliverse/rempts-core": "workspace:*"
   },
   "devDependencies": {
@@ -42,7 +42,7 @@
     "typescript": "catalog:"
   },
   "peerDependencies": {
-    "@opentui/core": "^0.1.57",
+    "@opentui/core": "^0.1.72",
     "react": "catalog:"
   }
 }

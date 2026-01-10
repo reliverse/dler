@@ -3,7 +3,6 @@
     "baseUrl": ".",
     "target": "ESNext",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "types": ["node", "react", "react-dom", "mdx"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -17,7 +16,8 @@
     "jsx": "react-jsx",
     "incremental": true,
     "paths": {
-      "~/*": ["./*"]
+      "~/*": ["./src/*"],
+      "fumadocs-mdx:collections/*": [".source/*"]
     },
     "plugins": [
       {
@@ -30,8 +30,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "next.config.mjs"
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

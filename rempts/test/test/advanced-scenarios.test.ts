@@ -11,7 +11,6 @@ test("complex validation scenario with Standard Schema", async () => {
   });
 
   const command = defineCommand({
-    name: "register",
     description: "Register a new user",
     options: {
       user: option(userSchema),
@@ -36,7 +35,6 @@ test("complex validation scenario with Standard Schema", async () => {
 
 test("validation error handling with Standard Schema", async () => {
   const _command = defineCommand({
-    name: "validate",
     description: "Validate port number",
     options: {
       port: option(type("number.integer >= 1 & number.integer <= 65535"), {
@@ -57,7 +55,6 @@ test("validation error handling with Standard Schema", async () => {
 
 test("nested command prompt mocking", async () => {
   const command = defineCommand({
-    name: "deploy",
     description: "Deploy application",
     handler: async ({ prompt, shell, spinner }) => {
       const env = await prompt.select("Select environment:", {
@@ -106,7 +103,6 @@ test("nested command prompt mocking", async () => {
 
 test("multi-step form with validation retries", async () => {
   const command = defineCommand({
-    name: "setup",
     description: "Project setup wizard",
     handler: async ({ prompt }) => {
       const name = await prompt("Project name:", {
@@ -150,7 +146,6 @@ test("multi-step form with validation retries", async () => {
 
 test("shell command mocking with complex outputs", async () => {
   const command = defineCommand({
-    name: "status",
     description: "Show project status",
     handler: async ({ shell, colors }) => {
       const gitStatus = await shell`git status --porcelain`.text();
@@ -189,7 +184,6 @@ test("shell command mocking with complex outputs", async () => {
 
 test("mergeTestOptions with conflicting options", async () => {
   const command = defineCommand({
-    name: "test",
     description: "Test command with prompts and options",
     handler: async ({ prompt, flags, env }) => {
       const name = await prompt("Name:");
@@ -225,7 +219,6 @@ test("password prompt with validation", async () => {
   });
 
   const command = defineCommand({
-    name: "secure",
     description: "Prompt for password with validation",
     handler: async ({ prompt }) => {
       const password = await prompt.password("Enter password:", {
@@ -251,7 +244,6 @@ test("password prompt with validation", async () => {
 
 test("multiselect prompt", async () => {
   const command = defineCommand({
-    name: "features",
     description: "Select features to enable",
     handler: async ({ prompt }) => {
       const features = await prompt.multiselect("Select features to enable:", {
@@ -284,7 +276,6 @@ test("multiselect prompt", async () => {
 
 test("stdin fallback when mockPrompts not provided", async () => {
   const command = defineCommand({
-    name: "mixed",
     description: "Mixed prompt types with stdin fallback",
     handler: async ({ prompt }) => {
       const name = await prompt("Name:"); // Will use mockPrompts
@@ -306,7 +297,6 @@ test("stdin fallback when mockPrompts not provided", async () => {
 
 test("custom shell command output simulation", async () => {
   const command = defineCommand({
-    name: "docker-status",
     description: "Show Docker container status",
     handler: async ({ shell }) => {
       try {

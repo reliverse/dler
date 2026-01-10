@@ -87,7 +87,7 @@ fi
 
 # Build find patterns for directories and files
 DIR_PATTERNS=""
-for dir in node_modules dist .output .source .tanstack .cache .turbo/cache .nitro .expo android ios target; do
+for dir in node_modules dist .output .source .tanstack .cache .turbo .next .nitro .expo android ios target; do
     DIR_PATTERNS="${DIR_PATTERNS} -name ${dir} -o"
 done
 DIR_PATTERNS="${DIR_PATTERNS% -o}" # Remove trailing -o

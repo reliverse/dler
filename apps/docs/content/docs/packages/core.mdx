@@ -6,12 +6,12 @@ description: The core CLI framework for Rempts
 import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
 import { Callout } from 'fumadocs-ui/components/callout';
 
-# @rempts/core
+# @reliverse/rempts-core
 
-The core CLI framework that powers Rempts. Provides type-safe command definitions, automatic validation, and rich handler contexts.
+The core CLI framework that powers Rempts. Provides type-safe command definitions, automatic validation, plugin system, and rich handler contexts.
 
 <Callout type="info">
-  @rempts/core has **zero dependencies** and integrates with the Standard Schema v1 specification for validation, supporting Zod, Valibot, and other schema libraries.
+  @reliverse/rempts-core integrates with Standard Schema v1 for validation and uses Zustand for plugin state management. It supports Zod, Valibot, ArkType, and other schema libraries.
 </Callout>
 
 ## Installation
@@ -19,17 +19,17 @@ The core CLI framework that powers Rempts. Provides type-safe command definition
 <Tabs groupId="package-manager" defaultValue="bun">
   <Tab value="bun" label="Bun">
     ```bash
-    bun add @rempts/core
+    bun add @reliverse/rempts-core
     ```
   </Tab>
   <Tab value="npm" label="npm">
     ```bash
-    npm install @rempts/core
+    npm install @reliverse/rempts-core
     ```
   </Tab>
   <Tab value="pnpm" label="pnpm">
     ```bash
-    pnpm add @rempts/core
+    pnpm add @reliverse/rempts-core
     ```
   </Tab>
 </Tabs>
@@ -38,51 +38,30 @@ The core CLI framework that powers Rempts. Provides type-safe command definition
 
 ### createCLI
 
-Create a new CLI instance with configuration:
+Create a new CLI instance with automatic configuration loading:
 
 ```typescript
-import { createCLI } from '@rempts/core'
+import { createCLI } from '@reliverse/rempts-core'
 
-const cli = createCLI({
+// Automatic config loading from dler.config.ts
+const cli = await createCLI()
+
+// With runtime configuration override
+const cli = await createCLI({
   name: 'my-cli',
   version: '1.0.0',
   description: 'My awesome CLI tool'
 })
 
-// With command manifest for lazy loading
-const cli = createCLI({
-  name: 'my-cli',
-  version: '1.0.0',
-  description: 'My awesome CLI tool',
-  commands: {
-    manifest: './commands/manifest.js'
-  }
-})
-
 // With plugins for extended functionality
 const cli = await createCLI({
-  name: 'my-cli',
-  version: '1.0.0',
-  description: 'My awesome CLI tool',
   plugins: [
-    configMergerPlugin(),
-    aiAgentPlugin()
+    configPlugin({ sources: ['.myrc.json'] }),
+    aiDetectPlugin({ verbose: true })
   ]
 })
 
-// Add commands
-cli.command({
-  name: 'hello',
-  description: 'Say hello',
-  handler: async () => {
-    console.log('Hello, World!')
-  }
-})
-
-// Initialize (loads manifest if configured)
-await cli.init()
-
-// Run the CLI
+// CLI automatically loads commands from config
 await cli.run()
 ```
 
@@ -91,7 +70,7 @@ await cli.run()
 Define commands with full type inference:
 
 ```typescript
-import { defineCommand, option } from '@rempts/core'
+import { defineCommand, option } from '@reliverse/rempts-core'
 import { z } from 'zod'
 
 export default defineCommand({
@@ -108,14 +87,19 @@ export default defineCommand({
       { short: 'd', description: 'Perform a dry run' }
     )
   },
-  handler: async ({ flags, positional, shell, env, cwd, prompt, spinner, colors }) => {
+  handler: async ({ flags, positional, shell, env, cwd, prompt, spinner, colors, context, terminal }) => {
     const spin = spinner(`Deploying to ${flags.env}...`)
     spin.start()
-    
+
     if (!flags.dry) {
       await shell`git push ${flags.env} main`
     }
-    
+
+    // Access plugin stores if available
+    if (context?.store?.deploymentCount !== undefined) {
+      context.setStoreValue('deploymentCount', context.getStoreValue('deploymentCount') + 1)
+    }
+
     spin.succeed('Deployed successfully!')
   }
 })
@@ -126,10 +110,10 @@ export default defineCommand({
 Create typed options with validation:
 
 ```typescript
-import { option } from '@rempts/core'
+import { option } from '@reliverse/rempts-core'
 import { z } from 'zod'
 
-// Options always require a schema
+// Options always require a Standard Schema v1 compatible schema
 const portOption = option(
   z.coerce.number().int().min(1).max(65535).default(3000),
   {
@@ -156,7 +140,7 @@ defineCommand({
 ```
 
 <Callout type="important">
-  **All options must have a schema** - there are no raw options in Rempts. Use `z.coerce` for CLI inputs to automatically convert string inputs to the correct type (boolean, number, etc.)
+  **All options must have a schema** - Rempts uses Standard Schema v1 for validation. Use schema transforms and `z.coerce` for CLI inputs to automatically convert string inputs to the correct type (boolean, number, etc.)
 </Callout>
 
 ## Handler Context
@@ -164,32 +148,60 @@ defineCommand({
 Every command handler receives a rich context object:
 
 ```typescript
-interface HandlerArgs<T> {
-  // Parsed and validated flags
-  flags: T
-  
+interface HandlerArgs<TFlags, TStore = {}> {
+  // Parsed and validated flags (fully typed from schema)
+  flags: TFlags
+
   // Non-flag arguments
   positional: string[]
-  
+
   // Bun Shell for running commands
   shell: typeof Bun.$
-  
+
   // Environment variables
   env: typeof process.env
-  
+
   // Current working directory
   cwd: string
-  
-  // Utility functions from @rempts/utils (auto-imported)
-  prompt: typeof import('@rempts/utils').prompt
-  spinner: typeof import('@rempts/utils').spinner
-  colors: typeof import('@rempts/utils').colors
-  
-  // Plugin context (when using plugins)
+
+  // Utility functions from @reliverse/rempts-utils
+  prompt: typeof import('@reliverse/rempts-utils').prompt
+  spinner: typeof import('@reliverse/rempts-utils').spinner
+  colors: typeof import('@reliverse/relico').relico
+
+  // Plugin context with type-safe store access
   context?: CommandContext<TStore>
-  
-  // CLI instance
-  cli: CLI
+
+  // Global hook data (set by before hooks)
+  hooks?: Record<string, any>
+
+  // Terminal information
+  terminal: TerminalInfo
+
+  // Runtime information
+  runtime: RuntimeInfo
+}
+```
+
+### Plugin Context
+
+When plugins are loaded, handlers receive additional context:
+
+```typescript
+interface CommandContext<TStore> {
+  // Type-safe store access
+  store: TStore
+  getStoreValue<K extends keyof TStore>(key: K): TStore[K]
+  setStoreValue<K extends keyof TStore>(key: K, value: TStore[K]): void
+
+  // Command information
+  command: string
+  commandDef: Command
+
+  // Plugin execution context
+  args: string[]
+  flags: Record<string, any>
+  env: EnvironmentInfo
 }
 ```
 
@@ -453,7 +465,7 @@ const command = defineCommand({
 Define configuration for the Rempts CLI:
 
 ```typescript
-// rempts.config.ts
+// dler.config.ts
 import { defineConfig } from '@rempts/core'
 
 export default defineConfig({
@@ -538,41 +550,54 @@ const portOption = option(
 
 ## Plugin System
 
-Rempts includes a powerful plugin system for extending functionality:
+Rempts includes a powerful functional plugin system with Zustand stores:
 
 ```typescript
-import { createPlugin } from '@rempts/core/plugin'
+import { createPlugin } from '@reliverse/rempts-core/plugin'
 
-// Create a simple plugin
-const myPlugin = createPlugin({
-  name: 'my-plugin',
+interface MetricsStore {
+  commandCount: number
+  totalDuration: number
+}
+
+// Create a plugin with typed store
+const metricsPlugin = createPlugin<MetricsStore>((options = {}) => ({
+  name: 'metrics-plugin',
   store: {
-    requestCount: 0
+    commandCount: 0,
+    totalDuration: 0
   },
-  beforeCommand({ store }) {
-    store.requestCount++
+  beforeCommand({ setStoreValue, getStoreValue }) {
+    const count = getStoreValue('commandCount')
+    setStoreValue('commandCount', count + 1)
   },
-  afterCommand({ store }) {
-    console.log(`Total requests: ${store.requestCount}`)
+  afterCommand({ getStoreValue, setStoreValue }, { exitCode }) {
+    if (exitCode === 0) {
+      const duration = Date.now() - (global as any).__startTime
+      const total = getStoreValue('totalDuration')
+      setStoreValue('totalDuration', total + duration)
+    }
   }
-})
+}))
 
-// Use in CLI with type-safe store
+// Use in CLI
 const cli = await createCLI({
-  name: 'my-cli',
-  plugins: [myPlugin]
+  plugins: [metricsPlugin()]
 })
 
-// Access plugin store in commands
+// Access plugin store in commands with full type safety
 defineCommand({
-  name: 'info',
+  name: 'stats',
   handler: async ({ context }) => {
-    console.log(`Requests: ${context?.store.requestCount}`)
+    if (context) {
+      console.log(`Commands run: ${context.getStoreValue('commandCount')}`)
+      console.log(`Total time: ${context.getStoreValue('totalDuration')}ms`)
+    }
   }
 })
 ```
 
-Learn more in the [Plugin Documentation](/docs/core-concepts/plugins).
+Learn more in the [Plugin API Reference](/libraries/rempts/api/plugins).
 
 ## Type Utilities
 
@@ -649,4 +674,4 @@ type AllCommands = MergeAll<
 
 ## API Reference
 
-See the [API Reference](/docs/api/create-cli) for detailed documentation of all exports.
+See the [API Reference](/libraries/rempts/api/create-cli) for detailed documentation of all exports.

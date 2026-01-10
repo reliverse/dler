@@ -32,17 +32,17 @@ export default defineCommand({
       description:
         "Dependencies to exclude from updates, supports glob patterns (e.g. 'eslint-*', '@types/*')",
     }),
-    dryRun: option(type("boolean"), {
+    dryRun: option(type("boolean | undefined"), {
       description: "Preview updates without making changes",
     }),
-    install: option(type("boolean"), {
+    install: option(type("boolean | undefined"), {
       description: "Run install after updating (default: true)",
       short: "i",
     }),
-    allowMajor: option(type("boolean"), {
+    allowMajor: option(type("boolean | undefined"), {
       description: "Allow major version updates (default: true)",
     }),
-    details: option(type("boolean"), {
+    details: option(type("boolean | undefined"), {
       description: "Show detailed dependency information (default: false)",
       short: "d",
     }),
