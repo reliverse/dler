@@ -166,11 +166,11 @@ Execute the command through the development server:
 
 ```bash
 # Test with development server
-bunx rempts dev greet --name World --excited
+bunx @reliverse/rempts dev greet --name World --excited
 # Output: Hello, World!
 
 # Execute the full test suite
-bunx rempts test
+bunx @reliverse/rempts test
 ```
 
 ### Compile for distribution
@@ -179,10 +179,10 @@ Generate optimized, standalone executables ready for deployment:
 
 ```bash
 # Compile for current platform
-bunx rempts build
+bunx @reliverse/rempts build
 
 # Cross-compile for all supported platforms
-bunx rempts build --all
+bunx @reliverse/rempts build --all
 ```
 
 </Steps>
@@ -299,8 +299,8 @@ await cli.run()
     "my-cli": "./cli.ts"
   },
   "scripts": {
-    "dev": "bunx rempts dev",
-    "build": "bunx rempts build",
+    "dev": "bunx @reliverse/rempts dev",
+    "build": "bunx @reliverse/rempts build",
     "test": "bun test"
   },
   "dependencies": {

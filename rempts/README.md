@@ -25,7 +25,7 @@ Rempts is a minimal, type-safe CLI framework designed specifically for Bun. It l
 bun add -g rempts
 
 # Create a new CLI project
-bunx rempts my-cli
+bunx @reliverse/rempts my-cli
 
 # Start development
 cd my-cli

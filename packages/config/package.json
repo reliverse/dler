@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/config",
-  "version": "2.2.9",
+  "version": "2.3.2",
   "private": false,
   "description": "Configuration management for Reliverse ecosystem",
   "keywords": [
@@ -33,9 +33,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "scripts": {
-    "perf": "bun bench/perf.ts"
-  },
   "dependencies": {
     "@reliverse/matcha": "workspace:*",
     "@reliverse/rempts-core": "workspace:*",
@@ -48,5 +45,8 @@
     "@types/bun": "catalog:",
     "@types/semver": "catalog:",
     "typescript": "catalog:"
+  },
+  "scripts": {
+    "perf": "bun bench/perf.ts"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/rempts-plugin-config",
-  "version": "0.2.0",
+  "version": "2.3.2",
   "description": "Config merger plugin for Rempts - loads config from multiple sources",
   "keywords": [
     "cli",
@@ -12,29 +12,33 @@
   "author": "bun dler Team",
   "files": [
     "dist",
-    "src"
+    "src",
+    "README.md"
   ],
   "type": "module",
   "main": "./src/mod.ts",
-  "types": "./src/mod.ts",
+  "types": "./dist/mod.d.ts",
   "exports": {
     ".": {
       "types": "./src/mod.ts",
       "default": "./src/mod.ts"
     }
   },
-  "scripts": {
-    "build": "bun run scripts/build.ts",
-    "typecheck": "tsc --noEmit",
-    "test": "bun test"
-  },
   "dependencies": {
     "@reliverse/rempts-core": "workspace:*",
     "@reliverse/rempts-utils": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
     "typescript": "catalog:"
+  },
+  "scripts": {
+    "build": "bun run scripts/build.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
   }
 }

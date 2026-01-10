@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler",
-  "version": "2.3.0",
+  "version": "2.3.2",
   "description": "@reliverse/dler is a framework which helps TypeScript and JavaScript developers create their libraries and CLI tools. It provides ready-to-use primitives, so you don't have to write them from scratch.",
   "keywords": [
     "build-tool",
@@ -23,29 +23,20 @@
     "directory": "packages/cli"
   },
   "bin": {
-    "dler": "./src/cli.ts"
+    "dler": "./dist/cli.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "type": "module",
-  "module": "./src/mod.ts",
-  "types": "./src/mod.ts",
+  "module": "./dist/mod.js",
+  "types": "./dist/mod.d.ts",
   "exports": {
     ".": {
       "types": "./src/mod.ts",
       "import": "./src/mod.ts"
     }
-  },
-  "scripts": {
-    "dler": "bun src/cli.ts",
-    "typecheck": "tsc --noEmit",
-    "cli": "bun dler",
-    "test": "bun test",
-    "build": "bun scripts/build.ts && bun run tsc",
-    "build:standalone": "bun run scripts/build.ts --compile",
-    "build:binaries": "bun run scripts/release-binaries.ts",
-    "prepublishOnly": "bun run build"
   },
   "dependencies": {
     "@reliverse/build": "workspace:*",
@@ -69,10 +60,23 @@
     "semver": "catalog:",
     "arktype": "catalog:"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
     "@types/semver": "catalog:",
     "typescript": "catalog:"
+  },
+  "scripts": {
+    "dler": "bun src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "cli": "bun dler",
+    "test": "bun test",
+    "build": "bun scripts/build.ts && bun run tsc",
+    "build:standalone": "bun run scripts/build.ts --compile",
+    "build:binaries": "bun run scripts/release-binaries.ts",
+    "prepublishOnly": "bun run build"
   }
 }

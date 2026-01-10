@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/utils",
-  "version": "0.1.0",
+  "version": "2.3.2",
   "description": "Shared utilities for Reliverse packages",
   "type": "module",
   "exports": {
@@ -13,19 +13,27 @@
       "default": "./src/validation.ts"
     }
   },
-  "scripts": {
-    "build": "bun run build.ts",
-    "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
-  },
   "dependencies": {
     "arktype": "catalog:"
   },
+  "peerDependencies": {
+    "typescript": ">=5.9.3"
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
   "devDependencies": {
     "@types/bun": "catalog:",
     "typescript": ">=5.9.3"
   },
-  "peerDependencies": {
-    "typescript": ">=5.9.3"
+  "scripts": {
+    "build": "bun run build.ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
   }
 }

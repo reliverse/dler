@@ -11,7 +11,7 @@ const configCommand = defineCommand({
       name: "get",
       description: "Get a config value",
       options: {
-        key: option(type("string"), {
+        key: option(type("string | undefined"), {
           description: "Config key to get",
         }),
       },
@@ -38,10 +38,10 @@ const configCommand = defineCommand({
       name: "set",
       description: "Set a config value",
       options: {
-        key: option(type("string"), {
+        key: option(type("string | undefined"), {
           description: "Config key to set",
         }),
-        value: option(type("string"), {
+        value: option(type("string | undefined"), {
           description: "Value to set",
         }),
       },

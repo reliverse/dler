@@ -13,7 +13,7 @@ const cli = await createApp({
 });
 
 // Use type assertion to access internal command() method
-// This is needed for the rempts CLI itself which registers commands programmatically
+// This is needed for the @reliverse/rempts CLI itself which registers commands programmatically
 (cli as any).command(
   defineCommand({
     description: "Create a new Rempts CLI project",

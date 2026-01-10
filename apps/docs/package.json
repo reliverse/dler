@@ -1,6 +1,6 @@
 {
   "name": "relidocs",
-  "version": "0.0.0",
+  "version": "2.3.0",
   "private": true,
   "scripts": {
     "build": "next build",
@@ -71,6 +71,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
     "@types/mdx": "^2.0.13",
+    "@types/next": "^9.0.0",
     "@types/node": "^25.0.5",
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",

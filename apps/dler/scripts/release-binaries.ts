@@ -9,7 +9,7 @@ import { $ } from "bun";
 const version = process.argv[2] || "latest";
 const platforms = ["darwin-arm64", "darwin-x64", "linux-arm64", "linux-x64", "windows-x64"];
 
-console.log(`🚀 Building rempts ${version} for all platforms...\n`);
+console.log(`🚀 Building @reliverse/rempts ${version} for all platforms...\n`);
 
 const outdir = "./release";
 

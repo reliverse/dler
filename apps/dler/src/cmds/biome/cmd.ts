@@ -11,10 +11,10 @@ export default defineCommand({
     cwd: option(type("string | undefined"), {
       description: "Working directory to run biome from (default: current directory)",
     }),
-    verbose: option(type("boolean"), {
+    verbose: option(type("boolean | undefined"), {
       description: "Verbose mode (default: false)",
     }),
-    copyLogs: option(type("boolean"), {
+    copyLogs: option(type("boolean | undefined"), {
       description: "Copy diagnostics to clipboard (default: true, skipped in CI)",
     }),
   },

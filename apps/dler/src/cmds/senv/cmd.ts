@@ -201,7 +201,7 @@ const persistPosixEditPath = async (
 export default defineCommand({
   description: "Inspect and modify environment variables (process and user-level)",
   options: {
-    action: option(type("string"), {
+    action: option(type("string | undefined"), {
       description: "Operation to perform: list|get|set|append|remove|contains",
     }),
     name: option(type("string | undefined"), {
@@ -229,7 +229,7 @@ export default defineCommand({
       const yes = flags.yes ?? false;
 
       const allowed = new Set(["list", "get", "set", "append", "remove", "contains"]);
-      if (!allowed.has(action)) {
+      if (action && !allowed.has(action)) {
         logger.error("Unknown action. Allowed: list, get, set, append, remove, contains");
         process.exit(2);
       }

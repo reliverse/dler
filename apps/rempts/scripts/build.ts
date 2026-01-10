@@ -26,4 +26,4 @@ const cliContent = await Bun.file("./dist/cli.js").text();
 const finalContent = cliContent.startsWith("#!") ? cliContent : `#!/usr/bin/env bun\n${cliContent}`;
 await Bun.write("./dist/cli.js", finalContent);
 
-console.log("✅ rempts built successfully");
+console.log("✅ @reliverse/rempts built successfully");

@@ -1,12 +1,13 @@
 {
   "name": "@reliverse/matcha",
-  "version": "2.2.9",
+  "version": "2.3.2",
   "private": false,
   "description": "@reliverse/matcha is a high-performance minimal matcher, with micromatch-level power, zepto-level size, and reliverse-grade dx.",
   "license": "MIT",
   "files": [
     "dist",
-    "package.json"
+    "package.json",
+    "README.md"
   ],
   "type": "module",
   "exports": {
@@ -18,9 +19,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "scripts": {
-    "perf": "bun bench/perf.ts"
-  },
   "dependencies": {
     "zeptomatch": "catalog:"
   },
@@ -28,5 +26,8 @@
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
     "typescript": "catalog:"
+  },
+  "scripts": {
+    "perf": "bun bench/perf.ts"
   }
 }

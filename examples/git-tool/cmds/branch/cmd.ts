@@ -7,31 +7,31 @@ export default defineCommand({
   alias: "br",
   options: {
     // Branch name
-    name: option(type("string"), {
+    name: option(type("string | undefined"), {
       short: "n",
       description: "Branch name",
     }),
 
     // Base branch
-    base: option(type("string"), {
+    base: option(type("string | undefined"), {
       short: "b",
       description: "Base branch to create from",
     }),
 
     // Switch to branch
-    switch: option(type("boolean"), {
+    switch: option(type("boolean | undefined"), {
       short: "s",
       description: "Switch to the branch after creating",
     }),
 
     // Delete branch
-    delete: option(type("boolean"), {
+    delete: option(type("boolean | undefined"), {
       short: "d",
       description: "Delete the branch",
     }),
 
     // Force operations
-    force: option(type("boolean"), {
+    force: option(type("boolean | undefined"), {
       short: "f",
       description: "Force the operation",
     }),

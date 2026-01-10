@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/rempts",
-  "version": "0.4.0",
+  "version": "2.3.2",
   "description": "Scaffold new Rempts CLI projects with ease",
   "keywords": [
     "bun",
@@ -24,27 +24,21 @@
     "directory": "packages/rempts"
   },
   "bin": {
-    "rempts": "./src/cli.ts"
+    "rempts": "./dist/cli.js"
   },
   "files": [
     "dist",
-    "templates"
+    "templates",
+    "README.md"
   ],
   "type": "module",
-  "module": "./src/mod.ts",
-  "types": "./src/mod.ts",
+  "module": "./dist/mod.js",
+  "types": "./dist/mod.d.ts",
   "exports": {
     ".": {
       "types": "./src/mod.ts",
       "import": "./src/mod.ts"
     }
-  },
-  "scripts": {
-    "dev": "bun run src/cli.ts",
-    "build": "bun scripts/build.ts && bun run tsc",
-    "test": "bun test",
-    "typecheck": "tsc --noEmit",
-    "prepublishOnly": "bun run build"
   },
   "dependencies": {
     "@reliverse/relico": "workspace:*",
@@ -54,9 +48,19 @@
     "arktype": "catalog:",
     "giget": "catalog:"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
     "typescript": "catalog:"
+  },
+  "scripts": {
+    "dev": "bun run src/cli.ts",
+    "build": "bun scripts/build.ts && bun run tsc",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "bun run build"
   }
 }

@@ -1,13 +1,14 @@
 {
   "name": "@reliverse/relifso",
-  "version": "2.2.10",
+  "version": "2.3.2",
   "private": false,
   "description": "Bun-first fs-extra style helpers (copy, ensure*, output*) for Reliverse ecosystem",
   "license": "MIT",
   "author": "reliverse",
   "files": [
     "dist",
-    "package.json"
+    "package.json",
+    "README.md"
   ],
   "type": "module",
   "exports": {

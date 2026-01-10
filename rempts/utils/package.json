@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/rempts-utils",
-  "version": "0.2.0",
+  "version": "2.3.2",
   "description": "Built-in utilities for Rempts CLI framework - prompts, spinners, and colors",
   "keywords": [
     "cli",
@@ -27,8 +27,8 @@
     "README.md"
   ],
   "type": "module",
-  "module": "./src/mod.ts",
-  "types": "./src/mod.ts",
+  "module": "./dist/mod.js",
+  "types": "./dist/mod.d.ts",
   "exports": {
     ".": {
       "types": "./src/mod.ts",
@@ -38,24 +38,24 @@
   "publishConfig": {
     "access": "public"
   },
-  "scripts": {
-    "build": "bun scripts/build.ts && bun run tsc",
-    "test": "bun test",
-    "typecheck": "tsc --noEmit",
-    "prepublishOnly": "bun run build"
-  },
   "dependencies": {
     "@reliverse/relico": "workspace:*",
     "@standard-schema/spec": "catalog:",
     "@standard-schema/utils": "catalog:",
     "arktype": "catalog:"
   },
+  "engines": {
+    "bun": ">=1.3.5"
+  },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
     "typescript": "catalog:"
   },
-  "engines": {
-    "bun": ">=1.3.5"
+  "scripts": {
+    "build": "bun scripts/build.ts && bun run tsc",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "bun run build"
   }
 }

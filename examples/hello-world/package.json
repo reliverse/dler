@@ -1,9 +1,10 @@
 {
   "name": "@reliverse/examples-rempts-hello-world",
-  "version": "1.0.0",
+  "private": true,
+  "version": "2.3.0",
   "type": "module",
   "scripts": {
-    "build": "bun rempts build",
+    "build": "bun @reliverse/rempts build",
     "typecheck": "tsc --noEmit",
     "cli": "bun cli.ts"
   },

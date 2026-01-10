@@ -6,7 +6,7 @@ Scaffold new Rempts CLI projects with ease.
 
 ```bash
 # Using bunx (recommended)
-bunx rempts my-cli
+bunx @reliverse/rempts my-cli
 
 # Or install globally and use directly
 bun add -g rempts
@@ -30,7 +30,7 @@ rempts my-cli
 Create a new project with the default template:
 
 ```bash
-bunx rempts my-cli
+bunx @reliverse/rempts my-cli
 ```
 
 ### Using Templates
@@ -39,13 +39,13 @@ Choose from bundled templates:
 
 ```bash
 # Basic single-command CLI
-bunx rempts my-cli --template basic
+bunx @reliverse/rempts my-cli --template basic
 
 # Advanced multi-command CLI with subcommands
-bunx rempts my-cli --template advanced
+bunx @reliverse/rempts my-cli --template advanced
 
 # Monorepo setup with Turborepo
-bunx rempts my-cli --template monorepo
+bunx @reliverse/rempts my-cli --template monorepo
 ```
 
 ### Using External Templates
@@ -54,19 +54,19 @@ Use any GitHub repository as a template:
 
 ```bash
 # GitHub repository
-bunx rempts my-cli --template username/repo
+bunx @reliverse/rempts my-cli --template username/repo
 
 # With full GitHub URL
-bunx rempts my-cli --template github:username/repo
+bunx @reliverse/rempts my-cli --template github:username/repo
 
 # Specific branch or tag
-bunx rempts my-cli --template username/repo#branch
+bunx @reliverse/rempts my-cli --template username/repo#branch
 ```
 
 ### Options
 
 ```bash
-bunx rempts [name] [options]
+bunx @reliverse/rempts [name] [options]
 
 Options:
   -t, --template <template>   Project template (default: "basic")
@@ -82,16 +82,16 @@ Options:
 
 ```bash
 # Create in current directory
-bunx rempts .
+bunx @reliverse/rempts .
 
 # Create without installing dependencies
-bunx rempts my-cli --no-install
+bunx @reliverse/rempts my-cli --no-install
 
 # Create in custom directory
-bunx rempts my-cli --dir ~/projects/my-cli
+bunx @reliverse/rempts my-cli --dir ~/projects/my-cli
 
 # Use external template
-bunx rempts my-cli --template pvtnbr/rempts-starter
+bunx @reliverse/rempts my-cli --template pvtnbr/rempts-starter
 ```
 
 ## Templates

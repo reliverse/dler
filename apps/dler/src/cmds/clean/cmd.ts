@@ -32,22 +32,22 @@ export default defineCommand({
     cwd: option(type("string | undefined"), {
       description: "Working directory (monorepo root)",
     }),
-    subdirs: option(type("boolean"), {
+    subdirs: option(type("boolean | undefined"), {
       description: "Search recursively in subdirectories (single-repo mode only)",
     }),
-    dryRun: option(type("boolean"), {
+    dryRun: option(type("boolean | undefined"), {
       description: "Preview what would be deleted without actually deleting",
     }),
-    force: option(type("boolean"), {
+    force: option(type("boolean | undefined"), {
       description: "Required flag to proceed with deletion (no prompts, args-only)",
     }),
-    verbose: option(type("boolean"), {
+    verbose: option(type("boolean | undefined"), {
       description: "Verbose mode with detailed logging",
     }),
-    deleteLockFiles: option(type("boolean"), {
+    deleteLockFiles: option(type("boolean | undefined"), {
       description: "Include lock files (bun.lock, package-lock.json, etc.) when using deps preset",
     }),
-    replaceExports: option(type("boolean"), {
+    replaceExports: option(type("boolean | undefined"), {
       description: "Replace exports from ./src/*.ts to ./dist/*.js before cleaning (default: true)",
     }),
     replaceExportsIgnorePackages: option(type("string | undefined"), {

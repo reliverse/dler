@@ -1,6 +1,6 @@
 {
   "name": "@{{name}}/cli",
-  "version": "0.1.0",
+  "version": "2.3.0",
   "description": "CLI for {{name}}",
   "license": "MIT",
   "author": "{{author}}",

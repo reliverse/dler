@@ -19,11 +19,11 @@ export default defineCommand({
       short: "d",
       description: "Directory to create project in",
     }),
-    git: option(type("boolean"), {
+    git: option(type("boolean | undefined"), {
       short: "g",
       description: "Initialize git repository",
     }),
-    install: option(type("boolean"), { description: "Install dependencies" }),
+    install: option(type("boolean | undefined"), { description: "Install dependencies" }),
     "package-manager": option(type("'bun'|'pnpm'|'yarn'|'npm'"), {
       short: "p",
       description: "Package manager to use",
@@ -39,7 +39,7 @@ export default defineCommand({
     console.log(relico.cyan("🚀 Creating new Rempts CLI project..."));
     console.log();
 
-    // Build rempts command
+    // Build @reliverse/rempts command
     const args = ["rempts"];
 
     // Add project name from positional arg
@@ -73,7 +73,7 @@ export default defineCommand({
     console.log(relico.dim(`> bunx ${args.join(" ")}`));
     console.log();
 
-    // Run rempts via bunx
+    // Run @reliverse/rempts via bunx
     const proc = spawn("bunx", args, {
       stdio: "inherit",
       env: process.env,
@@ -87,7 +87,7 @@ export default defineCommand({
         console.log("Next steps:");
         const projectName = positional[0] || flags.name || "your-project";
         console.log(relico.gray(`  cd ${projectName}`));
-        console.log(relico.gray("  rempts dev"));
+        console.log(relico.gray("  @reliverse/rempts dev"));
       } else {
         console.error(relico.red("Failed to create project"));
         process.exit(code || 1);
@@ -97,8 +97,8 @@ export default defineCommand({
     proc.on("error", (error) => {
       console.error(relico.red("Failed to run rempts:"), error.message);
       console.log();
-      console.log("Make sure rempts is available:");
-      console.log(relico.gray("  bunx rempts --help"));
+      console.log("Make sure @reliverse/rempts is available:");
+      console.log(relico.gray("  bunx @reliverse/rempts --help"));
       process.exit(1);
     });
   },

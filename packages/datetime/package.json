@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/datetime",
-  "version": "2.2.9",
+  "version": "2.3.2",
   "private": false,
   "description": "DateTime manipulation and formatting utilities for Reliverse ecosystem",
   "license": "MIT",
@@ -11,7 +11,7 @@
   ],
   "type": "module",
   "main": "./src/mod.ts",
-  "types": "./src/mod.ts",
+  "types": "./dist/mod.d.ts",
   "exports": {
     ".": {
       "types": "./src/mod.ts",
@@ -21,12 +21,12 @@
   "publishConfig": {
     "access": "public"
   },
-  "scripts": {
-    "perf": "bun bench/perf.ts"
-  },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
     "typescript": "catalog:"
+  },
+  "scripts": {
+    "perf": "bun bench/perf.ts"
   }
 }

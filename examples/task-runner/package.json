@@ -1,6 +1,7 @@
 {
   "name": "@reliverse/examples-rempts-task-runner",
-  "version": "1.0.0",
+  "private": true,
+  "version": "2.3.0",
   "type": "module",
   "scripts": {
     "dev": "bun dler dev",

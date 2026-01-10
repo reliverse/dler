@@ -51,7 +51,7 @@ Each example demonstrates the recommended Rempts development workflow:
 # Navigate to an example
 cd hello-world
 
-# Install dependencies (includes rempts CLI)
+# Install dependencies (includes @reliverse/rempts CLI)
 bun install
 
 # Generate types (creates .dler/commands.gen.ts)

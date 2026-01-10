@@ -21,6 +21,7 @@
       },
       "style": {
         "noUnusedTemplateLiteral": "off",
+        "useCollapsedIf": "off",
         "useDefaultSwitchClause": "off",
         "noParameterAssign": "off",
         "useBlockStatements": "off",

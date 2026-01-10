@@ -1,6 +1,7 @@
 {
   "name": "file-based-commands-example",
-  "version": "1.0.0",
+  "private": true,
+  "version": "2.3.0",
   "description": "Example of file-based command loading in @rempts",
   "type": "module",
   "scripts": {

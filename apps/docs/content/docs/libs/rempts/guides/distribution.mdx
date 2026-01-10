@@ -13,7 +13,7 @@ Master the compilation, packaging, and global distribution of your Rempts CLI ap
 
 
 ```bash
-bunx rempts dev
+bunx @reliverse/rempts dev
 bun run cli.ts --help
 ```
 
@@ -21,26 +21,26 @@ For production deployment, generate optimized standalone executables:
 
 ```bash
 # Production compilation
-bunx rempts build
+bunx @reliverse/rempts build
 ```
 
 ### Compilation Configuration
 
 ```bash
 # Generate JavaScript bundle (requires Bun runtime)
-bunx rempts build
+bunx @reliverse/rempts build
 
 # Create standalone executable for current platform
-bunx rempts build --targets native
+bunx @reliverse/rempts build --targets native
 
 # Cross-compile for specific architectures
-bunx rempts build --targets darwin-arm64,linux-x64
+bunx @reliverse/rempts build --targets darwin-arm64,linux-x64
 
 # Build for complete platform matrix
-bunx rempts build --targets all
+bunx @reliverse/rempts build --targets all
 
 # Advanced compilation with optimization flags
-bunx rempts build \
+bunx @reliverse/rempts build \
   --targets darwin-arm64,linux-x64 \
   --minify \
   --sourcemap \
@@ -80,7 +80,7 @@ export default defineConfig({
 ```
 
 ```bash
-bunx rempts build --targets all
+bunx @reliverse/rempts build --targets all
 ```
 
 This produces the following distribution artifacts:
@@ -116,13 +116,13 @@ Rempts leverages Bun's compilation capabilities to produce runtime-embedded exec
 
 ```bash
 # Compile for current platform architecture
-bunx rempts build --targets native
+bunx @reliverse/rempts build --targets native
 
 # Cross-compile for designated platforms
-bunx rempts build --targets darwin-arm64,linux-x64
+bunx @reliverse/rempts build --targets darwin-arm64,linux-x64
 
 # Compile with performance optimizations
-bunx rempts build --targets native --minify --bytecode
+bunx @reliverse/rempts build --targets native --minify --bytecode
 ```
 
 ### Binary Size Optimization
@@ -180,7 +180,7 @@ Apply cryptographic signatures to macOS executables:
 
 ```bash
 # Compile the executable
-bunx rempts build --targets darwin-arm64
+bunx @reliverse/rempts build --targets darwin-arm64
 
 # Apply code signature
 codesign --sign "Developer ID Application: Your Name" \
@@ -218,7 +218,7 @@ jobs:
         run: bun install
 
       - name: Cross-platform compilation
-        run: bunx rempts build --targets all
+        run: bunx @reliverse/rempts build --targets all
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -243,7 +243,7 @@ Publish through NPM for streamlined installation:
     "dist/"
   ],
   "scripts": {
-    "prepublishOnly": "bunx rempts build"
+    "prepublishOnly": "bunx @reliverse/rempts build"
   }
 }
 ```
@@ -306,7 +306,7 @@ COPY package.json bun.lockb ./
 RUN bun install --frozen-lockfile
 
 COPY . .
-RUN bunx rempts build --targets native
+RUN bunx @reliverse/rempts build --targets native
 
 FROM alpine:latest
 RUN apk add --no-cache libstdc++
@@ -366,22 +366,22 @@ package() {
 
 ## Automated Release Management
 
-### Leveraging rempts release
+### Leveraging @reliverse/rempts release
 
 Rempts includes an automated release system that streamlines the publication workflow:
 
 ```bash
 # Generate a new release
-bunx rempts release
+bunx @reliverse/rempts release
 
 # Release with explicit version specification
-bunx rempts release --version 2.0.0
+bunx @reliverse/rempts release --version 2.0.0
 
 # Release excluding NPM publication
-bunx rempts release --no-npm
+bunx @reliverse/rempts release --no-npm
 
 # Perform dry-run validation
-bunx rempts release --dry-run
+bunx @reliverse/rempts release --dry-run
 ```
 
 ### Release Configuration Management
@@ -414,15 +414,15 @@ export default defineConfig({
 1. **Version Bump**
    ```bash
    # Automatic version based on commits
-   rempts release
+   @reliverse/rempts release
    
    # Manual version
-   rempts release --version 2.0.0
+   @reliverse/rempts release --version 2.0.0
    ```
 
 2. **Build All Platforms**
    ```bash
-   rempts build --targets all
+   @reliverse/rempts build --targets all
    ```
 
 3. **Create Git Tag**

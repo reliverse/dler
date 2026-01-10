@@ -173,7 +173,7 @@ export default defineCommand({
     expect(commands[0]?.name).toBe("utility-test");
   });
 
-  it("should detect commands that only use defineCommand without rempts imports", async () => {
+  it("should detect commands that only use defineCommand without @reliverse/rempts imports", async () => {
     // Test the fixed logic for detecting commands that use defineCommand
     // but don't explicitly import from rempts-core
     const commandContent = `

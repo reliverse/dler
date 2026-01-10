@@ -7,19 +7,19 @@ export default defineCommand({
   alias: "st",
   options: {
     // Show detailed information
-    detailed: option(type("boolean"), {
+    detailed: option(type("boolean | undefined"), {
       short: "d",
       description: "Show detailed status information",
     }),
 
     // Show branch information
-    branches: option(type("boolean"), {
+    branches: option(type("boolean | undefined"), {
       short: "b",
       description: "Show branch information",
     }),
 
     // Show remote information
-    remote: option(type("boolean"), {
+    remote: option(type("boolean | undefined"), {
       short: "r",
       description: "Show remote information",
     }),

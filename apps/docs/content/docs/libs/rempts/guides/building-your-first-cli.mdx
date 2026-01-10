@@ -103,7 +103,7 @@ await cli.run()
 
 
 ```bash
-bunx rempts dev
+bunx @reliverse/rempts dev
 ```
 
 Execute your command to verify functionality:
@@ -250,13 +250,13 @@ Generate optimized executables for distribution:
 
 ```bash
 # Compile for current platform architecture
-bunx rempts build
+bunx @reliverse/rempts build
 
 # Cross-compile for all supported platforms
-bunx rempts build --all
+bunx @reliverse/rempts build --all
 
 # Generate standalone executable with no runtime dependencies
-bunx rempts build --compile
+bunx @reliverse/rempts build --compile
 ```
 
 ## Comprehensive Testing
@@ -280,7 +280,7 @@ test('add command registers new task successfully', async () => {
 Execute the test suite:
 
 ```bash
-bunx rempts test
+bunx @reliverse/rempts test
 ```
 
 ## Plugin Integration
@@ -356,12 +356,12 @@ When prepared to distribute your CLI globally:
 
 1. **Cross-platform compilation:**
    ```bash
-   bunx rempts build --all
+   bunx @reliverse/rempts build --all
    ```
 
 2. **Automated release creation:**
    ```bash
-   bunx rempts release
+   bunx @reliverse/rempts release
    ```
 
 3. **NPM publication:**

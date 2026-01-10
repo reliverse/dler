@@ -864,6 +864,57 @@ async function preparePackageForPublishing(
       pkg.exports = transformExportsForBuild(pkg.exports);
     }
 
+    // Transform bin field from src/*.ts to dist/*.js for publishing
+    if (pkg.bin) {
+      if (options.verbose) {
+        logger.debug("Transforming bin field for publishing");
+      }
+      if (typeof pkg.bin === "string") {
+        pkg.bin = pkg.bin.replace(/\.ts$/, ".js").replace(/^\.\/src\//, "./dist/");
+      } else if (typeof pkg.bin === "object" && pkg.bin !== null) {
+        for (const [key, value] of Object.entries(pkg.bin)) {
+          if (typeof value === "string") {
+            pkg.bin[key] = value.replace(/\.ts$/, ".js").replace(/^\.\/src\//, "./dist/");
+          }
+        }
+      }
+    }
+
+    // Transform module field from src/*.ts to dist/*.js for publishing
+    if (pkg.module && typeof pkg.module === "string") {
+      if (options.verbose) {
+        logger.debug("Transforming module field for publishing");
+      }
+      pkg.module = pkg.module.replace(/\.ts$/, ".js").replace(/^\.\/src\//, "./dist/");
+    }
+
+    // Transform types field from src/*.ts to dist/*.d.ts for publishing
+    if (pkg.types && typeof pkg.types === "string") {
+      if (options.verbose) {
+        logger.debug("Transforming types field for publishing");
+      }
+      pkg.types = pkg.types.replace(/\.ts$/, ".d.ts").replace(/^\.\/src\//, "./dist/");
+    }
+
+    // Ensure files field includes README.md if it exists
+    if (pkg.files && Array.isArray(pkg.files)) {
+      if (!pkg.files.includes("README.md")) {
+        try {
+          const readmePath = resolve(packagePath, "README.md");
+          await Bun.file(readmePath).stat();
+          pkg.files.push("README.md");
+          if (options.verbose) {
+            logger.debug("Added README.md to files field");
+          }
+        } catch (error) {
+          // README.md doesn't exist, skip adding it
+          if (options.verbose) {
+            logger.debug("README.md not found, skipping addition to files field");
+          }
+        }
+      }
+    }
+
     // Write modified package.json back to root
     await writePackageJSON(resolve(packagePath, "package.json"), pkg);
 

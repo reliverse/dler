@@ -27,7 +27,7 @@ const AuthType = type("'web' | 'legacy'");
 
 export default defineCommand({
   description:
-    "Publish packages to npm, JSR, Vercel, or multiple registries. Supports version bumping, dist-tags, access control, and concurrent publishing. Automatically loads .env files for authentication. Works with dler.ts configuration for per-package settings.",
+    "Publish packages to NPM, JSR (soon), GitHub Releases, Vercel (soon), or multiple registries. Supports version bumping, dist-tags, access control, and concurrent publishing. Automatically loads .env files for authentication. Works with dler.ts configuration for per-package settings.",
   options: {
     ignore: option(type("string | undefined"), {
       description: "Package(s) to ignore (supports wildcards like @reliverse/*)",
@@ -49,7 +49,7 @@ export default defineCommand({
     access: option(AccessType.or(type.undefined), {
       description: "Access level: public or restricted (default: public)",
     }),
-    dryRun: option(type("boolean"), {
+    dryRun: option(type("boolean | undefined"), {
       description: "Simulate publishing without actually publishing (default: false)",
     }),
     otp: option(type("string | undefined"), {
@@ -61,7 +61,7 @@ export default defineCommand({
     concurrency: option(type("number | undefined"), {
       description: "Number of packages to publish concurrently (default: 3)",
     }),
-    verbose: option(type("boolean"), {
+    verbose: option(type("boolean | undefined"), {
       description: "Verbose mode (default: false)",
     }),
     registry: option(type("string | undefined"), {
@@ -70,11 +70,11 @@ export default defineCommand({
     kind: option(type("string | undefined"), {
       description: "Package kind: library, browser-app, native-app, or cli (default: library)",
     }),
-    bumpDisable: option(type("boolean"), {
+    bumpDisable: option(type("boolean | undefined"), {
       description:
         "Disable version bumping for all published packages, overwrites config (default: false)",
     }),
-    withNpmLogs: option(type("boolean"), {
+    withNpmLogs: option(type("boolean | undefined"), {
       description:
         "Display bun publish logs directly to terminal instead of hiding them (setting this to false is not recommended) (default: true)",
     }),
@@ -88,27 +88,27 @@ export default defineCommand({
     cafile: option(type("string | undefined"), {
       description: "Path to Certificate Authority certificate file",
     }),
-    ignoreScripts: option(type("boolean"), {
+    ignoreScripts: option(type("boolean | undefined"), {
       description: "Skip lifecycle scripts during packing and publishing (default: false)",
     }),
-    silent: option(type("boolean"), {
+    silent: option(type("boolean | undefined"), {
       description: "Suppress all output from bun publish (default: false)",
     }),
-    noProgress: option(type("boolean"), {
+    noProgress: option(type("boolean | undefined"), {
       description: "Hide progress bar from bun publish (default: false)",
     }),
-    noSummary: option(type("boolean"), {
+    noSummary: option(type("boolean | undefined"), {
       description: "Don't print publish summary from bun publish (default: false)",
     }),
     bunRegistry: option(type("string | undefined"), {
       description:
         "Registry URL for bun publish (overrides .npmrc and bunfig.toml). Note: This is different from dler's --registry option which controls which registry type to use.",
     }),
-    skipTip2FA: option(type("boolean"), {
+    skipTip2FA: option(type("boolean | undefined"), {
       description:
         "Skip the 2FA tip message and the 3-second wait when using --with-npm-logs (default: false)",
     }),
-    stopOnError: option(type("boolean"), {
+    stopOnError: option(type("boolean | undefined"), {
       description: "Stop on first error instead of collecting all errors (default: false)",
     }),
     // Release options

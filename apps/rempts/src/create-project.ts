@@ -81,7 +81,7 @@ export async function createProject(options: CreateProjectOptions) {
         await shell`cd ${dir} && git add .`.quiet();
         await shell`cd ${dir} && git commit -m "feat: initialize ${name} CLI project with Rempts
 
-- Generated using rempts template
+- Generated using @reliverse/rempts template
 - Includes basic CLI structure with commands directory
 - Configured with Rempts build system and TypeScript
 - Ready for development with bun run dev"`;

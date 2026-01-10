@@ -24,8 +24,8 @@ test("testCommand - with flags", async () => {
   const command = defineCommand({
     description: "Greet someone",
     options: {
-      name: option(type("string")),
-      loud: option(type("boolean"), { short: "l" }),
+      name: option(type("string | undefined")),
+      loud: option(type("boolean | undefined"), { short: "l" }),
     },
     handler: async ({ flags }) => {
       const message = `Hello, ${flags.name}!`;

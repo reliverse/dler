@@ -7,42 +7,42 @@ export default defineCommand({
   alias: "pull-request",
   options: {
     // PR title
-    title: option(type("string"), {
+    title: option(type("string | undefined"), {
       short: "t",
       description: "Pull request title",
     }),
 
     // PR description
-    description: option(type("string"), {
+    description: option(type("string | undefined"), {
       short: "d",
       description: "Pull request description",
     }),
 
     // Base branch
-    base: option(type("string"), {
+    base: option(type("string | undefined"), {
       short: "b",
       description: "Base branch to merge into",
     }),
 
     // Head branch
-    head: option(type("string"), {
+    head: option(type("string | undefined"), {
       short: "h",
       description: "Head branch (defaults to current branch)",
     }),
 
     // Draft PR
-    draft: option(type("boolean"), {
+    draft: option(type("boolean | undefined"), {
       description: "Create as draft pull request",
     }),
 
     // Assign reviewers
-    reviewers: option(type("string"), {
+    reviewers: option(type("string | undefined"), {
       short: "r",
       description: "Comma-separated list of reviewers",
     }),
 
     // Labels
-    labels: option(type("string"), {
+    labels: option(type("string | undefined"), {
       short: "l",
       description: "Comma-separated list of labels",
     }),

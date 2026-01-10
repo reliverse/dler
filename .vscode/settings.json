@@ -1,5 +1,6 @@
 {
   "terminal.integrated.enablePersistentSessions": false,
+  "json.schemaDownload.enable": true,
   "editor.selectionClipboard": false,
   "editor.formatOnSave": true,
   "editor.quickSuggestions": {

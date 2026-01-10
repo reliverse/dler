@@ -7,30 +7,30 @@ export default defineCommand({
   alias: "pull",
   options: {
     // Remote name
-    remote: option(type("string"), {
+    remote: option(type("string | undefined"), {
       short: "r",
       description: "Remote name to sync with",
     }),
 
     // Branch to sync
-    branch: option(type("string"), {
+    branch: option(type("string | undefined"), {
       short: "b",
       description: "Branch to sync (defaults to current branch)",
     }),
 
     // Force sync
-    force: option(type("boolean"), {
+    force: option(type("boolean | undefined"), {
       short: "f",
       description: "Force sync even if there are conflicts",
     }),
 
     // Rebase instead of merge
-    rebase: option(type("boolean"), {
+    rebase: option(type("boolean | undefined"), {
       description: "Use rebase instead of merge",
     }),
 
     // Prune remote branches
-    prune: option(type("boolean"), {
+    prune: option(type("boolean | undefined"), {
       short: "p",
       description: "Remove remote-tracking branches that no longer exist",
     }),

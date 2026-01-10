@@ -17,7 +17,7 @@ Scaffold new Rempts CLI projects in seconds with built-in templates and full cus
 <Tabs groupId="package-manager" defaultValue="bun">
   <Tab value="bun" label="Bun">
     ```bash
-    bunx rempts my-cli
+    bunx @reliverse/rempts my-cli
     ```
   </Tab>
   <Tab value="npm" label="npm">
@@ -27,12 +27,12 @@ Scaffold new Rempts CLI projects in seconds with built-in templates and full cus
   </Tab>
   <Tab value="yarn" label="yarn">
     ```bash
-    yarn create rempts my-cli
+    yarn create @reliverse/rempts my-cli
     ```
   </Tab>
   <Tab value="pnpm" label="pnpm">
     ```bash
-    pnpm create rempts my-cli
+    pnpm create @reliverse/rempts my-cli
     ```
   </Tab>
 </Tabs>
@@ -68,7 +68,7 @@ You'll be prompted for:
 Specify options directly:
 
 ```bash
-bunx rempts my-cli --template advanced --package-manager pnpm
+bunx @reliverse/rempts my-cli --template advanced --package-manager pnpm
 ```
 
 ### Options
@@ -117,7 +117,7 @@ my-cli/
 - Essential dependencies only
 
 ```bash
-bunx rempts my-cli --template basic
+bunx @reliverse/rempts my-cli --template basic
 ```
 
 ### Advanced Template
@@ -160,7 +160,7 @@ my-cli/
 - **Arktype integration** for TypeScript-like validation
 
 ```bash
-bunx rempts my-cli --template advanced
+bunx @reliverse/rempts my-cli --template advanced
 ```
 
 ### Monorepo Template
@@ -200,7 +200,7 @@ my-cli/
 - Optimized for scalability
 
 ```bash
-bunx rempts my-cli --template monorepo
+bunx @reliverse/rempts my-cli --template monorepo
 ```
 
 ## External Templates
@@ -211,26 +211,26 @@ Use any GitHub repository as a template:
 
 ```bash
 # Short format
-bunx rempts my-cli --template username/repo
+bunx @reliverse/rempts my-cli --template username/repo
 
 # Full GitHub format
-bunx rempts my-cli --template github:username/repo
+bunx @reliverse/rempts my-cli --template github:username/repo
 
 # Specific branch or tag
-bunx rempts my-cli --template username/repo#branch
+bunx @reliverse/rempts my-cli --template username/repo#branch
 ```
 
 ### NPM Templates
 
 ```bash
-bunx rempts my-cli --template npm:template-package
+bunx @reliverse/rempts my-cli --template npm:template-package
 ```
 
 ### Local Templates
 
 ```bash
-bunx rempts my-cli --template ./path/to/template
-bunx rempts my-cli --template file:./path/to/template
+bunx @reliverse/rempts my-cli --template ./path/to/template
+bunx @reliverse/rempts my-cli --template file:./path/to/template
 ```
 
 ## Creating Custom Templates
@@ -356,7 +356,7 @@ templates/
 
 ### Programmatic API
 
-Use rempts programmatically:
+Use @reliverse/rempts programmatically:
 
 ```typescript
 import { createProject } from 'rempts'
@@ -378,10 +378,10 @@ Work offline with cached templates:
 
 ```bash
 # Use cached template if available
-bunx rempts my-cli --offline
+bunx @reliverse/rempts my-cli --offline
 
 # Force offline mode (fail if not cached)
-GIGET_FORCE_OFFLINE=1 bunx rempts my-cli
+GIGET_FORCE_OFFLINE=1 bunx @reliverse/rempts my-cli
 ```
 
 ### Custom Directory
@@ -390,10 +390,10 @@ Create project in a specific location:
 
 ```bash
 # Create in current directory
-bunx rempts . --template advanced
+bunx @reliverse/rempts . --template advanced
 
 # Create in custom path
-bunx rempts my-cli --dir ~/projects/my-cli
+bunx @reliverse/rempts my-cli --dir ~/projects/my-cli
 ```
 
 ## Examples
@@ -403,7 +403,7 @@ bunx rempts my-cli --dir ~/projects/my-cli
 ### Create a simple CLI
 
 ```bash
-bunx rempts todo-cli
+bunx @reliverse/rempts todo-cli
 cd todo-cli
 rempts dev
 ```
@@ -411,7 +411,7 @@ rempts dev
 ### Create with all options
 
 ```bash
-bunx rempts weather-cli \
+bunx @reliverse/rempts weather-cli \
   --template advanced \
   --package-manager pnpm \
   --dir ~/tools/weather-cli \
@@ -422,7 +422,7 @@ bunx rempts weather-cli \
 ### Use external template
 
 ```bash
-bunx rempts my-app \
+bunx @reliverse/rempts my-app \
   --template pvtnbr/rempts-starter \
   --package-manager npm
 ```
@@ -430,7 +430,7 @@ bunx rempts my-app \
 ### Create without prompts
 
 ```bash
-bunx rempts api-cli \
+bunx @reliverse/rempts api-cli \
   --template monorepo \
   --no-git \
   --no-install

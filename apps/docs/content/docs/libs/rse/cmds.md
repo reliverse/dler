@@ -630,7 +630,7 @@ dler relinka --input src/app.ts --from relinkaFunction --to consolaObject
 
 ```bash
 bun dler rempts
-bun dler rempts --init cmd1 cmd2
+bun dler @reliverse/rempts --init cmd1 cmd2
 ```
 
 ### 13. `x`

@@ -361,7 +361,7 @@ export async function createCLI<TPlugins extends readonly Plugin[] = []>(
     fullConfig = remptsConfigStrictSchema.assert(updatedConfig);
 
     // Register plugin commands (if any)
-    // Note: Since rempts is file-based only, plugins should register commands from files
+    // Note: Since @reliverse/rempts is file-based only, plugins should register commands from files
     // Plugin commands are deprecated - use file-based commands instead
     if (pluginCommands.length > 0) {
       console.warn(

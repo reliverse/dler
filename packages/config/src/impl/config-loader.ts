@@ -4,8 +4,8 @@ import { remptsConfigSchema } from "@reliverse/rempts-core";
 import type { BuildConfig } from "./build";
 import type { PublishConfig } from "./publish";
 
-// Type for loaded config with defaults applied by rempts schema
-// Note: The build field is overridden to use the extended BuildConfig instead of the simple rempts build config
+// Type for loaded config with defaults applied by @reliverse/rempts schema
+// Note: The build field is overridden to use the extended BuildConfig instead of the simple @reliverse/rempts build config
 export interface LoadedConfig {
   name?: string;
   version?: string;
@@ -78,7 +78,7 @@ export async function loadConfig(cwd = process.cwd()): Promise<LoadedConfig> {
         const validatedConfig = remptsConfigSchema.assert(module.default || module) as any;
 
         // Transform the config to use extended BuildConfig format
-        // The rempts schema applies defaults, so these fields should always be present
+        // The @reliverse/rempts schema applies defaults, so these fields should always be present
         const config: LoadedConfig = {
           ...validatedConfig,
           build: transformBuildConfig(validatedConfig.build),

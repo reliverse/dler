@@ -6,15 +6,6 @@ import { type } from "arktype";
  */
 
 /**
- * Creates a branded type for compile-time guarantees
- * Note: This is a simplified version that works with basic types
- */
-export const createBrandedType =
-  <T extends string>(brand: T) =>
-  (baseType: "string" | "number" | "boolean") =>
-    type(baseType).brand(brand);
-
-/**
  * File path validation with safety checks
  */
 export const SafePath = type("string")

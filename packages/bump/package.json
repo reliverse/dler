@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/bump",
-  "version": "2.2.10",
+  "version": "2.3.2",
   "private": false,
   "description": "Bump utils for Reliverse ecosystem",
   "keywords": [
@@ -11,7 +11,8 @@
   "author": "reliverse",
   "files": [
     "dist",
-    "package.json"
+    "package.json",
+    "README.md"
   ],
   "type": "module",
   "exports": {
@@ -23,9 +24,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "scripts": {
-    "perf": "bun bench/perf.ts"
-  },
   "dependencies": {
     "semver": "catalog:"
   },
@@ -34,5 +32,8 @@
     "@types/bun": "catalog:",
     "@types/semver": "catalog:",
     "typescript": "catalog:"
+  },
+  "scripts": {
+    "perf": "bun bench/perf.ts"
   }
 }
