@@ -1,5 +1,6 @@
 // packages/config/src/impl/build.ts
 
+import type { LoadedConfig } from "./config-loader";
 import { type BaseConfig, mergeConfig, resolvePackageConfig } from "./core";
 import type { PackageKind } from "./publish";
 
@@ -90,6 +91,7 @@ export interface GoBuildOptions {
 
 export interface PackageBuildConfig {
   enable?: boolean;
+  entry?: string | string[];
   bundler?: "bun" | "mkdist";
   target?: "browser" | "bun" | "node";
   format?: "esm" | "cjs" | "iife";
@@ -204,5 +206,31 @@ export const mergeBuildOptions = <T extends Record<string, any>>(
   cliOptions: T,
   packageConfig?: PackageBuildConfig
 ): T => {
+  return mergeConfig(cliOptions, packageConfig);
+};
+
+// ============================================================================
+// Unified Configuration (works with dler.config.ts)
+// ============================================================================
+
+/**
+ * Get package-specific build configuration from dler.config.ts (unified approach)
+ */
+export const getPackageBuildConfigUnified = async (
+  packageName: string,
+  dlerConfig: LoadedConfig | null
+): Promise<PackageBuildConfig | undefined> => {
+  return resolvePackageConfig<PackageBuildConfig>(packageName, dlerConfig?.build);
+};
+
+/**
+ * Merge build options with package-specific configuration from dler.config.ts (unified approach)
+ */
+export const mergeBuildOptionsUnified = <T extends Record<string, any>>(
+  cliOptions: T,
+  packageName: string,
+  dlerConfig: LoadedConfig | null
+): T => {
+  const packageConfig = getPackageBuildConfigUnified(packageName, dlerConfig);
   return mergeConfig(cliOptions, packageConfig);
 };

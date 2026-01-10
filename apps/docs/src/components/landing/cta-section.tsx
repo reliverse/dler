@@ -10,7 +10,7 @@ export function CTASection() {
 
   useEffect(() => {
     // Fetch GitHub stars count
-    fetch("https://api.github.com/repos/reliverse/rempts")
+    fetch("https://api.github.com/repos/reliverse/dler")
       .then((res) => res.json())
       .then((data) => {
         if (data.stargazers_count) {
@@ -34,13 +34,13 @@ export function CTASection() {
           </p>
 
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link href="/libraries/rempts/getting-started">
+            <Link href="/docs/libs/rempts/getting-started">
               <Button className="gap-2" size="lg">
                 Get Started
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link href="https://github.com/reliverse/rempts">
+            <Link href="https://github.com/reliverse/dler">
               <Button className="gap-2" size="lg" variant="outline">
                 <Github className="h-4 w-4" />
                 View on GitHub

@@ -1,0 +1,581 @@
+---
+title: Distribution
+description: Package and distribute your CLI to users
+---
+
+# Distribution Guide
+
+Master the compilation, packaging, and global distribution of your Rempts CLI applications across multiple platforms.
+
+## Compilation Workflow
+
+### Development vs Production Environments
+
+
+```bash
+bunx rempts dev
+bun run cli.ts --help
+```
+
+For production deployment, generate optimized standalone executables:
+
+```bash
+# Production compilation
+bunx rempts build
+```
+
+### Compilation Configuration
+
+```bash
+# Generate JavaScript bundle (requires Bun runtime)
+bunx rempts build
+
+# Create standalone executable for current platform
+bunx rempts build --targets native
+
+# Cross-compile for specific architectures
+bunx rempts build --targets darwin-arm64,linux-x64
+
+# Build for complete platform matrix
+bunx rempts build --targets all
+
+# Advanced compilation with optimization flags
+bunx rempts build \
+  --targets darwin-arm64,linux-x64 \
+  --minify \
+  --sourcemap \
+  --outdir ./dist
+```
+
+## Target Platform Matrix
+
+Rempts enables cross-platform compilation supporting comprehensive architecture coverage:
+
+- `darwin-arm64` - macOS Apple Silicon processors
+- `darwin-x64` - macOS Intel processors
+- `linux-arm64` - Linux ARM64 architecture
+- `linux-x64` - Linux x64 architecture
+- `windows-x64` - Windows x64 architecture
+
+### Matrix Compilation
+
+Execute simultaneous builds for complete platform coverage:
+
+```typescript
+// dler.config.ts
+import { defineConfig } from '@reliverse/rempts-core'
+
+export default defineConfig({
+  build: {
+    targets: [
+      'darwin-arm64',
+      'darwin-x64',
+      'linux-arm64',
+      'linux-x64',
+      'windows-x64'
+    ],
+    compress: true // Generate compressed .tar.gz archives
+  }
+})
+```
+
+```bash
+bunx rempts build --targets all
+```
+
+This produces the following distribution artifacts:
+```
+dist/
+├── darwin-arm64/
+│   └── cli
+├── darwin-x64/
+│   └── cli
+├── linux-arm64/
+│   └── cli
+├── linux-x64/
+│   └── cli
+└── windows-x64/
+    └── cli.exe
+```
+
+When compression is activated, additional archives are created:
+```
+dist/
+├── darwin-arm64.tar.gz
+├── darwin-x64.tar.gz
+├── linux-arm64.tar.gz
+├── linux-x64.tar.gz
+└── windows-x64.tar.gz
+```
+
+## Self-Contained Executables
+
+### Generating Single-File Binaries
+
+Rempts leverages Bun's compilation capabilities to produce runtime-embedded executables:
+
+```bash
+# Compile for current platform architecture
+bunx rempts build --targets native
+
+# Cross-compile for designated platforms
+bunx rempts build --targets darwin-arm64,linux-x64
+
+# Compile with performance optimizations
+bunx rempts build --targets native --minify --bytecode
+```
+
+### Binary Size Optimization
+
+Minimize executable footprint through strategic configuration:
+
+```typescript
+// dler.config.ts
+import { defineConfig } from '@reliverse/rempts-core'
+
+export default defineConfig({
+  build: {
+    targets: ['native'], // or explicit platform specifications
+    minify: true,
+    external: [
+      // Exclude substantial optional dependencies
+      'sharp',
+      'sqlite3',
+      '@prisma/client'
+    ]
+  }
+})
+```
+
+### Runtime Type Files in Distribution
+
+
+```typescript
+// dler.config.ts
+import { defineConfig } from '@reliverse/rempts-core'
+
+export default defineConfig({
+  name: 'my-cli',
+  version: '1.0.0',
+  build: {
+    entry: './cli.ts',
+    outdir: './dist'
+  }
+})
+```
+
+The generated type definitions provide:
+- **Automatic build inclusion** - Seamlessly bundled with your CLI
+- **Runtime type safety** - Complete TypeScript definitions available
+- **Production optimization** - Minified and tree-shaken for performance
+- **Universal compatibility** - Functional across all target architectures
+
+<Callout type="info">
+  Generated type files are automatically incorporated into distribution builds without requiring additional configuration.
+</Callout>
+
+### Code Signing (macOS)
+
+Apply cryptographic signatures to macOS executables:
+
+```bash
+# Compile the executable
+bunx rempts build --targets darwin-arm64
+
+# Apply code signature
+codesign --sign "Developer ID Application: Your Name" \
+  --options runtime \
+  --entitlements entitlements.plist \
+  dist/darwin-arm64/my-cli
+
+# Validate signature integrity
+codesign --verify --verbose dist/darwin-arm64/my-cli
+```
+
+## Distribution Strategies
+
+### 1. Direct Binary Distribution
+
+Host pre-compiled executables on your website or GitHub releases:
+
+```yaml
+# .github/workflows/release.yml
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Cross-platform compilation
+        run: bunx rempts build --targets all
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+          generate_release_notes: true
+```
+
+### 2. NPM Package Distribution
+
+Publish through NPM for streamlined installation:
+
+```json
+// package.json
+{
+  "name": "my-cli",
+  "version": "1.0.0",
+  "bin": {
+    "my-cli": "./dist/cli.js"
+  },
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "prepublishOnly": "bunx rempts build"
+  }
+}
+```
+
+```bash
+# Publish to NPM registry
+npm publish
+
+# Users can install globally via
+npm install -g my-cli
+# or execute directly with
+bunx my-cli
+```
+
+### 3. Homebrew (macOS/Linux)
+
+Create a Homebrew formula:
+
+```ruby
+# Formula/my-cli.rb
+class MyCli < Formula
+  desc "Description of my CLI"
+  homepage "https://github.com/username/my-cli"
+  version "1.0.0"
+  
+  if OS.mac? && Hardware::CPU.arm?
+    url "https://github.com/username/my-cli/releases/download/v1.0.0/darwin-arm64.tar.gz"
+    sha256 "abc123..."
+  elsif OS.mac?
+    url "https://github.com/username/my-cli/releases/download/v1.0.0/darwin-x64.tar.gz"
+    sha256 "def456..."
+  elsif OS.linux? && Hardware::CPU.arm?
+    url "https://github.com/username/my-cli/releases/download/v1.0.0/linux-arm64.tar.gz"
+    sha256 "ghi789..."
+  else
+    url "https://github.com/username/my-cli/releases/download/v1.0.0/linux-x64.tar.gz"
+    sha256 "jkl012..."
+  end
+  
+  def install
+    bin.install "my-cli"
+  end
+  
+  test do
+    system "#{bin}/my-cli", "--version"
+  end
+end
+```
+
+### 4. Container Distribution
+
+Construct a Docker container image:
+
+```dockerfile
+# Dockerfile
+FROM oven/bun:1-alpine AS builder
+
+WORKDIR /app
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile
+
+COPY . .
+RUN bunx rempts build --targets native
+
+FROM alpine:latest
+RUN apk add --no-cache libstdc++
+COPY --from=builder /app/dist/my-cli /usr/local/bin/my-cli
+
+ENTRYPOINT ["my-cli"]
+```
+
+```bash
+# Build and distribute container
+docker build -t username/my-cli:latest .
+docker push username/my-cli:latest
+
+# Users execute via container
+docker run username/my-cli --help
+```
+
+### 5. Package Managers
+
+#### Scoop (Windows)
+
+```json
+// my-cli.json
+{
+  "version": "1.0.0",
+  "description": "Description of my CLI",
+  "homepage": "https://github.com/username/my-cli",
+  "license": "MIT",
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/username/my-cli/releases/download/v1.0.0/windows-x64.tar.gz",
+      "hash": "sha256:abc123..."
+    }
+  },
+  "bin": "my-cli.exe"
+}
+```
+
+#### AUR (Arch Linux)
+
+```bash
+# PKGBUILD
+pkgname=my-cli
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Description of my CLI"
+arch=('x86_64' 'aarch64')
+url="https://github.com/username/my-cli"
+license=('MIT')
+source_x86_64=("$url/releases/download/v$pkgver/linux-x64.tar.gz")
+source_aarch64=("$url/releases/download/v$pkgver/linux-arm64.tar.gz")
+
+package() {
+  install -Dm755 my-cli "$pkgdir/usr/bin/my-cli"
+}
+```
+
+## Automated Release Management
+
+### Leveraging rempts release
+
+Rempts includes an automated release system that streamlines the publication workflow:
+
+```bash
+# Generate a new release
+bunx rempts release
+
+# Release with explicit version specification
+bunx rempts release --version 2.0.0
+
+# Release excluding NPM publication
+bunx rempts release --no-npm
+
+# Perform dry-run validation
+bunx rempts release --dry-run
+```
+
+### Release Configuration Management
+
+```typescript
+// dler.config.ts
+import { defineConfig } from '@reliverse/rempts-core'
+
+export default defineConfig({
+  release: {
+    npm: true,              // Enable NPM publication
+    github: true,           // Generate GitHub release
+    tagFormat: 'v${version}', // Git tag naming convention
+    conventionalCommits: true, // Adopt conventional commit standards
+
+    // Pre-release execution hook
+    beforeRelease: async (version) => {
+      // Perform changelog updates, documentation refresh, etc.
+    },
+
+    // Post-release execution hook
+    afterRelease: async (version) => {
+      // Execute user notifications, website updates, etc.
+  }
+})
+```
+
+### Release Workflow
+
+1. **Version Bump**
+   ```bash
+   # Automatic version based on commits
+   rempts release
+   
+   # Manual version
+   rempts release --version 2.0.0
+   ```
+
+2. **Build All Platforms**
+   ```bash
+   rempts build --targets all
+   ```
+
+3. **Create Git Tag**
+   ```bash
+   git tag v2.0.0
+   git push origin v2.0.0
+   ```
+
+4. **GitHub Release**
+   - Upload built artifacts
+   - Generate release notes
+   - Publish release
+
+5. **Publish to npm**
+   ```bash
+   npm publish
+   ```
+
+## Installation Scripts
+
+### Universal Install Script
+
+Create an install script for easy installation:
+
+```bash
+#!/bin/sh
+# install.sh
+
+set -e
+
+VERSION="1.0.0"
+REPO="username/my-cli"
+
+# Detect OS and architecture
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m)
+
+case "$OS" in
+  darwin) OS="darwin" ;;
+  linux) OS="linux" ;;
+  *) echo "Unsupported OS: $OS"; exit 1 ;;
+esac
+
+case "$ARCH" in
+  x86_64) ARCH="x64" ;;
+  aarch64|arm64) ARCH="arm64" ;;
+  *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
+esac
+
+# Download URL
+URL="https://github.com/$REPO/releases/download/v$VERSION/$OS-$ARCH.tar.gz"
+
+# Download and install
+echo "Downloading my-cli..."
+curl -fsSL "$URL" | tar -xz -C /tmp
+sudo mv /tmp/my-cli /usr/local/bin/
+sudo chmod +x /usr/local/bin/my-cli
+
+echo "my-cli installed successfully!"
+my-cli --version
+```
+
+Users install with:
+```bash
+curl -fsSL https://example.com/install.sh | sh
+```
+
+## Version Management
+
+### Semantic Versioning
+
+Follow semantic versioning (semver):
+
+- **Major** (1.0.0 → 2.0.0): Breaking changes
+- **Minor** (1.0.0 → 1.1.0): New features
+- **Patch** (1.0.0 → 1.0.1): Bug fixes
+
+### Version Display
+
+```typescript
+// src/index.ts
+import { createCLI } from '@reliverse/rempts-core'
+import { version } from '../package.json'
+
+const cli = createCLI({
+  name: 'my-cli',
+  version, // Automatically shows with --version
+  description: 'My awesome CLI'
+})
+```
+
+### Update Notifications
+
+Notify users of new versions:
+
+```typescript
+// src/utils/check-update.ts
+import { getLatestVersion } from '@reliverse/rempts-utils'
+
+export async function checkForUpdates(currentVersion: string) {
+  try {
+    const latest = await getLatestVersion('my-cli')
+    if (latest > currentVersion) {
+      console.log(`\n  Update available: ${currentVersion} → ${latest}`)
+      console.log('  Run: npm update -g my-cli\n')
+    }
+  } catch {
+    // Ignore update check failures
+  }
+}
+```
+
+## Best Practices
+
+1. **Test Before Release**: Run tests on all target platforms
+2. **Include License**: Add LICENSE file to distributions
+3. **Document Installation**: Provide clear installation instructions
+4. **Version Everything**: Tag releases and maintain changelog
+5. **Automate Releases**: Use CI/CD for consistent releases
+6. **Sign Binaries**: Code sign for security and trust
+7. **Provide Checksums**: Include SHA256 checksums for verification
+
+## Troubleshooting
+
+### Common Issues
+
+**Binary not executable:**
+```bash
+chmod +x ./my-cli
+```
+
+**Missing dependencies:**
+```bash
+# Bundle all dependencies
+rempts build --targets native --external none
+```
+
+**Large binary size:**
+```bash
+# Enable optimizations
+rempts build --targets native --minify --bytecode
+```
+
+**Platform-specific issues:**
+```typescript
+// Handle platform differences
+if (process.platform === 'win32') {
+  // Windows-specific code
+}
+```
+
+## Next Steps
+
+- [Testing](/docs/libs/rempts/guides/testing) - Test before distribution
+- [rempts CLI](/docs/rempts-cli) - CLI command reference
+- [Configuration](/docs/libs/rempts/core-concepts/configuration) - Build configuration options

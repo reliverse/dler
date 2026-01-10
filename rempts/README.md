@@ -34,7 +34,7 @@ rempts dev
 
 ## Examples
 
-rempts is validator agnostic. It uses [Standard Schema v1](https://github.com/standard-schema/spec) for validation under the hood, so you can use any validator you want.
+Rempts is validator agnostic. It uses [Standard Schema v1](https://github.com/standard-schema/spec) for validation under the hood, so you can use any validator you want.
 
 ```typescript
 import { defineCommand, option } from '@reliverse/rempts-core'

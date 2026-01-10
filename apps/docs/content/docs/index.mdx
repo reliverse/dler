@@ -1,13 +1,208 @@
 ---
-title: Hello World
-description: Your first document
+title: Welcome to Reliverse
+description: A complete ecosystem for modern JavaScript/TypeScript development
 ---
 
-Welcome to the docs! You can start writing documents in `/content/docs`.
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
-## What is Next?
+# Reliverse
+
+The complete ecosystem for modern JavaScript/TypeScript development. Build, ship, and scale with confidence using our integrated suite of tools designed for the Bun runtime.
+
+## What is Reliverse?
+
+Reliverse is a comprehensive ecosystem that provides everything you need for modern JavaScript/TypeScript development. From CLI frameworks to build tools, monorepo management to project scaffolding, Reliverse offers a unified experience that makes development faster, safer, and more enjoyable.
 
 <Cards>
-  <Card title="Learn more about Next.js" href="https://nextjs.org/docs" />
-  <Card title="Learn more about Fumadocs" href="https://fumadocs.dev" />
+  <Card title="Rempts CLI Framework" description="Build type-safe CLIs with Rempts - full TypeScript support, plugin system, and cross-platform distribution">
+    ```ts
+    // Type-safe CLI development with Bun
+    export default defineCommand({
+      name: 'deploy',
+      options: { env: option(z.enum(['dev', 'prod'])) },
+      handler: async ({ flags }) => {
+        // Fully typed, zero config
+      }
+    })
+    ```
+  </Card>
+  <Card title="Project Management" description="RSE - Bootstrap projects, manage monorepos, and automate workflows with AI-powered tools">
+    ```bash
+    # Create projects, clone templates, deploy
+    rse cli
+    rse deploy
+    ```
+  </Card>
+  <Card title="Monorepo Tools" description="Dler - Advanced monorepo management with Turborepo caching, automated builds, and dependency management">
+    ```bash
+    # Manage complex monorepos effortlessly
+    dler build
+    dler publish
+    dler clean
+    ```
+  </Card>
+  <Card title="Build System" description="High-performance build tools optimized for Bun with advanced bundling, TypeScript support, and asset optimization">
+    ```ts
+    // Fast builds, zero config
+    export default defineConfig({
+      entry: './src/index.ts',
+      outDir: './dist'
+    })
+    ```
+  </Card>
 </Cards>
+
+## Quick Start
+
+<Tabs groupId="getting-started" defaultValue="cli">
+  <Tab value="cli" label="Create a CLI">
+    ```bash
+    # Create a new CLI with Rempts
+    bunx rempts my-cli
+    cd my-cli
+
+    # Start development with hot reload
+    rempts dev
+
+    # Build for production
+    rempts build
+    ```
+  </Tab>
+  <Tab value="web" label="Create a Web App">
+    ```bash
+    # Use RSE to bootstrap a web project
+    bunx @reliverse/rse@latest cli
+    # Select "Create a brand new project"
+    # Choose your preferred stack
+    ```
+  </Tab>
+  <Tab value="monorepo" label="Setup Monorepo">
+    ```bash
+    # Create a monorepo with Dler
+    bunx @reliverse/dler@latest init
+    cd my-monorepo
+
+    # Add packages and start developing
+    dler add @reliverse/build
+    ```
+  </Tab>
+</Tabs>
+
+## Core Components
+
+### 🚀 Rempts - CLI Framework
+
+Production-ready CLI development with Bun:
+- **Type-safe** - Automatic type inference from schemas
+- **Plugin system** - Extensible with Zustand stores
+- **File-based commands** - Auto-discovery from directory structure
+- **Rich context** - Shell, prompts, spinners, terminal info
+
+### 🛠️ RSE - Project Ecosystem
+
+Your all-in-one development companion:
+- **Project bootstrapping** - Multiple stacks and templates
+- **AI integration** - Smart code generation and refactoring
+- **Framework support** - Next.js, React, Vue, Svelte, Astro
+- **Automation** - GitHub, Vercel, ESLint, Prettier setup
+
+### 📦 Dler - Monorepo Management
+
+Advanced monorepo tooling:
+- **Turborepo integration** - Remote caching and parallel builds
+- **Dependency management** - Automated package handling
+- **Build orchestration** - Cross-package builds and publishing
+- **Workspace utilities** - Clean, update, and maintenance tools
+
+### 🔨 Build Tools
+
+High-performance build system:
+- **Bun optimized** - Native TypeScript, fast bundling
+- **Asset processing** - CSS, images, fonts, workers
+- **TypeScript declarations** - Automatic .d.ts generation
+- **Framework plugins** - React refresh, CSS modules, SVG
+
+## Why Reliverse?
+
+### Designed for Modern JavaScript
+
+Built specifically for the Bun runtime with:
+- **Native performance** - Compiled JavaScript execution
+- **TypeScript first** - Zero-config type checking and generation
+- **ESM everywhere** - Modern module system throughout
+- **Fast tooling** - Sub-second cold starts and builds
+
+### Developer Experience First
+
+Every tool in Reliverse prioritizes DX:
+- **Zero config** - Sensible defaults, works out of the box
+- **Type safety** - Full TypeScript support with inference
+- **Hot reload** - Instant feedback during development
+- **Rich tooling** - Linting, testing, building, deployment
+
+### Ecosystem Approach
+
+Unlike fragmented toolchains, Reliverse provides:
+- **Integrated experience** - Tools work together seamlessly
+- **Consistent APIs** - Unified patterns across all tools
+- **Shared conventions** - Predictable project structures
+- **Monorepo ready** - Built for complex, multi-package projects
+
+## Popular Templates
+
+<Cards>
+  <Card
+    title="Relivator"
+    description="Next.js 15+ template with advanced features, authentication, and modern tooling"
+    href="/docs/templates/relivator"
+  />
+  <Card
+    title="Versator"
+    description="Versel-like deployment platform built with Next.js and advanced caching"
+    href="/docs/templates/versator"
+  />
+  <Card
+    title="Rempts CLI"
+    description="Example CLI built with Rempts framework showcasing all features"
+    href="/docs/examples/hello-world"
+  />
+</Cards>
+
+## Getting Started
+
+<Cards>
+  <Card
+    title="Rempts CLI Framework"
+    description="Build type-safe command-line tools"
+    href="/docs/libs/rempts"
+  />
+  <Card
+    title="RSE Project Manager"
+    description="Bootstrap and manage projects"
+    href="/docs/libs/rse"
+  />
+  <Card
+    title="Dler Monorepo Tool"
+    description="Advanced monorepo management"
+    href="/docs/libs/dler"
+  />
+  <Card
+    title="Available Templates"
+    description="Pre-built project templates"
+    href="/docs/templates"
+  />
+</Cards>
+
+## Community & Support
+
+Join thousands of developers building with Reliverse:
+
+- **GitHub** - [reliverse/dler](https://github.com/reliverse/dler)
+- **Discord** - [Join our community](https://discord.gg/Pb8uKbwpsJ)
+- **Documentation** - [Complete guides and API reference](/docs/intro)
+- **Sponsor** - [Support development](https://github.com/sponsors/blefnk)
+
+---
+
+*Built with ❤️ for the JavaScript ecosystem*

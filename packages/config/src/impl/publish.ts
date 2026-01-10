@@ -1,5 +1,6 @@
 // packages/config/src/impl/publish.ts
 
+import type { LoadedConfig } from "./config-loader";
 import { type BaseConfig, mergeConfig, resolvePackageConfig } from "./core";
 import type { BumpType } from "./types";
 
@@ -65,5 +66,31 @@ export const mergePublishOptions = <T extends Record<string, any>>(
   dlerConfig: { publish?: PublishConfig } | null
 ): T => {
   const packageConfig = getPackagePublishConfig(packageName, dlerConfig);
+  return mergeConfig(cliOptions, packageConfig);
+};
+
+// ============================================================================
+// Unified Configuration (works with dler.config.ts)
+// ============================================================================
+
+/**
+ * Get package-specific publish configuration from dler.config.ts (unified approach)
+ */
+export const getPackagePublishConfigUnified = (
+  packageName: string,
+  dlerConfig: LoadedConfig | null
+): PackagePublishConfig | undefined => {
+  return resolvePackageConfig<PackagePublishConfig>(packageName, dlerConfig?.publish);
+};
+
+/**
+ * Merge publish options with package-specific configuration from dler.config.ts (unified approach)
+ */
+export const mergePublishOptionsUnified = <T extends Record<string, any>>(
+  cliOptions: T,
+  packageName: string,
+  dlerConfig: LoadedConfig | null
+): T => {
+  const packageConfig = getPackagePublishConfigUnified(packageName, dlerConfig);
   return mergeConfig(cliOptions, packageConfig);
 };

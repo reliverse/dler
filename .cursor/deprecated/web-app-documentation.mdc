@@ -81,7 +81,6 @@ const cli = await createCLI({
 - Document plugin options interface
 - Explain store properties
 - Show lifecycle hook usage
-```
 
 ## Development
 
@@ -100,7 +99,7 @@ const cli = await createCLI({
 
 - Deployed to Vercel for Next.js hosting
 - Automatic deployments from Git pushes
-- Custom domain: `rempts.dev` with `www.dler.dev` alias
+- Custom domain: `docs.reliverse.org` with `www.dler.dev` alias
 
 ### Deployment Workflow
 

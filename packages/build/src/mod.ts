@@ -7,7 +7,7 @@ import {
   getPackageBuildConfig,
   mergeBuildOptions,
 } from "@reliverse/config/impl/build";
-import type { DlerConfig } from "@reliverse/config/impl/core";
+import type { LoadedConfig } from "@reliverse/config";
 import {
   findMonorepoRoot,
   loadDlerConfig,
@@ -539,7 +539,7 @@ const resolveOutputDir = async (packagePath: string): Promise<string> => {
 
 const resolvePackageInfo = async (
   packagePath: string,
-  dlerConfig: DlerConfig | null
+  dlerConfig: LoadedConfig | null
 ): Promise<PackageInfo | null> => {
   const pkgJsonPath = join(packagePath, "package.json");
 
@@ -650,78 +650,118 @@ const compileToExecutable = async (
     return;
   }
 
-  const executableName =
-    entryPoint
-      .split("/")
-      .pop()
-      ?.split("\\")
-      .pop()
-      ?.replace(/\.(ts|js|mjs|cjs)$/, "") || "app";
-  const executablePath = join(
-    pkg.outputDir,
-    executableName + (process.platform === "win32" ? ".exe" : "")
-  );
-
-  // Ensure output directory exists
-  if (!existsSync(pkg.outputDir)) {
-    mkdirSync(pkg.outputDir, { recursive: true });
+  // Determine targets - from options.targets, or single target from options.target
+  let targets: string[] = [];
+  if (options.targets) {
+    const targetsInput = Array.isArray(options.targets) ? options.targets : [options.targets];
+    for (const target of targetsInput) {
+      if (target === "all") {
+        targets.push("darwin-arm64", "darwin-x64", "linux-arm64", "linux-x64", "windows-x64");
+      } else if (target === "native") {
+        const platform = process.platform === "darwin" ? "darwin" : process.platform === "win32" ? "windows" : "linux";
+        const arch = process.arch === "arm64" ? "arm64" : "x64";
+        targets.push(`${platform}-${arch}`);
+      } else {
+        targets.push(target);
+      }
+    }
+    // Remove duplicates
+    targets = [...new Set(targets)];
+  } else {
+    // Single target compilation (backward compatible)
+    const platform = process.platform === "darwin" ? "darwin" : process.platform === "win32" ? "windows" : "linux";
+    const arch = process.arch === "arm64" ? "arm64" : "x64";
+    targets = [`${platform}-${arch}`];
   }
 
-  await relinka.info(
-    `🔨 Compiling ${pkg.name} to executable: ${executablePath}`
-  );
+  const isMultiTarget = targets.length > 1;
+  const { $ } = await import("bun");
 
-  try {
-    const buildConfig: any = {
-      entrypoints: [entryPoint],
-      outfile: executablePath,
-      compile: true,
-      target: options.target || "bun",
-      format: options.format || "cjs",
-    };
+  // Build for each target platform
+  for (const platform of targets) {
+    const shouldCreateSubdir = isMultiTarget;
+    const targetDir = shouldCreateSubdir ? join(pkg.outputDir, platform) : pkg.outputDir;
 
-    // Add Windows-specific metadata if on Windows
-    if (process.platform === "win32") {
-      if (options.windowsHideConsole)
-        buildConfig.windowsHideConsole = options.windowsHideConsole;
-      if (options.windowsIcon) buildConfig.windowsIcon = options.windowsIcon;
-      if (options.windowsTitle) buildConfig.windowsTitle = options.windowsTitle;
-      if (options.windowsPublisher)
-        buildConfig.windowsPublisher = options.windowsPublisher;
-      if (options.windowsVersion)
-        buildConfig.windowsVersion = options.windowsVersion;
-      if (options.windowsDescription)
-        buildConfig.windowsDescription = options.windowsDescription;
-      if (options.windowsCopyright)
-        buildConfig.windowsCopyright = options.windowsCopyright;
+    // Ensure output directory exists
+    if (!existsSync(targetDir)) {
+      mkdirSync(targetDir, { recursive: true });
     }
 
-    // Use Bun's CLI approach for compilation instead of the API
-    const { $ } = await import("bun");
+    // Determine output filename
+    const ext = entryPoint.split(".").pop() || "";
+    const nameWithoutExt = ext ? entryPoint.slice(0, -ext.length - 1) : entryPoint;
+    const baseName = nameWithoutExt.split("/").pop()?.split("\\").pop() || "app";
+    const isWindows = platform.includes("windows");
+    const executableName = isWindows ? `${baseName}.exe` : baseName;
+    const executablePath = join(targetDir, executableName);
+
+    await relinka.info(
+      `🔨 Compiling ${pkg.name} for ${platform}: ${executablePath}`
+    );
 
     try {
-      // For now, use the basic compilation without Windows-specific options
-      // TODO: Add Windows-specific options support later (for some reason build is failing)
-      const cmd = $`bun build ${entryPoint} --outfile ${executablePath} --compile --target ${buildConfig.target || "bun"}`;
+      // Build compile command
+      const compileArgs = [
+        "build",
+        entryPoint,
+        "--compile",
+        "--outfile",
+        executablePath,
+        "--target",
+        `bun-${platform}`, // Bun requires the bun- prefix
+      ];
 
-      await cmd.cwd(pkg.path).quiet();
+      if (options.minify ?? true) {
+        compileArgs.push("--minify");
+      }
+
+      if (options.sourcemap ?? false) {
+        compileArgs.push("--sourcemap");
+      }
+
+      if (options.bytecode) {
+        compileArgs.push("--bytecode");
+      }
+
+      // Add external modules if specified
+      if (options.external) {
+        const externals = Array.isArray(options.external) ? options.external : [options.external];
+        for (const ext of externals) {
+          compileArgs.push("--external", ext);
+        }
+      }
+
+      const result = await $`bun ${compileArgs}`.cwd(pkg.path).quiet();
+
+      if (result.exitCode !== 0) {
+        throw new Error(`Compilation failed for ${platform}`);
+      }
+
+      // Check if the executable was actually created
+      if (!existsSync(executablePath)) {
+        throw new Error(`Executable was not created at ${executablePath}`);
+      }
+
+      const stats = statSync(executablePath);
+      await relinka.success(
+        `✅ ${pkg.name} (${platform}): Executable created (${formatBytes(stats.size)})`
+      );
     } catch (error) {
-      await relinka.error(`❌ Bun CLI compilation failed: ${error}`);
+      await relinka.error(`❌ ${pkg.name} (${platform}): Compilation failed - ${error}`);
       throw error;
     }
+  }
 
-    // Check if the executable was actually created
-    if (!existsSync(executablePath)) {
-      throw new Error(`Executable was not created at ${executablePath}`);
+  // Compress if configured and multiple targets
+  if (options.compress && isMultiTarget) {
+    await relinka.info(`📦 Compressing builds for ${pkg.name}...`);
+    for (const platform of targets) {
+      const platformDir = join(pkg.outputDir, platform);
+      if (existsSync(platformDir)) {
+        await $`cd ${pkg.outputDir} && tar -czf ${platform}.tar.gz ${platform}`.quiet();
+        await $`rm -rf ${platformDir}`.quiet();
+      }
     }
-
-    const stats = statSync(executablePath);
-    await relinka.success(
-      `✅ ${pkg.name}: Executable created (${formatBytes(stats.size)})`
-    );
-  } catch (error) {
-    await relinka.error(`❌ ${pkg.name}: Compilation failed - ${error}`);
-    throw error;
   }
 };
 
@@ -1132,7 +1172,17 @@ export const buildPackage = async (
   // Debug logging
   debugLogger.logConfigResolution(pkg, pkg.buildConfig ? "dler" : "default");
   debugLogger.logBuildOptions(mergedOptions, pkg);
-  debugLogger.logEntryPoints(pkg);
+  // Use entry from options if provided, otherwise use detected entry points
+  const entryPoints = mergedOptions.entry
+    ? (Array.isArray(mergedOptions.entry) ? mergedOptions.entry : [mergedOptions.entry]).map(
+        (ep) => resolve(pkg.path, ep)
+      )
+    : pkg.entryPoints;
+
+  // Use outdir from options if provided
+  const outputDir = mergedOptions.outdir ? resolve(pkg.path, mergedOptions.outdir) : pkg.outputDir;
+
+  debugLogger.logEntryPoints({ ...pkg, entryPoints });
 
   const startTime = Date.now();
 
@@ -1146,8 +1196,8 @@ export const buildPackage = async (
     }
 
     const buildConfig: any = {
-      entrypoints: pkg.entryPoints,
-      outdir: pkg.outputDir,
+      entrypoints: entryPoints,
+      outdir: outputDir,
       target: validTarget,
       format: validFormat,
       sourcemap: validSourcemap,
@@ -1449,7 +1499,13 @@ export const buildPackage = async (
 
     // After successful build, check if compilation is requested
     if (mergedOptions.compile && result.success && result.outputs) {
-      await compileToExecutable(pkg, result.outputs, mergedOptions);
+      // Create a modified package info with updated entry points and output dir
+      const modifiedPkg = {
+        ...pkg,
+        entryPoints,
+        outputDir,
+      };
+      await compileToExecutable(modifiedPkg, result.outputs, mergedOptions);
     }
 
     // Prepare package.json for publishing (runs for all successful builds)

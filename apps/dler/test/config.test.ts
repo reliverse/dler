@@ -2,8 +2,8 @@ import { expect, test } from "bun:test";
 import { existsSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { loadConfig } from "@reliverse/config";
 import { defineConfig, remptsConfigSchema } from "@reliverse/rempts-core";
-import { loadConfig } from "../src/config";
 
 test("defineConfig - returns config as-is", () => {
   const config = {
@@ -76,7 +76,7 @@ test("loadConfig - loads config from file", async () => {
   try {
     const config = await loadConfig(tmpDir);
     expect(config.name).toBe("test-cli");
-    expect(config.build?.entry).toBe("src/cli.ts");
+    expect(config.build?.global?.entry).toBe("src/cli.ts");
   } finally {
     // Cleanup
     if (existsSync(configPath)) {

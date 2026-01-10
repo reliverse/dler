@@ -69,7 +69,7 @@ export function QuickStart() {
           </div>
 
           <div className="mt-12 text-center">
-            <Link href="/libraries/rempts/getting-started">
+            <Link href="/docs/libs/rempts/getting-started">
               <Button className="gap-2" size="lg" variant="outline">
                 Read the Full Guide
                 <ArrowRight className="h-4 w-4" />

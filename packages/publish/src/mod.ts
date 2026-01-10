@@ -18,6 +18,15 @@ import { re } from "@reliverse/relico";
 import { logger } from "@reliverse/relinka";
 import { readPackageJSON, writePackageJSON } from "@reliverse/typerso";
 import { config } from "dotenv";
+import {
+  buildProject,
+  bumpVersionSimple,
+  checkGitClean,
+  createGitHubRelease,
+  createGitTag,
+  getGitHubRepo,
+  runTests,
+} from "./impl/release";
 
 // ============================================================================
 // Constants
@@ -59,10 +68,6 @@ export interface PublishConfig extends BaseConfig {
   }>;
 }
 
-export interface DlerConfig {
-  publish?: PublishConfig;
-}
-
 export interface PublishOptions {
   dryRun?: boolean;
   tag?: string;
@@ -86,6 +91,13 @@ export interface PublishOptions {
   bunRegistry?: string;
   skipTip2FA?: boolean;
   filter?: string | string[];
+  // Release workflow options
+  release?: boolean; // Enable full release workflow
+  test?: boolean; // Run tests before publishing (default: true when release=true)
+  build?: boolean; // Build before publishing (default: true when release=true)
+  github?: boolean; // Create GitHub release after publishing
+  gitTag?: boolean; // Create git tag after version bump (default: true when release=true)
+  version?: string | "patch" | "minor" | "major"; // Version to release (overrides bump)
 }
 
 export type { PackageKind, RegistryType } from "@reliverse/config/impl/publish";
@@ -704,39 +716,32 @@ async function preparePackageForPublishing(
       logger.debug("Created backup of original package.json");
     }
 
-    // Handle version bumping (skip if bumpDisable is true or dry-run is true or shouldBumpVersion is false)
-    if (
-      shouldBumpVersion &&
-      options.bump &&
-      !options.bumpDisable &&
-      !options.dryRun &&
-      pkg.version
-    ) {
-      if (options.verbose) {
-        logger.debug(`Bumping version: ${pkg.version} -> ${options.bump}`);
-      }
-      const bumpResult = bumpVersion(pkg.version, options.bump);
-      if (!bumpResult) {
+    // Handle version bumping using bumpedVersions map (populated in publishAllPackages)
+    if (shouldBumpVersion && !options.dryRun && bumpedVersions && pkg.name) {
+      const bumpedVersion = bumpedVersions.get(pkg.name);
+      if (bumpedVersion) {
         if (options.verbose) {
-          logger.debug(`Invalid version bump: ${options.bump}`);
+          logger.log(
+            re.blue(
+              `  Bumping version from ${re.bold(pkg.version || "none")} to ${re.bold(re.green(bumpedVersion))}`
+            )
+          );
         }
-        return {
-          success: false,
-          error: `Invalid version bump: ${options.bump}`,
-        };
+        pkg.version = bumpedVersion;
+      } else if (options.bump && !options.bumpDisable && pkg.version) {
+        // Fallback: bump version directly if not in map (for single package publish)
+        const bumpResult = bumpVersion(pkg.version, options.bump);
+        if (bumpResult) {
+          if (options.verbose) {
+            logger.log(
+              re.blue(
+                `  Bumping version from ${re.bold(pkg.version)} to ${re.bold(re.green(bumpResult.bumped))} (${options.bump})`
+              )
+            );
+          }
+          pkg.version = bumpResult.bumped;
+        }
       }
-      if (options.verbose) {
-        logger.log(
-          re.blue(
-            `  Bumping version from ${re.bold(pkg.version)} to ${re.bold(re.green(bumpResult.bumped))} (${options.bump})`
-          )
-        );
-      }
-      pkg.version = bumpResult.bumped;
-    } else if (options.verbose) {
-      logger.debug(
-        `Skipping version bump: shouldBumpVersion=${shouldBumpVersion}, bump=${options.bump}, bumpDisable=${options.bumpDisable}, dryRun=${options.dryRun}`
-      );
     }
 
     // Add publishConfig with access level
@@ -1416,6 +1421,41 @@ export async function publishAllPackages(
     }
     const dlerConfig = await loadDlerConfig(cwd);
 
+    // Release workflow: pre-publish steps
+    if (options.release) {
+      const shouldTest = options.test !== false; // Default to true when release=true
+      const shouldBuild = options.build !== false; // Default to true when release=true
+
+      // Check git is clean
+      if (shouldTest || shouldBuild) {
+        await checkGitClean(options.dryRun ?? false);
+      }
+
+      // Run tests
+      if (shouldTest && !options.dryRun) {
+        logger.info("Running tests...");
+        try {
+          await runTests();
+          logger.success("✓ Tests passed");
+        } catch (error) {
+          logger.error("✗ Tests failed");
+          throw error;
+        }
+      }
+
+      // Build project
+      if (shouldBuild && !options.dryRun) {
+        logger.info("Building project...");
+        try {
+          await buildProject();
+          logger.success("✓ Build complete");
+        } catch (error) {
+          logger.error("✗ Build failed");
+          throw error;
+        }
+      }
+    }
+
     if (options.verbose) {
       logger.debug("Discovering workspace packages...");
     }
@@ -1509,42 +1549,73 @@ export async function publishAllPackages(
 
     for (const pkg of packagesToPublish) {
       const mergedOptions = mergePublishOptions(options, pkg.name, dlerConfig);
-      const bumpType = mergedOptions.bump || (mergedOptions.bumpDisable ? undefined : "patch");
 
-      if (options.verbose) {
-        logger.debug(
-          `Pre-bumping ${pkg.name}: current=${pkg.pkg.version}, bumpType=${bumpType ?? "none"}, bumpDisable=${mergedOptions.bumpDisable}`
-        );
-      }
-
-      if (bumpType && !mergedOptions.bumpDisable && pkg.pkg.version) {
-        try {
-          const nextVersion = getNextVersion(pkg.pkg.version, bumpType);
-          if (nextVersion) {
-            bumpedVersions.set(pkg.name, nextVersion);
-            if (options.verbose) {
-              logger.log(
-                re.blue(
-                  `  ${re.bold(pkg.name)}: ${pkg.pkg.version} -> ${re.bold(re.green(nextVersion))}`
-                )
-              );
-            }
-          } else if (options.verbose) {
-            logger.debug(`Failed to calculate next version for ${pkg.name}`);
-          }
-        } catch (error) {
-          // Skip if can't bump
-          if (options.verbose) {
-            logger.debug(
-              `Error bumping ${pkg.name}: ${error instanceof Error ? error.message : String(error)}`
+      // Handle release version option
+      if (options.release && options.version) {
+        let releaseVersion: string;
+        if (
+          typeof options.version === "string" &&
+          !["patch", "minor", "major"].includes(options.version)
+        ) {
+          releaseVersion = options.version; // Explicit version
+        } else {
+          // Bump from current version
+          if (pkg.pkg.version) {
+            releaseVersion = bumpVersionSimple(
+              pkg.pkg.version,
+              (options.version || "patch") as "patch" | "minor" | "major"
             );
+          } else {
+            releaseVersion = "1.0.0"; // Default if no version
           }
         }
-      } else if (pkg.pkg.version) {
-        // If not bumping, use current version
-        bumpedVersions.set(pkg.name, pkg.pkg.version);
+        bumpedVersions.set(pkg.name, releaseVersion);
         if (options.verbose) {
-          logger.debug(`Using current version for ${pkg.name}: ${pkg.pkg.version}`);
+          logger.log(
+            re.blue(
+              `  ${re.bold(pkg.name)}: ${pkg.pkg.version || "none"} -> ${re.bold(re.green(releaseVersion))} (release)`
+            )
+          );
+        }
+      } else {
+        // Normal version bumping
+        const bumpType = mergedOptions.bump || (mergedOptions.bumpDisable ? undefined : "patch");
+
+        if (options.verbose) {
+          logger.debug(
+            `Pre-bumping ${pkg.name}: current=${pkg.pkg.version}, bumpType=${bumpType ?? "none"}, bumpDisable=${mergedOptions.bumpDisable}`
+          );
+        }
+
+        if (bumpType && !mergedOptions.bumpDisable && pkg.pkg.version) {
+          try {
+            const nextVersion = getNextVersion(pkg.pkg.version, bumpType);
+            if (nextVersion) {
+              bumpedVersions.set(pkg.name, nextVersion);
+              if (options.verbose) {
+                logger.log(
+                  re.blue(
+                    `  ${re.bold(pkg.name)}: ${pkg.pkg.version} -> ${re.bold(re.green(nextVersion))}`
+                  )
+                );
+              }
+            } else if (options.verbose) {
+              logger.debug(`Failed to calculate next version for ${pkg.name}`);
+            }
+          } catch (error) {
+            // Skip if can't bump
+            if (options.verbose) {
+              logger.debug(
+                `Error bumping ${pkg.name}: ${error instanceof Error ? error.message : String(error)}`
+              );
+            }
+          }
+        } else if (pkg.pkg.version) {
+          // If not bumping, use current version
+          bumpedVersions.set(pkg.name, pkg.pkg.version);
+          if (options.verbose) {
+            logger.debug(`Using current version for ${pkg.name}: ${pkg.pkg.version}`);
+          }
         }
       }
     }
@@ -1624,6 +1695,57 @@ export async function publishAllPackages(
       );
     }
 
+    // Release workflow: post-publish steps
+    if (options.release && !hasErrors && !options.dryRun) {
+      const shouldGitTag = options.gitTag !== false; // Default to true when release=true
+      const shouldGitHub = options.github ?? dlerConfig?.release?.github ?? false;
+
+      // Get the version that was published (from first successful package or release version)
+      let publishedVersion: string | undefined;
+      if (
+        options.version &&
+        typeof options.version === "string" &&
+        !["patch", "minor", "major"].includes(options.version)
+      ) {
+        publishedVersion = options.version;
+      } else {
+        const firstSuccess = results.find((r) => r.success && r.version);
+        publishedVersion = firstSuccess?.version;
+      }
+
+      if (publishedVersion) {
+        // Create git tag
+        if (shouldGitTag) {
+          logger.info("Creating git tag...");
+          try {
+            await createGitTag(publishedVersion, dlerConfig, options.tag);
+            logger.success("✓ Git tag created");
+          } catch (error) {
+            logger.error("✗ Git tag failed");
+            if (options.verbose) {
+              logger.error(error instanceof Error ? error.message : String(error));
+            }
+          }
+        }
+
+        // Create GitHub release
+        if (shouldGitHub) {
+          logger.info("Creating GitHub release...");
+          try {
+            await createGitHubRelease(publishedVersion, dlerConfig);
+            logger.success("✓ GitHub release created");
+            const repo = await getGitHubRepo();
+            logger.info(`GitHub: https://github.com/${repo}/releases/tag/v${publishedVersion}`);
+          } catch (error) {
+            logger.error("✗ GitHub release failed");
+            if (options.verbose) {
+              logger.error(error instanceof Error ? error.message : String(error));
+            }
+          }
+        }
+      }
+    }
+
     return {
       results,
       hasErrors,
@@ -1648,3 +1770,14 @@ export async function publishAllPackages(
     };
   }
 }
+
+// Export release utilities (for internal use)
+export {
+  buildProject,
+  bumpVersionSimple,
+  checkGitClean,
+  createGitHubRelease,
+  createGitTag,
+  getGitHubRepo,
+  runTests,
+} from "./impl/release";

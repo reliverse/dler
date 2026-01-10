@@ -1,0 +1,383 @@
+---
+title: Building Your First CLI
+description: Complete walkthrough of building a CLI with Rempts
+---
+
+# Building Your First CLI
+
+This comprehensive guide demonstrates creating a fully-featured CLI application using Rempts' file-based command system and type-safe architecture.
+
+## Prerequisites
+
+- [Bun](https://bun.sh) runtime (v1.0 or later)
+- Fundamental TypeScript proficiency
+- Terminal/command line interface
+
+## Project Initialization
+
+Bootstrap your CLI project using the intelligent scaffolding tool:
+
+```bash
+bunx @reliverse/rempts todo-cli
+cd todo-cli
+```
+
+The scaffolding automatically provisions:
+- Bun-optimized TypeScript configuration
+- Rempts core dependencies with plugin ecosystem
+- File-based command discovery structure
+- Hot-reload development workflow
+- Comprehensive testing infrastructure
+
+## Project Architecture
+
+Rempts generates a production-ready layout optimized for Bun:
+
+```
+todo-cli/
+├── cli.ts                # Primary CLI entry point with async initialization
+├── cmds/                 # Command repository (essential for file-based discovery)
+│   └── greet/
+│       └── cmd.ts        # Sample command implementation
+├── dler.config.ts        # Centralized Rempts configuration
+├── package.json          # Dependencies including @reliverse/rempts-core
+├── tsconfig.json         # TypeScript configuration for Bun compatibility
+└── README.md             # Generated project documentation
+```
+
+## Implementing Your First Command
+
+Develop a comprehensive todo management CLI. Replace the default greet command with an `add` command featuring full type safety:
+
+```typescript
+// cmds/add/cmd.ts
+import { defineCommand, option } from '@reliverse/rempts-core'
+import { z } from 'zod'
+
+export default defineCommand({
+  name: 'add',
+  description: 'Register a new todo item to the task list',
+  options: {
+    task: option(
+      z.string().min(1),
+      { description: 'Descriptive task content' }
+    ),
+    priority: option(
+      z.enum(['low', 'medium', 'high']).default('medium'),
+      { short: 'p', description: 'Urgency classification' }
+    ),
+    due: option(
+      z.string().optional(),
+      { short: 'd', description: 'Deadline specification' }
+    )
+  },
+  handler: async ({ flags, colors }) => {
+    console.log(colors.green('✓'), 'Task registered:', flags.task)
+    console.log(colors.dim(`Priority: ${flags.priority}`))
+    if (flags.due) {
+      console.log(colors.dim(`Deadline: ${flags.due}`))
+    }
+  }
+})
+```
+
+## CLI Configuration
+
+Configure your main CLI entry point with automatic command discovery:
+
+```typescript
+// cli.ts
+import { createCLI } from '@reliverse/rempts-core'
+
+const cli = await createCLI({
+  name: 'todo',
+  version: '1.0.0',
+  description: 'Type-safe task management CLI'
+})
+
+// Commands automatically discovered from cmds/ directory
+await cli.run()
+```
+
+## Development Workflow
+
+
+```bash
+bunx rempts dev
+```
+
+Execute your command to verify functionality:
+
+```bash
+bun run cli.ts add --task "Write documentation" --priority high
+```
+
+## Expanding Command Set
+
+Implement a comprehensive `list` command with filtering capabilities:
+
+```typescript
+// cmds/list.ts
+import { defineCommand, option } from '@reliverse/rempts-core'
+import { z } from 'zod'
+
+export default defineCommand({
+  name: 'list',
+  description: 'Display all registered tasks',
+  alias: 'ls',
+  options: {
+    filter: option(
+      z.enum(['all', 'pending', 'completed']).default('all'),
+      { short: 'f', description: 'Task status filter' }
+    ),
+    sort: option(
+      z.enum(['priority', 'due', 'created']).default('created'),
+      { short: 's', description: 'Result ordering' }
+    )
+  },
+  handler: async ({ flags, colors, spinner }) => {
+    const spin = spinner('Retrieving task collection...')
+    spin.start()
+
+    // Simulate data retrieval latency
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    const tasks = [
+      { id: 1, task: 'Write documentation', priority: 'high', completed: false },
+      { id: 2, task: 'Add tests', priority: 'medium', completed: false },
+      { id: 3, task: 'Review PR', priority: 'low', completed: true }
+    ]
+
+    spin.succeed('Task collection retrieved')
+
+    const filteredTasks = tasks.filter(task => {
+      if (flags.filter === 'pending') return !task.completed
+      if (flags.filter === 'completed') return task.completed
+      return true
+    })
+
+    console.log('\nRegistered tasks:\n')
+    filteredTasks.forEach(task => {
+      const statusIcon = task.completed
+        ? colors.green('✓')
+        : colors.yellow('○')
+      const priorityIndicator = colors.dim(`[${task.priority}]`)
+      console.log(`${statusIcon} ${task.task} ${priorityIndicator}`)
+    })
+  }
+})
+```
+
+## Interactive Command Implementation
+
+Develop an interactive task completion command:
+
+```typescript
+// cmds/complete.ts
+import { defineCommand } from '@reliverse/rempts-core'
+
+export default defineCommand({
+  name: 'complete',
+  description: 'Mark a task as successfully completed',
+  handler: async ({ prompt, colors }) => {
+    const taskCollection = [
+      { id: 1, task: 'Write documentation', completed: false },
+      { id: 2, task: 'Add tests', completed: false },
+      { id: 3, task: 'Review PR', completed: false }
+    ]
+
+    const pendingTasks = taskCollection.filter(task => !task.completed)
+
+    if (pendingTasks.length === 0) {
+      console.log(colors.yellow('No outstanding tasks remain!'))
+      return
+    }
+
+    const selectedTask = await prompt.select('Select completed task:', {
+      choices: pendingTasks.map(task => ({
+        value: task.id,
+        label: task.task
+      }))
+    })
+
+    console.log(colors.green('✓'), 'Task marked as completed!')
+  }
+})
+```
+
+## Hierarchical Command Structure
+
+Leverage Rempts' file-based routing to create nested command hierarchies:
+
+```typescript
+// cmds/db/init.ts
+import { defineCommand } from '@reliverse/rempts-core'
+
+export default defineCommand({
+  name: 'init',
+  description: 'Initialize the database schema',
+  handler: async ({ colors }) => {
+    console.log(colors.green('✓'), 'Database schema initialized successfully')
+  }
+})
+```
+
+```typescript
+// cmds/db/backup.ts
+import { defineCommand } from '@reliverse/rempts-core'
+
+export default defineCommand({
+  name: 'backup',
+  description: 'Create database backup archive',
+  handler: async ({ spinner }) => {
+    const spin = spinner('Generating backup archive...')
+    spin.start()
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    spin.succeed('Backup archive created: backup-2024-01-15.db')
+  }
+})
+```
+
+This creates the command structure:
+```
+todo db init    # Initialize database
+todo db backup  # Create backup
+```
+
+## Production Compilation
+
+Generate optimized executables for distribution:
+
+```bash
+# Compile for current platform architecture
+bunx rempts build
+
+# Cross-compile for all supported platforms
+bunx rempts build --all
+
+# Generate standalone executable with no runtime dependencies
+bunx rempts build --compile
+```
+
+## Comprehensive Testing
+
+Develop tests for your command implementations:
+
+```typescript
+// cmds/add.test.ts
+import { test, expect } from 'bun:test'
+import { createTestCLI } from '@reliverse/rempts-test'
+import addCommand from './add'
+
+test('add command registers new task successfully', async () => {
+  const cli = createTestCLI()
+
+  expect(result.exitCode).toBe(0)
+  expect(result.output).toContain('Task registered: Test implementation')
+})
+```
+
+Execute the test suite:
+
+```bash
+bunx rempts test
+```
+
+## Plugin Integration
+
+Augment your CLI with powerful plugins for configuration management and AI detection:
+
+```typescript
+// cli.ts
+import { createCLI } from '@reliverse/rempts-core'
+import { configPlugin } from '@reliverse/rempts-plugin-config'
+import { aiDetectPlugin } from '@reliverse/rempts-plugin-ai-detect'
+
+const cli = await createCLI({
+  name: 'todo',
+  version: '1.0.0',
+  description: 'Type-safe task management CLI',
+  plugins: [
+    // Load configuration from .todorc.json or ~/.config/todo/config.json
+    configPlugin(),
+
+    // Detect execution within AI assistant environments
+    aiDetectPlugin({ verbose: true })
+  ] as const
+})
+
+await cli.run()
+```
+
+Now your commands can use plugin features:
+
+```typescript
+// cmds/list.ts
+handler: async ({ flags, colors, context }) => {
+  // Provide structured output for AI agents
+  if (context?.env.isAIAgent) {
+    console.log(JSON.stringify({ tasks }, null, 2))
+  } else {
+    // Human-friendly output
+    tasks.forEach(task => {
+      console.log(`${colors.green('✓')} ${task.name}`)
+    })
+  }
+}
+```
+
+
+## Configuration Management
+
+Tailor your CLI behavior through `dler.config.ts`:
+
+```typescript
+import { defineConfig } from '@reliverse/rempts-core'
+
+export default defineConfig({
+  name: 'todo',
+  version: '1.0.0',
+  commands: {
+    directory: './commands'
+  },
+
+  build: {
+    entry: './cli.ts',
+    outdir: './dist',
+    compile: true,
+    targets: ['darwin-arm64', 'linux-x64', 'windows-x64']
+  }
+})
+```
+
+## Distribution Pipeline
+
+When prepared to distribute your CLI globally:
+
+1. **Cross-platform compilation:**
+   ```bash
+   bunx rempts build --all
+   ```
+
+2. **Automated release creation:**
+   ```bash
+   bunx rempts release
+   ```
+
+3. **NPM publication:**
+   ```bash
+   npm publish
+   ```
+
+## Next Steps
+
+You've built a functional CLI! Here's what to explore next:
+
+- [Schema Validation](/docs/libs/rempts/guides/schema-validation) - Advanced validation
+- [Interactive Prompts](/docs/libs/rempts/guides/interactive-prompts) - Rich user interactions
+- [Testing](/docs/libs/rempts/guides/testing) - Comprehensive testing strategies
+- [Distribution](/docs/libs/rempts/guides/distribution) - Publishing and deployment
+
+## Complete Example
+
+Find the complete todo CLI example in the [Rempts repository](https://github.com/reliverse/dler/tree/main/examples/todo-cli).

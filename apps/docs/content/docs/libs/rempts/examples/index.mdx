@@ -1,0 +1,83 @@
+---
+title: Examples
+description: Real-world examples of CLIs built with Rempts
+---
+
+# Examples
+
+Learn by example with these real-world CLI implementations, organized from simple to advanced.
+
+## Learning Path
+
+Follow this progression to master Rempts:
+
+1. **[Hello World](/docs/libs/rempts/examples/hello-world)** - Absolute basics (5 min)
+2. **[Task Runner](/docs/libs/rempts/examples/task-runner)** - Validation and interactivity (15 min)
+3. **[Git Tool](/docs/libs/rempts/examples/git-tool)** - Command structure and organization (15 min)
+
+## Example Projects
+
+Check out these complete example projects in the [Rempts repository](https://github.com/reliverse/dler/tree/main/examples):
+
+### hello-world
+The simplest possible Rempts CLI with a single command. Perfect starting point to understand the basics.
+- Basic command definition
+- Simple flag handling
+- Minimal configuration
+- Type generation for enhanced DX
+
+### task-runner
+A practical task automation CLI showcasing validation and interactivity patterns.
+- Schema validation with Zod
+- Interactive prompts and confirmations
+- Progress indicators and spinners
+- Build, test, deploy, and setup workflows
+
+### git-tool
+A Git workflow helper demonstrating command organization and external tool integration.
+- Nested command structure
+- Command aliases
+- Integration with external tools (git)
+- Shell command execution
+
+A development server CLI showcasing advanced plugin system and configuration management.
+- Plugin system with lifecycle hooks
+- Type-safe plugin context
+- Configuration management
+- Long-running processes
+
+### file-based-commands *(New!)*
+A comprehensive example demonstrating file-based command loading and global hooks system.
+- Automatic command discovery from directory structure
+- Nested command hierarchies
+- Global before/after hooks for shared setup
+- Hook context sharing between commands
+- File-based command organization patterns
+
+## Getting Started
+
+Each example demonstrates the recommended Rempts development workflow:
+
+```bash
+# Navigate to an example
+cd examples/hello-world
+
+# Install dependencies
+bun install
+
+bun run dev
+
+# Build for production
+bun run build
+
+# Run the built executable
+bun run start
+```
+
+## Key Features Demonstrated
+
+- **Schema Validation**: Type-safe options with runtime validation
+- **Interactive Prompts**: User-friendly CLI experiences
+- **Plugin System**: Extensible architecture with type safety
+- **Command Organization**: Scalable multi-command structure
+- **External Integration**: Working with git, build tools, and more

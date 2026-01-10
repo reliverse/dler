@@ -70,6 +70,7 @@ export interface BuildOptions {
   watch?: boolean;
   bundler?: "bun" | "mkdist";
   target?: "browser" | "bun" | "node";
+  targets?: string | string[]; // For compiled builds: darwin-arm64, darwin-x64, linux-arm64, linux-x64, windows-x64, native, all
   format?: "esm" | "cjs" | "iife";
   minify?: boolean | MinifyOptions;
   minifyWhitespace?: boolean;
@@ -174,6 +175,13 @@ export interface BuildOptions {
   // Build type selection
   goOnly?: boolean;
   tsOnly?: boolean;
+  // Compression for multi-target builds
+  compress?: boolean;
+  // Single package build options
+  entry?: string | string[];
+  outdir?: string;
+  outfile?: string;
+  runtime?: "bun" | "node";
 }
 
 export interface CacheEntry {

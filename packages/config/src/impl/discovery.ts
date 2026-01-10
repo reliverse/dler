@@ -3,7 +3,8 @@
 import { dirname, resolve } from "node:path";
 import { createIncludeFilter } from "@reliverse/matcha";
 import { readPackageJSON } from "@reliverse/typerso";
-import { loadConfig, watchConfig } from "c12";
+import type { LoadedConfig } from "./config-loader";
+import { loadConfig } from "./config-loader";
 
 // ============================================================================
 // Monorepo Discovery
@@ -222,63 +223,20 @@ export const filterPackages = (
 // ============================================================================
 
 /**
- * Load dler.ts configuration using c12
+ * Load dler.config.ts configuration
  *
- * c12 automatically handles:
- * - Searching up directory tree for config files
- * - Loading TypeScript/JavaScript config files
- * - Merging multiple config sources (dler.ts, package.json, .dlerrc, etc.)
- * - Environment-specific configurations ($test, $development, $production)
- * - Config extending from remote/local sources
- *
- * Additional c12 features available:
- * - .config/ directory support
- * - RC file support (.dlerrc)
- * - Environment-specific configs ($env: { staging: {...} })
- * - Config watching with auto-reload
- * - Remote config extending (gh:user/repo)
+ * Uses the unified config loader which:
+ * - Validates against rempts schema
+ * - Loads dler.config.ts, dler.config.js, or dler.config.mjs files
+ * - Applies schema defaults
+ * - Returns LoadedConfig with extended build and publish configs
  */
-export const loadDlerConfig = async <T extends Record<string, any> = any>(
-  cwd?: string
-): Promise<T | null> => {
+export const loadDlerConfig = async (cwd?: string): Promise<LoadedConfig | null> => {
   try {
-    const { config } = await loadConfig<T>({
-      cwd: cwd || process.cwd(),
-      name: "dler",
-      configFile: "dler",
-      packageJson: "dler", // Enable reading from package.json "dler" field
-      dotenv: false,
-    });
-
-    return config || null;
+    const config = await loadConfig(cwd || process.cwd());
+    return config;
   } catch {
     // Return null for config loading errors (file not found, etc.)
     return null;
   }
-};
-
-/**
- * Watch dler.ts configuration for changes (development mode)
- * Uses c12's watchConfig for auto-reload and HMR support
- */
-export const watchDlerConfig = <T extends Record<string, any> = any>(
-  cwd?: string,
-  options?: {
-    onUpdate?: (config: T) => void;
-    onError?: (error: Error) => void;
-  }
-) => {
-  return watchConfig<T>({
-    cwd: cwd || process.cwd(),
-    name: "dler",
-    configFile: "dler",
-    packageJson: "dler",
-    dotenv: false,
-    onUpdate: ({ newConfig }) => {
-      options?.onUpdate?.(newConfig.config);
-    },
-    onWatch: (event) => {
-      console.log("[dler config watcher]", event.type, event.path);
-    },
-  });
 };

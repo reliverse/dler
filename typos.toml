@@ -2,3 +2,4 @@
 
 [default.extend-words]
 Inferrable = "Inferrable"
+rentime = "rentime"

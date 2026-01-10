@@ -1,7 +1,6 @@
 // packages/config/src/impl/core.ts
 
-import type { BuildConfig } from "./build";
-import type { PublishConfig } from "./publish";
+import type { LoadedConfig } from "./config-loader";
 
 // ============================================================================
 // Generic Configuration Types
@@ -14,11 +13,6 @@ export interface BaseConfig {
     pattern: string;
     config: Record<string, any>;
   }>;
-}
-
-export interface DlerConfig {
-  build?: BuildConfig;
-  publish?: PublishConfig;
 }
 
 // ============================================================================
@@ -103,4 +97,56 @@ export const mergeConfig = <T extends Record<string, any>>(
     ...configOptions,
     ...cliOptions,
   } as T;
+};
+
+// ============================================================================
+// Unified Configuration Resolution (works with dler.config.ts)
+// ============================================================================
+
+/**
+ * Get package-specific build configuration from dler.config.ts
+ */
+export const getPackageBuildConfigUnified = async (
+  packageName: string,
+  dlerConfig: LoadedConfig | null
+): Promise<Record<string, any> | undefined> => {
+  return resolvePackageConfig(packageName, dlerConfig?.build);
+};
+
+/**
+ * Get package-specific publish configuration from dler.config.ts
+ */
+export const getPackagePublishConfigUnified = (
+  packageName: string,
+  dlerConfig: LoadedConfig | null
+): Record<string, any> | undefined => {
+  return resolvePackageConfig(packageName, dlerConfig?.publish);
+};
+
+// ============================================================================
+// Unified Configuration Merging (works with dler.config.ts)
+// ============================================================================
+
+/**
+ * Merge build options with package-specific configuration from dler.config.ts
+ */
+export const mergeBuildOptionsUnified = <T extends Record<string, any>>(
+  cliOptions: T,
+  packageName: string,
+  dlerConfig: LoadedConfig | null
+): T => {
+  const packageConfig = getPackageBuildConfigUnified(packageName, dlerConfig);
+  return mergeConfig(cliOptions, packageConfig);
+};
+
+/**
+ * Merge publish options with package-specific configuration from dler.config.ts
+ */
+export const mergePublishOptionsUnified = <T extends Record<string, any>>(
+  cliOptions: T,
+  packageName: string,
+  dlerConfig: LoadedConfig | null
+): T => {
+  const packageConfig = getPackagePublishConfigUnified(packageName, dlerConfig);
+  return mergeConfig(cliOptions, packageConfig);
 };

@@ -1,0 +1,270 @@
+---
+title: createCLI
+description: Create a new CLI instance with configuration
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# createCLI
+
+Creates a new CLI instance with automatic configuration loading and plugin initialization.
+
+## Syntax
+
+```typescript
+function createCLI<TPlugins extends readonly Plugin[]>(
+  configOverride?: Partial<RemptsConfig> & {
+    plugins?: TPlugins
+  }
+): Promise<CLI<MergePluginStores<TPlugins>>>
+```
+
+## Parameters
+
+### configOverride (optional)
+
+Override specific configuration values. Configuration is automatically loaded from `dler.config.ts`, and plugins are initialized during CLI creation.
+
+```typescript
+interface RemptsConfig {
+  name?: string
+  version?: string
+  description?: string
+  commands?: {
+    directory?: string
+  }
+  plugins?: PluginConfig[]
+  build?: BuildConfig
+  dev?: DevConfig
+  test?: TestConfig
+  // ... other config options
+}
+```
+
+<Callout type="tip">
+  **Rempts automatically loads configuration** from `dler.config.ts` in your project root. You only need to provide overrides for runtime-specific settings like plugins with custom options.
+</Callout>
+
+## Returns
+
+A `CLI` instance with the following methods:
+
+```typescript
+interface CLI {
+  init(): Promise<void>
+  run(argv?: string[]): Promise<void>
+  execute(commandName: string, args?: string[]): Promise<void>
+  execute<T extends keyof RegisteredCommands>(
+    commandName: T,
+    options: CommandOptions<T>
+  ): Promise<void>
+  execute<T extends keyof RegisteredCommands>(
+    commandName: T,
+    args: string[],
+    options: CommandOptions<T>
+  ): Promise<void>
+  before(hook: BeforeHook): void
+  after(hook: AfterHook): void
+}
+```
+
+## Examples
+
+### Basic Usage (Recommended)
+
+With automatic config loading from `dler.config.ts`:
+
+```typescript
+// cli.ts
+import { createCLI } from '@reliverse/rempts-core'
+
+const cli = await createCLI()
+
+// CLI automatically loads commands from dler.config.ts
+await cli.run()
+```
+
+```typescript
+// dler.config.ts
+import { defineConfig } from '@reliverse/rempts-core'
+
+export default defineConfig({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'My awesome CLI tool',
+  commands: {
+    directory: './commands' // File-based command loading
+  }
+})
+```
+
+### With Command Manifest
+
+```typescript
+// cli.ts
+import { createCLI } from '@reliverse/rempts-core'
+
+const cli = await createCLI()
+
+await cli.load({
+  build: () => import('./commands/build'),
+  test: () => import('./commands/test'),
+  deploy: () => import('./commands/deploy')
+})
+
+await cli.run()
+```
+
+```typescript
+// dler.config.ts
+import { defineConfig } from '@reliverse/rempts-core'
+
+export default defineConfig({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'My CLI with lazy-loaded commands',
+  commands: {
+    directory: './commands'
+  }
+})
+```
+
+### With Runtime Plugin Configuration
+
+For plugins that need runtime-specific options:
+
+```typescript
+// cli.ts
+import { createCLI } from '@reliverse/rempts-core'
+import { configPlugin } from '@reliverse/rempts-plugin-config'
+import { aiDetectPlugin } from '@reliverse/rempts-plugin-ai-detect'
+
+const cli = await createCLI({
+  plugins: [
+    configPlugin({ sources: ['.myrc.json'] }),
+    aiDetectPlugin({ verbose: true })
+  ] as const
+})
+
+await cli.run()
+```
+
+```typescript
+// dler.config.ts
+import { defineConfig } from '@reliverse/rempts-core'
+
+export default defineConfig({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'My CLI with plugins',
+  commands: {
+    directory: './commands'
+  }
+})
+```
+
+### Legacy: Explicit Configuration
+
+You can still provide full configuration explicitly:
+
+```typescript
+import { createCLI } from '@reliverse/rempts-core'
+
+const cli = await createCLI({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'My awesome CLI tool',
+  plugins: []
+})
+
+await cli.run()
+```
+
+<Callout type="warning">
+  **Deprecated**: Explicit configuration is still supported but not recommended. Use `dler.config.ts` for better maintainability and consistency with the Rempts CLI toolchain.
+</Callout>
+
+## CLI Methods
+
+### execute(commandName, args?, options?)
+
+Load commands from a manifest for lazy loading.
+
+```typescript
+const manifest = {
+  build: () => import('./commands/build.js'),
+  test: () => import('./commands/test.js'),
+  deploy: () => import('./commands/deploy.js')
+}
+
+await cli.load(manifest)
+```
+
+### init()
+
+Initialize the CLI. This loads commands from the manifest if configured.
+
+```typescript
+await cli.init()
+```
+
+### run(argv?)
+
+Run the CLI with the given arguments. If no arguments are provided, uses `process.argv.slice(2)`.
+
+```typescript
+// Use process arguments
+await cli.run()
+
+// Use custom arguments
+await cli.run(['build', '--watch'])
+```
+
+## Automatic Features
+
+When you create a CLI with `createCLI`, you get:
+
+- **Automatic help generation** - `--help` flag shows available commands
+- **Version display** - `--version` flag shows CLI version
+- **Command routing** - Automatically routes to the correct command
+- **Error handling** - Friendly error messages for unknown commands
+- **Nested command support** - Commands can have subcommands
+- **Alias support** - Commands can have shortcuts
+- **Plugin system** - Extend functionality with type-safe plugins
+- **Type-safe context** - Plugin stores are fully typed in commands
+
+## Help Output
+
+Running with `--help` shows:
+
+```bash
+$ my-cli --help
+my-cli v1.0.0
+My awesome CLI tool
+
+Commands:
+  hello                Say hello
+  build                Build the project
+  test                 Run tests
+```
+
+## Error Handling
+
+Unknown commands show helpful messages:
+
+```bash
+$ my-cli unknown
+Unknown command: unknown
+```
+
+<Callout type="tip">
+  The CLI automatically handles help flags at any level. For example, `my-cli build --help` shows help for the build command specifically.
+</Callout>
+
+## See Also
+
+- [defineCommand](/docs/api/define-command) - Define type-safe commands
+- [Plugins](/docs/libs/rempts/core-concepts/plugins) - Learn about the plugin system
+- [Plugin API](/docs/api/plugins) - Plugin API reference
+- [Command Manifests](/docs/libs/rempts/core-concepts/commands#command-manifests) - Learn about lazy loading
+- [Configuration](/docs/libs/rempts/core-concepts/configuration) - CLI configuration options

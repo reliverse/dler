@@ -21,6 +21,10 @@
       "types": "./src/mod.ts",
       "default": "./src/mod.ts"
     },
+    "./config-loader": {
+      "types": "./src/impl/config-loader.ts",
+      "default": "./src/impl/config-loader.ts"
+    },
     "./impl/*": {
       "types": "./src/impl/*.ts",
       "default": "./src/impl/*.ts"
@@ -34,6 +38,7 @@
   },
   "dependencies": {
     "@reliverse/matcha": "workspace:*",
+    "@reliverse/rempts-core": "workspace:*",
     "@reliverse/typerso": "workspace:*",
     "c12": "catalog:",
     "semver": "catalog:"

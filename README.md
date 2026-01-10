@@ -118,7 +118,7 @@ Docs for v2 will be available soon. For now, you can read the v1 docs, or check 
 
 ## v1 Docs
 
-Visit [docs.reliverse.org/libraries/dler](https://docs.reliverse.org/libraries/dler) to learn how to install and use `@reliverse/dler` library.
+Visit [docs.reliverse.org/docs/libs/dler](https://docs.reliverse.org/docs/libs/dler) to learn how to install and use `@reliverse/dler` library.
 
 ## Contributing
 

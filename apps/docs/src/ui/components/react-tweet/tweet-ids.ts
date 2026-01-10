@@ -1,0 +1,15 @@
+export const TWEET_IDS = [
+  "1873482480315191733",
+  "1913858580429623504",
+  "1915099144198451693",
+  "1913026416330911745",
+  "1898615456862261460",
+  "1915771924136833394",
+  "1916389550642889016",
+  "1916115826413043929",
+  "1917592827980308879",
+] as const;
+
+export function getRandomTweetId(): string {
+  return TWEET_IDS[Math.floor(Math.random() * TWEET_IDS.length)];
+}

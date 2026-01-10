@@ -211,7 +211,7 @@ The Rempts CLI handles:
 
 ## Learn More
 
-- [Rempts Documentation](https://rempts.dev)
+- [Rempts Documentation](https://docs.reliverse.org)
 - [Standard Schema](https://github.com/standard-schema/standard-schema)
 - [Bun Documentation](https://bun.sh)
 

@@ -4,6 +4,36 @@ import { inc, parse, valid } from "semver";
 import type { BumpType, VersionInfo } from "./impl/types";
 
 // ============================================================================
+// Config Loading
+// ============================================================================
+
+export { type LoadedConfig, loadConfig } from "./impl/config-loader";
+
+// ============================================================================
+// Unified Configuration (works with dler.config.ts)
+// ============================================================================
+
+export {
+  type BuildConfig,
+  getPackageBuildConfigUnified,
+  mergeBuildOptionsUnified,
+  type PackageBuildConfig,
+} from "./impl/build";
+
+export {
+  getPackagePublishConfigUnified,
+  mergePublishOptionsUnified,
+  type PackageKind,
+  type PackagePublishConfig,
+  type PublishConfig,
+  type RegistryType,
+} from "./impl/publish";
+
+// ============================================================================
+// Version Management
+// ============================================================================
+
+// ============================================================================
 // Version Management
 // ============================================================================
 

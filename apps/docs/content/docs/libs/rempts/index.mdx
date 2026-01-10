@@ -1,0 +1,207 @@
+---
+title: Introduction
+description: The complete CLI development ecosystem for Bun
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+# Rempts
+
+The modern CLI framework designed exclusively for Bun. Build powerful, type-safe command-line tools that leverage Bun's unique capabilities and compile to efficient single-file executables.
+
+## What is Rempts?
+
+Rempts is a comprehensive CLI development ecosystem built specifically for the Bun runtime. It provides a type-safe foundation for creating sophisticated command-line applications with automatic type inference, extensible plugin architecture, and seamless integration with Bun's ecosystem.
+
+<Cards>
+  <Card title="Bun-Native" description="Purpose-built for Bun with native TypeScript execution and Bun Shell integration">
+    ```ts
+    // Types flow automatically from schema validation
+    handler: async ({ flags, context }) => {
+      // flags is fully typed, context provides plugin stores
+    }
+    ```
+  </Card>
+  <Card title="Type-Safe Plugins" description="Compile-time safe plugin system with Zustand-powered stores and lifecycle hooks">
+    ```ts
+    // Powerful plugin system with Zustand stores
+    const cli = await createCLI({
+      plugins: [configPlugin(), aiDetectPlugin()]
+    })
+    ```
+  </Card>
+  <Card title="File-Based Discovery" description="Automatic command loading from directory structure with nested command hierarchies">
+    ```bash
+    commands/
+    ├── build/
+    │   └── cmd.ts
+    ├── deploy/
+    │   └── cmd.ts
+    └── db/
+        ├── migrate/
+        │   └── cmd.ts
+        └── seed/
+            └── cmd.ts
+    ```
+  </Card>
+  <Card title="Runtime Context" description="Rich execution context with shell access, interactive prompts, and terminal information">
+    ```ts
+    handler: async ({ shell, prompt, spinner, terminal, context }) => {
+      // Bun Shell, interactive prompts, progress indicators, plugin context
+    }
+    ```
+  </Card>
+</Cards>
+
+## Quick Start
+
+<Tabs groupId="package-manager" defaultValue="bun">
+  <Tab value="bun" label="Bun">
+    ```bash
+    # Scaffold a new CLI project
+    bunx @reliverse/rempts my-cli
+    cd my-cli
+
+    # Run your CLI directly
+    bun run cli.ts --help
+
+    # Build optimized executable
+    bun dler build
+    ```
+  </Tab>
+  <Tab value="npm" label="npm">
+    ```bash
+    # Scaffold a new CLI project
+    npx @reliverse/rempts my-cli
+    cd my-cli
+
+    # Run your CLI directly
+    bun run cli.ts --help
+
+    # Build optimized executable
+    bun dler build
+    ```
+  </Tab>
+</Tabs>
+
+## Why Rempts?
+
+### Built for Bun's Ecosystem
+
+Rempts harnesses Bun's unique advantages for CLI development:
+- **Native TypeScript** - Execute .ts files directly without compilation overhead
+- **Bun Shell** - Integrated shell operations with automatic process management
+- **Rapid Startup** - Sub-millisecond cold starts for instant CLI responsiveness
+- **Single Executables** - Compile to standalone binaries with zero runtime dependencies
+- **Built-in Testing** - Leverage Bun's fast test runner for comprehensive CLI testing
+
+### Zero-Config Type Safety
+
+Automatic type inference eliminates manual type annotations while maintaining full compile-time safety:
+
+<Tabs groupId="type-safety" defaultValue="zod">
+  <Tab value="zod" label="Zod">
+    ```typescript
+    import { defineCommand, option } from '@reliverse/rempts-core'
+    import { z } from 'zod'
+
+    // Rempts infers everything automatically
+    export default defineCommand({
+      name: 'deploy',
+      options: {
+        env: option(
+          z.enum(['dev', 'staging', 'prod']),
+          { description: 'Target environment' }
+        )
+      },
+      handler: async ({ flags }) => {
+        // TypeScript knows flags.env is 'dev' | 'staging' | 'prod'
+        switch (flags.env) {
+          case 'dev':     // ✅ Autocompleted
+          case 'staging': // ✅ Autocompleted
+          case 'prod':    // ✅ Autocompleted
+        }
+      }
+    })
+    ```
+  </Tab>
+
+  <Tab value="arktype" label="Arktype">
+    ```typescript
+    import { defineCommand, option } from '@reliverse/rempts-core'
+    import { type } from 'arktype'
+
+    // Rempts infers everything automatically
+    export default defineCommand({
+      name: 'deploy',
+      options: {
+        env: option(
+          type("'dev'|'staging'|'prod'"),
+          { description: 'Target environment' }
+        )
+      },
+      handler: async ({ flags }) => {
+        // TypeScript knows flags.env is 'dev' | 'staging' | 'prod'
+        switch (flags.env) {
+          case 'dev':     // ✅ Autocompleted
+          case 'staging': // ✅ Autocompleted
+          case 'prod':    // ✅ Autocompleted
+        }
+      }
+    })
+    ```
+  </Tab>
+</Tabs>
+
+### Validator Agnostic
+
+Freedom to choose your preferred validation library with Standard Schema v1 compatibility:
+
+```typescript
+import { z } from 'zod'
+import * as v from 'valibot'
+import { type } from 'arktype'
+
+// Mix and match validators seamlessly
+options: {
+  email: option(z.string().email()),
+  port: option(v.number([v.minValue(1), v.maxValue(65535)])),
+  env: option(type("'dev'|'staging'|'prod'"))
+}
+```
+
+### Complete Development Ecosystem
+
+Rempts provides a comprehensive ecosystem for CLI development:
+
+- **`@reliverse/rempts`** - Project scaffolding tool with template selection
+- **`@reliverse/rempts-core`** - Type-safe CLI framework with file-based command discovery
+- **`@reliverse/rempts-utils`** - Shared utilities (prompts, spinners, colors, validation)
+- **`@reliverse/rempts-test`** - Testing utilities for CLI applications
+- **`@reliverse/rempts-plugin-*`** - Extensible plugin system for advanced functionality
+
+## Next Steps
+
+<Cards>
+  <Card
+    title="Getting Started"
+    description="Scaffold and configure your first Bun CLI"
+    href="/docs/getting-started"
+  />
+  <Card
+    title="Core Concepts"
+    description="Master command definitions and file-based routing"
+    href="/docs/core-concepts/commands"
+  />
+  <Card
+    title="Examples"
+    description="Explore real-world CLI implementations"
+    href="/docs/examples/hello-world"
+  />
+  <Card
+    title="API Reference"
+    description="Complete TypeScript API documentation"
+    href="/docs/api/create-cli"
+  />
+</Cards>

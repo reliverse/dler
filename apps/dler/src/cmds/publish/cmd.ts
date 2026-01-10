@@ -1,6 +1,9 @@
 // Note on `bun publish` and `bun tsc`: we don't display npm/tsc raw output, because both are not reliable for concurrent display, so we display them on our own.
 
+// release workflow: test → build → version bump → publish → git tag → GitHub release
+
 import type { BumpType } from "@reliverse/bump";
+import { loadConfig } from "@reliverse/config";
 import {
   type PackageKind,
   type PublishOptions,
@@ -108,6 +111,23 @@ export default defineCommand({
     stopOnError: option(type("boolean"), {
       description: "Stop on first error instead of collecting all errors (default: false)",
     }),
+    // Release options
+    release: option(type("boolean | undefined"), {
+      description: "Run full release workflow (test, build, version, tag, publish, GitHub)",
+    }),
+    version: option(type("'patch'|'minor'|'major' | string | undefined"), {
+      short: "v",
+      description: "Version to release (patch/minor/major/x.y.z) - only used with --release",
+    }),
+    github: option(type("boolean | undefined"), {
+      description: "Create GitHub release - only used with --release",
+    }),
+    noTest: option(type("boolean | undefined"), {
+      description: "Skip tests during release - only used with --release",
+    }),
+    noBuild: option(type("boolean | undefined"), {
+      description: "Skip build during release - only used with --release",
+    }),
   },
   handler: async ({ flags }) => {
     try {
@@ -139,6 +159,9 @@ export default defineCommand({
       // But allow explicit overrides
       const isVerbose = verbose === true;
 
+      // Load config for release options
+      const config = await loadConfig(flags.cwd);
+
       const options: PublishOptions = {
         dryRun,
         tag: flags.tag || "latest",
@@ -161,6 +184,13 @@ export default defineCommand({
         noSummary: noSummary !== undefined ? noSummary : !isVerbose,
         bunRegistry: flags.bunRegistry || "",
         skipTip2FA,
+        // Release workflow options
+        release: flags.release ?? false,
+        test: flags.release ? !flags.noTest : undefined,
+        build: flags.release ? !flags.noBuild : undefined,
+        github: flags.release ? (flags.github ?? config?.release?.github ?? false) : undefined,
+        gitTag: flags.release ? true : undefined,
+        version: flags.release ? flags.version : undefined,
       };
 
       const results = await publishAllPackages(flags.cwd, flags.ignore, {
