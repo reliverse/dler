@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/config",
-  "version": "2.3.2",
+  "version": "2.3.4",
   "private": false,
   "description": "Configuration management for Reliverse ecosystem",
   "keywords": [
@@ -38,13 +38,15 @@
     "@reliverse/rempts-core": "workspace:*",
     "@reliverse/typerso": "workspace:*",
     "c12": "catalog:",
-    "semver": "catalog:"
+    "semver": "catalog:",
+    "left-pad": "^1.3.0"
   },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
     "@types/semver": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:"
   },
   "scripts": {
     "perf": "bun bench/perf.ts"

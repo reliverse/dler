@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/dler",
-  "version": "2.3.2",
+  "version": "2.3.4",
   "description": "@reliverse/dler is a framework which helps TypeScript and JavaScript developers create their libraries and CLI tools. It provides ready-to-use primitives, so you don't have to write them from scratch.",
   "keywords": [
     "build-tool",
@@ -31,7 +31,7 @@
   ],
   "type": "module",
   "module": "./dist/mod.js",
-  "types": "./dist/mod.d.ts",
+  "types": "./dist/mod.d.d.d.ts",
   "exports": {
     ".": {
       "types": "./src/mod.ts",
@@ -58,7 +58,8 @@
     "clipboardy": "catalog:",
     "lookpath": "catalog:",
     "semver": "catalog:",
-    "arktype": "catalog:"
+    "arktype": "catalog:",
+    "lodash": "catalog:"
   },
   "publishConfig": {
     "access": "public"
@@ -67,11 +68,14 @@
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
     "@types/semver": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "@types/lodash": "^4.17.23",
+    "svelte": "^5.46.1"
   },
   "scripts": {
     "dler": "bun src/cli.ts",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsgo --noEmit",
     "cli": "bun dler",
     "test": "bun test",
     "build": "bun scripts/build.ts && bun run tsc",

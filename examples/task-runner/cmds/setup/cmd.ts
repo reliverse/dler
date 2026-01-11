@@ -186,7 +186,7 @@ export default defineCommand({
 
       // Install dependencies
       if (config.installDeps) {
-        spin.update("Installing dependencies...");
+        spin.update("Applying changes (bun install)...");
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 

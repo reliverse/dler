@@ -7,7 +7,7 @@
   "scripts": {
     "dler": "bun apps/dler/src/cli.ts",
     "pub": "bun run build && bun dler publish",
-    "latest": "bun dler update && bun check",
+    "latest": "bun dler update",
     "build": "bun clean:build && bun check && bun dler build --loggerClearInternals",
     "pub:minor": "bun pub --bump minor",
     "turbo:build": "turbo run build",
@@ -24,7 +24,7 @@
     "release": "bun scripts/release.ts",
     "lint": "biome lint --fix --unsafe",
     "format": "biome format --fix",
-    "check": "bun dler tsc && bun format && bun lint"
+    "check": "bun dler tsc && bun format && bun lint && bun dler unused"
   },
   "workspaces": {
     "packages": [
@@ -35,6 +35,7 @@
       "scripts"
     ],
     "catalog": {
+      "@typescript/native-preview": "^7.0.0-dev.20260111.1",
       "giget": "^2.0.0",
       "zustand": "^5.0.9",
       "@types/bun": "^1.3.5",
@@ -44,7 +45,6 @@
       "sisteransi": "^1.0.5",
       "bun-plugin-dts": "^0.3.0",
       "dts-bundle-generator": "^9.5.1",
-      "@typescript/native-preview": "^7.0.0-dev.20260109.1",
       "@microsoft/api-extractor": "^7.55.2",
       "clipboardy": "^5.0.2",
       "cli-cursor": "^5.0.0",
@@ -59,10 +59,9 @@
       "@babel/preset-typescript": "^7.28.5",
       "@biomejs/biome": "^2.3.11",
       "@hookform/resolvers": "^5.2.2",
-      "@libsql/client": "^0.15.15",
+      "@libsql/client": "^0.17.0",
       "@mendable/firecrawl-js": "^4.10.0",
       "@mrleebo/prisma-ast": "^0.13.1",
-      "@octokit/plugin-rest-endpoint-methods": "^17.0.0",
       "@octokit/request-error": "^7.1.0",
       "@octokit/rest": "^22.0.1",
       "@radix-ui/react-label": "^2.1.8",
@@ -142,11 +141,11 @@
       "posthog-node": "^5.20.0",
       "pretty-bytes": "^7.1.0",
       "pretty-ms": "^9.3.0",
+      "react": "^19.2.3",
       "querystring": "^0.2.1",
       "random-words": "^2.0.1",
       "react-dom": "^19.2.3",
-      "react-hook-form": "^7.70.0",
-      "react": "^19.2.3",
+      "react-hook-form": "^7.71.0",
       "registry-auth-token": "^5.1.0",
       "registry-url": "^7.2.0",
       "rollup-plugin-dts": "^6.3.0",
@@ -171,7 +170,8 @@
       "@standard-schema/spec": "^1.1.0",
       "@standard-schema/utils": "^0.3.0",
       "arkregex": "^0.0.5",
-      "arktype": "^2.1.29"
+      "arktype": "^2.1.29",
+      "lodash": "^4.17.21"
     }
   },
   "devDependencies": {

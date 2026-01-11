@@ -1,27 +1,24 @@
 // apps/dler/src/cmds/tsc/cache.ts
 
 import { existsSync, statSync } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { loadCache, saveCache } from "../../utils/cache";
 import type { PackageInfo } from "./impl";
 import type { CacheMetadata, PackageCacheEntry, SourceFileInfo, TscCacheOptions } from "./types";
 
 const CACHE_VERSION = "1.0.0";
-const DEFAULT_CACHE_DIR = "node_modules/.cache/dler-tsc";
 const DEFAULT_MAX_AGE = 24 * 60 * 60 * 1000; // 24 hours
 
 export class TscCache {
   private readonly options: TscCacheOptions;
   private metadata: CacheMetadata | null = null;
-  private readonly metadataPath: string;
 
   constructor(options: Partial<TscCacheOptions> = {}) {
     this.options = {
       enabled: options.enabled ?? true,
-      cacheDir: options.cacheDir ?? DEFAULT_CACHE_DIR,
+      cacheDir: options.cacheDir ?? "node_modules/.cache/dler",
       maxAge: options.maxAge ?? DEFAULT_MAX_AGE,
     };
-    this.metadataPath = join(this.options.cacheDir, "metadata.json");
   }
 
   async initialize(): Promise<void> {
@@ -30,7 +27,6 @@ export class TscCache {
     }
 
     try {
-      await mkdir(this.options.cacheDir, { recursive: true });
       await this.loadMetadata();
     } catch {
       // Cache initialization failed, disable caching
@@ -39,7 +35,9 @@ export class TscCache {
   }
 
   private async loadMetadata(): Promise<void> {
-    if (!existsSync(this.metadataPath)) {
+    const cachedMetadata = await loadCache<CacheMetadata>("tsc");
+
+    if (!cachedMetadata) {
       this.metadata = {
         version: CACHE_VERSION,
         lastUpdated: Date.now(),
@@ -48,24 +46,15 @@ export class TscCache {
       return;
     }
 
-    try {
-      const content = await readFile(this.metadataPath, "utf-8");
-      this.metadata = JSON.parse(content) as CacheMetadata;
-
-      // Check if cache is too old
-      if (Date.now() - this.metadata.lastUpdated > this.options.maxAge) {
-        this.metadata = {
-          version: CACHE_VERSION,
-          lastUpdated: Date.now(),
-          packages: {},
-        };
-      }
-    } catch {
+    // Check if cache is too old
+    if (Date.now() - cachedMetadata.lastUpdated > this.options.maxAge) {
       this.metadata = {
         version: CACHE_VERSION,
         lastUpdated: Date.now(),
         packages: {},
       };
+    } else {
+      this.metadata = cachedMetadata;
     }
   }
 
@@ -76,7 +65,7 @@ export class TscCache {
 
     try {
       this.metadata.lastUpdated = Date.now();
-      await writeFile(this.metadataPath, JSON.stringify(this.metadata, null, 2), "utf-8");
+      await saveCache("tsc", this.metadata);
     } catch {
       // Ignore save errors
     }

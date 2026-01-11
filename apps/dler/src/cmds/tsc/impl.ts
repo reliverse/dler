@@ -289,36 +289,55 @@ const hasProjectReferences = async (packagePath: string): Promise<boolean> => {
   }
 };
 
-const findTscExecutable = async (packagePath: string): Promise<string | null> => {
-  // First, try to find local tsc in node_modules/.bin/tsc
-  const localTscPath = join(packagePath, "node_modules", ".bin", "tsc");
-  if (existsSync(localTscPath)) {
-    return localTscPath;
-  }
-
-  // Also check parent directories (for monorepo setups where tsc might be in root)
-  let currentDir = resolve(packagePath, "..");
-  while (currentDir !== "/") {
-    const parentLocalTscPath = join(currentDir, "node_modules", ".bin", "tsc");
-    if (existsSync(parentLocalTscPath)) {
-      return parentLocalTscPath;
+const findTypeScriptExecutable = async (
+  packagePath: string,
+  preferTsgo: boolean = false
+): Promise<{ executable: string | null; usedTsgo: boolean }> => {
+  const findExecutable = async (name: string): Promise<string | null> => {
+    // First, try to find local executable in node_modules/.bin/
+    const localPath = join(packagePath, "node_modules", ".bin", name);
+    if (existsSync(localPath)) {
+      return localPath;
     }
 
-    const parentDir = resolve(currentDir, "..");
-    if (parentDir === currentDir) {
-      break;
+    // Also check parent directories (for monorepo setups where executable might be in root)
+    let currentDir = resolve(packagePath, "..");
+    while (currentDir !== "/") {
+      const parentLocalPath = join(currentDir, "node_modules", ".bin", name);
+      if (existsSync(parentLocalPath)) {
+        return parentLocalPath;
+      }
+
+      const parentDir = resolve(currentDir, "..");
+      if (parentDir === currentDir) {
+        break;
+      }
+      currentDir = parentDir;
     }
-    currentDir = parentDir;
-  }
 
-  // Fallback to global tsc using lookpath
-  const globalTscPath = await lookpath("tsc");
-  if (globalTscPath) {
-    return globalTscPath;
-  }
+    // Fallback to global executable using lookpath
+    const globalPath = await lookpath(name);
+    if (globalPath) {
+      return globalPath;
+    }
 
-  // Return null if tsc is not found (package will be skipped)
-  return null;
+    return null;
+  };
+
+  if (preferTsgo) {
+    // Try tsgo first
+    const tsgoPath = await findExecutable("tsgo");
+    if (tsgoPath) {
+      return { executable: tsgoPath, usedTsgo: true };
+    }
+    // Fall back to tsc if tsgo not found
+    const tscPath = await findExecutable("tsc");
+    return { executable: tscPath, usedTsgo: false };
+  } else {
+    // Use tsc
+    const tscPath = await findExecutable("tsc");
+    return { executable: tscPath, usedTsgo: false };
+  }
 };
 
 const runTscCommand = async (
@@ -326,33 +345,35 @@ const runTscCommand = async (
   options: {
     incremental?: boolean;
     buildMode?: boolean;
-    tscExecutable?: string | null;
+    preferTsgo?: boolean;
   } = {}
 ): Promise<SpawnResult> => {
+  const { incremental = true, buildMode = false, preferTsgo = false } = options;
+
   try {
-    const { incremental = true, buildMode = false, tscExecutable: providedTsc } = options;
+    // Find the appropriate TypeScript executable
+    const { executable, usedTsgo } = await findTypeScriptExecutable(packagePath, preferTsgo);
 
-    // Find tsc executable (local first, then global) if not provided
-    const tscExecutable = providedTsc ?? (await findTscExecutable(packagePath));
-
-    if (!tscExecutable) {
+    if (!executable) {
       throw new Error(
-        "TypeScript not found. Skipping package (install typescript locally or globally to enable type checking)."
+        `${preferTsgo ? "tsgo" : "tsc"} not found. Skipping package (install ${preferTsgo ? "@typescript/native-preview" : "typescript"} locally or globally to enable type checking).`
       );
     }
 
     let args: string[];
 
     if (buildMode && (await hasProjectReferences(packagePath))) {
-      // Use tsc --build for project references (faster for multi-package setups)
-      args = [tscExecutable, "--build"];
-      if (incremental) {
+      // Use tsc/tsgo --build for project references (faster for multi-package setups)
+      args = [executable, "--build"];
+      if (incremental && !usedTsgo) {
+        // tsgo doesn't support --incremental flag like tsc does
         args.push("--incremental");
       }
     } else {
-      // Use regular tsc --noEmit for single packages
-      args = [tscExecutable, "--noEmit"];
-      if (incremental) {
+      // Use regular tsc/tsgo --noEmit for single packages
+      args = [executable, "--noEmit"];
+      if (incremental && !usedTsgo) {
+        // tsgo doesn't support --incremental flag like tsc does
         args.push("--incremental");
         // Add tsbuildinfo file path for incremental compilation
         const tsBuildInfoPath = join(
@@ -379,8 +400,22 @@ const runTscCommand = async (
 
     return { stdout, stderr, exitCode };
   } catch (error) {
+    // If using tsgo failed and we were preferring tsgo, try to fall back to tsc
+    if (preferTsgo && error instanceof Error && !error.message.includes("TypeScript not found")) {
+      try {
+        logger.warn(`⚠️  tsgo failed, falling back to tsc: ${error.message}`);
+
+        // Retry with tsc (preferTsgo = false)
+        return runTscCommand(packagePath, { ...options, preferTsgo: false });
+      } catch (fallbackError) {
+        throw new Error(
+          `Failed to spawn TypeScript compiler (both tsgo and tsc): ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`
+        );
+      }
+    }
+
     throw new Error(
-      `Failed to spawn tsc: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to spawn TypeScript compiler: ${error instanceof Error ? error.message : String(error)}`
     );
   }
 };
@@ -458,14 +493,14 @@ const filterOutputLines = (output: string, packagePath: string, monorepoRoot: st
 
 interface RequiredDependencies {
   hasTypeScript: boolean;
-  hasTypesBun: boolean;
+  hasNativePreview: boolean;
 }
 
 const checkRequiredDependencies = async (packagePath: string): Promise<RequiredDependencies> => {
   try {
     const pkg = await readPackageJSON(packagePath);
     if (!pkg) {
-      return { hasTypeScript: false, hasTypesBun: false };
+      return { hasTypeScript: false, hasNativePreview: false };
     }
 
     const deps = pkg.dependencies && typeof pkg.dependencies === "object" ? pkg.dependencies : {};
@@ -473,11 +508,12 @@ const checkRequiredDependencies = async (packagePath: string): Promise<RequiredD
       pkg.devDependencies && typeof pkg.devDependencies === "object" ? pkg.devDependencies : {};
 
     const hasTypeScript = "typescript" in deps || "typescript" in devDeps;
-    const hasTypesBun = "@types/bun" in deps || "@types/bun" in devDeps;
+    const hasNativePreview =
+      "@typescript/native-preview" in deps || "@typescript/native-preview" in devDeps;
 
-    return { hasTypeScript, hasTypesBun };
+    return { hasTypeScript, hasNativePreview };
   } catch {
-    return { hasTypeScript: false, hasTypesBun: false };
+    return { hasTypeScript: false, hasNativePreview: false };
   }
 };
 
@@ -514,21 +550,16 @@ const runTscOnPackage = async (
   }
 
   // Validate that package has required dependencies in package.json if it has tsconfig.json
-  const { hasTypeScript, hasTypesBun } = await checkRequiredDependencies(pkg.path);
+  const { hasTypeScript, hasNativePreview } = await checkRequiredDependencies(pkg.path);
 
-  if (!(hasTypeScript && hasTypesBun)) {
-    const missing: string[] = [];
-    if (!hasTypeScript) {
-      missing.push("typescript");
-    }
-    if (!hasTypesBun) {
-      missing.push("@types/bun");
-    }
-
+  if (!(hasNativePreview || hasTypeScript)) {
     throw new Error(
-      `Package ${pkg.name} has tsconfig.json but ${missing.join(" and ")} ${missing.length === 1 ? "is" : "are"} not listed in dependencies or devDependencies. Please add ${missing.join(" and ")} to this package's package.json (then run bun install).`
+      `Package ${pkg.name} has tsconfig.json but neither "@typescript/native-preview" nor "typescript" is listed in dependencies or devDependencies. Please add one of them to this package's package.json (then run bun install).`
     );
   }
+
+  // Prefer tsgo if package has @typescript/native-preview
+  const preferTsgo = hasNativePreview;
 
   // Check cache first
   if (cache) {
@@ -559,40 +590,43 @@ const runTscOnPackage = async (
   }
 
   try {
-    // Find tsc executable first to log it in verbose mode
-    const tscExecutable = await findTscExecutable(pkg.path);
+    // Find TypeScript executable first to log it in verbose mode
+    const { executable: tsExecutable, usedTsgo } = await findTypeScriptExecutable(
+      pkg.path,
+      preferTsgo
+    );
 
-    if (!tscExecutable) {
+    if (!tsExecutable) {
       throw new Error(
-        "TypeScript not found. Skipping package (install typescript locally or globally to enable type checking)."
+        `${preferTsgo ? "tsgo" : "tsc"} not found. Skipping package (install ${preferTsgo ? "@typescript/native-preview" : "typescript"} locally or globally to enable type checking).`
       );
     }
 
     if (verbose) {
-      // Determine the source of the tsc executable for logging
-      const normalizedTscPath = resolve(tscExecutable);
+      // Determine the source of the executable for logging
+      const normalizedExecPath = resolve(tsExecutable);
       const normalizedPackagePath = resolve(pkg.path);
       const normalizedMonorepoRoot = resolve(monorepoRoot);
 
-      const relativeToPackage = relative(normalizedPackagePath, normalizedTscPath);
-      const relativeToMonorepo = relative(normalizedMonorepoRoot, normalizedTscPath);
+      const relativeToPackage = relative(normalizedPackagePath, normalizedExecPath);
+      const relativeToMonorepo = relative(normalizedMonorepoRoot, normalizedExecPath);
 
       let source: string;
-      if (normalizedTscPath.startsWith(normalizedPackagePath)) {
+      if (normalizedExecPath.startsWith(normalizedPackagePath)) {
         source = `local (${relativeToPackage})`;
-      } else if (normalizedTscPath.startsWith(normalizedMonorepoRoot)) {
+      } else if (normalizedExecPath.startsWith(normalizedMonorepoRoot)) {
         source = `monorepo root (${relativeToMonorepo})`;
       } else {
-        source = `global (${tscExecutable})`;
+        source = `global (${tsExecutable})`;
       }
 
-      logger.info(`   Using tsc: ${source}`);
+      logger.info(`   Using ${usedTsgo ? "tsgo" : "tsc"}: ${source}`);
     }
 
     const result = await runTscCommand(pkg.path, {
       incremental,
       buildMode,
-      tscExecutable,
+      preferTsgo,
     });
     const output = result.stdout + result.stderr;
     const filteredOutput = filterOutputLines(output, pkg.path, monorepoRoot);
@@ -636,13 +670,10 @@ const runTscOnPackage = async (
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    // If TypeScript is not found, skip the package instead of failing
-    if (
-      errorMessage.includes("TypeScript not found") ||
-      errorMessage.includes("Executable not found")
-    ) {
+    // If TypeScript compiler is not found, skip the package instead of failing
+    if (errorMessage.includes(" not found") || errorMessage.includes("Executable not found")) {
       if (verbose) {
-        logger.info(`⏭️  Skipping ${pkg.name} (TypeScript not installed in this package)`);
+        logger.info(`⏭️  Skipping ${pkg.name} (TypeScript compiler not installed in this package)`);
       }
       return {
         package: pkg,
@@ -695,16 +726,11 @@ const collectAllResults = async (
     buildMode = false,
   } = options;
 
-  // Log progress for package processing
-  if (!verbose) {
-    logger.info(`Processing ${packages.length} packages...`);
-  }
-
   try {
     const tscResults = await pMap(
       packages,
       async (pkg, index) => {
-        if (!verbose) {
+        if (verbose) {
           logger.info(`Processing ${pkg.name} (${index + 1}/${packages.length})...`);
         }
         return runTscOnPackage(pkg, monorepoRoot, {
@@ -980,7 +1006,7 @@ export const runTscOnAllPackages = async (
 
     const { stopOnError = false } = options;
     logger.info(
-      `   Checking ${packages.length} packages (concurrency: ${concurrency}, stopOnError: ${stopOnError})...\n`
+      `Checking ${packages.length} packages (concurrency: ${concurrency}, stopOnError: ${stopOnError})...`
     );
 
     if (verbose) {

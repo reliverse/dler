@@ -59,6 +59,14 @@ export const PRESET_CATEGORIES: Record<string, PresetCategory> = {
     order: 7,
   },
 
+  // Dler caches
+  "dler-cache": {
+    name: "dler-cache",
+    description: "Dler command caches",
+    patterns: ["node_modules/.cache/dler/"],
+    order: 8,
+  },
+
   // Dependencies (deleted last)
   deps: {
     name: "deps",

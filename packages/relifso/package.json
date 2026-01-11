@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/relifso",
-  "version": "2.3.2",
+  "version": "2.3.4",
   "private": false,
   "description": "Bun-first fs-extra style helpers (copy, ensure*, output*) for Reliverse ecosystem",
   "license": "MIT",
@@ -20,9 +20,13 @@
   "publishConfig": {
     "access": "public"
   },
+  "dependencies": {
+    "left-pad": "^1.3.0"
+  },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:"
   }
 }

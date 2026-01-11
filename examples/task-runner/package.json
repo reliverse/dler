@@ -6,19 +6,22 @@
   "scripts": {
     "dev": "bun dler dev",
     "build": "bun dler build",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsgo --noEmit",
     "cli": "bun cli.ts"
   },
   "dependencies": {
     "@reliverse/rempts-core": "workspace:*",
     "@reliverse/relico": "workspace:*",
     "arktype": "catalog:",
-    "arkregex": "catalog:"
+    "arkregex": "catalog:",
+    "left-pad": "^1.3.0"
   },
   "devDependencies": {
     "@reliverse/dler": "workspace:*",
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "svelte": "^5.46.1"
   }
 }

@@ -323,7 +323,7 @@ test('long running command', async () => {
   })
   
   expect(result.exitCode).toBe(0)
-  expect(result.stdout).toContain('Installing dependencies...')
+  expect(result.stdout).toContain('Applying changes (bun install)...')
   expect(result.stdout).toContain('✓ Installation complete')
 })
 

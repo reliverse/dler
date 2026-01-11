@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/rempts",
-  "version": "2.3.2",
+  "version": "2.3.4",
   "description": "Scaffold new Rempts CLI projects with ease",
   "keywords": [
     "bun",
@@ -33,7 +33,7 @@
   ],
   "type": "module",
   "module": "./dist/mod.js",
-  "types": "./dist/mod.d.ts",
+  "types": "./dist/mod.d.d.d.ts",
   "exports": {
     ".": {
       "types": "./src/mod.ts",
@@ -46,7 +46,8 @@
     "@reliverse/rempts-test": "workspace:*",
     "@reliverse/rempts-utils": "workspace:*",
     "arktype": "catalog:",
-    "giget": "catalog:"
+    "giget": "catalog:",
+    "left-pad": "^1.3.0"
   },
   "publishConfig": {
     "access": "public"
@@ -54,13 +55,14 @@
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:"
   },
   "scripts": {
     "dev": "bun run src/cli.ts",
     "build": "bun scripts/build.ts && bun run tsc",
     "test": "bun test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsgo --noEmit",
     "prepublishOnly": "bun run build"
   }
 }

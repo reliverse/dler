@@ -891,7 +891,7 @@ bun dler update
 {
   "scripts": {
     "latest": "bun dler update --with-check-script",
-    "check": "tsc --noEmit && eslint --cache --fix . && biome check --fix --unsafe . && knip"
+    "check": "tsgo --noEmit && eslint --cache --fix . && biome check --fix --unsafe . && knip"
   }
 }
 ```

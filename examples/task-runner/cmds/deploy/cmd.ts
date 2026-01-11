@@ -83,7 +83,7 @@ export default defineCommand({
 
         // Simulate substeps for some operations
         if (step.name === "build") {
-          spin.update("Installing dependencies...");
+          spin.update("Applying changes (bun install)...");
           await new Promise((resolve) => setTimeout(resolve, 500));
 
           spin.update("Compiling TypeScript...");

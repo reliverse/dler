@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/build",
-  "version": "2.3.2",
+  "version": "2.3.4",
   "private": false,
   "description": "Build utils for Reliverse ecosystem",
   "license": "MIT",
@@ -37,13 +37,15 @@
     "mlly": "catalog:",
     "pkg-types": "catalog:",
     "semver": "catalog:",
-    "tinyglobby": "catalog:"
+    "tinyglobby": "catalog:",
+    "left-pad": "latest"
   },
   "devDependencies": {
     "@microsoft/api-extractor": "catalog:",
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:"
   },
   "scripts": {
     "perf": "bun bench/perf.ts"

@@ -6,6 +6,9 @@ export default defineConfig({
   description:
     "@reliverse/dler is a framework which helps TypeScript and JavaScript developers create their libraries and CLI tools. It provides ready-to-use primitives, so you don't have to write them from scratch.",
   plugins: [],
+  // commands: {
+  //   directory: "./src/cmds",
+  // }, // <src|dist> is the default, it is not required to be set
   build: {
     entry: "./cli.ts",
     outdir: "./dist",

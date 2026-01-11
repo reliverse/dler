@@ -11,6 +11,7 @@ import {
   type DependencyInfo,
   type PackageCheckOptions,
   prepareDependenciesForUpdate,
+  prepareDependenciesForUpdateFromMap,
   runInstallCommand,
   type UpdateResult,
 } from "./utils";
@@ -25,6 +26,7 @@ interface UpdateArgs {
   allowMajor?: boolean;
   concurrency?: number;
   ignoreFields?: string[];
+  verbose?: boolean;
 }
 
 export async function validatePackageJson(): Promise<string> {
@@ -38,13 +40,13 @@ export async function validatePackageJson(): Promise<string> {
   return packageJsonPath;
 }
 
-export async function prepareAllUpdateCandidates(): Promise<{
+export async function prepareAllUpdateCandidates(cwd?: string): Promise<{
   packageJsonFiles: string[];
   fileDepsMap: Map<string, Record<string, DependencyInfo>>;
 }> {
-  // Find ALL package.json files in the project using Bun's Glob
+  // Find ALL package.json files in the project
   const glob = new Glob("**/package.json");
-  const packageJsonFiles: string[] = [];
+  let packageJsonFiles: string[] = [];
 
   for await (const file of glob.scan({
     cwd: process.cwd(),
@@ -70,31 +72,44 @@ export async function prepareAllUpdateCandidates(): Promise<{
     }
   }
 
+  // Filter by cwd if specified
+  if (cwd) {
+    const cwdPath = path.resolve(process.cwd(), cwd);
+    packageJsonFiles = packageJsonFiles.filter((filePath) => {
+      return (
+        filePath.startsWith(cwdPath + path.sep) || filePath === path.join(cwdPath, "package.json")
+      );
+    });
+  }
+
   if (packageJsonFiles.length === 0) {
     logger.warn("No package.json files found");
     return { packageJsonFiles: [], fileDepsMap: new Map() };
   }
 
-  logger.debug(`Found ${packageJsonFiles.length} package.json files`);
-
-  // Process each package.json file independently
+  // Process each package.json file in parallel for better I/O performance
   const fileDepsMap = new Map<string, Record<string, DependencyInfo>>();
 
-  for (const packageJsonPath of packageJsonFiles) {
+  const readPromises = packageJsonFiles.map(async (packageJsonPath) => {
     try {
       const packageJson = JSON.parse(await fs.readFile(packageJsonPath, { encoding: "utf8" }));
       const { map } = collectTargetDependencies(packageJson);
-
-      // Store file-specific dependencies
-      fileDepsMap.set(packageJsonPath, map);
+      return { path: packageJsonPath, map };
     } catch (error) {
       logger.warn(
         `Failed to process ${packageJsonPath}: ${error instanceof Error ? error.message : String(error)}`
       );
+      return { path: packageJsonPath, map: {} };
     }
+  });
+
+  const readResults = await pMap(readPromises, (promise) => promise, { concurrency: 20 });
+
+  for (const result of readResults) {
+    fileDepsMap.set(result.path, result.map);
   }
 
-  logger.debug(`Processing ${packageJsonFiles.length} package.json files`);
+  logger.debug(`Processing ${packageJsonFiles.length} package.json files...`);
   return { packageJsonFiles, fileDepsMap };
 }
 
@@ -135,6 +150,68 @@ export async function checkPackageUpdatesForFile(
     },
     { concurrency: args.concurrency || 5 }
   );
+}
+
+export async function checkPackageUpdatesForAllFiles(
+  globalDepsMap: Map<string, { versionSpec: string; locations: Set<string>; files: Set<string> }>,
+  args: UpdateArgs
+): Promise<UpdateResult[]> {
+  const options: PackageCheckOptions = {
+    allowMajor: !!args.allowMajor,
+    savePrefix: "^", // Use default prefix
+    concurrency: args.concurrency || 50, // Increased default concurrency for HTTP requests
+  };
+
+  // Get candidates for all files combined (pass Map directly to avoid conversion)
+  const candidates = prepareDependenciesForUpdateFromMap(globalDepsMap, args);
+
+  if (candidates.length === 0) {
+    return [];
+  }
+
+  if (args.verbose) {
+    logger.debug(
+      `Checking ${candidates.length} unique dependencies across all files with concurrency ${options.concurrency}`
+    );
+  }
+
+  // Use Promise.allSettled with high concurrency for maximum parallelization of HTTP requests
+  const promises = candidates.map(async (dep): Promise<UpdateResult> => {
+    const depInfo = globalDepsMap.get(dep);
+    if (!depInfo?.versionSpec) {
+      return {
+        package: dep,
+        currentVersion: "unknown",
+        latestVersion: "unknown",
+        updated: false,
+        error: "Current version not found",
+        semverCompatible: false,
+        location: "unknown",
+      };
+    }
+
+    return checkPackageUpdate(dep, depInfo.versionSpec, depInfo.locations, options);
+  });
+
+  const results = await Promise.allSettled(promises);
+
+  // Convert results and filter out any rejected promises (treat as errors)
+  return results.map((result, index) => {
+    if (result.status === "fulfilled") {
+      return result.value;
+    } else {
+      const dep = candidates[index] ?? "unknown";
+      return {
+        package: dep,
+        currentVersion: "unknown",
+        latestVersion: "unknown",
+        updated: false,
+        error: `Failed to check: ${result.reason}`,
+        semverCompatible: false,
+        location: "unknown",
+      };
+    }
+  });
 }
 
 export async function updatePackageJsonFileDirectly(
@@ -204,9 +281,9 @@ export async function updatePackageJsonFileDirectly(
   }
 }
 
-export async function handleInstallation(): Promise<void> {
+export async function handleInstallation(verbose: boolean = false): Promise<void> {
   try {
-    await runInstallCommand();
+    await runInstallCommand(verbose);
     logger.log("Installation completed successfully");
   } catch (error) {
     logger.warn(`Install failed: ${error instanceof Error ? error.message : String(error)}`);

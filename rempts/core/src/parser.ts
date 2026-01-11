@@ -6,6 +6,13 @@ export interface ParsedArgs<TOptions extends Options = Options> {
   positional: string[];
 }
 
+/**
+ * Convert kebab-case string to camelCase
+ */
+function kebabToCamel(str: string): string {
+  return str.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
 export async function parseArgs<TOptions extends Options = Options>(
   args: string[],
   options: TOptions,
@@ -45,7 +52,8 @@ export async function parseArgs<TOptions extends Options = Options>(
     if (arg.startsWith("--")) {
       // Long flag: --name or --name=value
       const eqIndex = arg.indexOf("=");
-      const name = eqIndex > 0 ? arg.slice(2, eqIndex) : arg.slice(2);
+      const kebabName = eqIndex > 0 ? arg.slice(2, eqIndex) : arg.slice(2);
+      const name = kebabToCamel(kebabName);
       const inlineValue = eqIndex > 0 ? arg.slice(eqIndex + 1) : undefined;
 
       if (!(name && options[name])) {
@@ -54,8 +62,12 @@ export async function parseArgs<TOptions extends Options = Options>(
 
       // Get the value (inline, next arg, or 'true' for boolean-like flags)
       let value: string | undefined = inlineValue;
-      if (value === undefined && i + 1 < args.length && !args[i + 1]?.startsWith("-")) {
-        value = args[++i];
+      if (value === undefined) {
+        // Check if this option only accepts boolean values
+        const isStrictBooleanFlag = await isStrictBooleanOption(options[name]?.schema);
+        if (!isStrictBooleanFlag && i + 1 < args.length && !args[i + 1]?.startsWith("-")) {
+          value = args[++i];
+        }
       }
 
       // Pass the value to the schema for validation
@@ -66,9 +78,12 @@ export async function parseArgs<TOptions extends Options = Options>(
       const name = shortToName.get(short);
 
       if (name && options[name]) {
-        // Get the next argument as value if available
+        // Check if this option only accepts boolean values (not boolean|string)
+        const isStrictBooleanFlag = await isStrictBooleanOption(options[name]?.schema);
+
+        // Get the next argument as value only if it's not a strict boolean flag
         let value: string | undefined;
-        if (i + 1 < args.length && !args[i + 1]?.startsWith("-")) {
+        if (!isStrictBooleanFlag && i + 1 < args.length && !args[i + 1]?.startsWith("-")) {
           value = args[++i];
         }
 
@@ -188,6 +203,21 @@ function extractSchemaType(schema: StandardSchemaV1): string {
   }
 
   return "unknown";
+}
+
+/**
+ * Check if a schema ONLY accepts boolean values (not boolean|string etc.)
+ */
+async function isStrictBooleanOption(schema: StandardSchemaV1): Promise<boolean> {
+  // Check if it accepts boolean values
+  const trueResult = await schema["~standard"].validate(true);
+  const falseResult = await schema["~standard"].validate(false);
+
+  // Check if it rejects non-boolean values
+  const stringResult = await schema["~standard"].validate("true");
+
+  // It's a strict boolean if it accepts true/false but rejects strings
+  return !(trueResult.issues || falseResult.issues) && !!stringResult.issues;
 }
 
 /**

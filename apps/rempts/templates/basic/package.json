@@ -12,7 +12,7 @@
     "dev": "bun run src/mod.ts",
     "build": "bun dler build",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
     "@reliverse/rempts-core": "workspace:*"
@@ -22,7 +22,8 @@
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
     "rempts": "workspace:*",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:"
   },
   "rempts": {
     "entry": "./src/mod.ts",

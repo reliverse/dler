@@ -14,8 +14,8 @@
     "build": "bun dler build",
     "test": "bun test",
     "test:watch": "bun test --watch",
-    "typecheck": "tsc --noEmit",
-    "lint": "tsc --noEmit",
+    "typecheck": "tsgo --noEmit",
+    "lint": "tsgo --noEmit",
     "prepare": "bun run build"
   },
   "dependencies": {
@@ -28,7 +28,8 @@
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
     "rempts": "workspace:*",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:"
   },
   "rempts": {
     "entry": "./src/mod.ts",

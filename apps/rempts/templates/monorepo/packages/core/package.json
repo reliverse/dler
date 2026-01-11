@@ -16,7 +16,7 @@
   "scripts": {
     "build": "bun scripts/build.ts && bun run tsc",
     "test": "bun test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsgo --noEmit",
     "clean": "rm -rf dist"
   },
   "dependencies": {
@@ -28,6 +28,7 @@
     "@reliverse/rempts-test": "workspace:*",
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:"
   }
 }

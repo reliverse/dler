@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/rempts-plugin-ai-detect",
-  "version": "2.3.2",
+  "version": "2.3.4",
   "description": "AI agent detection plugin for Rempts - detects Claude, Cursor, Copilot and other AI coding assistants",
   "keywords": [
     "ai",
@@ -20,7 +20,7 @@
   ],
   "type": "module",
   "main": "./src/mod.ts",
-  "types": "./dist/mod.d.ts",
+  "types": "./dist/mod.d.d.d.ts",
   "exports": {
     ".": {
       "types": "./src/mod.ts",
@@ -28,7 +28,8 @@
     }
   },
   "dependencies": {
-    "@reliverse/rempts-core": "workspace:*"
+    "@reliverse/rempts-core": "workspace:*",
+    "left-pad": "^1.3.0"
   },
   "publishConfig": {
     "access": "public"
@@ -36,11 +37,12 @@
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:"
   },
   "scripts": {
     "build": "bun run scripts/build.ts",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsgo --noEmit",
     "test": "bun test"
   }
 }

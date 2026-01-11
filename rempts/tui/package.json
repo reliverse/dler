@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/rempts-tui",
-  "version": "2.3.2",
+  "version": "2.3.4",
   "description": "Terminal User Interface plugin for Rempts CLI framework",
   "keywords": [
     "cli",
@@ -28,7 +28,8 @@
   "dependencies": {
     "@opentui/core": "^0.1.72",
     "@opentui/react": "^0.1.72",
-    "@reliverse/rempts-core": "workspace:*"
+    "@reliverse/rempts-core": "workspace:*",
+    "left-pad": "^1.3.0"
   },
   "peerDependencies": {
     "@opentui/core": "^0.1.72",
@@ -42,11 +43,12 @@
     "@types/bun": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:"
   },
   "scripts": {
     "build": "bun run scripts/build.ts",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsgo --noEmit"
   }
 }

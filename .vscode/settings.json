@@ -1,4 +1,5 @@
 {
+  "typescript.experimental.useTsgo": true,
   "terminal.integrated.enablePersistentSessions": false,
   "json.schemaDownload.enable": true,
   "editor.selectionClipboard": false,
@@ -16,6 +17,7 @@
   },
   "markdownlint.config": {
     "MD031": false,
+    "MD060": false,
     "MD032": false,
     "MD022": false,
     "MD033": false,

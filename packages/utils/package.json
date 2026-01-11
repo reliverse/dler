@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/utils",
-  "version": "2.3.2",
+  "version": "2.3.4",
   "description": "Shared utilities for Reliverse packages",
   "type": "module",
   "exports": {
@@ -14,7 +14,9 @@
     }
   },
   "dependencies": {
-    "arktype": "catalog:"
+    "arktype": "catalog:",
+    "lodash": "^4.17.21",
+    "immutable": "^5.1.4"
   },
   "peerDependencies": {
     "typescript": ">=5.9.3"
@@ -33,7 +35,7 @@
   },
   "scripts": {
     "build": "bun run build.ts",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsgo --noEmit",
     "clean": "rm -rf dist"
   }
 }

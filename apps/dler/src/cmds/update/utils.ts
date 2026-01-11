@@ -5,6 +5,62 @@ import { logger } from "@reliverse/relinka";
 import type { PackageJson } from "@reliverse/typerso";
 import { $ } from "bun";
 import semver from "semver";
+import { loadCache, saveCache } from "../../utils/cache";
+
+// Global cache for package versions to avoid repeated API calls
+const versionCache = new Map<string, { version: string; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const PERSISTENT_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours for persistent cache
+
+interface PersistentCache {
+  packages: Record<string, { version: string; timestamp: number }>;
+  lastUpdated: number;
+}
+
+/**
+ * Load persistent cache from disk
+ */
+async function loadPersistentCache(verbose = false): Promise<void> {
+  try {
+    const cacheData = await loadCache<PersistentCache>("update");
+
+    if (cacheData) {
+      // Only load cache if it's not older than 24 hours
+      if (Date.now() - cacheData.lastUpdated < PERSISTENT_CACHE_TTL) {
+        for (const [pkg, data] of Object.entries(cacheData.packages)) {
+          versionCache.set(pkg, data as { version: string; timestamp: number });
+        }
+        if (verbose) {
+          logger.debug(`Loaded ${Object.keys(cacheData.packages).length} cached package versions`);
+        }
+      } else {
+        logger.debug("Persistent cache expired, ignoring");
+      }
+    }
+  } catch (error) {
+    // Silently ignore cache loading errors
+    logger.debug(
+      `Failed to load persistent cache: ${error instanceof Error ? error.message : String(error)}, continuing without it`
+    );
+  }
+}
+
+/**
+ * Save persistent cache to disk
+ */
+async function savePersistentCache(): Promise<void> {
+  try {
+    const cacheData: PersistentCache = {
+      packages: Object.fromEntries(versionCache.entries()),
+      lastUpdated: Date.now(),
+    };
+
+    await saveCache("update", cacheData);
+  } catch (error) {
+    // Silently ignore cache saving errors
+    logger.debug("Failed to save persistent cache");
+  }
+}
 
 interface PackageJsonWithCatalogs extends PackageJson {
   dependencies?: Record<string, string>;
@@ -90,11 +146,6 @@ export function isSemverCompatible(currentVersionRange: string, latestVersion: s
       return false;
     }
 
-    // If the current version range is exact (no prefix), be conservative
-    if (!(currentVersionRange.startsWith("^") || currentVersionRange.startsWith("~"))) {
-      return false;
-    }
-
     // Check if the latest version satisfies the current range
     return semver.satisfies(latestVersion, currentVersionRange);
   } catch {
@@ -106,6 +157,7 @@ export function isSemverCompatible(currentVersionRange: string, latestVersion: s
 /**
  * Collect ALL dependencies from package.json.
  * Returns a map of dependency name to its version and all locations where it appears.
+ * Early filters out non-updateable dependencies to reduce processing.
  */
 export function collectTargetDependencies(pkg: PackageJsonWithCatalogs): {
   map: Record<string, DependencyInfo>;
@@ -117,56 +169,50 @@ export function collectTargetDependencies(pkg: PackageJsonWithCatalogs): {
   const peerDependencies = pkg.peerDependencies || {};
   const optionalDependencies = pkg.optionalDependencies || {};
 
-  // Production dependencies
-  for (const dep of Object.keys(dependencies)) {
-    const version = dependencies[dep];
-    if (!version) {
-      continue;
-    }
+  // Helper function to add dependency with early filtering
+  const addDependency = (dep: string, version: string, location: string) => {
+    if (!version) return;
+
+    // Early filter: skip non-semver specifiers
+    if (isNonSemverSpecifier(version)) return;
+
     if (!map[dep]) {
       map[dep] = { versionSpec: version, locations: new Set() };
     }
     map[dep].versionSpec = version;
-    map[dep].locations.add("dependencies");
+    map[dep].locations.add(location);
+  };
+
+  // Production dependencies
+  for (const dep of Object.keys(dependencies)) {
+    const version = dependencies[dep];
+    if (version) {
+      addDependency(dep, version, "dependencies");
+    }
   }
 
   // Development dependencies
   for (const dep of Object.keys(devDependencies)) {
     const version = devDependencies[dep];
-    if (!version) {
-      continue;
+    if (version) {
+      addDependency(dep, version, "devDependencies");
     }
-    if (!map[dep]) {
-      map[dep] = { versionSpec: version, locations: new Set() };
-    }
-    map[dep].versionSpec = version;
-    map[dep].locations.add("devDependencies");
   }
 
   // Peer dependencies
   for (const dep of Object.keys(peerDependencies)) {
     const version = peerDependencies[dep];
-    if (!version) {
-      continue;
+    if (version) {
+      addDependency(dep, version, "peerDependencies");
     }
-    if (!map[dep]) {
-      map[dep] = { versionSpec: version, locations: new Set() };
-    }
-    map[dep].versionSpec = version;
-    map[dep].locations.add("peerDependencies");
   }
 
   // Optional dependencies
   for (const dep of Object.keys(optionalDependencies)) {
     const version = optionalDependencies[dep];
-    if (!version) {
-      continue;
+    if (version) {
+      addDependency(dep, version, "optionalDependencies");
     }
-    if (!map[dep]) {
-      map[dep] = { versionSpec: version, locations: new Set() };
-    }
-    map[dep].versionSpec = version;
-    map[dep].locations.add("optionalDependencies");
   }
 
   // Catalog dependencies
@@ -175,14 +221,9 @@ export function collectTargetDependencies(pkg: PackageJsonWithCatalogs): {
   const workspacesCatalog = pkg.workspaces?.catalog || {};
   for (const dep of Object.keys(workspacesCatalog)) {
     const version = workspacesCatalog[dep];
-    if (!version) {
-      continue;
+    if (version) {
+      addDependency(dep, version, "catalog");
     }
-    if (!map[dep]) {
-      map[dep] = { versionSpec: version, locations: new Set() };
-    }
-    map[dep].versionSpec = version;
-    map[dep].locations.add("catalog");
   }
 
   // Check for workspaces.catalogs (named catalogs)
@@ -191,14 +232,9 @@ export function collectTargetDependencies(pkg: PackageJsonWithCatalogs): {
     const catalog = workspacesCatalogs[catalogName] || {};
     for (const dep of Object.keys(catalog)) {
       const version = catalog[dep];
-      if (!version) {
-        continue;
+      if (version) {
+        addDependency(dep, version, `catalogs.${catalogName}`);
       }
-      if (!map[dep]) {
-        map[dep] = { versionSpec: version, locations: new Set() };
-      }
-      map[dep].versionSpec = version;
-      map[dep].locations.add(`catalogs.${catalogName}`);
     }
   }
 
@@ -320,24 +356,66 @@ export function applyVersionUpdate(
  * Fallback function to fetch package version directly from npm registry
  */
 export async function fetchVersionFromRegistry(packageName: string): Promise<string> {
-  const response = await fetch(`https://registry.npmjs.org/${packageName}/latest`);
+  // Normalize package name to lowercase (npm registry is case-insensitive but some tools expect this)
+  const normalizedName = packageName.toLowerCase();
+
+  const response = await fetch(`https://registry.npmjs.org/${normalizedName}/latest`, {
+    headers: {
+      // Use npm install headers for better compatibility and potentially faster responses
+      accept: "application/vnd.npm.install-v1+json; q=1.0, application/json; q=0.8, */*",
+    },
+  });
+
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    if (response.status === 404) {
+      throw new Error(`Package '${packageName}' not found in npm registry`);
+    }
+    throw new Error(
+      `Failed to fetch version for '${packageName}': HTTP ${response.status} ${response.statusText}`
+    );
   }
+
   const data = (await response.json()) as { version: string };
+  if (!data.version) {
+    throw new Error(`No version found for package '${packageName}'`);
+  }
+
   return data.version;
 }
 
 /**
- * Get latest version of a package
+ * Get latest version of a package with caching
  */
 export async function getLatestVersion(packageName: string): Promise<string> {
+  // Check cache first (includes both memory and persistent cache)
+  const cached = versionCache.get(packageName);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.version;
+  }
+
   try {
     // Use Bun's built-in fetch to get the latest version from npm registry
-    return await fetchVersionFromRegistry(packageName);
+    const version = await fetchVersionFromRegistry(packageName);
+
+    // Cache the result
+    versionCache.set(packageName, { version, timestamp: Date.now() });
+
+    // Save persistent cache in background (don't await)
+    savePersistentCache().catch(() => {
+      // Ignore save errors
+    });
+
+    return version;
   } catch (error) {
     throw new Error(`Failed to get latest version for ${packageName}: ${error}`);
   }
+}
+
+/**
+ * Initialize persistent cache (call this at the start of update operations)
+ */
+export async function initializeCache(verbose = false): Promise<void> {
+  await loadPersistentCache(verbose);
 }
 
 /**
@@ -357,9 +435,17 @@ export async function checkPackageUpdate(
 ): Promise<UpdateResult> {
   try {
     const latest = await getLatestVersion(packageName);
-    const cleanCurrent = versionSpec.replace(/^[\^~]/, "");
+    const cleanCurrent = versionSpec.replace(/^[\^~>=<]+/, ""); // Also remove >=, >, <, = prefixes
     let isCompatible = isSemverCompatible(versionSpec, latest);
-    const isExact = !(versionSpec.startsWith("^") || versionSpec.startsWith("~"));
+    const isExact = !(
+      versionSpec.startsWith("^") ||
+      versionSpec.startsWith("~") ||
+      versionSpec.startsWith(">=") ||
+      versionSpec.startsWith(">") ||
+      versionSpec.startsWith("<=") ||
+      versionSpec.startsWith("<") ||
+      versionSpec.startsWith("=")
+    );
 
     // Allow updates to latest version: exact versions always, and major updates when enabled (default)
     if (isExact || (!isCompatible && options.allowMajor)) {
@@ -385,6 +471,100 @@ export async function checkPackageUpdate(
       location: Array.from(locations).join(", "),
     };
   }
+}
+
+/**
+ * Filter and prepare dependencies for updating with glob pattern support (optimized for Map input)
+ */
+export function prepareDependenciesForUpdateFromMap(
+  allDepsMap: Map<string, { versionSpec: string; locations: Set<string>; files: Set<string> }>,
+  args: {
+    name?: string[];
+    ignore?: string[];
+    ignoreFields?: string[];
+  }
+): string[] {
+  // Filter dependencies based on name and ignore parameters
+  const depsToUpdate = Array.from(allDepsMap.keys());
+  let filteredDeps: string[] = [];
+
+  if (args.name && args.name.length > 0) {
+    // Update only specified dependencies (supports glob patterns)
+    const namePatterns = args.name as string[];
+    filteredDeps = depsToUpdate.filter((dep) => {
+      return namePatterns.some((pattern) => {
+        // If pattern contains glob chars, use zeptomatch; otherwise exact match
+        if (
+          pattern.includes("*") ||
+          pattern.includes("?") ||
+          pattern.includes("[") ||
+          pattern.includes("{")
+        ) {
+          return zeptomatch.isMatch(pattern, dep);
+        }
+        return dep === pattern;
+      });
+    });
+
+    // Show helpful info about pattern matching
+    const exactMatches = filteredDeps.filter((dep) => namePatterns.includes(dep));
+    const patternMatches = filteredDeps.length - exactMatches.length;
+
+    if (patternMatches > 0) {
+      logger.debug(
+        `Found ${exactMatches.length} exact matches and ${patternMatches} pattern matches`
+      );
+    }
+
+    if (filteredDeps.length === 0) {
+      logger.warn(`No dependencies found matching patterns: ${namePatterns.join(", ")}`);
+    }
+  } else {
+    // Update all dependencies, respecting ignore list (supports glob patterns)
+    const ignoreList = args.ignore || [];
+    filteredDeps = depsToUpdate.filter((dep) => {
+      return !ignoreList.some((ignorePattern: string) => {
+        // If pattern contains glob chars, use zeptomatch; otherwise exact match
+        if (
+          ignorePattern.includes("*") ||
+          ignorePattern.includes("?") ||
+          ignorePattern.includes("[") ||
+          ignorePattern.includes("{")
+        ) {
+          return zeptomatch.isMatch(ignorePattern, dep);
+        }
+        return dep === ignorePattern;
+      });
+    });
+
+    // Show info about ignored packages
+    const ignoredCount = depsToUpdate.length - filteredDeps.length;
+    if (ignoredCount > 0 && ignoreList.length > 0) {
+      logger.debug(`Ignored ${ignoredCount} dependencies matching ignore patterns`);
+    }
+  }
+
+  // Filter out dependencies in ignored fields
+  const ignoreFields = args.ignoreFields || [];
+  if (ignoreFields.length > 0) {
+    filteredDeps = filteredDeps.filter((dep) => {
+      const depInfo = allDepsMap.get(dep);
+      if (!depInfo) return false;
+
+      // Check if any of the dependency's locations should be ignored
+      return !Array.from(depInfo.locations).some((location) => ignoreFields.includes(location));
+    });
+
+    const ignoredFieldsCount = depsToUpdate.length - filteredDeps.length;
+    if (ignoredFieldsCount > 0) {
+      logger.debug(
+        `Ignored ${ignoredFieldsCount} dependencies in ignored fields: ${ignoreFields.join(", ")}`
+      );
+    }
+  }
+
+  // All dependencies are already filtered during collection, just return filteredDeps
+  return filteredDeps;
 }
 
 /**
@@ -582,15 +762,8 @@ export function displayStructuredUpdateResults(
     logger.log(""); // Empty line for spacing
   }
 
-  // If not showing details, just show simplified success info
+  // If not showing details, don't show the summary (it's shown by the command handler)
   if (!showDetails) {
-    if (toUpdate.length === 0) {
-      logger.log(`All ${upToDate.length} dependencies are already up to date`);
-    } else {
-      logger.log(
-        `${toUpdate.length} dependencies can be updated across ${packageJsonFiles.length} package.json files`
-      );
-    }
     return;
   }
 
@@ -704,13 +877,18 @@ export function displayStructuredUpdateResults(
 /**
  * Run Bun install command
  */
-export async function runInstallCommand(): Promise<void> {
+export async function runInstallCommand(verbose: boolean = false): Promise<void> {
   try {
-    await $`bun install`.quiet();
+    const cmd = $`bun install`;
+    await cmd;
   } catch (error) {
-    logger.warn(
-      `Failed to run install command: ${error instanceof Error ? error.message : String(error)}`
-    );
+    // Show the actual error from bun install instead of generic message
+    logger.warn("Failed to run install command:");
+    if (error instanceof Error) {
+      logger.warn(error.message);
+    } else {
+      logger.warn(String(error));
+    }
     throw error;
   }
 }

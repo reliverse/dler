@@ -25,6 +25,7 @@
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
     "turbo": "^2.7.3",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:"
   }
 }

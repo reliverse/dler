@@ -155,7 +155,7 @@ handler: async ({ prompt, flags }) => {
 
 ```typescript
 handler: async ({ spinner, shell }) => {
-  const spin = spinner('Installing dependencies...')
+  const spin = spinner('Applying changes (bun install)...')
   spin.start()
   
   try {

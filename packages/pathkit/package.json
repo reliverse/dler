@@ -1,6 +1,6 @@
 {
   "name": "@reliverse/pathkit",
-  "version": "2.3.2",
+  "version": "2.3.4",
   "private": false,
   "description": "Path manipulation and resolution utilities for Reliverse ecosystem",
   "license": "MIT",
@@ -19,9 +19,14 @@
   "publishConfig": {
     "access": "public"
   },
+  "dependencies": {
+    "ramda": "^0.32.0",
+    "immutable": "^5.1.4"
+  },
   "devDependencies": {
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:"
   }
 }

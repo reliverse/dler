@@ -24,7 +24,7 @@ description: "extend your bun/pnpm/yarn/npm usage"
 - **zero-config setup** — forget about `package.json` maintenance
 - **built-in bun environment** when used as a standalone cli app
 - **performance-optimized** using fast build pipelines and aggressive caching
-- **17 built-in commands** — see [dler commands](/rse/cmds) for everything it can do
+- **12 built-in commands** — comprehensive CLI toolkit for modern development
 - **path alias resolution** — automatically rewrites tsconfig aliases to relative imports
 - **configurable by design** — dedicated config files with sane defaults
 - **dual interface** — use via cli or import as sdk for programmatic use
@@ -35,6 +35,34 @@ description: "extend your bun/pnpm/yarn/npm usage"
 - **full monorepo system** with optimized cross-package dependency handling
 - **esp. designed for** cli tool creators, project bootstrappers (like [rse](https://github.com/reliverse/rse))
 - **perfect for** anyone who wants their package manager to have *sweet powers*
+
+## commands
+
+dler provides a comprehensive set of commands for modern JavaScript/TypeScript development:
+
+### Package Management
+- [`dler add`](./add) — Add dependencies to package.json files with catalog support
+- [`dler rm`](./rm) — Remove dependencies from package.json files with catalog support
+- [`dler update`](./update) — Update all dependencies to their latest versions across all package.json files
+
+### Build & Development
+- [`dler build`](./build) — Build workspace packages using configurable bundler
+- [`dler clean`](./clean) — Clean build artifacts and generated files from workspace packages
+- [`dler test`](./test) — Run tests for your CLI project
+
+### Code Quality
+- [`dler biome`](./biome) — Run Biome linting and formatting check on workspace
+- [`dler tsc`](./tsc) — Run TypeScript type checking on all workspace packages
+- [`dler unused`](./unused) — Find unused dependencies in package.json files
+
+### Publishing & Distribution
+- [`dler publish`](./publish) — Publish packages to NPM, JSR, GitHub Releases, or multiple registries
+
+### Project Setup
+- [`dler init`](./init) — Initialize a new Rempts CLI project
+
+### System Management
+- [`dler senv`](./senv) — Inspect and modify environment variables
 
 ## getting started
 

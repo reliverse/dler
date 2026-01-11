@@ -95,7 +95,7 @@ export async function createProject(options: CreateProjectOptions) {
 
     // Install dependencies
     if (install) {
-      const installSpin = spinner("Installing dependencies...");
+      const installSpin = spinner("Applying changes (bun install)...");
       installSpin.start();
 
       try {

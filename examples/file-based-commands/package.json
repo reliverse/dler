@@ -8,7 +8,7 @@
     "gen": "bun dler generate",
     "dev": "bun dler dev",
     "build": "bun dler build",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsgo --noEmit",
     "cli": "bun cli.ts"
   },
   "dependencies": {
@@ -20,6 +20,7 @@
     "@reliverse/dler": "workspace:*",
     "@reliverse/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:"
   }
 }
