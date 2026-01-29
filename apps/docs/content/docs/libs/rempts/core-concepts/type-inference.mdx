@@ -80,7 +80,7 @@ export default defineCommand({
 With generated types, you can execute commands programmatically with full type safety:
 
 ```typescript
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 
 const cli = await createCLI(config)
 
@@ -125,7 +125,7 @@ import {
   Expand,
   DeepPartial,
   Constrain
-} from '@reliverse/rempts-core'
+} from '@reliverse/rempts'
 
 // Get all command options as a union
 type AllCommandOptions = UnionToIntersection<
@@ -152,7 +152,7 @@ export default defineConfig({
 
 
 - `CommandsByName` interface - Maps command names to their definitions
-- `RegisteredCommands` module augmentation - Extends @reliverse/rempts-core types
+- `RegisteredCommands` module augmentation - Extends @reliverse/rempts types
 - Helper functions - `getCommandApi`, `listCommands`, `hasCommand`
 - Runtime registry - For command discovery
 

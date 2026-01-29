@@ -39,7 +39,7 @@ export type {
 export { defineCommand, option } from "./types";
 
 // Note: Plugin system is exported via subpath export
-// Usage: import { PluginManager, createPlugin } from '@reliverse/rempts-core/plugin'
+// Usage: import { PluginManager, createPlugin } from '@reliverse/rempts/plugin'
 
 // Export type utilities
 export type {

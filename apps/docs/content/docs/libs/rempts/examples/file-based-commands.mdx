@@ -40,7 +40,7 @@ Enable file-based command loading in your CLI configuration:
 ```typescript
 // cli.ts
 #!/usr/bin/env bun
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 
 const cli = await createCLI({
   name: 'file-cli',
@@ -91,7 +91,7 @@ await cli.run()
 
 ```typescript
 // dler.config.ts
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 
 export default defineConfig({
   name: 'file-cli',
@@ -117,7 +117,7 @@ export default defineConfig({
 
 ```typescript
 // commands/build.ts
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({
@@ -156,7 +156,7 @@ export default defineCommand({
 
 ```typescript
 // commands/test.ts
-import { defineCommand } from '@reliverse/rempts-core'
+import { defineCommand } from '@reliverse/rempts'
 
 export default defineCommand({
   name: 'test',
@@ -176,7 +176,7 @@ export default defineCommand({
 
 ```typescript
 // commands/db/migrate.ts
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({
@@ -211,7 +211,7 @@ export default defineCommand({
 
 ```typescript
 // commands/db/seed.ts
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({

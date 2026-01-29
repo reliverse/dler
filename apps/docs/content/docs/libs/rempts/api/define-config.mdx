@@ -90,7 +90,7 @@ interface RemptsConfig {
 
 ```typescript
 // dler.config.ts
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 
 export default defineConfig({
   name: 'my-cli',
@@ -283,7 +283,7 @@ The `rempts` CLI looks for config files in this order:
 You can also load config programmatically:
 
 ```typescript
-import { loadConfig } from '@reliverse/rempts-core'
+import { loadConfig } from '@reliverse/rempts'
 
 const config = await loadConfig()
 ```

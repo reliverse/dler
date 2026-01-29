@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { $ } from "bun";
 
-console.log("🔨 Building @reliverse/rempts CLI...");
+console.log("🔨 Building @reliverse/dler rempts CLI...");
 
 // Clean dist directory
 await $`rm -rf dist`;

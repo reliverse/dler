@@ -56,7 +56,7 @@ import { testCommand, expectCommand } from '@reliverse/rempts-test'
 ### Test a simple command
 
 ```typescript
-import { defineCommand } from '@reliverse/rempts-core'
+import { defineCommand } from '@reliverse/rempts'
 
 const greetCommand = defineCommand({
   name: 'greet',
@@ -261,7 +261,7 @@ test('password masking and validation', async () => {
 Test entire CLI applications with multiple commands:
 
 ```typescript
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 import { testCLI } from '@reliverse/rempts-test'
 
 test('CLI help command', async () => {

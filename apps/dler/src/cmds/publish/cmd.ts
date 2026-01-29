@@ -11,7 +11,7 @@ import {
   type RegistryType,
 } from "@reliverse/publish";
 import { logger } from "@reliverse/relinka";
-import { defineCommand, option } from "@reliverse/rempts-core";
+import { defineCommand, option } from "@reliverse/rempts";
 import { type } from "arktype";
 
 // Valid bump types

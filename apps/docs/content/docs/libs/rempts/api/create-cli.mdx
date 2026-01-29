@@ -76,7 +76,7 @@ With automatic config loading from `dler.config.ts`:
 
 ```typescript
 // cli.ts
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 
 const cli = await createCLI()
 
@@ -86,7 +86,7 @@ await cli.run()
 
 ```typescript
 // dler.config.ts
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 
 export default defineConfig({
   name: 'my-cli',
@@ -102,7 +102,7 @@ export default defineConfig({
 
 ```typescript
 // cli.ts
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 
 const cli = await createCLI()
 
@@ -117,7 +117,7 @@ await cli.run()
 
 ```typescript
 // dler.config.ts
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 
 export default defineConfig({
   name: 'my-cli',
@@ -135,7 +135,7 @@ For plugins that need runtime-specific options:
 
 ```typescript
 // cli.ts
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 import { configPlugin } from '@reliverse/rempts-plugin-config'
 import { aiDetectPlugin } from '@reliverse/rempts-plugin-ai-detect'
 
@@ -151,7 +151,7 @@ await cli.run()
 
 ```typescript
 // dler.config.ts
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 
 export default defineConfig({
   name: 'my-cli',
@@ -168,7 +168,7 @@ export default defineConfig({
 You can still provide full configuration explicitly:
 
 ```typescript
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 
 const cli = await createCLI({
   name: 'my-cli',

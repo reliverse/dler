@@ -19,7 +19,7 @@ describe("FileCommandLoader", () => {
   it("should build command tree from directory", async () => {
     // Create a test command file
     const commandContent = `
-import { defineCommand } from "@reliverse/rempts-core";
+import { defineCommand } from "@reliverse/rempts";
 
 export default defineCommand({
   description: "A test command",
@@ -42,7 +42,7 @@ export default defineCommand({
   it("should handle nested commands", async () => {
     // Create nested command files
     const parentContent = `
-import { defineCommand } from "@reliverse/rempts-core";
+import { defineCommand } from "@reliverse/rempts";
 
 export default defineCommand({
   description: "A parent command",
@@ -53,7 +53,7 @@ export default defineCommand({
 `;
 
     const childContent = `
-import { defineCommand } from "@reliverse/rempts-core";
+import { defineCommand } from "@reliverse/rempts";
 
 export default defineCommand({
   description: "A child command",
@@ -81,7 +81,7 @@ export default defineCommand({
   it("should detect command conflicts", async () => {
     // Create conflicting command files
     const command1 = `
-import { defineCommand } from "@reliverse/rempts-core";
+import { defineCommand } from "@reliverse/rempts";
 
 export default defineCommand({
   description: "First build command",
@@ -90,7 +90,7 @@ export default defineCommand({
 `;
 
     const command2 = `
-import { defineCommand } from "@reliverse/rempts-core";
+import { defineCommand } from "@reliverse/rempts";
 
 export default defineCommand({
   description: "Second build command",
@@ -111,7 +111,7 @@ export default defineCommand({
 
   it("should support .js and .mjs extensions", async () => {
     const jsCommand = `
-import { defineCommand } from "@reliverse/rempts-core";
+import { defineCommand } from "@reliverse/rempts";
 
 export default defineCommand({
   description: "JavaScript command",
@@ -120,7 +120,7 @@ export default defineCommand({
 `;
 
     const mjsCommand = `
-import { defineCommand } from "@reliverse/rempts-core";
+import { defineCommand } from "@reliverse/rempts";
 
 export default defineCommand({
   description: "MJS command",
@@ -173,7 +173,7 @@ export default defineCommand({
     expect(commands[0]?.name).toBe("utility-test");
   });
 
-  it("should detect commands that only use defineCommand without @reliverse/rempts imports", async () => {
+  it("should detect commands that only use defineCommand without @reliverse/dler rempts imports", async () => {
     // Test the fixed logic for detecting commands that use defineCommand
     // but don't explicitly import from rempts-core
     const commandContent = `
@@ -214,7 +214,7 @@ describe("Directory-Based Command Loading", () => {
 
   it("should load commands from directory structure", async () => {
     const commandContent = `
-import { defineCommand } from "@reliverse/rempts-core";
+import { defineCommand } from "@reliverse/rempts";
 
 export default defineCommand({
   description: "Test command",
@@ -235,7 +235,7 @@ export default defineCommand({
 
   it("should handle nested commands", async () => {
     const parentCommand = `
-import { defineCommand } from "@reliverse/rempts-core";
+import { defineCommand } from "@reliverse/rempts";
 
 export default defineCommand({
   description: "Parent command",
@@ -244,7 +244,7 @@ export default defineCommand({
 `;
 
     const childCommand = `
-import { defineCommand } from "@reliverse/rempts-core";
+import { defineCommand } from "@reliverse/rempts";
 
 export default defineCommand({
   description: "Child command",

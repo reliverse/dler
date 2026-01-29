@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@reliverse/matcha": "workspace:*",
-    "@reliverse/rempts-core": "workspace:*",
+    "@reliverse/rempts": "workspace:*",
     "@reliverse/typerso": "workspace:*",
     "c12": "catalog:",
     "semver": "catalog:",

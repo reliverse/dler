@@ -3,10 +3,10 @@
  * Detects various AI coding assistants from environment variables
  */
 
-import { createPlugin, createPluginStore } from "@reliverse/rempts-core/plugin";
+import { createPlugin, createPluginStore } from "@reliverse/rempts/plugin";
 
 // Extend core interfaces with AI-specific fields
-// declare module "@reliverse/rempts-core/plugin" {
+// declare module "@reliverse/rempts/plugin" {
 //   interface EnvironmentInfo {
 //     /** AI agent detected */
 //     isAIAgent: boolean;

@@ -37,7 +37,7 @@ When developing Rempts CLIs:
 
 ```typescript
 // dler.config.ts
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 
 export default defineConfig({
   name: 'my-cli',

@@ -8,7 +8,7 @@ Rempts is a minimal, type-safe CLI framework for Bun with an advanced plugin sys
 
 ### Key Packages
 
-- **@reliverse/rempts-core** - Core CLI framework with type-safe command definitions and plugin system
+- **@reliverse/rempts** - Core CLI framework with type-safe command definitions and plugin system
 - **rempts-utils** - Shared utilities (colors, prompts, spinners, validation)
 - **rempts-test** - Testing utilities for CLI applications
 - **rempts-generator** - TypeScript type generation from CLI commands
@@ -82,7 +82,7 @@ export default defineConfig({
 Commands in Rempts use a type-safe builder pattern:
 
 ```typescript
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { type } from 'arktype'
 
 const command = defineCommand({
@@ -150,7 +150,7 @@ Each package uses explicit exports in package.json:
 ### Adding a New Command
 
 1. Create command file in `commands/` directory (e.g., `commands/my-command.ts`)
-2. Use `defineCommand` from @reliverse/rempts-core
+2. Use `defineCommand` from @reliverse/rempts
 3. Export as default export
 4. Import and register in `cli.ts`
 5. Run `bun run generate` to update types
@@ -188,7 +188,7 @@ Rempts emphasizes type safety throughout:
 ### Creating Plugins
 
 ```typescript
-import { createPlugin } from '@reliverse/rempts-core/plugin'
+import { createPlugin } from '@reliverse/rempts/plugin'
 
 interface MyStore {
   count: number
@@ -210,7 +210,7 @@ export const myPlugin = createPlugin<MyStore>({
 ### Using Plugins
 
 ```typescript
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 import { aiAgentPlugin } from '@reliverse/rempts-plugin-ai-detect'
 import { configMergerPlugin } from '@reliverse/rempts-plugin-config'
 
@@ -230,7 +230,7 @@ const cli = await createCLI({
 Projects use `dler.config.ts` for configuration:
 
 ```typescript
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 
 export default defineConfig({
   name: 'my-cli',

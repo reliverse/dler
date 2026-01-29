@@ -60,7 +60,7 @@ Rempts is a comprehensive CLI development ecosystem built specifically for the B
   <Tab value="bun" label="Bun">
     ```bash
     # Scaffold a new CLI project
-    bunx @reliverse/rempts my-cli
+    bunx @reliverse/dler rempts my-cli
     cd my-cli
 
     # Run your CLI directly
@@ -73,7 +73,7 @@ Rempts is a comprehensive CLI development ecosystem built specifically for the B
   <Tab value="npm" label="npm">
     ```bash
     # Scaffold a new CLI project
-    npx @reliverse/rempts my-cli
+    npx @reliverse/dler rempts my-cli
     cd my-cli
 
     # Run your CLI directly
@@ -103,7 +103,7 @@ Automatic type inference eliminates manual type annotations while maintaining fu
 <Tabs groupId="type-safety" defaultValue="zod">
   <Tab value="zod" label="Zod">
     ```typescript
-    import { defineCommand, option } from '@reliverse/rempts-core'
+    import { defineCommand, option } from '@reliverse/rempts'
     import { z } from 'zod'
 
     // Rempts infers everything automatically
@@ -129,7 +129,7 @@ Automatic type inference eliminates manual type annotations while maintaining fu
 
   <Tab value="arktype" label="Arktype">
     ```typescript
-    import { defineCommand, option } from '@reliverse/rempts-core'
+    import { defineCommand, option } from '@reliverse/rempts'
     import { type } from 'arktype'
 
     // Rempts infers everything automatically
@@ -176,7 +176,7 @@ options: {
 Rempts provides a comprehensive ecosystem for CLI development:
 
 - **`@reliverse/rempts`** - Project scaffolding tool with template selection
-- **`@reliverse/rempts-core`** - Type-safe CLI framework with file-based command discovery
+- **`@reliverse/rempts`** - Type-safe CLI framework with file-based command discovery
 - **`@reliverse/rempts-utils`** - Shared utilities (prompts, spinners, colors, validation)
 - **`@reliverse/rempts-test`** - Testing utilities for CLI applications
 - **`@reliverse/rempts-plugin-*`** - Extensible plugin system for advanced functionality

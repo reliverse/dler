@@ -42,7 +42,7 @@ A `CLIOption` object that can be used in command definitions.
 ### Basic Options
 
 ```typescript
-import { option } from '@reliverse/rempts-core'
+import { option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 // String option with default
@@ -73,7 +73,7 @@ const env = option(
 ### Using in Commands
 
 ```typescript
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({

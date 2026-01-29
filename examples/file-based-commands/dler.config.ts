@@ -1,4 +1,4 @@
-import { defineConfig } from "@reliverse/rempts-core";
+import { defineConfig } from "@reliverse/rempts";
 
 export default defineConfig({
   name: "git-tool",

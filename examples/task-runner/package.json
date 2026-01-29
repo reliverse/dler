@@ -10,7 +10,7 @@
     "cli": "bun cli.ts"
   },
   "dependencies": {
-    "@reliverse/rempts-core": "workspace:*",
+    "@reliverse/rempts": "workspace:*",
     "@reliverse/relico": "workspace:*",
     "arktype": "catalog:",
     "arkregex": "catalog:",
@@ -22,6 +22,6 @@
     "@types/bun": "catalog:",
     "typescript": "catalog:",
     "@typescript/native-preview": "catalog:",
-    "svelte": "^5.46.1"
+    "svelte": "^5.49.0"
   }
 }

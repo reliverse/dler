@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { defineCommand, option } from "@reliverse/rempts-core";
+import { defineCommand, option } from "@reliverse/rempts";
 import { type } from "arktype";
 import { mergeTestOptions, mockPromptResponses, mockShellCommands, testCommand } from "../src/mod";
 

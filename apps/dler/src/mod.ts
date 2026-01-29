@@ -4,10 +4,24 @@ export {
   type LoadedConfig,
   loadConfig,
   type RemptsConfig,
-} from "@reliverse/rempts-core";
+} from "@reliverse/rempts";
 
 // Re-export utilities
 export { findEntry } from "./utils/find-entry";
 
 // Version info
 export const version = "0.1.0";
+
+// Re-export utilities for programmatic usage
+export { createProject } from "./cmds/rempts/impl/create-project";
+export {
+  isLocalTemplate,
+  processTemplate,
+  resolveTemplateSource,
+} from "./cmds/rempts/impl/template-engine";
+export type {
+  CreateOptions,
+  ProjectConfig,
+  TemplateManifest,
+  TemplateVariable,
+} from "./cmds/rempts/impl/types";

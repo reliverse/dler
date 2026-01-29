@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { createApp } from "@reliverse/rempts-core";
+import { createApp } from "@reliverse/rempts";
 
 const cli = await createApp({
   entryFile: import.meta.path,

@@ -15,7 +15,7 @@ Commands are the building blocks of your CLI. Rempts provides a powerful, type-s
 The simplest command requires just a name and handler:
 
 ```typescript
-import { defineCommand } from '@reliverse/rempts-core'
+import { defineCommand } from '@reliverse/rempts'
 
 export default defineCommand({
   name: 'hello',
@@ -31,7 +31,7 @@ export default defineCommand({
 Add typed options to your commands using the `option()` helper with Zod schemas:
 
 ```typescript
-import { option } from '@reliverse/rempts-core'
+import { option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({
@@ -178,7 +178,7 @@ Rempts uses **file-based command discovery only**. Commands are automatically di
 
 ```typescript
 // cli.ts
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 
 const cli = await createCLI({
   name: 'my-cli',
@@ -216,7 +216,7 @@ Each command file exports a default command definition:
 
 ```typescript
 // cmds/build/cmd.ts
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({
@@ -239,7 +239,7 @@ export default defineCommand({
 
 ```typescript
 // cmds/db/migrate/cmd.ts
-import { defineCommand } from '@reliverse/rempts-core'
+import { defineCommand } from '@reliverse/rempts'
 
 export default defineCommand({
   name: 'migrate',

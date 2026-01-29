@@ -75,7 +75,7 @@ Enhanced git status with additional information:
 
 ### 1. Nested Command Structure
 ```typescript
-import { defineCommand } from '@reliverse/rempts-core'
+import { defineCommand } from '@reliverse/rempts'
 
 export const branchCommand = defineCommand({
   name: 'branch',
@@ -110,7 +110,7 @@ export const branchCommand = defineCommand({
 
 ### 2. External Tool Integration
 ```typescript
-import { shell } from '@reliverse/rempts-core'
+import { shell } from '@reliverse/rempts'
 
 handler: async ({ shell, colors, spinner }) => {
   spinner.start('Fetching latest changes...')
@@ -150,7 +150,7 @@ export const prCommand = defineCommand({
 
 ### 4. Colored Output and Status
 ```typescript
-import { colors } from '@reliverse/rempts-core'
+import { colors } from '@reliverse/rempts'
 
 handler: async ({ shell, colors }) => {
   // Get git status
@@ -272,7 +272,7 @@ handler: async ({ shell, colors, spinner }) => {
 
 ### 1. Shell Command Execution
 ```typescript
-import { shell } from '@reliverse/rempts-core'
+import { shell } from '@reliverse/rempts'
 
 // Simple command execution
 const result = await shell.run('git status')

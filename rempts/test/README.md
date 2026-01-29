@@ -22,7 +22,7 @@ bun add -d rempts-test
 
 ```typescript
 import { test, expect } from 'bun:test'
-import { defineCommand } from '@reliverse/rempts-core'
+import { defineCommand } from '@reliverse/rempts'
 import { testCommand, expectCommand } from '@reliverse/rempts-test'
 
 const greetCommand = defineCommand({
@@ -142,7 +142,7 @@ test('email validation', async () => {
 ### Testing Complete CLIs
 
 ```typescript
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 import { testCLI } from '@reliverse/rempts-test'
 
 test('CLI help', async () => {

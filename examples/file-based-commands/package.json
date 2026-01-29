@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@reliverse/relico": "workspace:*",
-    "@reliverse/rempts-core": "workspace:*",
+    "@reliverse/rempts": "workspace:*",
     "arktype": "catalog:"
   },
   "devDependencies": {

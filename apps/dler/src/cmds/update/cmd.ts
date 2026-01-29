@@ -3,7 +3,7 @@
 import path from "@reliverse/pathkit";
 import fs from "@reliverse/relifso";
 import { logger } from "@reliverse/relinka";
-import { defineCommand, option } from "@reliverse/rempts-core";
+import { defineCommand, option } from "@reliverse/rempts";
 import { type } from "arktype";
 import { msgs } from "../../const";
 import {

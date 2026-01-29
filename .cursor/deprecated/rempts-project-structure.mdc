@@ -46,7 +46,7 @@ This is a monorepo for the Dler framework, which codebase is organized into apps
 Plugins are created using the type-safe plugin system in [packages/core/src/plugin/](mdc:packages/core/src/plugin):
 
 ```typescript
-import { createPlugin } from '@reliverse/rempts-core/plugin'
+import { createPlugin } from '@reliverse/rempts/plugin'
 
 interface MyStore {
   data: string[]
@@ -68,7 +68,7 @@ See [packages/plugin-ai-detect/](mdc:packages/plugin-ai-detect) and [packages/pl
 Projects use `dler.config.ts` for configuration:
 
 ```typescript
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 
 export default defineConfig({
   name: 'my-cli',

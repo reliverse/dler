@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@reliverse/relico": "workspace:*",
-    "@reliverse/rempts-core": "workspace:*",
+    "@reliverse/rempts": "workspace:*",
     "@reliverse/rempts-plugin-ai-detect": "workspace:*",
     "@reliverse/rempts-plugin-config": "workspace:*",
     "arktype": "catalog:",
@@ -23,6 +23,6 @@
     "@types/bun": "catalog:",
     "typescript": "catalog:",
     "@typescript/native-preview": "catalog:",
-    "svelte": "^5.46.1"
+    "svelte": "^5.49.0"
   }
 }

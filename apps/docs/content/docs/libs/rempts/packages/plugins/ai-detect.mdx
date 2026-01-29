@@ -25,7 +25,7 @@ bun add @reliverse/rempts-plugin-ai-detect
 ## Basic Usage
 
 ```typescript
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 import { aiAgentPlugin } from '@reliverse/rempts-plugin-ai-detect'
 
 const cli = await createCLI({
@@ -170,7 +170,7 @@ aiAgentPlugin({
 The plugin extends the `EnvironmentInfo` interface:
 
 ```typescript
-declare module '@reliverse/rempts-core/plugin' {
+declare module '@reliverse/rempts/plugin' {
   interface EnvironmentInfo {
     /** AI agent detected */
     isAIAgent: boolean

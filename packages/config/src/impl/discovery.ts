@@ -226,7 +226,7 @@ export const filterPackages = (
  * Load dler.config.ts configuration
  *
  * Uses the unified config loader which:
- * - Validates against @reliverse/rempts schema
+ * - Validates against @reliverse/dler rempts schema
  * - Loads dler.config.ts, dler.config.js, or dler.config.mjs files
  * - Applies schema defaults
  * - Returns LoadedConfig with extended build and publish configs

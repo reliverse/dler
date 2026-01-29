@@ -11,7 +11,7 @@ bun add rempts-plugin-config
 ## Usage
 
 ```typescript
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 import { configMergerPlugin } from '@reliverse/rempts-plugin-config'
 
 const cli = await createCLI({

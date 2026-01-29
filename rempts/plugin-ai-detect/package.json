@@ -28,7 +28,7 @@
     }
   },
   "dependencies": {
-    "@reliverse/rempts-core": "workspace:*",
+    "@reliverse/rempts": "workspace:*",
     "left-pad": "^1.3.0"
   },
   "publishConfig": {

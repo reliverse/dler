@@ -8,6 +8,6 @@
     "emitDeclarationOnly": true,
     "strictNullChecks": true
   },
-  "include": ["./src/**/*", "./test/**/*", "dler.config.ts"],
+  "include": ["./src/**/*.ts", "./test/**/*.test.ts", "dler.config.ts"],
   "exclude": ["./node_modules", "./dist"]
 }

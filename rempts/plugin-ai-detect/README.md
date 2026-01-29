@@ -11,7 +11,7 @@ bun add rempts-plugin-ai-detect
 ## Usage
 
 ```typescript
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 import { aiAgentPlugin } from '@reliverse/rempts-plugin-ai-detect'
 
 const cli = await createCLI({

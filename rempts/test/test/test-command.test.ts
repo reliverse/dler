@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { relico } from "@reliverse/relico";
-import { defineCommand, option } from "@reliverse/rempts-core";
+import { defineCommand, option } from "@reliverse/rempts";
 import { type } from "arktype";
 import { mockInteractive, mockPromptResponses, mockShellCommands } from "../src/helpers";
 import { expectCommand, testCommand } from "../src/mod";

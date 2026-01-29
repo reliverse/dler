@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { createLogger } from "@reliverse/rempts-core/utils";
+import { createLogger } from "@reliverse/rempts/utils";
 import { configMergerPlugin } from "../src/mod";
 
 // Create a mock plugin context for testing

@@ -31,7 +31,7 @@ bun --version
 Leverage the intelligent scaffolding tool to bootstrap your CLI:
 
 ```bash
-bunx @reliverse/rempts my-cli
+bunx @reliverse/dler rempts my-cli
 cd my-cli
 ```
 
@@ -43,7 +43,7 @@ The interactive setup will prompt for:
 The scaffolding automatically handles:
 - ✅ Structured project layout with file-based command discovery
 - ✅ Git repository initialization with appropriate ignores
-- ✅ Dependency installation including `@reliverse/rempts-core`
+- ✅ Dependency installation including `@reliverse/rempts`
 - ✅ TypeScript configuration optimized for Bun
 - ✅ Comprehensive testing setup with Bun's test runner
 - ✅ Generated `dler.config.ts` with sensible defaults
@@ -59,7 +59,7 @@ my-cli/
 │   └── greet/
 │       └── cmd.ts        # Individual command implementations
 ├── dler.config.ts        # Auto-loaded configuration file
-├── package.json          # Dependencies with @reliverse/rempts-core
+├── package.json          # Dependencies with @reliverse/rempts
 ├── tsconfig.json         # Bun-optimized TypeScript configuration
 └── README.md             # Generated project documentation
 ```
@@ -85,7 +85,7 @@ Define a greeting command in `cmds/greet/cmd.ts` with type-safe options:
 <Tabs groupId="getting-started-validation" defaultValue="zod">
   <Tab value="zod" label="Zod">
     ```typescript
-    import { defineCommand, option } from '@reliverse/rempts-core'
+    import { defineCommand, option } from '@reliverse/rempts'
     import { z } from 'zod'
 
     export default defineCommand({
@@ -123,7 +123,7 @@ Define a greeting command in `cmds/greet/cmd.ts` with type-safe options:
 
   <Tab value="arktype" label="Arktype">
     ```typescript
-    import { defineCommand, option } from '@reliverse/rempts-core'
+    import { defineCommand, option } from '@reliverse/rempts'
     import { type } from 'arktype'
 
     export default defineCommand({
@@ -166,11 +166,11 @@ Execute the command through the development server:
 
 ```bash
 # Test with development server
-bunx @reliverse/rempts dev greet --name World --excited
+bunx @reliverse/dler rempts dev greet --name World --excited
 # Output: Hello, World!
 
 # Execute the full test suite
-bunx @reliverse/rempts test
+bunx @reliverse/dler rempts test
 ```
 
 ### Compile for distribution
@@ -179,10 +179,10 @@ Generate optimized, standalone executables ready for deployment:
 
 ```bash
 # Compile for current platform
-bunx @reliverse/rempts build
+bunx @reliverse/dler rempts build
 
 # Cross-compile for all supported platforms
-bunx @reliverse/rempts build --all
+bunx @reliverse/dler rempts build --all
 ```
 
 </Steps>
@@ -195,7 +195,7 @@ Choose from curated project templates designed for different CLI complexity leve
   <Tab value="basic" label="Basic">
     Minimal CLI foundation for getting started:
     ```bash
-    bunx @reliverse/rempts my-cli --template basic
+    bunx @reliverse/dler rempts my-cli --template basic
     ```
 
     **Ideal for:**
@@ -212,7 +212,7 @@ Choose from curated project templates designed for different CLI complexity leve
   <Tab value="advanced" label="Advanced">
     Full-featured CLI with comprehensive capabilities:
     ```bash
-    bunx @reliverse/rempts my-cli --template advanced
+    bunx @reliverse/dler rempts my-cli --template advanced
     ```
 
     **Features:**
@@ -231,7 +231,7 @@ Choose from curated project templates designed for different CLI complexity leve
   <Tab value="monorepo" label="Monorepo">
     Scalable workspace configuration for complex projects:
     ```bash
-    bunx @reliverse/rempts my-cli --template monorepo
+    bunx @reliverse/dler rempts my-cli --template monorepo
     ```
 
     **Capabilities:**
@@ -253,13 +253,13 @@ Leverage any GitHub repository or NPM package as your project foundation:
 
 ```bash
 # Use a GitHub repository template
-bunx @reliverse/rempts my-cli --template username/repo
+bunx @reliverse/dler rempts my-cli --template username/repo
 
 # Specify a particular branch
-bunx @reliverse/rempts my-cli --template username/repo#branch
+bunx @reliverse/dler rempts my-cli --template username/repo#branch
 
 # Utilize an NPM-published template
-bunx @reliverse/rempts my-cli --template npm:template-package
+bunx @reliverse/dler rempts my-cli --template npm:template-package
 ```
 
 ## Manual Configuration
@@ -271,14 +271,14 @@ For complete control over your CLI setup, configure Rempts manually:
 ### Install core dependencies
 
 ```bash
-bun add @reliverse/rempts-core @reliverse/rempts-utils
+bun add @reliverse/rempts @reliverse/rempts-utils
 ```
 
 ### Establish the main entry point
 
 ```typescript
 // cli.ts
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 
 const cli = await createCLI({
   name: 'my-cli',
@@ -299,12 +299,12 @@ await cli.run()
     "my-cli": "./cli.ts"
   },
   "scripts": {
-    "dev": "bunx @reliverse/rempts dev",
-    "build": "bunx @reliverse/rempts build",
+    "dev": "bunx @reliverse/dler rempts dev",
+    "build": "bunx @reliverse/dler rempts build",
     "test": "bun test"
   },
   "dependencies": {
-    "@reliverse/rempts-core": "latest",
+    "@reliverse/rempts": "latest",
     "@reliverse/rempts-utils": "latest"
   }
 }
@@ -313,7 +313,7 @@ await cli.run()
 ### Configure dler.config.ts
 
 ```typescript
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 
 export default defineConfig({
   name: 'my-cli',
@@ -337,7 +337,7 @@ mkdir commands
 
 ```typescript
 // cmds/hello/cmd.ts
-import { defineCommand } from '@reliverse/rempts-core'
+import { defineCommand } from '@reliverse/rempts'
 
 export default defineCommand({
   name: 'hello',

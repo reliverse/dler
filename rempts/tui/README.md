@@ -21,7 +21,7 @@ bun add rempts-tui react
 ## Quick Start
 
 ```typescript
-import { createCLI, defineCommand } from '@reliverse/rempts-core'
+import { createCLI, defineCommand } from '@reliverse/rempts'
 import { registerTuiRenderer } from '@reliverse/rempts-tui'
 
 const cli = await createCLI({
@@ -56,7 +56,7 @@ await cli.run()
 ### Basic TUI Component
 
 ```typescript
-import { defineCommand } from '@reliverse/rempts-core'
+import { defineCommand } from '@reliverse/rempts'
 
 function MyTUI() {
   return (
@@ -79,7 +79,7 @@ export const myCommand = defineCommand({
 ### Using Form Components
 
 ```typescript
-import { defineCommand } from '@reliverse/rempts-core'
+import { defineCommand } from '@reliverse/rempts'
 import { FormField, SelectField } from '@reliverse/rempts-tui'
 import type { SelectOption } from '@opentui/core'
 import { useState } from 'react'

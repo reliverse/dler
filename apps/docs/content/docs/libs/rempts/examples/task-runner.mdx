@@ -67,7 +67,7 @@ Interactive setup wizard:
 
 ### 1. Schema Validation
 ```typescript
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export const buildCommand = defineCommand({
@@ -96,7 +96,7 @@ export const buildCommand = defineCommand({
 
 ### 2. Interactive Prompts
 ```typescript
-import { prompt } from '@reliverse/rempts-core'
+import { prompt } from '@reliverse/rempts'
 
 // Text input
 const name = await prompt.text('Project name?')
@@ -117,7 +117,7 @@ const features = await prompt.multiselect('Features?', [
 
 ### 3. Progress Indicators
 ```typescript
-import { spinner } from '@reliverse/rempts-core'
+import { spinner } from '@reliverse/rempts'
 
 spinner.start('Building project...')
 

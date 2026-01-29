@@ -18,7 +18,7 @@ This comprehensive guide demonstrates creating a fully-featured CLI application 
 Bootstrap your CLI project using the intelligent scaffolding tool:
 
 ```bash
-bunx @reliverse/rempts todo-cli
+bunx @reliverse/dler rempts todo-cli
 cd todo-cli
 ```
 
@@ -40,7 +40,7 @@ todo-cli/
 │   └── greet/
 │       └── cmd.ts        # Sample command implementation
 ├── dler.config.ts        # Centralized Rempts configuration
-├── package.json          # Dependencies including @reliverse/rempts-core
+├── package.json          # Dependencies including @reliverse/rempts
 ├── tsconfig.json         # TypeScript configuration for Bun compatibility
 └── README.md             # Generated project documentation
 ```
@@ -51,7 +51,7 @@ Develop a comprehensive todo management CLI. Replace the default greet command w
 
 ```typescript
 // cmds/add/cmd.ts
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({
@@ -87,7 +87,7 @@ Configure your main CLI entry point with automatic command discovery:
 
 ```typescript
 // cli.ts
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 
 const cli = await createCLI({
   name: 'todo',
@@ -103,7 +103,7 @@ await cli.run()
 
 
 ```bash
-bunx @reliverse/rempts dev
+bunx @reliverse/dler rempts dev
 ```
 
 Execute your command to verify functionality:
@@ -118,7 +118,7 @@ Implement a comprehensive `list` command with filtering capabilities:
 
 ```typescript
 // cmds/list.ts
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({
@@ -174,7 +174,7 @@ Develop an interactive task completion command:
 
 ```typescript
 // cmds/complete.ts
-import { defineCommand } from '@reliverse/rempts-core'
+import { defineCommand } from '@reliverse/rempts'
 
 export default defineCommand({
   name: 'complete',
@@ -211,7 +211,7 @@ Leverage Rempts' file-based routing to create nested command hierarchies:
 
 ```typescript
 // cmds/db/init.ts
-import { defineCommand } from '@reliverse/rempts-core'
+import { defineCommand } from '@reliverse/rempts'
 
 export default defineCommand({
   name: 'init',
@@ -224,7 +224,7 @@ export default defineCommand({
 
 ```typescript
 // cmds/db/backup.ts
-import { defineCommand } from '@reliverse/rempts-core'
+import { defineCommand } from '@reliverse/rempts'
 
 export default defineCommand({
   name: 'backup',
@@ -250,13 +250,13 @@ Generate optimized executables for distribution:
 
 ```bash
 # Compile for current platform architecture
-bunx @reliverse/rempts build
+bunx @reliverse/dler rempts build
 
 # Cross-compile for all supported platforms
-bunx @reliverse/rempts build --all
+bunx @reliverse/dler rempts build --all
 
 # Generate standalone executable with no runtime dependencies
-bunx @reliverse/rempts build --compile
+bunx @reliverse/dler rempts build --compile
 ```
 
 ## Comprehensive Testing
@@ -280,7 +280,7 @@ test('add command registers new task successfully', async () => {
 Execute the test suite:
 
 ```bash
-bunx @reliverse/rempts test
+bunx @reliverse/dler rempts test
 ```
 
 ## Plugin Integration
@@ -289,7 +289,7 @@ Augment your CLI with powerful plugins for configuration management and AI detec
 
 ```typescript
 // cli.ts
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 import { configPlugin } from '@reliverse/rempts-plugin-config'
 import { aiDetectPlugin } from '@reliverse/rempts-plugin-ai-detect'
 
@@ -332,7 +332,7 @@ handler: async ({ flags, colors, context }) => {
 Tailor your CLI behavior through `dler.config.ts`:
 
 ```typescript
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 
 export default defineConfig({
   name: 'todo',
@@ -356,12 +356,12 @@ When prepared to distribute your CLI globally:
 
 1. **Cross-platform compilation:**
    ```bash
-   bunx @reliverse/rempts build --all
+   bunx @reliverse/dler rempts build --all
    ```
 
 2. **Automated release creation:**
    ```bash
-   bunx @reliverse/rempts release
+   bunx @reliverse/dler rempts release
    ```
 
 3. **NPM publication:**

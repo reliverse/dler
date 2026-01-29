@@ -1,17 +1,17 @@
 ---
-title: '@reliverse/rempts-core'
+title: '@reliverse/rempts'
 description: The core CLI framework for Rempts
 ---
 
 import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
 import { Callout } from 'fumadocs-ui/components/callout';
 
-# @reliverse/rempts-core
+# @reliverse/rempts
 
 The core CLI framework that powers Rempts. Provides type-safe command definitions, automatic validation, plugin system, and rich handler contexts.
 
 <Callout type="info">
-  @reliverse/rempts-core integrates with Standard Schema v1 for validation and uses Zustand for plugin state management. It supports Zod, Valibot, ArkType, and other schema libraries.
+  @reliverse/rempts integrates with Standard Schema v1 for validation and uses Zustand for plugin state management. It supports Zod, Valibot, ArkType, and other schema libraries.
 </Callout>
 
 ## Installation
@@ -19,17 +19,17 @@ The core CLI framework that powers Rempts. Provides type-safe command definition
 <Tabs groupId="package-manager" defaultValue="bun">
   <Tab value="bun" label="Bun">
     ```bash
-    bun add @reliverse/rempts-core
+    bun add @reliverse/rempts
     ```
   </Tab>
   <Tab value="npm" label="npm">
     ```bash
-    npm install @reliverse/rempts-core
+    npm install @reliverse/rempts
     ```
   </Tab>
   <Tab value="pnpm" label="pnpm">
     ```bash
-    pnpm add @reliverse/rempts-core
+    pnpm add @reliverse/rempts
     ```
   </Tab>
 </Tabs>
@@ -41,7 +41,7 @@ The core CLI framework that powers Rempts. Provides type-safe command definition
 Create a new CLI instance with automatic configuration loading:
 
 ```typescript
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 
 // Automatic config loading from dler.config.ts
 const cli = await createCLI()
@@ -70,7 +70,7 @@ await cli.run()
 Define commands with full type inference:
 
 ```typescript
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({
@@ -110,7 +110,7 @@ export default defineCommand({
 Create typed options with validation:
 
 ```typescript
-import { option } from '@reliverse/rempts-core'
+import { option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 // Options always require a Standard Schema v1 compatible schema
@@ -352,7 +352,7 @@ export default {
 }
 
 // cli.ts
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 import manifest from './commands/manifest.js'
 
 const cli = createCLI({
@@ -458,7 +458,7 @@ Define configuration for the Rempts CLI:
 
 ```typescript
 // dler.config.ts
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 
 export default defineConfig({
   name: 'my-cli',
@@ -526,7 +526,7 @@ Rempts supports any validation library that implements Standard Schema v1:
 ```typescript
 // Using Valibot instead of Zod
 import * as v from 'valibot'
-import { option } from '@reliverse/rempts-core'
+import { option } from '@reliverse/rempts'
 
 const portOption = option(
   v.pipe(
@@ -545,7 +545,7 @@ const portOption = option(
 Rempts includes a powerful functional plugin system with Zustand stores:
 
 ```typescript
-import { createPlugin } from '@reliverse/rempts-core/plugin'
+import { createPlugin } from '@reliverse/rempts/plugin'
 
 interface MetricsStore {
   commandCount: number
@@ -605,7 +605,7 @@ import {
   IsNever,
   IsAny,
   IsUnknown
-} from '@reliverse/rempts-core'
+} from '@reliverse/rempts'
 ```
 
 ### Key Utilities
@@ -645,7 +645,7 @@ type Example = Constrain<string, 'a' | 'b' | 'c', 'a'>
 These utilities work particularly well with generated command types:
 
 ```typescript
-import { UnionToIntersection, MergeAll } from '@reliverse/rempts-core'
+import { UnionToIntersection, MergeAll } from '@reliverse/rempts'
 
 // Get all command options as a union
 type AllCommandOptions = UnionToIntersection<

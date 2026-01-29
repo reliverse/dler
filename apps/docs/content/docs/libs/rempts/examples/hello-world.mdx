@@ -12,7 +12,7 @@ The absolute minimum code needed to create a working CLI with Rempts. Perfect st
 ```typescript
 // cli.ts
 #!/usr/bin/env bun
-import { createCLI, defineCommand, option } from '@reliverse/rempts-core'
+import { createCLI, defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 const cli = await createCLI({
@@ -159,7 +159,7 @@ The build process:
     "start": "bun run dist/cli.js"
   },
   "dependencies": {
-    "@reliverse/rempts-core": "workspace:*",
+    "@reliverse/rempts": "workspace:*",
     "arktype": "^2.1.29"
   }
 }

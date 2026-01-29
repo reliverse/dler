@@ -13,7 +13,7 @@ Rempts automatically loads configuration from `dler.config.ts` when you call `cr
 
 ```typescript
 // cli.ts - No config needed!
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 
 const cli = await createCLI()  // Automatically loads dler.config.ts
 
@@ -27,7 +27,7 @@ await cli.run()
 
 ```typescript
 // dler.config.ts - All configuration here
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 
 export default defineConfig({
   name: 'my-cli',
@@ -54,7 +54,7 @@ You can override specific settings for runtime-specific needs:
 
 ```typescript
 // cli.ts - Override plugins with runtime options
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 import { configMergerPlugin } from '@reliverse/rempts-plugin-config'
 
 const cli = await createCLI({
@@ -73,7 +73,7 @@ The override merges with the loaded config (override values win).
 Create a `dler.config.ts` file in your project root:
 
 ```typescript
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 
 export default defineConfig({
   name: 'my-cli',
@@ -288,7 +288,7 @@ export const baseConfig = {
 }
 
 // dler.config.ts
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 import { baseConfig } from './base.config'
 
 export default defineConfig({

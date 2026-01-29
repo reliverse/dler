@@ -26,13 +26,13 @@
     }
   },
   "dependencies": {
-    "@opentui/core": "^0.1.72",
-    "@opentui/react": "^0.1.72",
-    "@reliverse/rempts-core": "workspace:*",
+    "@opentui/core": "^0.1.75",
+    "@opentui/react": "^0.1.75",
+    "@reliverse/rempts": "workspace:*",
     "left-pad": "^1.3.0"
   },
   "peerDependencies": {
-    "@opentui/core": "^0.1.72",
+    "@opentui/core": "^0.1.75",
     "react": "catalog:"
   },
   "publishConfig": {

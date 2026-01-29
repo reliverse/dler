@@ -1,4 +1,4 @@
-import { defineCommand } from "@reliverse/rempts-core";
+import { defineCommand } from "@reliverse/rempts";
 
 export default defineCommand({
   description: "Build command files",

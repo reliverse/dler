@@ -80,7 +80,7 @@ When adding examples:
 
 ### README Structure
 - Features demonstrated
-- Usage instructions (direct + @reliverse/rempts dev)
+- Usage instructions (direct + @reliverse/dler rempts dev)
 - Key concepts explained
 - Code examples with explanations
 - Configuration examples (dler.config.ts)

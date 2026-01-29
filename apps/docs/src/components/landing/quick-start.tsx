@@ -13,7 +13,7 @@ const steps = [
   },
   {
     title: "Create your first command",
-    command: "bun create @reliverse/rempts my-cli",
+    command: "bun create @reliverse/dler rempts my-cli",
     description: "Scaffold a new CLI project",
   },
   {

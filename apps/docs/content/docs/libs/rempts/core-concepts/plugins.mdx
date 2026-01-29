@@ -23,7 +23,7 @@ Plugins in Rempts can:
 A plugin is an object that implements the `RemptsPlugin` interface:
 
 ```typescript
-import { createPlugin } from '@reliverse/rempts-core/plugin'
+import { createPlugin } from '@reliverse/rempts/plugin'
 
 const myPlugin = createPlugin({
   name: 'my-plugin',
@@ -51,7 +51,7 @@ const myPlugin = createPlugin({
 For configurable plugins, use a factory function:
 
 ```typescript
-import { createPlugin } from '@reliverse/rempts-core/plugin'
+import { createPlugin } from '@reliverse/rempts/plugin'
 
 interface MyPluginOptions {
   prefix: string
@@ -221,7 +221,7 @@ const cli = await createCLI({
 Plugins can extend core interfaces using TypeScript's module augmentation:
 
 ```typescript
-declare module '@reliverse/rempts-core/plugin' {
+declare module '@reliverse/rempts/plugin' {
   interface EnvironmentInfo {
     isDocker: boolean
     containerName?: string
@@ -292,7 +292,7 @@ In addition to plugin hooks, Rempts provides a global hooks system that allows y
 Before hooks run before any command is executed and can set up shared context:
 
 ```typescript
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 
 const cli = await createCLI({
   name: 'my-cli',

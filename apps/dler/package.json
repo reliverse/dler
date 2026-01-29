@@ -2,6 +2,21 @@
   "name": "@reliverse/dler",
   "version": "2.3.4",
   "description": "@reliverse/dler is a framework which helps TypeScript and JavaScript developers create their libraries and CLI tools. It provides ready-to-use primitives, so you don't have to write them from scratch.",
+  "scripts": {
+    "dler": "bun src/cli.ts",
+    "typecheck": "tsgo --noEmit",
+    "cli": "bun dler",
+    "test": "bun test",
+    "build": "bun scripts/build.ts && bun run tsc",
+    "build:standalone": "bun run scripts/build.ts --compile",
+    "build:binaries": "bun run scripts/release-binaries.ts",
+    "prepublishOnly": "bun run build",
+    "init-relinter": "bun codemods/0-init-relinter.ts",
+    "clone-repos": "bun codemods/1-clone-repos.ts",
+    "relinter-to-relinter": "bun codemods/2-relinter-to-relinter.ts",
+    "migrate-to-bun": "bun codemods/3-migrate-to-bun.ts",
+    "count-gh-files": "bun other-scripts/count-gh-files.ts"
+  },
   "keywords": [
     "build-tool",
     "bun",
@@ -51,11 +66,12 @@
     "@reliverse/relico": "workspace:*",
     "@reliverse/relifso": "workspace:*",
     "@reliverse/relinka": "workspace:*",
-    "@reliverse/rempts-core": "workspace:*",
+    "@reliverse/rempts": "workspace:*",
     "@reliverse/rempts-utils": "workspace:*",
     "@reliverse/typerso": "workspace:*",
     "c12": "catalog:",
     "clipboardy": "catalog:",
+    "giget": "catalog:",
     "lookpath": "catalog:",
     "semver": "catalog:",
     "arktype": "catalog:",
@@ -71,16 +87,6 @@
     "typescript": "catalog:",
     "@typescript/native-preview": "catalog:",
     "@types/lodash": "^4.17.23",
-    "svelte": "^5.46.1"
-  },
-  "scripts": {
-    "dler": "bun src/cli.ts",
-    "typecheck": "tsgo --noEmit",
-    "cli": "bun dler",
-    "test": "bun test",
-    "build": "bun scripts/build.ts && bun run tsc",
-    "build:standalone": "bun run scripts/build.ts --compile",
-    "build:binaries": "bun run scripts/release-binaries.ts",
-    "prepublishOnly": "bun run build"
+    "svelte": "^5.49.0"
   }
 }

@@ -312,7 +312,7 @@ const loggingMiddleware: Middleware = async (context, next) => {
 Extend core interfaces in your plugins.
 
 ```typescript
-declare module '@reliverse/rempts-core/plugin' {
+declare module '@reliverse/rempts/plugin' {
   interface EnvironmentInfo {
     // Add custom fields
     isDocker: boolean
@@ -360,8 +360,8 @@ declare module '@reliverse/rempts-core/plugin' {
 ## Complete Example
 
 ```typescript
-import { createPlugin, type RemptsPlugin } from '@reliverse/rempts-core/plugin'
-import { defineCommand } from '@reliverse/rempts-core'
+import { createPlugin, type RemptsPlugin } from '@reliverse/rempts/plugin'
+import { defineCommand } from '@reliverse/rempts'
 
 interface MetricsStore {
   commandCount: number

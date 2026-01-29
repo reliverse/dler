@@ -28,7 +28,7 @@ bun add zod
 
 ```typescript
 import { z } from 'zod'
-import { option } from '@reliverse/rempts-core'
+import { option } from '@reliverse/rempts'
 
 // Use Zod schemas with the option helper
 const portOption = option(
@@ -44,7 +44,7 @@ bun add valibot
 
 ```typescript
 import * as v from 'valibot'
-import { option } from '@reliverse/rempts-core'
+import { option } from '@reliverse/rempts'
 
 // Valibot schemas work too
 const emailOption = option(
@@ -60,7 +60,7 @@ bun add @sinclair/typebox
 
 ```typescript
 import { Type } from '@sinclair/typebox'
-import { option } from '@reliverse/rempts-core'
+import { option } from '@reliverse/rempts'
 
 // TypeBox for JSON Schema compatibility
 const configOption = option(

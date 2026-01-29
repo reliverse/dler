@@ -43,7 +43,7 @@ Rempts TUI enables you to build interactive terminal applications using React co
 Instead of handlers, commands can define `render` functions:
 
 ```typescript
-import { defineCommand } from '@reliverse/rempts-core'
+import { defineCommand } from '@reliverse/rempts'
 import { Box, Text } from '@reliverse/rempts-tui'
 
 export default defineCommand({
@@ -65,7 +65,7 @@ export default defineCommand({
 Register the TUI renderer for commands that use render functions:
 
 ```typescript
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 import { registerTuiRenderer } from '@reliverse/rempts-tui'
 
 const cli = await createCLI()

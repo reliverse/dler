@@ -27,7 +27,7 @@ Use Bun's native test runner with rempts-test utilities:
 
 ```typescript
 // cmds/greet/cmd.ts
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({
@@ -72,7 +72,7 @@ test('greet command with custom name', async () => {
 
 ```typescript
 // src/commands/serve.ts
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({
@@ -482,7 +482,7 @@ This generates a coverage report showing:
 // src/plugins/analytics.test.ts
 import { test, expect } from '@reliverse/rempts-test'
 import { createTestCLI } from '@reliverse/rempts-test'
-import { createPlugin } from '@reliverse/rempts-core/plugin'
+import { createPlugin } from '@reliverse/rempts/plugin'
 
 const analyticsPlugin = createPlugin({
   name: 'analytics',

@@ -1,7 +1,7 @@
 import { createCliRenderer } from "@opentui/core";
 import { createRoot } from "@opentui/react";
-import type { RenderArgs } from "@reliverse/rempts-core";
-import { registerTuiRenderer as coreRegisterTuiRenderer } from "@reliverse/rempts-core";
+import type { RenderArgs } from "@reliverse/rempts";
+import { registerTuiRenderer as coreRegisterTuiRenderer } from "@reliverse/rempts";
 import type { ReactElement } from "react";
 
 export function registerTuiRenderer(): void {

@@ -17,7 +17,7 @@ Scaffold new Rempts CLI projects in seconds with built-in templates and full cus
 <Tabs groupId="package-manager" defaultValue="bun">
   <Tab value="bun" label="Bun">
     ```bash
-    bunx @reliverse/rempts my-cli
+    bunx @reliverse/dler rempts my-cli
     ```
   </Tab>
   <Tab value="npm" label="npm">
@@ -27,12 +27,12 @@ Scaffold new Rempts CLI projects in seconds with built-in templates and full cus
   </Tab>
   <Tab value="yarn" label="yarn">
     ```bash
-    yarn create @reliverse/rempts my-cli
+    yarn create @reliverse/dler rempts my-cli
     ```
   </Tab>
   <Tab value="pnpm" label="pnpm">
     ```bash
-    pnpm create @reliverse/rempts my-cli
+    pnpm create @reliverse/dler rempts my-cli
     ```
   </Tab>
 </Tabs>
@@ -68,7 +68,7 @@ You'll be prompted for:
 Specify options directly:
 
 ```bash
-bunx @reliverse/rempts my-cli --template advanced --package-manager pnpm
+bunx @reliverse/dler rempts my-cli --template advanced --package-manager pnpm
 ```
 
 ### Options
@@ -117,7 +117,7 @@ my-cli/
 - Essential dependencies only
 
 ```bash
-bunx @reliverse/rempts my-cli --template basic
+bunx @reliverse/dler rempts my-cli --template basic
 ```
 
 ### Advanced Template
@@ -160,7 +160,7 @@ my-cli/
 - **Arktype integration** for TypeScript-like validation
 
 ```bash
-bunx @reliverse/rempts my-cli --template advanced
+bunx @reliverse/dler rempts my-cli --template advanced
 ```
 
 ### Monorepo Template
@@ -200,7 +200,7 @@ my-cli/
 - Optimized for scalability
 
 ```bash
-bunx @reliverse/rempts my-cli --template monorepo
+bunx @reliverse/dler rempts my-cli --template monorepo
 ```
 
 ## External Templates
@@ -211,26 +211,26 @@ Use any GitHub repository as a template:
 
 ```bash
 # Short format
-bunx @reliverse/rempts my-cli --template username/repo
+bunx @reliverse/dler rempts my-cli --template username/repo
 
 # Full GitHub format
-bunx @reliverse/rempts my-cli --template github:username/repo
+bunx @reliverse/dler rempts my-cli --template github:username/repo
 
 # Specific branch or tag
-bunx @reliverse/rempts my-cli --template username/repo#branch
+bunx @reliverse/dler rempts my-cli --template username/repo#branch
 ```
 
 ### NPM Templates
 
 ```bash
-bunx @reliverse/rempts my-cli --template npm:template-package
+bunx @reliverse/dler rempts my-cli --template npm:template-package
 ```
 
 ### Local Templates
 
 ```bash
-bunx @reliverse/rempts my-cli --template ./path/to/template
-bunx @reliverse/rempts my-cli --template file:./path/to/template
+bunx @reliverse/dler rempts my-cli --template ./path/to/template
+bunx @reliverse/dler rempts my-cli --template file:./path/to/template
 ```
 
 ## Creating Custom Templates
@@ -356,7 +356,7 @@ templates/
 
 ### Programmatic API
 
-Use @reliverse/rempts programmatically:
+Use @reliverse/dler rempts programmatically:
 
 ```typescript
 import { createProject } from 'rempts'
@@ -378,10 +378,10 @@ Work offline with cached templates:
 
 ```bash
 # Use cached template if available
-bunx @reliverse/rempts my-cli --offline
+bunx @reliverse/dler rempts my-cli --offline
 
 # Force offline mode (fail if not cached)
-GIGET_FORCE_OFFLINE=1 bunx @reliverse/rempts my-cli
+GIGET_FORCE_OFFLINE=1 bunx @reliverse/dler rempts my-cli
 ```
 
 ### Custom Directory
@@ -390,10 +390,10 @@ Create project in a specific location:
 
 ```bash
 # Create in current directory
-bunx @reliverse/rempts . --template advanced
+bunx @reliverse/dler rempts . --template advanced
 
 # Create in custom path
-bunx @reliverse/rempts my-cli --dir ~/projects/my-cli
+bunx @reliverse/dler rempts my-cli --dir ~/projects/my-cli
 ```
 
 ## Examples
@@ -403,7 +403,7 @@ bunx @reliverse/rempts my-cli --dir ~/projects/my-cli
 ### Create a simple CLI
 
 ```bash
-bunx @reliverse/rempts todo-cli
+bunx @reliverse/dler rempts todo-cli
 cd todo-cli
 rempts dev
 ```
@@ -411,7 +411,7 @@ rempts dev
 ### Create with all options
 
 ```bash
-bunx @reliverse/rempts weather-cli \
+bunx @reliverse/dler rempts weather-cli \
   --template advanced \
   --package-manager pnpm \
   --dir ~/tools/weather-cli \
@@ -422,7 +422,7 @@ bunx @reliverse/rempts weather-cli \
 ### Use external template
 
 ```bash
-bunx @reliverse/rempts my-app \
+bunx @reliverse/dler rempts my-app \
   --template pvtnbr/rempts-starter \
   --package-manager npm
 ```
@@ -430,7 +430,7 @@ bunx @reliverse/rempts my-app \
 ### Create without prompts
 
 ```bash
-bunx @reliverse/rempts api-cli \
+bunx @reliverse/dler rempts api-cli \
   --template monorepo \
   --no-git \
   --no-install

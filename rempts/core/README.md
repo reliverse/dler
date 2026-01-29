@@ -11,7 +11,7 @@ bun add rempts-core
 ## Quick Start
 
 ```typescript
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { type } from 'arktype'
 
 export default defineCommand({
@@ -50,7 +50,7 @@ export default defineCommand({
 Define commands with automatic type inference:
 
 ```typescript
-import { defineCommand } from '@reliverse/rempts-core'
+import { defineCommand } from '@reliverse/rempts'
 
 export default defineCommand({
   name: 'build',
@@ -66,7 +66,7 @@ export default defineCommand({
 Use the `option` helper with Standard Schema validation:
 
 ```typescript
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { type } from 'arktype'
 
 export default defineCommand({
@@ -94,7 +94,7 @@ export default defineCommand({
 Create complex CLIs with multiple commands:
 
 ```typescript
-import { createCLI } from '@reliverse/rempts-core'
+import { createCLI } from '@reliverse/rempts'
 import build from './commands/build'
 import deploy from './commands/deploy'
 import test from './commands/test'
@@ -134,7 +134,7 @@ Rempts provides a powerful plugin system with compile-time type safety:
 ### Basic Plugin
 
 ```typescript
-import { RemptsPlugin, createPlugin } from '@reliverse/rempts-core'
+import { RemptsPlugin, createPlugin } from '@reliverse/rempts'
 
 interface MyPluginStore {
   apiKey: string
@@ -181,7 +181,7 @@ const myPlugin: RemptsPlugin<MyPluginStore> = {
 Use `createPlugin` for better ergonomics:
 
 ```typescript
-import { createPlugin } from '@reliverse/rempts-core'
+import { createPlugin } from '@reliverse/rempts'
 
 export const authPlugin = createPlugin((options: AuthOptions) => {
   return {
@@ -213,7 +213,7 @@ const cli = await createCLI({
 
 // In your command files (e.g., cmds/deploy/cmd.ts), the store is fully typed!
 // cmds/deploy/cmd.ts
-import { defineCommand } from '@reliverse/rempts-core'
+import { defineCommand } from '@reliverse/rempts'
 
 export default defineCommand({
   name: 'deploy',
@@ -238,7 +238,7 @@ import {
   createMockPluginContext,
   testPluginHooks,
   assertPluginBehavior
-} from '@reliverse/rempts-core/plugin'
+} from '@reliverse/rempts/plugin'
 
 // Create a test plugin
 const testPlugin = createTestPlugin(
@@ -274,7 +274,7 @@ assertPluginBehavior(results, {
 Plugins can extend Rempts's interfaces:
 
 ```typescript
-declare module '@reliverse/rempts-core' {
+declare module '@reliverse/rempts' {
   interface EnvironmentInfo {
     isCI: boolean
     ciProvider?: string
@@ -293,7 +293,7 @@ import {
   isValueOfType,
   createValidator,
   createBatchValidator
-} from '@reliverse/rempts-core'
+} from '@reliverse/rempts'
 
 // Validate a single value
 const result = await validateValue(
@@ -340,7 +340,7 @@ import {
   IsNever,
   IsAny,
   IsUnknown
-} from '@reliverse/rempts-core'
+} from '@reliverse/rempts'
 ```
 
 ### Key Utilities

@@ -51,7 +51,7 @@ Each example demonstrates the recommended Rempts development workflow:
 # Navigate to an example
 cd hello-world
 
-# Install dependencies (includes @reliverse/rempts CLI)
+# Install dependencies (includes @reliverse/dler rempts CLI)
 bun install
 
 # Generate types (creates .dler/commands.gen.ts)
@@ -97,7 +97,7 @@ Each example builds on the previous concepts and introduces new patterns.
 Rempts uses Standard Schema for validation, allowing you to use any compatible validation library:
 
 ```typescript
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { type } from 'arktype'
 
 export default defineCommand({
@@ -138,7 +138,7 @@ const confirmed = await prompt.confirm('Continue?')
 Extend functionality with type-safe plugins:
 
 ```typescript
-import { createPlugin } from '@reliverse/rempts-core/plugin'
+import { createPlugin } from '@reliverse/rempts/plugin'
 
 export const myPlugin = createPlugin({
   name: 'my-plugin',
@@ -155,7 +155,7 @@ All examples use `dler.config.ts` for build configuration:
 
 ```typescript
 // dler.config.ts
-import { defineConfig } from '@reliverse/rempts-core'
+import { defineConfig } from '@reliverse/rempts'
 
 export default defineConfig({
   name: 'my-cli',

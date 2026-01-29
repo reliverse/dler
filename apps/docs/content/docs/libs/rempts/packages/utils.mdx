@@ -35,7 +35,7 @@ Shared utilities for building beautiful, interactive CLI applications. Includes 
 </Tabs>
 
 <Callout type="info">
-  When using @reliverse/rempts-core, these utilities are automatically injected into your command handlers. You typically don't need to import them directly.
+  When using @reliverse/rempts, these utilities are automatically injected into your command handlers. You typically don't need to import them directly.
 </Callout>
 
 ## Prompts
@@ -401,7 +401,7 @@ import {
   Expand,
   DeepPartial,
   Constrain
-} from '@reliverse/rempts-core'
+} from '@reliverse/rempts'
 
 // Get all command options as a union
 type AllCommandOptions = UnionToIntersection<
@@ -425,5 +425,5 @@ type SafeCommandName = Constrain<string, keyof CommandRegistry, 'help'>
 
 
 <Callout type="info">
-  Type utilities are exported from `@reliverse/rempts-core`, not `@reliverse/rempts-utils`. They're designed to work with generated types for advanced type manipulation patterns.
+  Type utilities are exported from `@reliverse/rempts`, not `@reliverse/rempts-utils`. They're designed to work with generated types for advanced type manipulation patterns.
 </Callout>

@@ -1,0 +1,41 @@
+{
+  "name": "@{{name}}/cli",
+  "version": "2.3.0",
+  "description": "CLI for {{name}}",
+  "license": "MIT",
+  "author": "{{author}}",
+  "bin": {
+    "{{name}}": "./src/mod.ts"
+  },
+  "type": "module",
+  "scripts": {
+    "postinstall": "bun dler generate",
+    "dev": "bun run src/mod.ts",
+    "build": "bun dler build",
+    "test": "bun test",
+    "typecheck": "tsgo --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@reliverse/rempts": "workspace:*",
+    "@{{name}}/core": "workspace:*",
+    "@{{name}}/utils": "workspace:*"
+  },
+  "devDependencies": {
+    "@reliverse/rempts-test": "workspace:*",
+    "@reliverse/tsconfig": "workspace:*",
+    "@types/bun": "catalog:",
+    "rempts": "workspace:*",
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:"
+  },
+  "rempts": {
+    "entry": "./src/mod.ts",
+    "outDir": "./dist",
+    "external": [
+      "@reliverse/rempts",
+      "@{{name}}/core",
+      "@{{name}}/utils"
+    ]
+  }
+}

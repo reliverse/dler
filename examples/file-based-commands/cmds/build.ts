@@ -1,4 +1,4 @@
-import { defineCommand } from "@reliverse/rempts-core";
+import { defineCommand } from "@reliverse/rempts";
 
 const buildCommand = defineCommand({
   description: "Build the project",

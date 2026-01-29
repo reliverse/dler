@@ -3,7 +3,7 @@ import { existsSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadConfig } from "@reliverse/config";
-import { defineConfig, remptsConfigSchema } from "@reliverse/rempts-core";
+import { defineConfig, remptsConfigSchema } from "@reliverse/rempts";
 
 test("defineConfig - returns config as-is", () => {
   const config = {

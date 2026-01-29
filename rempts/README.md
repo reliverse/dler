@@ -25,7 +25,7 @@ Rempts is a minimal, type-safe CLI framework designed specifically for Bun. It l
 bun add -g rempts
 
 # Create a new CLI project
-bunx @reliverse/rempts my-cli
+bunx @reliverse/dler rempts my-cli
 
 # Start development
 cd my-cli
@@ -37,7 +37,7 @@ rempts dev
 Rempts is validator agnostic. It uses [Standard Schema v1](https://github.com/standard-schema/spec) for validation under the hood, so you can use any validator you want.
 
 ```typescript
-import { defineCommand, option } from '@reliverse/rempts-core'
+import { defineCommand, option } from '@reliverse/rempts'
 import { z } from 'zod'
 
 export default defineCommand({
@@ -61,7 +61,7 @@ export default defineCommand({
 #!/usr/bin/env bun
 
 // Test file to verify default values work for all types
-import { defineCommand, option } from "@reliverse/rempts-core";
+import { defineCommand, option } from "@reliverse/rempts";
 import { type } from "arktype";
 
 // This demonstrates that defaults work for all types

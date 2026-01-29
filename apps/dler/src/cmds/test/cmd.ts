@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { relico } from "@reliverse/relico";
-import { defineCommand, loadConfig, option } from "@reliverse/rempts-core";
+import { defineCommand, loadConfig, option } from "@reliverse/rempts";
 import { type } from "arktype";
 
 export default defineCommand({

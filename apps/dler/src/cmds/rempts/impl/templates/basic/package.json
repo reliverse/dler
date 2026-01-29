@@ -1,0 +1,32 @@
+{
+  "name": "{{name}}",
+  "version": "2.3.0",
+  "description": "{{description}}",
+  "author": "{{author}}",
+  "bin": {
+    "{{name}}": "./src/mod.ts"
+  },
+  "type": "module",
+  "scripts": {
+    "postinstall": "bun dler generate",
+    "dev": "bun run src/mod.ts",
+    "build": "bun dler build",
+    "test": "bun test",
+    "typecheck": "tsgo --noEmit"
+  },
+  "dependencies": {
+    "@reliverse/rempts": "workspace:*"
+  },
+  "devDependencies": {
+    "@reliverse/rempts-test": "workspace:*",
+    "@reliverse/tsconfig": "workspace:*",
+    "@types/bun": "catalog:",
+    "rempts": "workspace:*",
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:"
+  },
+  "rempts": {
+    "entry": "./src/mod.ts",
+    "outDir": "./dist"
+  }
+}
